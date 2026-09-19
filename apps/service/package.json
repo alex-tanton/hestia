@@ -7,9 +7,12 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsup",
     "start": "node dist/main.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p ../../supabase/seed",
     "test": "vitest run --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests"
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "db:types": "kysely-codegen --dialect postgres --url \"${HEARTH_DB_ADMIN_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" --include-pattern \"public.*\" --date-parser string --out-file src/db/types.ts && prettier --write src/db/types.ts",
+    "db:seed": "tsx ../../supabase/seed/seed-users.ts"
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",
@@ -22,6 +25,7 @@
     "@types/node": "24.13.6",
     "@types/pg": "8.23.1",
     "@vitest/coverage-v8": "5.0.1",
+    "kysely-codegen": "0.20.0",
     "tsup": "8.5.1",
     "tsx": "4.23.13",
     "typescript": "6.0.3",

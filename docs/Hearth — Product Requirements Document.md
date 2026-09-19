@@ -278,11 +278,13 @@ Postgres. Every household-scoped table carries `household_id` and is gated by ro
 | `household_member` | user\_id, household\_id, role (admin/member), joined\_at |
 | `household_invite` | id, household\_id, token\_hash, code\_hash, created\_by, created\_at, expires\_at, revoked\_at (nullable) |
 
-`profile` has a 1:1 relationship with `auth.users`. A trigger on `auth.users` creates the profile row at signup, copying `display_name` from the signup's `user_metadata`, and keeps `email` in sync. The table is not called `user` because that is a reserved word in Postgres.
+`profile` has a 1:1 relationship with `auth.users`. A trigger on `auth.users` creates the profile row at signup, copying `display_name` and `timezone` from the signup's `user_metadata`, and keeps `email` in sync. Signup passes the browser's timezone; a missing or unknown timezone falls back to `UTC` until the app's next open replaces it, and a blank display name falls back to the part of the email before the `@`. `quiet_hours_start` and `quiet_hours_end` are either both set or both null. `profile.timezone` and `household.timezone` are always timezone names Postgres recognizes. The table is not called `user` because that is a reserved word in Postgres.
 
 `household.last_active_at` is updated by the service on the first member request against the household each day. It decides which postal codes the daily deal refresh covers.
 
-`household_member` is the only place membership lives; a user has one row per household they belong to. Each household has exactly one row with role admin.
+`household_member` is the only place membership lives; a user has one row per household they belong to. Each household has exactly one row with role admin; a partial unique index enforces at most one, and the membership functions keep at least one.
+
+`household.postal_code` is a five-digit US ZIP code, required when the household is created. `household_invite` stores each credential as its SHA-256 digest in lowercase hex, and its `expires_at` is always exactly 7 days after `created_at`.
 
 ### Deals
 
@@ -293,7 +295,9 @@ Postgres. Every household-scoped table carries `household_id` and is gated by ro
 | `postal_code_refresh` | postal\_code (primary key), last\_refreshed\_at (nullable), last\_on\_demand\_at (nullable) |
 | `household_favorite_store` | id, household\_id, merchant\_id, merchant\_name |
 
-`deal` holds normalized deals that are currently valid, unique on (`postal_code`, `external_id`). It is not a historical record; rows are pruned once `valid_to` has passed. `deal_query_cache` records which deals a live search returned, keyed on (`postal_code`, `normalized_query`), so that repeated searches don't re-hit Flipp while the TTL lasts. `postal_code_refresh` records when each postal code's flyers were last refreshed, and when it last had an on-demand refresh.
+`deal` holds normalized deals that are currently valid, unique on (`postal_code`, `external_id`). Flipp's identifiers (`external_id`, `merchant_id`, `flyer_id`, and the snapshot's `deal_external_id`) are opaque text, as the wrapper's contract types them. `conditional_reason` is set exactly when `conditional_price` is true. It is not a historical record; rows are pruned once `valid_to` has passed. `deal_query_cache` records which deals a live search returned, keyed on (`postal_code`, `normalized_query`), so that repeated searches don't re-hit Flipp while the TTL lasts. `postal_code_refresh` records when each postal code's flyers were last refreshed, and when it last had an on-demand refresh.
+
+`household_favorite_store` is unique on (`household_id`, `merchant_id`).
 
 Favorites scope the default deal search, the flyer list, the daily flyer-item refresh, readiness matching, and the `flyer_refresh` notification. Browsing every merchant near the postal code remains available regardless.
 
@@ -305,7 +309,7 @@ Favorites scope the default deal search, the flyer list, the daily flyer-item re
 | `shopping_list_item` | id (client-generated UUID), list\_id, item\_name, normalized\_name, quantity (numeric, nullable), quantity\_note (nullable), status (needed/in\_cart/bought), added\_by, source (manual/from\_deal/from\_recipe), merchant\_id (nullable), merchant\_name (nullable), deal\_external\_id (nullable), sale\_price (nullable), regular\_price (nullable), deal\_valid\_to (nullable), price\_unit (each/lb/oz, default each), conditional\_price (boolean, default false), price (nullable), original\_sale\_price (nullable), repriced\_at (nullable), contributing\_recipe\_ids (uuid array), created\_at |
 | `pantry_item` | id, household\_id, item\_name, normalized\_name, quantity\_note, last\_updated |
 
-The deal fields on `shopping_list_item` are a snapshot taken when the item is added: `sale_price` is the deal's `unit_price`, and `regular_price` is its `original_price`. `price` is the price the item currently counts at: the sale price while the deal is valid, or the repriced value after that (see Expired deal repricing). A manually added item may have a `price` and `price_unit` entered by hand. `shopping_list.updated_at` is bumped by any change to the list or its items, and is shown as the list's last activity.
+The deal fields on `shopping_list_item` are a snapshot taken when the item is added: `sale_price` is the deal's `unit_price`, and `regular_price` is its `original_price`. `price` is the price the item currently counts at: the sale price while the deal is valid, or the repriced value after that (see Expired deal repricing). A manually added item may have a `price` and `price_unit` entered by hand. `shopping_list.updated_at` is bumped by any change to the list or its items (a trigger does it), and is shown as the list's last activity. `pantry_item` is unique on (`household_id`, `normalized_name`), so adding an item the pantry already has updates it rather than duplicating it.
 
 ### Meal planning
 
@@ -317,7 +321,7 @@ The deal fields on `shopping_list_item` are a snapshot taken when the item is ad
 | `ingredient_match_override` | id, household\_id, ingredient\_normalized\_name, target\_kind (deal/pantry), target\_normalized\_name, decision (force\_match/force\_no\_match), created\_by, created\_at |
 | `meal_plan_entry` | id, household\_id, recipe\_id (nullable, `ON DELETE SET NULL`), recipe\_title, planned\_date, meal\_type (breakfast/lunch/dinner), added\_by, created\_at |
 
-`ingredient_match_override` is unique on (`household_id`, `ingredient_normalized_name`, `target_kind`, `target_normalized_name`). `recipe_readiness` is derived data. The service rewrites it; users never edit it directly.
+`ingredient_match_override` is unique on (`household_id`, `ingredient_normalized_name`, `target_kind`, `target_normalized_name`). `recipe_readiness` is derived data. The service rewrites it; users never edit it directly. `recipe_readiness` and `meal_plan_entry` reference their recipe together with its `household_id`, so neither can point at another household's recipe.
 
 ### Bills
 
@@ -326,7 +330,7 @@ The deal fields on `shopping_list_item` are a snapshot taken when the item is ad
 | `bill` | id, household\_id (nullable), owner\_user\_id, name, amount, category, recurrence\_unit (day/week/month/year, nullable for a one-time bill), interval, anchor\_date, reminder\_days\_before (default 3), autopay, visibility (household/personal), is\_subscription, last\_used\_confirmed\_at (nullable), archived\_at (nullable), created\_at |
 | `bill_payment_log` | id, bill\_id, occurrence\_date, paid\_date (nullable), amount\_paid (nullable), is\_auto (boolean, default false), is\_skipped (boolean, default false), recorded\_by (nullable; null for automatic payments), created\_at |
 
-`bill` has a check constraint: `visibility = 'personal'` exactly when `household_id` is null. That constraint is what keeps personal bills out of every household's data. The next due date is not stored; it is derived from the recurrence fields and the payment log (see Recurrence).
+`bill` has a check constraint: `visibility = 'personal'` exactly when `household_id` is null. That constraint is what keeps personal bills out of every household's data. Only a bill's owner can change its visibility, which moves it between the household and the owner alone, and a household bill never moves to another household. A household bill's owner must be a member of its household when the owner is set. The next due date is not stored; it is derived from the recurrence fields and the payment log (see Recurrence).
 
 `bill_payment_log` is unique on (`bill_id`, `occurrence_date`). A row either records a payment (`paid_date` and `amount_paid` set) or a skip (`is_skipped` true, `paid_date` and `amount_paid` null); a check constraint enforces exactly one of the two.
 
@@ -338,7 +342,7 @@ The deal fields on `shopping_list_item` are a snapshot taken when the item is ad
 | `chore_completion` | id (client-generated UUID), chore\_id, occurrence\_date, completed\_by, completed\_at |
 | `errand` | id (client-generated UUID), household\_id, name, due\_date (nullable), status (open/done), added\_by, assigned\_to (nullable), completed\_at (nullable), completed\_by (nullable), created\_at |
 
-`chore_completion` is unique on (`chore_id`, `occurrence_date`). `assigned_to` must be null when `rotation_order` is set. Neither the next due date nor the current rotation position is stored; both are derived (see Recurrence and Rotation).
+`chore_completion` is unique on (`chore_id`, `occurrence_date`). `assigned_to` must be null when `rotation_order` is set. An errand's `completed_at` and `completed_by` are set exactly when its status is done. A chore's assignee and rotation members, and an errand's assignee, must be members of the household when they are set; an assignment that is not changed keeps a departed member's id, like other history. Neither the next due date nor the current rotation position is stored; both are derived (see Recurrence and Rotation).
 
 ### Notifications
 
@@ -350,7 +354,7 @@ The deal fields on `shopping_list_item` are a snapshot taken when the item is ad
 
 `notification_type` covers: `bill_due`, `chore_due`, `chore_rotation`, `list_activity`, `meal_reminder`, `weekly_meal_nudge`, `flyer_refresh`.
 
-`notification_preference` has one row per user and type, which is unique on (`user_id`, `notification_type`, `household_id`) with nulls treated as equal. `household_id` is set only for `weekly_meal_nudge`, whose opt-in is separate for each household. A missing row means the type's default from the Notifications section applies.
+`notification_preference` has one row per user and type, which is unique on (`user_id`, `notification_type`, `household_id`) with nulls treated as equal. `household_id` is set for `weekly_meal_nudge`, and only for it, since its opt-in is separate for each household. `push_subscription` is unique on (`user_id`, `endpoint`). A missing row means the type's default from the Notifications section applies.
 
 `notification` is the single outbox. It is unique on (`user_id`, `type`, `target_id`, `occurrence_key`), and that key is what makes a notification impossible to send twice. `occurrence_key` is defined per type in the Notifications section. A row with `sent_at` null and `send_after` in the past is due to send. `payload` carries the title, body, and deep-link target, including the household id.
 
@@ -703,13 +707,13 @@ A household picks **favorite stores** during setup. Favorites scope the default 
 
 - A household has **exactly one admin**. The role is transferable; the creator holds it initially.
 - The admin may remove any member. Any member may leave on their own.
-- **Departure prompts reassignment.** Before a removal or departure completes, the initiating user sees a departure preview of what the departing member owns: lists they created, chores assigned to them, errands assigned to them, and household bills they own. They must reassign each of these to a remaining member. The preview also lists every rotation the member is in, without asking for a reassignment: "Will be removed from rotation; the turn passes to Sam", naming whoever will hold the turn afterwards. The reassignment and the departure happen in one transaction; either both happen or neither does. The departing member is removed from each rotation order, which rebases it (see Rotation).
+- **Departure prompts reassignment.** Before a removal or departure completes, the initiating user sees a departure preview of what the departing member owns: lists they created, chores assigned to them, open errands assigned to them, and unarchived household bills they own. They must reassign each of these to a remaining member. Done errands and archived bills keep the departed member's id, like other history. The preview also lists every rotation the member is in, without asking for a reassignment: "Will be removed from rotation; the turn passes to Sam", naming whoever will hold the turn afterwards. The reassignment and the departure happen in one transaction; either both happen or neither does. The departing member is removed from each rotation order, which rebases it (see Rotation).
 - **The admin may leave without transferring first.** The longest-tenured remaining member, by `joined_at`, is promoted automatically, so a household is never left without an admin. The departing admin still completes the reassignment.
 - **When the last member leaves, the household and all its data are deleted**: lists, pantry, recipes, meal plans, match overrides, chores, errands, household bills, favorite stores, and invites. There is nothing to reassign in that case.
   - Deletion is irreversible. The confirmation names what will be lost, with counts ("This deletes 4 lists, 23 recipes, and 6 chores permanently"), and the user must type the household name to confirm.
 - Personal bills belong to the user, not the household. They leave with the user, survive household deletion, and are never reassigned.
 - Historical records (`chore_completion`, `bill_payment_log`) keep the departed user's id and render as "Former member" rather than being rewritten.
-- After a departure, the departed user's active household moves to their longest-held remaining membership, or to null (see Multi-household membership).
+- After a departure, the departed user's active household moves to their longest-held remaining membership, or to null (see Multi-household membership). Any of their unsent notifications about that household are deleted, since they could no longer open it.
 
 Technical Architecture specifies how these operations are implemented.
 

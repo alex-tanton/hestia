@@ -154,7 +154,7 @@ The E2E suite, which runs through Caddy, also includes a smoke test that externa
 
 ### Integration test database
 
-A disposable stack per run from the Supabase CLI (`supabase start`), migrated from `supabase/migrations/` so tests exercise the real schema, roles, and policies. Each test runs in a transaction that rolls back. Never test against a shared or development database.
+A disposable stack per run from the Supabase CLI (`supabase start`), migrated from `supabase/migrations/` so tests exercise the real schema, roles, and policies. Each test runs in a transaction that rolls back, and acts as a user with the same two statements `withUserDb` runs. Test files run one at a time, because fixtures share natural keys such as a postal code. Never test against a shared or development database.
 
 ### E2E journeys
 

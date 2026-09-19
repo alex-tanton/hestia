@@ -64,9 +64,8 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: 2.117.0
-      # Until the Supabase project is initialised there is nothing to start or test against.
+      # Applies supabase/migrations/ to a fresh local stack, the database the tests run against.
       - name: Start Supabase
-        if: hashFiles('supabase/config.toml') != ''
         run: supabase start
       - run: pnpm test:integration
 

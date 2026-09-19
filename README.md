@@ -21,7 +21,7 @@ chores for one household (or a few), running on a single home server. The specif
 | `packages/recurrence` | Anchored recurrence logic (pure, dependency-free) |
 | `packages/matching`   | Ingredient normalization and matching (pure)      |
 | `e2e`                 | Playwright journeys and Flipp fixtures            |
-| `supabase`            | Supabase CLI config and SQL migrations            |
+| `supabase`            | Supabase CLI config, SQL migrations, and seed     |
 | `docker`              | Compose file, Caddyfile, Kong config, Dockerfiles |
 | `scripts`             | `deploy.sh` and `generate-secrets.sh`             |
 
@@ -54,6 +54,35 @@ service against the local database, give it one and point `DATABASE_URL` at it:
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
   -c "alter role hearth_service with login password 'hearth'"
 export DATABASE_URL=postgresql://hearth_service:hearth@127.0.0.1:54322/postgres
+```
+
+### Database
+
+| Command                 | Runs                                                                      |
+| ----------------------- | ------------------------------------------------------------------------- |
+| `supabase db reset`     | Recreates the local database and applies every migration                  |
+| `pnpm db:types`         | Regenerates `apps/service/src/db/types.ts` from the migrated local schema |
+| `pnpm db:seed`          | Creates the Seed Data users through GoTrue, then applies the seed SQL     |
+| `pnpm test:integration` | RLS and database tests; each test rolls back its own transaction          |
+
+Run `pnpm db:types` after every new migration and commit the result. `pnpm db:seed` needs `psql`
+on the path. It creates the five seed users (password `hearth-seed-pass-2026`) and prints the
+outstanding Oak Street invite's code and link token. It runs once per database: run
+`supabase db reset` before seeding again. It refuses a database or GoTrue that has any user other
+than the five seed users, so it cannot add them to a stack that real people use.
+
+To seed a Compose stack instead (development only, never production), point it at Caddy and at
+the `db` container's address on the Compose network (`hearth-compose` is the alias from "First
+start"):
+
+```sh
+set -a; . /srv/hearth/.env; set +a
+DB_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+  "$(hearth-compose ps --quiet db)")
+HEARTH_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
+  HEARTH_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+  HEARTH_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \
+  pnpm db:seed
 ```
 
 ## Deployment

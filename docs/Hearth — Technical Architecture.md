@@ -82,12 +82,18 @@ Operations that must touch rows a member cannot write directly — other members
 | Function | Caller check | Effect |
 | --- | --- | --- |
 | `public.create_household(name, postal_code, timezone)` | Caller is authenticated | Inserts the household and the caller's admin membership, and sets the caller's `profile.active_household_id` to it. `POST /api/households` calls this. |
-| `public.departure_preview(household_id, user_id)` | Caller is that user, or is admin | Returns the items to reassign: lists created, chores assigned, errands assigned, and household bills owned by the departing member. It also returns, for information only, each rotation the member is in and the member who will hold the turn after the removal. |
-| `public.depart_household(household_id, user_id, reassignments jsonb, confirm_name text)` | Caller is that user (leave), or is admin (remove) | In one transaction: apply every reassignment (and fail if any list, chore, errand, or bill is left unassigned), remove the member from rotation orders and rebase `rotation_offset`, delete the membership row, auto-promote the longest-tenured remaining member if the departing member was admin, and delete the household and all its data if no member remains. The last case requires `confirm_name` to equal the household name. It then moves the departed user's `active_household_id` to their longest-held remaining membership, or null. |
+| `public.departure_preview(household_id, user_id)` | Caller is that user, or is admin | Returns the items to reassign: lists created, chores assigned, open errands assigned, and unarchived household bills owned by the departing member. It also returns, for information only, each rotation the member is in and the member who will hold the turn after the removal, and, for the last member, the counts of what deleting the household would lose. |
+| `public.depart_household(household_id, user_id, reassignments jsonb, confirm_name text)` | Caller is that user (leave), or is admin (remove) | In one transaction: apply every reassignment (and fail if any list, chore, errand, or bill is left unassigned), remove the member from rotation orders and rebase `rotation_offset`, delete the membership row, auto-promote the longest-tenured remaining member if the departing member was admin, delete the departed member's unsent notifications about the household, and delete the household and all its data if no member remains. The last case requires `confirm_name` to equal the household name. It then moves the departed user's `active_household_id` to their longest-held remaining membership, or null. |
 | `public.transfer_admin(household_id, new_admin_id)` | Caller is admin; target is a member | Swaps the two roles |
 | `public.redeem_invite(token_or_code text)` | Caller is authenticated | Hashes the input, finds a live invite by `token_hash` or `code_hash`, inserts the membership (a no-op if one already exists), and sets `profile.active_household_id` |
+| `public.household_members(household_id)` | Caller is a member | Returns each member's user id, display name, role, and `joined_at`. `profile` is own-row only, so this is the only way to read a co-member's name, and it returns nothing else about them. `GET /households/:id/members` calls this. |
+| `public.mark_household_active(household_id)` | Caller is a member | Sets `household.last_active_at` to now if it is not already in the current UTC day. Members cannot update `household` directly, so the request-level activity stamp goes through this. |
 
-`reassignments` maps each owned list, chore, errand, and bill to a remaining member's id; rotation positions are never part of it. Deleting a household relies on `ON DELETE CASCADE` from `household` to every household-scoped table. `bill` cascades only household bills, because personal bills have a null `household_id`.
+`reassignments` is a JSON object mapping the id of each owned list, chore, errand, and bill to a remaining member's id; rotation positions are never part of it. A key the member does not own, or a value that is not a remaining member, fails the call.
+
+Invite credentials are stored as SHA-256 digests in lowercase hex. The service generates the link token as 32 random bytes, base64url-encoded, and the code as 8 random Crockford Base32 characters; the admin inserts the invite row with both digests. `redeem_invite` hashes its input as given to match `token_hash`, and to match `code_hash` it first decodes the input the Crockford way: case, spaces, and hyphens are ignored, I and L read as 1, O reads as 0, and anything that is not then 8 alphabet characters (U included) is not a code. An invite is live while `revoked_at` is null and `expires_at` is in the future.
+
+The functions report failures with SQLSTATEs the service maps to problem details: `42501` when the caller fails the check, `P0002` when the named user is not a member, `22023` for an invalid argument, `HR001` for an expired or revoked invite, `HR002` when no invite matches, `HR003` when a departure leaves something unassigned, and `HR004` when the typed household name does not match. Deleting a household relies on `ON DELETE CASCADE` from `household` to every household-scoped table. `bill` cascades only household bills, because personal bills have a null `household_id`.
 
 ## Deployment
 
@@ -206,7 +212,7 @@ Behaviour is specified in the Requirements document. This section gives the conf
 | `GOTRUE_SMTP_*` | Unset while magic link is disabled |
 | Rate limits | GoTrue's built-in per-IP auth limits at their defaults, keyed on `X-Forwarded-For` |
 
-- **Signup** goes through `POST /api/signup`. The service validates the email and the password (the common-password list from `packages/shared`), then calls GoTrue's `/signup` endpoint at `http://auth:9999`, passing `display_name` as `user_metadata` and the client's `X-Forwarded-For`. The `auth.users` trigger copies `display_name` into `profile`. The service returns GoTrue's session unchanged. Sign-in, token refresh, and sign-out go directly to GoTrue through Kong.
+- **Signup** goes through `POST /api/signup`. The service validates the email and the password (the common-password list from `packages/shared`), then calls GoTrue's `/signup` endpoint at `http://auth:9999`, passing `display_name` and the browser's `timezone` as `user_metadata` and the client's `X-Forwarded-For`. The `auth.users` trigger copies both into `profile`. The service returns GoTrue's session unchanged. Sign-in, token refresh, and sign-out go directly to GoTrue through Kong.
 - **Password change** (`POST /api/users/me/password`). The service first re-verifies the current password against GoTrue's password grant. It then applies the common-password check and calls GoTrue's `PUT /user` at `http://auth:9999` with the caller's own JWT. Re-verifying the current password is skipped only when the session's `amr` claim shows a recovery sign-in, which is how the reset link lands.
 - **Email change** (`POST /api/users/me/email`). The service re-verifies the current password, then calls the GoTrue admin API (`PUT /admin/users/:id` with `email_confirm: true`) using the service-role key. No mail is sent. The `profile` trigger syncs the new email.
 - **Password reset:** `docker compose exec hearth-service hearth-admin reset-password <email>` calls GoTrue's admin `generate_link` with type `recovery` and prints the resulting one-time link. The link expires after GoTrue's `GOTRUE_MAILER_OTP_EXP` (3600 seconds). Opening it lands on the PWA's set-new-password screen.
@@ -250,7 +256,7 @@ Offline-queueable writes (`POST /lists/:id/items`, `PATCH /lists/:id/items/:item
 - Errors return RFC 9457 problem details (`type`, `title`, `status`, `detail`) — never a bare string
 - Responses are camelCase; the database is snake\_case; mapping happens in one layer
 - No endpoint returns another household's data. The only responses that span households are the caller's membership list and the caller's own personal bills.
-- A request that names a household updates `household.last_active_at` if it has not already been updated that UTC day.
+- A request that names a household updates `household.last_active_at` if it has not already been updated that UTC day, through `public.mark_household_active`.
 - `isServerOwner` is true when the JWT's email equals `HEARTH_OWNER_EMAIL`, compared case-insensitively.
 
 ### Rate limits
@@ -491,16 +497,18 @@ Variants needed:
 | Child tables (`shopping_list_item`, `recipe_ingredient`, `chore_completion`, `bill_payment_log`) | Membership via the parent's `household_id`; for `bill_payment_log`, the parent bill's policy |
 | `recipe_readiness` | Membership in `household_id`. The service rewrites rows inside the request that changed a pantry item, recipe, or override, and in `refresh-deals`; no route edits it directly. |
 | `bill` | Membership when `visibility = 'household'`; `owner_user_id = auth.uid()` when personal |
-| `profile`, `notification_preference`, `push_subscription` | `id` or `user_id = auth.uid()` only |
-| `notification` | Select own rows (`user_id = auth.uid()`). Insert and update only unsent `list_activity` and `chore_rotation` rows whose recipient shares a household with the caller, which the request that causes them writes. All other rows are written by the service role in jobs. |
+| `profile`, `notification_preference`, `push_subscription` | `id` or `user_id = auth.uid()` only. A user updates only their own display name, timezone, active household (which must be one of their memberships), quiet hours, and household-bill setting; `email` follows `auth.users`. Co-members' names come from `household_members`, never from `profile`. |
+| `notification` | Select own rows (`user_id = auth.uid()`). Select, insert, update, and delete only unsent `list_activity` and `chore_rotation` rows whose target list or chore belongs to a household that both the caller and the recipient are members of, which the request that causes them writes (the batching upsert reads the row it extends; undoing a completion deletes it). All other rows are written by the service role in jobs. |
 | `household`, `household_member` | Select by membership. Inserts go only through `create_household` and `redeem_invite`, and deletes and role changes only through the other membership lifecycle functions. Direct updates to `household` name, postal code, and timezone require `role = 'admin'`. |
-| `household_invite` | Select, insert, and update (revoke) only when the caller is the admin of `household_id`. Redemption goes through `redeem_invite`, never direct access. |
-| `deal`, `deal_query_cache`, `postal_code_refresh` | Select, insert, and update where `postal_code` is the postal code of a household the caller belongs to |
+| `household_invite` | Select, insert, and update (revoke) only when the caller is the admin of `household_id`. The admin inserts only `household_id` and the two hashes; the other columns take their defaults, so an invite always starts now. The only updatable column is `revoked_at`, set once on an invite not yet revoked; there is no delete. Redemption goes through `redeem_invite`, never direct access. |
+| `deal`, `deal_query_cache`, `postal_code_refresh` | Select, insert, and update where `postal_code` is the postal code of a household the caller belongs to. No delete; pruning is a job. |
 | `app_error` | No direct access; written only through `public.record_app_error(fingerprint, message)`, a `security definer` function with `set search_path = ''`, granted to `anon` and `authenticated` |
 
 Every table has RLS enabled. A table without a policy denies everything, which is the correct default — an unprotected table is a bug, not a convenience.
 
-System health reads its figures through `public.system_health()`, a `security definer` function with `set search_path = ''`. It returns only aggregates: the newest `deal.fetched_at`, the newest `notification.sent_at`, and the `app_error` rows seen in the last 24 hours. The service calls it only from `GET /api/health/deep`, after checking that the caller is the server owner.
+Privileges are granted explicitly too. The migrations revoke Supabase's default grants on `public` from `anon` and `authenticated`, and `EXECUTE` on new functions from `PUBLIC`. `authenticated` holds only the table and column privileges its policies need, and `EXECUTE` on the functions above; `anon` holds nothing but `EXECUTE` on `record_app_error`. The policy helpers besides `is_household_member` (`is_household_admin`, `is_member_postal_code`, `can_access_bill`, `can_write_member_notification`) are `security definer` with `set search_path = ''` in the same way.
+
+System health reads its figures through `public.system_health()`, a `security definer` function with `set search_path = ''`. It returns only aggregates: the newest `deal.fetched_at`, the newest `notification.sent_at`, and the `app_error` rows seen in the last 24 hours. The service calls it only from `GET /api/health/deep`, after checking that the caller is the server owner, as `service_role`: its error messages span every household, so only `service_role` may execute it.
 
 ### Indexes
 
@@ -552,7 +560,7 @@ Errors are recorded in the `app_error` table, grouped by fingerprint:
 - **Service:** unhandled request and job errors are recorded by the service.
 - **PWA:** errors are posted to `POST /api/client-error`, which is rate-limited.
 
-Both call `public.record_app_error` in their own short transaction, as `anon`. The function upserts the row on `fingerprint`: it inserts with `count` 1 and `first_seen` and `last_seen` set to now, or else increments `count` and updates `last_seen`. The fingerprint is a SHA-256 of the source (`service` or `web`), the error name, and the route or job name. The message is truncated to 500 characters.
+Both call `public.record_app_error` in their own short transaction, as `anon`. The function upserts the row on `fingerprint`: it inserts with `count` 1 and `first_seen` and `last_seen` set to now, or else increments `count` and updates `last_seen`. The fingerprint is a SHA-256, in lowercase hex, of the source (`service` or `web`), the error name, and the route or job name, joined by newlines. The message is truncated to 500 characters.
 
 **Scrubbing is mandatory.** A recorded message may identify a route, a job name, a user id, or a household id. It must never contain bill amounts, list or pantry contents, recipe data, email addresses, or auth tokens. The scrubbing rules live in one function in `packages/shared`, used by both the service and the PWA, and are unit tested, since a leak here is a privacy failure in an app about someone's household finances.
 
@@ -566,7 +574,7 @@ Both call `public.record_app_error` in their own short transaction, as `anon`. T
 
   It also reports the top 10 `app_error` fingerprints by count seen in the last 24 hours, and the per-merchant skip rates since the last refresh. A service that is up while its deal refresh has silently stopped is the realistic failure mode, and this is where it shows.
 
-Docker healthchecks on each Compose service so a hung container restarts rather than sitting broken.
+Every Compose service has a Docker healthcheck. Docker Engine restarts a container only when it exits, never because its healthcheck fails, and the stack runs only the seven services above, with nothing that restarts unhealthy containers. The healthchecks gate startup ordering and `docker compose up --wait`, make a hung container visible as `unhealthy` in `docker compose ps`, and back the deploy's health gate. The server owner restarts a hung service with `docker compose restart <service>`.
 
 ### Alerting
 

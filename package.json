@@ -14,6 +14,8 @@
     "typecheck": "pnpm -r --parallel typecheck",
     "test": "pnpm -r test",
     "test:integration": "pnpm -r --if-present test:integration",
+    "db:types": "pnpm --filter @hearth/service db:types",
+    "db:seed": "pnpm --filter @hearth/service db:seed",
     "test:e2e": "pnpm --filter @hearth/e2e test:e2e",
     "build": "pnpm -r --if-present build"
   },

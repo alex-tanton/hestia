@@ -8,8 +8,8 @@ Realistic fixtures for development, mockups, and tests. Use this instead of inve
 
 Seeding runs in two steps:
 
-1. `supabase/seed/seed-users.ts` creates the users through the GoTrue admin API, which fires the `profile` trigger.
-2. `supabase/seed/seed.sql` inserts everything else.
+1. `supabase/seed/seed-users.ts` creates the users through the GoTrue admin API, passing each user's display name and timezone as `user_metadata`, which fires the `profile` trigger.
+2. `supabase/seed/seed.sql` inserts everything else. `seed-users.ts` applies it with `psql` once the users exist; `pnpm db:seed` runs both. The SQL runs once per database, so a second seeding starts from `supabase db reset`. Both steps refuse a database that has any user besides the five below, which keeps the seed users and their published password off any stack real people use.
 
 Every seed user has the development-only password `hearth-seed-pass-2026`.
 
@@ -103,8 +103,8 @@ The remaining stores stay unfavorited so browse-all has something to show beyond
 
 - A postal code (`99999`) that returns no merchants, for that error state
 - An outstanding invite to Oak Street, created 2 days ago, with code `K7M2Q9XA`; the development token is printed by the seed script
-- An expired Oak Street invite, created 9 days ago
-- A revoked Oak Street invite, for the revoked-invite state
+- An expired Oak Street invite, created 9 days ago, with code `EXP9RD2Z`
+- A revoked Oak Street invite, created 4 days ago and revoked 3 days ago, with code `RVK4D3NM`, for the revoked-invite state
 
 ## Deal fixtures
 
