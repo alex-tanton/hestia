@@ -14,8 +14,9 @@ export default defineConfig({
       // Engineering Practices: a waiting service worker must never reload under the user;
       // the shell shows an "Update available" affordance instead.
       registerType: 'prompt',
-      // An external registerSW.js keeps the CSP's script-src 'self' free of inline scripts.
-      injectRegister: 'script',
+      // The app registers the worker itself through useRegisterSW (the update prompt), so no
+      // registration script is injected; this also keeps the CSP's script-src 'self' inline-free.
+      injectRegister: false,
       includeAssets: ['icons/*.png'],
       manifest: {
         name: 'Hearth',

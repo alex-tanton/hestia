@@ -65,6 +65,7 @@ hearth/
 | Push | `web-push` |
 | Offline persistence | `idb-keyval`, as the storage for TanStack Query's persister |
 | Logging | `pino` |
+| Routing | `react-router` (data router, with lazy route modules per pillar) |
 
 There is no client-state library. The active household comes from the server (`GET /api/users/me`), and UI state lives in React state or context.
 
@@ -106,7 +107,7 @@ There is no client-state library. The active household comes from the server (`G
 - Query keys are structured and household-scoped: `['lists', householdId]`, `['deals', householdId, query]`. Switching household must invalidate cleanly, which structured keys make trivial.
 - **Optimistic updates** for every offline-queueable write (see PWA implementation), with explicit rollback and an error toast on failure
 - Each time the app opens, the PWA compares the browser's timezone with `profile.timezone` and sends `PATCH /api/users/me` if they differ
-- Components are function components with hooks. No class components.
+- Components are function components with hooks. No class components. The single exception is the error boundary, since React can only catch render errors in a class.
 - A component that fetches does not also lay out complex UI — split container from presentation once a file passes 150 lines
 - Tailwind utilities inline; extract to a component when a pattern repeats, not to an `@apply` class
 - Section color is provided by context from the route, so a `DealCard` does not hardcode green

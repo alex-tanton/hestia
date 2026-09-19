@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App.tsx';
 
 describe('App', () => {
-  it('renders the app name as the page heading', () => {
+  it('lands on the This Week dashboard', async () => {
     render(<App />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Hearth' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
   });
 });

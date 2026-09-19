@@ -37,7 +37,7 @@ Each pillar owns a hue, applied to its tab icon, screen headers, primary buttons
 
 In the light theme, section-colored text and filled buttons with white text use the "Light text and filled buttons" value. The 600 value is used only for icons and large accents (large text, focus rings, the tab-bar active icon), where 3:1 is the requirement. In the dark theme, filled buttons use the 400 value as the fill with `#0F172A` text.
 
-Each section color needs a full ramp (50–900) generated from the listed 600 value, since tints are needed for backgrounds and badges.
+Each section color needs a full ramp (50–900) generated from the listed 600 value, since tints are needed for backgrounds and badges. Every listed 600 value is the 600 stop of a Tailwind v3 palette (green, amber, blue, violet, slate), so those palettes, in their published hex values, are the ramps. Tints use the 50 stop in the light theme and the 950 stop in the dark theme. Dashboard slate is also the neutral scale, whose 50 stop is `bg-raised`, so its tint is its badge background instead.
 
 ### Semantic colors
 
@@ -180,7 +180,7 @@ Borders carry most of the separation work rather than shadows. Flat surfaces wit
 
 **Lucide** — open source, MIT licensed, tree-shakeable, and already idiomatic in React. 20px default, 24px in the tab bar, 1.5px stroke.
 
-Icons in the tab bar are always paired with a text label. Standalone icon buttons carry an `aria-label`.
+Tab icons: Dashboard `layout-dashboard`, Lists `shopping-cart`, Meals `utensils-crossed`, Bills `receipt`, Chores `clipboard-check`. The same icon marks its section on dashboard cards and the coming-soon state. Icons in the tab bar are always paired with a text label. Standalone icon buttons carry an `aria-label`.
 
 ### Motion
 

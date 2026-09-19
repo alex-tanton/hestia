@@ -61,7 +61,16 @@ Pillars ship across four releases, but the shell is complete from v1.0. All five
 
 That state uses the pillar's own section color and icon, names what the section will do in one line, and offers nothing to tap. Hiding the tab instead would mean the navigation visibly changes shape between releases, which reads as instability rather than progress.
 
-The dashboard behaves the same way: its four cards are laid out from v1.0, with unshipped pillars showing a muted placeholder in their section color. The layout never reflows as pillars arrive.
+The pillar's sub-tabs are part of what it offers, so they appear only once the pillar ships; until then every path under the tab, including a sub-tab deep link, shows the coming-soon state, and the top bar's title is the tab label. The one-line descriptions:
+
+| Tab | Coming-soon line |
+| --- | --- |
+| Lists | "Shared shopping lists built from this week's deals at your stores." |
+| Meals | "Plan the week's meals around what's on sale and in your pantry." |
+| Bills | "Track bills and subscriptions and see what is due each week." |
+| Chores | "Keep recurring chores and one-off errands on a shared schedule." |
+
+The dashboard behaves the same way: its four cards are laid out from v1.0, with unshipped pillars showing a muted placeholder in their section color. A placeholder shows the pillar's icon and card title in its section color with the line "Coming soon", and, like the coming-soon state, is not a link. The layout never reflows as pillars arrive.
 
 ## Components
 

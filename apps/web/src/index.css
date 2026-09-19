@@ -1,6 +1,394 @@
 @import 'tailwindcss';
 
-/* Branding: both themes follow prefers-color-scheme, with no manual toggle. */
+/*
+ * Hearth design tokens (Branding). Raw hex lives only in this file; components use the role
+ * utilities below (bg-base, text-section, ...), so a section color is never hardcoded.
+ * Tailwind's default palette, type scale, radii, and shadows are removed on purpose: the only
+ * values reachable from a utility are the Branding ones.
+ */
+@theme {
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  /* Design: the sidebar layout starts above 1024px, so 1024 itself keeps the bottom tab bar. */
+  --breakpoint-lg: 64.0625rem;
+
+  --text-display: 1.875rem;
+  --text-display--line-height: 1.2;
+  --text-display--font-weight: 700;
+  --text-h1: 1.5rem;
+  --text-h1--line-height: 1.3;
+  --text-h1--font-weight: 600;
+  --text-h2: 1.25rem;
+  --text-h2--line-height: 1.35;
+  --text-h2--font-weight: 600;
+  --text-h3: 1.0625rem;
+  --text-h3--line-height: 1.4;
+  --text-h3--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-body--font-weight: 400;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--font-weight: 400;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--font-weight: 600;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.12);
+
+  --animate-sheet-in: sheet-in 200ms ease-out;
+  --animate-sheet-out: sheet-out 150ms ease-out;
+  --animate-fade-in: fade-in 150ms ease-out;
+  --animate-fade-out: fade-out 150ms ease-out;
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes sheet-out {
+    to {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+}
+
+@theme inline {
+  --color-base: var(--bg-base);
+  --color-raised: var(--bg-raised);
+  --color-border: var(--border);
+  --color-input: var(--border-input);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-overlay: var(--overlay);
+
+  --color-section: var(--section);
+  --color-section-accent: var(--section-accent);
+  --color-on-section: var(--on-section);
+  --color-section-tint: var(--section-tint);
+  --color-section-badge: var(--section-badge);
+  --color-on-section-badge: var(--on-section-badge);
+
+  --color-danger: var(--danger);
+  --color-danger-accent: var(--danger-accent);
+  --color-on-danger: var(--on-danger);
+  --color-danger-badge: var(--danger-badge);
+  --color-on-danger-badge: var(--on-danger-badge);
+  --color-warning: var(--warning);
+  --color-warning-accent: var(--warning-accent);
+  --color-on-warning: var(--on-warning);
+  --color-warning-badge: var(--warning-badge);
+  --color-on-warning-badge: var(--on-warning-badge);
+  --color-success: var(--success);
+  --color-success-accent: var(--success-accent);
+  --color-on-success: var(--on-success);
+  --color-info: var(--info);
+  --color-info-accent: var(--info-accent);
+  --color-on-info: var(--on-info);
+  --color-neutral-badge: var(--neutral-badge);
+  --color-on-neutral-badge: var(--on-neutral-badge);
+}
+
+/*
+ * Section ramps (Branding: a full 50-900 ramp per section, from its 600 value). Each listed 600
+ * value is the 600 stop of a Tailwind v3 palette, so those palettes are the ramps, kept in hex
+ * because the Branding contrast table is measured on these exact values.
+ */
+:root {
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+  --green-200: #bbf7d0;
+  --green-300: #86efac;
+  --green-400: #4ade80;
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --green-700: #15803d;
+  --green-800: #166534;
+  --green-900: #14532d;
+  --green-950: #052e16;
+
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-300: #fcd34d;
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --amber-800: #92400e;
+  --amber-900: #78350f;
+  --amber-950: #451a03;
+
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #172554;
+
+  --violet-50: #f5f3ff;
+  --violet-100: #ede9fe;
+  --violet-200: #ddd6fe;
+  --violet-300: #c4b5fd;
+  --violet-400: #a78bfa;
+  --violet-500: #8b5cf6;
+  --violet-600: #7c3aed;
+  --violet-700: #6d28d9;
+  --violet-800: #5b21b6;
+  --violet-900: #4c1d95;
+  --violet-950: #2e1065;
+
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  --white: #ffffff;
+}
+
+/* Light theme roles. */
 :root {
   color-scheme: light dark;
+
+  --bg-base: var(--white);
+  --bg-raised: var(--slate-50);
+  --border: var(--slate-200);
+  --border-input: var(--slate-500);
+  --text-primary: var(--slate-900);
+  --text-secondary: var(--slate-600);
+  --text-muted: var(--slate-500);
+  --overlay: rgb(15 23 42 / 0.4);
+
+  /* <section>: text and filled buttons; -accent: icons, large accents, focus rings (3:1 only). */
+  --dashboard: var(--slate-600);
+  --dashboard-accent: var(--slate-600);
+  --on-dashboard: var(--white);
+  --dashboard-tint: var(--slate-100);
+  --dashboard-badge: var(--slate-100);
+  --on-dashboard-badge: var(--slate-700);
+
+  --lists: var(--green-700);
+  --lists-accent: var(--green-600);
+  --on-lists: var(--white);
+  --lists-tint: var(--green-50);
+  --lists-badge: var(--green-100);
+  --on-lists-badge: var(--green-800);
+
+  --meals: var(--amber-700);
+  --meals-accent: var(--amber-600);
+  --on-meals: var(--white);
+  --meals-tint: var(--amber-50);
+  --meals-badge: var(--amber-100);
+  --on-meals-badge: var(--amber-800);
+
+  --bills: var(--blue-600);
+  --bills-accent: var(--blue-600);
+  --on-bills: var(--white);
+  --bills-tint: var(--blue-50);
+  --bills-badge: var(--blue-100);
+  --on-bills-badge: var(--blue-800);
+
+  --chores: var(--violet-600);
+  --chores-accent: var(--violet-600);
+  --on-chores: var(--white);
+  --chores-tint: var(--violet-50);
+  --chores-badge: var(--violet-100);
+  --on-chores-badge: var(--violet-800);
+
+  --danger: #dc2626;
+  --danger-accent: #dc2626;
+  --on-danger: var(--white);
+  --danger-badge: #fee2e2;
+  --on-danger-badge: #991b1b;
+
+  /* Warning 600 fails 3:1 on white, so light warning icons use the 700 value too. */
+  --warning: #a16207;
+  --warning-accent: #a16207;
+  --on-warning: var(--white);
+  --warning-badge: #fef9c3;
+  --on-warning-badge: #854d0e;
+
+  --success: #047857;
+  --success-accent: #059669;
+  --on-success: var(--white);
+
+  --info: #0e7490;
+  --info-accent: #0891b2;
+  --on-info: var(--white);
+
+  --neutral-badge: var(--slate-100);
+  --on-neutral-badge: var(--slate-700);
+}
+
+/* Dark theme roles: 400 values for text, icons, and fills, with slate-900 text on fills. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-base: var(--slate-900);
+    --bg-raised: var(--slate-800);
+    --border: var(--slate-700);
+    --border-input: var(--slate-400);
+    --text-primary: var(--slate-100);
+    --text-secondary: var(--slate-300);
+    --text-muted: var(--slate-400);
+    --overlay: rgb(2 6 23 / 0.6);
+
+    --dashboard: var(--slate-400);
+    --dashboard-accent: var(--slate-400);
+    --on-dashboard: var(--slate-900);
+    --dashboard-tint: var(--slate-800);
+    --dashboard-badge: var(--slate-800);
+    --on-dashboard-badge: var(--slate-200);
+
+    --lists: var(--green-400);
+    --lists-accent: var(--green-400);
+    --on-lists: var(--slate-900);
+    --lists-tint: var(--green-950);
+    --lists-badge: var(--green-950);
+    --on-lists-badge: var(--green-300);
+
+    --meals: var(--amber-400);
+    --meals-accent: var(--amber-400);
+    --on-meals: var(--slate-900);
+    --meals-tint: var(--amber-950);
+    --meals-badge: var(--amber-950);
+    --on-meals-badge: var(--amber-300);
+
+    --bills: var(--blue-400);
+    --bills-accent: var(--blue-400);
+    --on-bills: var(--slate-900);
+    --bills-tint: var(--blue-950);
+    --bills-badge: var(--blue-950);
+    --on-bills-badge: var(--blue-300);
+
+    --chores: var(--violet-400);
+    --chores-accent: var(--violet-400);
+    --on-chores: var(--slate-900);
+    --chores-tint: var(--violet-950);
+    --chores-badge: var(--violet-950);
+    --on-chores-badge: var(--violet-300);
+
+    --danger: #f87171;
+    --danger-accent: #f87171;
+    --on-danger: var(--slate-900);
+    --danger-badge: #450a0a;
+    --on-danger-badge: #fca5a5;
+
+    --warning: #facc15;
+    --warning-accent: #facc15;
+    --on-warning: var(--slate-900);
+    --warning-badge: #422006;
+    --on-warning-badge: #fde047;
+
+    --success: #34d399;
+    --success-accent: #34d399;
+    --on-success: var(--slate-900);
+
+    --info: #22d3ee;
+    --info-accent: #22d3ee;
+    --on-info: var(--slate-900);
+
+    --neutral-badge: var(--slate-700);
+    --on-neutral-badge: var(--slate-200);
+  }
+}
+
+/* The route (or a dashboard card) picks the section; every section-* utility follows it. */
+:root,
+[data-section='dashboard'] {
+  --section: var(--dashboard);
+  --section-accent: var(--dashboard-accent);
+  --on-section: var(--on-dashboard);
+  --section-tint: var(--dashboard-tint);
+  --section-badge: var(--dashboard-badge);
+  --on-section-badge: var(--on-dashboard-badge);
+}
+[data-section='lists'] {
+  --section: var(--lists);
+  --section-accent: var(--lists-accent);
+  --on-section: var(--on-lists);
+  --section-tint: var(--lists-tint);
+  --section-badge: var(--lists-badge);
+  --on-section-badge: var(--on-lists-badge);
+}
+[data-section='meals'] {
+  --section: var(--meals);
+  --section-accent: var(--meals-accent);
+  --on-section: var(--on-meals);
+  --section-tint: var(--meals-tint);
+  --section-badge: var(--meals-badge);
+  --on-section-badge: var(--on-meals-badge);
+}
+[data-section='bills'] {
+  --section: var(--bills);
+  --section-accent: var(--bills-accent);
+  --on-section: var(--on-bills);
+  --section-tint: var(--bills-tint);
+  --section-badge: var(--bills-badge);
+  --on-section-badge: var(--on-bills-badge);
+}
+[data-section='chores'] {
+  --section: var(--chores);
+  --section-accent: var(--chores-accent);
+  --on-section: var(--on-chores);
+  --section-tint: var(--chores-tint);
+  --section-badge: var(--chores-badge);
+  --on-section-badge: var(--on-chores-badge);
+}
+
+@layer base {
+  body {
+    @apply bg-base font-sans text-body text-primary antialiased;
+  }
+
+  /* Design: focus-visible is a 2px outline in the section color, never the browser default. */
+  :focus-visible {
+    outline: 2px solid var(--section-accent);
+    outline-offset: 2px;
+  }
+
+  /* Branding: all motion drops to instant under reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

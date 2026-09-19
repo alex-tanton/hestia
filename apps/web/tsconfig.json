@@ -6,7 +6,12 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
-    "types": ["vite/client", "vite-plugin-pwa/client", "@testing-library/jest-dom/vitest"]
+    "types": [
+      "vite/client",
+      "vite-plugin-pwa/client",
+      "vite-plugin-pwa/react",
+      "@testing-library/jest-dom/vitest"
+    ]
   },
   "include": ["src", "vite.config.ts"]
 }
