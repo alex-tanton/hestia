@@ -13,7 +13,7 @@ TypeScript everywhere. One language across frontend, service, and tests means sh
 | Tool | Version | Notes |
 | --- | --- | --- |
 | Node | 24 LTS | Pinned in `.nvmrc` and the Dockerfile |
-| TypeScript | Current stable | `strict: true`, no exceptions |
+| TypeScript | Newest stable that `typescript-eslint` supports | `strict: true`, no exceptions. Type-aware linting cannot yet run on the 7.x native compiler, so 6.0 at kickoff |
 | pnpm | 10 | Workspaces; faster and stricter than npm for a monorepo. Pinned via `packageManager` in `package.json` |
 | React | Current stable |  |
 | Vite | Current stable | Frontend build and dev server |
@@ -309,7 +309,7 @@ The PWA reports unexpected errors to `POST /api/client-error` after passing them
 
 ### Install and notifications
 
-- Web app manifest with name, section-neutral theme color, maskable icons at 192 and 512px, `display: standalone`
+- Web app manifest with name, section-neutral theme color (the Dashboard slate `#475569`), maskable icons at 192 and 512px, `display: standalone`
 - Install prompt offered after onboarding completes, not on first paint
 - **iOS specifically**: web push only works once the PWA is added to the home screen, so on iOS the notification permission request must follow install, and onboarding should explain the sequence rather than requesting permission that will fail
 - Permission is requested with context — after a user enables their first notification type, never on load

@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+  - packages/*
+  - e2e
+
+# Exact versions only, so "pinned in the lockfile" also holds for anything added later.
+saveExact: true
+
+onlyBuiltDependencies:
+  - esbuild
+
+peerDependencyRules:
+  allowedVersions:
+    # jsx-a11y 6.10.2's peer range predates ESLint 10; it uses no API ESLint 10 removed.
+    eslint-plugin-jsx-a11y>eslint: '10'

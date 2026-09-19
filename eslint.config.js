@@ -1,0 +1,58 @@
+import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactHooks from 'eslint-plugin-react-hooks';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+
+export default tseslint.config(
+  {
+    ignores: [
+      '**/node_modules/',
+      '**/dist/',
+      '**/dev-dist/',
+      '**/coverage/',
+      '**/playwright-report/',
+      '**/test-results/',
+      'docs/',
+      'e2e/fixtures/',
+      'supabase/.temp/',
+      'supabase/.branches/',
+    ],
+  },
+  js.configs.recommended,
+  tseslint.configs.strictTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          // Root-level config files are not part of any workspace tsconfig.
+          allowDefaultProject: ['*.js', '*.mjs', 'apps/web/scripts/*.mjs'],
+        },
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'error',
+    },
+  },
+  {
+    files: ['**/*.js', '**/*.mjs'],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: { globals: globals.node },
+    rules: { '@typescript-eslint/explicit-module-boundary-types': 'off' },
+  },
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    extends: [jsxA11y.flatConfigs.strict, reactHooks.configs.flat.recommended],
+    languageOptions: { globals: globals.browser },
+  },
+  {
+    // Engineering Practices allows non-null assertions in tests only.
+    files: ['**/*.test.{ts,tsx}', '**/*.spec.ts', 'e2e/**/*.ts'],
+    rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+  },
+  prettier,
+);

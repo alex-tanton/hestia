@@ -1,0 +1,11 @@
+docs/
+e2e/fixtures/
+pnpm-lock.yaml
+BUILD_PROMPT.md
+**/dist/
+**/dev-dist/
+**/coverage/
+**/playwright-report/
+**/test-results/
+supabase/.temp/
+supabase/.branches/

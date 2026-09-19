@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+
+/* Branding: both themes follow prefers-color-scheme, with no manual toggle. */
+:root {
+  color-scheme: light dark;
+}

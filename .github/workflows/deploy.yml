@@ -1,0 +1,44 @@
+name: Deploy
+
+# Deploys only a main commit whose CI run passed. The job runs on the production box, so
+# it must never run a pull request's code: the trigger is limited to main, and the job
+# re-checks that the CI run came from a push to main.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: [self-hosted, hearth]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+      # Engineering Practices: a change touching only docs/ is not deployed. main is
+      # squash-merged, so each push is one commit.
+      - id: changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qv '^docs/'; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Only docs/ changed; skipping deploy."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.changes.outputs.deploy == 'true'
+        run: scripts/deploy.sh
+        env:
+          HEARTH_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}

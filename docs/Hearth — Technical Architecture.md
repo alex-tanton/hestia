@@ -166,7 +166,7 @@ Per-IP rate limits only work if the real client IP survives every hop: Funnel â†
 - Caddy: `trusted_proxies static 127.0.0.1/32 ::1/128` and `client_ip_headers X-Forwarded-For`, so it treats Funnel's forwarded address as the client IP and passes it on in `X-Forwarded-For`.
 - Kong: `trusted_ips` set to the Compose network's subnet, `real_ip_header X-Forwarded-For`.
 - GoTrue: `GOTRUE_RATE_LIMIT_HEADER=X-Forwarded-For`.
-- Fastify: `trustProxy` set to the Compose network's subnet.
+- Fastify: `trustProxy` set to the Compose network's subnet, read from `HEARTH_TRUSTED_PROXIES` (comma-separated addresses or CIDRs; unset trusts no proxy).
 
 Phase 0 must verify this end to end, by making requests from two different outside networks and confirming that each IP appears in both the service and GoTrue logs. If Funnel does not forward the client address, that is recorded as a known limitation before Phase 1 begins.
 
