@@ -1,0 +1,319 @@
+# Hearth — Engineering Practices
+
+2026-09-17 · @Someone
+
+TypeScript monorepo, Tailwind, comprehensive testing including Playwright E2E, Conventional Commits with PR-based review and GitHub Actions checks.
+
+## Stack and repository
+
+TypeScript everywhere. One language across frontend, service, and tests means shared types and no context switching.
+
+### Versions
+
+| Tool | Version | Notes |
+| --- | --- | --- |
+| Node | 24 LTS | Pinned in `.nvmrc` and the Dockerfile |
+| TypeScript | Current stable | `strict: true`, no exceptions |
+| pnpm | 10 | Workspaces; faster and stricter than npm for a monorepo. Pinned via `packageManager` in `package.json` |
+| React | Current stable |  |
+| Vite | Current stable | Frontend build and dev server |
+| Fastify | Current stable | Service HTTP |
+| Tailwind | Current stable |  |
+| Vitest | Current stable | Unit and integration |
+| Playwright | Current stable | E2E |
+| Postgres | Follows the pinned Supabase image | Never pinned independently |
+
+"Current stable" means the latest stable release at project kickoff, pinned to an exact version in the lockfile. After that, versions change only through Dependabot PRs.
+
+### Monorepo layout
+
+```
+hearth/
+  apps/
+    web/                 React PWA
+    service/             Fastify API, jobs, and the hearth-admin CLI
+  packages/
+    shared/              Zod schemas, domain types, shared constants
+    recurrence/          Anchored recurrence logic (pure, heavily tested)
+    matching/            Ingredient normalization and fuzzy matching (pure)
+  supabase/
+    migrations/          Timestamped SQL
+    seed/                Seed-users script (GoTrue admin API) and seed SQL
+  e2e/                   Playwright specs and fixtures
+    fixtures/flipp/      Raw Flipp responses and normalized NormalizedDeal JSON
+  docker/                Compose file, Caddyfile, Kong config, Dockerfiles
+```
+
+### Why these packages are separate
+
+`recurrence` and `matching` are extracted deliberately. Both are pure functions with intricate rules and high bug potential, both are used by the service and (for preview rendering) the frontend, and both benefit from exhaustive table-driven tests without any surrounding infrastructure. Keeping them dependency-free makes that possible.
+
+`shared` holds the Zod schemas that define the API contract, the common-password list, and the error-scrubbing function. The service validates with the schemas, the frontend infers its types from them, and the OpenAPI document is generated from them. There is no separate type declaration that can drift.
+
+### Key libraries
+
+| Need | Choice |
+| --- | --- |
+| Server state | TanStack Query v5 |
+| Validation | Zod |
+| Query builder | Kysely (no ORM) |
+| Rate limiting | `@fastify/rate-limit` |
+| Fuzzy matching | `fastest-levenshtein` or `fuse.js`, whichever wins the Phase 3 benchmark on real deal strings |
+| Dates | `date-fns` plus `@date-fns/tz` for timezone handling |
+| Recipe parsing | `cheerio` for HTML, with JSON-LD extracted directly |
+| Ingredient lines | An ingredient-line parser library (`parse-ingredient`, or an equivalent chosen in Phase 3) |
+| Push | `web-push` |
+| Offline persistence | `idb-keyval`, as the storage for TanStack Query's persister |
+| Logging | `pino` |
+
+There is no client-state library. The active household comes from the server (`GET /api/users/me`), and UI state lives in React state or context.
+
+`date-fns` over Luxon or Day.js because the timezone-aware arithmetic in anchored recurrence needs to be explicit and tree-shakeable. Never use the raw `Date` constructor for date math.
+
+### Tooling
+
+- **ESLint** flat config, `typescript-eslint` strict, plus `eslint-plugin-jsx-a11y` given the WCAG AA target
+- **Prettier** for formatting, no arguments about style
+- **Husky** and **lint-staged** running lint, format, and typecheck on staged files pre-commit
+- **commitlint** enforcing Conventional Commits on the commit message
+
+## Code conventions
+
+### TypeScript
+
+- `strict: true`. No `any` — use `unknown` and narrow. A genuine escape hatch needs an inline comment explaining why.
+- No non-null assertions (`!`) outside tests. Handle the null case.
+- Types inferred from Zod schemas rather than hand-written alongside them
+- Discriminated unions for anything with variants (deal price forms, notification types, job outcomes)
+- **Money is integer cents.** Every price calculation (parsing, unit price, discount, subtotal, monthly and annualized amounts) works in integer cents, with half-up rounding wherever it divides. It converts to or from `numeric(10,2)` only at the database boundary, and formats as dollars only for display. Floating-point dollars are never used for arithmetic.
+- Exported functions have explicit return types; internal ones may infer
+
+### Naming
+
+| Thing | Convention |
+| --- | --- |
+| Files | `kebab-case.ts`; React components `PascalCase.tsx` |
+| Components, types | `PascalCase` |
+| Functions, variables | `camelCase` |
+| Constants | `SCREAMING_SNAKE` only for true module-level constants |
+| Database | `snake_case`, singular table names |
+| API responses | `camelCase`, mapped in one layer |
+| Booleans | `is`/`has`/`should` prefix |
+
+### Frontend patterns
+
+- **Server state belongs to TanStack Query**, never copied into component state. The active household id is server state: it is read from `GET /api/users/me` and changed with `PUT /api/users/me/active-household`. Transient UI state lives in React state, or in context when several components share it.
+- Query keys are structured and household-scoped: `['lists', householdId]`, `['deals', householdId, query]`. Switching household must invalidate cleanly, which structured keys make trivial.
+- **Optimistic updates** for every offline-queueable write (see PWA implementation), with explicit rollback and an error toast on failure
+- Each time the app opens, the PWA compares the browser's timezone with `profile.timezone` and sends `PATCH /api/users/me` if they differ
+- Components are function components with hooks. No class components.
+- A component that fetches does not also lay out complex UI — split container from presentation once a file passes 150 lines
+- Tailwind utilities inline; extract to a component when a pattern repeats, not to an `@apply` class
+- Section color is provided by context from the route, so a `DealCard` does not hardcode green
+
+### Service patterns
+
+- Route handler → validate with Zod → call a service function → map to response. Handlers stay thin.
+- Business logic lives in service functions that take a Kysely instance, so tests inject a transaction that rolls back
+- Every handler reaches the database only through `withUserDb(jwt, fn)` (Technical Architecture). A code path using the service role for a user request is a review blocker; the four sanctioned service-role uses are listed in Technical Architecture.
+- Kysely for queries, no ORM. The schema is small and RLS interacts badly with ORM abstractions. Kysely's database types are generated from the migrated schema.
+
+### Comments
+
+Comment the *why*, never the *what*. Particularly warranted: anchored-recurrence edge cases, each price parser's motivating example, and any Flipp response quirk being worked around. A parser without an example string in a comment will be misunderstood later.
+
+## Testing
+
+Comprehensive coverage including E2E. Tests never make live network calls — Flipp is always a fixture or a test double in tests.
+
+### Layers
+
+| Layer | Tool | Scope |
+| --- | --- | --- |
+| Unit | Vitest | Pure logic: recurrence, matching, price parsing, normalization |
+| Component | Vitest + Testing Library | React components with their states |
+| Integration | Vitest against a real Postgres | Service functions, RLS policies, job idempotency |
+| E2E | Playwright | User journeys through the real stack |
+
+### What gets exhaustive unit tests
+
+These three are where correctness actually lives, and each deserves table-driven tests over many cases:
+
+- **Recurrence.** Occurrence derivation from the anchor for every unit and interval, late completion not shifting the series, chores rolling forward past a missed occurrence, early completion closing the upcoming occurrence, bills staying overdue until paid or skipped, month-end clamping (a 31st anchor through February and back), leap years, rotation assignment from `rotation_offset` and the completion count, rebasing the offset when a member departs, and deleting the most recent completion moving the rotation and next due back. Autopay logging never backfills an occurrence dated before the bill's `created_at` date; an integration test runs `log-autopay` against such a bill and asserts that the earlier occurrence stays overdue.
+- **Price parsing.** Each parser against real recorded strings, plus the skip path (including rebates and BOGO with no base price) and the rounding rules. Every new Flipp format encountered in the wild gets a test case added before the parser is changed.
+- **Matching and normalization.** Punctuation, quantity, unit, descriptor, and brand stripping; singularization; token containment at the 0.85 threshold; pantry-beats-sale; overrides; and specifically the false-positive cases — "chicken breast" must not match "chicken broth", and this should be an explicit named test.
+
+### RLS testing is mandatory
+
+Integration tests must include an explicit isolation suite: a user in household A attempting to read and write every household-B resource, asserting failure at the database level. This is the one test suite whose absence would undermine the entire security model.
+
+Also tested: personal bills invisible to household members, admin-only actions rejected for non-admins, a removed member losing access immediately, every membership lifecycle function refusing a caller who fails its check, only a household's admin reading or writing its invites, deleting a chore completion other than the most recent returning `409`, and undoing a completion deleting its unsent `chore_rotation` row.
+
+The E2E suite, which runs through Caddy, also includes a smoke test that external `POST /auth/v1/signup` and `PUT /auth/v1/user` are refused, including percent-encoded and doubled-slash variants of the paths.
+
+### Integration test database
+
+A disposable stack per run from the Supabase CLI (`supabase start`), migrated from `supabase/migrations/` so tests exercise the real schema, roles, and policies. Each test runs in a transaction that rolls back. Never test against a shared or development database.
+
+### E2E journeys
+
+Playwright covering, at minimum:
+
+1. Sign up with email and password, create household, set postal code and favorites, reach the dashboard
+2. Search deals, add items to a list, check them off
+3. Two browser contexts on one list — assert realtime propagation between members
+4. Import a recipe by URL, view readiness, add missing ingredients to a list
+5. Create a recurring bill, mark it paid late, assert the next due date is the anchor and not the payment date
+6. Complete a rotating chore, assert rotation advances and next due is anchored, then undo it from the toast and assert both revert
+7. Go offline, check list items off and add one, return online, assert queued writes sync in order. The chores and errands portion (complete a chore, mark an errand done) is added in Phase 5.
+8. Remove a member, assert the reassignment prompt appears and blocks until resolved
+9. Switch household, assert no data from the previous household remains visible
+
+Each journey runs in both light and dark themes with `axe-core` assertions, satisfying the accessibility verification requirement.
+
+### Coverage
+
+90%+ on `packages/recurrence` and `packages/matching`, which should approach complete. 80%+ on the service. No numeric target on UI components — journeys matter more there than line coverage.
+
+### Not tested
+
+Flipp's live endpoint. Test doubles and fixtures only; hitting it from CI would be both flaky and rude.
+
+## Git and CI
+
+### Branching
+
+Trunk-based. `main` is always deployable. Work happens on short-lived branches merged by PR; nothing is pushed directly to `main`.
+
+The repository is private, and GitHub Free cannot enforce branch protection on private repositories, so "every change via PR" is a written convention. What enforces it is the deploy gate: only commits whose checks all passed are deployed.
+
+Branch naming: `feat/deal-search`, `fix/recurrence-month-clamp`, `chore/bump-deps`.
+
+### Conventional Commits
+
+Enforced by commitlint.
+
+```
+<type>(<scope>): <description>
+
+[body]
+[footer]
+```
+
+Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `build`, `ci`.
+
+Scopes matching the structure: `web`, `service`, `shared`, `recurrence`, `matching`, `db`, `e2e`, `docker`.
+
+```
+feat(service): add anchored recurrence advancement
+fix(matching): prevent chicken breast matching chicken broth
+test(recurrence): cover month-end clamping through February
+```
+
+Description in imperative mood, lowercase, no trailing period, under 72 characters.
+
+### Pull requests
+
+Every change goes through a PR, including solo work — the PR is where CI runs and where the diff gets read once more before it lands.
+
+PR requirements:
+
+- Title follows Conventional Commit format; it becomes the squash-merge commit
+- Description states what changed and why, and links the relevant document section for anything spec-driven
+- All CI checks green
+- UI changes include a screenshot in both themes
+- Squash merge only, so `main` history stays one commit per change
+
+### CI — GitHub Actions
+
+Every CI job runs on GitHub-hosted runners. On every PR:
+
+| Job | Runs |
+| --- | --- |
+| `lint` | ESLint and Prettier check |
+| `typecheck` | `tsc --noEmit` across all workspaces |
+| `test-unit` | Vitest unit and component tests |
+| `test-integration` | Vitest against `supabase start`, migrations applied |
+| `test-e2e` | Playwright against a built app and the `supabase start` stack |
+| `build` | Production builds of web and service |
+
+Jobs run in parallel where possible. E2E is the slow one; it runs on PRs and on `main`, not on every push to a branch.
+
+**On merge to `main`: deploy automatically.** The `deploy` job, and nothing else, runs on a self-hosted Actions runner on the box. The runner connects outbound to GitHub, so no inbound port is opened. **A self-hosted runner never runs PR jobs**, because a PR's code would then run on the production machine.
+
+The deploy job runs only once every check has passed for the merged commit. It then:
+
+1. builds the service image and the PWA locally on the box, tagging the image with the commit SHA (there is no image registry)
+2. takes a database backup (`docker compose exec backup /backup.sh`)
+3. applies pending migrations with the Supabase CLI
+4. restarts `hearth-service` and `caddy` on the new build
+
+Safeguards, given this deploys straight to the only environment there is:
+
+- A failed backup or a failed migration aborts the deploy without restarting anything
+- Health checks gate the restart; a service that fails `GET /api/health` within 60 seconds is rolled back to the previous locally built image tag
+- Deploys are skipped when the only changes are under `docs/`
+
+### Dependencies
+
+Dependabot weekly, grouped by ecosystem. Security updates are reviewed within 7 days; the rest batch monthly.
+
+### What lands in the repo
+
+Committed: source, migrations, Flipp fixtures, `.env.example`, the Compose file, Caddyfile, Kong config, and these specification documents under `docs/`.
+
+Never committed: `.env`, backups, database dumps, VAPID keys, or anything containing real household data.
+
+## PWA implementation
+
+### Service worker
+
+Built with **Workbox** via `vite-plugin-pwa`. Hand-rolling a service worker for offline queueing and cache versioning is a known source of subtle bugs.
+
+Caching strategy by asset type:
+
+| Asset | Strategy |
+| --- | --- |
+| App shell (JS, CSS, HTML) | Precache, revisioned at build |
+| Fonts | None needed — system fonts only |
+| Deal images | Loaded directly from Flipp's image CDN (cross-origin, allowed by the CSP's `img-src`); cache-first, 7-day expiry, 100-entry cap |
+| API responses | Not cached by the service worker; TanStack Query's persisted cache handles this |
+
+**Update handling**: a new service worker activates on next load rather than immediately. When one is waiting, show a subtle "Update available" affordance rather than reloading under the user — a forced reload mid-shopping-trip would be a genuine annoyance.
+
+### Offline data
+
+TanStack Query's persister writes its cache to IndexedDB through `idb-keyval`. The cache holds the last-synced shopping lists, meal plan, chores, errands, and bills for the active household, so a cold start offline renders from the last known state rather than empty.
+
+### The write queue
+
+The part most likely to be implemented incorrectly, so the rules are explicit. The queue *is* TanStack Query's paused mutations. There is no custom queue, no `client_mutation` table, and no server-side dedupe middleware.
+
+- Only the writes the Requirements document lists are queueable. v1.0 covers list item add, check, uncheck, and edit; v1.3 adds chore complete and errand done. Every other mutation is disabled while offline.
+- Each queueable mutation has a default `mutationFn` registered with `setMutationDefaults`, so paused mutations can resume after a reload. They are persisted along with the query cache via `idb-keyval`.
+- Every queueable mutation carries a `scope` id: `list:<listId>`, `chore:<choreId>`, or `errand:<errandId>`. Mutations in the same scope run one at a time, **in the order they were made**.
+- The UI applies the change optimistically and marks the row pending (reduced opacity, clock icon)
+- Writes are idempotent, so replaying a write that already landed changes nothing:
+  - Inserts carry a client-generated UUID primary key and use `on conflict do nothing`.
+  - Updates send absolute values (`status: 'bought'`), never toggles or increments.
+  - A chore-completion Undo tapped while the completion is still queued removes the paused mutation from the queue. Deleting a completion that has already been sent is online-only.
+  - A chore completion relies on the unique (`chore_id`, `occurrence_date`) key, with `occurrence_date` computed by the client at the time of the action.
+- A write that fails permanently (410, 403, or 404 for a deleted parent) is dropped from the queue and surfaced once, naming what could not be saved. It is never retried forever and never silently discarded.
+- Conflicts: **the last write to arrive wins**, per the Requirements document. This includes its documented quirk: a late offline "in cart" can move a "bought" item back to "in cart".
+- The queue survives a page reload and a browser restart; it is not in memory
+- `updated_at` exists only where the UI needs it: `shopping_list.updated_at`, shown as a list's last activity
+
+### Client error reporting
+
+The PWA reports unexpected errors to `POST /api/client-error` after passing them through the shared scrubbing function in `packages/shared`. It reports from global `error` and `unhandledrejection` handlers and from React error boundaries, at most 10 reports per page load. There is no third-party error SDK.
+
+### Install and notifications
+
+- Web app manifest with name, section-neutral theme color, maskable icons at 192 and 512px, `display: standalone`
+- Install prompt offered after onboarding completes, not on first paint
+- **iOS specifically**: web push only works once the PWA is added to the home screen, so on iOS the notification permission request must follow install, and onboarding should explain the sequence rather than requesting permission that will fail
+- Permission is requested with context — after a user enables their first notification type, never on load
+
+### Performance budget
+
+On a mid-range phone over 3G: first contentful paint under 2s, interactive under 3.5s. The app shell stays under 200KB gzipped, which the absence of web fonts and a UI library makes comfortable. Route-level code splitting per pillar.
