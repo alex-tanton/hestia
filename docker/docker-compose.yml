@@ -1,0 +1,297 @@
+# Hearth production stack (Technical Architecture, "Compose layout").
+#
+# The Supabase services are the subset of Supabase's official self-hosting compose that Hearth
+# uses. db, auth, and realtime are pinned to the same images the pinned Supabase CLI runs for
+# `supabase start`, so a production dump restores into local development unchanged.
+#
+# Run from the repository root, with the host's .env (which lives outside the checkout):
+#   docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml up -d
+# scripts/deploy.sh is the normal way to build and restart; see README "Deployment".
+
+name: hearth
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '5'
+
+services:
+  db:
+    image: public.ecr.aws/supabase/postgres:17.6.1.167
+    restart: unless-stopped
+    logging: *logging
+    networks: [hearth]
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      # Realtime polls constantly; below fatal the log is mostly its queries.
+      - -c
+      - log_min_messages=fatal
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_EXP: 3600
+      # Read by docker/db/hearth-service-login.sql, at initialization and on every deploy.
+      HEARTH_SERVICE_DB_PASSWORD: ${HEARTH_SERVICE_DB_PASSWORD:?set in .env}
+    volumes:
+      # init-scripts run as postgres, migrations as supabase_admin, each set in name order after
+      # the image's own. They run only when the data volume is empty.
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      # The role migration itself, so a fresh database (first start, or a restore target) has
+      # hearth_service before the service first connects. Re-applying it later is a no-op.
+      - ../supabase/migrations/20260919060000_hearth_service_role.sql:/docker-entrypoint-initdb.d/migrations/99-z1-hearth-service-role.sql:ro
+      - ./db/hearth-service-login.sql:/docker-entrypoint-initdb.d/migrations/99-z2-hearth-service-login.sql:ro
+      - db-data:/var/lib/postgresql/data
+      # The image keeps its pgsodium root key here; it must outlive the container.
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: [CMD, pg_isready, -U, postgres, -h, localhost]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth:
+    image: public.ecr.aws/supabase/gotrue:v2.196.0
+    restart: unless-stopped
+    logging: *logging
+    networks: [hearth]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${HEARTH_ORIGIN:?set in .env}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: ${HEARTH_ORIGIN}
+      GOTRUE_URI_ALLOW_LIST: ${HEARTH_ORIGIN},${HEARTH_ORIGIN}/**
+      GOTRUE_DISABLE_SIGNUP: 'false'
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:?set in .env}
+      GOTRUE_JWT_ISSUER: ${HEARTH_ORIGIN}/auth/v1
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
+      GOTRUE_EXTERNAL_PHONE_ENABLED: 'false'
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: 'false'
+      # Auth configuration table. No GOTRUE_SMTP_* while magic link is disabled.
+      GOTRUE_MAILER_AUTOCONFIRM: 'true'
+      GOTRUE_PASSWORD_MIN_LENGTH: 8
+      GOTRUE_MAILER_OTP_LENGTH: 6
+      GOTRUE_MAILER_OTP_EXP: 3600
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      # Per-IP limits key on the client address Caddy and Kong pass along.
+      GOTRUE_RATE_LIMIT_HEADER: X-Forwarded-For
+    healthcheck:
+      test: [CMD, wget, --no-verbose, --tries=1, --spider, http://localhost:9999/health]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  realtime:
+    image: public.ecr.aws/supabase/realtime:v2.130.0
+    restart: unless-stopped
+    logging: *logging
+    networks:
+      hearth:
+        # Realtime takes the tenant id from the first label of the Host header Kong sends, and
+        # the self-hosted tenant it seeds is "realtime-dev".
+        aliases: [realtime-dev.supabase-realtime]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY:?set in .env}
+      API_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE:?set in .env}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: '10000'
+      APP_NAME: realtime
+      SEED_SELF_HOST: 'true'
+      RUN_JANITOR: 'true'
+      DISABLE_HEALTHCHECK_LOGGING: 'true'
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer ${ANON_KEY:?set in .env}" http://localhost:4000/api/tenants/realtime-dev/health'
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  kong:
+    image: kong/kong:3.9.3
+    restart: unless-stopped
+    logging: *logging
+    networks: [hearth]
+    depends_on:
+      auth:
+        condition: service_healthy
+      realtime:
+        condition: service_healthy
+    entrypoint: [/bin/sh, /home/kong/kong-entrypoint.sh]
+    volumes:
+      - ./kong.yml:/home/kong/temp.yml:ro
+      - ./kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_DNS_NOT_FOUND_TTL: 1
+      KONG_DNS_VALID_TTL: 5
+      KONG_PLUGINS: key-auth,acl,request-termination
+      # One nginx worker per CPU by default, ~50 MB each; two are plenty for a household.
+      KONG_NGINX_WORKER_PROCESSES: 2
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_PROXY_ACCESS_LOG: /dev/stdout combined
+      # Client IP passthrough: only Caddy, on this network, may name the client.
+      KONG_TRUSTED_IPS: &subnet 172.16.238.0/24
+      KONG_REAL_IP_HEADER: X-Forwarded-For
+      KONG_REAL_IP_RECURSIVE: 'on'
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:?set in .env}
+    healthcheck:
+      test: [CMD, kong, health]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hearth-service:
+    image: hearth-service:${HEARTH_TAG:-current}
+    build:
+      context: ..
+      dockerfile: docker/service.Dockerfile
+      args:
+        HEARTH_REVISION: ${HEARTH_TAG:-dev}
+    restart: unless-stopped
+    logging: *logging
+    networks: [hearth]
+    depends_on:
+      db:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://hearth_service:${HEARTH_SERVICE_DB_PASSWORD}@db:5432/postgres
+      HEARTH_TRUSTED_PROXIES: *subnet
+      LOG_LEVEL: info
+      HEARTH_ORIGIN: ${HEARTH_ORIGIN}
+      HEARTH_OWNER_EMAIL: ${HEARTH_OWNER_EMAIL:?set in .env}
+      HEARTH_MAGIC_LINK_ENABLED: ${HEARTH_MAGIC_LINK_ENABLED:-false}
+      GOTRUE_URL: http://auth:9999
+      JWT_SECRET: ${JWT_SECRET}
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?set in .env}
+      # System health reports the newest backup's modification time from here.
+      BACKUP_DIR: /backups
+    volumes:
+      - ${BACKUP_DIR:?set in .env}:/backups:ro
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  caddy:
+    image: hearth-caddy:${HEARTH_TAG:-current}
+    build:
+      context: ..
+      dockerfile: docker/caddy.Dockerfile
+      args:
+        HEARTH_REVISION: ${HEARTH_TAG:-dev}
+        HEARTH_MAGIC_LINK_ENABLED: ${HEARTH_MAGIC_LINK_ENABLED:-false}
+    restart: unless-stopped
+    logging: *logging
+    networks: [hearth]
+    depends_on:
+      hearth-service:
+        condition: service_started
+      kong:
+        condition: service_started
+    # Tailscale Funnel on the host forwards here; nothing else is published.
+    ports:
+      - 127.0.0.1:8080:8080
+    environment:
+      HEARTH_ORIGIN: ${HEARTH_ORIGIN}
+      # Funnel's connection to the published port reaches Caddy from this address; see the
+      # Caddyfile's trusted_proxies.
+      HEARTH_HOST_GATEWAY: &gateway 172.16.238.1
+    healthcheck:
+      test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:8080/index.html]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  backup:
+    image: prodrigestivill/postgres-backup-local:17-debian-d257e5d
+    restart: unless-stopped
+    logging: *logging
+    networks: [hearth]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ${BACKUP_DIR}:/backups
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: postgres
+      # pg_dump needs to read every schema, auth included.
+      POSTGRES_USER: supabase_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Gzip-compressed plain SQL. --clean --if-exists lets the dump replace the objects a fresh
+      # Supabase Postgres container already has (README, "Restore").
+      POSTGRES_EXTRA_OPTS: -Z1 --clean --if-exists
+      SCHEDULE: 0 2 * * *
+      TZ: UTC
+      BACKUP_KEEP_DAYS: 14
+      BACKUP_KEEP_WEEKS: 8
+      BACKUP_KEEP_MONTHS: 6
+      HEALTHCHECK_PORT: 8080
+    healthcheck:
+      test: [CMD, curl, -fsS, -o, /dev/null, http://localhost:8080/]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  hearth:
+    name: hearth
+    ipam:
+      config:
+        - subnet: *subnet
+          gateway: *gateway
+
+volumes:
+  db-data:
+  db-config:

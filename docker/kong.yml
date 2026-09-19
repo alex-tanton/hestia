@@ -1,0 +1,114 @@
+# Kong declarative config: auth and realtime only (Technical Architecture, "Compose layout").
+# There are deliberately no rest, graphql, storage, functions, analytics, or meta routes.
+# $SUPABASE_ANON_KEY and $SUPABASE_SERVICE_KEY are substituted by kong-entrypoint.sh.
+_format_version: '2.1'
+_transform: true
+
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: $SUPABASE_ANON_KEY
+  - username: service_role
+    keyauth_credentials:
+      - key: $SUPABASE_SERVICE_KEY
+
+acls:
+  - consumer: anon
+    group: anon
+  - consumer: service_role
+    group: admin
+
+services:
+  # The email links GoTrue issues (password recovery) are opened in a browser with no apikey.
+  - name: auth-v1-open
+    url: http://auth:9999/verify
+    routes:
+      - name: auth-v1-open
+        strip_path: true
+        paths:
+          - /auth/v1/verify
+
+  - name: auth-v1
+    url: http://auth:9999/
+    routes:
+      - name: auth-v1-all
+        strip_path: true
+        paths:
+          - /auth/v1/
+    plugins:
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow:
+            - admin
+            - anon
+
+  # supabase-js sends the apikey in the WebSocket URL's query string.
+  - name: realtime-v1-ws
+    url: http://realtime-dev.supabase-realtime:4000/socket
+    protocol: ws
+    routes:
+      - name: realtime-v1-ws
+        strip_path: true
+        paths:
+          - /realtime/v1/
+    plugins:
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow:
+            - admin
+            - anon
+
+  # Realtime's REST API (broadcast over HTTP) is open to clients; its tenant-management and
+  # OpenAPI endpoints are not.
+  - name: realtime-v1-rest
+    url: http://realtime-dev.supabase-realtime:4000/api
+    protocol: http
+    routes:
+      - name: realtime-v1-rest
+        strip_path: true
+        paths:
+          - /realtime/v1/api
+    plugins:
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow:
+            - admin
+            - anon
+
+  - name: realtime-v1-rest-tenants
+    url: http://realtime-dev.supabase-realtime:4000/api/tenants
+    routes:
+      - name: realtime-v1-rest-tenants
+        strip_path: true
+        paths:
+          - /realtime/v1/api/tenants
+    plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Access is forbidden.
+
+  - name: realtime-v1-rest-openapi
+    url: http://realtime-dev.supabase-realtime:4000/api/openapi
+    routes:
+      - name: realtime-v1-rest-openapi
+        strip_path: true
+        paths:
+          - /realtime/v1/api/openapi
+    plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Access is forbidden.

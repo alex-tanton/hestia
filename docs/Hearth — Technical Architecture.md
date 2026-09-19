@@ -60,7 +60,7 @@ select set_config('request.jwt.claims', $1, true);  -- the verified claims as JS
 
 Inside that transaction `auth.uid()` returns the caller and every RLS policy applies. `fn` receives a Kysely instance bound to the transaction. The transaction commits when `fn` resolves and rolls back when it throws. Because both settings are transaction-local, nothing leaks to the next request that reuses the connection. There is no other way for a request handler to reach the database.
 
-The service connects as a dedicated login role, `hearth_service`. It is granted membership in `authenticated`, `anon`, and `service_role`, so it can switch into each one; it has no other privileges.
+The service connects as a dedicated login role, `hearth_service`. It is granted membership in `authenticated`, `anon`, and `service_role`, so it can switch into each one; it has no other privileges. It is `NOINHERIT`, so until a transaction switches role it holds none of those roles' rights either, and a query that forgets to switch fails. The role and its memberships come from the first migration (`supabase/migrations/20260919060000_hearth_service_role.sql`), which creates it `NOLOGIN` with no password; see Secrets for how it gets its login.
 
 The service role is used in exactly four places, none of which acts on behalf of a user's data request:
 
@@ -119,6 +119,8 @@ A single `docker-compose.yml`. It includes the subset of Supabase's official sel
 
 The production stack runs none of these: PostgREST, Storage, imgproxy, analytics/Logflare, vector, edge functions, or Studio. Studio is used only in local development, where the Supabase CLI provides it.
 
+The file is `docker/docker-compose.yml`, with the Caddyfile, Kong config, Dockerfiles, and database init scripts beside it. Every image is pinned to an exact tag. `db`, `auth`, and `realtime` use the same images the pinned Supabase CLI runs for `supabase start`, so a production dump restores into local development unchanged. All services share one bridge network, `hearth`, with the fixed subnet `172.16.238.0/24` and gateway `172.16.238.1`, which the trusted-proxy settings below name. Only Caddy publishes a port. The database lives in the named volume `hearth_db-data`. `hearth-service` and `caddy` are built on the box as `hearth-service:<sha>` and `hearth-caddy:<sha>`; the Compose file runs whichever image is tagged `current`.
+
 The PWA is built to static assets at deploy time and served by Caddy directly. There is no Node process serving the frontend.
 
 ### Ingress
@@ -163,12 +165,12 @@ Caddy sets these headers on every response:
 
 Per-IP rate limits only work if the real client IP survives every hop: Funnel → Caddy → Kong → GoTrue, and Funnel → Caddy → service. If it is lost, every request appears to come from 127.0.0.1 or a container address, and each per-IP limit collapses into one global limit.
 
-- Caddy: `trusted_proxies static 127.0.0.1/32 ::1/128` and `client_ip_headers X-Forwarded-For`, so it treats Funnel's forwarded address as the client IP and passes it on in `X-Forwarded-For`.
-- Kong: `trusted_ips` set to the Compose network's subnet, `real_ip_header X-Forwarded-For`.
+- Caddy: `trusted_proxies static 127.0.0.1/32 ::1/128 172.16.238.1/32`, `trusted_proxies_strict`, and `client_ip_headers X-Forwarded-For`, so it treats Funnel's forwarded address as the client IP. Funnel connects to `127.0.0.1:8080` on the host, but Docker's port publishing delivers that connection to Caddy from the Compose network's gateway, `172.16.238.1`, so the gateway is the hop Caddy must trust; the loopback entries only matter if Caddy runs on the host network. Strict mode takes the right-most untrusted address, so a client cannot choose its IP by sending its own `X-Forwarded-For`. When proxying, Caddy replaces `X-Forwarded-For` with that single address.
+- Kong: `trusted_ips` set to the Compose network's subnet, `172.16.238.0/24`, with `real_ip_header X-Forwarded-For` and `real_ip_recursive on`.
 - GoTrue: `GOTRUE_RATE_LIMIT_HEADER=X-Forwarded-For`.
-- Fastify: `trustProxy` set to the Compose network's subnet, read from `HEARTH_TRUSTED_PROXIES` (comma-separated addresses or CIDRs; unset trusts no proxy).
+- Fastify: `trustProxy` set to the Compose network's subnet, read from `HEARTH_TRUSTED_PROXIES` (comma-separated addresses or CIDRs; unset trusts no proxy). The Compose file sets it to `172.16.238.0/24`.
 
-Phase 0 must verify this end to end, by making requests from two different outside networks and confirming that each IP appears in both the service and GoTrue logs. If Funnel does not forward the client address, that is recorded as a known limitation before Phase 1 begins.
+Verified locally in Phase 0 (2026-09-19): requests to `127.0.0.1:8080` carrying `X-Forwarded-For: 203.0.113.7` and then `198.51.100.9` appeared with those addresses as the request IP in the service's logs and as `remote_addr` in GoTrue's logs (a failed password grant), and a client-supplied address in front of the forwarded one did not change the result. Whether Funnel itself sets `X-Forwarded-For` can only be checked once the owner enables Funnel. The check: from two different outside networks (for example home Wi-Fi and a phone on cellular), open `https://<machine>.<tailnet>.ts.net/api/health` and attempt a sign-in with a wrong password, then confirm each network's public IP appears in `docker compose logs hearth-service` (`remoteAddress`) and `docker compose logs auth` (`remote_addr`). If Funnel does not forward the client address, that is recorded here as a known limitation before Phase 1 begins.
 
 ### Secrets
 
@@ -181,8 +183,11 @@ A single `.env` file on the host, never committed. Contents:
 - `HEARTH_OWNER_EMAIL`
 - `HEARTH_MAGIC_LINK_ENABLED` (default `false`)
 - `BACKUP_DIR`, the path of the backup directory on the second disk
+- Realtime's `REALTIME_SECRET_KEY_BASE` and `REALTIME_DB_ENC_KEY`
 
-A `.env.example` with placeholder values is committed for reference.
+A `.env.example` with placeholder values is committed for reference. `scripts/generate-secrets.sh` writes a fresh `.env` from it with every secret generated, and refuses to overwrite an existing one. The file lives at `/srv/hearth/.env`, outside the repository checkout, because the deploy runner wipes its checkout on every run; `scripts/deploy.sh` reads it from there (`HEARTH_ENV_FILE` overrides the path).
+
+The `hearth_service` password never enters a migration. `docker/db/hearth-service-login.sql` runs `alter role hearth_service with login password …` from `HEARTH_SERVICE_DB_PASSWORD`, which the Compose file passes into the `db` container. It runs when the database is first initialized, right after the role migration, and again on every deploy after migrations, so it is idempotent and also applies a rotated password.
 
 ### Environments
 
@@ -521,7 +526,8 @@ Automated and scheduled, since this is the only copy of the data.
 - **A backup is taken immediately before every deploy's migrations** (`docker compose exec backup /backup.sh`). If the backup fails, the deploy is aborted.
 - `BACKUP_DIR` is also mounted read-only into `hearth-service`, so that System health can report the newest backup file's modification time.
 - **Restores are tested quarterly.** An untested backup is an assumption. The restore procedure lives in the repo's README.
-- `pg_dump` does not include roles. A restore therefore targets a fresh container of the same pinned Supabase Postgres image, which creates the Supabase roles (`anon`, `authenticated`, `service_role`, `supabase_auth_admin`, and the rest) at initialization. `hearth_service` is recreated from its migration. The dump restores the schemas, including `auth`, the data, the grants, the RLS policies, and the functions.
+- `pg_dump` does not include roles. A restore therefore targets a fresh container of the same pinned Supabase Postgres image, which creates the Supabase roles (`anon`, `authenticated`, `service_role`, `supabase_auth_admin`, and the rest) at initialization. `hearth_service` is recreated from its migration. `supabase_realtime_admin` is created by Realtime rather than the image, so the restore procedure creates it before loading the dump. The dump restores the schemas, including `auth`, the data, the grants, the RLS policies, and the functions.
+- The dump is taken as `supabase_admin` with `--clean --if-exists`, so loading it replaces the objects a fresh container already has, such as the initial `auth` tables.
 
 ## Observability
 

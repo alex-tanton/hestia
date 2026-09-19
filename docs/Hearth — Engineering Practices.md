@@ -253,6 +253,9 @@ Safeguards, given this deploys straight to the only environment there is:
 - A failed backup or a failed migration aborts the deploy without restarting anything
 - Health checks gate the restart; a service that fails `GET /api/health` within 60 seconds is rolled back to the previous locally built image tag
 - Deploys are skipped when the only changes are under `docs/`
+- A deploy starts any Supabase service that is not running but never recreates one, so it never restarts the database. A change to the `db`, `auth`, `realtime`, `kong`, or `backup` configuration or image is applied by hand with `docker compose up -d` after a backup (README, "Deploy").
+
+The deploy is `scripts/deploy.sh`, which the workflow runs from the runner's checkout of the merged commit.
 
 ### Dependencies
 

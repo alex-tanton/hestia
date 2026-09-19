@@ -21,6 +21,9 @@ chores for one household (or a few), running on a single home server. The specif
 | `packages/recurrence` | Anchored recurrence logic (pure, dependency-free) |
 | `packages/matching`   | Ingredient normalization and matching (pure)      |
 | `e2e`                 | Playwright journeys and Flipp fixtures            |
+| `supabase`            | Supabase CLI config and SQL migrations            |
+| `docker`              | Compose file, Caddyfile, Kong config, Dockerfiles |
+| `scripts`             | `deploy.sh` and `generate-secrets.sh`             |
 
 ## Development
 
@@ -42,3 +45,182 @@ pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
 
 Commits follow Conventional Commits, checked by commitlint in a Husky hook; the pre-commit hook
 lints, formats, and typechecks.
+
+`supabase start` runs Postgres, GoTrue, Realtime, Kong, and Studio locally and applies
+`supabase/migrations/`. The migrations create `hearth_service` without a login; to run the
+service against the local database, give it one and point `DATABASE_URL` at it:
+
+```sh
+psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+  -c "alter role hearth_service with login password 'hearth'"
+export DATABASE_URL=postgresql://hearth_service:hearth@127.0.0.1:54322/postgres
+```
+
+## Deployment
+
+Production is one Linux box running `docker/docker-compose.yml` (Technical Architecture,
+"Deployment"), published to the internet by Tailscale Funnel. Only Caddy publishes a port, and
+only on `127.0.0.1:8080`.
+
+### Pinned names
+
+> **The machine name and the tailnet name are pinned and must never change.** The origin
+> `https://<machine>.<tailnet>.ts.net` is baked into every installed PWA, its service worker,
+> and every push subscription. Renaming the machine or the tailnet strands installed apps and
+> invalidates every push subscription. The owner fills these in once, here and as
+> `HEARTH_ORIGIN` in `/srv/hearth/.env`.
+
+| Name    | Value                                |
+| ------- | ------------------------------------ |
+| Machine | `<machine>`                          |
+| Tailnet | `<tailnet>`                          |
+| Origin  | `https://<machine>.<tailnet>.ts.net` |
+
+### Host prerequisites
+
+- Ubuntu Server LTS (any Docker-capable Linux), with a **second physical disk** mounted for
+  backups, for example at `/mnt/backup`
+- Docker Engine with the Compose plugin
+- The Supabase CLI, version 2.117.0 (the version CI uses), for migrations
+- Node 24, git, and curl
+- Tailscale, logged in to the tailnet, with Funnel allowed for this machine in the tailnet policy
+- For automatic deploys: a GitHub Actions self-hosted runner registered to this repository with
+  the labels `self-hosted` and `hearth`, running as a user in the `docker` group. It runs only
+  `.github/workflows/deploy.yml`, never pull-request jobs.
+
+### First start
+
+Run from a checkout of `main`. The `.env` lives outside the checkout, at `/srv/hearth/.env`,
+because the runner wipes its checkout on every run.
+
+```sh
+sudo install -d -m 700 -o "$USER" /srv/hearth
+sudo install -d -m 755 /mnt/backup/hearth
+HEARTH_ORIGIN=https://<machine>.<tailnet>.ts.net HEARTH_OWNER_EMAIL=<owner email> \
+  BACKUP_DIR=/mnt/backup/hearth scripts/generate-secrets.sh
+
+alias hearth-compose='docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml'
+hearth-compose build
+hearth-compose up -d --wait
+curl -fsS http://127.0.0.1:8080/api/health
+
+sudo tailscale funnel --bg http://127.0.0.1:8080
+```
+
+`generate-secrets.sh` refuses to overwrite an existing `.env`: regenerating secrets on a live
+install signs everyone out and breaks the database login. `scripts/deploy.sh` also works as the
+first start; it builds, starts the stack, and migrates in one step.
+
+The commands in this README use the `hearth-compose` alias above, run from the repository root.
+
+### Deploy
+
+A merge to `main` whose CI passed runs `scripts/deploy.sh` on the self-hosted runner (skipped
+when only `docs/` changed). It can also be run by hand from a checkout. It:
+
+1. records the images tagged `current` as the rollback target
+2. builds `hearth-service:<sha>` and `hearth-caddy:<sha>` (the PWA is built into the Caddy image)
+3. starts any Supabase service that is not running, without recreating any
+4. takes a backup with `hearth-compose exec -T backup /backup.sh`; a failure aborts the deploy
+5. applies pending migrations with `supabase migration up`; a failure aborts the deploy
+6. re-applies the `hearth_service` login from `.env` (`docker/db/hearth-service-login.sql`)
+7. tags the new images `current` and recreates `hearth-service` and `caddy` on them
+8. polls `GET http://127.0.0.1:8080/api/health` for 60 seconds; if it never succeeds, tags the
+   previous images `current` again, recreates both containers, and exits non-zero
+
+Nothing is restarted before the backup and migrations succeed, and re-running a deploy of the
+same commit is harmless. The five newest SHA-tagged images of each kind are kept. To roll back
+by hand to an older build:
+
+```sh
+docker image ls 'hearth-*'
+docker tag hearth-service:<sha> hearth-service:current
+docker tag hearth-caddy:<sha> hearth-caddy:current
+hearth-compose up -d --no-deps hearth-service caddy
+```
+
+Migrations are forward-only, so rolling back images never rolls back the schema.
+
+A deploy never recreates `db`, `auth`, `realtime`, `kong`, or `backup`. After a change to their
+configuration or image tag, take a backup and apply it by hand with `hearth-compose up -d --wait`.
+
+## Backups
+
+The `backup` container runs `pg_dump` nightly at 02:00 UTC into `BACKUP_DIR` on the second disk,
+gzip-compressed, keeping 14 daily, 8 weekly, and 6 monthly dumps
+(`$BACKUP_DIR/{last,daily,weekly,monthly}/postgres-*.sql.gz`, each with a
+`postgres-latest.sql.gz` link). Every deploy takes one before migrating. To take one now:
+
+```sh
+hearth-compose exec -T backup /backup.sh
+```
+
+### Restore test (quarterly)
+
+An untested backup is an assumption. This restores the newest dump into a throwaway container of
+the same pinned Postgres image, leaving production untouched:
+
+```sh
+set -a; . /srv/hearth/.env; set +a
+DUMP="$BACKUP_DIR/last/postgres-latest.sql.gz"
+
+docker run --detach --name hearth-restore -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+  public.ecr.aws/supabase/postgres:17.6.1.167 \
+  postgres -c config_file=/etc/postgresql/postgresql.conf
+until docker logs hearth-restore 2>&1 | grep -q "PostgreSQL init process complete"; do sleep 1; done
+until docker exec hearth-restore pg_isready -U postgres -h localhost -q; do sleep 1; done
+
+# Roles are not in the dump: hearth_service comes from its migration, and
+# supabase_realtime_admin (created by Realtime, not the image) is created here.
+docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
+  < supabase/migrations/20260919060000_hearth_service_role.sql
+docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+create role supabase_realtime_admin noinherit nologin noreplication;
+grant anon, authenticated, service_role to supabase_realtime_admin;
+SQL
+
+gunzip -c "$DUMP" |
+  docker exec -i hearth-restore psql -U supabase_admin -d postgres -q -o /dev/null \
+  2> restore-errors.log
+grep -c ERROR restore-errors.log    # expect 0
+
+docker exec hearth-restore psql -U supabase_admin -d postgres -c "
+  select rolname, rolinherit, rolcanlogin from pg_roles where rolname = 'hearth_service';
+  select nspname from pg_namespace
+    where nspname in ('auth', 'public', 'realtime', 'supabase_migrations');
+  select count(*) as users from auth.users;
+  select version from supabase_migrations.schema_migrations order by version;"
+
+docker rm -f hearth-restore && rm restore-errors.log
+```
+
+### Restore production
+
+This replaces the live database with a dump. The site is down while it runs.
+
+```sh
+set -a; . /srv/hearth/.env; set +a
+DUMP="$BACKUP_DIR/daily/postgres-<yyyymmdd>.sql.gz"    # the dump to restore
+
+hearth-compose stop
+hearth-compose rm --force db
+docker volume rm hearth_db-data
+
+# A fresh database: the image creates the Supabase roles, and the init scripts recreate
+# hearth_service from its migration and give it its login from .env.
+hearth-compose up -d --wait db
+hearth-compose exec -T db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+create role supabase_realtime_admin noinherit nologin noreplication;
+grant anon, authenticated, service_role to supabase_realtime_admin;
+SQL
+gunzip -c "$DUMP" |
+  hearth-compose exec -T db psql -U supabase_admin -d postgres -q -o /dev/null \
+  2> restore-errors.log
+grep -c ERROR restore-errors.log    # expect 0
+
+hearth-compose up -d --wait
+curl -fsS http://127.0.0.1:8080/api/health
+```
+
+Only `db` runs while the dump loads: GoTrue and Realtime keep their own migration state in the
+database, and must find the restored state when they start.
