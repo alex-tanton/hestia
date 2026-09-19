@@ -672,15 +672,22 @@ Flipp item pricing is inconsistent. The wrapper normalizes each item into a unit
 | Input form | Handling |
 | --- | --- |
 | `$3.99` with original `$5.99` | Direct: unit price $3.99, 33% off |
-| `$2.49/lb` | Per-weight: unit price $2.49, `price_unit` lb. `/oz` likewise gives oz. |
+| `$2.49/lb` | Per-weight: unit price $2.49, `price_unit` lb. `Per Lb.`, `LB`, and the OCR misreading `Per Ib` are lb too. `/oz` likewise gives oz. |
+| Package price worded by weight (`$3.99 Per 3-Lb. Bag`) | `price_unit` each: it is the price of the package, not per lb |
 | `2 for $5` | Divide: $2.50 unit price; display retains the original "2 for $5" copy |
+| Multi-buy whose original is the bundle total (`FINAL PRICE 2/$3`, original $4) | Divide both: unit price $1.50, original $2.00, 25% off |
+| Original 10× the unit price or more (`$2.39/lb`, original $23.90, a case price) | Parse the unit price; the original is treated as unknown, so the discount is null |
 | `BOGO` / `Buy 1 Get 1 Free` with a known base price | Treated as 50% off the base price |
 | `BOGO` with no known base price | Skipped |
+| Buy-N-get-M free other than BOGO (`Buy 2 Get 1 Free`), with or without a base price | Skipped |
+| Minimum-quantity pricing (`when you buy 4`, `must buy 2`) | Skipped — the price does not apply to one item |
+| Percent off with no base price (`25% OFF WITH CARD`) | Skipped |
 | `$1.00 off` with a known original price | Subtract from the original price |
 | `$1.00 off` with no original price | Skipped |
 | `with digital coupon` qualifier | Parse the price; `conditional_price` true, `conditional_reason` coupon |
-| Loyalty-card qualifier (`w/ MVP Card`, `with card`) | Parse the price; `conditional_price` true, `conditional_reason` loyalty\_card |
+| Loyalty-card qualifier (`w/ MVP Card`, `MVP` price prefix, `with your VIC card`, `WITH CARD`, membership price) | Parse the price; `conditional_price` true, `conditional_reason` loyalty\_card |
 | Rebates (`with ExtraBucks Rewards`, `FREE with $25 purchase`) | Skipped — not a shelf price |
+| Shelf price with a secondary rebate offer (`$4.79 WITH CARD`, plus "Buy 2 get $6 ExtraBucks") | Parse the shelf price, as loyalty\_card conditional when carded; the rebate is ignored |
 | Mix-and-match multi-buy with purchase limits | Skipped — ambiguous enough that a confident parse would be wrong |
 | No price, or unparseable copy | Skipped — excluded from results rather than shown priceless |
 

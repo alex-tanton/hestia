@@ -151,13 +151,13 @@ Caddy sets these headers on every response:
 
 | Header | Value |
 | --- | --- |
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: <Flipp image CDN hosts>; connect-src 'self' wss://<machine>.<tailnet>.ts.net; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://<machine>.<tailnet>.ts.net; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
 | `Strict-Transport-Security` | `max-age=31536000` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `same-origin` |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
 
-`style-src 'unsafe-inline'` is needed for the inline `style` attributes that Radix sets. The Flipp image CDN hosts are the exact hostnames recorded by the Phase 0 Flipp spike; no wildcard beyond those hosts is allowed.
+`style-src 'unsafe-inline'` is needed for the inline `style` attributes that Radix sets. `f.wishabi.net` serves Flipp item and flyer images and `images.wishabi.net` serves merchant logos; no wildcard beyond those hosts is allowed. `flipp-image-retrieval.flipp.com` is deliberately excluded because it only serves e-commerce items, with signed, expiring URLs, which the Flipp wrapper ignores.
 
 ### Client IP passthrough
 
@@ -306,7 +306,7 @@ The service fetches user-pasted recipe URLs and extracts schema.org JSON-LD, fal
 
 ## Flipp wrapper
 
-One module, one file, isolated behind an interface. Everything that knows Flipp's response shape lives here so a breaking change upstream is a single-file fix. The endpoint URLs and parameters for the four modes are recorded in this module's header comment by the Phase 0 spike.
+One module, one file, isolated behind an interface. Everything that knows Flipp's response shape lives here so a breaking change upstream is a single-file fix. The endpoint URLs, parameters, and quirks are in Endpoints below.
 
 ### Contract
 
@@ -341,6 +341,32 @@ interface NormalizedDeal {
 
 The rest of the service depends only on `DealSource`, never on Flipp's raw shapes. A test double implementing the same interface is what the unit tests use.
 
+### Endpoints
+
+Base URL `https://backflipp.wishabi.com`. Every call is an unauthenticated `GET` returning JSON; no key, cookie, token, or `Referer` is needed. The module's header comment carries this same table.
+
+| Mode | Path | Parameters | Fields the wrapper reads |
+| --- | --- | --- | --- |
+| search | `/flipp/items/search` | `postal_code`, `q` (required); `locale=en-us` | `items[]` with `item_type` `flyer` (`ecom_items` and every other key are ignored): `id`, `flyer_id`, `name`, `merchant_id`, `merchant_name`, `merchant_logo`, `current_price`, `original_price`, `pre_price_text`, `post_price_text`, `sale_story`, `_L1`, `_L2`, `clean_image_url`, `valid_from`, `valid_to` |
+| flyers | `/flipp/flyers` | `postal_code` (required); `locale=en-us` | `flyers[]`: `id`, `merchant_id`, `merchant`, `merchant_logo`, `valid_from`, `valid_to`, `thumbnail_url` |
+| flyer items | `/flipp/flyers/{flyerId}` | `locale=en-us` | `items[]`: `id`, `name`, `display_type`, `price`; `pages[]` is ignored |
+| item detail | `/flipp/items/{itemId}` | none | `item`: `name`, `merchant`, `merchant_id`, `pre_price_text`, `current_price`, `price_text`, `original_price`, `sale_story`, `image_url`, `ttm_url`, `valid_from`, `valid_to` |
+| merchants | `/flipp/merchants` | `locale=en-us` | `merchants[]`: `id`, `name`, `us_based` |
+
+Item detail is not a `DealSource` mode; it is how `listFlyerItems` prices a flyer. `flyers-ng.flippback.com` serves equivalent flyer and flyer-item data (`/api/flipp/data`, `/api/flipp/flyers/{id}/flyer_items`) with the same gaps; the wrapper does not use it. The quirks the wrapper absorbs, so nothing outside it sees them:
+
+- **Search is capped at 150 items, with no pagination.** Page and offset parameters are ignored, and the true total appears only in `facets`. The 150 returned are the result.
+- **Search and flyers include upcoming flyers.** The wrapper drops any flyer or item whose `valid_from` is after the current time; "active" means `valid_from` ≤ now ≤ `valid_to`.
+- **The flyer-items listing cannot be priced on its own.** It has a bare `price` string and no pre- or post-price text, sale story, original price, merchant, or category, so `"6.0"` may really be "2/$6 with VIC card". `listFlyerItems` uses the listing only as a roster. For each product (`display_type` 1 or 25) with a non-empty `price`, it requests `/flipp/items/{id}` and normalizes from the detail. Products with an empty `price` count as skipped (no price). Banners (`display_type` 5) and navigation links (7) are ignored and not counted.
+- **Merchants is a global directory.** It ignores `postal_code`, lists about 2,500 US and Canadian retailers, and has no logos. `listMerchants(postalCode)` returns the directory entries that have an active flyer in that postal code's flyers response, with the logo taken from the flyer's `merchant_logo`.
+- **Prices are numbers in search** (`3.99`) **and strings elsewhere** (`"6.0"`, or `""` for none). Both become integer cents before the normalization chain runs.
+- **Search timestamps are UTC** (`2026-09-23T03:59:59+00:00`); flyers, flyer items, and item detail use the store's local offset (`2026-09-22T23:59:59-04:00`). `validFrom` and `validTo` are calendar dates in the local offset, so a search item takes its dates from its flyer, matched by `flyer_id`, in the cached flyers response for the postal code. A search item whose flyer is not in that response is dropped.
+- **Some image URLs are `http://`.** The wrapper rewrites them to `https://`, which the CSP requires.
+- **Merchant names can carry trailing spaces** (`"Costco "`). The wrapper trims them.
+- **`sourceUrl`** is item detail's `ttm_url`, which is often null. Search has no source URL, so `sourceUrl` is null for search results.
+- **`category`** is search's `_L2`, falling back to `_L1`. Flyer items have no category, so it is null for them, and an upsert never replaces an existing non-null `category` with null.
+- **Item ids change every week; merchant ids are stable** (Harris Teeter is always 2431), which is why favorites are stored by merchant id.
+
 ### Price normalization
 
 Implemented as an ordered chain of parsers, each attempting the raw price copy and passing on failure. The rules, including what is skipped and how values round, are in the Requirements document. The implementation obligations are:
@@ -357,9 +383,9 @@ Live calls with aggressive caching. The browser never calls Flipp; only the serv
 | Query | TTL | Where |
 | --- | --- | --- |
 | Flyers by postal code | 12 hours | In-process memory |
-| Flyer items | Until the flyer's `valid_to` | `deal` rows, by `flyer_id` |
+| Flyer items | Until the flyer's `valid_to`. Fetched once per flyer, and never re-fetched while `deal` rows for that `flyer_id` exist and the flyer is valid | `deal` rows, by `flyer_id` |
 | Search by (postal code, query) | 6 hours | `deal_query_cache` (deal ids), with the deals themselves in `deal` |
-| Merchants by postal code | 7 days | In-process memory |
+| Merchant directory | 7 days | In-process memory, one copy for all postal codes, since the directory ignores postal code |
 
 `deal` rows are upserted on (`postal_code`, `external_id`), with `normalized_name` computed by the `matching` package and `fetched_at` set to the time of the fetch. A cache miss triggers a live fetch. If a live fetch fails while a stale entry exists, the service returns the stale entry and its age, which the UI renders as an "as of" label.
 
@@ -368,8 +394,8 @@ Live calls with aggressive caching. The browser never calls Flipp; only the serv
 `refresh-deals` builds the set of postal codes from households whose `last_active_at` is within 14 days. For each postal code:
 
 1. It fetches the active flyers.
-2. It fetches flyer items only for flyers whose merchant is in the union of `household_favorite_store` merchant ids across households at that postal code.
-3. It upserts the items into `deal`.
+2. It fetches flyer items only for flyers whose merchant is in the union of `household_favorite_store` merchant ids across households at that postal code, and only once per flyer: a flyer is not re-fetched while `deal` rows for its `flyer_id` exist and it is valid. Fetching one flyer's items is its roster request plus one item-detail request per priced product (see Endpoints), all through the same serialized request queue, backoff, and circuit breaker as every other call.
+3. It upserts each flyer's items into `deal` once all of that flyer's requests have finished. An item whose detail request still fails after backoff counts as skipped. A flyer cut short by the circuit breaker opening writes nothing, so the next run fetches it whole rather than leaving it partial.
 
 It then reprices expired list items (see Repricing) and recomputes `recipe_readiness` for every household at that postal code.
 
@@ -400,6 +426,7 @@ This runs after each refresh and when a list is fetched. It applies to `shopping
 - A descriptive `User-Agent` identifying the app and its origin
 - Exponential backoff on any non-200, with a circuit breaker opening after 5 consecutive failures and staying open for 30 minutes
 - The daily refresh runs once per **active postal code**, not once per household, so ten households in one ZIP cost one flyer fetch, and it fetches flyer items only for favorited merchants. A dormant postal code gets at most one on-demand refresh per UTC day, under the same rules.
+- A favorited merchant's flyer costs its roster request plus one item-detail request per priced product, roughly 120 to 300 requests over a few minutes at the 500ms gap, once per flyer. It is never fetched again while `deal` rows for that `flyer_id` exist and the flyer is valid.
 - No fetch is ever triggered directly by a user action that a cache could serve
 
 ### Development

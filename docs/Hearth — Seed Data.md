@@ -110,6 +110,8 @@ The remaining stores stay unfavorited so browse-all has something to show beyond
 
 The most important fixtures in the set. Every parser path and every deal-related UI state needs a representative here. Prices are shown as they normalize: unit price with its `price_unit`, original price, and `discount_percent` (floored). Normalized names assume the matcher's descriptor list includes at least "boneless", "skinless", "family pack", "large", "grade a", "shredded", "fresh", "crowns", "crumbles", "frozen", "sweet", "red or green", and "bag", and its brand list includes at least "Kraft", "Barilla", "Dave's Killer", "Progresso", "Tropicana", "Publix", "Tide", "Coca-Cola", and "Lowes Foods".
 
+The raw captures for 27514 are in `e2e/fixtures/flipp/raw/`: `search-27514-{milk,chicken,harris-teeter,food-lion,publix,lowes-foods,aldi,cvs}.json`, `flyers-27514.json`, `data-27514.json` (the `flyers-ng.flippback.com` flyers-and-coupons variant), `merchants-27514.json`, `flyer-items-{harris-teeter-8132883,food-lion-8128502,publix-8128353,lowes-foods-8132169,aldi-8131738,cvs-8139694}.json`, `flyer-items-ng-harris-teeter-8132883.json` (the `flyers-ng` equivalent), and `item-{harris-teeter-1040206756,food-lion-1039547929,publix-1039945367,lowes-foods-1039938734,cvs-1041117892}.json` (item detail). Item ids change weekly, but merchant ids are stable, so fixtures and tests may rely on them: Harris Teeter 2431, Food Lion 2100, Publix 2361, Lowes Foods 2469, ALDI 2353, CVS Pharmacy 2264, and Walmart 2175 (the directory's other "Walmart", 234, is Walmart Canada).
+
 ### Clean prices
 
 The straightforward path.
