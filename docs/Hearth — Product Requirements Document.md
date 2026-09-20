@@ -495,7 +495,7 @@ Supabase's GoTrue service handles auth, self-hosted and free. **Email and passwo
 
 - **Signup is open**, protected by rate limits only (the limits are in Technical Architecture). A person can sign up and then create a household or join one with an invite.
 - Email addresses are autoconfirmed. Nothing is ever emailed, so an email address serves only as a login identifier and is never verified.
-- **Password policy:** at least 8 characters, and not on the common-password list kept in `packages/shared`. GoTrue enforces the minimum length. The PWA and the service both check the common-password list at signup and at password change.
+- **Password policy:** at least 8 characters, and not on the common-password list kept in `packages/shared`. GoTrue enforces the minimum length. The PWA and the service both check the common-password list at signup and at password change. The list is the 10,000 most common passwords of at least 8 characters, held as a data module so nothing is fetched at runtime; shorter ones are left out because the length rule already rejects them, and the comparison ignores case, so "Password1" is as common as "password1". A password is also capped at 72 bytes, the most bcrypt — which GoTrue hashes with — reads.
 - In Settings → Account, a user changes their display name, email, and password. Changing the email or the password requires re-entering the current password.
 - **Magic link is built but disabled** behind a configuration flag, because it needs outbound email. When enabled, the email carries both a link and a 6-digit code. The app has a code-entry field, because an iOS home-screen app cannot receive a session through a magic link. Technical Architecture has an appendix on enabling it.
 

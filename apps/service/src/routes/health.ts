@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { scrubErrorName, scrubErrorText } from '@hearth/shared';
 import { PROBLEM_CONTENT_TYPE, problem } from '../problem.js';
 
 export interface HealthRouteOptions {
@@ -11,7 +12,16 @@ export const healthRoute: FastifyPluginAsync<HealthRouteOptions> = (app, { pingD
     try {
       await pingDatabase();
     } catch (error) {
-      request.log.error({ err: error }, 'health check: database unreachable');
+      // Scrubbed like every other logged error: a connection failure can name the database URL.
+      request.log.error(
+        {
+          err: {
+            name: scrubErrorName(error instanceof Error ? error.name : 'Error'),
+            message: scrubErrorText(error),
+          },
+        },
+        'health check: database unreachable',
+      );
       return reply
         .code(503)
         .type(PROBLEM_CONTENT_TYPE)

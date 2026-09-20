@@ -1,16 +1,34 @@
 import { randomUUID } from 'node:crypto';
 import rateLimit from '@fastify/rate-limit';
-import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
-import { PROBLEM_CONTENT_TYPE, ProblemError, problem } from './problem.js';
+import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
+import { scrubErrorName, scrubErrorText } from '@hearth/shared';
+import { GoTrueError } from './gotrue/http.js';
+import { createRouteContext, type AppDependencies } from './http/context.js';
+import { buildOpenApiDocument } from './openapi.js';
+import {
+  PROBLEM_CONTENT_TYPE,
+  ProblemError,
+  problem,
+  problemFromDatabaseError,
+  problemFromGoTrueError,
+} from './problem.js';
+import { authRoutes } from './routes/auth.js';
 import { healthRoute } from './routes/health.js';
+import { householdRoutes } from './routes/households.js';
+import { systemRoutes } from './routes/system.js';
+import { userRoutes } from './routes/users.js';
+import { buildErrorRecord } from './services/errors.js';
 
-export interface AppDependencies {
-  pingDatabase: () => Promise<void>;
-}
+export type { AppDependencies } from './http/context.js';
 
 export interface AppOptions {
   trustedProxies: string[];
-  logger: NonNullable<FastifyServerOptions['logger']>;
+  logger: false | { level: string };
+  /** HEARTH_ORIGIN: invite links are built on it. */
+  origin: string;
+  /** HEARTH_OWNER_EMAIL; empty means nobody is the owner. */
+  ownerEmail: string;
+  openApiDocument?: () => unknown;
 }
 
 const API_RATE_LIMIT_PER_MINUTE = 300;
@@ -25,12 +43,29 @@ function statusOf(error: unknown): number {
   return 500;
 }
 
+// Logs never carry query strings: a search term or a token in a URL is user data.
+function pathOnly(url: string): string {
+  return url.split('?')[0] ?? '';
+}
+
 export async function buildApp(
   deps: AppDependencies,
   options: AppOptions,
 ): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: options.logger,
+    logger:
+      options.logger === false
+        ? false
+        : {
+            ...options.logger,
+            serializers: {
+              req: (request: FastifyRequest) => ({
+                method: request.method,
+                url: pathOnly(request.url),
+                remoteAddress: request.ip,
+              }),
+            },
+          },
     // Fastify binds the id into every request-scoped log line as `reqId`. It is generated
     // here rather than taken from a client header, which anyone could forge.
     genReqId: () => randomUUID(),
@@ -40,13 +75,35 @@ export async function buildApp(
     trustProxy: options.trustedProxies.length > 0 ? options.trustedProxies : false,
   });
 
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler(async (rawError, request, reply) => {
+    const error =
+      problemFromDatabaseError(rawError) ??
+      (rawError instanceof GoTrueError ? problemFromGoTrueError(rawError) : rawError);
     const status = statusOf(error);
+
+    if (status >= 500) {
+      const name = error instanceof Error ? error.name : 'Error';
+      const message = error instanceof Error ? error.message : String(error);
+      const route = request.routeOptions.url ?? 'unknown';
+      // Scrubbed like everything recorded (Handoff non-negotiable 3); the stack stays out.
+      request.log.error(
+        { err: { name: scrubErrorName(name), message: scrubErrorText(message) }, route },
+        'unhandled request error',
+      );
+      try {
+        await deps.recordError(buildErrorRecord('service', { name, message, route }));
+      } catch (recordFailure) {
+        request.log.error(
+          { err: { message: scrubErrorText(recordFailure) } },
+          'could not record the error',
+        );
+      }
+    }
+
     if (error instanceof ProblemError) {
       return reply.code(status).type(PROBLEM_CONTENT_TYPE).send(error.problem);
     }
     if (status >= 500) {
-      request.log.error({ err: error }, 'unhandled request error');
       // Internal details never reach the client.
       return reply.code(status).type(PROBLEM_CONTENT_TYPE).send(problem(status));
     }
@@ -71,10 +128,18 @@ export async function buildApp(
     return reply
       .code(404)
       .type(PROBLEM_CONTENT_TYPE)
-      .send(problem(404, `No route for ${request.method} ${request.url.split('?')[0] ?? ''}.`));
+      .send(problem(404, `No route for ${request.method} ${pathOnly(request.url)}.`));
   });
 
+  const ctx = createRouteContext(deps, { origin: options.origin, ownerEmail: options.ownerEmail });
   await app.register(healthRoute, { pingDatabase: deps.pingDatabase });
+  await app.register(authRoutes, { ctx });
+  await app.register(userRoutes, { ctx });
+  await app.register(householdRoutes, { ctx });
+  await app.register(systemRoutes, {
+    ctx,
+    openApiDocument: options.openApiDocument ?? buildOpenApiDocument,
+  });
 
   return app;
 }

@@ -62,12 +62,15 @@ Inside that transaction `auth.uid()` returns the caller and every RLS policy app
 
 The service connects as a dedicated login role, `hearth_service`. It is granted membership in `authenticated`, `anon`, and `service_role`, so it can switch into each one; it has no other privileges. It is `NOINHERIT`, so until a transaction switches role it holds none of those roles' rights either, and a query that forgets to switch fails. The role and its memberships come from the first migration (`supabase/migrations/20260919060000_hearth_service_role.sql`), which creates it `NOLOGIN` with no password; see Secrets for how it gets its login.
 
-The service role is used in exactly four places, none of which acts on behalf of a user's data request:
+The service role is used in exactly five places, none of which acts on behalf of a user's data request:
 
 - scheduled jobs that legitimately operate across households (deal refresh, repricing, autopay logging, notification dispatch, pruning)
 - migrations
 - the owner CLI (`hearth-admin`)
 - the GoTrue admin API call that changes a user's email, made only after the service has re-verified that user's password
+- `public.system_health()`, called only by `GET /api/health/deep` after the caller has been checked as the server owner (see Database); its figures span every household, so it is `service_role`-only
+
+In the service, the code that can reach either capability lives in `apps/service/src/privileged/`, which only `main.ts` and the CLI may import; routes receive the one narrow function they need (`changeEmail`, `systemHealth`) and nothing more. An ESLint rule enforces the import restriction, so a new route cannot quietly acquire the service role.
 
 ### Why everything routes through the service
 
@@ -91,9 +94,23 @@ Operations that must touch rows a member cannot write directly — other members
 
 `reassignments` is a JSON object mapping the id of each owned list, chore, errand, and bill to a remaining member's id; rotation positions are never part of it. A key the member does not own, or a value that is not a remaining member, fails the call.
 
-Invite credentials are stored as SHA-256 digests in lowercase hex. The service generates the link token as 32 random bytes, base64url-encoded, and the code as 8 random Crockford Base32 characters; the admin inserts the invite row with both digests. `redeem_invite` hashes its input as given to match `token_hash`, and to match `code_hash` it first decodes the input the Crockford way: case, spaces, and hyphens are ignored, I and L read as 1, O reads as 0, and anything that is not then 8 alphabet characters (U included) is not a code. An invite is live while `revoked_at` is null and `expires_at` is in the future.
+Invite credentials are stored as SHA-256 digests in lowercase hex. The service generates the link token as 32 random bytes, base64url-encoded, and the code as 8 random Crockford Base32 characters; the admin inserts the invite row with both digests. The shareable link is `<HEARTH_ORIGIN>/join#token=<token>`: the token rides in the fragment, which browsers never send to a server, so it stays out of every log between the invitee and the PWA. The link and the code are returned once, by the creating request, with `Cache-Control: no-store`; afterwards only the digests exist. `GET /households/:id/invites` lists the outstanding ones — neither revoked nor expired. `redeem_invite` hashes its input as given to match `token_hash`, and to match `code_hash` it first decodes the input the Crockford way: case, spaces, and hyphens are ignored, I and L read as 1, O reads as 0, and anything that is not then 8 alphabet characters (U included) is not a code. An invite is live while `revoked_at` is null and `expires_at` is in the future.
 
-The functions report failures with SQLSTATEs the service maps to problem details: `42501` when the caller fails the check, `P0002` when the named user is not a member, `22023` for an invalid argument, `HR001` for an expired or revoked invite, `HR002` when no invite matches, `HR003` when a departure leaves something unassigned, and `HR004` when the typed household name does not match. Deleting a household relies on `ON DELETE CASCADE` from `household` to every household-scoped table. `bill` cascades only household bills, because personal bills have a null `household_id`.
+The functions report failures with SQLSTATEs the service maps to problem details:
+
+| SQLSTATE | Meaning | Response |
+| --- | --- | --- |
+| `42501` | the caller fails the function's check, or an RLS policy refuses the write | `403` |
+| `P0002` | the named user is not a member | `404` |
+| `22023` | an invalid argument; the function's own message is shown | `400` |
+| `HR001` | the invite is expired or revoked | `410` |
+| `HR002` | no invite matches the link or code | `404` |
+| `HR003` | the departure leaves something unassigned | `409` |
+| `HR004` | the typed household name does not match | `400` |
+
+Constraint violations map alongside them: `23505` and `23503` to `409`, `23502`, `23514`, `22P02`, `22007`, and `22008` to `400`. Any other database error is a `500` with no detail, recorded in `app_error`.
+
+A request that names a household the caller does not belong to answers `404`, not `403`: `mark_household_active` runs before the handler and raises `42501`, which that path turns into "Household not found" so the API never reveals whether a household exists. `403` is reserved for a member who is not the admin. Deleting a household relies on `ON DELETE CASCADE` from `household` to every household-scoped table. `bill` cascades only household bills, because personal bills have a null `household_id`.
 
 ## Deployment
 
@@ -213,11 +230,12 @@ Behaviour is specified in the Requirements document. This section gives the conf
 | Rate limits | GoTrue's built-in per-IP auth limits at their defaults, keyed on `X-Forwarded-For` |
 
 - **Signup** goes through `POST /api/signup`. The service validates the email and the password (the common-password list from `packages/shared`), then calls GoTrue's `/signup` endpoint at `http://auth:9999`, passing `display_name` and the browser's `timezone` as `user_metadata` and the client's `X-Forwarded-For`. The `auth.users` trigger copies both into `profile`. The service returns GoTrue's session unchanged. Sign-in, token refresh, and sign-out go directly to GoTrue through Kong.
-- **Password change** (`POST /api/users/me/password`). The service first re-verifies the current password against GoTrue's password grant. It then applies the common-password check and calls GoTrue's `PUT /user` at `http://auth:9999` with the caller's own JWT. Re-verifying the current password is skipped only when the session's `amr` claim shows a recovery sign-in, which is how the reset link lands.
+- **Password change** (`POST /api/users/me/password`). The service first re-verifies the current password against GoTrue's password grant. It then applies the common-password check and calls GoTrue's `PUT /user` at `http://auth:9999` with the caller's own JWT. Re-verifying the current password is skipped only when the session's `amr` claim shows a recovery sign-in, which is how the reset link lands. The pinned GoTrue records a verified recovery link as `amr` method `otp` rather than `recovery`, so both are accepted, and only within an hour of that sign-in (`GOTRUE_MAILER_OTP_EXP`, the link's own lifetime), so a session left open does not waive the check forever. When magic link is enabled, its sign-in carries the same `otp` method and waives the check in the same way: both prove control of the mailbox.
 - **Email change** (`POST /api/users/me/email`). The service re-verifies the current password, then calls the GoTrue admin API (`PUT /admin/users/:id` with `email_confirm: true`) using the service-role key. No mail is sent. The `profile` trigger syncs the new email.
-- **Password reset:** `docker compose exec hearth-service hearth-admin reset-password <email>` calls GoTrue's admin `generate_link` with type `recovery` and prints the resulting one-time link. The link expires after GoTrue's `GOTRUE_MAILER_OTP_EXP` (3600 seconds). Opening it lands on the PWA's set-new-password screen.
-- **Magic link:** when `HEARTH_MAGIC_LINK_ENABLED` is `false`, the PWA build omits the magic-link and code-entry screens. See the appendix for enabling it.
+- **Password reset:** `docker compose exec hearth-service hearth-admin reset-password <email>` calls GoTrue's admin `generate_link` with type `recovery` and prints the resulting one-time link. The link expires after GoTrue's `GOTRUE_MAILER_OTP_EXP` (3600 seconds). Its `redirect_to` is `<HEARTH_ORIGIN>/set-password`, the PWA's set-new-password screen, which GoTrue's `/verify` reaches with the session in the URL fragment. The CLI is a bin in the service image, on the container's `PATH`.
+- **Magic link:** when `HEARTH_MAGIC_LINK_ENABLED` is `false`, the PWA build omits the magic-link and code-entry screens. The Compose file passes the flag to the `caddy` image build, which exposes it to Vite as `VITE_MAGIC_LINK_ENABLED` (Vite only exposes `VITE_`-prefixed variables), so the screens are decided at build time and no flag reaches the browser at runtime. See the appendix for enabling it.
 - **Sessions:** supabase-js default storage for the access and refresh tokens, protected by the CSP above.
+- **Token verification:** the service verifies the access token's signature and expiry itself, and also refuses a token whose `role` is not `authenticated` — the anon and service-role keys are JWTs signed with the same secret. The production GoTrue signs with HS256 and `JWT_SECRET`. The pinned Supabase CLI signs local sessions with ES256 instead and publishes the public key at GoTrue's `/.well-known/jwks.json`, so ES256 is accepted when the token's `kid` names a key GoTrue publishes, fetched from GoTrue and cached (an unknown `kid` refetches at most once a minute). No other algorithm is accepted.
 
 ## The Node service
 
@@ -574,6 +592,8 @@ Both call `public.record_app_error` in their own short transaction, as `anon`. T
 
   It also reports the top 10 `app_error` fingerprints by count seen in the last 24 hours, and the per-merchant skip rates since the last refresh. A service that is up while its deal refresh has silently stopped is the realistic failure mode, and this is where it shows.
 
+  The first two figures and the error list come from `public.system_health()`; the backup time is the newest file under `BACKUP_DIR`, which is mounted read-only into the service; the skip rates are held in memory by the process, written by each `refresh-deals` run, so they are empty until the first refresh after a restart.
+
 Every Compose service has a Docker healthcheck. Docker Engine restarts a container only when it exits, never because its healthcheck fails, and the stack runs only the seven services above, with nothing that restarts unhealthy containers. The healthchecks gate startup ordering and `docker compose up --wait`, make a hung container visible as `unhealthy` in `docker compose ps`, and back the deploy's health gate. The server owner restarts a hung service with `docker compose restart <service>`.
 
 ### Alerting
@@ -592,4 +612,4 @@ Magic link is built and disabled. Enabling it means giving up part of the free-h
 2. **A transactional SMTP relay.** Residential IP ranges are broadly blocklisted for outbound SMTP, so mail sent directly from the home server is rejected or filed as spam. Configure it through GoTrue's `GOTRUE_SMTP_HOST`, `GOTRUE_SMTP_PORT`, `GOTRUE_SMTP_USER`, `GOTRUE_SMTP_PASS`, and `GOTRUE_SMTP_ADMIN_EMAIL`. Because the relay is plain SMTP, it is not a code dependency.
 3. **SPF and DKIM records** for the sending domain. Without them, even relayed mail lands in spam.
 4. **The email template.** Set GoTrue's magic-link template to include both `{{ .ConfirmationURL }}` and the 6-digit `{{ .Token }}`, because an iOS home-screen app cannot receive a session from a link. The app verifies the code with `verifyOtp({ type: 'email' })`.
-5. **The flag.** Set `HEARTH_MAGIC_LINK_ENABLED=true` and redeploy, so the PWA build includes the magic-link and code-entry screens.
+5. **The flag.** Set `HEARTH_MAGIC_LINK_ENABLED=true` in `.env` and redeploy. The Compose file passes it to the `caddy` image build as the `HEARTH_MAGIC_LINK_ENABLED` build argument, which becomes `VITE_MAGIC_LINK_ENABLED` for the PWA build, so the rebuilt PWA includes the magic-link and code-entry screens.

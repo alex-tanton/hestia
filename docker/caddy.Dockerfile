@@ -14,9 +14,10 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
 
 COPY . .
 # The PWA build omits the magic-link screens unless this is true (Technical Architecture,
-# "Auth configuration").
+# "Auth configuration"). Vite exposes only VITE_-prefixed variables to the app, as
+# import.meta.env.VITE_MAGIC_LINK_ENABLED.
 ARG HEARTH_MAGIC_LINK_ENABLED=false
-ENV HEARTH_MAGIC_LINK_ENABLED=$HEARTH_MAGIC_LINK_ENABLED
+ENV VITE_MAGIC_LINK_ENABLED=$HEARTH_MAGIC_LINK_ENABLED
 RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/web... \
  && pnpm --filter @hearth/web build

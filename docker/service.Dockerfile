@@ -32,6 +32,9 @@ COPY --from=prod-deps /repo/node_modules /app/node_modules
 COPY --from=prod-deps /repo/apps/service/node_modules /app/apps/service/node_modules
 COPY --from=build /repo/apps/service/package.json /app/apps/service/package.json
 COPY --from=build /repo/apps/service/dist /app/apps/service/dist
+# The owner CLI on the PATH, so `docker compose exec hearth-service hearth-admin ...` works.
+COPY --from=build --chmod=755 /repo/apps/service/bin/hearth-admin /app/apps/service/bin/hearth-admin
+RUN ln -s /app/apps/service/bin/hearth-admin /usr/local/bin/hearth-admin
 WORKDIR /app/apps/service
 USER node
 EXPOSE 3000

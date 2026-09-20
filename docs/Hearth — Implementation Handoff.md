@@ -40,7 +40,7 @@ These are the constraints most likely to be quietly violated for convenience. Vi
 
 ### Security
 
-1. **The service forwards the caller's JWT to Postgres for every user-initiated request.** Every handler reaches the database through `withUserDb`, which runs the request as the `authenticated` role with the caller's claims, so RLS applies. The service role is used only by the four uses Technical Architecture lists: scheduled jobs, migrations, the owner CLI, and the password-verified email change. A user-facing code path holding the service role for anything else is a security failure, not a shortcut.
+1. **The service forwards the caller's JWT to Postgres for every user-initiated request.** Every handler reaches the database through `withUserDb`, which runs the request as the `authenticated` role with the caller's claims, so RLS applies. The service role is used only by the uses Technical Architecture lists: scheduled jobs, migrations, the owner CLI, the password-verified email change, and `system_health()` after the caller has been checked as the server owner. A user-facing code path holding the service role for anything else is a security failure, not a shortcut.
 2. **Every table has RLS enabled with an explicit policy.** A table without one denies everything, and that is correct — never disable RLS to make something work.
 3. **Recorded errors are scrubbed.** Nothing written to `app_error` or to the logs contains bill amounts, list or pantry contents, recipe data, email addresses, or tokens.
 4. **Secrets never enter the repository.** `.env` stays on the host.

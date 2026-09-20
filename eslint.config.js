@@ -52,6 +52,44 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
+    // The service role bypasses RLS. Only main.ts and the owner CLI may build a privileged
+    // client; everything else gets the narrow functions they hand out (Technical Architecture,
+    // "The RLS rule"). Type-only imports carry no capability, so they are allowed.
+    files: ['apps/service/src/**/*.ts'],
+    ignores: [
+      'apps/service/src/main.ts',
+      'apps/service/src/cli.ts',
+      'apps/service/src/privileged/**',
+      'apps/service/src/**/*.test.ts',
+      'apps/service/src/test/**',
+    ],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/privileged/*'],
+              allowTypeImports: true,
+              message:
+                'Service-role access is limited to the sanctioned uses; take the narrow function main.ts passes in.',
+            },
+          ],
+        },
+      ],
+      // no-restricted-imports only sees static imports, so `await import('../privileged/…')`
+      // would slip past the fence above.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ImportExpression > Literal[value=/privileged/]',
+          message:
+            'Service-role access is limited to the sanctioned uses; take the narrow function main.ts passes in.',
+        },
+      ],
+    },
+  },
+  {
     // Engineering Practices allows non-null assertions in tests only.
     files: ['**/*.test.{ts,tsx}', '**/*.spec.ts', 'e2e/**/*.ts'],
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },

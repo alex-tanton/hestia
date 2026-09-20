@@ -1,11 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
-import { buildApp } from './app.js';
+import { makeTestApp } from './test/fake-app.js';
 
 const apps: FastifyInstance[] = [];
 
 async function makeApp(pingDatabase: () => Promise<void>): Promise<FastifyInstance> {
-  const app = await buildApp({ pingDatabase }, { trustedProxies: [], logger: false });
+  const app = await makeTestApp({ pingDatabase });
   apps.push(app);
   return app;
 }
@@ -111,10 +111,7 @@ describe('rate limiting', () => {
   });
 
   it('keys on the forwarded client IP only when the proxy is trusted', async () => {
-    const app = await buildApp(
-      { pingDatabase: () => Promise.resolve() },
-      { trustedProxies: ['127.0.0.1'], logger: false },
-    );
+    const app = await makeTestApp({}, { trustedProxies: ['127.0.0.1'] });
     apps.push(app);
     app.get('/api/ip', (request) => ({ ip: request.ip }));
 

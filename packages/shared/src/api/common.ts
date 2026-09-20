@@ -1,0 +1,30 @@
+import { z } from 'zod';
+
+// Any 8-4-4-4-12 hex id. Stricter RFC version checks would reject fixed seed ids.
+export const idSchema = z.guid();
+
+export const timestampSchema = z.iso.datetime({ offset: true });
+
+/** A five-digit US ZIP code (Requirements, "Users and households"). */
+export const postalCodeSchema = z.string().regex(/^[0-9]{5}$/, 'Enter a five-digit ZIP code.');
+
+/** An IANA timezone name; the database rejects names Postgres does not recognize. */
+export const timezoneSchema = z.string().trim().min(1).max(64);
+
+export const householdNameSchema = z.string().trim().min(1, 'Enter a name.').max(100);
+
+export const displayNameSchema = z.string().trim().min(1, 'Enter a name.').max(100);
+
+export const emailSchema = z.email('Enter a valid email address.').max(254);
+
+/** A time of day as HH:MM, 24-hour. */
+export const timeOfDaySchema = z
+  .string()
+  .regex(/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/, 'Use a 24-hour HH:MM time.');
+
+export const householdRoleSchema = z.enum(['admin', 'member']);
+export type HouseholdRole = z.infer<typeof householdRoleSchema>;
+
+export const householdIdParamsSchema = z.object({ id: idSchema });
+export const memberParamsSchema = z.object({ id: idSchema, userId: idSchema });
+export const inviteParamsSchema = z.object({ id: idSchema, inviteId: idSchema });

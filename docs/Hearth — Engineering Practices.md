@@ -176,6 +176,8 @@ Each journey runs in both light and dark themes with `axe-core` assertions, sati
 
 90%+ on `packages/recurrence` and `packages/matching`, which should approach complete. 80%+ on the service. No numeric target on UI components — journeys matter more there than line coverage.
 
+The service's figure is measured over its unit and integration tests together (`pnpm --filter @hearth/service test:coverage`, which needs the `supabase start` stack), because its service functions exist to be exercised against the real schema and policies; a unit-only figure would describe a different program.
+
 ### Not tested
 
 Flipp's live endpoint. Test doubles and fixtures only; hitting it from CI would be both flaky and rude.

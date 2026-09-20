@@ -43,18 +43,55 @@ pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
 | `pnpm test:e2e`         | Playwright (base URL `HEARTH_E2E_BASE_URL`)     |
 | `pnpm build`            | Production builds of web and service            |
 
+`pnpm --filter @hearth/service test:coverage` reports the service's coverage over its unit and
+integration tests together, so it needs `supabase start` running too.
+
 Commits follow Conventional Commits, checked by commitlint in a Husky hook; the pre-commit hook
 lints, formats, and typechecks.
 
+### Running the service locally
+
 `supabase start` runs Postgres, GoTrue, Realtime, Kong, and Studio locally and applies
-`supabase/migrations/`. The migrations create `hearth_service` without a login; to run the
-service against the local database, give it one and point `DATABASE_URL` at it:
+`supabase/migrations/`. The migrations create `hearth_service` without a login; give it one, then
+point the service at the local database and at GoTrue through Kong:
 
 ```sh
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
   -c "alter role hearth_service with login password 'hearth'"
+
+eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
 export DATABASE_URL=postgresql://hearth_service:hearth@127.0.0.1:54322/postgres
+export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://auth:9999 in production
+export HEARTH_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
+export HEARTH_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
+export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
+pnpm --filter @hearth/service dev
 ```
+
+| Variable                    | Used for                                                               |
+| --------------------------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL`              | The `hearth_service` login; every request runs through `withUserDb`    |
+| `GOTRUE_URL`                | Signup, password change, and the admin calls                           |
+| `JWT_SECRET`                | Verifying access tokens (HS256; local sessions are ES256 via its JWKS) |
+| `ANON_KEY`                  | The `apikey` header on GoTrue calls                                    |
+| `SERVICE_ROLE_KEY`          | The sanctioned service-role uses only (email change, owner CLI)        |
+| `HEARTH_ORIGIN`             | Invite links (`/join#token=…`) and the reset link's `/set-password`    |
+| `HEARTH_OWNER_EMAIL`        | Who may open System health; unset means nobody                         |
+| `HEARTH_TRUSTED_PROXIES`    | Whose `X-Forwarded-For` to believe; unset trusts none                  |
+| `BACKUP_DIR`                | Optional; System health reports the newest backup file's time          |
+| `LOG_LEVEL`, `HOST`, `PORT` | Pino level and the listen address                                      |
+
+The generated API document is at `GET /api/openapi.json`. The owner CLI is a bin in the service
+image (`docker compose exec hearth-service hearth-admin reset-password <email>`); locally it runs
+from the built bundle with `GOTRUE_URL`, `SERVICE_ROLE_KEY`, and `HEARTH_ORIGIN` set:
+
+```sh
+pnpm --filter @hearth/service build
+./apps/service/bin/hearth-admin reset-password you@example.com
+```
+
+The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABLED`, which the
+`caddy` image build takes from `HEARTH_MAGIC_LINK_ENABLED` in `.env` (default `false`).
 
 ### Database
 

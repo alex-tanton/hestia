@@ -1,28 +1,69 @@
 import { describe, expect, it } from 'vitest';
-import { parseEnv } from './env.js';
+import { parseCliEnv, parseEnv } from './env.js';
+
+const REQUIRED = {
+  DATABASE_URL: 'postgres://u:p@db:5432/postgres',
+  HEARTH_ORIGIN: 'https://hearth.tail1234.ts.net/',
+  GOTRUE_URL: 'http://auth:9999/',
+  JWT_SECRET: 'x'.repeat(40),
+  ANON_KEY: 'anon',
+  SERVICE_ROLE_KEY: 'service',
+};
 
 describe('parseEnv', () => {
-  it('applies defaults and splits trusted proxies', () => {
-    const env = parseEnv({
-      DATABASE_URL: 'postgres://u:p@db:5432/postgres',
-      HEARTH_TRUSTED_PROXIES: '172.28.0.0/16, 127.0.0.1',
-    });
+  it('applies defaults, splits trusted proxies, and normalizes URLs', () => {
+    const env = parseEnv({ ...REQUIRED, HEARTH_TRUSTED_PROXIES: '172.28.0.0/16, 127.0.0.1' });
 
     expect(env).toEqual({
-      DATABASE_URL: 'postgres://u:p@db:5432/postgres',
+      ...REQUIRED,
+      HEARTH_ORIGIN: 'https://hearth.tail1234.ts.net',
+      GOTRUE_URL: 'http://auth:9999',
       HOST: '0.0.0.0',
       PORT: 3000,
       LOG_LEVEL: 'info',
       HEARTH_TRUSTED_PROXIES: ['172.28.0.0/16', '127.0.0.1'],
+      HEARTH_OWNER_EMAIL: '',
     });
   });
 
   it('trusts no proxy when the variable is unset', () => {
-    expect(parseEnv({ DATABASE_URL: 'postgresql://db/x' }).HEARTH_TRUSTED_PROXIES).toEqual([]);
+    expect(parseEnv(REQUIRED).HEARTH_TRUSTED_PROXIES).toEqual([]);
+  });
+
+  it('keeps the backup directory and owner email when set', () => {
+    const env = parseEnv({ ...REQUIRED, BACKUP_DIR: '/backups', HEARTH_OWNER_EMAIL: ' o@x.io ' });
+    expect(env.BACKUP_DIR).toBe('/backups');
+    expect(env.HEARTH_OWNER_EMAIL).toBe('o@x.io');
   });
 
   it('fails fast when DATABASE_URL is missing or not a Postgres URL', () => {
-    expect(() => parseEnv({})).toThrow(/DATABASE_URL/);
-    expect(() => parseEnv({ DATABASE_URL: 'https://example.com' })).toThrow(/DATABASE_URL/);
+    expect(() => parseEnv({ ...REQUIRED, DATABASE_URL: undefined })).toThrow(/DATABASE_URL/);
+    expect(() => parseEnv({ ...REQUIRED, DATABASE_URL: 'https://example.com' })).toThrow(
+      /DATABASE_URL/,
+    );
+  });
+
+  it('refuses a short JWT secret and a missing key', () => {
+    expect(() => parseEnv({ ...REQUIRED, JWT_SECRET: 'short' })).toThrow(/JWT_SECRET/);
+    expect(() => parseEnv({ ...REQUIRED, SERVICE_ROLE_KEY: undefined })).toThrow(
+      /SERVICE_ROLE_KEY/,
+    );
+  });
+});
+
+describe('parseCliEnv', () => {
+  it('needs only GoTrue, the service-role key, and the origin', () => {
+    expect(
+      parseCliEnv({
+        HEARTH_ORIGIN: REQUIRED.HEARTH_ORIGIN,
+        GOTRUE_URL: REQUIRED.GOTRUE_URL,
+        SERVICE_ROLE_KEY: 'service',
+      }),
+    ).toEqual({
+      HEARTH_ORIGIN: 'https://hearth.tail1234.ts.net',
+      GOTRUE_URL: 'http://auth:9999',
+      SERVICE_ROLE_KEY: 'service',
+    });
+    expect(() => parseCliEnv({})).toThrow(/SERVICE_ROLE_KEY/);
   });
 });
