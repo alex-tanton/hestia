@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import {
@@ -10,7 +10,10 @@ import {
   useLocation,
 } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { AppProviders } from '../../App.tsx';
 import { routes } from '../../routes.tsx';
+import { profileFixture } from '../../test/fixtures.ts';
+import { createAuthStub, createFetchStub, testQueryClient } from '../../test/harness.tsx';
 import { useSection } from '../../lib/section-context.tsx';
 import { PillarScreen } from '../../screens/PillarScreen.tsx';
 import { HouseholdSwitcher, type HouseholdSummary } from './HouseholdSwitcher.tsx';
@@ -24,9 +27,21 @@ const HOUSEHOLDS: HouseholdSummary[] = [
   { id: 'rivera', name: 'Rivera Family', memberCount: 2 },
 ];
 
+/**
+ * The shell sits behind the session guard, so its tests need a signed-in session and a profile.
+ * Both are stubs: a component test never reaches the network.
+ */
 function renderApp(path: string): ReturnType<typeof createMemoryRouter> {
+  const stub = createFetchStub({
+    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+  });
+  vi.stubGlobal('fetch', stub.fetch);
   const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(<RouterProvider router={router} />);
+  render(
+    <AppProviders auth={createAuthStub()} queryClient={testQueryClient()}>
+      <RouterProvider router={router} />
+    </AppProviders>,
+  );
   return router;
 }
 
@@ -117,7 +132,9 @@ describe('app shell', () => {
   it('sends unknown paths to the dashboard', async () => {
     const router = renderApp('/nowhere');
     expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/');
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/');
+    });
   });
 });
 

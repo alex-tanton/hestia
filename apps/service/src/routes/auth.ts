@@ -1,6 +1,10 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { signupRequestSchema } from '@hearth/shared';
+import { newPasswordSchema } from '@hearth/shared/common-passwords';
 import { parse, type RouteContext } from '../http/context.js';
+
+/** The wire schema with the common-password list applied, which is the full policy. */
+const signupBodySchema = signupRequestSchema.extend({ password: newPasswordSchema });
 
 /**
  * POST /api/signup (public). The password policy runs here before GoTrue sees the request;
@@ -8,7 +12,7 @@ import { parse, type RouteContext } from '../http/context.js';
  */
 export const authRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.post('/api/signup', async (request, reply) => {
-    const body = parse(signupRequestSchema, request.body);
+    const body = parse(signupBodySchema, request.body);
     const session = await ctx.deps.gotrue.signup(
       {
         email: body.email,

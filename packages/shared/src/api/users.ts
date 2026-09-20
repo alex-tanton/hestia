@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { newPasswordSchema } from '../password.js';
+import { passwordShapeSchema } from '../password.js';
 import {
   displayNameSchema,
   emailSchema,
@@ -18,6 +18,8 @@ export const membershipSchema = z.object({
   name: z.string(),
   role: householdRoleSchema,
   joinedAt: timestampSchema,
+  /** The switcher lists every household with its member count (Design › Screens › 3). */
+  memberCount: z.number().int().min(1),
 });
 export type Membership = z.infer<typeof membershipSchema>;
 
@@ -54,11 +56,12 @@ export type SetActiveHouseholdRequest = z.infer<typeof setActiveHouseholdRequest
 
 /**
  * POST /api/users/me/password. `currentPassword` may be left out only in a session that began
- * from a reset link.
+ * from a reset link. As with signup, the new password carries the shape rules here and the route
+ * composes the common-password rule in.
  */
 export const changePasswordRequestSchema = z.object({
   currentPassword: z.string().min(1).max(200).optional(),
-  newPassword: newPasswordSchema,
+  newPassword: passwordShapeSchema,
 });
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
 

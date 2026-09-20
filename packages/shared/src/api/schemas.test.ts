@@ -10,7 +10,7 @@ import { updateProfileRequestSchema } from './users.js';
 const ID = '3f2b8c1e-9a4d-4e6f-8b1a-2c3d4e5f6a7b';
 
 describe('request schemas', () => {
-  it('validates signup and rejects a common password', () => {
+  it('validates signup, leaving the common-password rule to the route', () => {
     expect(
       signupRequestSchema.safeParse({
         email: 'alex@example.com',
@@ -24,8 +24,10 @@ describe('request schemas', () => {
       displayName: 'Alex',
       timezone: 'America/New_York',
     });
+    // The list lives behind `@hearth/shared/common-passwords`, which the route composes in
+    // (`routes.test.ts` covers the refusal); the wire schema only checks length and bytes.
     expect(
-      signupRequestSchema.safeParse({ email: 'alex@example.com', password: 'password1' }).success,
+      signupRequestSchema.safeParse({ email: 'alex@example.com', password: 'short' }).success,
     ).toBe(false);
     expect(
       signupRequestSchema.safeParse({ email: 'not-an-email', password: 'violet-teapot-17' })

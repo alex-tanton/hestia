@@ -38,7 +38,19 @@ export async function getProfile(
     .selectFrom('household_member as m')
     .innerJoin('household as h', 'h.id', 'm.household_id')
     .where('m.user_id', '=', userId)
-    .select(['m.household_id', 'h.name', 'm.role', 'm.joined_at'])
+    .select((eb) => [
+      'm.household_id',
+      'h.name',
+      'm.role',
+      'm.joined_at',
+      // The switcher shows a member count per household (Design › Screens › 3). Counting here
+      // avoids a request per household, and the member_read policy already scopes it.
+      eb
+        .selectFrom('household_member as c')
+        .whereRef('c.household_id', '=', 'm.household_id')
+        .select((inner) => inner.fn.countAll<string>().as('count'))
+        .as('member_count'),
+    ])
     .orderBy('m.joined_at')
     .orderBy('m.household_id')
     .execute();
@@ -60,6 +72,7 @@ export async function getProfile(
       name: row.name,
       role: row.role,
       joinedAt: iso(row.joined_at),
+      memberCount: Number(row.member_count ?? 1),
     })),
   };
 }

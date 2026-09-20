@@ -5,11 +5,17 @@ import {
   setActiveHouseholdRequestSchema,
   updateProfileRequestSchema,
 } from '@hearth/shared';
+import { newPasswordSchema } from '@hearth/shared/common-passwords';
 import { isRecentRecovery } from '../auth/jwt.js';
 import { parse, type RouteContext } from '../http/context.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from '../services/households.js';
 import { getProfile, setActiveHousehold, updateProfile } from '../services/users.js';
+
+/** The wire schema with the common-password list applied, which is the full policy. */
+const changePasswordBodySchema = changePasswordRequestSchema.extend({
+  newPassword: newPasswordSchema,
+});
 
 export const userRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/users/me', async (request) => {
@@ -41,7 +47,7 @@ export const userRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx
   // session came from a reset link, apply the policy, then GoTrue's PUT /user as the caller.
   app.post('/api/users/me/password', async (request, reply) => {
     const user = await ctx.authenticate(request);
-    const body = parse(changePasswordRequestSchema, request.body);
+    const body = parse(changePasswordBodySchema, request.body);
     if (body.currentPassword === undefined) {
       if (!isRecentRecovery(user)) throw fail(400, 'Enter your current password.');
     } else if (

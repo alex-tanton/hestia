@@ -11,6 +11,7 @@ import {
 import { ToastProvider } from '../ui/Toast.tsx';
 import type { HouseholdSwitcherProps } from './HouseholdSwitcher.tsx';
 import { OfflineBanner } from './OfflineBanner.tsx';
+import { ScreenChromeProvider, useCurrentScreenChrome } from './screen-chrome.tsx';
 import { TabBar } from './TabBar.tsx';
 import { TopBar } from './TopBar.tsx';
 
@@ -62,10 +63,11 @@ function useTabScrollMemory(section: SectionId, householdId: string | undefined)
   }, [section]);
 }
 
-export function AppShell({ switcher, updatePrompt, children }: AppShellProps): ReactElement {
+function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactElement {
   const { pathname } = useLocation();
   const section = sectionForPath(pathname);
-  const title = titleForPath(pathname);
+  const chrome = useCurrentScreenChrome();
+  const title = chrome?.title ?? titleForPath(pathname);
 
   useTabScrollMemory(section, switcher.activeHouseholdId);
 
@@ -85,7 +87,7 @@ export function AppShell({ switcher, updatePrompt, children }: AppShellProps): R
         <div className="lg:pl-56">
           <header className="sticky top-0 z-20 border-b border-border bg-base pt-[env(safe-area-inset-top)]">
             <div className="mx-auto max-w-240">
-              <TopBar title={title} switcher={switcher} />
+              <TopBar title={title} switcher={switcher} chrome={chrome} />
             </div>
             <OfflineBanner />
             {updatePrompt}
@@ -101,5 +103,13 @@ export function AppShell({ switcher, updatePrompt, children }: AppShellProps): R
         <TabBar />
       </ToastProvider>
     </SectionProvider>
+  );
+}
+
+export function AppShell(props: AppShellProps): ReactElement {
+  return (
+    <ScreenChromeProvider>
+      <ShellFrame {...props} />
+    </ScreenChromeProvider>
   );
 }

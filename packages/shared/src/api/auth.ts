@@ -1,11 +1,16 @@
 import { z } from 'zod';
-import { newPasswordSchema } from '../password.js';
+import { passwordShapeSchema } from '../password.js';
 import { emailSchema, timezoneSchema } from './common.js';
 
-/** POST /api/signup. A blank display name becomes the part of the email before the @. */
+/**
+ * POST /api/signup. A blank display name becomes the part of the email before the @.
+ *
+ * The password carries the shape rules only; the route composes the common-password rule in from
+ * `@hearth/shared/common-passwords`, which is what keeps the list out of the PWA's app shell.
+ */
 export const signupRequestSchema = z.object({
   email: emailSchema,
-  password: newPasswordSchema,
+  password: passwordShapeSchema,
   displayName: z.string().trim().max(100).optional(),
   timezone: timezoneSchema.optional(),
 });

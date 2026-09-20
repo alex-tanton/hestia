@@ -2,11 +2,34 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
+import pkg from './package.json' with { type: 'json' };
 
 // Branding: the Dashboard slate is the section-neutral color.
 const THEME_COLOR = '#475569';
 
+/*
+ * In production one origin serves the PWA, `/api`, and `/auth/v1` (Technical Architecture,
+ * "Routing"), so the app only ever calls same-origin paths. The dev server and `vite preview`
+ * stand in for Caddy by proxying those two prefixes; the addresses default to `supabase start`
+ * and a locally run service.
+ */
+const proxy = {
+  '/api': { target: process.env['HEARTH_DEV_API'] ?? 'http://127.0.0.1:3000', changeOrigin: true },
+  '/auth/v1': {
+    target: process.env['HEARTH_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
+    changeOrigin: true,
+  },
+  '/realtime/v1': {
+    target: process.env['HEARTH_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
+    changeOrigin: true,
+    ws: true,
+  },
+};
+
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  server: { proxy },
+  preview: { proxy },
   plugins: [
     react(),
     tailwindcss(),

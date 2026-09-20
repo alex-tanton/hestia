@@ -370,6 +370,24 @@ describe('households', () => {
     );
   });
 
+  it('counts each membership’s members for the switcher', async () => {
+    const { admin, member, household } = await householdWithMember();
+    const solo = await createHousehold(admin, uniqueName('Solo House'), '27601');
+
+    expect(
+      (await profile(admin)).memberships.map(({ householdId, memberCount }) => ({
+        householdId,
+        memberCount,
+      })),
+    ).toEqual([
+      { householdId: household.id, memberCount: 2 },
+      { householdId: solo.id, memberCount: 1 },
+    ]);
+    expect((await profile(member)).memberships).toEqual([
+      expect.objectContaining({ householdId: household.id, memberCount: 2 }),
+    ]);
+  });
+
   it('stamps the household active at most once per UTC day', async () => {
     const user = await signUp(app, 'Stamper');
     const household = await createHousehold(user);
