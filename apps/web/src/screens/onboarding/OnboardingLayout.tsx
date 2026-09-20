@@ -8,7 +8,7 @@ import { ToastProvider } from '../../components/ui/Toast.tsx';
 export interface OnboardingLayoutProps {
   /** The onboarding headline (Branding › Typography: `display`). */
   title: string;
-  description?: string;
+  description?: string | undefined;
   /** A back control, where the step has somewhere to go back to. */
   onBack?: { label: string; onBack: () => void };
   children: ReactNode;

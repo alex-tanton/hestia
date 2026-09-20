@@ -1,7 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
 import { render, type RenderResult } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { RouterProvider, createMemoryRouter } from 'react-router';
+import {
+  RouterProvider,
+  createMemoryRouter,
+  type InitialEntry,
+  type RouteObject,
+} from 'react-router';
 import { vi } from 'vitest';
 import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
 import { AppProviders } from '../App.tsx';
@@ -47,6 +52,8 @@ export function createAuthStub(
     }),
     signIn: vi.fn(() => Promise.resolve()),
     signUp: vi.fn(() => Promise.resolve()),
+    sendSignInLink: vi.fn(() => Promise.resolve()),
+    verifySignInCode: vi.fn(() => Promise.resolve()),
     signOut: vi.fn(() => {
       setState({ status: 'signed-out', userId: null });
       return Promise.resolve();
@@ -147,7 +154,8 @@ export interface RenderOptions {
   queryClient?: QueryClient;
   /** A route pattern, when the screen reads params from it. */
   path?: string;
-  initialEntries?: string[];
+  /** A string, or a `{ pathname, state }` entry where the screen reads router state. */
+  initialEntries?: InitialEntry[];
 }
 
 /** Renders one screen inside the providers and a router, with no route guards in the way. */
@@ -175,7 +183,8 @@ export function renderScreen(
 }
 
 export interface RenderAppOptions extends RenderOptions {
-  initialEntries?: string[];
+  /** The route tree to mount; defaults to the app's own, built with this build's flags. */
+  routes?: RouteObject[];
 }
 
 /** Renders the real route tree, so guards, redirects, and the shell are exercised too. */
@@ -183,8 +192,9 @@ export function renderApp({
   initialEntries = ['/'],
   auth = createAuthStub(),
   queryClient = testQueryClient(),
+  routes: tree = routes,
 }: RenderAppOptions = {}): RenderResult & { auth: AuthStub; queryClient: QueryClient } {
-  const router = createMemoryRouter(routes, { initialEntries });
+  const router = createMemoryRouter(tree, { initialEntries });
   const result = render(
     <AppProviders auth={auth} queryClient={queryClient}>
       <RouterProvider router={router} />

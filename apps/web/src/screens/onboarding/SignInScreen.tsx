@@ -93,6 +93,16 @@ export function SignInScreen(): ReactElement {
         </Button>
       </form>
       <div className="flex flex-col gap-2 text-body-sm">
+        {/*
+         * Magic link is built but disabled (Requirements › Authentication). The flag is a
+         * build-time constant, so with it off this option — and the sentence naming it — is
+         * folded out of the build rather than hidden at runtime.
+         */}
+        {import.meta.env.VITE_MAGIC_LINK_ENABLED === 'true' && (
+          <Link to="/sign-in/link" className="font-semibold text-section">
+            Email me a sign-in link
+          </Link>
+        )}
         <Link to="/forgot-password" className="font-semibold text-section">
           Forgot password?
         </Link>

@@ -18,6 +18,12 @@ export interface AuthClient extends AuthPort {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (input: SignupRequest) => Promise<void>;
   signOut: () => Promise<void>;
+  /**
+   * Magic link (Requirements › Authentication). Nothing calls either of these unless the build
+   * included the magic-link screens, which is what `VITE_MAGIC_LINK_ENABLED` decides.
+   */
+  sendSignInLink: (email: string) => Promise<void>;
+  verifySignInCode: (email: string, code: string) => Promise<void>;
 }
 
 export const SIGN_IN_FAILED_MESSAGE = 'Email or password is incorrect.';
@@ -25,9 +31,16 @@ export const RATE_LIMITED_MESSAGE = 'Too many attempts. Try again in a minute.';
 
 /** A sign-in refusal, already reduced to the sentence Design specifies for it. */
 export class AuthError extends Error {
-  constructor(message: string) {
+  /**
+   * The status GoTrue refused with, where the caller needs to tell refusals apart. `0` is a
+   * request that never reached the network, which supabase-js reports the same way.
+   */
+  readonly status: number | undefined;
+
+  constructor(message: string, status?: number) {
     super(message);
     this.name = 'AuthError';
+    this.status = status;
   }
 }
 
@@ -115,7 +128,29 @@ export function createAuthClient(client: Promise<SupabaseAuthClient>): AuthClien
       const { auth } = await ready;
       const { error } = await auth.signInWithPassword({ email, password });
       if (!error) return;
-      throw new AuthError(error.status === 429 ? RATE_LIMITED_MESSAGE : SIGN_IN_FAILED_MESSAGE);
+      throw new AuthError(
+        error.status === 429 ? RATE_LIMITED_MESSAGE : SIGN_IN_FAILED_MESSAGE,
+        error.status,
+      );
+    },
+
+    async sendSignInLink(email) {
+      const { auth } = await ready;
+      const { error } = await auth.signInWithOtp({
+        email,
+        // The email carries a link and a 6-digit code (Technical Architecture, "Appendix:
+        // Enabling magic link later"). The link lands on the app's root with the session in the
+        // URL fragment, which `detectSessionInUrl` above is already watching for.
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      // The screen chooses the sentence: GoTrue's own message is for the log, not the user.
+      if (error) throw new AuthError(error.message, error.status);
+    },
+
+    async verifySignInCode(email, code) {
+      const { auth } = await ready;
+      const { error } = await auth.verifyOtp({ email, token: code, type: 'email' });
+      if (error) throw new AuthError(error.message, error.status);
     },
 
     async signUp(input) {

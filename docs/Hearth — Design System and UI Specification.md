@@ -179,7 +179,7 @@ The favorite-stores part of setup depends on the merchants near the postal code,
 - **Forgot password:** a single screen with no form. "Ask your server owner for a reset link. They can create one for you." plus a back action.
 - **Set new password:** opened by a reset link. New password field with the same rules, then it lands on the dashboard. An expired or used link shows "This reset link has expired. Ask your server owner for a new one."
 - **Join:** by invite link, which opens the app with the invite applied after sign-in, or by entering the 8-character code. The code field accepts lowercase and ignores spaces and dashes. Joining skips household setup entirely and lands on the dashboard.
-- **Magic link (flag-hidden):** built but hidden while `HEARTH_MAGIC_LINK_ENABLED` is false. A "Email me a sign-in link" option on sign-in leads to a check-your-email screen with a 6-digit code field and a resend action enabled after 30s. The code field is the primary path, since an iOS home-screen app cannot receive the link's session.
+- **Magic link (flag-hidden):** built but hidden while `HEARTH_MAGIC_LINK_ENABLED` is false. A "Email me a sign-in link" option on sign-in opens a screen that takes an email address; sending it leads to the check-your-email confirmation, whose primary action opens the 6-digit code field, with a resend action enabled after 30s. The code field is the primary path, since an iOS home-screen app cannot receive the link's session. It is one field, not six boxes, so a code pasted with the spacing the email gave it lands whole. An incorrect or expired code gets a single sentence that does not separate the two ("That code is incorrect or has expired. Ask for a new one."), since neither may confirm whether an address has an account.
 
 States: expired or revoked invite ("This invite has expired. Ask for a new link or code."), unrecognized code ("That code doesn't match an invite. Check it and try again."), rate-limited ("Too many attempts. Try again in a minute."), wrong password ("Email or password is incorrect.").
 
@@ -309,7 +309,7 @@ Flat list, open items first, done collapsed below with who completed each and wh
 | Contrast | 4.5:1 body text, 3:1 large text and UI boundaries, verified in both themes |
 | Color independence | Every state carrying meaning through color also carries an icon or text label |
 | Keyboard | Full operation without a pointer; visible focus on every interactive element; logical tab order |
-| Focus management | Sheets and dialogs trap focus and return it to the trigger on close |
+| Focus management | Sheets and dialogs trap focus and return it to the trigger on close; where a member's action replaces the control they used — a form giving way to its confirmation, a button giving way to the form it opens — focus moves into what replaced it rather than falling back to the document |
 | Touch targets | 44×44px minimum, with at least 8px between adjacent targets |
 | Screen readers | Semantic HTML first; ARIA only where semantics fall short |
 | Motion | All animation respects `prefers-reduced-motion` |
@@ -319,7 +319,7 @@ Flat list, open items first, done collapsed below with who completed each and wh
 
 ### Specific patterns
 
-- **Live regions** for realtime list changes, announced politely so a screen-reader user hears when another member adds an item
+- **Live regions** for realtime list changes, announced politely so a screen-reader user hears when another member adds an item. A region that will announce a later change is in the tree before it has anything to say, and while empty is hidden in a way that keeps it in the accessibility tree rather than with `display: none`, because a region that arrives already populated is announced unreliably
 - **Skip link** to main content, visible on focus
 - **Readiness percentages** are announced as "4 of 5 ingredients ready", not just a number, and the ring visual is `aria-hidden` with the text carrying the meaning
 - **Deal cards** announce price and discount as a sentence, not as disconnected fragments

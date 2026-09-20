@@ -29,51 +29,76 @@ function RouteError(): ReactElement {
  * only screens that pull in the common-password list, and all three are behind a lazy route,
  * which is what keeps the list out of the shell.
  */
-export const routes: RouteObject[] = [
-  {
-    errorElement: <RouteError />,
-    HydrateFallback: () => null,
-    children: [
-      {
-        element: <SignedOutOnly />,
-        children: [
-          { path: 'sign-in', lazy: () => import('./screens/onboarding/SignInScreen.tsx') },
-          { path: 'sign-up', lazy: () => import('./screens/onboarding/SignUpScreen.tsx') },
-        ],
-      },
-      {
-        path: 'forgot-password',
-        lazy: () => import('./screens/onboarding/ForgotPasswordScreen.tsx'),
-      },
-      // Not gated: the reset link lands here carrying a recovery session, which is a session.
-      { path: 'set-password', lazy: () => import('./screens/onboarding/SetPasswordScreen.tsx') },
-      {
-        element: <RequireSession />,
-        children: [
-          { path: 'onboarding', lazy: () => import('./screens/onboarding/OnboardingScreen.tsx') },
-          { path: 'join', lazy: () => import('./screens/onboarding/JoinRoute.tsx') },
+export function createRoutes(): RouteObject[] {
+  /*
+   * Magic link is built but disabled (Requirements › Authentication). The flag is a build-time
+   * constant, so with it off the bundler folds this away: neither screen's chunk is emitted and
+   * neither path exists. A direct URL to one then falls through to the splat route below, which
+   * sends a signed-out visitor to ordinary sign-in.
+   */
+  const magicLinkRoutes: RouteObject[] =
+    import.meta.env.VITE_MAGIC_LINK_ENABLED === 'true'
+      ? [
           {
-            element: <AuthenticatedLayout />,
-            children: [
-              { index: true, element: <DashboardScreen /> },
-              { path: 'lists/*', lazy: () => import('./pillars/lists/ListsRoute.tsx') },
-              { path: 'meals/*', lazy: () => import('./pillars/meals/MealsRoute.tsx') },
-              { path: 'bills/*', lazy: () => import('./pillars/bills/BillsRoute.tsx') },
-              { path: 'chores/*', lazy: () => import('./pillars/chores/ChoresRoute.tsx') },
-              { path: 'settings', lazy: () => import('./screens/settings/SettingsRoute.tsx') },
-              {
-                path: 'settings/system-health',
-                lazy: () => import('./screens/settings/SystemHealthRoute.tsx'),
-              },
-              {
-                path: 'settings/households/:householdId/members/:userId/depart',
-                lazy: () => import('./screens/settings/DepartRoute.tsx'),
-              },
-              { path: '*', element: <Navigate to="/" replace /> },
-            ],
+            path: 'sign-in/link',
+            lazy: () => import('./screens/onboarding/MagicLinkRequestScreen.tsx'),
           },
-        ],
-      },
-    ],
-  },
-];
+          {
+            path: 'sign-in/code',
+            lazy: () => import('./screens/onboarding/MagicLinkCodeScreen.tsx'),
+          },
+        ]
+      : [];
+
+  return [
+    {
+      errorElement: <RouteError />,
+      HydrateFallback: () => null,
+      children: [
+        {
+          element: <SignedOutOnly />,
+          children: [
+            { path: 'sign-in', lazy: () => import('./screens/onboarding/SignInScreen.tsx') },
+            { path: 'sign-up', lazy: () => import('./screens/onboarding/SignUpScreen.tsx') },
+            ...magicLinkRoutes,
+          ],
+        },
+        {
+          path: 'forgot-password',
+          lazy: () => import('./screens/onboarding/ForgotPasswordScreen.tsx'),
+        },
+        // Not gated: the reset link lands here carrying a recovery session, which is a session.
+        { path: 'set-password', lazy: () => import('./screens/onboarding/SetPasswordScreen.tsx') },
+        {
+          element: <RequireSession />,
+          children: [
+            { path: 'onboarding', lazy: () => import('./screens/onboarding/OnboardingScreen.tsx') },
+            { path: 'join', lazy: () => import('./screens/onboarding/JoinRoute.tsx') },
+            {
+              element: <AuthenticatedLayout />,
+              children: [
+                { index: true, element: <DashboardScreen /> },
+                { path: 'lists/*', lazy: () => import('./pillars/lists/ListsRoute.tsx') },
+                { path: 'meals/*', lazy: () => import('./pillars/meals/MealsRoute.tsx') },
+                { path: 'bills/*', lazy: () => import('./pillars/bills/BillsRoute.tsx') },
+                { path: 'chores/*', lazy: () => import('./pillars/chores/ChoresRoute.tsx') },
+                { path: 'settings', lazy: () => import('./screens/settings/SettingsRoute.tsx') },
+                {
+                  path: 'settings/system-health',
+                  lazy: () => import('./screens/settings/SystemHealthRoute.tsx'),
+                },
+                {
+                  path: 'settings/households/:householdId/members/:userId/depart',
+                  lazy: () => import('./screens/settings/DepartRoute.tsx'),
+                },
+                { path: '*', element: <Navigate to="/" replace /> },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+export const routes: RouteObject[] = createRoutes();
