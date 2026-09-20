@@ -70,9 +70,11 @@ jobs:
       - run: pnpm test:integration
 
   test-e2e:
-    # E2E is the slow job: pull requests and main only, not every branch push.
+    # E2E is the slow job: pull requests and main only, not every branch push. Most of the time
+    # is the two image builds, which a GitHub-hosted runner does from cold on every run.
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -81,7 +83,14 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The suite's own stack is the Compose stack, so migrations are applied with the CLI the
+      # way a deploy applies them, and seeding needs psql (both preinstalled on the runner).
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.117.0
       - run: pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
+      # Exactly the local command: Playwright's global setup builds and starts the stack from an
+      # empty database, and its teardown drops it (Engineering Practices, "E2E environment").
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7
         if: failure()

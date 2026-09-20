@@ -40,7 +40,7 @@ pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
 | `pnpm typecheck`        | `tsc --noEmit` in every workspace               |
 | `pnpm test`             | Vitest unit and component tests                 |
 | `pnpm test:integration` | Vitest against `supabase start`                 |
-| `pnpm test:e2e`         | Playwright (base URL `HEARTH_E2E_BASE_URL`)     |
+| `pnpm test:e2e`         | Playwright against the Compose stack (below)    |
 | `pnpm build`            | Production builds of web and service            |
 
 `pnpm --filter @hearth/service test:coverage` reports the service's coverage over its unit and
@@ -48,6 +48,21 @@ integration tests together, so it needs `supabase start` running too.
 
 Commits follow Conventional Commits, checked by commitlint in a Husky hook; the pre-commit hook
 lints, formats, and typechecks.
+
+### End-to-end tests
+
+`pnpm test:e2e` is the whole command. It needs Docker, the Supabase CLI, and `psql`, plus the
+browser once (`pnpm --filter @hearth/e2e exec playwright install --with-deps chromium`). Playwright's
+global setup builds and starts `docker/docker-compose.yml` with `e2e/docker-compose.e2e.yml` over
+it — the production stack, so the journeys really do run through Caddy — applies the migrations,
+seeds, and hands the suite a stack on `http://127.0.0.1:8099`. Teardown drops it, database volume
+included, so every run starts from the same fixtures.
+
+The stack uses its own Compose project, network, and ports, and its secrets are a throwaway
+`.env` generated under the run's temporary directory, so it never touches a stack, a
+`supabase start`, or an `.env` already on the machine. `HEARTH_E2E_REUSE_STACK=1` skips bring-up
+and leaves the stack running, which is for iterating on one test: a run whose result is being
+trusted starts from an empty database. Engineering Practices, "E2E environment", has the detail.
 
 ### Running the service locally
 

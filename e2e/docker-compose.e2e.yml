@@ -1,0 +1,51 @@
+# E2E overlay for docker/docker-compose.yml (Engineering Practices › Testing, "E2E environment").
+#
+#   docker compose -p hearth-e2e --env-file <generated .env> \
+#     -f docker/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --wait
+#
+# e2e/setup/stack.ts runs that for `pnpm test:e2e`. The suite exercises the production stack — the
+# same images, the same Caddyfile, the same Kong declarative config — so the routing rules it
+# asserts are the ones that ship. Only what the loopback demands is different:
+#
+#   * its own project name, network name, and subnet, so a run never touches a Compose stack or a
+#     `supabase start` stack already on the machine, and `down --volumes` only ever drops its own
+#     database
+#   * Caddy on 8099 and Postgres on 54329, for the same reason
+#   * the database port published, because the migrations, the seed, and the tests' own
+#     assertions reach it from the host
+#   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
+#     public origin an https one; E2E is plain HTTP on the loopback, so HEARTH_HOST — the only
+#     thing that entrypoint derives — is given directly
+#
+# The `backup` service is left out: nothing in the suite reads a backup, and the stack starts
+# faster without it.
+
+services:
+  db:
+    ports:
+      - 127.0.0.1:54329:5432
+
+  hearth-service:
+    environment:
+      HEARTH_TRUSTED_PROXIES: &subnet 172.16.239.0/24
+      LOG_LEVEL: warn
+
+  kong:
+    environment:
+      KONG_TRUSTED_IPS: *subnet
+
+  caddy:
+    command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+    environment:
+      HEARTH_HOST: 127.0.0.1:8099
+      HEARTH_HOST_GATEWAY: &gateway 172.16.239.1
+    ports: !override
+      - 127.0.0.1:8099:8080
+
+networks:
+  hearth:
+    name: hearth-e2e
+    ipam:
+      config:
+        - subnet: *subnet
+          gateway: *gateway

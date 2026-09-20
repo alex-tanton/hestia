@@ -171,7 +171,19 @@ Playwright covering, at minimum:
 8. Remove a member, assert the reassignment prompt appears and blocks until resolved
 9. Switch household, assert no data from the previous household remains visible
 
-Each journey runs in both light and dark themes with `axe-core` assertions, satisfying the accessibility verification requirement.
+Each journey runs in both light and dark themes with `axe-core` assertions, satisfying the accessibility verification requirement. Everything else the suite covers — the Caddy refusal smoke test, the owner reset CLI, the invite paths, the magic-link flag — runs once, because the theme matrix is about the journeys' screens.
+
+### E2E environment
+
+The suite runs against the production stack, because "through Caddy" means the Caddyfile and Kong config that ship, not a stand-in. `pnpm test:e2e` is the whole command from a cold machine: Playwright's global setup builds and starts `docker/docker-compose.yml` with `e2e/docker-compose.e2e.yml` over it, and its teardown drops the stack and the database volume. Because every run starts from an empty database, the journeys see exactly the Seed Data fixtures.
+
+The overlay changes only what the loopback demands: its own Compose project, network name, and subnet, so a run never touches a stack already on the machine and its `down --volumes` can only drop its own database; Caddy on `127.0.0.1:8099` and Postgres on `127.0.0.1:54329`, for the same reason and because migrations, seeding, and the tests' own database assertions reach Postgres from the host; and Caddy started without `docker/caddy-entrypoint.sh`, whose guard exists to keep the pinned public origin an https one — E2E is plain HTTP on the loopback, so `HEARTH_HOST` is given directly. `HEARTH_ORIGIN` is that loopback origin, so the invite links and the owner's reset link the stack prints are ones the browser can open unaltered. The `backup` service is left out; nothing in the suite reads a backup.
+
+Bring-up is the same sequence a deploy uses: start the database and the Supabase services, apply `supabase/migrations/` with the Supabase CLI, start the service and Caddy, then `pnpm db:seed` followed by `e2e/fixtures/e2e-seed.sql`. Secrets are a throwaway `.env` that `scripts/generate-secrets.sh` writes outside the checkout, under the run's own temporary directory, and teardown deletes; nothing generated for a run is ever committed.
+
+The suite runs on one worker in file order, because the journeys share one database and each leaves the seeded households in a state the next accounts for. For the same reason there are no retries: a retry of "remove Sam from Oak Street" would find Sam already gone and report a failure that says nothing, so a flake is fixed rather than retried away. Tests wait on web-first assertions and never on a fixed delay; `axe-core` additionally waits for every animation that has an end, since a dialog still fading reads as a contrast failure.
+
+CI runs exactly this, with `pnpm test:e2e` on a GitHub-hosted runner, and uploads the Playwright report when it fails.
 
 ### Coverage
 

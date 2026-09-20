@@ -2,7 +2,15 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2024", "DOM"],
-    "types": ["node"]
+    "types": ["node"],
+    "allowImportingTsExtensions": true
   },
-  "include": ["playwright.config.ts", "tests"]
+  "include": [
+    "playwright.config.ts",
+    "global-setup.ts",
+    "global-teardown.ts",
+    "setup",
+    "support",
+    "tests"
+  ]
 }

@@ -106,6 +106,26 @@ The remaining stores stay unfavorited so browse-all has something to show beyond
 - An expired Oak Street invite, created 9 days ago, with code `EXP9RD2Z`
 - A revoked Oak Street invite, created 4 days ago and revoked 3 days ago, with code `RVK4D3NM`, for the revoked-invite state
 
+### E2E-only fixtures
+
+Two things the E2E suite needs that `pnpm db:seed` does not create.
+
+**Accounts journey 1 creates.** Signing up is the journey, so the account cannot already exist, and it runs once per theme. The two are Riley Park (`riley@example.com`, household "Maple Court") and Drew Alvarez (`drew@example.com`, household "Birch Lane"), both in 27514 and both with the seed password.
+
+**Departure rows**, applied by `e2e/fixtures/e2e-seed.sql` after the seed. The departure preview asks for a new owner for the lists a member created, the chores and open errands assigned to them, and the unarchived household bills they own, so journey 8 and the last-member departure need at least one of each to exist before the pillars that own them ship. Each row is one of this document's own fixtures, and moves into `supabase/seed/seed.sql` when its pillar's phase seeds the rest:
+
+| Row | Owner | Why |
+| --- | --- | --- |
+| Oak Street list "This Week" | created by Sam | Journey 8 reassigns it |
+| Oak Street list "Weekend Cookout" | created by Jordan | Journey 8's second removal |
+| Oak Street errand "Renew car registration" | Sam, open, due in 3 weeks | The open-errand group of the preview |
+| Oak Street bill "Duke Energy" | Sam, household | The household-bill group |
+| Oak Street bill "Water and Sewer" | Jordan, household | The household-bill group |
+| Oak Street chore "Take out trash" | rotation Alex → Sam → Jordan | The rotation note, which has no picker |
+| Personal bill "Car Insurance", $128.00, monthly | Casey | Survives Empty House's deletion |
+
+Casey's Car Insurance is the personal bill the last-member departure leaves behind. Personal bills belong to the user rather than the household, so it must still be there, still personal, and still Casey's once Empty House is gone.
+
 ## Deal fixtures
 
 The most important fixtures in the set. Every parser path and every deal-related UI state needs a representative here. Prices are shown as they normalize: unit price with its `price_unit`, original price, and `discount_percent` (floored). Normalized names assume the matcher's descriptor list includes at least "boneless", "skinless", "family pack", "large", "grade a", "shredded", "fresh", "crowns", "crumbles", "frozen", "sweet", "red or green", and "bag", and its brand list includes at least "Kraft", "Barilla", "Dave's Killer", "Progresso", "Tropicana", "Publix", "Tide", "Coca-Cola", and "Lowes Foods".
