@@ -1,0 +1,21 @@
+[
+  {
+    "externalId": "1039945367",
+    "name": "12-Pack Samuel Adams Beer",
+    "merchantId": "2361",
+    "merchantName": "Publix",
+    "unitPrice": 1899,
+    "priceUnit": "each",
+    "originalPrice": null,
+    "discountPercent": null,
+    "displayPrice": "$18.99",
+    "conditionalPrice": false,
+    "conditionalReason": null,
+    "category": null,
+    "flyerId": "8128353",
+    "validFrom": "2026-09-16",
+    "validTo": "2026-09-22",
+    "imageUrl": "https://f.wishabi.net/page_items/433384837/1789120358/extra_large.jpg",
+    "sourceUrl": null
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {
+    "externalId": "1039547929",
+    "name": "Head & Shoulders Classic or Men's 2-in-1",
+    "merchantId": "2100",
+    "merchantName": "Food Lion",
+    "unitPrice": 699,
+    "priceUnit": "each",
+    "originalPrice": null,
+    "discountPercent": null,
+    "displayPrice": "MVP $6.99 EA",
+    "conditionalPrice": true,
+    "conditionalReason": "loyalty_card",
+    "category": null,
+    "flyerId": "8128502",
+    "validFrom": "2026-09-16",
+    "validTo": "2026-09-22",
+    "imageUrl": "https://f.wishabi.net/page_pdf_images/24067874/8786f49c-abda-11f1-9892-e24ca916c621/x_large",
+    "sourceUrl": "https://shop.foodlion.com/?utm_source=flipp&utm_medium=flipp&utm_content=flyer-product-clicks&utm_campaign=evergreen"
+  }
+]

@@ -353,21 +353,39 @@ interface NormalizedDeal {
   name: string;
   merchantId: string;
   merchantName: string;
-  unitPrice: number;          // always a parsed number, rounded half-up to cents
+  unitPrice: number;          // integer cents, rounded half-up
   priceUnit: 'each' | 'lb' | 'oz';
-  originalPrice: number | null;
+  originalPrice: number | null;    // integer cents
   discountPercent: number | null;  // integer, floored
-  displayPrice: string;       // original copy, e.g. "2 for $5"
+  displayPrice: string;       // original copy, e.g. "2/$6.00"
   conditionalPrice: boolean;
   conditionalReason: 'coupon' | 'loyalty_card' | null;
   category: string | null;
   flyerId: string;
-  validFrom: string;          // ISO date
+  validFrom: string;          // ISO date, in the store's local offset
   validTo: string;
   imageUrl: string | null;
   sourceUrl: string | null;
 }
+
+interface Flyer {
+  flyerId: string;
+  merchantId: string;
+  merchantName: string;
+  validFrom: string;
+  validTo: string;
+  thumbnailUrl: string | null;
+  logoUrl: string | null;
+}
+
+interface Merchant {
+  merchantId: string;
+  name: string;
+  logoUrl: string | null;
+}
 ```
+
+Prices cross this boundary as integer cents, like every other amount in the codebase; the `numeric(10,2)` columns are dollars, and the one layer that maps camelCase to the database converts them. Alongside `DealSource`, the wrapper exposes its per-merchant skip counts and a reset, which the refresh job hands to System health and nothing else reads.
 
 The rest of the service depends only on `DealSource`, never on Flipp's raw shapes. A test double implementing the same interface is what the unit tests use.
 
@@ -453,8 +471,8 @@ This runs after each refresh and when a list is fetched. It applies to `shopping
 ### Rate discipline
 
 - Requests are serialized with a minimum 500ms gap; no parallel bursts
-- A descriptive `User-Agent` identifying the app and its origin
-- Exponential backoff on any non-200, with a circuit breaker opening after 5 consecutive failures and staying open for 30 minutes
+- A descriptive `User-Agent` identifying the app and its origin: `Hearth/1.0 (self-hosted household admin; +<HEARTH_ORIGIN>)`
+- Exponential backoff on any non-200: three attempts a request, waiting one second and then two, each still behind the minimum gap. A circuit breaker opens after 5 consecutive failed requests and stays open for 30 minutes, refusing every call in that window without touching the network; the first call after it lapses is the one that closes it. A request that fails after its attempts are spent, or that finds the breaker open, throws, so a flyer part-way through its item-detail requests is abandoned rather than stored half-priced.
 - The daily refresh runs once per **active postal code**, not once per household, so ten households in one ZIP cost one flyer fetch, and it fetches flyer items only for favorited merchants. A dormant postal code gets at most one on-demand refresh per UTC day, under the same rules.
 - A favorited merchant's flyer costs its roster request plus one item-detail request per priced product, roughly 120 to 300 requests over a few minutes at the 500ms gap, once per flyer. It is never fetched again while `deal` rows for that `flyer_id` exist and the flyer is valid.
 - No fetch is ever triggered directly by a user action that a cache could serve
@@ -464,9 +482,13 @@ This runs after each refresh and when a list is fetched. It applies to `shopping
 Development uses live calls, respecting the same caching and rate rules. Tests never make live calls. They run against two kinds of fixtures, both checked into the repo:
 
 - raw Flipp responses, first captured by the Phase 0 spike
-- normalized `NormalizedDeal` JSON
+- normalized `NormalizedDeal`, `Flyer`, and `Merchant` JSON, one file per captured response
 
-Fixtures are refreshed deliberately, never automatically, so a fixture update is a visible diff that documents an upstream change.
+Fixtures are refreshed deliberately, never automatically, so a fixture update is a visible diff that documents an upstream change. `pnpm fixtures:normalize` regenerates the normalized set by running the wrapper against the raw captures through a transport that reads them from disk, and a unit test fails when the committed files and that output differ.
+
+Because the wrapper drops flyers that are not active now, the normalized fixtures are generated against a fixed clock: `refreshed_at` from `flyers-27514.json`, the instant the spike captured. Any other clock would expire or hide flyers the captured responses still refer to. At that instant four of the 62 captured flyers are upcoming — ALDI's, CVS Pharmacy's, Family Dollar's, and Walgreens' next weeks — leaving 58 active, which is what exercises the upcoming-flyer rule.
+
+The captures record one item detail per merchant flyer, so a flyer-items run over a fixture is limited to a roster of the items whose detail exists, plus an empty-priced product and a banner for the rules that need them.
 
 ## Database
 

@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage --config vitest.coverage.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:types": "kysely-codegen --dialect postgres --url \"${HEARTH_DB_ADMIN_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" --include-pattern \"public.*\" --date-parser string --out-file src/db/types.ts && prettier --write src/db/types.ts",
-    "db:seed": "tsx ../../supabase/seed/seed-users.ts"
+    "db:seed": "tsx ../../supabase/seed/seed-users.ts",
+    "fixtures:normalize": "tsx scripts/normalize-fixtures.ts"
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",

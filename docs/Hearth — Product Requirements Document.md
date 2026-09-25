@@ -163,7 +163,7 @@ Readiness is precomputed on the server and stored in `recipe_readiness`. It is r
 
 Matching lives in the `matching` package, in TypeScript. It is not done in SQL.
 
-- **Normalization**, applied to both sides: lowercase; strip punctuation, quantities, and units; strip terms on a maintained descriptor list ("boneless", "skinless", "family pack", "chopped", …) and a maintained brand list ("Kraft", "Barilla", …); singularize each remaining token. If nothing is left after this, the normalized name falls back to the lowercased original with only punctuation stripped. For example, "Coca-Cola 2L" loses its brand and its size, so it normalizes to "coca cola 2l". `normalized_name` is precomputed and stored whenever an ingredient, pantry item, deal, or list item is saved.
+- **Normalization**, applied to both sides: lowercase; strip punctuation, quantities, and units; strip terms on a maintained descriptor list ("boneless", "skinless", "family pack", "chopped", …) and a maintained brand list ("Kraft", "Barilla", …); singularize each remaining token, then apply the descriptor and brand lists once more, so that a plural descriptor ("Sandwich Bags") is stripped now that it reads as "bag" and normalizing a normalized name changes nothing. If nothing is left after this, the normalized name falls back to the lowercased original with only punctuation stripped. For example, "Coca-Cola 2L" loses its brand and its size, so it normalizes to "coca cola 2l". `normalized_name` is precomputed and stored whenever an ingredient, pantry item, deal, or list item is saved.
 - **Token containment:** an ingredient matches a candidate when every token of the ingredient's normalized name fuzzy-matches some token of the candidate's normalized name with a similarity of at least **0.85**. "chicken breast" does not match "chicken broth", because "breast" has no match in the candidate.
 - **Overrides** apply before fuzzy matching (see Match overrides).
 - Which fuzzy-similarity library to use (`fastest-levenshtein` or `fuse.js`) is decided by a Phase 3 benchmark on real deal strings.
@@ -681,9 +681,9 @@ Flipp item pricing is inconsistent. The wrapper normalizes each item into a unit
 | `2 for $5` | Divide: $2.50 unit price; display retains the original "2 for $5" copy |
 | Multi-buy whose original is the bundle total (`FINAL PRICE 2/$3`, original $4) | Divide both: unit price $1.50, original $2.00, 25% off |
 | Original 10× the unit price or more (`$2.39/lb`, original $23.90, a case price) | Parse the unit price; the original is treated as unknown, so the discount is null |
-| `BOGO` / `Buy 1 Get 1 Free` with a known base price | Treated as 50% off the base price |
+| `BOGO` / `Buy 1 Get 1 Free` with a known base price | Treated as 50% off the base price. The discount is recorded as that 50%: halving an odd base rounds up a cent ($9.49 becomes $4.75), which the general formula below would floor to 49% |
 | `BOGO` with no known base price | Skipped |
-| Buy-N-get-M free other than BOGO (`Buy 2 Get 1 Free`), with or without a base price | Skipped |
+| Buy-N-get-M other than a plain buy-one-get-one free (`Buy 2 Get 1 Free`, `Buy 1 get 1 50% off`, `Buy 2 Get $8.00 Off`), with or without a base price | Skipped — the price shown is not the price of one item |
 | Minimum-quantity pricing (`when you buy 4`, `must buy 2`) | Skipped — the price does not apply to one item |
 | Percent off with no base price (`25% OFF WITH CARD`) | Skipped |
 | `$1.00 off` with a known original price | Subtract from the original price |
@@ -692,8 +692,11 @@ Flipp item pricing is inconsistent. The wrapper normalizes each item into a unit
 | Loyalty-card qualifier (`w/ MVP Card`, `MVP` price prefix, `with your VIC card`, `WITH CARD`, membership price) | Parse the price; `conditional_price` true, `conditional_reason` loyalty\_card |
 | Rebates (`with ExtraBucks Rewards`, `FREE with $25 purchase`) | Skipped — not a shelf price |
 | Shelf price with a secondary rebate offer (`$4.79 WITH CARD`, plus "Buy 2 get $6 ExtraBucks") | Parse the shelf price, as loyalty\_card conditional when carded; the rebate is ignored |
+| Secondary offers generally, which CVS introduces with "Also get savings with …" | Read as extras, not as terms: they neither skip the item nor decide `conditional_reason`. A card named anywhere still counts, and the card wins over a coupon, because the card is what the shelf price requires |
 | Mix-and-match multi-buy with purchase limits | Skipped — ambiguous enough that a confident parse would be wrong |
 | No price, or unparseable copy | Skipped — excluded from results rather than shown priceless |
+
+The copy a parser reads is the price text Flipp prints around the number — its pre-price text, post-price text, and sale story — never the item's name. Names carry their own marketing ("… BOGO\*"), and letting a product description override a printed shelf price would lose real deals.
 
 Rounding: all price arithmetic (unit prices, discounts, subtotals, monthly and annualized amounts) is done in integer cents, and only formatted as dollars for display. Division rounds half-up to a whole cent ($10 ÷ 3 = 1000 ÷ 3 = 333 cents = $3.33). The discount percentage is `(original − unit) ÷ original × 100`, floored to an integer. It is null when no original price is known.
 

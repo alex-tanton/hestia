@@ -1,0 +1,21 @@
+[
+  {
+    "externalId": "1039938734",
+    "name": "Zesta Saltine Crackers",
+    "merchantId": "2469",
+    "merchantName": "Lowes Foods",
+    "unitPrice": 250,
+    "priceUnit": "each",
+    "originalPrice": null,
+    "discountPercent": null,
+    "displayPrice": "FINAL PRICE 2/$5.00",
+    "conditionalPrice": true,
+    "conditionalReason": "coupon",
+    "category": null,
+    "flyerId": "8132169",
+    "validFrom": "2026-09-16",
+    "validTo": "2026-09-22",
+    "imageUrl": "https://f.wishabi.net/page_items/433639683/1789120581/extra_large.jpg",
+    "sourceUrl": null
+  }
+]

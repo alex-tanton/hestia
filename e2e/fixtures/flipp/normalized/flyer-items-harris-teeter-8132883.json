@@ -1,0 +1,21 @@
+[
+  {
+    "externalId": "1040206756",
+    "name": "Harris Teeter Parchment Paper Sheets",
+    "merchantId": "2431",
+    "merchantName": "Harris Teeter",
+    "unitPrice": 300,
+    "priceUnit": "each",
+    "originalPrice": null,
+    "discountPercent": null,
+    "displayPrice": "2/$6.00",
+    "conditionalPrice": true,
+    "conditionalReason": "loyalty_card",
+    "category": null,
+    "flyerId": "8132883",
+    "validFrom": "2026-09-16",
+    "validTo": "2026-09-22",
+    "imageUrl": "https://f.wishabi.net/page_pdf_images/24084376/a68d401a-ade9-11f1-9d4d-92a72789765b/x_large",
+    "sourceUrl": null
+  }
+]

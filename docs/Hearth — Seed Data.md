@@ -128,77 +128,82 @@ Casey's Car Insurance is the personal bill the last-member departure leaves behi
 
 ## Deal fixtures
 
-The most important fixtures in the set. Every parser path and every deal-related UI state needs a representative here. Prices are shown as they normalize: unit price with its `price_unit`, original price, and `discount_percent` (floored). Normalized names assume the matcher's descriptor list includes at least "boneless", "skinless", "family pack", "large", "grade a", "shredded", "fresh", "crowns", "crumbles", "frozen", "sweet", "red or green", and "bag", and its brand list includes at least "Kraft", "Barilla", "Dave's Killer", "Progresso", "Tropicana", "Publix", "Tide", "Coca-Cola", and "Lowes Foods".
+The most important fixtures in the set. Every parser path and every deal-related UI state needs a representative here. Prices are shown as they normalize: unit price with its `price_unit`, original price, `discount_percent` (floored), and the `conditional_reason` where the price is conditional. Normalized names assume the matcher's descriptor list includes at least "boneless", "skinless", "family pack", "large", "extra large", "grade a", "shredded", "sliced", "fresh", "crowns", "crumbles", "frozen", "organic", "sweet", "red or green", and "bag", and its brand list includes at least "Kraft", "Barilla", "Dave's Killer", "Progresso", "Tropicana", "Publix", "Tide", "Coca-Cola", "Harris Teeter", "Food Lion", "ALDI", "CVS", and "Lowes Foods".
+
+Every row below is a real item from the 27514 captures, quoted by its normalized values. Grocery flyers price most of their stock behind a loyalty card, so most of these rows are conditional; that is what the captures contain, not a choice made here.
 
 The raw captures for 27514 are in `e2e/fixtures/flipp/raw/`: `search-27514-{milk,chicken,harris-teeter,food-lion,publix,lowes-foods,aldi,cvs}.json`, `flyers-27514.json`, `data-27514.json` (the `flyers-ng.flippback.com` flyers-and-coupons variant), `merchants-27514.json`, `flyer-items-{harris-teeter-8132883,food-lion-8128502,publix-8128353,lowes-foods-8132169,aldi-8131738,cvs-8139694}.json`, `flyer-items-ng-harris-teeter-8132883.json` (the `flyers-ng` equivalent), and `item-{harris-teeter-1040206756,food-lion-1039547929,publix-1039945367,lowes-foods-1039938734,cvs-1041117892}.json` (item detail). Item ids change weekly, but merchant ids are stable, so fixtures and tests may rely on them: Harris Teeter 2431, Food Lion 2100, Publix 2361, Lowes Foods 2469, ALDI 2353, CVS Pharmacy 2264, and Walmart 2175 (the directory's other "Walmart", 234, is Walmart Canada).
 
 ### Clean prices
 
-The straightforward path.
+The straightforward path: a shelf price with nothing attached to it, and an original where the flyer gives one.
 
 | Raw name | Merchant | Unit price | Original | Discount | Normalized name |
 | --- | --- | --- | --- | --- | --- |
-| Boneless Skinless Chicken Breast, Family Pack | Harris Teeter | $2.49/lb | $4.99/lb | 50% | chicken breast |
-| Large Grade A Eggs, 12 ct | Food Lion | $2.79 | $3.99 | 30% | egg |
-| Barilla Pasta, 16 oz | Publix | $1.29 | $1.99 | 35% | pasta |
-| Yellow Onions, 3 lb bag | Lowes Foods | $2.49 | $3.49 | 28% | yellow onion |
-| Lowes Foods Whole Milk, 1 gal | Lowes Foods | $3.49 | $3.99 | 12% | whole milk |
-| Roma Tomatoes | Walmart | $1.28/lb | — | — | roma tomato |
+| Harris Teeter Peanut Butter Chocolate Puffs Cereal | Harris Teeter | $3.19 | — | — | peanut butter chocolate puff cereal |
+| Woodbridge Cabernet or Chardonnay | Harris Teeter | $7.19 | $8.99 | 20% | woodbridge cabernet or chardonnay |
+| Sargento Balanced Breaks | Food Lion | $3.49 | $3.99 | 12% | sargento balanced break |
+| JUMBO YELLOW ONIONS | Lowes Foods | $1.49/lb | — | — | jumbo yellow onion |
+| HASS AVOCADOS | Lowes Foods | $1.79 | — | — | hass avocado |
 
 ### Multi-buy
 
-Parsed by division, with the unit price rounded half-up; `displayPrice` keeps the original copy.
+Parsed by division, with the unit price rounded half-up; `displayPrice` keeps the original copy. The last two carry an original that is also a bundle total, so both figures divide.
 
-| Raw copy | Merchant | Parses to | Normalized name |
-| --- | --- | --- | --- |
-| 2 for $5 — Kraft Shredded Cheese, 8 oz | Harris Teeter | $2.50 each | cheese |
-| 3/$10 — Ground Beef 80/20, 1 lb | Food Lion | $3.33 each | ground beef |
-| 5 for $5 — Progresso Soup | Publix | $1.00 each | soup |
-| 2/$7.00 Tropicana Orange Juice 52 oz | Walmart | $3.50 each | orange juice |
+| Raw copy | Merchant | Parses to | `conditionalReason` | Normalized name |
+| --- | --- | --- | --- | --- |
+| 2/$5.00 — Egg-Land's Best Extra Large Eggs | Harris Teeter | $2.50 each | `loyalty_card` | egg land s best egg |
+| 5/$5.00 — Farmers Market Cucumbers | Harris Teeter | $1.00 each | `loyalty_card` | farmer market cucumber |
+| MVP 2/$5.00 — Food Lion Mini Potatoes | Food Lion | $2.50 each | `loyalty_card` | mini potato |
+| 3/$5.00 — Harris Teeter 100% Pure Pumpkin, original $5.96 | Harris Teeter | $1.67 each, original $1.99, 16% off | `loyalty_card` | pure pumpkin |
+| FINAL PRICE 2/$4.00 — Stouffer's Entrees, original $6.00 | Lowes Foods | $2.00 each, original $3.00, 33% off | `coupon` | stouffer s entree |
+
+"3/$5.00" is the half-up rounding case: 500 ÷ 3 = 167 cents, and 596 ÷ 3 = 199.
 
 ### BOGO
 
-Every BOGO fixture has a base price, so each parses to half of it (rounded half-up) at 50% off. The BOGO-with-no-base-price skip case is covered by the parser's unit tests over the raw fixtures.
+The capture contains exactly one buy-one-get-one with a base price to halve. It parses to half of it, rounded half-up, at 50% off — the discount the offer states, not the 49% that halving an odd base would otherwise floor to.
 
-| Raw copy | Merchant | Base price | Parses to |
-| --- | --- | --- | --- |
-| BOGO Free — Publix Deli Subs, reg $8.99 | Publix | $8.99 | $4.50 each |
-| Buy 1 Get 1 Free Barilla Sauce 24oz, reg $3.49 | Publix | $3.49 | $1.75 each |
-| B1G1 — Cheerios, 12 oz, reg $4.99 | Harris Teeter | $4.99 | $2.50 each |
+| Raw copy | Merchant | Base price | Parses to | Normalized name |
+| --- | --- | --- | --- | --- |
+| Buy 1 Get 1 FREE* — Mifroma Le Gruyère AOP Cheese† BOGO* | Publix | $9.49 | $4.75 each, 50% off | mifroma le gruyère aop cheese bogo |
+
+Every other captured BOGO is printed with no price at all, which is the skip case below. Publix prints 48 of them.
 
 ### Conditional price
 
 Parsed, with `conditionalPrice: true` and a `conditionalReason`, so the UI badges them.
 
-| Raw copy | Merchant | Unit price | `conditionalReason` |
-| --- | --- | --- | --- |
-| $3.99 with digital coupon — Tide Pods 42ct | Harris Teeter | $3.99 | `coupon` |
-| $1.99 ea. w/ MVP Card — Coca-Cola 2L | Food Lion | $1.99 | `loyalty_card` |
+| Raw copy | Merchant | Unit price | Original | `conditionalReason` | Normalized name |
+| --- | --- | --- | --- | --- | --- |
+| 2/$6.00 with your VIC card — Harris Teeter Snack Cheese | Harris Teeter | $3.00 | — | `loyalty_card` | snack cheese |
+| FINAL PRICE $3.99, "$1 OFF ONE DIGITAL COUPON" — Fa!rlife Milk | Lowes Foods | $3.99 | $4.99 | `coupon` | fa rlife milk |
+| $4.79 WITH CARD — Colgate Optic White Advanced | CVS Pharmacy | $4.79 | $9.79 | `loyalty_card` | colgate optic white advanced charcoal purple sensitive or stain fighter |
 
-Coca-Cola 2L exercises the empty-normalization fallback. Removing the brand "Coca-Cola" and the size "2L" leaves nothing, so its normalized name is "coca cola 2l": the lowercased original with only punctuation stripped. Tide Pods 42ct normalizes to "pod".
+The Colgate row is also the secondary-rebate case: its sale story is "Also get savings with $5.00 on 2 Digital mfr coupon + Buy 2 get $6 ExtraBucks Rewards®". The shelf price parses and the rebate is ignored, and the card wins over the coupon because the card is what the $4.79 requires.
 
-### Amount-off
-
-| Raw copy | Merchant | Parses to |
-| --- | --- | --- |
-| $1.00 off — Dave's Killer Bread, reg $5.49 | Harris Teeter | $4.49, 18% off, normalized "bread" |
+The capture has no amount-off deal with a known original to subtract from — every "$1 OFF" in it is printed without a price — so the subtracting branch is covered by the parser's own unit test against the Requirements table, and the skip branch appears below.
 
 ### Favorite-store groceries
 
-Everyday deals at Oak Street's favorite merchants. These are what the recipe readiness scores below are computed against.
+Everyday deals at Oak Street's favorite merchants, which is what the recipe readiness scores below are computed against. All but one are MVP or VIC prices, because that is how these flyers price groceries.
 
-| Raw name | Merchant | Unit price | Original | Discount | Normalized name |
-| --- | --- | --- | --- | --- | --- |
-| Fresh Broccoli Crowns | Harris Teeter | $1.49/lb | $2.49/lb | 40% | broccoli |
-| Bell Peppers, Red or Green | Harris Teeter | $0.99 | $1.49 | 33% | bell pepper |
-| Russet Potatoes, 5 lb bag | Harris Teeter | $2.99 | $4.49 | 33% | russet potato |
-| Feta Cheese Crumbles, 6 oz | Harris Teeter | $2.50 | $3.99 | 37% | feta cheese |
-| Egg Noodles, 12 oz | Harris Teeter | $1.50 | $2.29 | 34% | egg noodle |
-| Carrots, 2 lb bag | Food Lion | $1.69 | $2.29 | 26% | carrot |
-| Flour Tortillas, 10 ct | Food Lion | $2.00 | $2.79 | 28% | flour tortilla |
-| Chuck Roast | Food Lion | $4.99/lb | $6.99/lb | 28% | chuck roast |
-| Cucumbers | Food Lion | $0.50 | — | — | cucumber |
-| Frozen Sweet Peas, 12 oz | Food Lion | $1.00 | $1.79 | 44% | pea |
+| Raw name | Merchant | Unit price | `conditionalReason` | Normalized name |
+| --- | --- | --- | --- | --- |
+| Broccoli Crowns | Food Lion | $1.99/lb | `loyalty_card` | broccoli |
+| Food Lion Rainbow Bell Peppers | Food Lion | $2.99 | `loyalty_card` | rainbow bell pepper |
+| Food Lion Baby Cut Carrots | Food Lion | $0.99 | `loyalty_card` | baby cut carrot |
+| Food Lion Mini Cucumbers | Food Lion | $2.49 | `loyalty_card` | mini cucumber |
+| Nature's Promise Organic Potatoes | Food Lion | $3.99 | `loyalty_card` | nature s promise potato |
+| Food Lion Pasta | Food Lion | $0.99 | `loyalty_card` | pasta |
+| Food Lion Chunk or Shredded Cheese | Food Lion | $3.49 | `loyalty_card` | chunk or cheese |
+| Nature's Promise Jumbo Chicken Breast | Food Lion | $3.49/lb | `loyalty_card` | nature s promise jumbo chicken breast |
+| 93% Lean Fresh Ground Beef | Food Lion | $7.29/lb | `loyalty_card` | lean ground beef |
+| Beef Chuck Roast | Food Lion | $7.99/lb | `loyalty_card` | beef chuck roast |
+| Bone-In Pork Chops | Harris Teeter | $3.49/lb | — | bone in pork chop |
+| 2/$7.00 — Artesano Bakery Bread | Harris Teeter | $3.50 | `loyalty_card` | artesano bakery bread |
+
+Bone-In Pork Chops is the OCR case: its post-price text reads "per Ib", not "per lb", and it still prices per pound. It is also the one unconditional row here — the capture prints it with no card or coupon wording at all — so the list and deal screens have a grocery deal with no badge beside the badged ones.
 
 ### Expired
 
@@ -206,27 +211,29 @@ All three have `valid_to` of yesterday and are attached to items on the "This We
 
 | Raw name | Merchant | Unit price | Original | Repricing outcome |
 | --- | --- | --- | --- | --- |
-| Boneless Skinless Chicken Breast, Family Pack (last week) | Harris Teeter | $1.99/lb | $4.99/lb | Re-matches the current Harris Teeter chicken breast deal by merchant plus normalized name: $2.49/lb, showing $1.99 struck through |
-| Bananas | Food Lion | $0.44/lb | $0.59/lb | No current deal: falls back to the regular price, $0.59/lb |
-| Gold Emblem Trail Mix, 10 oz | CVS Pharmacy | $2.99 | — | No current deal and no regular price: the price is cleared, and the item shows "No price" with $2.99 struck through |
+| Broccoli Crowns (last week) | Food Lion | $1.49/lb | — | Re-matches the current Food Lion broccoli deal by merchant plus normalized name: $1.99/lb, showing $1.49 struck through |
+| Oscar Mayer Sliced Bacon | Food Lion | $5.99 | $6.99 | No current deal: falls back to the regular price, $6.99 |
+| GARNIER Fructis shampoo/conditioner | CVS Pharmacy | $4.49 | — | No current deal and no regular price: the price is cleared, and the item shows "No price" with $4.49 struck through |
 
 ### Must be skipped
 
-These exist specifically to assert the skip path. None should appear in results, and each should increment the skip counter.
+These exist specifically to assert the skip path. None should appear in results, and each should increment the skip counter under the reason named here. Together they cover every skip reason the captures contain.
 
 | Raw copy | Merchant | Why |
 | --- | --- | --- |
-| Look for great savings in store! | Lowes Foods | No price at all |
-| Prices vary by location | Lowes Foods | Unparseable |
-| Save $2 on Tillamook Cheese Block | Lowes Foods | Amount-off with no original price |
-| See store for details — Weekly Produce | Food Lion | No price |
-| Mix & Match 10/$10 with card, limit 2, select varieties | Harris Teeter | Ambiguous enough that a confident parse would be wrong |
-| $5.00 with ExtraBucks Rewards — CVS Health Vitamins | CVS Pharmacy | Rebate, not a shelf price |
-| FREE with $25 purchase — Publix Paper Towels | Publix | Rebate conditional on basket total, not a shelf price |
+| CLR Cleaner or Lime & Rust Remover, with an empty price | Harris Teeter | No price at all, and no detail request is spent on it |
+| BUY 1 GET 1 FREE each item rings at half price with your VIC card — Chicken Breast or Tenderloins | Harris Teeter | BOGO with no base price to halve |
+| MVP $1.99 EA, "BUY 2 GET 1 FREE" — Food Lion Cream Cheese | Food Lion | Buy-N-get-M other than BOGO: $1.99 is not the price of one |
+| $1.95 ea MUST BUY 2 — Liquid Death Sparkling Energy | Lowes Foods | Minimum-quantity pricing |
+| 25% OFF WITH CARD — ALL Hyland's Naturals kids cold or sleep products | CVS Pharmacy | Percent off with no base price |
+| Spend $25 get $5 ExtraBucks Rewards®◆ WITH CARD — ANY CVS Brand diabetes care | CVS Pharmacy | Rebate, not a shelf price |
+| $5.00 off WITH MFR DIGITAL COUPON Any 1 — Zyrtec Allergy Shield Spray | Publix | Amount-off with no original price |
+
+Mix-and-match with a purchase limit is the one skip rule with no representative in the 27514 capture; the parser's unit test uses the Requirements table's own example.
 
 ### State-specific fixtures
 
-- **Lowes Foods has a 60% skip rate** in its flyer-items fixture: 5 items, 3 skipped (the three Lowes Foods rows above). That exercises the high-skip warning and System health's skip-rate display.
+- **CVS Pharmacy and Publix are the high-skip merchants.** Over the captured search responses the chain skips 78% of CVS items and 46% of Publix items, against 19% for Harris Teeter, 19% for Food Lion, 14% for Lowes Foods, and none at all for ALDI, whose flyer is plain shelf prices throughout. The first two exercise the above-40% warning and System health's skip-rate display; ALDI's zero is the control that says the warning is not firing on everything.
 - **An empty result set** for the query `"saffron"`, for the filtered-empty state
 - **A stale `deal_query_cache` row** for 27514 and the query `"chicken"`, with `cached_at` 7 hours ago (the TTL is 6 hours) and no live fetch available, for the as-of-date path
 
@@ -238,11 +245,11 @@ Twenty items for Oak Street: olive oil, salt, black pepper, garlic, rice, flour,
 
 Three pantry items also match current deals at Oak Street's favorite merchants:
 
-- eggs, against Food Lion's eggs
-- bread, against Harris Teeter's Dave's Killer Bread
-- flour, against Food Lion's flour tortillas, by token containment
+- eggs, against Harris Teeter's Egg-Land's Best Extra Large Eggs
+- bread, against Harris Teeter's Artesano Bakery Bread
+- pasta, against Food Lion's Pasta
 
-Each exercises pantry-beats-sale: the ingredient counts once, in the pantry bucket. The seed tests assert it is not double-counted. Pasta and yellow onions are on sale only at non-favorite merchants (Publix and Lowes Foods), so they never count as on sale for Oak Street.
+Each exercises pantry-beats-sale: the ingredient counts once, in the pantry bucket. The seed tests assert it is not double-counted. Yellow onions are on sale only at Lowes Foods, which Oak Street has not favorited, so they never count as on sale for it.
 
 ### Recipes
 
@@ -252,26 +259,28 @@ Legend: **S** on sale, **P** in pantry, **B** to buy. A deal is named where it d
 
 | Recipe | Ingredients and expected bucket | Readiness |
 | --- | --- | --- |
-| Sheet Pan Chicken and Vegetables | chicken breast S (HT), broccoli S (HT), bell pepper S (HT), olive oil P, garlic P, paprika P, lemon B | 6 of 7 — 86% (3 on sale, 3 pantry) |
-| Spaghetti with Meat Sauce | pasta P, ground beef S (FL), canned tomatoes P, onion P, garlic P, tomato paste B, parmesan P, dried oregano B | 6 of 8 — 75% (1 on sale, 5 pantry) |
-| Vegetable Fried Rice | rice P, eggs P (also on sale; pantry wins), frozen peas S (FL), carrots S (FL), soy sauce P, green onions B, sesame oil B, garlic P | 6 of 8 — 75% (2 on sale, 4 pantry) |
-| Black Bean Tacos | black beans P, flour tortillas S (FL), cumin P, avocado B, lime B, salsa B, cheese S (HT), red onion B | 4 of 8 — 50% (2 on sale, 2 pantry) |
-| Chicken Noodle Soup | chicken breast S (HT), egg noodles S (HT), carrots S (FL), celery B, onion P, garlic P, chicken broth P, thyme B, bay leaves B | 6 of 9 — 67% (3 on sale, 3 pantry) |
-| Greek Salad | cucumber S (FL), roma tomatoes B (Walmart is not a favorite), red onion B, feta cheese S (HT), kalamata olives B, olive oil P, red wine vinegar B | 3 of 7 — 43% (2 on sale, 1 pantry) |
+| Sheet Pan Chicken and Vegetables | chicken breast S (FL), broccoli S (FL), bell pepper S (FL), olive oil P, garlic P, paprika P, lemon B | 6 of 7 — 86% (3 on sale, 3 pantry) |
+| Spaghetti with Meat Sauce | pasta P (also on sale; pantry wins), ground beef S (FL), canned tomatoes P, onion P, garlic P, tomato paste B, parmesan P, dried oregano B | 6 of 8 — 75% (1 on sale, 5 pantry) |
+| Vegetable Fried Rice | rice P, eggs P (also on sale; pantry wins), frozen peas B, carrots S (FL), soy sauce P, green onions B, sesame oil B, garlic P | 5 of 8 — 63% (1 on sale, 4 pantry) |
+| Black Bean Tacos | black beans P, flour tortillas B, cumin P, avocado B, lime B, salsa B, cheese S (FL), red onion B | 3 of 8 — 38% (1 on sale, 2 pantry) |
+| Chicken Noodle Soup | chicken breast S (FL), egg noodles B, carrots S (FL), celery B, onion P, garlic P, chicken broth P, thyme B, bay leaves B | 5 of 9 — 56% (2 on sale, 3 pantry) |
+| Greek Salad | cucumber S (FL), roma tomatoes B, red onion B, feta cheese B, kalamata olives B, olive oil P, red wine vinegar B | 2 of 7 — 29% (1 on sale, 1 pantry) |
 | Baked Ziti | pasta P, ground beef S (FL), canned tomatoes P, mozzarella B, ricotta B, parmesan P, garlic P | 5 of 7 — 71% (1 on sale, 4 pantry) |
-| Breakfast Burritos | eggs P (also on sale; pantry wins), flour tortillas S (FL), cheese S (HT), potatoes S (HT russet potatoes), bell pepper S (HT), salsa B | 5 of 6 — 83% (4 on sale, 1 pantry) |
+| Breakfast Burritos | eggs P (also on sale; pantry wins), flour tortillas B, cheese S (FL), potatoes S (FL), bell pepper S (FL), salsa B | 4 of 6 — 67% (3 on sale, 1 pantry) |
 | Lentil Curry | lentils B, coconut milk B, onion P, garlic P, ginger B, curry powder B, cumin P, canned tomatoes P, basmati rice B, cilantro B | 4 of 10 — 40% (0 on sale, 4 pantry) |
-| Grilled Cheese and Tomato Soup | bread P (also on sale; pantry wins), butter P, cheese S (HT), canned tomatoes P, milk P | 5 of 5 — 100% (1 on sale, 4 pantry) |
+| Grilled Cheese and Tomato Soup | bread P (also on sale; pantry wins), butter P, cheese S (FL), canned tomatoes P, milk P | 5 of 5 — 100% (1 on sale, 4 pantry) |
 | Shrimp Pad Thai | rice noodles B, shrimp B, tamarind paste B, fish sauce B, bean sprouts B, peanuts B, lime B, green onions B | 0 of 8 — 0% |
-| Sunday Pot Roast | chuck roast S (FL), russet potatoes S (HT), carrots S (FL), onion P, beef broth B, rosemary B, worcestershire sauce B, flour P (also matches flour tortillas; pantry wins) | 5 of 8 — 63% (3 on sale, 2 pantry) |
+| Sunday Pot Roast | chuck roast S (FL), russet potatoes B, carrots S (FL), onion P, beef broth B, rosemary B, worcestershire sauce B, flour P | 4 of 8 — 50% (2 on sale, 2 pantry) |
+
+Ingredients that the 27514 capture happens not to put on sale at a favorite merchant — frozen peas, flour tortillas, egg noodles, feta cheese, and russet potatoes specifically — sit in the buy bucket. That is the capture, not an omission: a week where every ingredient is on sale would test nothing.
 
 Rivera Family has two recipes, **Tuna Poke Bowl** (ahi tuna, sushi rice, soy sauce, avocado, cucumber, sesame seeds) and **Miso Soup** (miso paste, tofu, green onions, dashi, wakame). Rivera Family has no pantry, and nothing on sale at Publix or Walmart matches either recipe. Both score 0%, which exercises the suggestions screen's "all recipes at 0%" state: shown normally, ranked by title.
 
 The suggestions screen's "no deals available" state has a test-only fixture, not part of `seed.sql`: an E2E setup that empties `deal` and `deal_query_cache` for 27601 and stubs the `DealSource` double to fail. Rivera Family's suggestions screen then has recipes but no deals and no cache.
 
-Grilled Cheese at 100% and Shrimp Pad Thai at 0% bracket the range, so the suggestions screen has both extremes without contrived data. Nothing in Pad Thai matches: "rice noodles" needs both tokens, and neither pantry "rice" nor the "egg noodle" deal supplies both. "bean sprouts" fails against pantry "black beans" for the same reason.
+Grilled Cheese at 100% and Shrimp Pad Thai at 0% bracket the range, so the suggestions screen has both extremes without contrived data. Nothing in Pad Thai matches: "rice noodles" needs both tokens, and pantry "rice" supplies only one. "bean sprouts" fails against pantry "black beans" for the same reason.
 
-The Recipe detail screen needs one override fixture: Oak Street has a force-no-match override for ingredient "cheese" against deal "feta cheese". It demonstrates the "Corrected" label, and it changes no score above, because "cheese" already matches Kraft Shredded Cheese.
+The Recipe detail screen needs one override fixture: Oak Street has a force-no-match override for ingredient "cheese" against deal "snack cheese", Harris Teeter's. It demonstrates the "Corrected" label, and it changes no score above, because "cheese" already matches Food Lion's "chunk or cheese".
 
 ### Recipe sources
 
@@ -310,16 +319,16 @@ Deliberately included to exercise the matcher:
 
 | Item | Source | Store | Price | Qty | Status |
 | --- | --- | --- | --- | --- | --- |
-| Chicken breast | Deal (expired, repriced) | Harris Teeter | $2.49/lb, was $1.99 | 2 lb | Needed |
-| Kraft Shredded Cheese | Deal | Harris Teeter | $2.50 | 2 | Bought |
-| Tide Pods 42ct | Deal, coupon | Harris Teeter | $3.99 | 1 | Needed |
-| Trash bags | Manual | Harris Teeter | — | 1 | Needed |
-| Ground beef | Deal | Food Lion | $3.33 | 2 | In cart |
-| Coca-Cola 2L | Deal, card | Food Lion | $1.99 | 3 | Needed |
-| Bananas | Deal (expired, repriced to regular) | Food Lion | $0.59/lb, was $0.44 | — | Needed |
+| Broccoli | Deal (expired, repriced), card | Food Lion | $1.99/lb, was $1.49 | 2 lb | Needed |
+| Shredded cheese | Deal, card | Food Lion | $3.49 | 2 | Bought |
+| Ground beef | Deal, card | Food Lion | $7.29/lb | 1 lb | In cart |
+| Oscar Mayer Sliced Bacon | Deal (expired, repriced to regular), card | Food Lion | $6.99, was $5.99 | 1 | Needed |
 | Apples | Manual | Food Lion | — | 3 lb (note) | Needed |
+| Artesano Bakery Bread | Deal, card | Harris Teeter | $3.50 | 2 | Needed |
+| Trash bags | Manual | Harris Teeter | — | 1 | Needed |
+| Colgate Optic White | Deal, card | CVS Pharmacy | $4.79 | 1 | Needed |
+| GARNIER Fructis shampoo | Deal (expired, price cleared) | CVS Pharmacy | No price, was $4.49 | 1 | Needed |
 | Paper towels | Manual | CVS Pharmacy | $5.99 (entered) | 1 | Needed |
-| Gold Emblem Trail Mix | Deal (expired, price cleared) | CVS Pharmacy | No price, was $2.99 | 1 | Needed |
 | Red onion | Recipes, matching units | Anywhere | — | 2 (Black Bean Tacos + Greek Salad) | Needed |
 | Salsa | Recipes, mismatched units | Anywhere | — | "1 cup + 16 oz" (Black Bean Tacos + Breakfast Burritos) | Needed |
 | Celery | Recipe | Anywhere | — | 1 | Needed |
@@ -330,12 +339,14 @@ Expected store headers, from needed and in-cart items only:
 
 | Store | Subtotal | Unpriced |
 | --- | --- | --- |
-| Harris Teeter | $8.97 (2 lb × $2.49 + $3.99) | +1 unpriced |
-| Food Lion | $12.63 (2 × $3.33 + 3 × $1.99) | +2 unpriced (bananas, per-lb with no quantity; apples, no price) |
-| CVS Pharmacy | $5.99 | +1 unpriced (trail mix, price cleared) |
+| Food Lion | $18.26 (2 lb × $1.99 + 1 lb × $7.29 + $6.99) | +1 unpriced (apples, no price) |
+| Harris Teeter | $7.00 (2 × $3.50) | +1 unpriced (trash bags) |
+| CVS Pharmacy | $10.78 ($4.79 + $5.99) | +1 unpriced (shampoo, price cleared) |
 | Anywhere | $0.00 | +3 unpriced |
 
 This gives 7 items from deals, 4 from recipes, and 4 manual; 3 bought, 1 in cart, and 11 needed. The three bought items sit in the collapsed "Bought (3)" group.
+
+The capture has no Walmart search response, so no deal fixture is a Walmart one. Rivera Family still favorites Walmart, which is what makes its suggestions score 0%.
 
 **"Weekend Cookout"**, active, 4 items all bought (hot dogs, buns, charcoal, ketchup) — for the all-bought summary and "Add bought items to pantry".
 

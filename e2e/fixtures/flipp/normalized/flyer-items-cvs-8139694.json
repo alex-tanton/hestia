@@ -1,0 +1,21 @@
+[
+  {
+    "externalId": "1041117892",
+    "name": "Adult Nasacort 120 sprays, Allegra 24 gelcaps, 30 tablets or Xyzal 35 ct. (excludes ALL products with pseudoephedrine or ephedrine)",
+    "merchantId": "2264",
+    "merchantName": "CVS Pharmacy",
+    "unitPrice": 1999,
+    "priceUnit": "each",
+    "originalPrice": null,
+    "discountPercent": null,
+    "displayPrice": "$19.99 WITH CARD",
+    "conditionalPrice": true,
+    "conditionalReason": "loyalty_card",
+    "category": null,
+    "flyerId": "8139694",
+    "validFrom": "2026-09-20",
+    "validTo": "2026-09-26",
+    "imageUrl": "https://f.wishabi.net/page_pdf_images/24103727/57b4ef4c-b15e-11f1-a463-c2a0dba36e38/x_large",
+    "sourceUrl": "https://www.cvs.com/shop/deals/23075?icid=weeklyad-shopnow-92026-adblk-23075"
+  }
+]
