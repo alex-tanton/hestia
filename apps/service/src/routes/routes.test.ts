@@ -39,7 +39,11 @@ describe('authentication', () => {
     '%s %s answers 401 without a valid token',
     async (method, path) => {
       const instance = await app();
-      const url = path.replace(':inviteId', ID).replace(':userId', ID).replace(':id', ID);
+      const url = path
+        .replace(':inviteId', ID)
+        .replace(':itemId', ID)
+        .replace(':userId', ID)
+        .replace(':id', ID);
       for (const headers of [
         {},
         { authorization: 'Basic abc' },

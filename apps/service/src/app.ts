@@ -15,6 +15,7 @@ import {
 import { authRoutes } from './routes/auth.js';
 import { healthRoute } from './routes/health.js';
 import { householdRoutes } from './routes/households.js';
+import { listRoutes } from './routes/lists.js';
 import { systemRoutes } from './routes/system.js';
 import { userRoutes } from './routes/users.js';
 import { buildErrorRecord } from './services/errors.js';
@@ -136,6 +137,7 @@ export async function buildApp(
   await app.register(authRoutes, { ctx });
   await app.register(userRoutes, { ctx });
   await app.register(householdRoutes, { ctx });
+  await app.register(listRoutes, { ctx });
   await app.register(systemRoutes, {
     ctx,
     openApiDocument: options.openApiDocument ?? buildOpenApiDocument,

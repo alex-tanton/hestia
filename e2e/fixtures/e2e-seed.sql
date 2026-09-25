@@ -5,8 +5,8 @@
 --
 -- Every row below is one of the fixtures Seed Data already specifies. They live here rather than
 -- in supabase/seed/seed.sql because that file adds each pillar's data in the phase that builds
--- the pillar, and lists, chores, errands, and bills belong to Phases 2 and 4. When those phases
--- seed them, this file loses the rows they take over.
+-- the pillar, and chores, errands, and bills belong to Phase 4. When that phase seeds them, this
+-- file loses the rows it takes over, as it already has for Phase 2's shopping lists.
 --
 -- The departure preview asks for a new owner for the lists a member created, the chores and open
 -- errands assigned to them, and the unarchived household bills they own, so journey 8 needs at
@@ -31,15 +31,12 @@ begin
   if alex is null or sam is null or jordan is null or casey is null or oak_street is null then
     raise exception 'run `pnpm db:seed` before the E2E fixtures';
   end if;
-  if exists (select 1 from public.shopping_list where household_id = oak_street) then
+  if exists (select 1 from public.errand where household_id = oak_street) then
     raise exception 'already applied: reset the database before applying the E2E fixtures again';
   end if;
 
-  -- Seed Data, "Shopping lists". The creator is what the departure preview reassigns, so the two
-  -- Oak Street lists are created by the two members journey 8 removes.
-  insert into public.shopping_list (household_id, name, created_by, created_at) values
-    (oak_street, 'This Week', sam, now() - interval '3 days'),
-    (oak_street, 'Weekend Cookout', jordan, now() - interval '5 days');
+  -- The two Oak Street lists journey 8 reassigns ('This Week' created by Sam, 'Weekend Cookout'
+  -- created by Jordan) now come from supabase/seed/seed.sql, with the rest of Phase 2's lists.
 
   -- Seed Data, "Errands": open, assigned to Sam, due in three weeks.
   insert into public.errand (household_id, name, due_date, status, added_by, assigned_to)

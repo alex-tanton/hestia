@@ -117,7 +117,9 @@ List changes sync live to every household member. If one person checks off milk 
 
 ### Pantry
 
-A lightweight inventory of what the household already has. It exists mainly to feed the meal-planning readiness score and to avoid buying duplicates; it is not a full inventory system and does not track quantities precisely. The bought items on a list can be added to the pantry in one action.
+A lightweight inventory of what the household already has. It exists mainly to feed the meal-planning readiness score and to avoid buying duplicates; it is not a full inventory system and does not track quantities precisely. An item is a name, with an optional free-text quantity note that the household writes for itself.
+
+The bought items on a list can be added to the pantry in one action. Each becomes a pantry item under its `normalized_name`: a name already in the pantry is refreshed rather than duplicated, and one that is not is added. A list quantity does not follow the item into the pantry — it is how much was bought this week, not what is in the cupboard, and the pantry deliberately does not do quantity arithmetic. The bought items stay on their list.
 
 ## Meal planning
 
@@ -727,6 +729,7 @@ When more than one recipe contributes the same ingredient to a shopping list:
 - **The merge key is `normalized_name`**, the same key the readiness matcher uses.
 - **Matching units sum.** 1 cup and 2 cups of milk become one item for 3 cups.
 - **Mismatched units merge into one item and keep both quantities** in `quantity_note`: 2 cups plus 1 lb of onions becomes a single "onions" item reading "2 cups + 1 lb". No unit conversion is ever attempted, because converting volume to weight needs per-ingredient density and would produce confident wrong answers.
+- **A missing unit is a unit of its own.** "2 onions" and "1 lb onions" disagree, so they merge the mismatched way rather than being assumed comparable. Quantities that sum keep their unit in `quantity_note` ("3 cups"); counts with no unit need none.
 - The item records every contributing recipe in `contributing_recipe_ids`, so its origin stays visible.
 - Aggregation happens when ingredients are added to the list. Editing a recipe afterwards does not change an existing list.
 
@@ -745,8 +748,9 @@ Lists are **created, archived, and deleted manually**. Nothing rolls over automa
 
 - A household may hold several active lists at once
 - Archiving hides a list from the main view while keeping it readable, and a list can be unarchived
-- Deleting a list removes it and its items permanently, and requires confirmation
+- Deleting a list removes it and its items permanently, and requires confirmation. The confirmation is the client's, and names the list's item count ("Delete This Week? Its 15 items are removed permanently.")
 - Bought items stay on their list, in a collapsed, dimmed "Bought (n)" group, rather than disappearing
+- An archived list is **read-only in the app**, apart from unarchiving and deleting it. The API still accepts an item write against it, because a queued offline write must never be refused for a state that changed while the device was offline; the last write wins there as everywhere else.
 
 ### Subtotals
 
@@ -763,7 +767,11 @@ An item added from a sale that ends before the shopping happens is **repriced**,
 
 - The item is re-matched against current deals by `merchant_id` plus `normalized_name`, not by the Flipp item id, because Flipp item ids change every week.
 - The new price is the matching current deal's price if one exists. Otherwise it is the item's known `regular_price`. Otherwise the price is cleared and the item shows no price; it is never guessed.
+- When several current deals match, the one with the lowest `unit_price` wins, the same rule "Add missing to list" uses.
 - A repriced item records the previous sale price in `original_sale_price` and the time in `repriced_at`. If it matched a new deal, it takes that deal's snapshot. The item is visibly marked as repriced, with the old sale price shown next to the new one, so a store subtotal is never quietly wrong.
+- `original_sale_price` records the sale price the item was **added** at, and is written once: an item that falls back to its regular price this week and matches a deal next week still shows the sale price the shopper first saw.
+- Repricing is deterministic and **writes only when a value actually changes**, so running it again over an already-corrected item does nothing. An item that fell back to its regular price is re-evaluated on every fetch, because a new deal may appear, but it does not churn the list's last activity in the meantime.
+- "Today" is evaluated in the household's timezone, like every other household date.
 
 ### Meal plan history and deleted recipes
 

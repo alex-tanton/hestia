@@ -5,6 +5,15 @@ export const idSchema = z.guid();
 
 export const timestampSchema = z.iso.datetime({ offset: true });
 
+/** A calendar date with no time component, read in the timezone that owns it. */
+export const calendarDateSchema = z.iso.date();
+
+/**
+ * Money on the wire is integer cents, never floating-point dollars (Engineering Practices,
+ * "Code conventions"). The ceiling is what `numeric(10, 2)` holds at two decimal places.
+ */
+export const centsSchema = z.int().min(0).max(99_999_999);
+
 /** A five-digit US ZIP code (Requirements, "Users and households"). */
 export const postalCodeSchema = z.string().regex(/^[0-9]{5}$/, 'Enter a five-digit ZIP code.');
 
@@ -28,3 +37,6 @@ export type HouseholdRole = z.infer<typeof householdRoleSchema>;
 export const householdIdParamsSchema = z.object({ id: idSchema });
 export const memberParamsSchema = z.object({ id: idSchema, userId: idSchema });
 export const inviteParamsSchema = z.object({ id: idSchema, inviteId: idSchema });
+export const listIdParamsSchema = z.object({ id: idSchema });
+export const listItemParamsSchema = z.object({ id: idSchema, itemId: idSchema });
+export const pantryItemParamsSchema = z.object({ id: idSchema });

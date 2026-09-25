@@ -56,6 +56,9 @@ importers:
       '@fastify/rate-limit':
         specifier: 11.2.0
         version: 11.2.0
+      '@hearth/matching':
+        specifier: workspace:*
+        version: link:../../packages/matching
       '@hearth/shared':
         specifier: workspace:*
         version: link:../../packages/shared

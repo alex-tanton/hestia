@@ -268,6 +268,10 @@ REST under `/api`, resource-oriented, household-scoped by path where applicable.
 
 Offline-queueable writes (`POST /lists/:id/items`, `PATCH /lists/:id/items/:itemId`, `POST /chores/:id/complete`, `PATCH /errands/:id`) accept a client-generated UUID where they create a row. They are idempotent, as specified under Offline behavior in the Requirements document.
 
+`POST /lists/:id/items` takes either a manual item — its name, and optionally a quantity, a hand-entered price and unit, and a store — or a deal's id. It never takes a price for a deal: the service reads the `deal` row and copies the snapshot itself, so a client cannot invent one, and the item's `normalized_name` is the deal's own, which is the key repricing re-matches on. A manual item's `normalized_name` is computed from its name by `@hearth/matching`.
+
+`GET /lists/:id` answers with the list's items already grouped by store, each group carrying its subtotal and its count of unpriced items, and the bought items in a group of their own. The client never does money arithmetic; every amount in a list, pantry, or deal response is an integer number of cents, named with a `Cents` suffix.
+
 ### Conventions
 
 - Every request carries the caller's Supabase JWT as a bearer token. Handlers reach the database only through `withUserDb`.
@@ -503,6 +507,21 @@ Supabase CLI migrations — plain SQL files, timestamped, applied in order, chec
 - Each migration is tested locally against a restored production backup before deployment
 - RLS policies and `security definer` functions live in migrations alongside the tables they protect, never configured through Studio
 - Tables that the realtime layer streams (`shopping_list`, `shopping_list_item`, `chore_completion`, `errand`) are added to the `supabase_realtime` publication in a migration
+
+### Realtime subscriptions
+
+The PWA subscribes to Supabase Realtime directly (see Request paths), so RLS is the only thing between a stream and another household's data. Realtime evaluates each subscriber's policies as that user, with the claims from the access token the channel carries.
+
+An open shopping list subscribes to one channel, `list:<listId>`, with two `postgres_changes` bindings:
+
+| Binding | Schema and table | Filter |
+| --- | --- | --- |
+| Item changes | `public.shopping_list_item` | `list_id=eq.<listId>` |
+| The list itself | `public.shopping_list` | `id=eq.<listId>` |
+
+The second binding is not redundant. A delete on a filtered subscription carries only the row's primary key, because that is all the default replica identity puts in the WAL, so a filter on `list_id` cannot match it and Realtime does not deliver it. The list row's own update is what a member sees when another member deletes an item: the `updated_at` trigger fires on every insert, update, and delete of an item, and the client treats a change to the list row as the signal to refetch the list. That is also what keeps a subtotal correct after a change the client cannot reconstruct locally.
+
+Channels are named after the resource, not the household, so switching household tears down exactly the subscriptions that belonged to the previous one.
 
 ### RLS policy pattern
 

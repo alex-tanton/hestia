@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",
+    "@hearth/matching": "workspace:*",
     "@hearth/shared": "workspace:*",
     "fastify": "5.12.5",
     "kysely": "0.29.6",

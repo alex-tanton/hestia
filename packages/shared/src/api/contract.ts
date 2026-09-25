@@ -1,6 +1,13 @@
 import type { z } from 'zod';
 import { sessionResponseSchema, signupRequestSchema } from './auth.js';
-import { householdIdParamsSchema, inviteParamsSchema, memberParamsSchema } from './common.js';
+import {
+  householdIdParamsSchema,
+  inviteParamsSchema,
+  listIdParamsSchema,
+  listItemParamsSchema,
+  memberParamsSchema,
+  pantryItemParamsSchema,
+} from './common.js';
 import {
   createHouseholdRequestSchema,
   householdListSchema,
@@ -11,11 +18,25 @@ import {
 } from './households.js';
 import { createdInviteSchema, inviteListSchema } from './invites.js';
 import {
+  createListItemRequestSchema,
+  createListRequestSchema,
+  shoppingListDetailSchema,
+  shoppingListListSchema,
+  updateListItemRequestSchema,
+  updateListRequestSchema,
+} from './lists.js';
+import {
   departRequestSchema,
   departResultSchema,
   departurePreviewSchema,
   transferAdminRequestSchema,
 } from './membership.js';
+import {
+  createPantryItemRequestSchema,
+  pantryItemSchema,
+  pantryListSchema,
+  updatePantryItemRequestSchema,
+} from './pantry.js';
 import {
   clientErrorRequestSchema,
   deepHealthResponseSchema,
@@ -199,6 +220,132 @@ export const endpoints = [
     access: 'user',
     params: householdIdParamsSchema,
     body: transferAdminRequestSchema,
+    response: { status: 204 },
+  },
+  {
+    method: 'GET',
+    path: '/api/households/:id/lists',
+    summary: 'The household’s lists; ?archived=true for the archived ones',
+    access: 'user',
+    params: householdIdParamsSchema,
+    response: { status: 200, schema: shoppingListListSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/households/:id/lists',
+    summary: 'Create a shopping list',
+    access: 'user',
+    params: householdIdParamsSchema,
+    body: createListRequestSchema,
+    response: { status: 201, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'GET',
+    path: '/api/lists/:id',
+    summary: 'A list, grouped by store with subtotals; expired deal prices are corrected first',
+    access: 'user',
+    params: listIdParamsSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'PATCH',
+    path: '/api/lists/:id',
+    summary: 'Rename a list',
+    access: 'user',
+    params: listIdParamsSchema,
+    body: updateListRequestSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'DELETE',
+    path: '/api/lists/:id',
+    summary: 'Delete a list and its items permanently',
+    access: 'user',
+    params: listIdParamsSchema,
+    response: { status: 204 },
+  },
+  {
+    method: 'POST',
+    path: '/api/lists/:id/archive',
+    summary: 'Archive a list',
+    access: 'user',
+    params: listIdParamsSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/lists/:id/unarchive',
+    summary: 'Unarchive a list',
+    access: 'user',
+    params: listIdParamsSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/lists/:id/items',
+    summary: 'Add an item, manually or from a deal (idempotent on a client-generated id)',
+    access: 'user',
+    params: listIdParamsSchema,
+    body: createListItemRequestSchema,
+    response: { status: 201, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'PATCH',
+    path: '/api/lists/:id/items/:itemId',
+    summary: 'Set an item’s absolute values',
+    access: 'user',
+    params: listItemParamsSchema,
+    body: updateListItemRequestSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'DELETE',
+    path: '/api/lists/:id/items/:itemId',
+    summary: 'Remove an item from a list',
+    access: 'user',
+    params: listItemParamsSchema,
+    response: { status: 204 },
+  },
+  {
+    method: 'POST',
+    path: '/api/lists/:id/add-bought-to-pantry',
+    summary: 'Merge the list’s bought items into the pantry',
+    access: 'user',
+    params: listIdParamsSchema,
+    response: { status: 200, schema: pantryListSchema },
+  },
+  {
+    method: 'GET',
+    path: '/api/households/:id/pantry',
+    summary: 'The household’s pantry',
+    access: 'user',
+    params: householdIdParamsSchema,
+    response: { status: 200, schema: pantryListSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/households/:id/pantry',
+    summary: 'Add a pantry item, updating one that is already there',
+    access: 'user',
+    params: householdIdParamsSchema,
+    body: createPantryItemRequestSchema,
+    response: { status: 201, schema: pantryItemSchema },
+  },
+  {
+    method: 'PATCH',
+    path: '/api/pantry/:id',
+    summary: 'Rename a pantry item or change its note',
+    access: 'user',
+    params: pantryItemParamsSchema,
+    body: updatePantryItemRequestSchema,
+    response: { status: 200, schema: pantryItemSchema },
+  },
+  {
+    method: 'DELETE',
+    path: '/api/pantry/:id',
+    summary: 'Remove a pantry item',
+    access: 'user',
+    params: pantryItemParamsSchema,
     response: { status: 204 },
   },
   {
