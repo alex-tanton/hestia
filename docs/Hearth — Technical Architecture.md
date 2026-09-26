@@ -486,7 +486,7 @@ The refresh runs the same steps as a daily refresh for that single postal code. 
 - with whatever is cached, marked stale with its "as of" age, and `refreshing: true`
 - or, when no flyers are cached, an empty list with `refreshing: true`
 
-The PWA refetches while `refreshing` is true. This counts as a cache-miss fetch, which the rate discipline allows.
+The PWA refetches while `refreshing` is true. This counts as a cache-miss fetch, which the rate discipline allows. The refresh takes minutes rather than seconds, so the refetch backs off — three seconds, doubling to a minute — and stops after ten attempts, leaving whatever is cached on screen with its "as of" label and a manual retry rather than polling forever. It also stops while the browser is offline, since the request could only fail.
 
 **A flyer-items request never fetches inline**, dormant or not. One flyer costs its roster request plus an item-detail request per priced product, roughly 120 to 300 requests over several minutes, which no screen may trigger and no request may wait for. It is served from the `deal` rows for that `flyer_id`, which are the flyer-item cache. When there are none and the postal code is dormant, the request queues the day's one background refresh and answers with the refreshing state. When there are none and the postal code is active, the answer is an ordinary empty list: the daily run covers the postal code, and a flyer whose merchant nobody there favorites legitimately has no items.
 

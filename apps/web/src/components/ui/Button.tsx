@@ -25,11 +25,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   ref?: Ref<HTMLButtonElement>;
 }
 
+// Opacity below 95% lightens the white-on-fill text below 4.5:1 in the light theme for every
+// section color (axe caught it on Deals green): the fill blends toward bg-base, which is white
+// in light mode, so 90% opacity was measurably failing WCAG AA (Design › Accessibility). Active
+// (pressed) blends the same way and needs its own floor above hover's: at 90% it recomputes to
+// 4.18:1 (green), 4.22:1 (amber), 4.34:1 (blue), and 4.32:1 (danger) on white — still failing —
+// so active goes to 97%, which holds AA with margin (>= 4.69:1 across every section plus danger)
+// while staying visually distinct from hover's 95%.
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-section text-on-section hover:bg-section/90 active:bg-section/80',
+  primary: 'bg-section text-on-section hover:bg-section/95 active:bg-section/97',
   secondary: 'border border-input bg-base text-primary hover:bg-raised active:bg-section-tint',
   ghost: 'text-section hover:bg-raised active:bg-section-tint',
-  destructive: 'bg-danger text-on-danger hover:bg-danger/90 active:bg-danger/80',
+  destructive: 'bg-danger text-on-danger hover:bg-danger/95 active:bg-danger/97',
 };
 
 export const BUTTON_BASE =

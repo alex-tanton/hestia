@@ -125,7 +125,7 @@ describe('app shell', () => {
   );
 
   it('shows a deep link into an unshipped sub-tab as coming soon too', async () => {
-    renderApp('/lists/deals');
+    renderApp('/meals/recipes');
     expect(await screen.findByRole('heading', { name: 'Coming soon' })).toBeInTheDocument();
   });
 

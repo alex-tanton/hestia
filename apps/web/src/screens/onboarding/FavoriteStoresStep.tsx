@@ -1,25 +1,26 @@
 import type { ReactElement } from 'react';
-import { Button } from '../../components/ui/Button.tsx';
-import { ComingSoonPanel } from '../../components/states/ComingSoon.tsx';
 import { SectionProvider } from '../../lib/section-context.tsx';
-import { PILLARS } from '../../lib/sections.ts';
-
-export const FAVORITE_STORES_COMING_SOON =
-  'Picking favorite stores opens when Lists ships. You can choose them in Settings then.';
+import { useActiveHousehold } from '../deals/deals-frame.tsx';
+import { FavoriteStoresPanel } from '../deals/FavoriteStores.tsx';
 
 /**
- * Household setup's third part (Design › Screens › 1). The merchants near a postal code come
- * from the deals pipeline, which ships with Lists, so this step takes the same coming-soon state
- * an unshipped pillar's tab takes, in the Lists section color — the step stays in the flow
- * rather than disappearing and reappearing between releases.
+ * Household setup's third part (Design › Screens › 1): the favorite stores, chosen from the
+ * merchants with an active flyer near the postal code the previous step set. They scope the deal
+ * search, the flyer list, and the daily refresh from here on, and any member may change them
+ * later in Settings — which is also where the postal code is corrected, so this step does not
+ * offer that itself.
  */
 export function FavoriteStoresStep({ onDone }: { onDone: () => void }): ReactElement {
+  const { householdId, postalCode } = useActiveHousehold();
+
   return (
-    <div className="flex flex-col gap-4">
-      <SectionProvider section="lists">
-        <ComingSoonPanel icon={PILLARS.lists.icon} message={FAVORITE_STORES_COMING_SOON} />
-      </SectionProvider>
-      <Button onClick={onDone}>Continue</Button>
-    </div>
+    <SectionProvider section="lists">
+      <FavoriteStoresPanel
+        householdId={householdId}
+        postalCode={postalCode}
+        showPostalCodeAction={false}
+        onDone={onDone}
+      />
+    </SectionProvider>
   );
 }

@@ -10,8 +10,9 @@ import {
   type StubHandler,
 } from '../../test/harness.tsx';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
+import { merchantsResponse } from '../../test/deal-fixtures.ts';
 import { AuthError, SIGN_IN_FAILED_MESSAGE } from '../../lib/auth/auth-client.ts';
-import { FAVORITE_STORES_COMING_SOON, FavoriteStoresStep } from './FavoriteStoresStep.tsx';
+import { FavoriteStoresStep } from './FavoriteStoresStep.tsx';
 import { CreateHouseholdStep } from './CreateHouseholdStep.tsx';
 import { ForgotPasswordScreen } from './ForgotPasswordScreen.tsx';
 import { IOS_INSTALL_MESSAGE, InstallStep } from './InstallStep.tsx';
@@ -280,12 +281,30 @@ describe('joining a household', () => {
 });
 
 describe('the rest of onboarding', () => {
-  it('explains that favorite stores arrive with Lists, and still moves on', async () => {
+  it('picks favorite stores from the merchants near the postal code, then moves on', async () => {
     const user = userEvent.setup();
     const onDone = vi.fn();
+    const stub = stubFetch({
+      'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+      'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
+      'GET /api/households/:id/merchants': () => ({ status: 200, body: merchantsResponse() }),
+      'POST /api/households/:id/favorite-stores': () => ({ status: 204 }),
+    });
     renderScreen(<FavoriteStoresStep onDone={onDone} />);
 
-    expect(screen.getByText(FAVORITE_STORES_COMING_SOON)).toBeInTheDocument();
+    const publix = await screen.findByRole('checkbox', { name: /Publix/ });
+    expect(publix).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /Harris Teeter/ })).toBeChecked();
+
+    await user.click(publix);
+    await waitFor(() => {
+      expect(stub.calls.some((call) => call.method === 'POST')).toBe(true);
+    });
+    expect(stub.calls.find((call) => call.method === 'POST')?.body).toEqual({
+      merchantId: '2361',
+      merchantName: 'Publix',
+    });
+
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(onDone).toHaveBeenCalled();
   });

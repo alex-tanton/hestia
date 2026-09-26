@@ -78,6 +78,14 @@ export function createRoutes(): RouteObject[] {
               element: <AuthenticatedLayout />,
               children: [
                 { index: true, element: <DashboardScreen /> },
+                // Deals and flyers are lazy chunks of their own under the Lists tab, so opening
+                // the tab does not pull in the deal screens and vice versa.
+                { path: 'lists/deals', lazy: () => import('./screens/deals/DealSearchScreen.tsx') },
+                { path: 'lists/flyers', lazy: () => import('./screens/deals/FlyersScreen.tsx') },
+                {
+                  path: 'lists/flyers/:flyerId',
+                  lazy: () => import('./screens/deals/FlyerItemsScreen.tsx'),
+                },
                 { path: 'lists/*', lazy: () => import('./pillars/lists/ListsRoute.tsx') },
                 { path: 'meals/*', lazy: () => import('./pillars/meals/MealsRoute.tsx') },
                 { path: 'bills/*', lazy: () => import('./pillars/bills/BillsRoute.tsx') },

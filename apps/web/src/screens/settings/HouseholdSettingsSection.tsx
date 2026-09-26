@@ -2,7 +2,6 @@ import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { householdNameSchema, postalCodeSchema, type Household } from '@hearth/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
-import { ComingSoonPanel } from '../../components/states/ComingSoon.tsx';
 import { ErrorState } from '../../components/states/StateBlocks.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
@@ -13,11 +12,10 @@ import { useHousehold, useUpdateHousehold } from '../../lib/api/hooks.ts';
 import { OFFLINE_MESSAGE, userMessage } from '../../lib/api/problem.ts';
 import { formatTimezone } from '../../lib/format.ts';
 import { SectionProvider } from '../../lib/section-context.tsx';
-import { PILLARS } from '../../lib/sections.ts';
 import { firstIssue } from '../../lib/validation.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
-import { FAVORITE_STORES_COMING_SOON } from '../onboarding/FavoriteStoresStep.tsx';
+import { FavoriteStores } from '../deals/FavoriteStores.tsx';
 import { ReadOnlyValue, SettingsSection } from './SettingsSection.tsx';
 
 /** US zones only, which is what v1 assumes (Requirements, "Locale"). */
@@ -129,7 +127,7 @@ export interface HouseholdSettingsSectionProps {
 /**
  * Design › Screens › 4, "Household settings" for the active household. Name, postal code, and
  * timezone are the admin's to change and read-only for everyone else (Requirements,
- * "Permissions"); favorite stores arrive with the deals pipeline.
+ * "Permissions"); the favorite stores below are editable by any member.
  */
 export function HouseholdSettingsSection({
   householdId,
@@ -162,12 +160,13 @@ export function HouseholdSettingsSection({
               </p>
             </>
           ))}
-        <SectionProvider section="lists">
-          <ComingSoonPanel
-            icon={PILLARS.lists.icon}
-            heading="Favorite stores"
-            headingLevel={3}
-            message={FAVORITE_STORES_COMING_SOON}
+        {/* Favorite stores are editable by any member, not only the admin (Design › Screens › 4). */}
+        <SectionProvider section="lists" className="flex flex-col gap-3">
+          <h3 className="text-h3 text-primary">Favorite stores</h3>
+          <FavoriteStores
+            householdId={householdId}
+            postalCode={household.data?.postalCode}
+            showPostalCodeAction={false}
           />
         </SectionProvider>
       </Card>

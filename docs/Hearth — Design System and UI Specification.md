@@ -98,7 +98,7 @@ Built on **shadcn/ui** primitives (Radix under the hood, styled with Tailwind). 
 
 | Component | Used by | Contents |
 | --- | --- | --- |
-| `DealCard` | Deal search, flyer detail, suggestions | Image (from Flipp's CDN, with a neutral placeholder when absent), item name, merchant, unit price with its unit ("$2.49/lb", "$3.99"), original price struck through, discount badge, conditional-price badge ("Coupon" or "Card") when flagged, validity dates, add-to-list action |
+| `DealCard` | Deal search, flyer detail, suggestions | Image (from Flipp's CDN, with a neutral placeholder when absent or blocked), item name, merchant, unit price with its unit ("$2.49/lb", "$3.99"), the deal's own `displayPrice` copy beside it when it differs ("2/$5.00"), original price struck through, discount badge, conditional-price badge ("Coupon" or "Card") when flagged, validity dates, add-to-list action. Adding goes straight to the household's only list, or opens the same list picker the week planner uses when there is more than one. |
 | `ShoppingListRow` | List detail | Checkbox (full-row target), item name, price with unit, quantity, store chip, added-by avatar, source icon. A repriced item shows the old sale price struck through beside the new price, or "No price" when the price was cleared |
 | `StoreGroupHeader` | List detail | Merchant name, item count, running subtotal, and "+N unpriced" when N items are excluded from the subtotal |
 | `RecipeCard` | Library, suggestions | Title, readiness percentage ring, bucket breakdown line, servings |
@@ -172,7 +172,7 @@ Each entry gives layout, the primary action, and the states that differ from the
 
 Three steps: sign up or sign in with email and password, create or join a household, then set up the household (name, postal code, favorite stores). The household timezone is taken from the browser without asking. PWA install prompt appears after setup completes, and is mandatory messaging on iOS since notifications depend on it. It follows the join path too, since it concerns the app rather than the household.
 
-The favorite-stores part of setup depends on the merchants near the postal code, which arrive with the Deals & Lists pillar. Until then the step stays in the flow and takes the coming-soon state, in the Lists section color: "Picking favorite stores opens when Lists ships. You can choose them in Settings then." The step is never removed and later re-added, for the same reason an unshipped pillar's tab is never hidden.
+The favorite-stores part of setup lists the merchants with an active flyer near the postal code the previous step set, each as a checkbox row, in the Lists section color. Picking none is allowed, since a household with no favorites is shown every merchant anyway and can choose later. The step's only other action is to continue; the postal code itself is corrected in Settings rather than here, so a ZIP that returns no merchants says so and continues.
 
 - **Sign up:** email, display name, password. The password field shows the rule ("At least 8 characters") up front. A password on the common-password list gets an inline error: "That password is too common. Choose another."
 - **Sign in:** email and password, with a "Forgot password?" link.
@@ -207,7 +207,7 @@ Grouped sections:
 - **Account:** email, display name, and password, each editable; changing the email or password asks for the current password. The timezone is shown as detected and is read-only.
 - **My Households:** each household with its role and member list, plus a leave action, and a "Join or create a household" action. The admin also sees remove-member and transfer-admin.
 - **Invites** (admin only): create an invite, which shows the link (with a copy action) and the 8-character code once; a list of outstanding invites with creation and expiry dates; a revoke action on each.
-- **Household settings** for the active household: favorite stores, editable by any member, chosen from the merchants near the postal code, and taking the coming-soon state until Lists ships. Name, postal code, and timezone are editable by the admin and read-only for everyone else.
+- **Household settings** for the active household: favorite stores, editable by any member, chosen from the merchants near the postal code as the same checkbox list onboarding shows. Name, postal code, and timezone are editable by the admin and read-only for everyone else.
 - **Notifications:** per-type toggles. Turning on the first type on a device asks for push permission and registers that device's push subscription. `weekly_meal_nudge` has its own toggle for each household. The single "Remind me about all household bills" toggle. The quiet-hours window, with start and end times. The per-type toggles ship with push itself and take the coming-soon state until then, since a switch that turns nothing on would be a lie; the quiet-hours window and the household-bill reminder live on the profile and are editable from the first release, and apply as soon as sending starts.
 - **About:** version and sign out. Signing out removes this device's push subscription. For the server owner only, a **System health** entry opens a screen with job freshness (last deal refresh, last notification sent, last backup), the top errors from the last 24 hours, and per-merchant skip rates. Each item is plain text with an "as of" time; nothing on the screen is interactive beyond a refresh action.
 
@@ -215,13 +215,15 @@ Grouped sections:
 
 ### 5. Deal search — green
 
-Search field pinned below the top bar. Filter row beneath: store, category, price. Results as `DealCard` list. Default scope is favorite stores; a toggle widens to all merchants.
+Search field pinned below the top bar. Filter row beneath: store, category, price. Results as `DealCard` list, 50 to a page, with a previous-and-next pagination control that states the page and the total. Default scope is favorite stores; a toggle widens to all merchants.
 
-States: no query yet (favorite-store shortcuts), filtered-empty, offline (dedicated "needs a connection" state).
+The query and the price range are committed by submitting the search, so a half-typed price never becomes a request; store, category, and sort apply as they change. The store filter is one store within the current scope, and the category filter lists the categories present in the results, since the deals source has no category directory to offer. Every filter change returns to page 1.
+
+States: no query yet (the favorite stores as shortcuts that set the store filter), filtered-empty, a query that matched nothing (which offers widening to all stores rather than clearing filters), offline (dedicated "needs a connection" state).
 
 ### 6. Browse flyers — green
 
-Grid of active flyers for favorite stores, each showing merchant, validity dates, item count. Tapping opens that flyer's items using the same `DealCard` list, with category filtering.
+Grid of active flyers for favorite stores, each showing merchant, validity dates, item count, and the same scope toggle deal search has. Tapping opens that flyer's items as a pushed screen, using the same `DealCard` list and the same pagination, with category filtering and the same sort.
 
 ### 7. Shopping lists — green
 

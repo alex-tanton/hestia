@@ -64,10 +64,13 @@ export function createAuthStub(
 
 export interface StubRequest {
   method: string;
+  /** The full path as the client asked for it, query string included. */
   path: string;
   body: unknown;
   token: string | null;
   params: Record<string, string>;
+  /** The parsed query string, for the screens that filter, sort, and paginate. */
+  query: URLSearchParams;
 }
 
 export interface StubResponse {
@@ -101,7 +104,10 @@ function matchRoute(
   return params;
 }
 
-/** Handlers keyed by `"<METHOD> /api/path/:param"`; anything unmatched answers 404. */
+/**
+ * Handlers keyed by `"<METHOD> /api/path/:param"`; anything unmatched answers 404. A pattern
+ * names the path only — a query string is parsed off and handed to the handler as `query`.
+ */
 export function createFetchStub(handlers: Readonly<Record<string, StubHandler>>): FetchStub {
   const calls: FetchStub['calls'] = [];
 
@@ -113,14 +119,18 @@ export function createFetchStub(handlers: Readonly<Record<string, StubHandler>>)
     const body: unknown = raw === undefined ? undefined : JSON.parse(raw);
     calls.push({ method, path, body });
 
+    const queryStart = path.indexOf('?');
+    const pathname = queryStart === -1 ? path : path.slice(0, queryStart);
+    const query = new URLSearchParams(queryStart === -1 ? '' : path.slice(queryStart + 1));
+
     const headers = new Headers(init?.headers);
     const authorization = headers.get('authorization');
     const token = authorization === null ? null : authorization.replace(/^Bearer\s+/i, '');
 
     for (const [pattern, handler] of Object.entries(handlers)) {
-      const params = matchRoute(pattern, method, path);
+      const params = matchRoute(pattern, method, pathname);
       if (params === undefined) continue;
-      const result = await handler({ method, path, body, token, params });
+      const result = await handler({ method, path, body, token, params, query });
       if (result.status === 204 || result.body === undefined) {
         return new Response(null, { status: result.status });
       }

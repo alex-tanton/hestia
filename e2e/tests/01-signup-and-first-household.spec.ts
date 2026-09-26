@@ -5,8 +5,8 @@ import { SEED, SEED_PASSWORD } from '../support/env.ts';
 
 /**
  * Journey 1 (Engineering Practices › E2E journeys): sign up with email and password, create a
- * household, set the postal code and favorites, reach the dashboard. Favorites arrive with the
- * Lists pillar, so that part of setup is the coming-soon state rather than a skipped step
+ * household, set the postal code and favorites, reach the dashboard. Favorites are the merchants
+ * with an active flyer near the postal code the previous step set, picking none is allowed
  * (Design › Screens › 1).
  */
 
@@ -23,9 +23,6 @@ const ACCOUNTS = {
     household: 'Birch Lane',
   },
 } as const;
-
-const FAVORITES_COMING_SOON =
-  'Picking favorite stores opens when Lists ships. You can choose them in Settings then.';
 
 async function finishInstallStep(page: Page): Promise<void> {
   // Chromium offers `beforeinstallprompt` when it feels like it, so the step ends on whichever
@@ -59,10 +56,14 @@ for (const theme of ['light', 'dark'] as const) {
       await expectAccessible(page, `onboarding, name the household (${theme})`);
       await page.getByRole('button', { name: 'Create household' }).click();
 
-      // The favorites step stays in the flow and says when it opens; it never vanishes.
+      // A brand-new household has no favorites yet; picking none is allowed (Design › Screens
+      // › 1), so the step lists the merchants near the postal code, all unchecked, and moves on.
       await expect(page.getByRole('heading', { name: 'Favorite stores' })).toBeVisible();
-      await expect(page.getByText(FAVORITES_COMING_SOON)).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Coming soon' })).toBeVisible();
+      const stores = page.getByRole('checkbox');
+      await expect(stores.first()).toBeVisible();
+      for (const checkbox of await stores.all()) {
+        await expect(checkbox).not.toBeChecked();
+      }
       await expectAccessible(page, `onboarding, favorite stores (${theme})`);
       await page.getByRole('button', { name: 'Continue' }).click();
 
