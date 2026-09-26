@@ -306,6 +306,107 @@ describe('listMerchants', () => {
   });
 });
 
+describe('in-flight coalescing', () => {
+  /** A transport that counts its calls and holds every one open until `release` is called. */
+  function gatedTransport(body: unknown): {
+    get: HttpGet;
+    release: () => void;
+    callCount: () => number;
+  } {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let calls = 0;
+    const get: HttpGet = async () => {
+      calls += 1;
+      await gate;
+      return { status: 200, json: () => Promise.resolve(body) };
+    };
+    return { get, release, callCount: () => calls };
+  }
+
+  it('coalesces concurrent cold-cache flyer requests into one fetch', async () => {
+    const { get, release, callCount } = gatedTransport({ flyers: [] });
+    const source = new FlippDealSource({
+      queue: new FlippRequestQueue({
+        get,
+        userAgent: buildUserAgent('https://hearth.example.ts.net'),
+        minGapMs: 0,
+        attempts: 1,
+      }),
+      now: () => FIXTURE_NOW,
+    });
+
+    // Three callers race a cold cache before any of them can have populated it.
+    const first = source.listFlyers(FIXTURE_POSTAL_CODE);
+    const second = source.listFlyers(FIXTURE_POSTAL_CODE);
+    const third = source.listFlyers(FIXTURE_POSTAL_CODE);
+    release();
+    const [a, b, c] = await Promise.all([first, second, third]);
+
+    expect(callCount()).toBe(1);
+    expect(a).toEqual(b);
+    expect(b).toEqual(c);
+  });
+
+  it('coalesces concurrent cold-cache merchant-directory requests into one fetch', async () => {
+    const flyers = gatedTransport({ flyers: [] });
+    const merchants = gatedTransport({ merchants: [] });
+    const get: HttpGet = (url, headers) =>
+      url.includes('/flipp/merchants') ? merchants.get(url, headers) : flyers.get(url, headers);
+    const source = new FlippDealSource({
+      queue: new FlippRequestQueue({
+        get,
+        userAgent: buildUserAgent('https://hearth.example.ts.net'),
+        minGapMs: 0,
+        attempts: 1,
+      }),
+      now: () => FIXTURE_NOW,
+    });
+
+    const first = source.listMerchants(FIXTURE_POSTAL_CODE);
+    const second = source.listMerchants(FIXTURE_POSTAL_CODE);
+    const third = source.listMerchants(FIXTURE_POSTAL_CODE);
+    flyers.release();
+    merchants.release();
+    await Promise.all([first, second, third]);
+
+    expect(flyers.callCount()).toBe(1);
+    expect(merchants.callCount()).toBe(1);
+  });
+
+  it('gives the caller right after a failed fetch a fresh attempt, not the failed promise', async () => {
+    let calls = 0;
+    const get: HttpGet = () => {
+      calls += 1;
+      if (calls === 1) return Promise.resolve({ status: 500, json: () => Promise.resolve({}) });
+      return Promise.resolve({ status: 200, json: () => Promise.resolve({ flyers: [] }) });
+    };
+    const source = new FlippDealSource({
+      queue: new FlippRequestQueue({
+        get,
+        userAgent: buildUserAgent('https://hearth.example.ts.net'),
+        minGapMs: 0,
+        attempts: 1,
+      }),
+      now: () => FIXTURE_NOW,
+    });
+
+    // Chained onto the first call's own rejection, so the second call is issued the instant the
+    // first settles — the tightest race between the in-flight entry being cleared and a new
+    // caller arriving. A stale-promise leak would hand this caller the first failure again
+    // instead of triggering fetch #2.
+    const firstFailure = source.listFlyers(FIXTURE_POSTAL_CODE).catch((error: unknown) => error);
+    const second = firstFailure.then(() => source.listFlyers(FIXTURE_POSTAL_CODE));
+
+    const failure: unknown = await firstFailure;
+    expect(failure).toBeInstanceOf(Error);
+    await expect(second).resolves.toEqual([]);
+    expect(calls).toBe(2);
+  });
+});
+
 describe('item detail fixtures', () => {
   it('covers one item per captured merchant flyer', () => {
     // Guards the roster subset the fixture transport serves: five captured details.

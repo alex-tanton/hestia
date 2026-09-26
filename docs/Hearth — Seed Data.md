@@ -50,6 +50,8 @@ Enough to feel real without being unwieldy:
 
 Seed dates are relative to the seed run, not hardcoded, so the data never goes stale. "Today" means the seed-run date in the household's timezone. Deal validity spans the current week, bills sit across overdue, this-week, and later, and chores cover the same spread. Three deals are deliberately expired to exercise all three repricing outcomes.
 
+Deal validity is a calendar date in the store's local offset, so the seed computes it in `America/New_York`, which every 27514 household uses, rather than from the server's `current_date`. A seed run made in the evening Eastern time would otherwise date the expired deals to the household's today, and repricing — which evaluates `deal_valid_to` in the household timezone — would leave them alone.
+
 ## Households, users, and stores
 
 ### Users
@@ -96,6 +98,8 @@ The six that match the target area:
 Oak Street favorites: Harris Teeter, Food Lion, CVS. Rivera Family favorites: Publix, Walmart. Empty House favorites: Harris Teeter, Food Lion.
 
 Empty House (27705) is also the dormant-postal-code fixture. Its `last_active_at` is 20 days ago, there is no `postal_code_refresh` row for 27705, and there are no `deal` rows for it. Opening its flyers shows the "no cache, refreshing" state and queues one on-demand refresh. That first refresh enqueues no `flyer_refresh`.
+
+27514 and 27601 each get a `postal_code_refresh` row with `last_refreshed_at` six hours ago, so they read as covered by this morning's daily run and no on-demand refresh is queued for them in development.
 
 The remaining stores stay unfavorited so browse-all has something to show beyond the favorites, and so the favorites filter is visibly doing work.
 
@@ -178,9 +182,9 @@ Parsed, with `conditionalPrice: true` and a `conditionalReason`, so the UI badge
 | --- | --- | --- | --- | --- | --- |
 | 2/$6.00 with your VIC card — Harris Teeter Snack Cheese | Harris Teeter | $3.00 | — | `loyalty_card` | snack cheese |
 | FINAL PRICE $3.99, "$1 OFF ONE DIGITAL COUPON" — Fa!rlife Milk | Lowes Foods | $3.99 | $4.99 | `coupon` | fa rlife milk |
-| $4.79 WITH CARD — Colgate Optic White Advanced | CVS Pharmacy | $4.79 | $9.79 | `loyalty_card` | colgate optic white advanced charcoal purple sensitive or stain fighter |
+| $4.79 WITH CARD — Colgate Optic White Advanced | CVS Pharmacy | $4.79 | — | `loyalty_card` | colgate optic white advanced charcoal purple sensitive total or hello adult toothpaste |
 
-The Colgate row is also the secondary-rebate case: its sale story is "Also get savings with $5.00 on 2 Digital mfr coupon + Buy 2 get $6 ExtraBucks Rewards®". The shelf price parses and the rebate is ignored, and the card wins over the coupon because the card is what the $4.79 requires.
+The Colgate row is also the secondary-rebate case: its sale story is "Also get savings with $5.00 on 2 Digital mfr coupon + Buy 2 get $6 ExtraBucks Rewards®". The shelf price parses and the rebate is ignored, and the card wins over the coupon because the card is what the $4.79 requires. Its captured name is the full "Colgate Optic White Advanced 3.2 oz, Charcoal, Purple, Sensitive 3.8-4.2 oz, Total 3 oz or hello adult toothpaste.", which is where that normalized name comes from, and the capture prints no original price beside it. The "This Week" list item still carries a $9.79 `regular_price`, because a list item's deal fields are a snapshot taken when it was added rather than a live reference.
 
 The capture has no amount-off deal with a known original to subtract from — every "$1 OFF" in it is printed without a price — so the subtracting branch is covered by the parser's own unit test against the Requirements table, and the skip branch appears below.
 

@@ -157,6 +157,8 @@ The E2E suite, which runs through Caddy, also includes a smoke test that externa
 
 A disposable stack per run from the Supabase CLI (`supabase start`), migrated from `supabase/migrations/` so tests exercise the real schema, roles, and policies. Each test runs in a transaction that rolls back, and acts as a user with the same two statements `withUserDb` runs. Test files run one at a time, because fixtures share natural keys such as a postal code. Never test against a shared or development database.
 
+`supabase start` after a `supabase stop` does not re-run migrations: it prints "Starting database from backup" and reuses the CLI's own `supabase_db_hearth` Docker volume, which still holds every row any previous session — a manual `supabase start` for local dev, or a prior test run — ever committed. This is normal Supabase CLI behavior, not a repo defect, and this suite is already written defensively against it: every integration file that writes rows scoped to a postal code deletes exactly those rows in its own `beforeEach` (or wipes the shared cache tables wholesale in `afterAll`, per `jobs.integration.test.ts`), so a leftover row from an earlier session never survives into a test that runs after it. Two consecutive `test:integration` runs against the same un-reset volume pass cleanly for this reason. A contributor who wants a genuinely empty database — for instance, to rule out this exact possibility while debugging — needs `supabase db reset`, or `supabase stop` followed by `docker volume rm supabase_db_hearth` before the next `supabase start`; stopping the stack alone leaves the volume, and with it every row, in place.
+
 ### E2E journeys
 
 Playwright covering, at minimum:

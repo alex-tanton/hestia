@@ -10,6 +10,8 @@ import {
 import { buildApp, type AppDependencies, type AppOptions } from '../app.js';
 import { createTokenVerifier } from '../auth/jwt.js';
 import type { Database } from '../db.js';
+import { createDealsService } from '../services/deals/deals.js';
+import { fixtureDealSource } from './fixture-deal-source.js';
 
 /** Helpers for unit tests that drive the app with inject() and no database or GoTrue. */
 
@@ -78,6 +80,11 @@ export function fakeDeps(overrides: Partial<AppDependencies> = {}): AppDependenc
     recordError: () => Promise.resolve(),
     newestBackupTime: () => Promise.resolve(null),
     merchantSkipRates: () => [],
+    // The recorded fixtures, never the network (Handoff non-negotiable 17).
+    deals: createDealsService({
+      source: fixtureDealSource(),
+      queueBackgroundRefresh: () => undefined,
+    }),
     ...overrides,
   };
 }

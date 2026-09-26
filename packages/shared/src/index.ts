@@ -1,6 +1,7 @@
 export * from './api/auth.js';
 export * from './api/common.js';
 export * from './api/contract.js';
+export * from './api/deals.js';
 export * from './api/households.js';
 export * from './api/invites.js';
 export * from './api/lists.js';

@@ -282,6 +282,24 @@ Offline-queueable writes (`POST /lists/:id/items`, `PATCH /lists/:id/items/:item
 - A request that names a household updates `household.last_active_at` if it has not already been updated that UTC day, through `public.mark_household_active`.
 - `isServerOwner` is true when the JWT's email equals `HEARTH_OWNER_EMAIL`, compared case-insensitively.
 
+#### Deals responses
+
+The four deals reads answer with the data plus the freshness the UI needs to pick its state (Design › Deals-specific states):
+
+| Field | Meaning |
+| --- | --- |
+| `asOf` | When the data being returned was fetched; null when nothing has ever been fetched |
+| `stale` | A live fetch failed, or the cache is past its TTL and could not be replaced, so what is shown is older than `asOf` implies is current |
+| `refreshing` | A background refresh for this postal code is queued, so the PWA refetches |
+
+`deals/search` and `flyers/:flyerId/items` add `page`, `pageSize` (50), `total`, and `hasMore`. A deal carries every field the `DealCard` needs, including `displayPrice`, `conditionalPrice` with its `conditionalReason`, `discountPercent`, and `validFrom`/`validTo`; prices are integer cents.
+
+`deals/search` takes `q` (required), `scope` (`favorites`, the default, or `all`), `stores` (comma-separated merchant ids), `category`, `minPrice` and `maxPrice` in cents, `sort` (`relevance`, the default, or `price`), and `page`. `flyers` takes `scope`; `flyers/:flyerId/items` takes `category`, `sort`, and `page`. A household with no favorites yet is shown every merchant rather than nothing, since the screen's job then is to prompt for favorites with browse-all already working.
+
+A failed fetch with nothing cached answers `503`, which is the error-with-retry state; with anything cached it answers `200` and `stale: true`, because stale data beats empty data (non-negotiable 18).
+
+`DELETE /households/:id/favorite-stores/:storeId` takes the **merchant id**, not the row id, because that is what the merchant list and the flyer rows carry. `POST` on an existing favorite updates its name rather than failing, so a replayed add changes nothing.
+
 ### Rate limits
 
 `@fastify/rate-limit`, keyed on the client IP (see Client IP passthrough), with in-memory storage:
@@ -311,7 +329,7 @@ A request over the limit gets `429` with a problem-details body and a `Retry-Aft
 1. **Enqueue.** For every scheduled type and every recipient whose send time for today has passed in the relevant timezone, the job inserts an outbox row with `on conflict do nothing` on (`user_id`, `type`, `target_id`, `occurrence_key`). Only today's send times are enqueued, so downtime never produces a backlog of stale reminders. Preferences are checked at enqueue time, and so are the conditions: still unpaid, still uncompleted, still unplanned. `list_activity` and `chore_rotation` rows are enqueued by the request that causes them, and `flyer_refresh` rows by `refresh-deals`, not by this step.
 2. **Send.** It selects rows with `sent_at is null and send_after <= now()`, sends each to every one of the recipient's push subscriptions, and stamps `sent_at`.
 
-`send_after` is set when a row is written. If it falls inside the recipient's quiet hours, it is moved to the end of the window.
+`send_after` is set when a row is written. If it falls inside the recipient's quiet hours, it is moved to the end of the window. Both calculations are SQL functions, `public.next_local_time(after, tz, at_local)` and `public.after_quiet_hours(send_at, tz, quiet_start, quiet_end)`, so every writer of an outbox row — jobs as `service_role`, and the request-written `list_activity` and `chore_rotation` rows as `authenticated` — gets the same answer, resolved in the timezone that owns the time rather than the server's.
 
 ### Idempotency
 
@@ -449,17 +467,19 @@ Live calls with aggressive caching. The browser never calls Flipp; only the serv
 2. It fetches flyer items only for flyers whose merchant is in the union of `household_favorite_store` merchant ids across households at that postal code, and only once per flyer: a flyer is not re-fetched while `deal` rows for its `flyer_id` exist and it is valid. Fetching one flyer's items is its roster request plus one item-detail request per priced product (see Endpoints), all through the same serialized request queue, backoff, and circuit breaker as every other call.
 3. It upserts each flyer's items into `deal` once all of that flyer's requests have finished. An item whose detail request still fails after backoff counts as skipped. A flyer cut short by the circuit breaker opening writes nothing, so the next run fetches it whole rather than leaving it partial.
 
-It then reprices expired list items (see Repricing) and recomputes `recipe_readiness` for every household at that postal code.
+Once every postal code has been through those steps, the run reprices expired list items (see Repricing) and recomputes `recipe_readiness` for every household it covered. Both are deterministic from current data, so they run once at the end of the run rather than inside the loop: a postal code whose fetch failed must not stop another household's items being corrected.
 
 After a refresh, the job sets `postal_code_refresh.last_refreshed_at` for each postal code it refreshed.
 
-A flyer counts as new when, before the run, no `deal` row had its `flyer_id`. No `flyer_refresh` is enqueued for a postal code that had no previous refresh, meaning `last_refreshed_at` was null, or it was dormant before this run. Otherwise, for each household with a new flyer from a favorite merchant, the job enqueues a `flyer_refresh` row for each opted-in member, with `occurrence_key` set to that day's date, which limits it to once per day per household. `send_after` is the recipient's next 09:00 local time.
+A flyer counts as new when, before the run, no `deal` row had its `flyer_id`. No `flyer_refresh` is enqueued for a postal code that had no previous refresh, meaning `last_refreshed_at` was null, or it was dormant before this run. Both conditions are read from `last_refreshed_at`: a stamp that is null, or older than a day when the run started, is a postal code the last daily run did not cover. `last_active_at` cannot answer this, because `mark_household_active` has already stamped the caller's household before a queued on-demand refresh runs, and the first daily run after dormancy sees a postal code that is active again. Otherwise, for each household with a new flyer from a favorite merchant, the job enqueues a `flyer_refresh` row for each opted-in member, with `occurrence_key` set to that day's date, which limits it to once per day per household. `send_after` is the recipient's next 09:00 local time.
 
 ### Dormant postal codes
 
 Dormancy governs only the flyer and flyer-item refresh. A keyword search that misses the cache always fetches live and synchronously, under the normal rate discipline, whether or not its postal code is dormant.
 
-A postal code is dormant when no household with that postal code has a `last_active_at` within 14 days. A flyers or flyer-items request for a dormant postal code queues one background refresh for it. It does so only if `postal_code_refresh.last_on_demand_at` is not already in the current UTC day, and it sets that column when it queues, which makes the one-per-UTC-day limit hold whether or not any deal rows exist.
+A postal code is dormant when no household with that postal code has a `last_active_at` within 14 days. A flyers or flyer-items request for a dormant postal code queues one background refresh for it. It does so only if `postal_code_refresh.last_on_demand_at` is not already in the current UTC day, and it sets that column when it queues, which makes the one-per-UTC-day limit hold whether or not any deal rows exist. The claim and the queueing are one statement — an upsert that writes `last_on_demand_at` only when it is not already in the current UTC day — so two concurrent requests queue one refresh between them.
+
+The daily job reads `last_active_at` directly, because it runs as `service_role` and sees every household. **A request cannot, and reads `postal_code_refresh.last_refreshed_at` instead.** Two things stop it using `last_active_at`: RLS shows a caller only the households they belong to, so the maximum across a postal code is not readable, and `mark_household_active` has already stamped the caller's own household by the time the handler runs. `last_refreshed_at` answers the same question from the other side, because the daily run sets it for exactly the postal codes that are not dormant: one that is null, missing, or more than 24 hours old is one the last run did not cover. A run that failed for an active postal code therefore also reads as dormant, which costs at most one extra cache-miss fetch that day and is what the rate discipline already allows.
 
 The refresh runs the same steps as a daily refresh for that single postal code. It goes through the same serialized request queue and is skipped while the circuit breaker is open. The request that triggered it returns immediately:
 
@@ -467,6 +487,8 @@ The refresh runs the same steps as a daily refresh for that single postal code. 
 - or, when no flyers are cached, an empty list with `refreshing: true`
 
 The PWA refetches while `refreshing` is true. This counts as a cache-miss fetch, which the rate discipline allows.
+
+**A flyer-items request never fetches inline**, dormant or not. One flyer costs its roster request plus an item-detail request per priced product, roughly 120 to 300 requests over several minutes, which no screen may trigger and no request may wait for. It is served from the `deal` rows for that `flyer_id`, which are the flyer-item cache. When there are none and the postal code is dormant, the request queues the day's one background refresh and answers with the refreshing state. When there are none and the postal code is active, the answer is an ordinary empty list: the daily run covers the postal code, and a flyer whose merchant nobody there favorites legitimately has no items.
 
 ### Repricing
 
@@ -612,6 +634,7 @@ Particular things worth logging at `info`:
 - deals fetched and skipped per merchant per run
 - notifications sent per type per run
 - autopay payments logged per run
+- every Flipp request, as its mode and path with the gap since the previous one, so the rate discipline is readable rather than assumed (Handoff, Phase 2). A search URL's query string is the user's data and never appears; the line carries the path and, where there is one, the postal code.
 
 ### Error recording
 

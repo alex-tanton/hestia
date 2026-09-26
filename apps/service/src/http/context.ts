@@ -8,6 +8,7 @@ import { withUserDb } from '../db/user-db.js';
 import type { GoTrueClient } from '../gotrue/client.js';
 import type { SystemHealthRow } from '../privileged/service-role-db.js';
 import { fail } from '../problem.js';
+import type { DealsService } from '../services/deals/deals.js';
 import type { ErrorRecord } from '../services/errors.js';
 import { markHouseholdActive } from '../services/households.js';
 
@@ -25,12 +26,15 @@ export interface AppDependencies {
   recordError: (record: ErrorRecord) => Promise<void>;
   newestBackupTime: () => Promise<Date | null>;
   merchantSkipRates: () => MerchantSkipRate[];
+  /** The deals read path: the Flipp wrapper behind its caches (Technical Architecture, "Caching"). */
+  deals: DealsService;
 }
 
 export interface RouteContext {
   deps: AppDependencies;
   origin: string;
   ownerEmail: string;
+  deals: DealsService;
   /** The verified caller, or 401. */
   authenticate: (request: FastifyRequest) => Promise<VerifiedUser>;
   isOwner: (user: VerifiedUser) => boolean;
@@ -55,6 +59,7 @@ export function createRouteContext(
     deps,
     origin: settings.origin,
     ownerEmail: settings.ownerEmail,
+    deals: deps.deals,
     authenticate: async (request) => {
       const header = request.headers.authorization ?? '';
       const match = /^Bearer\s+(\S+)$/i.exec(header);

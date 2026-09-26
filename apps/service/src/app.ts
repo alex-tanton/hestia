@@ -13,6 +13,7 @@ import {
   problemFromGoTrueError,
 } from './problem.js';
 import { authRoutes } from './routes/auth.js';
+import { dealRoutes } from './routes/deals.js';
 import { healthRoute } from './routes/health.js';
 import { householdRoutes } from './routes/households.js';
 import { listRoutes } from './routes/lists.js';
@@ -137,6 +138,7 @@ export async function buildApp(
   await app.register(authRoutes, { ctx });
   await app.register(userRoutes, { ctx });
   await app.register(householdRoutes, { ctx });
+  await app.register(dealRoutes, { ctx });
   await app.register(listRoutes, { ctx });
   await app.register(systemRoutes, {
     ctx,

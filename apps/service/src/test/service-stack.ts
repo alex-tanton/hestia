@@ -10,7 +10,9 @@ import { withAnonDb } from '../db/user-db.js';
 import { createGoTrueClient } from '../gotrue/client.js';
 import { createGoTrueAdmin } from '../privileged/gotrue-admin.js';
 import { readSystemHealth } from '../privileged/service-role-db.js';
+import { createDealsService, type DealsService } from '../services/deals/deals.js';
 import { recordAppError } from '../services/errors.js';
+import { FakeDealSource } from './fixture-deal-source.js';
 import { TEST_DATABASE_URL } from './integration-db.js';
 
 /**
@@ -87,6 +89,25 @@ export interface Stack {
   close: () => Promise<void>;
 }
 
+/** The deals dependency a test drives: a double plus the postal codes it queued refreshes for. */
+export interface TestDeals {
+  source: FakeDealSource;
+  service: DealsService;
+  queued: string[];
+}
+
+export function testDeals(source = new FakeDealSource()): TestDeals {
+  const queued: string[] = [];
+  return {
+    source,
+    queued,
+    service: createDealsService({
+      source,
+      queueBackgroundRefresh: (postalCode) => queued.push(postalCode),
+    }),
+  };
+}
+
 export const TEST_ORIGIN = 'http://127.0.0.1:5173';
 
 export async function startStack(): Promise<Stack> {
@@ -112,6 +133,7 @@ export async function startStack(): Promise<Stack> {
           recordError: (record) => withAnonDb(database.db, (db) => recordAppError(db, record)),
           newestBackupTime: () => Promise.resolve(null),
           merchantSkipRates: () => [],
+          deals: testDeals().service,
           ...options.deps,
         },
         {

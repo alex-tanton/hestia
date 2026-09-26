@@ -24,6 +24,7 @@
     "@hearth/shared": "workspace:*",
     "fastify": "5.12.5",
     "kysely": "0.29.6",
+    "node-cron": "4.6.0",
     "pg": "8.23.0",
     "zod": "4.6.5"
   },

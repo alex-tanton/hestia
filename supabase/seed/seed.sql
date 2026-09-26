@@ -27,6 +27,11 @@ declare
   rivera_list uuid;
   deal_ext text;
   deal_end date;
+  -- Deal validity is a calendar date in the store's own local offset, and every 27514 household
+  -- is in America/New_York. Using the server's `current_date` instead would put "yesterday" on
+  -- today's date for a seed run made in the evening Eastern time, and the three expired deals
+  -- would not be expired in the timezone that owns them (Handoff non-negotiable 8).
+  local_today date := (pg_catalog.now() at time zone 'America/New_York')::date;
 begin
   select id into alex from public.profile where email = 'alex@example.com';
   select id into sam from public.profile where email = 'sam@example.com';
@@ -136,8 +141,184 @@ begin
       now() - interval '3 days');
 
   -- -------------------------------------------------------------------------------------------
-  -- Deals and postal code refreshes: Phase 2 (Seed Data, "Deal fixtures")
+  -- Deals and postal code refreshes (Seed Data, "Deal fixtures")
+  --
+  -- Every current row is a real 27514 item, quoted from the committed normalized fixtures in
+  -- `e2e/fixtures/flipp/normalized/`, down to its `external_id`, `flyer_id`, and `display_price`.
+  -- Money is `numeric(10, 2)` here and integer cents everywhere above it. `normalized_name` is
+  -- what `@hearth/matching` produces from the raw name, because that is the key repricing and
+  -- readiness match on.
+  --
+  -- Validity is relative to the seed run, not the capture: the current rows span this week and
+  -- the three expired ones ended yesterday, so the data never goes stale. The expired rows are
+  -- last week's flyers, which no capture holds, so their ids are the one invented part.
   -- -------------------------------------------------------------------------------------------
+
+  insert into public.deal (external_id, merchant_id, merchant_name, name, normalized_name,
+    unit_price, price_unit, original_price, discount_percent, display_price, conditional_price,
+    conditional_reason, category, image_url, source_url, flyer_id, postal_code, valid_from,
+    valid_to, fetched_at) values
+    -- Clean prices: a shelf price with nothing attached to it.
+    ('1038943471', '2431', 'Harris Teeter',
+      'Harris Teeter Peanut Butter Chocolate Puffs Cereal', 'peanut butter chocolate puff cereal',
+      3.19, 'each', null, null, '$3.19 each', false, null, 'Food Items',
+      'https://f.wishabi.net/page_items/433190342/1788758837/extra_large.jpg', null, '8125654',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1040207155', '2431', 'Harris Teeter', 'Woodbridge Cabernet or Chardonnay',
+      'woodbridge cabernet or chardonnay', 7.19, 'each', 8.99, 20, '$7.19', false, null,
+      'Beverages', 'https://f.wishabi.net/page_items/433697067/1789221953/extra_large.jpg', null,
+      '8132883', '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039540717', '2100', 'Food Lion', 'Sargento Balanced Breaks', 'sargento balanced break',
+      3.49, 'each', 3.99, 12, '$3.49', false, null, 'Food Items',
+      'https://f.wishabi.net/page_items/433395659/1788948259/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039937866', '2469', 'Lowes Foods', 'JUMBO YELLOW ONIONS', 'jumbo yellow onion',
+      1.49, 'lb', null, null, '$1.49 PER LB', false, null, 'Food Items',
+      'https://f.wishabi.net/page_items/433638854/1789120573/extra_large.jpg', null, '8132169',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039937947', '2469', 'Lowes Foods', 'HASS AVOCADOS', 'hass avocado',
+      1.79, 'each', null, null, '$1.79 EACH', false, null, 'Food Items',
+      'https://f.wishabi.net/page_items/433638867/1789120585/extra_large.jpg', null, '8132169',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+
+    -- Multi-buy: parsed by division, with `display_price` keeping the original copy. "3/$5.00" is
+    -- the half-up rounding case (500 / 3 = 167 cents, 596 / 3 = 199).
+    ('1040206850', '2431', 'Harris Teeter', 'Egg-Land''s Best Extra Large Eggs',
+      'egg land s best egg', 2.50, 'each', null, null, '2/$5.00', true, 'loyalty_card',
+      'Food Items', 'https://f.wishabi.net/page_items/433696191/1789219830/extra_large.jpg', null,
+      '8132883', '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1040207255', '2431', 'Harris Teeter', 'Farmers Market Cucumbers', 'farmer market cucumber',
+      1.00, 'each', null, null, '5/$5.00', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433697090/1789219832/extra_large.jpg', null, '8132883',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039534632', '2100', 'Food Lion', 'Food Lion Mini Potatoes', 'mini potato',
+      2.50, 'each', null, null, 'MVP 2/$5.00', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433393877/1788948217/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1040206686', '2431', 'Harris Teeter', 'Harris Teeter 100% Pure Pumpkin', 'pure pumpkin',
+      1.67, 'each', 1.99, 16, '3/$5.00', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433696179/1789219816/extra_large.jpg', null, '8132883',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039937762', '2469', 'Lowes Foods', 'Stouffer''s Entrees', 'stouffer s entree',
+      2.00, 'each', 3.00, 33, 'FINAL PRICE 2/$4.00', true, 'coupon', 'Food Items',
+      'https://f.wishabi.net/page_items/433638770/1789120562/extra_large.jpg', null, '8132169',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+
+    -- BOGO with a base price: half of it, rounded half-up, at the 50% the offer states.
+    ('1039947403', '2361', 'Publix', 'Mifroma Le Gruyère AOP Cheese† BOGO*',
+      'mifroma le gruyère aop cheese bogo', 4.75, 'each', 9.49, 50, 'Buy 1 Get 1 FREE* $9.49',
+      false, null, 'Food Items',
+      'https://f.wishabi.net/page_items/433383502/1789120410/extra_large.jpg', null, '8128353',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+
+    -- Conditional prices, which the UI badges. The Colgate row is also the secondary-rebate case:
+    -- its sale story offers ExtraBucks on top, and the card still wins, because the card is what
+    -- the $4.79 shelf price requires.
+    ('1040206076', '2431', 'Harris Teeter', 'Harris Teeter Snack Cheese', 'snack cheese',
+      3.00, 'each', null, null, '2/$6.00', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433696117/1789219821/extra_large.jpg', null, '8132883',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039937779', '2469', 'Lowes Foods', 'Fa!rlife Milk', 'fa rlife milk',
+      3.99, 'each', 4.99, 20, 'FINAL PRICE $3.99', true, 'coupon', 'Beverages',
+      'https://f.wishabi.net/page_items/433638776/1789120568/extra_large.jpg', null, '8132169',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1038126719', '2264', 'CVS Pharmacy',
+      'Colgate Optic White Advanced 3.2 oz, Charcoal, Purple, Sensitive 3.8-4.2 oz, Total 3 oz or hello adult toothpaste.',
+      'colgate optic white advanced charcoal purple sensitive total or hello adult toothpaste',
+      4.79, 'each', null, null, '$4.79 WITH CARD', true, 'loyalty_card', 'Personal Care',
+      'https://f.wishabi.net/page_items/432762238/1788338899/extra_large.jpg', null, '8120827',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+
+    -- Favorite-store groceries, which the readiness scores are computed against. Bone-In Pork
+    -- Chops is the OCR case: its post-price text reads "per Ib", and it still prices per pound.
+    -- It is also the one unconditional grocery row, so the screens have an unbadged deal.
+    ('1039535334', '2100', 'Food Lion', 'Broccoli Crowns', 'broccoli',
+      1.99, 'lb', null, null, 'MVP $1.99 LB', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433393873/1788948214/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039542198', '2100', 'Food Lion', 'Food Lion Rainbow Bell Peppers', 'rainbow bell pepper',
+      2.99, 'each', null, null, 'MVP $2.99 EA', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433457738/1788948233/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039534752', '2100', 'Food Lion', 'Food Lion Baby Cut Carrots', 'baby cut carrot',
+      0.99, 'each', null, null, 'MVP $0.99 EA', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433393874/1788948215/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039534387', '2100', 'Food Lion', 'Food Lion Mini Cucumbers', 'mini cucumber',
+      2.49, 'each', null, null, 'MVP $2.49 EA', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433393870/1788948212/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039534825', '2100', 'Food Lion', 'Nature''s Promise Organic Potatoes',
+      'nature s promise potato', 3.99, 'each', null, null, 'MVP $3.99 EA', true, 'loyalty_card',
+      'Food Items', 'https://f.wishabi.net/page_items/433393878/1788948218/extra_large.jpg', null,
+      '8128502', '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039530648', '2100', 'Food Lion', 'Food Lion Pasta', 'pasta',
+      0.99, 'each', null, null, 'MVP $0.99 EA', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433393310/1788948217/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039540409', '2100', 'Food Lion', 'Food Lion Chunk or Shredded Cheese', 'chunk or cheese',
+      3.49, 'each', null, null, 'MVP $3.49 EA', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433395662/1788948261/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039535162', '2100', 'Food Lion', 'Nature''s Promise Jumbo Chicken Breast',
+      'nature s promise jumbo chicken breast', 3.49, 'lb', null, null, 'MVP $3.49 LB', true,
+      'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433395195/1788948253/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039535590', '2100', 'Food Lion', '93% Lean Fresh Ground Beef', 'lean ground beef',
+      7.29, 'lb', null, null, 'MVP $7.29 LB', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433395201/1788948258/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1039534923', '2100', 'Food Lion', 'Beef Chuck Roast', 'beef chuck roast',
+      7.99, 'lb', null, null, 'MVP $7.99 LB', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433395200/1788948257/extra_large.jpg', null, '8128502',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1040206685', '2431', 'Harris Teeter', 'Bone-In Pork Chops', 'bone in pork chop',
+      3.49, 'lb', null, null, '$3.49 per Ib', false, null, 'Food Items',
+      'https://f.wishabi.net/page_items/433696710/1789221951/extra_large.jpg', null, '8132883',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+    ('1040206901', '2431', 'Harris Teeter', 'Artesano Bakery Bread', 'artesano bakery bread',
+      3.50, 'each', null, null, '2/$7.00', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433696196/1789219836/extra_large.jpg', null, '8132883',
+      '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
+
+    -- Expired (Seed Data, "Expired"): last week's flyers, ended yesterday, attached to the items
+    -- on the "This Week" list that exercise the three repricing outcomes — a re-match to this
+    -- week's broccoli deal, a fall back to a known regular price, and a cleared price.
+    ('1038221844', '2100', 'Food Lion', 'Broccoli Crowns', 'broccoli',
+      1.49, 'lb', null, null, 'MVP $1.49 LB', true, 'loyalty_card', 'Food Items',
+      'https://f.wishabi.net/page_items/433393873/1788948214/extra_large.jpg', null, '8121874',
+      '27514', local_today - 9, local_today - 1, now() - interval '8 days'),
+    ('1038221907', '2100', 'Food Lion', 'Oscar Mayer Sliced Bacon', 'oscar mayer bacon',
+      5.99, 'each', 6.99, 14, 'MVP $5.99 EA', true, 'loyalty_card', 'Food Items', null, null,
+      '8121874', '27514', local_today - 9, local_today - 1, now() - interval '8 days'),
+    ('1037905512', '2264', 'CVS Pharmacy', 'GARNIER Fructis shampoo/conditioner',
+      'garnier fructis shampoo conditioner', 4.49, 'each', null, null, '$4.49 WITH CARD', true,
+      'loyalty_card', 'Personal Care', null, null, '8114312', '27514',
+      local_today - 9, local_today - 1, now() - interval '8 days');
+
+  -- Refresh bookkeeping. 27514 and 27601 were covered by this morning's run; 27705 has no row at
+  -- all, which is the dormant fixture: opening Empty House's flyers shows the "no cache,
+  -- refreshing" state and queues one on-demand refresh for the UTC day.
+  insert into public.postal_code_refresh (postal_code, last_refreshed_at, last_on_demand_at)
+  values
+    ('27514', now() - interval '6 hours', null),
+    ('27601', now() - interval '6 hours', null);
+
+  -- Search cache (Seed Data, "State-specific fixtures"). "saffron" is the filtered-empty state.
+  -- "chicken" is cached 7 hours ago, past the 6-hour TTL, so it re-fetches; when that fetch
+  -- fails, this row is what the stale "as of" state renders (Handoff non-negotiable 18).
+  insert into public.deal_query_cache (postal_code, normalized_query, deal_ids, cached_at) values
+    ('27514', 'saffron', '{}', now() - interval '1 hour'),
+    ('27514', 'chicken',
+      array(
+        select d.id from public.deal d
+        where d.postal_code = '27514'
+          and d.normalized_name in ('nature s promise jumbo chicken breast', 'lean ground beef',
+            'beef chuck roast')
+        order by d.unit_price
+      ),
+      now() - interval '7 hours');
 
   -- -------------------------------------------------------------------------------------------
   -- Pantry (Seed Data, "Pantry"): twenty staples for Oak Street. `normalized_name` is what the
@@ -178,13 +359,10 @@ begin
   --
   -- The three expired items are seeded in the state they were added in, still at last week's
   -- sale price. Repricing runs whenever the list is fetched, which is what turns them into the
-  -- three outcomes Seed Data documents — a re-match, a fall back to the regular price, and a
-  -- cleared price — rather than the seed asserting them by hand. Two of the three need nothing
-  -- else. The broccoli re-matches this week's Food Lion deal only once the deal fixtures above
-  -- are seeded; with the `deal` table still empty it has no regular price to fall back to, so
-  -- its price clears too and Food Lion subtotals $14.28 with two unpriced rather than Seed
-  -- Data's $18.26 with one. Harris Teeter's $7.00, CVS Pharmacy's $10.78, and Anywhere's $0.00
-  -- with three unpriced hold either way.
+  -- three outcomes Seed Data documents — a re-match to this week's broccoli deal at $1.99/lb, a
+  -- fall back to the bacon's $6.99 regular price, and a cleared price for the shampoo — rather
+  -- than the seed asserting them by hand. Food Lion then subtotals $18.26 with one unpriced,
+  -- Harris Teeter $7.00, CVS Pharmacy $10.78, and Anywhere $0.00 with three unpriced.
   -- -------------------------------------------------------------------------------------------
 
   insert into public.shopping_list (household_id, name, created_by, created_at)
@@ -266,14 +444,14 @@ begin
   select d.external_id, d.valid_to into deal_ext, deal_end from public.deal d
   where d.postal_code = '27514' and d.merchant_id = '2264' and d.valid_to >= current_date
     and d.normalized_name =
-      'colgate optic white advanced charcoal purple sensitive or stain fighter'
+      'colgate optic white advanced charcoal purple sensitive total or hello adult toothpaste'
   order by d.external_id limit 1;
   insert into public.shopping_list_item (list_id, item_name, normalized_name, quantity, status,
     added_by, source, merchant_id, merchant_name, deal_external_id, sale_price, regular_price,
     deal_valid_to, price_unit, conditional_price, price, created_at)
   values (this_week, 'Colgate Optic White',
-    'colgate optic white advanced charcoal purple sensitive or stain fighter', 1, 'needed', alex,
-    'from_deal', '2264', 'CVS Pharmacy', deal_ext, 4.79, 9.79,
+    'colgate optic white advanced charcoal purple sensitive total or hello adult toothpaste', 1,
+    'needed', alex, 'from_deal', '2264', 'CVS Pharmacy', deal_ext, 4.79, 9.79,
     coalesce(deal_end, current_date + 5), 'each', true, 4.79,
     now() - interval '3 days' + interval '10 minutes');
 

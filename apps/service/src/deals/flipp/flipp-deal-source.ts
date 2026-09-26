@@ -115,6 +115,15 @@ export class FlippDealSource implements DealSource, DealSourceStats {
   private readonly flyersById = new Map<string, Flyer>();
   private merchantCache: { merchants: Map<string, string>; fetchedAt: number } | null = null;
   private readonly counts = new Map<string, MerchantSkipCount>();
+  /**
+   * In-flight coalescing: a cold cache key already being fetched hands every other caller the
+   * same promise rather than enqueueing another request. Cleared on settle, success or failure,
+   * so the next caller after a failure gets a fresh attempt rather than a cached rejection
+   * (Technical Architecture, "Flipp wrapper"; non-negotiable 19, rate discipline — a cache never
+   * lets a burst of callers each pay for their own fetch).
+   */
+  private readonly flyersInFlight = new Map<string, Promise<Map<string, Flyer>>>();
+  private merchantsInFlight: Promise<Map<string, string>> | null = null;
 
   constructor(options: FlippDealSourceOptions) {
     this.queue = options.queue;
@@ -338,6 +347,17 @@ export class FlippDealSource implements DealSource, DealSourceStats {
       return new Map(cached.flyers.map((flyer) => [flyer.flyerId, flyer]));
     }
 
+    const inFlight = this.flyersInFlight.get(postalCode);
+    if (inFlight !== undefined) return inFlight;
+
+    const fetching = this.fetchActiveFlyers(postalCode, at).finally(() => {
+      this.flyersInFlight.delete(postalCode);
+    });
+    this.flyersInFlight.set(postalCode, fetching);
+    return fetching;
+  }
+
+  private async fetchActiveFlyers(postalCode: string, at: number): Promise<Map<string, Flyer>> {
     const body = asRecord(
       await this.queue.request(
         `${BASE_URL}/flipp/flyers?postal_code=${encodeURIComponent(postalCode)}&locale=${LOCALE}`,
@@ -382,6 +402,16 @@ export class FlippDealSource implements DealSource, DealSourceStats {
       return this.merchantCache.merchants;
     }
 
+    if (this.merchantsInFlight !== null) return this.merchantsInFlight;
+
+    const fetching = this.fetchMerchantDirectory(at).finally(() => {
+      this.merchantsInFlight = null;
+    });
+    this.merchantsInFlight = fetching;
+    return fetching;
+  }
+
+  private async fetchMerchantDirectory(at: number): Promise<Map<string, string>> {
     const body = asRecord(await this.queue.request(`${BASE_URL}/flipp/merchants?locale=${LOCALE}`));
     const merchants = new Map<string, string>();
     for (const raw of asArray(body['merchants'])) {
