@@ -215,3 +215,24 @@ describe('Settings', () => {
     }
   });
 });
+
+/*
+ * Design › Accessibility › Focus management: where a member's action replaces the control they
+ * used — a button giving way to the form it opens — focus moves into what replaced it rather than
+ * falling back to the document, and returns to the trigger when the form closes.
+ */
+describe('Account forms swap focus with the control they replace', () => {
+  it.each([
+    ['Change password', 'Current password'],
+    ['Change email', 'New email'],
+  ])('%s moves focus into the form and back to the trigger', async (trigger, firstField) => {
+    const user = userEvent.setup();
+    renderSettings(settingsHandlers());
+
+    await user.click(await screen.findByRole('button', { name: trigger }));
+    expect(await screen.findByLabelText(firstField)).toHaveFocus();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(await screen.findByRole('button', { name: trigger })).toHaveFocus();
+  });
+});

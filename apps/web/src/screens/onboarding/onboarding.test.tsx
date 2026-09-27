@@ -278,6 +278,26 @@ describe('joining a household', () => {
     });
     expect(stub.calls[0]?.body).toEqual({ tokenOrCode: 'a-token-from-the-invite-link' });
   });
+
+  it('moves focus into the code form when a failed link puts it back', async () => {
+    stubFetch({
+      'POST /api/households/join': () => ({
+        status: 410,
+        body: problemBody(410, 'Gone', 'This invite has expired or was revoked.'),
+      }),
+    });
+    renderScreen(<JoinHouseholdStep autoToken="a-dead-token" onJoined={() => undefined} />);
+
+    // The status message gave way to the form, so focus follows rather than falling back to the
+    // document (Design › Accessibility › Focus management).
+    expect(await screen.findByLabelText('Invite code')).toHaveFocus();
+  });
+
+  it('leaves focus alone on an ordinary visit, which starts on the form', async () => {
+    stubFetch({});
+    renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
+    expect(await screen.findByLabelText('Invite code')).not.toHaveFocus();
+  });
 });
 
 describe('the rest of onboarding', () => {

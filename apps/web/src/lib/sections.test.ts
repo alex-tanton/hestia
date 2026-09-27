@@ -31,8 +31,8 @@ describe('navigation config', () => {
     }
   });
 
-  it('ships no pillar yet, so every pillar tab is coming soon', () => {
-    expect(RELEASED_PILLARS.size).toBe(0);
+  it('ships Lists and nothing else yet, so the other three tabs are coming soon', () => {
+    expect([...RELEASED_PILLARS]).toEqual(['lists']);
   });
 });
 

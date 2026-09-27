@@ -12,5 +12,12 @@ export const queryKeys = {
   invites: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'invites'] as const,
   departurePreview: (householdId: string, userId: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'departure-preview', userId] as const,
+  /** The lists index. Archived lists are a separate read-only view, so a separate key. */
+  lists: (householdId: string, archived: boolean) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'lists', archived ? 'archived' : 'active'] as const,
+  /** One list's detail. A list's own path does not name its household; its cache entry must. */
+  list: (householdId: string, listId: string) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'list', listId] as const,
+  pantry: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'pantry'] as const,
   deepHealth: ['health', 'deep'] as const,
 };

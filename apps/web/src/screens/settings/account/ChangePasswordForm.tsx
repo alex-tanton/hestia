@@ -1,4 +1,4 @@
-import { useState, type SyntheticEvent, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Button } from '../../../components/ui/Button.tsx';
 import { TextField } from '../../../components/ui/Field.tsx';
 import { FormMessage } from '../../../components/ui/FormMessage.tsx';
@@ -24,6 +24,18 @@ export function ChangePasswordForm(): ReactElement {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [formError, setFormError] = useState<string>();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(isOpen);
+
+  // Opening swaps the trigger for the form, and closing swaps it back. Where a member's action
+  // replaces the control they used, focus moves into what replaced it rather than falling back to
+  // the document (Design › Accessibility › Focus management).
+  useEffect(() => {
+    if (wasOpen.current === isOpen) return;
+    wasOpen.current = isOpen;
+    if (isOpen) formRef.current?.querySelector('input')?.focus();
+    else triggerRef.current?.focus();
+  }, [isOpen, formRef]);
 
   const handleSubmit = async (event: SyntheticEvent): Promise<void> => {
     event.preventDefault();
@@ -56,6 +68,7 @@ export function ChangePasswordForm(): ReactElement {
       <div className="flex flex-col gap-2">
         <span className="text-body-sm font-semibold text-primary">Password</span>
         <Button
+          ref={triggerRef}
           variant="secondary"
           className="self-start"
           onClick={() => {

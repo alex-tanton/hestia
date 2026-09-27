@@ -38,7 +38,17 @@ export function JoinHouseholdStep({ autoToken, onJoined }: JoinHouseholdStepProp
   const [formError, setFormError] = useState<string>();
   const [isRedeemingLink, setIsRedeemingLink] = useState(autoToken !== undefined);
   const hasTriedLink = useRef(false);
+  const wasRedeeming = useRef(isRedeemingLink);
   const join = joinHousehold.mutateAsync;
+
+  // A failed redemption swaps the status message back to the code form. Focus follows into what
+  // replaced it rather than falling back to the document (Design › Accessibility › Focus
+  // management); an ordinary visit starts on the form already and is left alone.
+  useEffect(() => {
+    if (wasRedeeming.current === isRedeemingLink) return;
+    wasRedeeming.current = isRedeemingLink;
+    if (!isRedeemingLink) formRef.current?.querySelector('input')?.focus();
+  }, [isRedeemingLink, formRef]);
 
   useEffect(() => {
     if (autoToken === undefined || hasTriedLink.current) return;

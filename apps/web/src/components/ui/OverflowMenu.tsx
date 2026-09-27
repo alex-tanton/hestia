@@ -11,6 +11,12 @@ export interface OverflowMenuItem {
   icon?: ReactNode;
   isDestructive?: boolean;
   isDisabled?: boolean;
+  /**
+   * Why the action is unavailable ("Needs a connection."). It disables the item and sits beneath
+   * the label: a row's actions live in this menu, so the one line explaining an offline-disabled
+   * control belongs here too (Design › Offline rules).
+   */
+  disabledReason?: string | undefined;
 }
 
 export interface OverflowMenuProps {
@@ -42,15 +48,20 @@ export function OverflowMenu({ label, items }: OverflowMenuProps): ReactElement 
           {items.map((item) => (
             <DropdownMenu.Item
               key={item.label}
-              disabled={item.isDisabled ?? false}
+              disabled={(item.isDisabled ?? false) || item.disabledReason !== undefined}
               onSelect={item.onSelect}
               className={cn(
-                'flex min-h-11 cursor-default items-center gap-2 rounded-sm px-3 text-body outline-none select-none data-disabled:opacity-50 data-highlighted:bg-raised data-highlighted:outline-2 data-highlighted:-outline-offset-2 data-highlighted:outline-section-accent',
+                'flex min-h-11 cursor-default items-center gap-2 rounded-sm px-3 py-1.5 text-body outline-none select-none data-disabled:opacity-50 data-highlighted:bg-raised data-highlighted:outline-2 data-highlighted:-outline-offset-2 data-highlighted:outline-section-accent',
                 item.isDestructive ? 'text-danger' : 'text-primary',
               )}
             >
               {item.icon}
-              {item.label}
+              <span className="flex flex-col">
+                {item.label}
+                {item.disabledReason !== undefined && (
+                  <span className="text-body-sm text-secondary">{item.disabledReason}</span>
+                )}
+              </span>
             </DropdownMenu.Item>
           ))}
         </DropdownMenu.Content>

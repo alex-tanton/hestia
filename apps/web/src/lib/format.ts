@@ -1,9 +1,13 @@
+import type { PriceUnit } from '@hearth/shared';
+
 /**
  * US formatting through `Intl` rather than hand-built strings, so a future locale is a change of
  * constants (Requirements, "Locale").
  */
 
 const LOCALE = 'en-US';
+
+const MONEY = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'USD' });
 
 const DATE = new Intl.DateTimeFormat(LOCALE, {
   month: '2-digit',
@@ -49,6 +53,26 @@ export function formatDateTime(iso: string): string {
 /** A timezone name as people read it: "America/New_York" as "New York". */
 export function formatTimezone(timezone: string): string {
   return (timezone.split('/').at(-1) ?? timezone).replaceAll('_', ' ');
+}
+
+/**
+ * Integer cents as dollars. Money arrives from the API already computed and is only ever
+ * formatted here; nothing in the client does arithmetic on it (Engineering Practices, "Money is
+ * integer cents"; Technical Architecture, "API surface").
+ */
+export function formatCents(cents: number): string {
+  return MONEY.format(cents / 100);
+}
+
+/** A price with its unit, as Design writes it: "$2.49/lb", "$3.99". */
+export function formatPrice(cents: number, unit: PriceUnit): string {
+  return unit === 'each' ? formatCents(cents) : `${formatCents(cents)}/${unit}`;
+}
+
+/** The same price as a sentence, for the accessible name of a row or a card. */
+export function speakPrice(cents: number, unit: PriceUnit): string {
+  if (unit === 'each') return formatCents(cents);
+  return `${formatCents(cents)} per ${unit === 'lb' ? 'pound' : 'ounce'}`;
 }
 
 export function pluralize(count: number, singular: string, plural = `${singular}s`): string {

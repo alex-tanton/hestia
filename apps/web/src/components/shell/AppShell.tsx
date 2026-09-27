@@ -8,6 +8,7 @@ import {
   sectionForPath,
   type SectionId,
 } from '../../lib/sections.ts';
+import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import { ToastProvider } from '../ui/Toast.tsx';
 import type { HouseholdSwitcherProps } from './HouseholdSwitcher.tsx';
 import { OfflineBanner } from './OfflineBanner.tsx';
@@ -63,6 +64,16 @@ function useTabScrollMemory(section: SectionId, householdId: string | undefined)
   }, [section]);
 }
 
+/**
+ * A queued write's toast can arrive long after the screen that made it has gone — after a
+ * reconnect, or after a reload — so the queue is wired in at the shell, inside the toast
+ * provider (Design › Offline rules).
+ */
+function WriteQueue(): null {
+  useWriteQueue();
+  return null;
+}
+
 function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactElement {
   const { pathname } = useLocation();
   const section = sectionForPath(pathname);
@@ -78,6 +89,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
   return (
     <SectionProvider section={section} className="min-h-dvh bg-base text-primary">
       <ToastProvider>
+        <WriteQueue />
         <a
           href="#main"
           className="sr-only z-50 rounded-md bg-base px-4 py-3 text-body font-semibold text-section focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:px-4 focus:py-3"

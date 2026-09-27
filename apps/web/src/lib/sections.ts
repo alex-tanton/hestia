@@ -100,7 +100,7 @@ export const TABS: readonly Tab[] = [
  * Pillars whose screens have shipped. Everything else renders the coming-soon state; each
  * pillar's phase adds itself here (Lists in Phase 2, Meals in Phase 3, Bills and Chores in 4).
  */
-export const RELEASED_PILLARS: ReadonlySet<PillarId> = new Set<PillarId>();
+export const RELEASED_PILLARS: ReadonlySet<PillarId> = new Set<PillarId>(['lists']);
 
 /** The section that owns a pathname. Settings and unknown paths are section-neutral. */
 export function sectionForPath(pathname: string): SectionId {

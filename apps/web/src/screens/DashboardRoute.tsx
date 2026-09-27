@@ -1,0 +1,56 @@
+import type { ReactElement } from 'react';
+import type { ShoppingList } from '@hearth/shared';
+import type { DashboardCardState } from '../components/dashboard/DashboardCard.tsx';
+import { DASHBOARD_EMPTY_COPY } from '../components/dashboard/DashboardCards.tsx';
+import { useProfile } from '../lib/api/hooks.ts';
+import { useShoppingLists } from '../lib/api/list-hooks.ts';
+import { DashboardScreen } from './DashboardScreen.tsx';
+
+/** "3 of 15 left" — the compact progress indicator Design gives the Shopping card. */
+export function listProgress(list: ShoppingList): string {
+  return `${String(list.outstandingCount)} of ${String(list.itemCount)} left`;
+}
+
+/**
+ * The Shopping card's data (PRD › This Week: active shopping list status, items outstanding). The
+ * service sorts the lists by last activity, so the most recently worked list leads. A list with
+ * nothing outstanding is not news, so the card counts only the lists that still have something to
+ * buy and reads as empty when none do.
+ */
+export function shoppingCardState(lists: ReturnType<typeof useShoppingLists>): DashboardCardState {
+  if (lists.isPending && lists.fetchStatus !== 'paused') return { status: 'loading' };
+  if (lists.data === undefined) {
+    if (lists.isError) {
+      return {
+        status: 'error',
+        message: "Couldn't load your lists. Try again.",
+        onRetry: () => {
+          void lists.refetch();
+        },
+      };
+    }
+    // Offline before this household ever synced: nothing to show and nothing failed.
+    return { status: 'empty', message: DASHBOARD_EMPTY_COPY.lists };
+  }
+
+  const outstanding = lists.data.filter((list) => list.outstandingCount > 0);
+  if (outstanding.length === 0) return { status: 'empty', message: DASHBOARD_EMPTY_COPY.lists };
+
+  return {
+    status: 'populated',
+    total: outstanding.length,
+    items: outstanding.map((list) => ({
+      id: list.id,
+      label: list.name,
+      detail: listProgress(list),
+    })),
+  };
+}
+
+/** The dashboard with its data. It ships in the shell, so it is small and fetches only lists. */
+export function DashboardRoute(): ReactElement {
+  const profile = useProfile();
+  const householdId = profile.data?.activeHouseholdId ?? undefined;
+  const lists = useShoppingLists(householdId);
+  return <DashboardScreen shopping={shoppingCardState(lists)} />;
+}

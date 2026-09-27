@@ -7,6 +7,7 @@ import { DashboardScreen, type DashboardScreenProps } from '../../screens/Dashbo
 import type { PillarId } from '../../lib/sections.ts';
 import { DashboardCard, type DashboardCardState } from './DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from './DashboardCards.tsx';
+import { FIRST_RUN_HEADING } from './DashboardFirstRun.tsx';
 
 const ALL_RELEASED: ReadonlySet<PillarId> = new Set(['lists', 'meals', 'bills', 'chores']);
 
@@ -43,7 +44,7 @@ describe('This Week dashboard', () => {
   });
 
   it('shows muted, untappable placeholders in each section color while nothing has shipped', () => {
-    renderDashboard({});
+    renderDashboard({ releasedPillars: new Set() });
     for (const [name, section] of [
       ['Bills', 'bills'],
       ['Shopping', 'lists'],
@@ -60,11 +61,34 @@ describe('This Week dashboard', () => {
   it('keeps a placeholder for an unshipped pillar even when data is supplied', () => {
     renderDashboard({
       releasedPillars: new Set(['lists']),
-      shopping: { status: 'empty', message: DASHBOARD_EMPTY_COPY.lists },
+      shopping: { status: 'populated', total: 1, items: [{ id: 'l1', label: 'This Week' }] },
       bills: { status: 'empty', message: DASHBOARD_EMPTY_COPY.bills },
     });
-    expect(within(card('Shopping')).getByText('Nothing left to buy')).toBeInTheDocument();
+    expect(within(card('Shopping')).getByText('This Week')).toBeInTheDocument();
     expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
+  });
+
+  it('replaces the shipped pillars’ empty cards with one first-run panel', () => {
+    renderDashboard({
+      releasedPillars: new Set(['lists']),
+      shopping: { status: 'empty', message: DASHBOARD_EMPTY_COPY.lists },
+    });
+    expect(screen.getByRole('heading', { level: 2, name: FIRST_RUN_HEADING })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /^Shopping/ })).toBeNull();
+    // An unshipped pillar's placeholder is unaffected and keeps its place.
+    expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
+    ).toEqual(['Bills', FIRST_RUN_HEADING, 'Meals', 'Chores']);
+  });
+
+  it('keeps the four cards when a shipped pillar has anything at all', () => {
+    renderDashboard({
+      releasedPillars: new Set(['lists']),
+      shopping: { status: 'loading' },
+    });
+    expect(screen.queryByRole('heading', { name: FIRST_RUN_HEADING })).toBeNull();
+    expect(within(card('Shopping')).getByRole('status')).toHaveTextContent('Loading shopping');
   });
 
   it('renders each card independently: one failing card leaves the others intact', () => {

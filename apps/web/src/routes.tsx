@@ -6,7 +6,7 @@ import {
   RequireSession,
   SignedOutOnly,
 } from './screens/AuthenticatedLayout.tsx';
-import { DashboardScreen } from './screens/DashboardScreen.tsx';
+import { DashboardRoute } from './screens/DashboardRoute.tsx';
 
 function RouteError(): ReactElement {
   return (
@@ -77,7 +77,7 @@ export function createRoutes(): RouteObject[] {
             {
               element: <AuthenticatedLayout />,
               children: [
-                { index: true, element: <DashboardScreen /> },
+                { index: true, element: <DashboardRoute /> },
                 // Deals and flyers are lazy chunks of their own under the Lists tab, so opening
                 // the tab does not pull in the deal screens and vice versa.
                 { path: 'lists/deals', lazy: () => import('./screens/deals/DealSearchScreen.tsx') },

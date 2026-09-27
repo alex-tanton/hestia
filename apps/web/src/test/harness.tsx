@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import type { Persister } from '@tanstack/react-query-persist-client';
 import { render, type RenderResult } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import {
@@ -13,6 +14,7 @@ import { AppProviders } from '../App.tsx';
 import { ToastProvider } from '../components/ui/Toast.tsx';
 import { SectionProvider } from '../lib/section-context.tsx';
 import type { AuthClient, AuthState } from '../lib/auth/auth-client.ts';
+import type { ListRealtimeHandlers, RealtimePort } from '../lib/realtime/realtime-port.ts';
 import { routes } from '../routes.tsx';
 import { ALEX_ID } from './fixtures.ts';
 
@@ -112,16 +114,17 @@ export function createFetchStub(handlers: Readonly<Record<string, StubHandler>>)
   const calls: FetchStub['calls'] = [];
 
   const stub: typeof fetch = async (input, init) => {
-    const path =
+    const requested =
       typeof input === 'string' ? input : input instanceof URL ? input.pathname : input.url;
     const method = init?.method ?? 'GET';
     const raw = typeof init?.body === 'string' ? init.body : undefined;
     const body: unknown = raw === undefined ? undefined : JSON.parse(raw);
-    calls.push({ method, path, body });
+    calls.push({ method, path: requested, body });
 
-    const queryStart = path.indexOf('?');
-    const pathname = queryStart === -1 ? path : path.slice(0, queryStart);
-    const query = new URLSearchParams(queryStart === -1 ? '' : path.slice(queryStart + 1));
+    // Handlers are keyed on the path alone; a handler that cares reads the query from `query`.
+    const queryStart = requested.indexOf('?');
+    const pathname = queryStart === -1 ? requested : requested.slice(0, queryStart);
+    const query = new URLSearchParams(queryStart === -1 ? '' : requested.slice(queryStart + 1));
 
     const headers = new Headers(init?.headers);
     const authorization = headers.get('authorization');
@@ -130,7 +133,7 @@ export function createFetchStub(handlers: Readonly<Record<string, StubHandler>>)
     for (const [pattern, handler] of Object.entries(handlers)) {
       const params = matchRoute(pattern, method, pathname);
       if (params === undefined) continue;
-      const result = await handler({ method, path, body, token, params, query });
+      const result = await handler({ method, path: requested, body, token, params, query });
       if (result.status === 204 || result.body === undefined) {
         return new Response(null, { status: result.status });
       }
@@ -162,6 +165,12 @@ export function testQueryClient(): QueryClient {
 export interface RenderOptions {
   auth?: AuthStub;
   queryClient?: QueryClient;
+  /** A stand-in for Supabase Realtime, for the screens that subscribe to one. */
+  realtime?: RealtimePort;
+  /** Absent unless a test exercises persistence directly; enables `PersistQueryClientProvider`. */
+  persister?: Persister;
+  /** Absent unless a test exercises the write queue's own immediate, unthrottled flush. */
+  flushPersister?: Persister;
   /** A route pattern, when the screen reads params from it. */
   path?: string;
   /** A string, or a `{ pathname, state }` entry where the screen reads router state. */
@@ -174,13 +183,22 @@ export function renderScreen(
   {
     auth = createAuthStub(),
     queryClient = testQueryClient(),
+    realtime,
+    persister,
+    flushPersister,
     path = '*',
     initialEntries = ['/'],
   }: RenderOptions = {},
 ): RenderResult & { auth: AuthStub; queryClient: QueryClient } {
   const router = createMemoryRouter([{ path, element: ui }], { initialEntries });
   const result = render(
-    <AppProviders auth={auth} queryClient={queryClient}>
+    <AppProviders
+      auth={auth}
+      queryClient={queryClient}
+      realtime={realtime}
+      persister={persister}
+      flushPersister={flushPersister}
+    >
       {/* The shell supplies both around every screen; a screen under test needs them too. */}
       <SectionProvider section="dashboard">
         <ToastProvider>
@@ -190,6 +208,34 @@ export function renderScreen(
     </AppProviders>,
   );
   return { ...result, auth, queryClient };
+}
+
+/** A realtime port a test drives by hand, recording what each open list subscribed to. */
+export interface RealtimeStub extends RealtimePort {
+  /** The channels currently open, by list id. */
+  readonly open: Map<string, ListRealtimeHandlers>;
+  /** Every list subscribed to and torn down, in order, for asserting the lifecycle. */
+  readonly subscribed: string[];
+  readonly unsubscribed: string[];
+}
+
+export function createRealtimeStub(): RealtimeStub {
+  const open = new Map<string, ListRealtimeHandlers>();
+  const subscribed: string[] = [];
+  const unsubscribed: string[] = [];
+  return {
+    open,
+    subscribed,
+    unsubscribed,
+    subscribeToList(listId, handlers) {
+      open.set(listId, handlers);
+      subscribed.push(listId);
+      return () => {
+        open.delete(listId);
+        unsubscribed.push(listId);
+      };
+    },
+  };
 }
 
 export interface RenderAppOptions extends RenderOptions {
