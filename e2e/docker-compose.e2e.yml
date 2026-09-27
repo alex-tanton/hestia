@@ -16,6 +16,9 @@
 #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
 #     public origin an https one; E2E is plain HTTP on the loopback, so HEARTH_HOST — the only
 #     thing that entrypoint derives — is given directly
+#   * hearth-service reads the checked-in Flipp captures instead of the live endpoint (Handoff
+#     non-negotiable 17), and logs at info rather than warn so the rate discipline the deal
+#     journeys exercise is readable in `docker compose logs` (Handoff, Phase 2 "Done when")
 #
 # The `backup` service is left out: nothing in the suite reads a backup, and the stack starts
 # faster without it.
@@ -26,9 +29,17 @@ services:
       - 127.0.0.1:54329:5432
 
   hearth-service:
+    # Relative to docker/, not to this file: Compose resolves every file's relative paths against
+    # the first -f file's directory, which is docker/docker-compose.yml (`compose.ts`).
+    volumes:
+      - ../e2e/fixtures/flipp/raw:/app/fixtures/flipp/raw:ro
     environment:
       HEARTH_TRUSTED_PROXIES: &subnet 172.16.239.0/24
-      LOG_LEVEL: warn
+      LOG_LEVEL: info
+      # The fixture set's own instant (`FIXTURE_NOW`, Technical Architecture › "Development"), so
+      # the wrapper's active-flyer window matches what the captures cover regardless of today.
+      HEARTH_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
+      HEARTH_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
 
   kong:
     environment:

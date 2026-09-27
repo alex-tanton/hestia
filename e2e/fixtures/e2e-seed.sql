@@ -61,6 +61,27 @@ begin
     rotation_order, rotation_offset, created_by)
   values (oak_street, 'Take out trash', 'week', 1, (now() - interval '56 days')::date,
     array[alex, sam, jordan], 2, alex);
+
+  -- -------------------------------------------------------------------------------------------
+  -- Journey 2's search cache (Handoff, Phase 2 "Done when": E2E journey 2). `supabase/seed/seed.sql`
+  -- seeds the deals themselves — Food Lion's Rainbow Bell Peppers and Baby Cut Carrots, both real
+  -- 27514 favorite-store groceries (Seed Data, "Favorite-store groceries") — but its own
+  -- `deal_query_cache` rows are "saffron" and "chicken", neither a favorited-merchant deal a
+  -- journey can add to a list. A row per theme, already warm, is what lets the journey's search be
+  -- a cache hit rather than a live Flipp call the suite must never make (non-negotiable 17): each
+  -- `normalized_query` is exactly what `@hearth/matching` normalizes the raw item name to, which is
+  -- also what the journey types into the search box.
+  -- -------------------------------------------------------------------------------------------
+
+  insert into public.deal_query_cache (postal_code, normalized_query, deal_ids, cached_at) values
+    ('27514', 'rainbow bell pepper',
+      array(select id from public.deal where postal_code = '27514'
+        and external_id = '1039542198'),
+      now()),
+    ('27514', 'baby cut carrot',
+      array(select id from public.deal where postal_code = '27514'
+        and external_id = '1039534752'),
+      now());
 end
 $$;
 

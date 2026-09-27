@@ -32,6 +32,24 @@ export async function householdStatus(
 }
 
 /**
+ * `POST /api/lists/:id/items` as that caller, status only. Sent twice with the same body and the
+ * same client-generated `id`, this is how a journey replays an offline write directly rather than
+ * racing the browser's own queue, to prove the replay is a no-op (Handoff non-negotiable 9).
+ */
+export async function addListItemStatus(
+  request: APIRequestContext,
+  token: string,
+  listId: string,
+  body: Readonly<Record<string, unknown>>,
+): Promise<number> {
+  const response = await request.post(`/api/lists/${listId}/items`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: body,
+  });
+  return response.status();
+}
+
+/**
  * `POST /api/households/:id/members/:userId/remove` as that caller, with whatever reassignments
  * are given. The gating the departure preview shows is a server rule, not a disabled button, so
  * this is how a journey asks the server directly whether an unresolved departure is refused.

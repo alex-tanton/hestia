@@ -55,3 +55,20 @@ export async function reassign(page: Page, itemName: string, memberName: string)
   await page.getByRole('combobox', { name: itemName }).click();
   await page.getByRole('option', { name: memberName }).click();
 }
+
+/** Opens a list from the Lists index by name (Design › Screens › 7 and 8). */
+export async function openList(page: Page, listName: string): Promise<void> {
+  await page.goto('/lists');
+  await page.getByRole('link', { name: new RegExp(`^${listName}`) }).click();
+  await expect(page.getByRole('heading', { name: listName, level: 1 })).toBeVisible();
+}
+
+/**
+ * Waits for the service worker to finish installing and activating, so a caller about to go
+ * offline knows the precache (Engineering Practices › "Service worker") is actually there to serve
+ * a reload. First activation needs no user prompt — only an update to an already-controlling
+ * worker does — so this resolves on the very first visit.
+ */
+export async function waitForServiceWorker(page: Page): Promise<void> {
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
+}

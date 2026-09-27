@@ -42,6 +42,17 @@ export function useProfile(): UseQueryResult<ProfileResponse> {
   const api = useApi();
   return useQuery({
     queryKey: queryKeys.profile,
+    /*
+     * Never served from cache without a fresh check behind it. This is the query every
+     * household-scoped screen gates on (`AuthenticatedLayout`), and the query cache now survives
+     * a full reload (`PersistQueryClientProvider`): with the client default `staleTime` a reload
+     * within that window would keep showing a household the caller was just removed from, missing
+     * "a removed member loses access immediately" (Handoff, Phase 1 "Done when") by however much
+     * of the window was left. The persisted `data` still paints instantly — `staleTime` only
+     * decides whether a mount also revalidates — so this costs nothing offline or on a quick
+     * reopen; it only removes the window where a reload could still be trusting stale membership.
+     */
+    staleTime: 0,
     queryFn: ({ signal }) =>
       api.request({ method: 'GET', path: '/api/users/me', schema: profileResponseSchema, signal }),
   });

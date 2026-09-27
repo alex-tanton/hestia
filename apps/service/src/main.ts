@@ -4,7 +4,13 @@ import { createTokenVerifier } from './auth/jwt.js';
 import { createDatabase } from './db.js';
 import { withAnonDb } from './db/user-db.js';
 import { FlippDealSource } from './deals/flipp/flipp-deal-source.js';
-import { buildUserAgent, fetchGet, FlippRequestQueue } from './deals/flipp/request-queue.js';
+import { FIXTURE_ITEM_DETAIL, fixtureTransport } from './deals/flipp/fixture-transport.js';
+import {
+  buildUserAgent,
+  fetchGet,
+  FlippRequestQueue,
+  type HttpGet,
+} from './deals/flipp/request-queue.js';
 import { parseEnv } from './env.js';
 import { createGoTrueClient } from './gotrue/client.js';
 import { createScheduler, readinessNotBuiltYet, type Scheduler } from './jobs/index.js';
@@ -38,12 +44,23 @@ const queueLogger = {
   warn: (data: Record<string, unknown>, message: string) => wiring.log?.warn(data, message),
   info: (data: Record<string, unknown>, message: string) => wiring.log?.info(data, message),
 };
+// Only the E2E Compose overlay sets HEARTH_FLIPP_FIXTURE_DIR (non-negotiable 17): every other
+// caller, including a real deployment, gets the live transport unchanged.
+const flippGet: HttpGet =
+  env.HEARTH_FLIPP_FIXTURE_DIR === undefined
+    ? fetchGet
+    : fixtureTransport({ dir: env.HEARTH_FLIPP_FIXTURE_DIR, itemDetail: FIXTURE_ITEM_DETAIL });
 const flippQueue = new FlippRequestQueue({
-  get: fetchGet,
+  get: flippGet,
   userAgent: buildUserAgent(env.HEARTH_ORIGIN),
   logger: queueLogger,
 });
-const dealSource = new FlippDealSource({ queue: flippQueue, logger: queueLogger });
+const fixtureNow = env.HEARTH_FLIPP_FIXTURE_NOW;
+const dealSource = new FlippDealSource({
+  queue: flippQueue,
+  logger: queueLogger,
+  ...(fixtureNow === undefined ? {} : { now: () => fixtureNow }),
+});
 
 const deals = createDealsService({
   source: dealSource,

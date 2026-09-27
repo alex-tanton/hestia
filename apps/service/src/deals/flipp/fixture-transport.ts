@@ -56,8 +56,8 @@ function fixtureName(query: string): string {
   return query.replace(/\s+/g, '-');
 }
 
-function read(file: string): unknown {
-  return JSON.parse(readFileSync(`${RAW_FIXTURE_DIR}${file}`, 'utf8'));
+function read(dir: string, file: string): unknown {
+  return JSON.parse(readFileSync(`${dir}${dir.endsWith('/') ? '' : '/'}${file}`, 'utf8'));
 }
 
 function notFound(url: string): HttpResponse {
@@ -78,6 +78,13 @@ export interface FixtureTransportOptions {
    * roster of these items rather than inventing responses for the rest.
    */
   itemDetail?: Record<string, string>;
+  /**
+   * Where the raw captures live. Defaults to the checked-out repo's own copy, which is what every
+   * Vitest caller wants; the E2E stack instead points this at the read-only mount the Compose
+   * overlay gives the built image (`HEARTH_FLIPP_FIXTURE_DIR`), since the image never has the
+   * source tree's `e2e/` directory beside it.
+   */
+  dir?: string;
 }
 
 /** Item detail fixtures, by item id. */
@@ -128,6 +135,7 @@ function rosterSubset(body: unknown, details: Record<string, string>): unknown {
  */
 export function fixtureTransport(options: FixtureTransportOptions = {}): HttpGet {
   const details = options.itemDetail ?? FIXTURE_ITEM_DETAIL;
+  const dir = options.dir ?? RAW_FIXTURE_DIR;
   return (url: string) => {
     const parsed = new URL(url);
     const path = parsed.pathname;
@@ -138,18 +146,20 @@ export function fixtureTransport(options: FixtureTransportOptions = {}): HttpGet
       if (postalCode !== FIXTURE_POSTAL_CODE) return Promise.resolve(notFound(url));
       const file = `search-${FIXTURE_POSTAL_CODE}-${fixtureName(query)}.json`;
       return Promise.resolve(
-        (FIXTURE_QUERIES as readonly string[]).includes(query) ? ok(read(file)) : notFound(url),
+        (FIXTURE_QUERIES as readonly string[]).includes(query)
+          ? ok(read(dir, file))
+          : notFound(url),
       );
     }
     if (path === '/flipp/flyers') {
       return Promise.resolve(
         postalCode === FIXTURE_POSTAL_CODE
-          ? ok(read(`flyers-${FIXTURE_POSTAL_CODE}.json`))
+          ? ok(read(dir, `flyers-${FIXTURE_POSTAL_CODE}.json`))
           : notFound(url),
       );
     }
     if (path === '/flipp/merchants') {
-      return Promise.resolve(ok(read(`merchants-${FIXTURE_POSTAL_CODE}.json`)));
+      return Promise.resolve(ok(read(dir, `merchants-${FIXTURE_POSTAL_CODE}.json`)));
     }
     const flyerItems = /^\/flipp\/flyers\/(\d+)$/.exec(path);
     if (flyerItems !== null) {
@@ -157,12 +167,17 @@ export function fixtureTransport(options: FixtureTransportOptions = {}): HttpGet
       return Promise.resolve(
         entry === undefined
           ? notFound(url)
-          : ok(rosterSubset(read(`flyer-items-${entry.merchant}-${entry.flyerId}.json`), details)),
+          : ok(
+              rosterSubset(
+                read(dir, `flyer-items-${entry.merchant}-${entry.flyerId}.json`),
+                details,
+              ),
+            ),
       );
     }
     const itemDetail = /^\/flipp\/items\/(\d+)$/.exec(path);
     const detailFile = itemDetail === null ? undefined : details[itemDetail[1] ?? ''];
-    if (detailFile !== undefined) return Promise.resolve(ok(read(detailFile)));
+    if (detailFile !== undefined) return Promise.resolve(ok(read(dir, detailFile)));
 
     return Promise.resolve(notFound(url));
   };
