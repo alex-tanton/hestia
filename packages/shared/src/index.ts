@@ -8,6 +8,7 @@ export * from './api/lists.js';
 export * from './api/matching.js';
 export * from './api/membership.js';
 export * from './api/pantry.js';
+export * from './api/recipes.js';
 export * from './api/system.js';
 export * from './api/users.js';
 export * from './password.js';

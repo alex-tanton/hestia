@@ -85,6 +85,7 @@ export function fakeDeps(overrides: Partial<AppDependencies> = {}): AppDependenc
       source: fixtureDealSource(),
       queueBackgroundRefresh: () => undefined,
     }),
+    parseRecipeUrl: unexpected('parseRecipeUrl'),
     ...overrides,
   };
 }

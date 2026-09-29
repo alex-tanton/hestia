@@ -1,6 +1,7 @@
 import { STATUS_CODES } from 'node:http';
 import { PROBLEM_CONTENT_TYPE, type ProblemDetails } from '@hearth/shared';
 import type { GoTrueError } from './gotrue/http.js';
+import type { RecipeFetchError, RecipeFetchErrorCode } from './recipes/fetch-recipe.js';
 
 export { PROBLEM_CONTENT_TYPE, type ProblemDetails };
 
@@ -86,4 +87,22 @@ export function problemFromGoTrueError(error: GoTrueError): ProblemError {
     return fail(status, error.message === '' ? undefined : error.message);
   }
   return fail(502, 'The sign-in service is unavailable.');
+}
+
+/**
+ * A recipe URL that could not be fetched at all (Technical Architecture, "Recipe fetching"). This
+ * is distinct from a page that fetched fine but had no usable JSON-LD: that is a 200 with
+ * `needsManualEntry: true`, never an error.
+ */
+const RECIPE_FETCH_STATUS: Readonly<Record<RecipeFetchErrorCode, number>> = {
+  invalid_url: 400,
+  private_address: 400,
+  timeout: 504,
+  too_large: 502,
+  http_error: 502,
+  network_error: 502,
+};
+
+export function problemFromRecipeFetchError(error: RecipeFetchError): ProblemError {
+  return fail(RECIPE_FETCH_STATUS[error.code], error.message);
 }

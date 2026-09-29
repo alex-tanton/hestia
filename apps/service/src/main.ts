@@ -18,6 +18,9 @@ import { loadOpenApiDocument } from './openapi.js';
 import { createGoTrueAdmin } from './privileged/gotrue-admin.js';
 import { createJobDatabase } from './privileged/job-database.js';
 import { readSystemHealth } from './privileged/service-role-db.js';
+import { fetchRecipePage } from './recipes/fetch-recipe.js';
+import { HostRateLimiter } from './recipes/host-rate-limiter.js';
+import { parseRecipeUrl } from './recipes/parse-recipe-url.js';
 import { newestBackupTime } from './services/backups.js';
 import { createDealsService } from './services/deals/deals.js';
 import { recordAppError } from './services/errors.js';
@@ -68,6 +71,11 @@ const deals = createDealsService({
   logger: queueLogger,
 });
 
+// One limiter for every recipe fetch, so 1 request/second/host holds across requests, the same
+// way flippQueue holds Flipp's rate discipline (Technical Architecture, "Recipe fetching").
+const recipeFetchLimiter = new HostRateLimiter();
+const recipeUserAgent = buildUserAgent(env.HEARTH_ORIGIN);
+
 const app = await buildApp(
   {
     pingDatabase: database.ping,
@@ -80,6 +88,10 @@ const app = await buildApp(
     newestBackupTime: () => newestBackupTime(env.BACKUP_DIR),
     merchantSkipRates: () => skipRates.list(),
     deals,
+    parseRecipeUrl: (url) =>
+      parseRecipeUrl(url, (pageUrl) =>
+        fetchRecipePage(pageUrl, { userAgent: recipeUserAgent, limiter: recipeFetchLimiter }),
+      ),
   },
   {
     trustedProxies: env.HEARTH_TRUSTED_PROXIES,

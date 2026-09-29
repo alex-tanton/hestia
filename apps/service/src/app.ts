@@ -11,13 +11,16 @@ import {
   problem,
   problemFromDatabaseError,
   problemFromGoTrueError,
+  problemFromRecipeFetchError,
 } from './problem.js';
+import { RecipeFetchError } from './recipes/fetch-recipe.js';
 import { authRoutes } from './routes/auth.js';
 import { dealRoutes } from './routes/deals.js';
 import { healthRoute } from './routes/health.js';
 import { householdRoutes } from './routes/households.js';
 import { listRoutes } from './routes/lists.js';
 import { matchOverrideRoutes } from './routes/match-overrides.js';
+import { recipeRoutes } from './routes/recipes.js';
 import { systemRoutes } from './routes/system.js';
 import { userRoutes } from './routes/users.js';
 import { buildErrorRecord } from './services/errors.js';
@@ -81,7 +84,11 @@ export async function buildApp(
   app.setErrorHandler(async (rawError, request, reply) => {
     const error =
       problemFromDatabaseError(rawError) ??
-      (rawError instanceof GoTrueError ? problemFromGoTrueError(rawError) : rawError);
+      (rawError instanceof GoTrueError
+        ? problemFromGoTrueError(rawError)
+        : rawError instanceof RecipeFetchError
+          ? problemFromRecipeFetchError(rawError)
+          : rawError);
     const status = statusOf(error);
 
     if (status >= 500) {
@@ -142,6 +149,7 @@ export async function buildApp(
   await app.register(dealRoutes, { ctx });
   await app.register(listRoutes, { ctx });
   await app.register(matchOverrideRoutes, { ctx });
+  await app.register(recipeRoutes, { ctx });
   await app.register(systemRoutes, {
     ctx,
     openApiDocument: options.openApiDocument ?? buildOpenApiDocument,

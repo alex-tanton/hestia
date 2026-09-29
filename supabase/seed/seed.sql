@@ -25,6 +25,7 @@ declare
   weekend_cookout uuid;
   party_supplies uuid;
   rivera_list uuid;
+  recipe_id uuid;
   deal_ext text;
   deal_end date;
   -- Deal validity is a calendar date in the store's own local offset, and every 27514 household
@@ -529,7 +530,271 @@ begin
   -- other row here, and is kept so the insert above reads like its neighbours.
 
   -- -------------------------------------------------------------------------------------------
-  -- Recipes, readiness, match overrides, and meal plan: Phase 3 (Seed Data, "Recipes")
+  -- Recipes (Seed Data, "Recipes", "Recipe sources"): 12 for Oak Street, 2 for Rivera Family.
+  -- `normalized_name` is `@hearth/matching`'s `normalize()` run once offline and pasted here, the
+  -- same way the deal and pantry rows above do it — there is no SQL implementation to call.
+  -- Readiness, match overrides, and the meal plan are a later unit's seed rows: this unit's job is
+  -- the recipe library alone, unscored (recipe_readiness is derived data the matching unit writes).
+  --
+  -- Ten of Oak Street's twelve keep a source_url and each ingredient's original raw_text, as if
+  -- imported from a URL; Lentil Curry and Shrimp Pad Thai are the two manual entries (no
+  -- source_url, no raw_text). Rivera Family's two recipes are manual too: "Recipe sources" only
+  -- accounts for ten-plus-two, which is exactly Oak Street's count, so Rivera's are left as the
+  -- simpler, unspecified case rather than inventing two more source pages for them.
+  -- -------------------------------------------------------------------------------------------
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Sheet Pan Chicken and Vegetables',
+    'https://www.weeknightkitchen.test/recipes/sheet-pan-chicken-and-vegetables',
+    'Preheat the oven to 425F. Toss the chicken and vegetables with olive oil, garlic, and '
+    || 'paprika on a sheet pan. Roast 25 minutes, until the chicken is cooked through. Squeeze '
+    || 'the lemon over everything before serving.', 4, alex, now() - interval '18 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '2 lb boneless, skinless chicken breast', 'chicken breast', 'chicken breast',
+      2, 'lb'),
+    (recipe_id, 1, '1 lb broccoli florets', 'broccoli', 'broccoli', 1, 'lb'),
+    (recipe_id, 2, '1 bell pepper, sliced', 'bell pepper', 'bell pepper', 1, null),
+    (recipe_id, 3, '2 tbsp olive oil', 'olive oil', 'olive oil', 2, 'tbsp'),
+    (recipe_id, 4, '3 cloves garlic, minced', 'garlic', 'garlic', 3, 'cloves'),
+    (recipe_id, 5, '1 tsp smoked paprika', 'paprika', 'paprika', 1, 'tsp'),
+    (recipe_id, 6, '1 lemon, quartered', 'lemon', 'lemon', 1, null);
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Spaghetti with Meat Sauce',
+    'https://www.weeknightkitchen.test/recipes/spaghetti-with-meat-sauce',
+    'Brown the ground beef with the onion and garlic. Stir in the crushed tomatoes and tomato '
+    || 'paste and simmer 20 minutes, seasoning with the oregano. Serve over cooked spaghetti '
+    || 'with parmesan.', 6, alex, now() - interval '17 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '1 lb spaghetti', 'pasta', 'pasta', 1, 'lb'),
+    (recipe_id, 1, '1 lb ground beef', 'ground beef', 'ground beef', 1, 'lb'),
+    (recipe_id, 2, '1 (28 oz) can crushed tomatoes', 'canned tomatoes', 'canned tomato', 28, 'oz'),
+    (recipe_id, 3, '1 onion, diced', 'onion', 'onion', 1, null),
+    (recipe_id, 4, '2 cloves garlic, minced', 'garlic', 'garlic', 2, 'cloves'),
+    (recipe_id, 5, '2 tbsp tomato paste', 'tomato paste', 'tomato paste', 2, 'tbsp'),
+    (recipe_id, 6, '1/2 cup grated parmesan', 'parmesan', 'parmesan', 0.5, 'cup'),
+    (recipe_id, 7, '1 tsp dried oregano', 'dried oregano', 'dried oregano', 1, 'tsp');
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Vegetable Fried Rice',
+    'https://www.homegrown-table.test/vegetable-fried-rice',
+    'Scramble the eggs and set aside. Stir-fry the carrots and peas in sesame oil, add the cold '
+    || 'rice and soy sauce, then fold in the eggs and green onions with the garlic.', 4, sam,
+    now() - interval '16 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '3 cups cooked rice, cold', 'rice', 'rice', 3, 'cups'),
+    (recipe_id, 1, '2 eggs, beaten', 'eggs', 'egg', 2, null),
+    (recipe_id, 2, '1 cup frozen peas', 'frozen peas', 'pea', 1, 'cup'),
+    (recipe_id, 3, '2 carrots, diced', 'carrots', 'carrot', 2, null),
+    (recipe_id, 4, '3 tbsp soy sauce', 'soy sauce', 'soy sauce', 3, 'tbsp'),
+    (recipe_id, 5, '2 green onions, sliced', 'green onions', 'green onion', 2, null),
+    (recipe_id, 6, '1 tsp sesame oil', 'sesame oil', 'sesame oil', 1, 'tsp'),
+    (recipe_id, 7, '2 cloves garlic, minced', 'garlic', 'garlic', 2, 'cloves');
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Black Bean Tacos', 'https://www.homegrown-table.test/black-bean-tacos',
+    'Warm the black beans with the cumin. Fill the tortillas with beans, cheese, avocado, and '
+    || 'red onion, and serve with salsa and lime wedges.', 4, sam, now() - interval '15 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '1 (15 oz) can black beans, drained', 'black beans', 'black bean', 1, 'can'),
+    (recipe_id, 1, '8 flour tortillas', 'flour tortillas', 'flour tortilla', 8, null),
+    (recipe_id, 2, '1 tsp cumin', 'cumin', 'cumin', 1, 'tsp'),
+    (recipe_id, 3, '1 avocado, sliced', 'avocado', 'avocado', 1, null),
+    (recipe_id, 4, '1 lime, cut into wedges', 'lime', 'lime', 1, null),
+    (recipe_id, 5, '1/2 cup salsa', 'salsa', 'salsa', 0.5, 'cup'),
+    (recipe_id, 6, '1 cup shredded cheese', 'cheese', 'cheese', 1, 'cup'),
+    (recipe_id, 7, '1/4 cup diced red onion', 'red onion', 'red onion', 0.25, 'cup');
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Chicken Noodle Soup',
+    'https://www.comfortfoodclub.test/chicken-noodle-soup',
+    'Simmer the chicken breast in the broth with the carrots, celery, onion, garlic, thyme, and '
+    || 'bay leaves until cooked through. Shred the chicken, add the egg noodles, and simmer '
+    || 'until tender.', 6, jordan, now() - interval '14 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '1 lb chicken breast', 'chicken breast', 'chicken breast', 1, 'lb'),
+    (recipe_id, 1, '8 oz egg noodles', 'egg noodles', 'egg noodle', 8, 'oz'),
+    (recipe_id, 2, '3 carrots, sliced', 'carrots', 'carrot', 3, null),
+    (recipe_id, 3, '3 stalks celery, sliced', 'celery', 'celery', 3, 'stalks'),
+    (recipe_id, 4, '1 onion, diced', 'onion', 'onion', 1, null),
+    (recipe_id, 5, '2 cloves garlic, minced', 'garlic', 'garlic', 2, 'cloves'),
+    (recipe_id, 6, '8 cups chicken broth', 'chicken broth', 'chicken broth', 8, 'cups'),
+    (recipe_id, 7, '1 tsp dried thyme', 'thyme', 'thyme', 1, 'tsp'),
+    (recipe_id, 8, '2 bay leaves', 'bay leaves', 'bay leaf', 2, null);
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Greek Salad', 'https://www.comfortfoodclub.test/greek-salad',
+    'Toss the cucumber, tomatoes, and red onion with the olives and feta. Whisk the olive oil '
+    || 'and red wine vinegar together and dress the salad just before serving.', 4, jordan,
+    now() - interval '13 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '1 cucumber, diced', 'cucumber', 'cucumber', 1, null),
+    (recipe_id, 1, '3 roma tomatoes, diced', 'roma tomatoes', 'roma tomato', 3, null),
+    (recipe_id, 2, '1/2 red onion, thinly sliced', 'red onion', 'red onion', 0.5, null),
+    (recipe_id, 3, '1 cup crumbled feta cheese', 'feta cheese', 'feta cheese', 1, 'cup'),
+    (recipe_id, 4, '1/2 cup kalamata olives', 'kalamata olives', 'kalamata olive', 0.5, 'cup'),
+    (recipe_id, 5, '2 tbsp olive oil', 'olive oil', 'olive oil', 2, 'tbsp'),
+    (recipe_id, 6, '1 tbsp red wine vinegar', 'red wine vinegar', 'red wine vinegar', 1, 'tbsp');
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Baked Ziti', 'https://www.weeknightkitchen.test/recipes/baked-ziti',
+    'Brown the ground beef with the garlic and stir in the crushed tomatoes. Toss with cooked '
+    || 'ziti and the ricotta, top with mozzarella and parmesan, and bake until bubbling.', 6, alex,
+    now() - interval '12 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '1 lb ziti pasta', 'pasta', 'pasta', 1, 'lb'),
+    (recipe_id, 1, '1 lb ground beef', 'ground beef', 'ground beef', 1, 'lb'),
+    (recipe_id, 2, '1 (28 oz) can crushed tomatoes', 'canned tomatoes', 'canned tomato', 28, 'oz'),
+    (recipe_id, 3, '2 cups shredded mozzarella', 'mozzarella', 'mozzarella', 2, 'cups'),
+    (recipe_id, 4, '1 cup ricotta cheese', 'ricotta', 'ricotta', 1, 'cup'),
+    (recipe_id, 5, '1/2 cup grated parmesan', 'parmesan', 'parmesan', 0.5, 'cup'),
+    (recipe_id, 6, '2 cloves garlic, minced', 'garlic', 'garlic', 2, 'cloves');
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Breakfast Burritos', 'https://www.homegrown-table.test/breakfast-burritos',
+    'Scramble the eggs and roast the diced potatoes and bell pepper. Fill the tortillas with '
+    || 'eggs, potatoes, pepper, and cheese, and serve with salsa.', 4, sam,
+    now() - interval '11 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '6 eggs, scrambled', 'eggs', 'egg', 6, null),
+    (recipe_id, 1, '4 large flour tortillas', 'flour tortillas', 'flour tortilla', 4, null),
+    (recipe_id, 2, '1 cup shredded cheese', 'cheese', 'cheese', 1, 'cup'),
+    (recipe_id, 3, '2 potatoes, diced and roasted', 'potatoes', 'potato', 2, null),
+    (recipe_id, 4, '1 bell pepper, diced', 'bell pepper', 'bell pepper', 1, null),
+    (recipe_id, 5, '1/2 cup salsa', 'salsa', 'salsa', 0.5, 'cup');
+
+  -- Manual entry (Seed Data, "Recipe sources"): no source_url, no raw_text on any ingredient.
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Lentil Curry', null,
+    'Saute the onion, garlic, and ginger, stir in the curry powder and cumin, then add the '
+    || 'lentils, tomatoes, and enough water to cover. Simmer until the lentils are tender and '
+    || 'serve over basmati rice with cilantro.', 4, alex, now() - interval '10 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, null, 'lentils', 'lentil', 2, 'cups'),
+    (recipe_id, 1, null, 'coconut milk', 'coconut milk', 1, 'can'),
+    (recipe_id, 2, null, 'onion', 'onion', 1, null),
+    (recipe_id, 3, null, 'garlic', 'garlic', 3, 'cloves'),
+    (recipe_id, 4, null, 'ginger', 'ginger', 1, 'tbsp'),
+    (recipe_id, 5, null, 'curry powder', 'curry powder', 2, 'tbsp'),
+    (recipe_id, 6, null, 'cumin', 'cumin', 1, 'tsp'),
+    (recipe_id, 7, null, 'canned tomatoes', 'canned tomato', 14.5, 'oz'),
+    (recipe_id, 8, null, 'basmati rice', 'basmati rice', 2, 'cups'),
+    (recipe_id, 9, null, 'cilantro', 'cilantro', 0.25, 'cup');
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Grilled Cheese and Tomato Soup',
+    'https://www.comfortfoodclub.test/grilled-cheese-and-tomato-soup',
+    'Simmer the crushed tomatoes with the milk until warmed through. Butter the bread, fill with '
+    || 'cheese, and grill until golden on both sides. Serve alongside the soup.', 4, jordan,
+    now() - interval '9 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '8 slices bread', 'bread', 'bread', 8, null),
+    (recipe_id, 1, '2 tbsp butter, softened', 'butter', 'butter', 2, 'tbsp'),
+    (recipe_id, 2, '8 slices cheese', 'cheese', 'cheese', 8, 'slices'),
+    (recipe_id, 3, '1 (28 oz) can crushed tomatoes', 'canned tomatoes', 'canned tomato', 28, 'oz'),
+    (recipe_id, 4, '1 cup milk', 'milk', 'milk', 1, 'cup');
+
+  -- Manual entry (Seed Data, "Recipe sources"): no source_url, no raw_text on any ingredient.
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Shrimp Pad Thai', null,
+    'Soak the rice noodles until pliable. Stir-fry the shrimp, then add the noodles with the '
+    || 'tamarind paste and fish sauce. Toss in the bean sprouts and green onions and finish with '
+    || 'peanuts and a squeeze of lime.', 4, alex, now() - interval '8 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, null, 'rice noodles', 'rice noodle', 8, 'oz'),
+    (recipe_id, 1, null, 'shrimp', 'shrimp', 1, 'lb'),
+    (recipe_id, 2, null, 'tamarind paste', 'tamarind paste', 2, 'tbsp'),
+    (recipe_id, 3, null, 'fish sauce', 'fish sauce', 3, 'tbsp'),
+    (recipe_id, 4, null, 'bean sprouts', 'bean sprout', 1, 'cup'),
+    (recipe_id, 5, null, 'peanuts', 'peanut', 0.25, 'cup'),
+    (recipe_id, 6, null, 'lime', 'lime', 1, null),
+    (recipe_id, 7, null, 'green onions', 'green onion', 2, null);
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (oak_street, 'Sunday Pot Roast', 'https://www.sundaysupperclub.test/pot-roast',
+    'Sear the chuck roast, then dust with flour and add the broth, potatoes, carrots, onion, '
+    || 'rosemary, and worcestershire sauce. Cover and cook low and slow until the roast falls '
+    || 'apart.', 6, sam, now() - interval '7 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, '3 lb beef chuck roast', 'chuck roast', 'chuck roast', 3, 'lb'),
+    (recipe_id, 1, '4 russet potatoes, quartered', 'russet potatoes', 'russet potato', 4, null),
+    (recipe_id, 2, '4 carrots, cut into chunks', 'carrots', 'carrot', 4, null),
+    (recipe_id, 3, '1 onion, quartered', 'onion', 'onion', 1, null),
+    (recipe_id, 4, '2 cups beef broth', 'beef broth', 'beef broth', 2, 'cups'),
+    (recipe_id, 5, '1 tsp dried rosemary', 'rosemary', 'rosemary', 1, 'tsp'),
+    (recipe_id, 6, '1 tbsp worcestershire sauce', 'worcestershire sauce', 'worcestershire sauce',
+      1, 'tbsp'),
+    (recipe_id, 7, '2 tbsp flour', 'flour', 'flour', 2, 'tbsp');
+
+  -- Rivera Family: manual entries, same as Oak Street's two (see the note above).
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (rivera_family, 'Tuna Poke Bowl', null,
+    'Cube the ahi tuna and toss with soy sauce and sesame seeds. Serve over sushi rice with '
+    || 'avocado and cucumber.', 2, morgan, now() - interval '6 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, null, 'ahi tuna', 'ahi tuna', 0.75, 'lb'),
+    (recipe_id, 1, null, 'sushi rice', 'sushi rice', 2, 'cups'),
+    (recipe_id, 2, null, 'soy sauce', 'soy sauce', 2, 'tbsp'),
+    (recipe_id, 3, null, 'avocado', 'avocado', 1, null),
+    (recipe_id, 4, null, 'cucumber', 'cucumber', 0.5, null),
+    (recipe_id, 5, null, 'sesame seeds', 'sesame seed', 1, 'tbsp');
+
+  insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
+    created_at)
+  values (rivera_family, 'Miso Soup', null,
+    'Whisk the miso paste into hot dashi, then add the tofu, wakame, and green onions and warm '
+    || 'through without boiling.', 4, morgan, now() - interval '5 days')
+  returning id into recipe_id;
+  insert into public.recipe_ingredient (recipe_id, "position", raw_text, item_name,
+    normalized_name, quantity, unit) values
+    (recipe_id, 0, null, 'miso paste', 'miso paste', 3, 'tbsp'),
+    (recipe_id, 1, null, 'tofu', 'tofu', 0.5, 'block'),
+    (recipe_id, 2, null, 'green onions', 'green onion', 2, null),
+    (recipe_id, 3, null, 'dashi', 'dashi', 4, 'cups'),
+    (recipe_id, 4, null, 'wakame', 'wakame', 2, 'tbsp');
+
+  -- -------------------------------------------------------------------------------------------
+  -- Readiness, match overrides, and meal plan: a later Phase 3 unit's seed rows, once the
+  -- matching package and its benchmark land (Seed Data, "Matching test cases", "Meal plan").
   -- -------------------------------------------------------------------------------------------
 
   -- -------------------------------------------------------------------------------------------

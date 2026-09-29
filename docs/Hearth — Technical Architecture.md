@@ -355,6 +355,8 @@ The service fetches user-pasted recipe URLs and extracts schema.org JSON-LD, fal
 - Outbound fetches are limited to 1 request per second per host, a 10-second timeout, and a 5 MB response body. A slow or enormous page cannot tie up the service.
 - Only `http` and `https` schemes; requests to private address ranges are refused, which prevents a pasted URL being used to probe the local network
 - Each `recipeIngredient` line is split by the ingredient-line parser library into quantity, unit, and item name, keeping the original line as `raw_text`. The split is returned in the editable preview and saved only when the user confirms.
+- `POST /households/:id/recipes/parse`'s response carries a `needsManualEntry` boolean: true only when the page had no JSON-LD `Recipe` node at all, never on a merely incomplete one (say, ingredients but no instructions), which still comes back with the gaps left null for the same editable preview to fill in.
+- `PATCH /recipes/:id` takes the same shape as the create body, every field optional: a given `ingredients` array replaces the recipe's ingredient list wholesale rather than merging one in, since the client always holds and re-sends the full edited set and a newly added line has no id yet to key a merge on.
 
 ## Flipp wrapper
 

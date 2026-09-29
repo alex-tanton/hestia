@@ -1,7 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import type { Kysely } from 'kysely';
 import type { z } from 'zod';
-import type { MerchantSkipRate } from '@hearth/shared';
+import type { MerchantSkipRate, ParseRecipeResponse } from '@hearth/shared';
 import { isServerOwner, TokenError, type TokenVerifier, type VerifiedUser } from '../auth/jwt.js';
 import type { Database } from '../db.js';
 import { withUserDb } from '../db/user-db.js';
@@ -28,6 +28,12 @@ export interface AppDependencies {
   merchantSkipRates: () => MerchantSkipRate[];
   /** The deals read path: the Flipp wrapper behind its caches (Technical Architecture, "Caching"). */
   deals: DealsService;
+  /**
+   * Fetches a pasted recipe URL server-side and extracts JSON-LD, never throwing on unusable
+   * markup (Technical Architecture, "Recipe fetching"). A network or fetch-limit failure still
+   * throws, and the route maps it to a problem response.
+   */
+  parseRecipeUrl: (url: string) => Promise<ParseRecipeResponse>;
 }
 
 export interface RouteContext {

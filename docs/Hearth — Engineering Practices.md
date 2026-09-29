@@ -61,7 +61,7 @@ hearth/
 | Fuzzy matching | `fastest-levenshtein` 1.0.16 — tied with `fuse.js` 7.5.0 at 12/12 on Seed Data's matching test cases, 2-3x faster over hundreds of real deal names, and a normalized-edit-distance metric that maps onto the 0.85 threshold without Fuse's prose-search-oriented location weighting (`packages/matching/scripts/fuzzy-benchmark.ts`) |
 | Dates | `date-fns` plus `@date-fns/tz` for timezone handling |
 | Recipe parsing | `cheerio` for HTML, with JSON-LD extracted directly |
-| Ingredient lines | An ingredient-line parser library (`parse-ingredient`, or an equivalent chosen in Phase 3) |
+| Ingredient lines | `parse-ingredient` 3.0.0, chosen in Phase 3: it splits a free-text line into quantity, unit, and description in one call, with no dependencies of its own, which is what the recipe library's ingredient split needs and nothing more |
 | Push | `web-push` |
 | Offline persistence | `idb-keyval`, as the storage for TanStack Query's persister |
 | Logging | `pino` |

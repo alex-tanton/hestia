@@ -6,6 +6,7 @@ import { createHouseholdRequestSchema, updateHouseholdRequestSchema } from './ho
 import { createdInviteSchema } from './invites.js';
 import { createMatchOverrideRequestSchema } from './matching.js';
 import { departRequestSchema } from './membership.js';
+import { createRecipeRequestSchema, updateRecipeRequestSchema } from './recipes.js';
 import { updateProfileRequestSchema } from './users.js';
 
 const ID = '3f2b8c1e-9a4d-4e6f-8b1a-2c3d4e5f6a7b';
@@ -108,6 +109,40 @@ describe('request schemas', () => {
     expect(
       createMatchOverrideRequestSchema.safeParse({ ...base, targetKind: 'deal' }).success,
     ).toBe(false);
+  });
+
+  it('accepts a recipe with manual or parsed-style ingredients, and requires a title', () => {
+    const manual = {
+      title: 'Lentil Curry',
+      ingredients: [{ itemName: 'lentils', quantity: 2, unit: 'cups' }],
+    };
+    expect(createRecipeRequestSchema.safeParse(manual).success).toBe(true);
+    const parsed = {
+      title: 'Sheet Pan Chicken',
+      sourceUrl: 'https://example.com/recipe',
+      ingredients: [
+        { itemName: 'chicken breast', quantity: 2, unit: 'lb', rawText: '2 lb chicken breast' },
+      ],
+    };
+    expect(createRecipeRequestSchema.safeParse(parsed).success).toBe(true);
+    expect(createRecipeRequestSchema.safeParse({ title: '  ', ingredients: [] }).success).toBe(
+      false,
+    );
+    // A recipe with no ingredients at all is allowed (Requirements: "A recipe with no
+    // ingredients scores 0%").
+    expect(createRecipeRequestSchema.safeParse({ title: 'Empty', ingredients: [] }).success).toBe(
+      true,
+    );
+  });
+
+  it('refuses an empty recipe PATCH, but accepts replacing just the ingredients', () => {
+    expect(updateRecipeRequestSchema.safeParse({}).success).toBe(false);
+    expect(
+      updateRecipeRequestSchema.safeParse({
+        ingredients: [{ itemName: 'salt' }],
+      }).success,
+    ).toBe(true);
+    expect(updateRecipeRequestSchema.safeParse({ sourceUrl: null }).success).toBe(true);
   });
 });
 

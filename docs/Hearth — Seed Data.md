@@ -290,6 +290,7 @@ The Recipe detail screen needs one override fixture: Oak Street has a force-no-m
 
 - **Ten with a `source_url`** pointing at sites publishing schema.org JSON-LD, for the parse path. Each ingredient keeps its original line in `raw_text`.
 - **Two entered manually** (Lentil Curry, Shrimp Pad Thai), with no source URL and null `raw_text`
+- **Rivera Family's two recipes** (Tuna Poke Bowl, Miso Soup) are manual too, with no source URL and null `raw_text`. The ten-plus-two count above already accounts for all of Oak Street's twelve; Rivera's are the simpler, unspecified case rather than two more invented source pages.
 - **One fixture of a page with no JSON-LD**, for the parse-failure fallback
 - **One fixture with partial JSON-LD** — title and ingredients but no instructions — for the incomplete-parse path
 - **One fixture with awkward ingredient lines** ("1 (14.5 oz) can diced tomatoes, drained", "salt and pepper to taste", "2-3 cloves garlic") for the parser split and the editable preview
