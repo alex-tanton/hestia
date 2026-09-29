@@ -37,6 +37,11 @@ import {
   updateListRequestSchema,
 } from './lists.js';
 import {
+  createMatchOverrideRequestSchema,
+  matchOverrideParamsSchema,
+  matchOverrideSchema,
+} from './matching.js';
+import {
   departRequestSchema,
   departResultSchema,
   departurePreviewSchema,
@@ -357,6 +362,23 @@ export const endpoints = [
     summary: 'Remove a pantry item',
     access: 'user',
     params: pantryItemParamsSchema,
+    response: { status: 204 },
+  },
+  {
+    method: 'POST',
+    path: '/api/households/:id/match-overrides',
+    summary: 'Correct a match, force or forbid a pair; updates one that already exists',
+    access: 'user',
+    params: householdIdParamsSchema,
+    body: createMatchOverrideRequestSchema,
+    response: { status: 201, schema: matchOverrideSchema },
+  },
+  {
+    method: 'DELETE',
+    path: '/api/match-overrides/:id',
+    summary: 'Remove a match override',
+    access: 'user',
+    params: matchOverrideParamsSchema,
     response: { status: 204 },
   },
   {

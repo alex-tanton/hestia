@@ -180,6 +180,8 @@ A wrong match (or a missed one) can be corrected from the recipe's breakdown. Th
 
 An override applies to every recipe in the household. It stays in effect until a member removes it. A force match puts the ingredient in the target's bucket whenever a target with that normalized name exists; a force no-match prevents that pair from matching.
 
+`POST /households/:id/match-overrides` takes the ingredient's and target's plain names, not pre-normalized strings: the service normalizes both itself through `@hearth/matching`, the same as every other `normalized_name` in the system, rather than trusting a client-supplied normalized form. Creating an override for a (household, ingredient, target kind, target) that already has one updates its decision in place, the same idempotent-POST pattern as `favorite-stores` and the pantry, rather than failing with a conflict.
+
 ### Transparency
 
 A suggestion card shows the breakdown, not just the number: "4 of 5 ready — 2 on sale, 2 in pantry, 1 to buy". Opening the recipe shows which specific ingredient landed in which bucket, so a wrong fuzzy match is visible and correctable rather than hidden inside a score.

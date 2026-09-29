@@ -5,6 +5,7 @@ export * from './api/deals.js';
 export * from './api/households.js';
 export * from './api/invites.js';
 export * from './api/lists.js';
+export * from './api/matching.js';
 export * from './api/membership.js';
 export * from './api/pantry.js';
 export * from './api/system.js';

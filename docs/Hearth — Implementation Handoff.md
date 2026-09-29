@@ -233,7 +233,7 @@ When a gap is resolved, write the resolution directly into the owning document, 
 These cannot be settled from a spec and will need real-world work:
 
 - **Fuzzy matching threshold.** 0.85 token similarity is a starting point. Real deal strings will require tuning, and each adjustment needs test cases added rather than the threshold quietly moved.
-- **Fuzzy library.** `fastest-levenshtein` versus `fuse.js`, decided by a Phase 3 benchmark on real deal strings.
+- **Fuzzy library.** `fastest-levenshtein` versus `fuse.js`, decided by a Phase 3 benchmark on real deal strings. Resolved: `fastest-levenshtein` (Engineering Practices, "Key libraries").
 - **Price parser coverage.** The parser chain handles the known formats. New ones will appear; the skip-rate logging exists precisely to surface them.
 - **Flipp upstream stability.** Flipp is unauthenticated and has no SLA, so its endpoints and response shapes (Technical Architecture, Flipp wrapper › Endpoints) can change without notice. The wrapper's single-file isolation and the raw captures in `e2e/fixtures/flipp/raw/` exist so a breaking change is a one-file fix.
 - **Client-IP passthrough.** Whether Tailscale Funnel delivers the real client IP to Caddy is unknown until the Phase 0 check. If it does not, per-IP rate limits act as one global limit.

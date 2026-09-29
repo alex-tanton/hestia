@@ -4,6 +4,7 @@ import { signupRequestSchema } from './auth.js';
 import { endpoints } from './contract.js';
 import { createHouseholdRequestSchema, updateHouseholdRequestSchema } from './households.js';
 import { createdInviteSchema } from './invites.js';
+import { createMatchOverrideRequestSchema } from './matching.js';
 import { departRequestSchema } from './membership.js';
 import { updateProfileRequestSchema } from './users.js';
 
@@ -82,6 +83,31 @@ describe('request schemas', () => {
     for (const code of ['0123ABCU', '0123ABCI', '0123abcz', '0123ABC']) {
       expect(createdInviteSchema.safeParse({ ...base, code }).success).toBe(false);
     }
+  });
+
+  it('requires a target kind and decision on a match override, refusing neither', () => {
+    const base = { ingredientName: 'cheese', targetName: 'Kraft Shredded Cheese' };
+    expect(
+      createMatchOverrideRequestSchema.safeParse({
+        ...base,
+        targetKind: 'deal',
+        decision: 'force_match',
+      }).success,
+    ).toBe(true);
+    expect(
+      createMatchOverrideRequestSchema.safeParse({
+        ...base,
+        targetKind: 'aisle',
+        decision: 'force_match',
+      }).success,
+    ).toBe(false);
+    expect(
+      createMatchOverrideRequestSchema.safeParse({ ...base, targetKind: 'deal', decision: 'maybe' })
+        .success,
+    ).toBe(false);
+    expect(
+      createMatchOverrideRequestSchema.safeParse({ ...base, targetKind: 'deal' }).success,
+    ).toBe(false);
   });
 });
 

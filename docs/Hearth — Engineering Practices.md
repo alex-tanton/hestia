@@ -58,7 +58,7 @@ hearth/
 | Validation | Zod |
 | Query builder | Kysely (no ORM) |
 | Rate limiting | `@fastify/rate-limit` |
-| Fuzzy matching | `fastest-levenshtein` or `fuse.js`, whichever wins the Phase 3 benchmark on real deal strings |
+| Fuzzy matching | `fastest-levenshtein` 1.0.16 — tied with `fuse.js` 7.5.0 at 12/12 on Seed Data's matching test cases, 2-3x faster over hundreds of real deal names, and a normalized-edit-distance metric that maps onto the 0.85 threshold without Fuse's prose-search-oriented location weighting (`packages/matching/scripts/fuzzy-benchmark.ts`) |
 | Dates | `date-fns` plus `@date-fns/tz` for timezone handling |
 | Recipe parsing | `cheerio` for HTML, with JSON-LD extracted directly |
 | Ingredient lines | An ingredient-line parser library (`parse-ingredient`, or an equivalent chosen in Phase 3) |

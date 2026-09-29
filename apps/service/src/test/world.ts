@@ -215,8 +215,14 @@ async function populate(
      values ($1, 'milk', array[$2::uuid])`,
     [postalCode, deal],
   );
+  // on conflict, not a plain insert: postal_code_refresh is keyed by postal_code alone (not
+  // household_id), and every other fixture row here is protected only by withTestDb's rollback —
+  // this guard keeps it from hard-failing with a duplicate-key error the moment it is ever reused
+  // outside that rollback (a committing harness, or a second buildWorld in one transaction), the
+  // same as deals.integration.test.ts's own insert into this table.
   await db.admin.query(
-    `insert into public.postal_code_refresh (postal_code, last_refreshed_at) values ($1, now())`,
+    `insert into public.postal_code_refresh (postal_code, last_refreshed_at) values ($1, now())
+     on conflict (postal_code) do update set last_refreshed_at = excluded.last_refreshed_at`,
     [postalCode],
   );
 
