@@ -19,5 +19,14 @@ export const queryKeys = {
   list: (householdId: string, listId: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'list', listId] as const,
   pantry: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'pantry'] as const,
+  /** The recipe library, one page at a time (Requirements › "Scale and pagination"). */
+  recipes: (householdId: string, page: number) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'recipes', page] as const,
+  recipe: (householdId: string, recipeId: string) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'recipe', recipeId] as const,
+  suggestions: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'suggestions'] as const,
+  /** A meal-plan week, keyed by its Sunday. */
+  mealPlan: (householdId: string, week: string) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'meal-plan', week] as const,
   deepHealth: ['health', 'deep'] as const,
 };

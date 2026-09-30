@@ -247,7 +247,7 @@ Seven-day view, Sunday to Saturday. Mobile: day tabs with a single day's three s
 
 Placing a recipe opens a picker defaulting to deal-matched suggestions, with the full library searchable behind it. A placed meal shows title and readiness percentage. An entry whose recipe has since been deleted shows its snapshot title in `text-secondary` with no readiness and no link.
 
-Each placed meal's overflow menu holds "Add missing to list" and remove. A week-level action adds the whole week's missing ingredients. Both open a list picker. Past weeks remain reachable as read-only history.
+Each placed meal's overflow menu holds "Add missing to list" and remove. A week-level action adds the whole week's missing ingredients. Both open a list picker — always, with no single-list shortcut: unlike `DealCard`'s inline add, these three entry points (recipe, meal, week) target a plan-level scope rather than one item, so the picker is the one interaction to keep consistent across all three, per Requirements' "Add missing to list".
 
 ### 11. Recipe library — amber
 
@@ -255,11 +255,15 @@ Searchable list with readiness percentage on each card. Sort by recently added, 
 
 States: parse in progress, parse failed ("Couldn't read that page. Add it by hand?" with fields prefilled where partial data was extracted), parse succeeded but incomplete (flag missing fields in the editable preview rather than saving silently).
 
+`GET /households/:id/recipes` (Technical Architecture › "API surface") carries no readiness — only `GET /households/:id/suggestions` computes it, for every recipe including 0% ones. The library's readiness and bucket-breakdown line come from joining that response onto the recipe list client-side by `recipeId`, rather than adding a field to the recipes endpoint. Recipes paginate at 50, the same as deals (Requirements › "Scale and pagination"), and this screen carries the same previous-and-next `Pagination` control deal search uses, so a household past the first page can still reach every recipe rather than the extra ones silently going missing. Sort and the search field both act on the page currently loaded, not the whole library — the recipes endpoint has no search of its own to filter server-side — so a new search returns to page 1.
+
 ### 12. Recipe detail — amber
 
 Title, servings, source link, `ReadinessBreakdown`, ingredients, instructions. Each ingredient shows its bucket with an icon and label, and what it matched. A wrong match can be corrected inline: "Not a match" stores a force-no-match override, and "Match to…" picks a pantry item or current deal and stores a force-match override. Overrides apply to the whole household. An ingredient governed by an override shows a small "Corrected" label with a remove action.
 
-Primary action: add missing ingredients to a list. Secondary: place on the week planner. The overflow menu holds edit, which opens the same editable form as the add flow, and delete, which asks for confirmation ("Delete Baked Ziti? Planned meals keep its name.").
+Primary action: add missing ingredients to a list. Secondary: place on the week planner, which opens a sheet asking for the date and the meal slot (breakfast, lunch, or dinner), defaulted to today and dinner. The overflow menu holds edit, which opens the same editable form as the add flow, and delete, which asks for confirmation ("Delete Baked Ziti? Planned meals keep its name.").
+
+"Match to…" has no endpoint that lists every current deal (Technical Architecture only offers a keyword search), so its deal half searches the household's favorite-merchant deals by keyword, prefilled with the ingredient's own name but editable — a member can retype it, since the right deal's product name often shares none of the ingredient's tokens (the same 0.85 token-similarity limit "on sale" scoring itself runs into) — rather than a new listing endpoint; its pantry half lists the household's pantry in full, since that endpoint already exists.
 
 ### 13. Deal-matched suggestions — amber
 

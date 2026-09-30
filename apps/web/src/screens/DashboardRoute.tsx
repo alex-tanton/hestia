@@ -1,10 +1,60 @@
 import type { ReactElement } from 'react';
-import type { ShoppingList } from '@hearth/shared';
+import type { MealPlanEntry, MealType, ShoppingList } from '@hearth/shared';
+import { mealTypeLabel } from '../components/meals/meal-copy.ts';
 import type { DashboardCardState } from '../components/dashboard/DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from '../components/dashboard/DashboardCards.tsx';
 import { useProfile } from '../lib/api/hooks.ts';
 import { useShoppingLists } from '../lib/api/list-hooks.ts';
+import { useMealPlanWeek } from '../lib/api/meal-hooks.ts';
+import { addDays, todayInTimezone, weekStart } from '../lib/household-date.ts';
 import { DashboardScreen } from './DashboardScreen.tsx';
+
+const MEAL_ORDER: Readonly<Record<MealType, number>> = { breakfast: 0, lunch: 1, dinner: 2 };
+
+function compareEntries(a: MealPlanEntry, b: MealPlanEntry): number {
+  return a.plannedDate === b.plannedDate
+    ? MEAL_ORDER[a.mealType] - MEAL_ORDER[b.mealType]
+    : a.plannedDate.localeCompare(b.plannedDate);
+}
+
+/**
+ * The Meals card's data (PRD › This Week: "today's planned meals, then tomorrow's"). Both dates
+ * are read from the household's own clock (Handoff non-negotiable 8), never the browser's.
+ */
+export function mealsCardState(
+  plan: ReturnType<typeof useMealPlanWeek>,
+  today: string,
+  tomorrow: string,
+): DashboardCardState {
+  if (plan.isPending && plan.fetchStatus !== 'paused') return { status: 'loading' };
+  if (plan.data === undefined) {
+    if (plan.isError) {
+      return {
+        status: 'error',
+        message: "Couldn't load meals. Try again.",
+        onRetry: () => {
+          void plan.refetch();
+        },
+      };
+    }
+    return { status: 'empty', message: DASHBOARD_EMPTY_COPY.meals };
+  }
+
+  const upcoming = plan.data.entries
+    .filter((entry) => entry.plannedDate === today || entry.plannedDate === tomorrow)
+    .sort(compareEntries);
+  if (upcoming.length === 0) return { status: 'empty', message: DASHBOARD_EMPTY_COPY.meals };
+
+  return {
+    status: 'populated',
+    total: upcoming.length,
+    items: upcoming.map((entry) => ({
+      id: entry.id,
+      label: entry.recipeTitle,
+      detail: `${entry.plannedDate === today ? 'Today' : 'Tomorrow'} · ${mealTypeLabel(entry.mealType)}`,
+    })),
+  };
+}
 
 /** "3 of 15 left" — the compact progress indicator Design gives the Shopping card. */
 export function listProgress(list: ShoppingList): string {
@@ -47,10 +97,24 @@ export function shoppingCardState(lists: ReturnType<typeof useShoppingLists>): D
   };
 }
 
-/** The dashboard with its data. It ships in the shell, so it is small and fetches only lists. */
+/** The dashboard with its data. It ships in the shell, so it fetches only what its cards need. */
 export function DashboardRoute(): ReactElement {
   const profile = useProfile();
   const householdId = profile.data?.activeHouseholdId ?? undefined;
+  const timezone = profile.data?.timezone;
   const lists = useShoppingLists(householdId);
-  return <DashboardScreen shopping={shoppingCardState(lists)} />;
+
+  const today = timezone !== undefined ? todayInTimezone(timezone) : undefined;
+  const tomorrow = today !== undefined ? addDays(today, 1) : undefined;
+  const week = today !== undefined ? weekStart(today) : undefined;
+  const plan = useMealPlanWeek(householdId, week);
+
+  return (
+    <DashboardScreen
+      shopping={shoppingCardState(lists)}
+      {...(today !== undefined && tomorrow !== undefined
+        ? { meals: mealsCardState(plan, today, tomorrow) }
+        : {})}
+    />
+  );
 }

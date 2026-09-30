@@ -105,7 +105,6 @@ describe('app shell', () => {
   });
 
   it.each([
-    ['/meals', 'Meals', 'meals'],
     ['/bills', 'Bills', 'bills'],
     ['/chores', 'Chores', 'chores'],
   ])(
@@ -124,13 +123,16 @@ describe('app shell', () => {
   );
 
   it('shows a deep link into an unshipped sub-tab as coming soon too', async () => {
-    renderApp('/meals/recipes');
+    renderApp('/bills/subscriptions');
     expect(await screen.findByRole('heading', { name: 'Coming soon' })).toBeInTheDocument();
   });
 
-  it('opens a shipped pillar with its sub-tabs instead of the coming-soon state', async () => {
-    renderApp('/lists');
-    expect(await screen.findByRole('radiogroup', { name: 'Lists sections' })).toBeInTheDocument();
+  it.each([
+    ['/lists', 'Lists sections'],
+    ['/meals', 'Meals sections'],
+  ])('opens %s with its sub-tabs instead of the coming-soon state', async (path, groupName) => {
+    renderApp(path);
+    expect(await screen.findByRole('radiogroup', { name: groupName })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Coming soon' })).toBeNull();
   });
 
@@ -150,7 +152,8 @@ describe('titleForPath', () => {
     ['/lists', 'Lists'],
     // A shipped pillar names its sub-tab; an unshipped one shows only its tab label.
     ['/lists/pantry', 'Pantry'],
-    ['/meals/suggestions', 'Meals'],
+    ['/meals/suggestions', 'Suggestions'],
+    ['/bills/subscriptions', 'Bills'],
   ])('%s → %s', (path, title) => {
     expect(titleForPath(path)).toBe(title);
   });

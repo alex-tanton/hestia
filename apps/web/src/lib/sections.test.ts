@@ -31,8 +31,8 @@ describe('navigation config', () => {
     }
   });
 
-  it('ships Lists and nothing else yet, so the other three tabs are coming soon', () => {
-    expect([...RELEASED_PILLARS]).toEqual(['lists']);
+  it('ships Lists and Meals, so Bills and Chores are still coming soon', () => {
+    expect([...RELEASED_PILLARS]).toEqual(['lists', 'meals']);
   });
 });
 

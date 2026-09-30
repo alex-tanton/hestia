@@ -275,6 +275,25 @@ describe('Tabs', () => {
     expect(screen.getByRole('tab', { name: 'Mon' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Monday meals')).toBeVisible();
   });
+
+  it('scrolls the newly active tab into view, from the keyboard and not only a click', async () => {
+    const scrollIntoView = vi.fn();
+    const original: unknown = Reflect.get(Element.prototype, 'scrollIntoView');
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      render(<Harness />);
+
+      await userEvent.tab();
+      await userEvent.keyboard('{ArrowRight}');
+      expect(scrollIntoView).toHaveBeenCalled();
+
+      scrollIntoView.mockClear();
+      await userEvent.click(screen.getByRole('tab', { name: 'Sun' }));
+      expect(scrollIntoView).toHaveBeenCalled();
+    } finally {
+      Reflect.set(Element.prototype, 'scrollIntoView', original);
+    }
+  });
 });
 
 describe('OverflowMenu', () => {
