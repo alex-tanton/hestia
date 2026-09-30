@@ -108,7 +108,7 @@ function groupByStore(items: readonly ListItem[]): StoreGroup[] {
 }
 
 /** The list row, or 404. Reading it means RLS allowed it, so the household is the caller's. */
-async function requireList(db: Kysely<Database>, listId: string): Promise<ListRow> {
+export async function requireList(db: Kysely<Database>, listId: string): Promise<ListRow> {
   const row = await db
     .selectFrom('shopping_list')
     .selectAll()
@@ -131,7 +131,7 @@ async function itemsOf(db: Kysely<Database>, listId: string): Promise<ListItem[]
   return rows.map(toItem);
 }
 
-async function detailOf(db: Kysely<Database>, row: ListRow): Promise<ShoppingListDetail> {
+export async function detailOf(db: Kysely<Database>, row: ListRow): Promise<ShoppingListDetail> {
   const items = await itemsOf(db, row.id);
   return {
     ...toList(row, items),
@@ -195,7 +195,7 @@ export async function getList(db: Kysely<Database>, listId: string): Promise<Sho
 }
 
 /** The list row again, since repricing bumps `updated_at` when it changes an item. */
-async function refreshed(db: Kysely<Database>, row: ListRow): Promise<ListRow> {
+export async function refreshed(db: Kysely<Database>, row: ListRow): Promise<ListRow> {
   const updated = await db
     .selectFrom('shopping_list')
     .selectAll()

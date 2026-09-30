@@ -20,6 +20,7 @@ import { healthRoute } from './routes/health.js';
 import { householdRoutes } from './routes/households.js';
 import { listRoutes } from './routes/lists.js';
 import { matchOverrideRoutes } from './routes/match-overrides.js';
+import { mealPlanRoutes } from './routes/meal-plan.js';
 import { recipeRoutes } from './routes/recipes.js';
 import { systemRoutes } from './routes/system.js';
 import { userRoutes } from './routes/users.js';
@@ -150,6 +151,7 @@ export async function buildApp(
   await app.register(listRoutes, { ctx });
   await app.register(matchOverrideRoutes, { ctx });
   await app.register(recipeRoutes, { ctx });
+  await app.register(mealPlanRoutes, { ctx });
   await app.register(systemRoutes, {
     ctx,
     openApiDocument: options.openApiDocument ?? buildOpenApiDocument,

@@ -40,3 +40,4 @@ export const inviteParamsSchema = z.object({ id: idSchema, inviteId: idSchema })
 export const listIdParamsSchema = z.object({ id: idSchema });
 export const listItemParamsSchema = z.object({ id: idSchema, itemId: idSchema });
 export const pantryItemParamsSchema = z.object({ id: idSchema });
+export const mealPlanEntryIdParamsSchema = z.object({ id: idSchema });

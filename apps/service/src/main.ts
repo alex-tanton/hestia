@@ -13,7 +13,7 @@ import {
 } from './deals/flipp/request-queue.js';
 import { parseEnv } from './env.js';
 import { createGoTrueClient } from './gotrue/client.js';
-import { createScheduler, readinessNotBuiltYet, type Scheduler } from './jobs/index.js';
+import { createScheduler, type Scheduler } from './jobs/index.js';
 import { loadOpenApiDocument } from './openapi.js';
 import { createGoTrueAdmin } from './privileged/gotrue-admin.js';
 import { createJobDatabase } from './privileged/job-database.js';
@@ -24,6 +24,7 @@ import { parseRecipeUrl } from './recipes/parse-recipe-url.js';
 import { newestBackupTime } from './services/backups.js';
 import { createDealsService } from './services/deals/deals.js';
 import { recordAppError } from './services/errors.js';
+import { recomputeReadinessForHousehold } from './services/readiness.js';
 import { repriceExpiredItems } from './services/repricing.js';
 import { SkipRateRegistry } from './services/skip-rates.js';
 
@@ -113,7 +114,10 @@ const scheduler = createScheduler({
       skipRates.replace(counts);
     },
     repriceExpiredItems: (db) => repriceExpiredItems(db, { kind: 'all' }),
-    recomputeReadiness: readinessNotBuiltYet,
+    recomputeReadiness: (db, householdIds) =>
+      Promise.all(householdIds.map((id) => recomputeReadinessForHousehold(db, id))).then(
+        () => undefined,
+      ),
   },
 });
 wiring.scheduler = scheduler;

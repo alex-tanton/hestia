@@ -4,6 +4,7 @@ import type { CreateMatchOverrideRequest, MatchOverride } from '@hearth/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from './households.js';
+import { recomputeReadinessForHousehold } from './readiness.js';
 
 /*
  * Match overrides (Requirements, "Match overrides"; Data model, "Meal planning" —
@@ -66,6 +67,9 @@ export async function createMatchOverride(
     .returningAll()
     .executeTakeFirst();
   if (row === undefined) throw fail(404, 'Household not found.');
+  // An override can change a bucket assignment (force a match, or block one) for every recipe in
+  // the household, so readiness is recomputed inline (the design's recompute-trigger list).
+  await recomputeReadinessForHousehold(db, householdId);
   return toMatchOverride(row);
 }
 
@@ -80,4 +84,18 @@ export async function deleteMatchOverride(db: Kysely<Database>, id: string): Pro
   if (existing === undefined) throw fail(404, 'Match override not found.');
   await markHouseholdActive(db, existing.household_id);
   await db.deleteFrom('ingredient_match_override').where('id', '=', id).execute();
+  await recomputeReadinessForHousehold(db, existing.household_id);
+}
+
+/** The household's overrides, in the API's own shape (not `@hearth/matching`'s pared-down one). */
+export async function listMatchOverrides(
+  db: Kysely<Database>,
+  householdId: string,
+): Promise<MatchOverride[]> {
+  const rows = await db
+    .selectFrom('ingredient_match_override')
+    .selectAll()
+    .where('household_id', '=', householdId)
+    .execute();
+  return rows.map(toMatchOverride);
 }

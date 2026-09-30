@@ -4,6 +4,7 @@ import type { CreatePantryItemRequest, PantryItem, UpdatePantryItemRequest } fro
 import type { Database } from '../db.js';
 import { markHouseholdActive } from './households.js';
 import { fail } from '../problem.js';
+import { recomputeReadinessForHousehold } from './readiness.js';
 
 /*
  * The pantry (Requirements, "Pantry"): a lightweight inventory that feeds readiness scoring and
@@ -67,6 +68,10 @@ export async function addPantryItem(
     )
     .returningAll()
     .executeTakeFirstOrThrow();
+  // A pantry write can change which recipes' ingredients match it (pantry-beats-sale), so
+  // readiness is recomputed inline, in the same transaction (Requirements, "Deal-matched
+  // suggestions"; the design's recompute-trigger list).
+  await recomputeReadinessForHousehold(db, householdId);
   return toPantryItem(row);
 }
 
@@ -87,7 +92,7 @@ export async function updatePantryItem(
   id: string,
   input: UpdatePantryItemRequest,
 ): Promise<PantryItem> {
-  await requirePantryItem(db, id);
+  const current = await requirePantryItem(db, id);
   const row = await db
     .updateTable('pantry_item')
     .set({
@@ -100,10 +105,12 @@ export async function updatePantryItem(
     .where('id', '=', id)
     .returningAll()
     .executeTakeFirstOrThrow();
+  await recomputeReadinessForHousehold(db, current.householdId);
   return toPantryItem(row);
 }
 
 export async function deletePantryItem(db: Kysely<Database>, id: string): Promise<void> {
-  await requirePantryItem(db, id);
+  const current = await requirePantryItem(db, id);
   await db.deleteFrom('pantry_item').where('id', '=', id).execute();
+  await recomputeReadinessForHousehold(db, current.householdId);
 }

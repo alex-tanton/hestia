@@ -273,7 +273,7 @@ Legend: **S** on sale, **P** in pantry, **B** to buy. A deal is named where it d
 | Breakfast Burritos | eggs P (also on sale; pantry wins), flour tortillas B, cheese S (FL), potatoes S (FL), bell pepper S (FL), salsa B | 4 of 6 — 67% (3 on sale, 1 pantry) |
 | Lentil Curry | lentils B, coconut milk B, onion P, garlic P, ginger B, curry powder B, cumin P, canned tomatoes P, basmati rice B, cilantro B | 4 of 10 — 40% (0 on sale, 4 pantry) |
 | Grilled Cheese and Tomato Soup | bread P (also on sale; pantry wins), butter P, cheese S (FL), canned tomatoes P, milk P | 5 of 5 — 100% (1 on sale, 4 pantry) |
-| Shrimp Pad Thai | rice noodles B, shrimp B, tamarind paste B, fish sauce B, bean sprouts B, peanuts B, lime B, green onions B | 0 of 8 — 0% |
+| Shrimp Pad Thai | rice noodles B, shrimp B, tamarind paste B, fish sauce B, bean sprouts B, peanuts S (HT), lime B, green onions B | 1 of 8 — 13% (1 on sale) |
 | Sunday Pot Roast | chuck roast S (FL), russet potatoes B, carrots S (FL), onion P, beef broth B, rosemary B, worcestershire sauce B, flour P | 4 of 8 — 50% (2 on sale, 2 pantry) |
 
 Ingredients that the 27514 capture happens not to put on sale at a favorite merchant — frozen peas, flour tortillas, egg noodles, feta cheese, and russet potatoes specifically — sit in the buy bucket. That is the capture, not an omission: a week where every ingredient is on sale would test nothing.
@@ -282,7 +282,7 @@ Rivera Family has two recipes, **Tuna Poke Bowl** (ahi tuna, sushi rice, soy sau
 
 The suggestions screen's "no deals available" state has a test-only fixture, not part of `seed.sql`: an E2E setup that empties `deal` and `deal_query_cache` for 27601 and stubs the `DealSource` double to fail. Rivera Family's suggestions screen then has recipes but no deals and no cache.
 
-Grilled Cheese at 100% and Shrimp Pad Thai at 0% bracket the range, so the suggestions screen has both extremes without contrived data. Nothing in Pad Thai matches: "rice noodles" needs both tokens, and pantry "rice" supplies only one. "bean sprouts" fails against pantry "black beans" for the same reason.
+Grilled Cheese at 100% brackets the range against Tuna Poke Bowl and Miso Soup at 0% (Rivera Family, below), so the suggestions screens have both extremes without contrived data. Within Pad Thai, "rice noodles" needs both tokens and pantry "rice" supplies only one, and "bean sprouts" fails against pantry "black beans" for the same reason — but "peanuts" does contain-match Harris Teeter's real captured "Peanut Butter Chocolate Puffs Cereal" deal, both normalizing to share the token "peanut". That is the same direction of match the Matching test cases table already endorses ("eggs" against "Egg Noodles, 12 oz"), not a defect, so Pad Thai is genuinely 13%, not 0%: the raw capture decides the score, per "Using this data" above, even where it produces a coincidental match nobody chose on purpose.
 
 The Recipe detail screen needs one override fixture: Oak Street has a force-no-match override for ingredient "cheese" against deal "snack cheese", Harris Teeter's. It demonstrates the "Corrected" label, and it changes no score above, because "cheese" already matches Food Lion's "chunk or cheese".
 

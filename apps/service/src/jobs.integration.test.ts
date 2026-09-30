@@ -13,6 +13,7 @@ import {
 import { createScheduler } from './jobs/scheduler.js';
 import type { JobDatabase, JobLogger } from './jobs/types.js';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
+import { recomputeReadinessForHousehold } from './services/readiness.js';
 import { repriceExpiredItems } from './services/repricing.js';
 import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
 import { adminPool, enableServiceLogin, stackConfig } from './test/service-stack.js';
@@ -191,6 +192,39 @@ async function notifications(
     [userId],
   );
   return rows;
+}
+
+/**
+ * A one-ingredient recipe, seeded directly as `postgres` the same way `seedHousehold` does, so the
+ * readiness-recompute-across-households test below does not need the route layer to exercise the
+ * job's own recompute wiring (Technical Architecture, "Daily refresh": "recomputes `recipe_readiness`
+ * for every household it covered").
+ */
+async function seedOneIngredientRecipe(
+  householdId: string,
+  userId: string,
+  ingredientNormalizedName: string,
+): Promise<string> {
+  const { rows: recipeRows } = await adminPool.query<{ id: string }>(
+    `insert into public.recipe (household_id, title, servings, created_by)
+     values ($1, 'Readiness Job Test Recipe', 1, $2) returning id`,
+    [householdId, userId],
+  );
+  const recipeId = recipeRows[0]?.id ?? '';
+  await adminPool.query(
+    `insert into public.recipe_ingredient (recipe_id, "position", item_name, normalized_name)
+     values ($1, 0, $2, $2)`,
+    [recipeId, ingredientNormalizedName],
+  );
+  return recipeId;
+}
+
+async function readinessPercentOf(recipeId: string): Promise<number | null> {
+  const { rows } = await adminPool.query<{ readiness_percent: number }>(
+    `select readiness_percent from public.recipe_readiness where recipe_id = $1`,
+    [recipeId],
+  );
+  return rows[0]?.readiness_percent ?? null;
 }
 
 const foodLionFlyer = aFlyer({
@@ -403,6 +437,56 @@ describe('refresh-deals', () => {
     const reprice = vi.fn(() => Promise.resolve(3));
     await runRefreshDeals(deps({ repriceExpiredItems: reprice }));
     expect(reprice).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('readiness recompute across households (Technical Architecture, "Daily refresh")', () => {
+  // `jobDb.asServiceRole` gives the recompute step a `service_role` connection, the same as
+  // `main.ts` wires it; `readinessNotBuiltYet` (the no-op every other test in this file uses)
+  // would hide a regression that recomputes only the first household at a postal code, so this
+  // uses the real function instead.
+  const recomputeReadiness: RefreshDeps['recomputeReadiness'] = (db, householdIds) =>
+    Promise.all(householdIds.map((id) => recomputeReadinessForHousehold(db, id))).then(
+      () => undefined,
+    );
+
+  it('recomputes every household at the refreshed postal code, not just one', async () => {
+    const first = await seedHousehold({
+      postalCode: POSTAL_CODE,
+      favorites: [['2100', 'Food Lion']],
+    });
+    const second = await seedHousehold({
+      postalCode: POSTAL_CODE,
+      favorites: [['2100', 'Food Lion']],
+    });
+    const firstRecipe = await seedOneIngredientRecipe(first.householdId, first.userId, 'milk');
+    const secondRecipe = await seedOneIngredientRecipe(second.householdId, second.userId, 'milk');
+
+    // Both recipes start unreadied: no deal and no pantry match "milk" yet.
+    await withServiceRoleDb(handle.db, (db) =>
+      Promise.all([
+        recomputeReadinessForHousehold(db, first.householdId),
+        recomputeReadinessForHousehold(db, second.householdId),
+      ]),
+    );
+    expect(await readinessPercentOf(firstRecipe)).toBe(0);
+    expect(await readinessPercentOf(secondRecipe)).toBe(0);
+
+    source.data.flyers = [foodLionFlyer];
+    // `aDeal`'s default name, "Whole Milk", normalizes to contain "milk" — the same token
+    // containment the Matching test cases table exercises, not an override. Both households
+    // favorited Food Lion ('2100'), not `aDeal`'s own default merchant, so the deal is
+    // attributed to Food Lion's flyer explicitly.
+    source.data.flyerItems = {
+      '8128502': [
+        flyerDeal('8128502', 'milk-1', { merchantId: '2100', merchantName: 'Food Lion' }),
+      ],
+    };
+
+    await runRefreshDeals(deps({ recomputeReadiness }));
+
+    expect(await readinessPercentOf(firstRecipe)).toBe(100);
+    expect(await readinessPercentOf(secondRecipe)).toBe(100);
   });
 });
 

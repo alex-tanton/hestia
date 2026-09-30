@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import {
+  addToListRequestSchema,
   createRecipeRequestSchema,
   householdIdParamsSchema,
   parseRecipeRequestSchema,
@@ -8,6 +9,7 @@ import {
   updateRecipeRequestSchema,
 } from '@hearth/shared';
 import { parse, type RouteContext } from '../http/context.js';
+import { addMissingIngredientsToList } from '../services/add-to-list.js';
 import {
   createRecipe,
   deleteRecipe,
@@ -15,6 +17,7 @@ import {
   listRecipes,
   updateRecipe,
 } from '../services/recipes.js';
+import { getSuggestions } from '../services/suggestions.js';
 
 /**
  * Recipes (Technical Architecture, "API surface"). Handlers stay thin: validate with a shared
@@ -66,6 +69,23 @@ export const recipeRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { c
     const { id } = parse(recipeIdParamsSchema, request.params);
     await ctx.asUser(user, (db) => deleteRecipe(db, id));
     return reply.code(204).send();
+  });
+
+  // A missing/foreign recipe 404s (via getRecipe) before the list is ever touched.
+  app.post('/api/recipes/:id/add-to-list', async (request) => {
+    const user = await ctx.authenticate(request);
+    const { id } = parse(recipeIdParamsSchema, request.params);
+    const body = parse(addToListRequestSchema, request.body);
+    return ctx.asUser(user, async (db) => {
+      await getRecipe(db, id);
+      return addMissingIngredientsToList(db, body.listId, [id], user.id);
+    });
+  });
+
+  app.get('/api/households/:id/suggestions', async (request) => {
+    const user = await ctx.authenticate(request);
+    const { id } = parse(householdIdParamsSchema, request.params);
+    return ctx.inHousehold(user, id, (db) => getSuggestions(db, id));
   });
 
   return Promise.resolve();

@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - e2e
+  - supabase/seed
 
 # Exact versions only, so "pinned in the lockfile" also holds for anything added later.
 saveExact: true

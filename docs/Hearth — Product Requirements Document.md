@@ -740,9 +740,11 @@ When more than one recipe contributes the same ingredient to a shopping list:
 "Add missing to list" works from a recipe, a planned meal, or a whole planned week, and targets one list.
 
 - An ingredient is **missing** unless it matches a pantry item, or an item already on the target list with status needed or in cart has the same `normalized_name`.
-- A missing ingredient in the On sale bucket is added **linked to the deal**: the item takes the deal snapshot (store, sale price, price unit, validity, conditional flag), with `source` from\_recipe. When several favorite-merchant deals match, the one with the lowest unit price is used.
+- A missing ingredient in the On sale bucket is added **linked to the deal**: the item takes the deal snapshot (store, sale price, price unit, validity, conditional flag), with `source` from\_recipe. When several favorite-merchant deals match, the one with the lowest unit price is used — the same deal the readiness breakdown itself would show for that ingredient.
+- The added item keeps the **ingredient's own name**, never the deal's product name: a recipe-sourced item stays "ground beef" even though its store, price, validity, and conditional flag are the matched deal's.
 - Other missing ingredients are added without a store or price.
 - Missing ingredients from several recipes are aggregated per Ingredient aggregation.
+- Adding a planned meal's missing ingredients to a list requires a recipe to compute them from: if that entry's recipe has since been deleted, the action answers `404` rather than adding nothing, consistent with the week planner never offering the action on a deleted-recipe entry (see Meal plan history and deleted recipes).
 
 ### Shopping list lifecycle
 

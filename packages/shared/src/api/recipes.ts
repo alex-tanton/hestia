@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { idSchema, timestampSchema } from './common.js';
 import { pageSchema } from './deals.js';
+import { matchOverrideSchema } from './matching.js';
 
 /**
  * Recipes (Requirements, "Recipe library"; Technical Architecture, "Recipe fetching"). A
@@ -43,10 +44,67 @@ export const recipeSchema = z.object({
 });
 export type Recipe = z.infer<typeof recipeSchema>;
 
+/**
+ * Recipe readiness (Requirements, "Deal-matched suggestions"; Technical Architecture, "Database" —
+ * `recipe_readiness`: "breakdown (jsonb: per ingredient id, its bucket and the matched deal or
+ * pantry name)"). `readiness` is null only in the never-computed edge case, which the recompute
+ * triggers in `services/readiness.ts` are meant to make unreachable in practice.
+ */
+export const readinessBucketSchema = z.enum(['on_sale', 'in_pantry', 'to_buy']);
+export type ReadinessBucket = z.infer<typeof readinessBucketSchema>;
+
+export const readinessBreakdownEntrySchema = z.object({
+  ingredientId: idSchema,
+  bucket: readinessBucketSchema,
+  matchedId: idSchema.nullable(),
+  matchedName: z.string().nullable(),
+  overridden: z.boolean(),
+});
+export type ReadinessBreakdownEntry = z.infer<typeof readinessBreakdownEntrySchema>;
+
+export const recipeReadinessSchema = z.object({
+  onSaleCount: z.int().min(0),
+  inPantryCount: z.int().min(0),
+  toBuyCount: z.int().min(0),
+  readinessPercent: z.int().min(0).max(100),
+  breakdown: z.array(readinessBreakdownEntrySchema),
+  computedAt: timestampSchema,
+});
+export type RecipeReadiness = z.infer<typeof recipeReadinessSchema>;
+
 export const recipeDetailSchema = recipeSchema.extend({
   ingredients: z.array(recipeIngredientSchema),
+  readiness: recipeReadinessSchema.nullable(),
+  /**
+   * The household's overrides that apply to this recipe (Technical Architecture, "API surface":
+   * "the overrides that apply to a recipe come back in `GET /recipes/:id`") — filtered to those
+   * whose `ingredientNormalizedName` matches one of this recipe's ingredients.
+   */
+  matchOverrides: z.array(matchOverrideSchema),
 });
 export type RecipeDetail = z.infer<typeof recipeDetailSchema>;
+
+/** GET /households/:id/suggestions (Design, "13. Deal-matched suggestions"). */
+export const suggestionSchema = z.object({
+  recipeId: idSchema,
+  title: z.string(),
+  readinessPercent: z.int().min(0).max(100),
+  onSaleCount: z.int().min(0),
+  inPantryCount: z.int().min(0),
+  toBuyCount: z.int().min(0),
+});
+export type Suggestion = z.infer<typeof suggestionSchema>;
+
+export const suggestionsResponseSchema = z.object({
+  recipes: z.array(suggestionSchema),
+  /**
+   * The newest `deal.fetched_at` for the household's postal code, or null when there are no deal
+   * rows for it at all — which is also the "no deals available" signal the UI shows a retry
+   * state for, so no separate boolean flag is needed.
+   */
+  dealsAsOf: timestampSchema.nullable(),
+});
+export type SuggestionsResponse = z.infer<typeof suggestionsResponseSchema>;
 
 /** Requirements, "Scale and pagination": recipe libraries paginate at the same size as deals. */
 export const RECIPE_PAGE_SIZE = 50;

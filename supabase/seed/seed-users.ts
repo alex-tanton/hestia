@@ -1,7 +1,8 @@
 /**
  * Seeds a development database (Seed Data, "Using this data"): creates the five seed users through
  * GoTrue's admin API, which fires the profile trigger exactly as a real signup does, then applies
- * seed.sql with psql and prints the outstanding Oak Street invite.
+ * seed.sql with psql, computes recipe readiness for Oak Street and Rivera Family (Seed Data,
+ * "Recipes"), and prints the outstanding Oak Street invite.
  *
  *   pnpm db:seed
  *
@@ -18,6 +19,8 @@
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import pg from 'pg';
+import { recomputeReadinessForHousehold } from './compute-readiness.js';
 
 const SEED_PASSWORD = 'hearth-seed-pass-2026';
 
@@ -140,6 +143,23 @@ async function main(): Promise<void> {
   );
 
   console.log('seeded households, members, favorites, notification settings, and invites');
+
+  // Readiness is derived data (Seed Data, "Recipes"): computed here, not hand-written into
+  // seed.sql, so it is always the real matcher's own output for the seeded pantry, deals, and
+  // overrides — the strongest check that the matching rules and the fixtures agree.
+  const pool = new pg.Pool({ connectionString: dbUrl });
+  try {
+    const { rows } = await pool.query<{ id: string; name: string }>(
+      `select id, name from public.household where name in ('Oak Street', 'Rivera Family')`,
+    );
+    for (const household of rows) {
+      await recomputeReadinessForHousehold(pool, household.id);
+    }
+    console.log(`computed readiness for ${String(rows.length)} household(s)`);
+  } finally {
+    await pool.end();
+  }
+
   console.log(`every seed user's password: ${SEED_PASSWORD}`);
   console.log('Oak Street invite (outstanding): code K7M2Q9XA');
   console.log(`Oak Street invite (outstanding): link token ${inviteToken}`);

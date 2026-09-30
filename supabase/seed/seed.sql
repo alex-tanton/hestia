@@ -33,6 +33,9 @@ declare
   -- today's date for a seed run made in the evening Eastern time, and the three expired deals
   -- would not be expired in the timezone that owns them (Handoff non-negotiable 8).
   local_today date := (pg_catalog.now() at time zone 'America/New_York')::date;
+  -- The current week's Sunday in the same timezone, the same "current week" the week planner's
+  -- own default computes (Technical Architecture, "API surface" — "Meal plan").
+  this_sunday date := local_today - extract(dow from local_today)::int;
 begin
   select id into alex from public.profile where email = 'alex@example.com';
   select id into sam from public.profile where email = 'sam@example.com';
@@ -793,9 +796,59 @@ begin
     (recipe_id, 4, null, 'wakame', 'wakame', 2, 'tbsp');
 
   -- -------------------------------------------------------------------------------------------
-  -- Readiness, match overrides, and meal plan: a later Phase 3 unit's seed rows, once the
-  -- matching package and its benchmark land (Seed Data, "Matching test cases", "Meal plan").
+  -- Match override (Seed Data, "Recipes": "Oak Street has a force-no-match override for
+  -- ingredient 'cheese' against deal 'snack cheese', Harris Teeter's. It demonstrates the
+  -- 'Corrected' label, and it changes no score above, because 'cheese' already matches Food
+  -- Lion's 'chunk or cheese'."). recipe_readiness itself is derived data: computed by
+  -- seed-users.ts after this script applies, never hand-written here.
   -- -------------------------------------------------------------------------------------------
+
+  insert into public.ingredient_match_override (household_id, ingredient_normalized_name,
+    target_kind, target_normalized_name, decision, created_by, created_at)
+  values (oak_street, 'cheese', 'deal', 'snack cheese', 'force_no_match', alex,
+    now() - interval '1 day');
+
+  -- -------------------------------------------------------------------------------------------
+  -- Meal plan (Seed Data, "Meal plan"). The current week has seven entries, including two in
+  -- Wednesday's dinner slot (Baked Ziti and Greek Salad) — so one entry per day across the other
+  -- five days, and Saturday left without one. The previous week has five, one of which stands
+  -- for a deleted recipe ("Mushroom Stroganoff", a null recipe_id and a title snapshot with
+  -- nothing to join back to). The coming week is left empty on purpose, which is what makes
+  -- Alex's `weekly_meal_nudge` for Oak Street eligible on Saturday.
+  -- -------------------------------------------------------------------------------------------
+
+  insert into public.meal_plan_entry (household_id, recipe_id, recipe_title, planned_date,
+    meal_type, added_by, created_at)
+  select oak_street, r.id, r.title, v.planned_date, v.meal_type::public.meal_type, v.added_by,
+    now() - make_interval(days => local_today - v.planned_date)
+  from (values
+    (this_sunday + 0, 'Sunday Pot Roast', 'dinner', sam),
+    (this_sunday + 1, 'Spaghetti with Meat Sauce', 'dinner', alex),
+    (this_sunday + 2, 'Chicken Noodle Soup', 'dinner', jordan),
+    (this_sunday + 3, 'Baked Ziti', 'dinner', alex),
+    (this_sunday + 3, 'Greek Salad', 'dinner', jordan),
+    (this_sunday + 4, 'Vegetable Fried Rice', 'dinner', sam),
+    (this_sunday + 5, 'Black Bean Tacos', 'dinner', sam)
+  ) as v(planned_date, title, meal_type, added_by)
+  join public.recipe r on r.household_id = oak_street and r.title = v.title;
+
+  insert into public.meal_plan_entry (household_id, recipe_id, recipe_title, planned_date,
+    meal_type, added_by, created_at)
+  select oak_street, r.id, r.title, v.planned_date, v.meal_type::public.meal_type, v.added_by,
+    now() - interval '7 days' - make_interval(days => local_today - v.planned_date)
+  from (values
+    (this_sunday - 7 + 0, 'Sheet Pan Chicken and Vegetables', 'dinner', jordan),
+    (this_sunday - 7 + 2, 'Lentil Curry', 'dinner', alex),
+    (this_sunday - 7 + 3, 'Grilled Cheese and Tomato Soup', 'lunch', sam),
+    (this_sunday - 7 + 5, 'Shrimp Pad Thai', 'dinner', jordan)
+  ) as v(planned_date, title, meal_type, added_by)
+  join public.recipe r on r.household_id = oak_street and r.title = v.title;
+
+  -- The deleted-recipe fixture: an explicit null recipe_id, never a reference to a real recipe.
+  insert into public.meal_plan_entry (household_id, recipe_id, recipe_title, planned_date,
+    meal_type, added_by, created_at)
+  values (oak_street, null, 'Mushroom Stroganoff', this_sunday - 7 + 4, 'dinner', sam,
+    now() - interval '8 days');
 
   -- -------------------------------------------------------------------------------------------
   -- Bills and payment history: Phase 4 (Seed Data, "Bills")

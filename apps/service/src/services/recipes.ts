@@ -3,10 +3,12 @@ import { normalize } from '@hearth/matching';
 import type {
   CreateRecipeRequest,
   IngredientInput,
+  ReadinessBreakdownEntry,
   Recipe,
   RecipeDetail,
   RecipeIngredient,
   RecipeListResponse,
+  RecipeReadiness,
   UpdateRecipeRequest,
 } from '@hearth/shared';
 import { RECIPE_PAGE_SIZE } from '@hearth/shared';
@@ -14,7 +16,9 @@ import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { paginate } from './deals/filter.js';
 import { markHouseholdActive } from './households.js';
+import { listMatchOverrides } from './match-overrides.js';
 import { toNumber } from './money.js';
+import { recomputeReadinessForHousehold } from './readiness.js';
 
 /*
  * Recipes (Requirements, "Recipe library"; Technical Architecture, "The Node service" › API
@@ -69,8 +73,45 @@ async function ingredientsOf(db: Kysely<Database>, recipeId: string): Promise<Re
   return rows.map(toIngredient);
 }
 
+/**
+ * The recipe's own `recipe_readiness` row, or null in the never-computed edge case (a defensive
+ * lookup, not a join that would throw — the recompute triggers should make this unreachable in
+ * practice). The jsonb `breakdown` is stored keyed by ingredient id (Technical Architecture,
+ * "Database"); the API response is the array of its values.
+ */
+async function readinessOf(
+  db: Kysely<Database>,
+  recipeId: string,
+): Promise<RecipeReadiness | null> {
+  const row = await db
+    .selectFrom('recipe_readiness')
+    .selectAll()
+    .where('recipe_id', '=', recipeId)
+    .executeTakeFirst();
+  if (row === undefined) return null;
+  const byIngredientId = row.breakdown as Record<string, ReadinessBreakdownEntry>;
+  return {
+    onSaleCount: row.on_sale_count,
+    inPantryCount: row.in_pantry_count,
+    toBuyCount: row.to_buy_count,
+    readinessPercent: row.readiness_percent,
+    breakdown: Object.values(byIngredientId),
+    computedAt: iso(row.computed_at),
+  };
+}
+
 async function detailOf(db: Kysely<Database>, row: RecipeRow): Promise<RecipeDetail> {
-  return { ...toRecipe(row), ingredients: await ingredientsOf(db, row.id) };
+  const ingredients = await ingredientsOf(db, row.id);
+  const normalizedNames = new Set(ingredients.map((ingredient) => ingredient.normalizedName));
+  const overrides = await listMatchOverrides(db, row.household_id);
+  return {
+    ...toRecipe(row),
+    ingredients,
+    readiness: await readinessOf(db, row.id),
+    matchOverrides: overrides.filter((override) =>
+      normalizedNames.has(override.ingredientNormalizedName),
+    ),
+  };
 }
 
 /** The recipe row, or 404; reading it means RLS allowed it. */
@@ -146,6 +187,8 @@ export async function createRecipe(
     .returningAll()
     .executeTakeFirstOrThrow();
   await insertIngredients(db, row.id, input.ingredients);
+  // A new recipe needs its first recipe_readiness row (the design's recompute-trigger list).
+  await recomputeReadinessForHousehold(db, householdId);
   return detailOf(db, row);
 }
 
@@ -184,6 +227,8 @@ export async function updateRecipe(
     // exist yet for a newly added line).
     await db.deleteFrom('recipe_ingredient').where('recipe_id', '=', id).execute();
     await insertIngredients(db, id, input.ingredients);
+    // Only an ingredient replace can change matching; a title/servings-only edit does not.
+    await recomputeReadinessForHousehold(db, row.household_id);
   }
   return detailOf(db, row);
 }

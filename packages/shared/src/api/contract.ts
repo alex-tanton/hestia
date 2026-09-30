@@ -5,6 +5,7 @@ import {
   inviteParamsSchema,
   listIdParamsSchema,
   listItemParamsSchema,
+  mealPlanEntryIdParamsSchema,
   memberParamsSchema,
   pantryItemParamsSchema,
 } from './common.js';
@@ -42,6 +43,13 @@ import {
   matchOverrideSchema,
 } from './matching.js';
 import {
+  addToListRequestSchema,
+  createMealPlanEntryRequestSchema,
+  mealPlanEntrySchema,
+  mealPlanWeekResponseSchema,
+  weekAddToListRequestSchema,
+} from './meal-plan.js';
+import {
   departRequestSchema,
   departResultSchema,
   departurePreviewSchema,
@@ -60,6 +68,7 @@ import {
   recipeDetailSchema,
   recipeIdParamsSchema,
   recipeListResponseSchema,
+  suggestionsResponseSchema,
   updateRecipeRequestSchema,
 } from './recipes.js';
 import {
@@ -440,6 +449,66 @@ export const endpoints = [
     access: 'user',
     params: recipeIdParamsSchema,
     response: { status: 204 },
+  },
+  {
+    method: 'POST',
+    path: '/api/recipes/:id/add-to-list',
+    summary: 'Add a recipe’s missing ingredients to a list',
+    access: 'user',
+    params: recipeIdParamsSchema,
+    body: addToListRequestSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'GET',
+    path: '/api/households/:id/suggestions',
+    summary: 'Recipes ranked by readiness, with the deals’ as-of date',
+    access: 'user',
+    params: householdIdParamsSchema,
+    response: { status: 200, schema: suggestionsResponseSchema },
+  },
+  {
+    method: 'GET',
+    path: '/api/households/:id/meal-plan',
+    summary: 'A planner week’s entries; ?week=YYYY-MM-DD, default the current week',
+    access: 'user',
+    params: householdIdParamsSchema,
+    response: { status: 200, schema: mealPlanWeekResponseSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/households/:id/meal-plan',
+    summary: 'Plan a recipe onto a date and meal slot',
+    access: 'user',
+    params: householdIdParamsSchema,
+    body: createMealPlanEntryRequestSchema,
+    response: { status: 201, schema: mealPlanEntrySchema },
+  },
+  {
+    method: 'DELETE',
+    path: '/api/meal-plan/:id',
+    summary: 'Remove a planned meal',
+    access: 'user',
+    params: mealPlanEntryIdParamsSchema,
+    response: { status: 204 },
+  },
+  {
+    method: 'POST',
+    path: '/api/meal-plan/:id/add-to-list',
+    summary: 'Add a planned meal’s missing ingredients to a list',
+    access: 'user',
+    params: mealPlanEntryIdParamsSchema,
+    body: addToListRequestSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/households/:id/meal-plan/add-to-list',
+    summary: 'Add a whole planned week’s missing ingredients to a list',
+    access: 'user',
+    params: householdIdParamsSchema,
+    body: weekAddToListRequestSchema,
+    response: { status: 200, schema: shoppingListDetailSchema },
   },
   {
     method: 'GET',
