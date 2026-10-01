@@ -5,6 +5,7 @@ import { FakeDealSource } from '../test/fixture-deal-source.js';
 import { readinessNotBuiltYet } from './refresh-deals.js';
 import {
   createScheduler,
+  LOG_AUTOPAY_SCHEDULE,
   PRUNE_CACHE_SCHEDULE,
   REFRESH_DEALS_SCHEDULE,
   type SchedulerDeps,
@@ -54,12 +55,13 @@ afterEach(() => {
 });
 
 describe('schedules', () => {
-  it('runs refresh-deals at 08:00 and prune-cache at 04:00', () => {
+  it('runs refresh-deals at 08:00, log-autopay every 2 minutes, and prune-cache at 04:00', () => {
     expect(REFRESH_DEALS_SCHEDULE).toBe('0 8 * * *');
+    expect(LOG_AUTOPAY_SCHEDULE).toBe('*/2 * * * *');
     expect(PRUNE_CACHE_SCHEDULE).toBe('0 4 * * *');
   });
 
-  it('registers both jobs in UTC and destroys them on stop', async () => {
+  it('registers all three jobs in UTC and destroys them on stop', async () => {
     const destroy = vi.fn(() => Promise.resolve());
     const schedule = vi
       .spyOn(cron, 'schedule')
@@ -68,9 +70,10 @@ describe('schedules', () => {
     const scheduler = createScheduler(deps());
     scheduler.start();
 
-    expect(schedule).toHaveBeenCalledTimes(2);
+    expect(schedule).toHaveBeenCalledTimes(3);
     expect(schedule.mock.calls.map((call) => call[0])).toStrictEqual([
       REFRESH_DEALS_SCHEDULE,
+      LOG_AUTOPAY_SCHEDULE,
       PRUNE_CACHE_SCHEDULE,
     ]);
     for (const call of schedule.mock.calls) {
@@ -78,12 +81,12 @@ describe('schedules', () => {
     }
 
     await scheduler.stop();
-    expect(destroy).toHaveBeenCalledTimes(2);
+    expect(destroy).toHaveBeenCalledTimes(3);
   });
 });
 
 describe('the advisory lock guard', () => {
-  it.each(['refresh-deals', 'prune-cache'] as const)(
+  it.each(['refresh-deals', 'log-autopay', 'prune-cache'] as const)(
     'skips %s and says so when the lock is held',
     async (job) => {
       const scheduler = createScheduler(deps());

@@ -1,4 +1,10 @@
 export { withJobLock, type LockOutcome } from './advisory-lock.js';
+export {
+  autopayOccurrences,
+  runLogAutopay,
+  type AutopayBillRow,
+  type LogAutopayOutcome,
+} from './log-autopay.js';
 export { pruneCache, pruneCutoffs, runPruneCache, type PruneOutcome } from './prune-cache.js';
 export {
   readinessNotBuiltYet,

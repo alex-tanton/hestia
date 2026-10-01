@@ -11,6 +11,27 @@ select pg_catalog.set_config('hearth.seed_invite_token', :'invite_token', false)
 
 begin;
 
+-- Session-local helper for the bills section below: the same clamped-month-add
+-- `packages/recurrence` uses (PRD, "Recurrence is anchored and derived on read": "Monthly and
+-- yearly anchors past the 28th clamp to the last day of shorter months... Each occurrence is
+-- computed from the anchor, never from the previous clamped date."). Postgres's own
+-- `date + interval 'N months'` does not clamp — it overflows into the following month when the
+-- day does not exist there (Jan 31 + 1 month lands on Mar 3, not Feb 28) — so computing seeded
+-- bill occurrences with plain interval arithmetic would quietly disagree with how the service
+-- itself derives them whenever the seed happens to run on the 29th through 31st. This mirrors
+-- `addClampedMonths` exactly: the target month is the base month plus the offset, and the day is
+-- the base's own day-of-month, clamped to that target month's last day.
+create function pg_temp.clamped_month_add(base date, months int) returns date
+language sql immutable as $$
+  select (date_trunc('month', base) + make_interval(months => months))::date
+    + (least(
+         extract(day from base)::int,
+         extract(day from (
+           date_trunc('month', base) + make_interval(months => months + 1) - interval '1 day'
+         ))::int
+       ) - 1)
+$$;
+
 do $$
 declare
   alex uuid;
@@ -36,6 +57,34 @@ declare
   -- The current week's Sunday in the same timezone, the same "current week" the week planner's
   -- own default computes (Technical Architecture, "API surface" — "Meal plan").
   this_sunday date := local_today - extract(dow from local_today)::int;
+  -- Bills (Seed Data, "Bills"): each bill's own current occurrence ("C" in that table), from which
+  -- its anchor_date is derived. Every household bill here is in Oak Street, whose timezone is the
+  -- same America/New_York every owner's profile uses too, so local_today owns every one of these.
+  rent_c date;
+  rent_anchor date;
+  rent_id uuid;
+  duke_c date;
+  duke_anchor date;
+  duke_id uuid;
+  spectrum_c date;
+  spectrum_anchor date;
+  spectrum_id uuid;
+  water_c date;
+  water_anchor date;
+  water_id uuid;
+  renters_anchor date;
+  renters_id uuid;
+  spotify_c date;
+  spotify_anchor date;
+  spotify_id uuid;
+  adobe_c date;
+  adobe_anchor date;
+  adobe_id uuid;
+  gym_c date;
+  gym_anchor date;
+  gym_id uuid;
+  old_phone_anchor date;
+  old_phone_id uuid;
 begin
   select id into alex from public.profile where email = 'alex@example.com';
   select id into sam from public.profile where email = 'sam@example.com';
@@ -851,8 +900,151 @@ begin
     now() - interval '8 days');
 
   -- -------------------------------------------------------------------------------------------
-  -- Bills and payment history: Phase 4 (Seed Data, "Bills")
+  -- Bills and payment history: Phase 4 (Seed Data, "Bills"). Nine bills: every occurrence from
+  -- `anchor_date` up to, but not including, "C" (each bill's own current occurrence) has a paid
+  -- or skipped log row; only Duke Energy's C is past due and unlogged, and only Old Phone Plan is
+  -- archived. Dates are relative to the seed run via local_today (declared above), so this section
+  -- reads the same whenever it is seeded.
   -- -------------------------------------------------------------------------------------------
+
+  -- Rent: anchor_date is given directly — the 1st of the month 5 months ago (not derived from C;
+  -- unlike the bills below, Seed Data gives Rent's and Old Phone Plan's anchors in absolute terms).
+  -- Six occurrences get paid (indices 0-5), which puts the unresolved seventh (index 6, six months
+  -- after the anchor) on next month's 1st — matching C, "1st of next month", as a consistency
+  -- check rather than a derivation. The anchor is always day 1, so no month-end clamping is ever
+  -- needed for it.
+  rent_anchor := (date_trunc('month', local_today) - interval '5 months')::date;
+  rent_c := pg_temp.clamped_month_add(rent_anchor, 6);
+  assert rent_c = (date_trunc('month', local_today) + interval '1 month')::date,
+    'Rent’s current occurrence no longer lands on next month’s 1st';
+  insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
+    anchor_date, visibility, created_at)
+  values (oak_street, alex, 'Rent', 1850.00, 'month', 1, rent_anchor, 'household',
+    (rent_anchor - 7)::timestamp at time zone 'America/New_York')
+  returning id into rent_id;
+  -- Six paid occurrences from the anchor; C (index 6, next month) is left unlogged and not yet due.
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid,
+    recorded_by)
+  select rent_id, occ, occ, 1850.00, alex
+  from (select pg_temp.clamped_month_add(rent_anchor, k) as occ from generate_series(0, 5) as k) s;
+
+  -- Duke Energy: C is 5 days ago, left deliberately unlogged so it is the one overdue bill
+  -- (Seed Data: "Only Duke Energy's C is past due and unlogged").
+  duke_c := local_today - 5;
+  duke_anchor := pg_temp.clamped_month_add(duke_c, -6);
+  insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
+    anchor_date, visibility, created_at)
+  values (oak_street, sam, 'Duke Energy', 142.30, 'month', 1, duke_anchor, 'household',
+    (duke_anchor - 3)::timestamp at time zone 'America/New_York')
+  returning id into duke_id;
+  -- Six paid occurrences; the third was recorded 4 days late, which exercises the anchored-
+  -- recurrence rule (its occurrence_date stays the anchor day, and the next occurrence is still
+  -- exactly one month later, never shifted by the late payment).
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid,
+    recorded_by)
+  select duke_id, occ, case when k = 2 then occ + 4 else occ end, 142.30, sam
+  from (select k, pg_temp.clamped_month_add(duke_anchor, k) as occ from generate_series(0, 5) as k)
+    s;
+
+  -- Spectrum Internet: household, autopay, subscription. Three is_auto rows from the anchor; its
+  -- created_at is the anchor date itself, so every auto-logged occurrence is on or after
+  -- created_at, as the no-backfill rule requires. last_used_confirmed_at is set recently so this
+  -- one does NOT trigger "Still using this?" — Sam's Adobe subscription below is the only
+  -- fixture meant to (Seed Data: "which triggers the 'Still using this?' prompt", singular).
+  spectrum_c := local_today + 3;
+  spectrum_anchor := pg_temp.clamped_month_add(spectrum_c, -3);
+  insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
+    anchor_date, visibility, autopay, is_subscription, last_used_confirmed_at, created_at)
+  values (oak_street, alex, 'Spectrum Internet', 74.99, 'month', 1, spectrum_anchor, 'household',
+    true, true, now() - interval '10 days',
+    spectrum_anchor::timestamp at time zone 'America/New_York')
+  returning id into spectrum_id;
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid, is_auto)
+  select spectrum_id, occ, occ, 74.99, true
+  from (select pg_temp.clamped_month_add(spectrum_anchor, k) as occ from generate_series(0, 2) as k)
+    s;
+
+  -- Water and Sewer: three past occurrences are paid, skipped, paid (Seed Data: "for the skip
+  -- display").
+  water_c := local_today + 9;
+  water_anchor := pg_temp.clamped_month_add(water_c, -3);
+  insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
+    anchor_date, visibility, created_at)
+  values (oak_street, jordan, 'Water and Sewer', 58.40, 'month', 1, water_anchor, 'household',
+    (water_anchor - 5)::timestamp at time zone 'America/New_York')
+  returning id into water_id;
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid,
+    is_skipped, recorded_by)
+  values
+    (water_id, pg_temp.clamped_month_add(water_anchor, 0), pg_temp.clamped_month_add(water_anchor,
+      0), 58.40, false, jordan),
+    (water_id, pg_temp.clamped_month_add(water_anchor, 1), null, null, true, jordan),
+    (water_id, pg_temp.clamped_month_add(water_anchor, 2), pg_temp.clamped_month_add(water_anchor,
+      2), 58.40, false, jordan);
+
+  -- Renters Insurance: yearly, autopay, no history yet — its first occurrence is C itself.
+  renters_anchor := local_today + 40;
+  insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
+    anchor_date, visibility, autopay, created_at)
+  values (oak_street, alex, 'Renters Insurance', 186.00, 'year', 1, renters_anchor, 'household',
+    true, now() - interval '10 days')
+  returning id into renters_id;
+
+  -- Personal subscriptions (Spotify, Adobe, Gym): visibility 'personal', household_id null, same
+  -- three-is_auto-row shape as Spectrum. Spotify and Gym also get a recent
+  -- last_used_confirmed_at, for the same reason as Spectrum above: only Adobe is the seed
+  -- fixture for the usage-confirmation prompt.
+  spotify_c := local_today + 12;
+  spotify_anchor := pg_temp.clamped_month_add(spotify_c, -3);
+  insert into public.bill (owner_user_id, name, amount, recurrence_unit, "interval", anchor_date,
+    visibility, autopay, is_subscription, last_used_confirmed_at, created_at)
+  values (alex, 'Spotify', 11.99, 'month', 1, spotify_anchor, 'personal', true, true,
+    now() - interval '10 days', spotify_anchor::timestamp at time zone 'America/New_York')
+  returning id into spotify_id;
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid, is_auto)
+  select spotify_id, occ, occ, 11.99, true
+  from (select pg_temp.clamped_month_add(spotify_anchor, k) as occ from generate_series(0, 2) as k)
+    s;
+
+  -- Sam's Adobe subscription: last_used_confirmed_at 70 days ago, past the 60-day threshold, so
+  -- it is the seed fixture for the "Still using this?" prompt.
+  adobe_c := local_today + 20;
+  adobe_anchor := pg_temp.clamped_month_add(adobe_c, -3);
+  insert into public.bill (owner_user_id, name, amount, recurrence_unit, "interval", anchor_date,
+    visibility, autopay, is_subscription, last_used_confirmed_at, created_at)
+  values (sam, 'Adobe Creative Cloud', 59.99, 'month', 1, adobe_anchor, 'personal', true, true,
+    now() - interval '70 days', adobe_anchor::timestamp at time zone 'America/New_York')
+  returning id into adobe_id;
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid, is_auto)
+  select adobe_id, occ, occ, 59.99, true
+  from (select pg_temp.clamped_month_add(adobe_anchor, k) as occ from generate_series(0, 2) as k)
+    s;
+
+  gym_c := local_today + 6;
+  gym_anchor := pg_temp.clamped_month_add(gym_c, -3);
+  insert into public.bill (owner_user_id, name, amount, recurrence_unit, "interval", anchor_date,
+    visibility, autopay, is_subscription, last_used_confirmed_at, created_at)
+  values (jordan, 'Gym Membership', 34.00, 'month', 1, gym_anchor, 'personal', true, true,
+    now() - interval '10 days', gym_anchor::timestamp at time zone 'America/New_York')
+  returning id into gym_id;
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid, is_auto)
+  select gym_id, occ, occ, 34.00, true
+  from (select pg_temp.clamped_month_add(gym_anchor, k) as occ from generate_series(0, 2) as k) s;
+
+  -- Old Phone Plan: archived 30 days ago, with paid rows for its first seven occurrences — it
+  -- must appear in no view and send no reminders.
+  old_phone_anchor := (date_trunc('month', local_today) - interval '8 months')::date;
+  insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
+    anchor_date, visibility, created_at, archived_at)
+  values (oak_street, sam, 'Old Phone Plan', 45.00, 'month', 1, old_phone_anchor, 'household',
+    (old_phone_anchor - 7)::timestamp at time zone 'America/New_York',
+    now() - interval '30 days')
+  returning id into old_phone_id;
+  insert into public.bill_payment_log (bill_id, occurrence_date, paid_date, amount_paid,
+    recorded_by)
+  select old_phone_id, occ, occ, 45.00, sam
+  from (select pg_temp.clamped_month_add(old_phone_anchor, k) as occ
+    from generate_series(0, 6) as k) s;
 
   -- -------------------------------------------------------------------------------------------
   -- Chores, completions (including Casey's), and errands: Phase 4 (Seed Data, "Chores",

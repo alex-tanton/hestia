@@ -15,6 +15,7 @@ import {
 } from './problem.js';
 import { RecipeFetchError } from './recipes/fetch-recipe.js';
 import { authRoutes } from './routes/auth.js';
+import { billRoutes } from './routes/bills.js';
 import { dealRoutes } from './routes/deals.js';
 import { healthRoute } from './routes/health.js';
 import { householdRoutes } from './routes/households.js';
@@ -152,6 +153,7 @@ export async function buildApp(
   await app.register(matchOverrideRoutes, { ctx });
   await app.register(recipeRoutes, { ctx });
   await app.register(mealPlanRoutes, { ctx });
+  await app.register(billRoutes, { ctx });
   await app.register(systemRoutes, {
     ctx,
     openApiDocument: options.openApiDocument ?? buildOpenApiDocument,

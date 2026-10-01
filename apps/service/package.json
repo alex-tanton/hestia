@@ -21,6 +21,7 @@
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",
     "@hearth/matching": "workspace:*",
+    "@hearth/recurrence": "workspace:*",
     "@hearth/shared": "workspace:*",
     "cheerio": "1.2.0",
     "fastify": "5.12.5",

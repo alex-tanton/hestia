@@ -1,6 +1,7 @@
 import cron, { type ScheduledTask } from 'node-cron';
 import { scrubErrorText } from '@hearth/shared';
 import { withJobLock } from './advisory-lock.js';
+import { runLogAutopay } from './log-autopay.js';
 import { runOnDemandRefresh, runRefreshDeals, type RefreshDeps } from './refresh-deals.js';
 import { runPruneCache } from './prune-cache.js';
 import type { JobDatabase, JobLogger } from './types.js';
@@ -9,9 +10,10 @@ import type { JobDatabase, JobLogger } from './types.js';
  * The in-process job runner (Technical Architecture, "Scheduled jobs"). `node-cron`, schedules in
  * UTC; anything user-facing resolves against a household or user timezone inside the job.
  *
- * | Job             | Schedule       |
- * | --------------- | -------------- |
+ * | Job             | Schedule        |
+ * | --------------- | --------------- |
  * | `refresh-deals` | Daily 08:00 UTC |
+ * | `log-autopay`   | Every 2 minutes |
  * | `prune-cache`   | Daily 04:00 UTC |
  *
  * Every run takes `pg_try_advisory_lock(hashtext('<job name>'))` on a dedicated connection and
@@ -19,6 +21,7 @@ import type { JobDatabase, JobLogger } from './types.js';
  */
 
 export const REFRESH_DEALS_SCHEDULE = '0 8 * * *';
+export const LOG_AUTOPAY_SCHEDULE = '*/2 * * * *';
 export const PRUNE_CACHE_SCHEDULE = '0 4 * * *';
 const TIMEZONE = 'UTC';
 
@@ -37,7 +40,7 @@ export interface Scheduler {
   stop: () => Promise<void>;
 }
 
-export type JobName = 'refresh-deals' | 'prune-cache';
+export type JobName = 'refresh-deals' | 'log-autopay' | 'prune-cache';
 
 export function createScheduler(deps: SchedulerDeps): Scheduler {
   const tasks: ScheduledTask[] = [];
@@ -63,6 +66,9 @@ export function createScheduler(deps: SchedulerDeps): Scheduler {
       return guard(jobName, () =>
         runRefreshDeals({ ...deps.refresh, database: deps.database, logger }),
       );
+    }
+    if (jobName === 'log-autopay') {
+      return guard(jobName, () => runLogAutopay({ database: deps.database, logger }));
     }
     return guard(jobName, () => runPruneCache({ database: deps.database, logger }));
   };
@@ -91,11 +97,13 @@ export function createScheduler(deps: SchedulerDeps): Scheduler {
         cron.schedule(REFRESH_DEALS_SCHEDULE, () => void run('refresh-deals'), {
           timezone: TIMEZONE,
         }),
+        cron.schedule(LOG_AUTOPAY_SCHEDULE, () => void run('log-autopay'), { timezone: TIMEZONE }),
         cron.schedule(PRUNE_CACHE_SCHEDULE, () => void run('prune-cache'), { timezone: TIMEZONE }),
       );
       deps.logger.info(
         {
           refreshDeals: REFRESH_DEALS_SCHEDULE,
+          logAutopay: LOG_AUTOPAY_SCHEDULE,
           pruneCache: PRUNE_CACHE_SCHEDULE,
           timezone: TIMEZONE,
         },
