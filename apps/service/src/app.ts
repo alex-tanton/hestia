@@ -16,7 +16,9 @@ import {
 import { RecipeFetchError } from './recipes/fetch-recipe.js';
 import { authRoutes } from './routes/auth.js';
 import { billRoutes } from './routes/bills.js';
+import { choreRoutes } from './routes/chores.js';
 import { dealRoutes } from './routes/deals.js';
+import { errandRoutes } from './routes/errands.js';
 import { healthRoute } from './routes/health.js';
 import { householdRoutes } from './routes/households.js';
 import { listRoutes } from './routes/lists.js';
@@ -154,6 +156,8 @@ export async function buildApp(
   await app.register(recipeRoutes, { ctx });
   await app.register(mealPlanRoutes, { ctx });
   await app.register(billRoutes, { ctx });
+  await app.register(choreRoutes, { ctx });
+  await app.register(errandRoutes, { ctx });
   await app.register(systemRoutes, {
     ctx,
     openApiDocument: options.openApiDocument ?? buildOpenApiDocument,

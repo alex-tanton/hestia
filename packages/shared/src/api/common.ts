@@ -34,6 +34,15 @@ export const timeOfDaySchema = z
 export const householdRoleSchema = z.enum(['admin', 'member']);
 export type HouseholdRole = z.infer<typeof householdRoleSchema>;
 
+/**
+ * The recurrence unit `bill` and `chore` share (Requirements, "Data model": "Recurrence uses the
+ * same three fields on `bill` and `chore`: `recurrence_unit`... `interval`... and `anchor_date`.").
+ * Lives here, not in either `bills.ts` or `chores.ts`, so the two sibling units that each need it
+ * don't export the same name twice.
+ */
+export const recurrenceUnitSchema = z.enum(['day', 'week', 'month', 'year']);
+export type RecurrenceUnit = z.infer<typeof recurrenceUnitSchema>;
+
 export const householdIdParamsSchema = z.object({ id: idSchema });
 export const memberParamsSchema = z.object({ id: idSchema, userId: idSchema });
 export const inviteParamsSchema = z.object({ id: idSchema, inviteId: idSchema });
@@ -41,3 +50,6 @@ export const listIdParamsSchema = z.object({ id: idSchema });
 export const listItemParamsSchema = z.object({ id: idSchema, itemId: idSchema });
 export const pantryItemParamsSchema = z.object({ id: idSchema });
 export const mealPlanEntryIdParamsSchema = z.object({ id: idSchema });
+export const choreIdParamsSchema = z.object({ id: idSchema });
+export const choreCompletionParamsSchema = z.object({ id: idSchema, completionId: idSchema });
+export const errandIdParamsSchema = z.object({ id: idSchema });

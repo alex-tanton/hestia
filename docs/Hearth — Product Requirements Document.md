@@ -246,7 +246,7 @@ Purely functional tracking. No streaks, points, or gamification — the goal is 
 
 ### Errands
 
-One-off tasks with a name, an optional due date, and a status of open or done. Any member can add one; assignment to a specific member is optional. Marking an errand done records `completed_at` and `completed_by`.
+One-off tasks with a name, an optional due date, and a status of open or done. Any member can add one; assignment to a specific member is optional. Marking an errand done records `completed_at` and `completed_by`. Marking a done errand open again clears both — the schema's check constraint already requires the two fields to move together in either direction, and an errand can be reopened the same way a bought list item can move back to needed.
 
 ### Chore notifications
 
@@ -346,7 +346,7 @@ The deal fields on `shopping_list_item` are a snapshot taken when the item is ad
 | `chore_completion` | id (client-generated UUID), chore\_id, occurrence\_date, completed\_by, completed\_at |
 | `errand` | id (client-generated UUID), household\_id, name, due\_date (nullable), status (open/done), added\_by, assigned\_to (nullable), completed\_at (nullable), completed\_by (nullable), created\_at |
 
-`chore_completion` is unique on (`chore_id`, `occurrence_date`). `assigned_to` must be null when `rotation_order` is set. An errand's `completed_at` and `completed_by` are set exactly when its status is done. A chore's assignee and rotation members, and an errand's assignee, must be members of the household when they are set; an assignment that is not changed keeps a departed member's id, like other history. Neither the next due date nor the current rotation position is stored; both are derived (see Recurrence and Rotation).
+`chore_completion` is unique on (`chore_id`, `occurrence_date`). `assigned_to` must be null when `rotation_order` is set. A `rotation_order` lists each member at most once, so no member holds two positions in the rotation; create and edit both refuse a repeated member. An errand's `completed_at` and `completed_by` are set exactly when its status is done. A chore's assignee and rotation members, and an errand's assignee, must be members of the household when they are set; an assignment that is not changed keeps a departed member's id, like other history. Neither the next due date nor the current rotation position is stored; both are derived (see Recurrence and Rotation).
 
 ### Notifications
 
@@ -665,7 +665,9 @@ where `completion_count` is the number of `chore_completion` rows for the chore.
 
 - Each completion advances the turn one position from the **scheduled** member, whoever actually did it. If Sam does Alex's turn, the next turn is still the member after Alex.
 - A missed occurrence does not pass the turn; only completions do.
+- Editing a chore's assignment from the Chore sheet replaces `rotation_order` wholesale: the sheet redefines the order rather than reordering it in place.
 - When a member leaves the household, they are removed from every rotation order. Let `cur` be the index of the member whose turn it was before the removal and `i` the removed index. `rotation_offset` is rebased so the turn stays with the same person: `cur' = cur − 1` if `i < cur`, `cur' = cur` if `i > cur`, and `cur' = cur mod (n − 1)` if `i = cur` (the next member takes the turn). The new offset is `(cur' − completion_count) mod (n − 1)`. When the last member is removed from an order, the order becomes null.
+- Editing a chore's rotation order preserves the current turn by member identity when that member remains in the new order (`rotation_offset` recomputed from their new index), and resets `rotation_offset` to 0 when they do not — distinct from departure's own rebase formula above, which this does not replace.
 
 ### Timezone
 

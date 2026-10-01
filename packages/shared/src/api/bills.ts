@@ -1,15 +1,19 @@
 import { z } from 'zod';
-import { calendarDateSchema, centsSchema, idSchema, timestampSchema } from './common.js';
+import {
+  calendarDateSchema,
+  centsSchema,
+  idSchema,
+  recurrenceUnitSchema,
+  timestampSchema,
+} from './common.js';
 
 /**
  * Bills and subscriptions (Requirements, "Bills and subscriptions"; Technical Architecture, "API
  * surface" — "Bills"). Recurrence is anchored (`packages/recurrence`); a bill's current occurrence
  * and overdue flag are derived on every read, never stored (Requirements, "Recurrence is anchored
- * and derived on read").
+ * and derived on read"). `recurrenceUnitSchema`/`RecurrenceUnit` live in `common.js`, shared with
+ * `chores.ts` (both export from `common.js` via `index.ts`, so neither re-exports them again here).
  */
-
-export const recurrenceUnitSchema = z.enum(['day', 'week', 'month', 'year']);
-export type RecurrenceUnit = z.infer<typeof recurrenceUnitSchema>;
 
 export const billVisibilitySchema = z.enum(['household', 'personal']);
 export type BillVisibility = z.infer<typeof billVisibilitySchema>;

@@ -43,6 +43,7 @@ describe('authentication', () => {
         .replace(':inviteId', ID)
         .replace(':itemId', ID)
         .replace(':userId', ID)
+        .replace(':completionId', ID)
         .replace(':id', ID);
       for (const headers of [
         {},

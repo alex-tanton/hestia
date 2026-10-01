@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { currentTurn, currentTurnIndex, rebaseRotationOnDeparture } from './rotation.js';
+import {
+  currentTurn,
+  currentTurnIndex,
+  rebaseRotationOnDeparture,
+  rebaseRotationOnEdit,
+} from './rotation.js';
 
 describe('currentTurnIndex / currentTurn', () => {
   const order = ['alex', 'casey', 'sam'];
@@ -86,5 +91,57 @@ describe('deleting the most recent completion moves the rotation back (composabi
     expect(currentTurn(order, 0, 3)).toBe('alex');
     // Undo the most recent completion: completionCount drops to 2, no new API needed.
     expect(currentTurn(order, 0, 2)).toBe('sam');
+  });
+});
+
+describe('rebaseRotationOnEdit', () => {
+  it('a pure reorder preserves the turn by identity, not by index', () => {
+    const order = ['alex', 'casey', 'sam'];
+    // offset=0, count=1 -> cur=1 ("casey").
+    const reordered = ['sam', 'casey', 'alex'];
+    const offset = rebaseRotationOnEdit(order, 0, 1, reordered);
+    expect(currentTurn(reordered, offset, 1)).toBe('casey');
+  });
+
+  it('appending a new member to the end preserves the current turn', () => {
+    const order = ['alex', 'sam'];
+    // offset=0, count=1 -> cur=1 ("sam").
+    const appended = ['alex', 'sam', 'jordan'];
+    const offset = rebaseRotationOnEdit(order, 0, 1, appended);
+    expect(currentTurn(appended, offset, 1)).toBe('sam');
+  });
+
+  it('removing the currently-scheduled member resets to 0', () => {
+    const order = ['alex', 'sam'];
+    // offset=0, count=0 -> cur=0 ("alex").
+    const withoutAlex = ['sam'];
+    const offset = rebaseRotationOnEdit(order, 0, 0, withoutAlex);
+    expect(offset).toBe(0);
+  });
+
+  it('a reset with completion history gives the turn to order[completion_count mod n], not the first member', () => {
+    // Offset 0 is not "first member next" once there is history: the turn is still derived as
+    // (offset + completion_count) mod n, so after one completion sam's removal hands the turn to
+    // jordan, the second member of the new order.
+    const order = ['alex', 'sam', 'jordan'];
+    // offset=0, count=1 -> cur=1 ("sam"), who is removed.
+    const withoutSam = ['alex', 'jordan'];
+    const offset = rebaseRotationOnEdit(order, 0, 1, withoutSam);
+    expect(offset).toBe(0);
+    expect(currentTurn(withoutSam, offset, 1)).toBe('jordan');
+  });
+
+  it("removing a different, non-scheduled member preserves the scheduled member's turn", () => {
+    const order = ['alex', 'sam', 'jordan'];
+    // offset=0, count=1 -> cur=1 ("sam").
+    const withoutJordan = ['alex', 'sam'];
+    const offset = rebaseRotationOnEdit(order, 0, 1, withoutJordan);
+    expect(currentTurn(withoutJordan, offset, 1)).toBe('sam');
+  });
+
+  it('a no-op edit (identical order resubmitted) reproduces an equivalent turn', () => {
+    const order = ['alex', 'casey', 'sam'];
+    const offset = rebaseRotationOnEdit(order, 1, 4, order);
+    expect(currentTurn(order, offset, 4)).toBe(currentTurn(order, 1, 4));
   });
 });

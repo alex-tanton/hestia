@@ -30,5 +30,6 @@ export {
   currentTurn,
   currentTurnIndex,
   rebaseRotationOnDeparture,
+  rebaseRotationOnEdit,
   type RebasedRotation,
 } from './rotation.js';

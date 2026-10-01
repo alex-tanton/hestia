@@ -49,6 +49,10 @@ declare
   recipe_id uuid;
   deal_ext text;
   deal_end date;
+  trash_chore uuid;
+  bathroom_chore uuid;
+  vacuum_chore uuid;
+  water_chore uuid;
   -- Deal validity is a calendar date in the store's own local offset, and every 27514 household
   -- is in America/New_York. Using the server's `current_date` instead would put "yesterday" on
   -- today's date for a seed run made in the evening Eastern time, and the three expired deals
@@ -1048,8 +1052,94 @@ begin
 
   -- -------------------------------------------------------------------------------------------
   -- Chores, completions (including Casey's), and errands: Phase 4 (Seed Data, "Chores",
-  -- "Errands")
+  -- "Errands"). Occurrence dates are evaluated in America/New_York, Oak Street's timezone, so
+  -- every occurrence_date below is computed from local_today, never from a plain interval off
+  -- now() (the same reasoning the deal-validity dates above this give for local_today).
   -- -------------------------------------------------------------------------------------------
+
+  -- Take out trash: weekly, anchored 56 days ago, rotation Alex -> Sam -> Jordan, offset 2.
+  -- (2 + 8) mod 3 = 1 = Sam, so today's occurrence (k=8, uncompleted) is Sam's turn, due today.
+  insert into public.chore (household_id, name, recurrence_unit, anchor_date, rotation_order,
+    rotation_offset, created_by, created_at)
+  values (oak_street, 'Take out trash', 'week', local_today - 56, array[alex, sam, jordan], 2,
+    alex, now() - interval '57 days')
+  returning id into trash_chore;
+
+  -- Eight completions, one per past occurrence (k = 0..7); the k=3 completion was recorded three
+  -- days after its occurrence_date, which the anchored-recurrence rule keeps from shifting the
+  -- occurrence after it (Requirements, "Recurrence is anchored and derived on read").
+  insert into public.chore_completion (chore_id, occurrence_date, completed_by, completed_at)
+  select trash_chore, local_today - 56 + 7 * k,
+    (array[alex, sam, jordan])[((2 + k) % 3) + 1],
+    now() - make_interval(days => (56 - 7 * k) - case when k = 3 then 3 else 0 end)
+  from generate_series(0, 7) as k;
+
+  -- Clean bathroom: weekly, anchored 5 days ago, same rotation, offset 1. One completion closes
+  -- the only arrived occurrence; (1 + 1) mod 3 = 2 = Jordan, due in 2 days (the next occurrence).
+  insert into public.chore (household_id, name, recurrence_unit, anchor_date, rotation_order,
+    rotation_offset, created_by, created_at)
+  values (oak_street, 'Clean bathroom', 'week', local_today - 5, array[alex, sam, jordan], 1,
+    alex, now() - interval '6 days')
+  returning id into bathroom_chore;
+
+  insert into public.chore_completion (chore_id, occurrence_date, completed_by, completed_at)
+  values (bathroom_chore, local_today - 5, sam, now() - interval '5 days');
+
+  -- Vacuum common areas: weekly, anchored 38 days ago, unassigned. Only the first occurrence was
+  -- ever completed, by Casey (now departed); the four missed occurrences since rolled forward
+  -- without stacking, leaving the occurrence 3 days ago overdue.
+  insert into public.chore (household_id, name, recurrence_unit, anchor_date, created_by,
+    created_at)
+  values (oak_street, 'Vacuum common areas', 'week', local_today - 38, alex,
+    now() - interval '39 days')
+  returning id into vacuum_chore;
+
+  insert into public.chore_completion (chore_id, occurrence_date, completed_by, completed_at)
+  values (vacuum_chore, local_today - 38, casey, now() - interval '38 days');
+
+  -- Replace HVAC filter: monthly, anchored 11 days from now, assigned to Alex, never completed.
+  insert into public.chore (household_id, name, recurrence_unit, anchor_date, assigned_to,
+    created_by, created_at)
+  values (oak_street, 'Replace HVAC filter', 'month', local_today + 11, alex, alex,
+    now() - interval '3 days');
+
+  -- Deep clean fridge: monthly, anchored 6 days from now, rotation Alex -> Sam, offset 0, never
+  -- completed; (0 + 0) mod 2 = 0 = Alex.
+  insert into public.chore (household_id, name, recurrence_unit, anchor_date, rotation_order,
+    rotation_offset, created_by, created_at)
+  values (oak_street, 'Deep clean fridge', 'month', local_today + 6, array[alex, sam], 0, alex,
+    now() - interval '2 days');
+
+  -- Water plants: every 3 days, anchored on its creation date 8 days ago, unassigned. Three
+  -- completions (8, 5, and 2 days ago) close every occurrence up to today; the next is tomorrow.
+  insert into public.chore (household_id, name, recurrence_unit, "interval", anchor_date,
+    created_by, created_at)
+  values (oak_street, 'Water plants', 'day', 3, local_today - 8, alex, now() - interval '8 days')
+  returning id into water_chore;
+
+  insert into public.chore_completion (chore_id, occurrence_date, completed_by, completed_at)
+  values
+    (water_chore, local_today - 8, alex, now() - interval '8 days'),
+    (water_chore, local_today - 5, alex, now() - interval '5 days'),
+    (water_chore, local_today - 2, alex, now() - interval '2 days');
+
+  -- Errands: a mix of open (dated, overdue, undated, unassigned) and done, including one done by
+  -- someone other than its assignee.
+  insert into public.errand (household_id, name, due_date, status, added_by, assigned_to,
+    completed_at, completed_by, created_at)
+  values
+    (oak_street, 'Return Amazon package', local_today + 2, 'open', alex, alex, null, null,
+      now() - interval '1 day'),
+    (oak_street, 'Pick up dry cleaning', local_today - 2, 'open', jordan, null, null, null,
+      now() - interval '5 days'),
+    (oak_street, 'Renew car registration', local_today + 21, 'open', sam, sam, null, null,
+      now() - interval '3 days'),
+    (oak_street, 'Buy birthday card', null, 'open', jordan, null, null, null,
+      now() - interval '2 days'),
+    (oak_street, 'Mail rent check', local_today - 3, 'done', alex, alex,
+      now() - interval '4 days', alex, now() - interval '10 days'),
+    (oak_street, 'Replace porch light bulb', null, 'done', jordan, jordan,
+      now() - interval '6 days', sam, now() - interval '14 days');
 
   -- -------------------------------------------------------------------------------------------
   -- App errors, for System health (Seed Data, "App errors"). The fingerprint is the SHA-256 of

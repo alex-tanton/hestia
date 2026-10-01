@@ -43,6 +43,23 @@ function makeLogger(): JobLogger {
   return self;
 }
 
+/*
+ * Every "today" in this file is the household's local date, not UTC: the job decides what is due
+ * by household timezone, so a UTC date would disagree with it for the hours a US-Eastern day is
+ * still ahead of UTC's (roughly 20:00-24:00 EDT).
+ */
+const HOUSEHOLD_TZ = 'America/New_York';
+
+/** Today's date (YYYY-MM-DD) in the household timezone. */
+function householdToday(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: HOUSEHOLD_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
 /** A fresh household and its admin, directly as `postgres` (no HTTP layer needed for this job). */
 async function createHousehold(): Promise<{ householdId: string; userId: string }> {
   const userId = randomUUID();
@@ -52,13 +69,13 @@ async function createHousehold(): Promise<{ householdId: string; userId: string 
     [
       userId,
       `autopay.${userId.slice(0, 8)}@example.com`,
-      JSON.stringify({ display_name: 'Autopay Tester', timezone: 'America/New_York' }),
+      JSON.stringify({ display_name: 'Autopay Tester', timezone: HOUSEHOLD_TZ }),
     ],
   );
   const { rows } = await adminPool.query<{ id: string }>(
     `insert into public.household (name, postal_code, timezone, created_by)
-     values ($1, $2, 'America/New_York', $3) returning id`,
-    [`Autopay ${userId.slice(0, 6)}`, POSTAL_CODE, userId],
+     values ($1, $2, $4, $3) returning id`,
+    [`Autopay ${userId.slice(0, 6)}`, POSTAL_CODE, userId, HOUSEHOLD_TZ],
   );
   const householdId = rows[0]?.id ?? '';
   await adminPool.query(
@@ -82,7 +99,7 @@ async function insertAutopayBill(fields: {
     `insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit,
        "interval", anchor_date, visibility, autopay, created_at, archived_at)
      values ($1, $2, 'Autopay Test Bill', 20.00, $3, $4,
-       current_date - ($5 || ' days')::interval, 'household', $6,
+       (now() at time zone $9)::date - ($5 || ' days')::interval, 'household', $6,
        now() - ($7 || ' days')::interval,
        case when $8 then now() else null end)
      returning id`,
@@ -95,6 +112,7 @@ async function insertAutopayBill(fields: {
       fields.autopay ?? true,
       fields.createdDaysAgo,
       fields.archived ?? false,
+      HOUSEHOLD_TZ,
     ],
   );
   return rows[0]?.id ?? '';
@@ -156,9 +174,9 @@ describe('log-autopay', () => {
       await runLogAutopay({ database: jobDb, logger: makeLogger() });
       const dates = await paymentDates(billId);
 
-      const today = new Date();
+      const today = householdToday();
       const dayOffset = (n: number): string => {
-        const d = new Date(today);
+        const d = new Date(`${today}T00:00:00Z`);
         d.setUTCDate(d.getUTCDate() - n);
         return d.toISOString().slice(0, 10);
       };

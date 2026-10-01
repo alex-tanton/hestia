@@ -80,3 +80,26 @@ export function rebaseRotationOnDeparture(
   const newOffset = mod(curPrime - completionCount, n - 1);
   return { rotationOrder: newOrder, rotationOffset: newOffset };
 }
+
+/**
+ * PRD, "Rotation": editing a chore's rotation order from the Chore sheet keeps the turn with
+ * whoever holds it in `oldOrder` when they are still present in `newOrder` — `rotation_offset` is
+ * recomputed from their new index — and resets to 0 when they are not, since there is then no
+ * "same person" to preserve. This is the smallest conservative extension of departure's own "the
+ * turn stays with the same person" rule to the edit case; it is not a generalization of
+ * `rebaseRotationOnDeparture`'s `cur`/`i` formula above, which is built for removing exactly one
+ * member and does not extend to an arbitrary reorder, insertion, or multi-member edit.
+ *
+ * `completionCount` is the caller's to determine, the same as everywhere else in this module.
+ */
+export function rebaseRotationOnEdit(
+  oldOrder: readonly string[],
+  oldOffset: number,
+  completionCount: number,
+  newOrder: readonly string[],
+): number {
+  const holder = currentTurn(oldOrder, oldOffset, completionCount);
+  const newIndex = newOrder.indexOf(holder);
+  if (newIndex === -1) return 0;
+  return mod(newIndex - completionCount, newOrder.length);
+}
