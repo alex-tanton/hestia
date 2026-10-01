@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "node --test support/run-identity.test.ts",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

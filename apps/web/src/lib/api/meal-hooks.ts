@@ -5,6 +5,7 @@ import {
   type UseMutationResult,
   type UseQueryResult,
 } from '@tanstack/react-query';
+import { persistQueryClientSave } from '@tanstack/react-query-persist-client';
 import {
   matchOverrideSchema,
   mealPlanEntrySchema,
@@ -27,7 +28,7 @@ import {
   type SuggestionsResponse,
   type UpdateRecipeRequest,
 } from '@hearth/shared';
-import { useApi } from './api-context.tsx';
+import { useApi, useFlushPersister } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE, queryKeys } from './keys.ts';
 
 /*
@@ -204,12 +205,29 @@ export function useParseRecipe(
   });
 }
 
-/** After adding to a list: the list's own detail and its counts on the index both moved. */
+/**
+ * After adding to a list: the list's own detail and its counts on the index both moved.
+ *
+ * This is the one moment "add missing to list" writes fresh data straight into the cache rather
+ * than only invalidating it (so the add-to-list sheet's own toast reflects the true new state
+ * without a refetch round trip), which means the regular query-cache persister — throttled to
+ * 1000ms so a busy screen does not hammer IndexedDB on every settle (`persist.ts`) — has not
+ * necessarily saved it yet. A reload that lands inside that window would otherwise restore the
+ * list as it was *before* this write and, since the restored snapshot is still within its own
+ * staleTime, show that stale state indefinitely rather than refetching (journey 4, "lists exactly
+ * what is missing": the picker's own list, visited empty right after creation, is exactly such a
+ * case). `flushPersister` is the same unthrottled, second persister the write queue uses for the
+ * identical reason (Engineering Practices › Offline data) — here it makes a just-completed,
+ * already-successful write durable immediately rather than leaving the index down to the
+ * throttle's next tick.
+ */
 function useListWriteEffects(): (householdId: string, detail: ShoppingListDetail) => void {
   const queryClient = useQueryClient();
+  const flushPersister = useFlushPersister();
   return (householdId, detail) => {
     queryClient.setQueryData(queryKeys.list(householdId, detail.id), detail);
     void queryClient.invalidateQueries({ queryKey: queryKeys.lists(householdId, false) });
+    if (flushPersister) void persistQueryClientSave({ queryClient, persister: flushPersister });
   };
 }
 

@@ -48,6 +48,15 @@ const envSchema = z.object({
   // The fixture captures' own instant (`FIXTURE_NOW`), so the wrapper's active-flyer window
   // matches what the captures actually cover regardless of the host's real clock.
   HEARTH_FLIPP_FIXTURE_NOW: z.coerce.date().optional(),
+  /*
+   * Unset in every real deployment, so production always fetches a pasted recipe URL for real
+   * (Technical Architecture, "Recipe fetching"). The E2E Compose overlay is the one caller that
+   * sets it: `fetchRecipePage`'s private/loopback/link-local refusal would just as correctly
+   * refuse a fixture server reachable only on the Compose network, so the E2E recipe-import
+   * journey (Handoff, Phase 3 "Done when") swaps the fetch step itself for reading the checked-in
+   * pages this points at, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
+   */
+  HEARTH_RECIPE_FIXTURE_DIR: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
-import { COMPOSE_PROJECT, ENV_FILE, REPO_ROOT } from './env.ts';
+import { COMPOSE_PROJECT, ENV_FILE, IMAGE_TAG, REPO_ROOT } from './env.ts';
 
 /**
  * The E2E stack is docker/docker-compose.yml with e2e/docker-compose.e2e.yml over it, under its
@@ -52,12 +52,12 @@ export function composeArgs(args: readonly string[]): string[] {
   return ['compose', '-p', COMPOSE_PROJECT, '--env-file', ENV_FILE, ...files, ...args];
 }
 
+// The run's own image tag: the `current` images a Compose stack on this machine runs are left
+// alone, and a concurrent run's build cannot replace the images this run is about to start.
 export function compose(args: readonly string[]): CommandResult {
-  // Its own image tag, so a run never replaces the `current` images a Compose stack on this
-  // machine is running.
-  return runCommand('docker', composeArgs(args), { HEARTH_TAG: 'e2e' });
+  return runCommand('docker', composeArgs(args), { HEARTH_TAG: IMAGE_TAG });
 }
 
 export function composeChecked(args: readonly string[]): string {
-  return runChecked('docker', composeArgs(args), { HEARTH_TAG: 'e2e' });
+  return runChecked('docker', composeArgs(args), { HEARTH_TAG: IMAGE_TAG });
 }

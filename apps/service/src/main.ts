@@ -19,6 +19,7 @@ import { createGoTrueAdmin } from './privileged/gotrue-admin.js';
 import { createJobDatabase } from './privileged/job-database.js';
 import { readSystemHealth } from './privileged/service-role-db.js';
 import { fetchRecipePage } from './recipes/fetch-recipe.js';
+import { recipeFixtureFetch } from './recipes/fixture-fetch.js';
 import { HostRateLimiter } from './recipes/host-rate-limiter.js';
 import { parseRecipeUrl } from './recipes/parse-recipe-url.js';
 import { newestBackupTime } from './services/backups.js';
@@ -76,6 +77,13 @@ const deals = createDealsService({
 // way flippQueue holds Flipp's rate discipline (Technical Architecture, "Recipe fetching").
 const recipeFetchLimiter = new HostRateLimiter();
 const recipeUserAgent = buildUserAgent(env.HEARTH_ORIGIN);
+// Only the E2E Compose overlay sets HEARTH_RECIPE_FIXTURE_DIR (see env.ts): every other caller,
+// including a real deployment, fetches the pasted URL for real.
+const recipeFetchPage: (pageUrl: string) => Promise<{ body: string }> =
+  env.HEARTH_RECIPE_FIXTURE_DIR === undefined
+    ? (pageUrl) =>
+        fetchRecipePage(pageUrl, { userAgent: recipeUserAgent, limiter: recipeFetchLimiter })
+    : recipeFixtureFetch({ dir: env.HEARTH_RECIPE_FIXTURE_DIR });
 
 const app = await buildApp(
   {
@@ -89,10 +97,7 @@ const app = await buildApp(
     newestBackupTime: () => newestBackupTime(env.BACKUP_DIR),
     merchantSkipRates: () => skipRates.list(),
     deals,
-    parseRecipeUrl: (url) =>
-      parseRecipeUrl(url, (pageUrl) =>
-        fetchRecipePage(pageUrl, { userAgent: recipeUserAgent, limiter: recipeFetchLimiter }),
-      ),
+    parseRecipeUrl: (url) => parseRecipeUrl(url, recipeFetchPage),
   },
   {
     trustedProxies: env.HEARTH_TRUSTED_PROXIES,

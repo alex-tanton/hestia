@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Baked Cod with Broccoli — Hearth E2E Fixture</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Recipe",
+        "name": "Baked Cod with Broccoli",
+        "recipeYield": "4 servings",
+        "recipeIngredient": [
+          "1 lb cod fillets",
+          "1 lb broccoli",
+          "3 tbsp butter",
+          "3 cloves garlic",
+          "1 tsp salt",
+          "1 tsp black pepper",
+          "1 tbsp olive oil"
+        ],
+        "recipeInstructions": [
+          { "@type": "HowToStep", "text": "Preheat the oven to 400°F." },
+          { "@type": "HowToStep", "text": "Toss the broccoli with olive oil, salt, and pepper on a sheet pan." },
+          { "@type": "HowToStep", "text": "Season the cod, dot with butter and garlic, and lay it beside the broccoli." },
+          { "@type": "HowToStep", "text": "Bake 15 minutes, until the cod flakes easily." }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Baked Cod with Broccoli</h1>
+    <p>
+      The dark-theme run's own fixture page, distinct from the light-theme one so the two runs
+      never import a recipe with the same title (Engineering Practices › "E2E environment"). Its
+      broccoli is a deliberate match against Food Lion's current "Broccoli Crowns" deal (Seed
+      Data, "Favorite-store groceries"), so this run exercises the on-sale bucket the light run's
+      recipe does not.
+    </p>
+  </body>
+</html>

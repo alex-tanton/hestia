@@ -1,16 +1,19 @@
 # E2E overlay for docker/docker-compose.yml (Engineering Practices › Testing, "E2E environment").
 #
-#   docker compose -p hearth-e2e --env-file <generated .env> \
+#   docker compose -p hearth-e2e-<run> --env-file <generated .env> \
 #     -f docker/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --wait
 #
 # e2e/setup/stack.ts runs that for `pnpm test:e2e`. The suite exercises the production stack — the
 # same images, the same Caddyfile, the same Kong declarative config — so the routing rules it
-# asserts are the ones that ship. Only what the loopback demands is different:
+# asserts are the ones that ship. Only what the loopback demands is different. Every value that
+# differs between two runs on one machine is a variable the generated `.env` supplies (see
+# e2e/setup/stack.ts and e2e/support/run-identity.ts), so the overlay itself names nothing fixed:
 #
 #   * its own project name, network name, and subnet, so a run never touches a Compose stack or a
 #     `supabase start` stack already on the machine, and `down --volumes` only ever drops its own
-#     database
-#   * Caddy on 8099 and Postgres on 54329, for the same reason
+#     database. The network is created before `up` and declared external here, so Docker itself
+#     refuses a subnet another run already holds
+#   * Caddy and Postgres on free loopback ports chosen at run start, for the same reason
 #   * the database port published, because the migrations, the seed, and the tests' own
 #     assertions reach it from the host
 #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
@@ -19,6 +22,11 @@
 #   * hearth-service reads the checked-in Flipp captures instead of the live endpoint (Handoff
 #     non-negotiable 17), and logs at info rather than warn so the rate discipline the deal
 #     journeys exercise is readable in `docker compose logs` (Handoff, Phase 2 "Done when")
+#   * hearth-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
+#     for real: `fetchRecipePage`'s private/loopback/link-local refusal (Technical Architecture,
+#     "Recipe fetching") would just as correctly refuse a fixture server reachable only on this
+#     network, so journey 4 (Phase 3 "Done when": "A recipe imports from a URL with JSON-LD…")
+#     swaps the fetch step itself rather than trying to make a reachable address pass that check
 #
 # The `backup` service is left out: nothing in the suite reads a backup, and the stack starts
 # faster without it.
@@ -26,37 +34,40 @@
 services:
   db:
     ports:
-      - 127.0.0.1:54329:5432
+      - 127.0.0.1:${HEARTH_E2E_DB_PORT:?}:5432
 
   hearth-service:
     # Relative to docker/, not to this file: Compose resolves every file's relative paths against
     # the first -f file's directory, which is docker/docker-compose.yml (`compose.ts`).
     volumes:
       - ../e2e/fixtures/flipp/raw:/app/fixtures/flipp/raw:ro
+      - ../e2e/fixtures/recipes:/app/fixtures/recipes:ro
     environment:
-      HEARTH_TRUSTED_PROXIES: &subnet 172.16.239.0/24
+      HEARTH_TRUSTED_PROXIES: ${HEARTH_E2E_SUBNET:?}
       LOG_LEVEL: info
       # The fixture set's own instant (`FIXTURE_NOW`, Technical Architecture › "Development"), so
       # the wrapper's active-flyer window matches what the captures cover regardless of today.
       HEARTH_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
       HEARTH_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
+      HEARTH_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
 
   kong:
     environment:
-      KONG_TRUSTED_IPS: *subnet
+      KONG_TRUSTED_IPS: ${HEARTH_E2E_SUBNET:?}
 
   caddy:
     command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
     environment:
-      HEARTH_HOST: 127.0.0.1:8099
-      HEARTH_HOST_GATEWAY: &gateway 172.16.239.1
+      HEARTH_HOST: 127.0.0.1:${HEARTH_E2E_CADDY_PORT:?}
+      HEARTH_HOST_GATEWAY: ${HEARTH_E2E_GATEWAY:?}
     ports: !override
-      - 127.0.0.1:8099:8080
+      - 127.0.0.1:${HEARTH_E2E_CADDY_PORT:?}:8080
 
 networks:
+  # The base file's network is named `hearth` with its own ipam, which would pin a fixed name and
+  # subnet. The run creates this network itself (e2e/setup/stack.ts), so that two runs' subnets
+  # cannot overlap silently, and Compose uses it as declared rather than creating one.
   hearth:
-    name: hearth-e2e
-    ipam:
-      config:
-        - subnet: *subnet
-          gateway: *gateway
+    name: ${HEARTH_E2E_NETWORK:?}
+    external: true
+    ipam: !reset null
