@@ -11,6 +11,10 @@
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
+  "dependencies": {
+    "@date-fns/tz": "1.5.0",
+    "date-fns": "4.4.0"
+  },
   "devDependencies": {
     "@vitest/coverage-v8": "5.0.1",
     "typescript": "6.0.3",
