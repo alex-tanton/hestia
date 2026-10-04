@@ -370,6 +370,63 @@ describe('chores: idempotent completion', () => {
   });
 });
 
+describe('chores: offline completion', () => {
+  async function queuedChore(
+    home: Home,
+  ): Promise<{ alex: SignedUpUser; sam: SignedUpUser; choreId: string }> {
+    const [alex, sam] = home.members as [SignedUpUser, SignedUpUser];
+    const chore = await createChore(home, {
+      name: 'Take out trash',
+      recurrenceUnit: 'week',
+      interval: 1,
+      anchorDate: await weeklyAnchor(home),
+      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id] },
+    });
+    return { alex, sam, choreId: chore.id };
+  }
+
+  it('a replayed completion, with its id, occurrence, and action time, changes nothing', async () => {
+    const home = await createHome(1);
+    const { alex, sam, choreId } = await queuedChore(home);
+    const before = await getChore(alex, choreId);
+    const body = {
+      id: randomUUID(),
+      occurrenceDate: before.dueDate,
+      doneAt: new Date(Date.now() - 60_000).toISOString(),
+    };
+
+    const first = await complete(alex, choreId, body);
+    // Another member replays it: the id is already there, so it is a no-op.
+    const replay = await complete(sam, choreId, body);
+
+    expect(replay.completions).toHaveLength(1);
+    expect(replay.currentTurn).toBe(first.currentTurn);
+    expect(replay.completions[0]?.completedBy).toBe(alex.id);
+  });
+
+  it('stores the moment the member acted, not the moment the request landed', async () => {
+    const home = await createHome(1);
+    const { alex, choreId } = await queuedChore(home);
+    const doneAt = new Date(Date.now() - 2 * 60 * 60_000).toISOString();
+
+    const detail = await complete(alex, choreId, { id: randomUUID(), doneAt });
+
+    expect(detail.completions[0]?.completedAt).toBe(doneAt);
+  });
+
+  it('clamps an action time in the future to now', async () => {
+    const home = await createHome(1);
+    const { alex, choreId } = await queuedChore(home);
+    const doneAt = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+
+    const detail = await complete(alex, choreId, { id: randomUUID(), doneAt });
+
+    const completedAt = detail.completions[0]?.completedAt;
+    if (completedAt === undefined) throw new Error('expected a completion');
+    expect(Date.parse(completedAt)).toBeLessThanOrEqual(Date.now());
+  });
+});
+
 describe('chores: attribution', () => {
   it('ignores a client-supplied completedBy and records the caller from the JWT', async () => {
     const home = await createHome(1);

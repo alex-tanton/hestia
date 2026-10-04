@@ -1,8 +1,10 @@
 import { onlineManager } from '@tanstack/react-query';
 import { act, configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Chore, ChoreDetail } from '@hearth/shared';
+import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import {
   BANNED_GAMIFICATION_WORDS,
   CHORES_EMPTY_COPY,
@@ -17,6 +19,7 @@ import {
   ALEX_ID,
   SAM_ID,
   JORDAN_ID,
+  oakStreetFixture,
   oakStreetMembers,
   profileFixture,
 } from '../../test/fixtures.ts';
@@ -58,6 +61,7 @@ configure({ asyncUtilTimeout: 5000 });
 
 const PROFILE: StubHandler = () => ({ status: 200, body: profileFixture });
 const MEMBERS: StubHandler = () => ({ status: 200, body: oakStreetMembers });
+const HOUSEHOLD: StubHandler = () => ({ status: 200, body: oakStreetFixture });
 
 function setOnline(isOnline: boolean): void {
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
@@ -73,11 +77,25 @@ function mountList(
   const stub = createFetchStub({
     'GET /api/users/me': PROFILE,
     'GET /api/households/:id/members': MEMBERS,
+    'GET /api/households/:id': HOUSEHOLD,
     ...handlers,
   });
   vi.stubGlobal('fetch', stub.fetch);
-  renderScreen(<ChoresListScreen householdId={OAK_STREET_ID} />);
+  renderScreen(
+    <WithQueue>
+      <ChoresListScreen householdId={OAK_STREET_ID} />
+    </WithQueue>,
+  );
   return stub;
+}
+
+/*
+ * Completion is a queued write, and the queue's defaults are registered by the shell that mounts it
+ * (AppShell → useWriteQueue), so a screen that completes a chore is mounted under it, as in the app.
+ */
+function WithQueue({ children }: { children: ReactNode }): ReactElement {
+  useWriteQueue();
+  return <>{children}</>;
 }
 
 function mountDetail(
@@ -87,10 +105,15 @@ function mountDetail(
   const stub = createFetchStub({
     'GET /api/users/me': PROFILE,
     'GET /api/households/:id/members': MEMBERS,
+    'GET /api/households/:id': HOUSEHOLD,
     ...handlers,
   });
   vi.stubGlobal('fetch', stub.fetch);
-  renderScreen(<ChoreDetailScreen householdId={OAK_STREET_ID} choreId={choreId} />);
+  renderScreen(
+    <WithQueue>
+      <ChoreDetailScreen householdId={OAK_STREET_ID} choreId={choreId} />
+    </WithQueue>,
+  );
   return stub;
 }
 
@@ -101,6 +124,7 @@ function mountForm(
   const stub = createFetchStub({
     'GET /api/users/me': PROFILE,
     'GET /api/households/:id/members': MEMBERS,
+    'GET /api/households/:id': HOUSEHOLD,
     ...handlers,
   });
   vi.stubGlobal('fetch', stub.fetch);
@@ -336,7 +360,7 @@ describe('Chores list (Design › Screens › 17)', () => {
     });
   });
 
-  it('offline: Done and Add are disabled with the reason, and cached rows stay readable', async () => {
+  it('offline with the household cached: Done is queued, and Add is disabled with the reason', async () => {
     mountList({
       'GET /api/households/:id/chores': () => ({ status: 200, body: [takeOutTrashFixture] }),
     });
@@ -345,8 +369,7 @@ describe('Chores list (Design › Screens › 17)', () => {
     setOnline(false);
 
     const done = await screen.findByRole('button', { name: 'Mark Take out trash done' });
-    expect(done).toHaveAttribute('aria-disabled', 'true');
-    expect(done).toHaveAccessibleDescription(OFFLINE_ACTION_REASON);
+    expect(done).not.toHaveAttribute('aria-disabled', 'true');
     expect(screen.getAllByText(OFFLINE_ACTION_REASON).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /^Take out trash/ })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Add a chore' })[0]).toHaveAttribute(
@@ -445,15 +468,14 @@ describe('Chore detail (Design › Screens › 17)', () => {
     ).toBeInTheDocument();
   });
 
-  it('offline: Mark done and history delete are disabled with the reason', async () => {
+  it('offline with the household cached: Mark done is queued', async () => {
     mountDetail({
       'GET /api/chores/:id': () => ({ status: 200, body: takeOutTrashDetailFixture }),
     });
     await screen.findByRole('heading', { level: 1, name: 'Take out trash' });
     setOnline(false);
-    expect(await screen.findByRole('button', { name: 'Mark done' })).toHaveAccessibleDescription(
-      OFFLINE_ACTION_REASON,
-    );
+    const markDone = await screen.findByRole('button', { name: 'Mark done' });
+    expect(markDone).not.toHaveAttribute('aria-disabled', 'true');
   });
 });
 

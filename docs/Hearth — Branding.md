@@ -208,6 +208,7 @@ Plain, brief, and never cute. Hearth is a tool for household admin — it should
 | Error, recoverable | What failed + what to do | "Couldn't reach the store data. Showing last week's deals." |
 | Error, unrecoverable | What failed + how to report | "Something went wrong loading this list. Try again, or reload." |
 | Offline | State + reassurance | "Offline. Changes will sync when you reconnect." |
+| Queued change refused | What could not be saved, counted, naming no one | "1 change couldn't be saved. The chore or errand is no longer available." |
 | Confirmation | Past tense, brief | "Added to Grocery List." |
 | Destructive confirm | Name the consequence | "Remove Sam from this household? Their chores and lists need reassigning first." |
 

@@ -317,13 +317,17 @@ The part most likely to be implemented incorrectly, so the rules are explicit. T
 - Only the writes the Requirements document lists are queueable. v1.0 covers list item add, check, uncheck, and edit; v1.3 adds chore complete and errand done. Every other mutation is disabled while offline.
 - Each queueable mutation has a default `mutationFn` registered with `setMutationDefaults`, so paused mutations can resume after a reload. They are persisted along with the query cache via `idb-keyval`.
 - Every queueable mutation carries a `scope` id: `list:<listId>`, `chore:<choreId>`, or `errand:<errandId>`. Mutations in the same scope run one at a time, **in the order they were made**.
-- The UI applies the change optimistically and marks the row pending (reduced opacity, clock icon)
+- The UI applies the change optimistically where the view can show it, and marks the row pending with the edge marker and clock icon Design specifies (`components/lists/PendingMark.tsx`). Chore and errand rows are marked pending and keep their dates until the server answers
 - Writes are idempotent, so replaying a write that already landed changes nothing:
   - Inserts carry a client-generated UUID primary key and use `on conflict do nothing`.
   - Updates send absolute values (`status: 'bought'`), never toggles or increments.
   - A chore-completion Undo tapped while the completion is still queued removes the paused mutation from the queue. Deleting a completion that has already been sent is online-only.
-  - A chore completion relies on the unique (`chore_id`, `occurrence_date`) key, with `occurrence_date` computed by the client at the time of the action.
-- A write that fails permanently (410, 403, or 404 for a deleted parent) is dropped from the queue and surfaced once, naming what could not be saved. It is never retried forever and never silently discarded.
+  - A chore completion relies on the unique (`chore_id`, `occurrence_date`) key. An offline completion sends the `occurrence_date` the client computed at the time of the action, in the household timezone from the cached household (`apps/web/src/lib/offline/chore-errand-writes.ts`). An online completion sends none, so the service answers from its own state and a stale cache cannot reject a live completion.
+- A write that fails permanently (410, 403, or 404 for a deleted parent) is dropped from the queue and surfaced once, naming what could not be saved. A chore or errand write is surfaced as a count of changes only, because error text never names a chore, an errand, or anyone in the household. It is never retried forever and never silently discarded.
+- A chore completion and an errand done carry the moment the member acted (`doneAt`, ISO 8601). The server stores the earlier of that and its own clock, so a client clock ahead of the server cannot date a completion into the future.
+- An errand's `done` for an errand already done changes nothing. The PATCH carries no client id, so this is what makes a replayed errand done a no-op: the first completion stands.
+- Offline, a queueable write is available only when the household is cached, because a chore's occurrence is dated in the household's timezone and that timezone comes from the cache. Without it the control is disabled with "Needs a connection."
+- Undoing a queued chore completion removes the paused mutation and flushes the persister at once, so a reload inside the throttle window cannot replay it.
 - Conflicts: **the last write to arrive wins**, per the Requirements document. This includes its documented quirk: a late offline "in cart" can move a "bought" item back to "in cart".
 - The queue survives a page reload and a browser restart; it is not in memory
 - `updated_at` exists only where the UI needs it: `shopping_list.updated_at`, shown as a list's last activity

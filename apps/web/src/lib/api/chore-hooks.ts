@@ -22,11 +22,10 @@ import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 
 /*
- * Chores and errands (Technical Architecture › "API surface" › Chores/Errands). Neither write is
- * offline-queueable this phase (Handoff, Phase 5 "Offline queueing is extended to chore complete
- * and errand done"), so every mutation here is an ordinary online call, disabled by the screen
- * while offline rather than going through the write queue — the same convention `meal-hooks.ts`
- * follows for recipes and the week planner.
+ * Chores and errands (Technical Architecture › "API surface" › Chores/Errands). Chore completion and
+ * marking an errand done are queueable (`lib/offline/chore-errand-writes.ts`); every other mutation
+ * here is an ordinary online call, disabled by the screen while offline, the same convention
+ * `meal-hooks.ts` follows for recipes and the week planner.
  */
 
 export function useChores(householdId: string | undefined): UseQueryResult<Chore[]> {
@@ -118,36 +117,6 @@ export function useDeleteChore(householdId: string): UseMutationResult<void, Err
     mutationFn: (choreId: string) => api.send({ method: 'DELETE', path: `/api/chores/${choreId}` }),
     onSuccess: async (_result, choreId) => {
       queryClient.removeQueries({ queryKey: queryKeys.chore(householdId, choreId) });
-      await invalidate();
-    },
-  });
-}
-
-export interface CompleteChoreInput {
-  choreId: string;
-}
-
-/**
- * Online-only completion (this phase): no `id` or `occurrenceDate` is sent, so the service
- * computes both itself, exactly as `completeChoreRequestSchema`'s own doc comment describes for a
- * "this phase's own (online-only) complete button" (`@hearth/shared`, `chores.ts`).
- */
-export function useCompleteChore(
-  householdId: string,
-): UseMutationResult<ChoreDetail, Error, CompleteChoreInput> {
-  const api = useApi();
-  const queryClient = useQueryClient();
-  const invalidate = useChoreInvalidator(householdId);
-  return useMutation({
-    mutationFn: ({ choreId }: CompleteChoreInput) =>
-      api.request({
-        method: 'POST',
-        path: `/api/chores/${choreId}/complete`,
-        body: {},
-        schema: choreDetailSchema,
-      }),
-    onSuccess: async (detail) => {
-      queryClient.setQueryData(queryKeys.chore(householdId, detail.id), detail);
       await invalidate();
     },
   });

@@ -6,7 +6,7 @@ import { createQueryClient } from './lib/api/query-client.ts';
 import { createAuthClient, loadSupabaseClient } from './lib/auth/auth-client.ts';
 import { installErrorReporting } from './lib/error-reporting.ts';
 import { createCachePersister, createImmediateFlushPersister } from './lib/offline/persist.ts';
-import { registerListWriteDefaults } from './lib/offline/write-queue.ts';
+import { registerQueueDefaults } from './lib/offline/chore-errand-writes.ts';
 import { createRealtimePort } from './lib/realtime/supabase-realtime.ts';
 import './index.css';
 
@@ -32,7 +32,7 @@ const queryClient = createQueryClient();
 // Registered before anything hydrates the persisted cache: TanStack merges a mutation's defaults
 // when it builds the mutation, and a restored write is built during hydration. Registering after
 // that would leave a queued write with no `mutationFn` to resume with.
-registerListWriteDefaults(queryClient, createApiClient(auth));
+registerQueueDefaults(queryClient, createApiClient(auth));
 
 createRoot(root).render(
   <StrictMode>

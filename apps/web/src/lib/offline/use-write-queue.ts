@@ -5,10 +5,16 @@ import { useToast } from '../../components/ui/Toast.tsx';
 import { useApi, useFlushPersister } from '../api/api-context.tsx';
 import { pluralize } from '../format.ts';
 import {
+  CHORE_WRITE_PREFIX,
+  ERRAND_WRITE_PREFIX,
+  isQueueWriteKey,
+  queueDropMessage,
+  registerQueueDefaults,
+} from './chore-errand-writes.ts';
+import {
   LIST_WRITE_PREFIX,
   announceQueueNotice,
-  listIdOfWrite,
-  registerListWriteDefaults,
+  isPermanentFailure,
   subscribeToQueueNotices,
   type ListWriteVariables,
 } from './write-queue.ts';
@@ -34,7 +40,7 @@ export function useWriteQueue(): void {
    */
   if (isRegistered.current == null) {
     isRegistered.current = true;
-    registerListWriteDefaults(queryClient, api);
+    registerQueueDefaults(queryClient, api);
   }
 
   useEffect(
@@ -53,7 +59,7 @@ export function useWriteQueue(): void {
     const inspect = (): void => {
       const writes = cache
         .getAll()
-        .filter((mutation) => listIdOfWrite(mutation.options.mutationKey) !== undefined);
+        .filter((mutation) => isQueueWriteKey(mutation.options.mutationKey));
 
       if (!onlineManager.isOnline()) {
         let newlyPaused = false;
@@ -81,9 +87,20 @@ export function useWriteQueue(): void {
 
       // A write that failed leaves the queue, so nothing can replay it; the error toast it
       // already raised is the single surfacing it gets (Engineering Practices › The write queue).
+      // A chore or errand write has no optimistic cache to roll back and no error toast of its own,
+      // so its drop is announced here, once for the whole pass, with a message that names no one.
+      let dropped = 0;
+      let anyPermanent = false;
       for (const mutation of writes) {
-        if (mutation.state.status === 'error') cache.remove(mutation);
+        if (mutation.state.status !== 'error') continue;
+        const key = mutation.options.mutationKey?.[0];
+        if (key === CHORE_WRITE_PREFIX || key === ERRAND_WRITE_PREFIX) {
+          dropped += 1;
+          anyPermanent ||= isPermanentFailure(mutation.state.error);
+        }
+        cache.remove(mutation);
       }
+      if (dropped > 0) announceQueueNotice('error', queueDropMessage(dropped, anyPermanent));
 
       if (watched.current.size === 0) return;
       const replaying = writes.filter((mutation) => watched.current.has(mutation.mutationId));

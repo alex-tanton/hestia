@@ -240,13 +240,15 @@ Purely functional tracking. No streaks, points, or gamification — the goal is 
 
 - A chore has a name and a recurrence (see Recurrence). A custom interval such as "every 3 days" uses unit day, and its anchor defaults to the date the chore was created.
 - Optional rotation: an ordered list of household members that advances on each completion, so the system answers "whose turn is it" rather than an argument. A chore without a rotation may be assigned to one member (`assigned_to`) or left unassigned.
-- A completion records who did it and when, and the occurrence it closes
+- A completion records who did it and when, and the occurrence it closes. "When" is the moment the member acted, even when the completion is sent later from the offline queue; a time in the future is never stored.
 - A completion can be undone. The completion toast offers Undo for 5 seconds, and the chore's history offers delete on its most recent completion. Only the most recent completion can be deleted. The next due date and the rotation are derived, so both recompute on their own.
+- Offline, a completion's occurrence is worked out on the device from the household's today and the completions the device holds. The full history is held once a chore's detail has been opened; until then the device holds only the chore's most recent completion, and the occurrence is placed from that. A completion placed from less history than the server holds is refused when it is sent, and the refusal is reported as a change that could not be saved, with no household content.
+- Chore and errand screens date everything in the household's timezone. Until the household's details are known, on this device or from the network, they show their loading or offline state rather than dated rows, so a day is never read from the device's own zone.
 - The list shows when each chore was last completed, so "this has not been done in three weeks" is visible without anyone having to nag. That time is the calendar day the completion was made, in the household timezone, not the occurrence it closed: a chore completed early for next week still reads as done today.
 
 ### Errands
 
-One-off tasks with a name, an optional due date, and a status of open or done. Any member can add one; assignment to a specific member is optional. Marking an errand done records `completed_at` and `completed_by`. Marking a done errand open again clears both — the schema's check constraint already requires the two fields to move together in either direction, and an errand can be reopened the same way a bought list item can move back to needed.
+One-off tasks with a name, an optional due date, and a status of open or done. Any member can add one; assignment to a specific member is optional. Marking an errand done records `completed_at` and `completed_by`. Marking a done errand open again clears both — the schema's check constraint already requires the two fields to move together in either direction, and an errand can be reopened the same way a bought list item can move back to needed. Marking an errand done offline queues it, with the moment it was made; reopening is online-only. Marking an errand done that is already done changes nothing, so a replayed done is harmless.
 
 ### Chore notifications
 
@@ -608,6 +610,8 @@ Every other action is disabled while offline, with an inline explanation where t
 - TanStack Query persists the last-synced data and the queue of paused writes to IndexedDB
 - Queued writes replay in the order they were made
 - Every queueable write is idempotent, so replaying one that already landed changes nothing. Inserts use client-generated UUIDs and ignore duplicates. Updates set absolute values ("status = bought"), never toggles or increments. Chore completions are unique per occurrence.
+- Chore completion and errand done need the household's cached data to be queued offline, because a chore's occurrence is dated in the household's timezone. Without the cache they are disabled offline, with "Needs a connection."
+- Undoing a chore completion while it is still queued removes it; once it has been sent, undoing it is online-only
 - A visible "offline — changes will sync" indicator, so it is never ambiguous whether an action landed
 
 Engineering Practices specifies the mechanism.

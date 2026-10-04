@@ -2,6 +2,7 @@ import { ClipboardCheck, Plus } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import { ChoreListRow } from '../../components/chores/ChoreListRow.tsx';
+import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import {
   CHORES_EMPTY_COPY,
   CHORE_GROUP_LABELS,
@@ -15,7 +16,7 @@ import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useChores } from '../../lib/api/chore-hooks.ts';
-import { useMembers, useProfile } from '../../lib/api/hooks.ts';
+import { useHousehold, useMembers } from '../../lib/api/hooks.ts';
 import { todayInTimezone } from '../../lib/household-date.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
 
@@ -27,14 +28,16 @@ export interface ChoresListScreenProps {
 export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
-  const profile = useProfile();
-  const timezone = profile.data?.timezone ?? 'America/New_York';
-  const today = todayInTimezone(timezone);
+  const household = useHousehold(householdId);
+  const timezone = household.data?.timezone;
 
   const chores = useChores(householdId);
   const members = useMembers(householdId);
   const memberList = members.data ?? [];
-  const { completeChore, pendingChoreId } = useChoreCompletion(householdId, memberList);
+  const { completeChore, pendingChoreIds, completeReason } = useChoreCompletion(
+    householdId,
+    memberList,
+  );
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
 
   const addButton = (
@@ -50,6 +53,9 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
   );
 
   function body(): ReactElement {
+    // Groups and due labels are dated in the household's timezone, so nothing renders before it.
+    if (timezone === undefined) return householdFallback(household, 'Loading chores');
+    const today = todayInTimezone(timezone);
     if (chores.isPending && chores.fetchStatus === 'paused') {
       return (
         <OfflineState message="Chores sync when you reconnect. What you have already opened stays readable." />
@@ -122,8 +128,8 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
                   today={today}
                   timezone={timezone}
                   onComplete={completeChore}
-                  isCompleting={pendingChoreId === chore.id}
-                  disabledReason={offlineReason}
+                  isPending={pendingChoreIds.has(chore.id)}
+                  disabledReason={completeReason}
                 />
               ))}
             </ul>

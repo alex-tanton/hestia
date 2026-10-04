@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 import type { Chore, Member } from '@hearth/shared';
 import { calendarDateOfInstant } from '../../lib/household-date.ts';
+import { PENDING_CLASSES, PendingMark } from '../lists/PendingMark.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import {
@@ -21,7 +22,8 @@ export interface ChoreListRowProps {
   /** The household timezone, which dates the last completion. */
   timezone: string;
   onComplete: (chore: Chore) => void;
-  isCompleting?: boolean;
+  /** A completion for this chore is waiting to sync: the row is marked, and Done is held. */
+  isPending?: boolean;
   disabledReason?: string | undefined;
 }
 
@@ -40,7 +42,7 @@ export function ChoreListRow({
   today,
   timezone,
   onComplete,
-  isCompleting = false,
+  isPending = false,
   disabledReason,
 }: ChoreListRowProps): ReactElement {
   const dueLabel = chore.isOverdue
@@ -64,7 +66,11 @@ export function ChoreListRow({
   );
 
   return (
-    <li className="flex items-center gap-2 border-b border-border pr-3 last:border-b-0">
+    <li
+      className={`flex items-center gap-2 border-b border-border pr-3 last:border-b-0${
+        isPending ? ` ${PENDING_CLASSES}` : ''
+      }`}
+    >
       <Link
         to={`/chores/${chore.id}`}
         className="flex min-h-11 min-w-0 flex-1 flex-col gap-1 px-4 py-3 transition-colors duration-150 ease-out hover:bg-raised active:bg-section-tint"
@@ -76,6 +82,7 @@ export function ChoreListRow({
             {chore.name}
           </span>
           {chore.isOverdue && <Badge variant="danger">{dueLabel}</Badge>}
+          {isPending && <PendingMark />}
         </span>
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-secondary">
           <span>{describeRecurrence(chore.recurrenceUnit, chore.interval)}</span>
@@ -89,7 +96,7 @@ export function ChoreListRow({
       <Button
         variant="secondary"
         aria-label={`Mark ${chore.name} done`}
-        isLoading={isCompleting}
+        isLoading={isPending}
         disabledReason={disabledReason}
         onClick={() => {
           onComplete(chore);

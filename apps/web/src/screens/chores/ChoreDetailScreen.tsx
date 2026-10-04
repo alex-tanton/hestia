@@ -2,6 +2,7 @@ import { Pencil } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import { CompletionHistory } from '../../components/chores/CompletionHistory.tsx';
+import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import {
   OFFLINE_ACTION_REASON,
   describeRecurrence,
@@ -16,7 +17,7 @@ import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
 import { useChoreDetail, useDeleteChoreCompletion } from '../../lib/api/chore-hooks.ts';
-import { useMembers, useProfile } from '../../lib/api/hooks.ts';
+import { useHousehold, useMembers } from '../../lib/api/hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { formatCalendarDate } from '../../lib/format.ts';
 import { todayInTimezone } from '../../lib/household-date.ts';
@@ -37,14 +38,16 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
   const toast = useToast();
-  const profile = useProfile();
-  const timezone = profile.data?.timezone ?? 'America/New_York';
-  const today = todayInTimezone(timezone);
+  const household = useHousehold(householdId);
+  const timezone = household.data?.timezone;
 
   const chore = useChoreDetail(householdId, choreId);
   const members = useMembers(householdId);
   const memberList = members.data ?? [];
-  const { completeChore, pendingChoreId } = useChoreCompletion(householdId, memberList);
+  const { completeChore, pendingChoreIds, completeReason } = useChoreCompletion(
+    householdId,
+    memberList,
+  );
   const deleteCompletion = useDeleteChoreCompletion(householdId);
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
@@ -82,6 +85,9 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
     return <SkeletonRows label="Loading this chore" />;
   }
 
+  // Due dates and the last-completed day are household dates, so nothing renders before the zone.
+  if (timezone === undefined) return householdFallback(household, 'Loading this chore');
+  const today = todayInTimezone(timezone);
   const data = chore.data;
 
   const handleDeleteCompletion = (completionId: string): void => {
@@ -134,10 +140,10 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
       </header>
 
       <Button
-        isLoading={pendingChoreId === choreId}
-        disabledReason={offlineReason}
+        isLoading={pendingChoreIds.has(choreId)}
+        disabledReason={completeReason}
         onClick={() => {
-          completeChore({ id: choreId, name: data.name });
+          completeChore(data);
         }}
       >
         Mark done

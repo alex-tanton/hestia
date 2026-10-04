@@ -186,6 +186,52 @@ describe('errands: status transitions', () => {
   });
 });
 
+describe('errands: offline done', () => {
+  async function markDone(actor: SignedUpUser, errandId: string, doneAt: string): Promise<Errand> {
+    const response = await as(app, actor, 'PATCH', `/api/errands/${errandId}`, {
+      status: 'done',
+      doneAt,
+    });
+    expectStatus(response, 200);
+    return response.json<Errand>();
+  }
+
+  it('a replayed done changes nothing, even when another member sends it', async () => {
+    const home = await createHome();
+    const member = await inviteMember(home);
+    const errand = await createErrand(home, { name: 'Mail rent check' });
+    const doneAt = new Date(Date.now() - 60_000).toISOString();
+
+    await markDone(home.admin, errand.id, doneAt);
+    const replay = await markDone(member, errand.id, doneAt);
+
+    expect(replay.completedAt).toBe(doneAt);
+    expect(replay.completedBy).toBe(home.admin.id);
+  });
+
+  it('stores the moment the member acted, not the moment the request landed', async () => {
+    const home = await createHome();
+    const errand = await createErrand(home, { name: 'Return Amazon package' });
+    const doneAt = new Date(Date.now() - 2 * 60 * 60_000).toISOString();
+
+    const done = await markDone(home.admin, errand.id, doneAt);
+
+    expect(done.completedAt).toBe(doneAt);
+  });
+
+  it('clamps a done time in the future to now', async () => {
+    const home = await createHome();
+    const errand = await createErrand(home, { name: 'Renew car registration' });
+    const doneAt = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+
+    const done = await markDone(home.admin, errand.id, doneAt);
+
+    const completedAt = done.completedAt;
+    if (completedAt === null) throw new Error('expected a completion time');
+    expect(Date.parse(completedAt)).toBeLessThanOrEqual(Date.now());
+  });
+});
+
 describe('errands: list and delete', () => {
   it('lists open before done, and removes an errand', async () => {
     const home = await createHome();

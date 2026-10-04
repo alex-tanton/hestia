@@ -121,23 +121,37 @@ export async function updateErrand(
   const existing = await requireErrandRow(db, id);
   await markHouseholdActive(db, existing.household_id);
 
+  /*
+   * A `done` for an errand that is already done changes nothing: the first completion stands. This
+   * is what makes a replayed offline done a no-op (Engineering Practices, "The write queue"), since
+   * the PATCH carries no client id to recognise a replay by.
+   */
+  const alreadyDone = input.status === 'done' && existing.status === 'done';
   const statusFields =
-    input.status === undefined
+    input.status === undefined || alreadyDone
       ? {}
       : input.status === 'done'
-        ? { status: 'done' as const, completed_at: sql<Date>`now()`, completed_by: userId }
+        ? {
+            status: 'done' as const,
+            // The earlier of the action time and the database clock, as for chore completions.
+            completed_at:
+              input.doneAt === undefined
+                ? sql<Date>`now()`
+                : sql<Date>`least(${input.doneAt}::timestamptz, now())`,
+            completed_by: userId,
+          }
         : { status: 'open' as const, completed_at: null, completed_by: null };
 
-  await db
-    .updateTable('errand')
-    .set({
-      ...(input.name === undefined ? {} : { name: input.name }),
-      ...(input.dueDate === undefined ? {} : { due_date: input.dueDate }),
-      ...(input.assignedTo === undefined ? {} : { assigned_to: input.assignedTo }),
-      ...statusFields,
-    })
-    .where('id', '=', id)
-    .execute();
+  const changes = {
+    ...(input.name === undefined ? {} : { name: input.name }),
+    ...(input.dueDate === undefined ? {} : { due_date: input.dueDate }),
+    ...(input.assignedTo === undefined ? {} : { assigned_to: input.assignedTo }),
+    ...statusFields,
+  };
+  // A replayed done can change nothing at all, and an empty SET is not valid SQL.
+  if (Object.keys(changes).length > 0) {
+    await db.updateTable('errand').set(changes).where('id', '=', id).execute();
+  }
   return getErrand(db, id);
 }
 

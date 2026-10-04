@@ -1,7 +1,9 @@
 import { onlineManager } from '@tanstack/react-query';
 import { act, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import {
   BANNED_GAMIFICATION_WORDS,
   ERRANDS_ALL_DONE_COPY,
@@ -13,6 +15,7 @@ import {
   ALEX_ID,
   OAK_STREET_ID,
   SAM_ID,
+  oakStreetFixture,
   oakStreetMembers,
   profileFixture,
 } from '../../test/fixtures.ts';
@@ -54,12 +57,23 @@ function mount(
   const stub = createFetchStub({
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
     'GET /api/households/:id/members': () => ({ status: 200, body: oakStreetMembers }),
+    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
     'GET /api/households/:id/errands': () => ({ status: 200, body: errandListFixture }),
     ...handlers,
   });
   vi.stubGlobal('fetch', stub.fetch);
-  renderScreen(<ErrandsListScreen householdId={OAK_STREET_ID} />);
+  renderScreen(
+    <WithQueue>
+      <ErrandsListScreen householdId={OAK_STREET_ID} />
+    </WithQueue>,
+  );
   return stub;
+}
+
+/* Marking done is a queued write; the shell that mounts the queue registers its defaults. */
+function WithQueue({ children }: { children: ReactNode }): ReactElement {
+  useWriteQueue();
+  return <>{children}</>;
 }
 
 /** Radix opens a menu on its trigger's keyboard activation, which is how a keyboard user opens it. */
@@ -189,7 +203,8 @@ describe('Errands list (Design › Screens › 18)', () => {
     await waitFor(() => {
       expect(patched).toHaveLength(1);
     });
-    expect(patched[0]).toEqual({ status: 'done' });
+    // The done carries the moment it was marked, which is the pinned clock here.
+    expect(patched[0]).toEqual({ status: 'done', doneAt: '2026-09-27T16:00:00.000Z' });
   });
 
   it('delete is in the overflow menu and asks for confirmation first', async () => {
@@ -312,7 +327,7 @@ describe('Errand quick-add and edit sheet (Design › Screens › 18)', () => {
 });
 
 describe('Errands offline (Design › Offline rules)', () => {
-  it('done toggles and Add are disabled with the reason beside them', async () => {
+  it('with the household cached, marking done is queued; Add is disabled with the reason', async () => {
     mount();
     await screen.findByRole('button', { name: /^Return Amazon package/ });
     setOnline(false);
@@ -320,8 +335,8 @@ describe('Errands offline (Design › Offline rules)', () => {
     const checkbox = await screen.findByRole('checkbox', {
       name: 'Mark Buy birthday card as done',
     });
-    expect(checkbox).toBeDisabled();
-    expect(checkbox).toHaveAccessibleDescription(OFFLINE_ACTION_REASON);
+    expect(checkbox).toBeEnabled();
+    expect(screen.getAllByText(OFFLINE_ACTION_REASON).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('button', { name: 'Add an errand' })[0]).toHaveAttribute(
       'aria-disabled',
       'true',

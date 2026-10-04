@@ -12,7 +12,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppProviders } from '../../App.tsx';
 import { routes } from '../../routes.tsx';
-import { profileFixture } from '../../test/fixtures.ts';
+import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { createAuthStub, createFetchStub, testQueryClient } from '../../test/harness.tsx';
 import { useSection } from '../../lib/section-context.tsx';
 import { PillarScreen } from '../../screens/PillarScreen.tsx';
@@ -119,7 +119,12 @@ describe('app shell', () => {
   ])(
     'opens %s with its sub-tabs instead of the coming-soon state',
     async (path, groupName) => {
-      renderApp(path, { 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) });
+      renderApp(path, {
+        'GET /api/households/:id/bills': () => ({ status: 200, body: [] }),
+        'GET /api/households/:id/chores': () => ({ status: 200, body: [] }),
+        'GET /api/households/:id/errands': () => ({ status: 200, body: [] }),
+        'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
+      });
       expect(
         await screen.findByRole('radiogroup', { name: groupName }, { timeout: 10_000 }),
       ).toBeInTheDocument();

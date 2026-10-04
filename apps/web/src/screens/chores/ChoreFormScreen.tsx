@@ -14,6 +14,7 @@ import {
   deleteChoreConfirmation,
 } from '../../components/chores/chore-copy.ts';
 import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';
+import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
@@ -29,7 +30,7 @@ import {
   useDeleteChore,
   useUpdateChore,
 } from '../../lib/api/chore-hooks.ts';
-import { useMembers, useProfile } from '../../lib/api/hooks.ts';
+import { useHousehold, useMembers } from '../../lib/api/hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { todayInTimezone } from '../../lib/household-date.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
@@ -83,6 +84,7 @@ export function ChoreFormScreen({ householdId, choreId }: ChoreFormScreenProps):
   const navigate = useNavigate();
   const members = useMembers(householdId);
   const existing = useChoreDetail(householdId, choreId);
+  const household = useHousehold(householdId);
   const isEditing = choreId !== undefined;
 
   useScreenChrome({
@@ -121,6 +123,8 @@ export function ChoreFormScreen({ householdId, choreId }: ChoreFormScreenProps):
     }
     return <SkeletonRows label="Loading members" />;
   }
+  // A new chore's anchor defaults to today in the household's timezone, so the form waits for it.
+  if (household.data === undefined) return householdFallback(household, 'Loading members');
 
   return (
     <ChoreForm
@@ -128,6 +132,7 @@ export function ChoreFormScreen({ householdId, choreId }: ChoreFormScreenProps):
       choreId={choreId}
       chore={existing.data}
       members={members.data}
+      timezone={household.data.timezone}
     />
   );
 }
@@ -138,6 +143,8 @@ interface ChoreFormProps {
   /** Loaded already when editing; absent when creating. */
   chore: ChoreDetail | undefined;
   members: readonly Member[];
+  /** The household's timezone, which dates a new chore's default anchor. */
+  timezone: string;
 }
 
 /**
@@ -150,12 +157,16 @@ interface ChoreFormProps {
  * member is still in the order and starts the turn at the top only when they were removed (PRD ›
  * "Rotation"), so reordering or adding a member never reassigns the turn from here.
  */
-function ChoreForm({ householdId, choreId, chore, members }: ChoreFormProps): ReactElement {
+function ChoreForm({
+  householdId,
+  choreId,
+  chore,
+  members,
+  timezone,
+}: ChoreFormProps): ReactElement {
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
   const toast = useToast();
-  const profile = useProfile();
-  const timezone = profile.data?.timezone ?? 'America/New_York';
 
   const createChore = useCreateChore(householdId);
   const updateChore = useUpdateChore(householdId);

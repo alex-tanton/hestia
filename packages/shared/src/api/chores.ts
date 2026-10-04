@@ -133,5 +133,12 @@ export type UpdateChoreRequest = z.infer<typeof updateChoreRequestSchema>;
 export const completeChoreRequestSchema = z.object({
   id: idSchema.optional(),
   occurrenceDate: calendarDateSchema.optional(),
+  /**
+   * The moment the member acted, ISO 8601 (Requirements, "Offline behavior"). An offline completion
+   * carries the time it was made, so `completedAt` is the action's time, not the replay's. The
+   * service stores the earlier of this and its own clock, so a client clock running ahead cannot
+   * post a completion into the future.
+   */
+  doneAt: timestampSchema.optional(),
 });
 export type CompleteChoreRequest = z.infer<typeof completeChoreRequestSchema>;

@@ -430,6 +430,11 @@ export async function completeChore(
     .insertInto('chore_completion')
     .values({
       ...(input.id === undefined ? {} : { id: input.id }),
+      // The earlier of the member's action time and the database clock: a replay keeps its action
+      // time, and a client clock ahead of the server cannot date a completion forward.
+      ...(input.doneAt === undefined
+        ? {}
+        : { completed_at: sql<Date>`least(${input.doneAt}::timestamptz, now())` }),
       chore_id: choreId,
       occurrence_date: occurrenceToClose,
       completed_by: userId,

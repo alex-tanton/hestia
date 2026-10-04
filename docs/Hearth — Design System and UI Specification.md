@@ -146,7 +146,9 @@ Every screen implements all applicable states. A screen is not complete when onl
 - Read-only surfaces render from the persisted cache with no visual difference except the banner
 - Only the writes the Requirements document lists as queueable work offline: list item add, check, uncheck, and edit (from v1.0), and chore complete and errand done (from v1.3)
 - Every other write control is disabled while offline. Beside it sits one line of `text-secondary` explaining why ("Needs a connection."), and the control's accessible description carries the same text. A control is never hidden, and never fails silently.
-- Queued writes show the affected row in a pending style (reduced opacity plus a small clock icon)
+- Queued writes show the affected row in a pending style: a section-coloured edge marker, plus a clock icon with the text "Waiting to sync" for screen readers. Opacity is not reduced, because blending text toward its background takes it below the WCAG AA contrast ratio
+- A chore completion or errand done made offline is queued, and its row is pending at once. Undo on a completion that is still queued removes it, so a reconnect sends nothing for it
+- A queued failure that the service refuses for good is announced once as a count of changes, with copy that names no chore, errand, or member
 - Screens requiring live data (deal search, flyer browse) show a dedicated offline empty state: "Deal search needs a connection. Your lists still work."
 - On reconnect, the queue replays and the banner is replaced by a 4-second success toast stating how many changes synced
 
@@ -337,13 +339,13 @@ Each row's name opens the chore's detail. Its complete action is a separate cont
 
 **Chore detail**, opened by tapping a row, shows the recurrence summary, the next three dates, the rotation order, and the completion history with who completed each occurrence and when; departed members show as "Former member". Each history entry also names the occurrence it closed ("For 09/20/2026"), so an early or late completion is legible. The most recent completion has a delete action, with confirmation.
 
-Completing closes the current occurrence, or the upcoming one when done early, and advances the rotation. The completion toast ("Take out trash done. Sam is next.") offers Undo for 5 seconds; undoing deletes the completion and the next due date and rotation revert. An occurrence that was never completed stops showing as overdue once the next occurrence's date arrives. Explicit non-nagging tone: overdue uses danger color but neutral copy.
+Completing closes the current occurrence, or the upcoming one when done early, and advances the rotation. The completion toast ("Take out trash done. Sam is next.") offers Undo for 5 seconds; undoing deletes the completion and the next due date and rotation revert. Offline, the toast appears at once and Undo removes a completion that has not synced yet; once it has synced, Undo is online-only. An occurrence that was never completed stops showing as overdue once the next occurrence's date arrives. Explicit non-nagging tone: overdue uses danger color but neutral copy.
 
 ### 18. Errands — purple
 
 Flat list, open items first, done collapsed below with who completed each and when. The primary action is quick-add, via a bottom sheet with optional due date and assignee; the assignee choice offers "Unassigned" explicitly, as the chore sheet does. Tapping an errand opens the same sheet for editing; its overflow menu holds delete.
 
-An open errand past its due date reads "Overdue N days" in the danger color, as an overdue chore does, so the word carries the state and the color only reinforces it. Its checkbox toggles done; while offline it is disabled, with "Needs a connection." beneath the errand's name, and the checkbox's accessible description carries the same line.
+An open errand past its due date reads "Overdue N days" in the danger color, as an overdue chore does, so the word carries the state and the color only reinforces it. Its checkbox toggles done. Offline, marking an open errand done is queued and the row is pending, provided the household is cached. Without the cache, or for reopening a done errand, the checkbox is disabled while offline, with "Needs a connection." beneath the errand's name, and the checkbox's accessible description carries the same line.
 
 ## Accessibility
 

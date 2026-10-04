@@ -1,6 +1,7 @@
 import { ListChecks, Plus } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import type { Errand } from '@hearth/shared';
+import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import { ErrandRow } from '../../components/errands/ErrandRow.tsx';
 import { ErrandSheet } from '../../components/errands/ErrandSheet.tsx';
 import {
@@ -15,9 +16,15 @@ import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDeleteErrand, useErrands, useUpdateErrand } from '../../lib/api/chore-hooks.ts';
-import { useMembers, useProfile } from '../../lib/api/hooks.ts';
+import { useHousehold, useMembers } from '../../lib/api/hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
+import {
+  queueErrandDone,
+  queueableWriteReason,
+  usePendingErrandDones,
+} from '../../lib/offline/chore-errand-writes.ts';
 import { todayInTimezone } from '../../lib/household-date.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
 
@@ -29,25 +36,43 @@ export interface ErrandsListScreenProps {
 export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
-  const profile = useProfile();
-  const timezone = profile.data?.timezone ?? 'America/New_York';
-  const today = todayInTimezone(timezone);
+  const household = useHousehold(householdId);
+  const timezone = household.data?.timezone;
 
+  const queryClient = useQueryClient();
   const errands = useErrands(householdId);
   const members = useMembers(householdId);
   const updateErrand = useUpdateErrand(householdId);
   const deleteErrand = useDeleteErrand(householdId);
+  const pendingDones = usePendingErrandDones();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editing, setEditing] = useState<Errand>();
   const [deleting, setDeleting] = useState<Errand>();
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
+  // Marking done is queueable and needs the household's cached timezone offline; reopening is not
+  // queueable, so it is online-only (Requirements, "Offline behavior"; Design, "Offline rules").
+  const doneReason = queueableWriteReason(
+    isOnline,
+    household.data !== undefined,
+    OFFLINE_ACTION_REASON,
+  );
   const memberList = members.data ?? [];
 
   const toggleDone = (errand: Errand, isDone: boolean): void => {
+    if (isDone) {
+      // Sent with the moment it was done, so an offline completion keeps its time.
+      void queueErrandDone(queryClient, {
+        kind: 'done',
+        householdId,
+        errandId: errand.id,
+        doneAt: new Date().toISOString(),
+      });
+      return;
+    }
     updateErrand.mutate(
-      { errandId: errand.id, body: { status: isDone ? 'done' : 'open' } },
+      { errandId: errand.id, body: { status: 'open' } },
       {
         onError: (error) => {
           toast({
@@ -77,6 +102,9 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
   };
 
   function body(): ReactElement {
+    // Due dates and the overdue count are household dates, so nothing renders before the zone.
+    if (timezone === undefined) return householdFallback(household, 'Loading errands');
+    const today = todayInTimezone(timezone);
     if (errands.isPending && errands.fetchStatus === 'paused') {
       return (
         <OfflineState message="Errands sync when you reconnect. What you have already opened stays readable." />
@@ -134,8 +162,12 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
         members={memberList}
         today={today}
         timezone={timezone}
-        isPending={updateErrand.isPending && updateErrand.variables.errandId === errand.id}
-        disabledReason={offlineReason}
+        isPending={
+          pendingDones.has(errand.id) ||
+          (updateErrand.isPending && updateErrand.variables.errandId === errand.id)
+        }
+        isQueuedDone={pendingDones.has(errand.id)}
+        disabledReason={errand.status === 'done' ? offlineReason : doneReason}
         onToggleDone={(isDone) => {
           toggleDone(errand, isDone);
         }}

@@ -56,8 +56,18 @@ export const updateErrandRequestSchema = z
     dueDate: calendarDateSchema.nullable().optional(),
     assignedTo: idSchema.nullable().optional(),
     status: errandStatusSchema.optional(),
+    /**
+     * The action time of a `done` made offline (Requirements, "Offline behavior"). Stored as the
+     * earlier of this and the service's clock, the same rule a chore completion follows. Only a
+     * `done` status may carry it.
+     */
+    doneAt: timestampSchema.optional(),
   })
   .refine((body) => Object.values(body).some((value) => value !== undefined), {
     message: 'Change at least one field.',
+  })
+  .refine((body) => body.doneAt === undefined || body.status === 'done', {
+    message: 'doneAt is only sent with status done.',
+    path: ['doneAt'],
   });
 export type UpdateErrandRequest = z.infer<typeof updateErrandRequestSchema>;
