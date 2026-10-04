@@ -18,7 +18,16 @@ function datePartsFormatter(timezone: string): Intl.DateTimeFormat {
 
 /** "Today" as a `YYYY-MM-DD` calendar date, read from the household's own clock. */
 export function todayInTimezone(timezone: string, now: Date = new Date()): string {
-  const parts = datePartsFormatter(timezone).formatToParts(now);
+  return calendarDateOfInstant(now.toISOString(), timezone);
+}
+
+/**
+ * The calendar date an instant falls on in a timezone. Timestamps are stored in UTC, so a
+ * completion stamped 01:00Z on the 4th is still the 3rd in New York; labelling it by its UTC date
+ * would be a day wrong for a household evening (Handoff non-negotiable 8).
+ */
+export function calendarDateOfInstant(instant: string, timezone: string): string {
+  const parts = datePartsFormatter(timezone).formatToParts(new Date(instant));
   const get = (type: string): string => parts.find((part) => part.type === type)?.value ?? '01';
   return `${get('year')}-${get('month')}-${get('day')}`;
 }

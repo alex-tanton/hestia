@@ -1,8 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FIRST_RUN_HEADING } from '../components/dashboard/DashboardFirstRun.tsx';
-import { todayInTimezone } from '../lib/household-date.ts';
+import { addDays, todayInTimezone } from '../lib/household-date.ts';
 import { oakStreetMembers, profileFixture } from '../test/fixtures.ts';
+import {
+  cleanBathroomFixture,
+  takeOutTrashFixture,
+  vacuumCommonAreasFixture,
+} from '../test/chore-fixtures.ts';
 import { createFetchStub, problemBody, renderScreen, type StubHandler } from '../test/harness.tsx';
 import { thisWeekFixture, weekendCookoutFixture } from '../test/list-fixtures.ts';
 import { DashboardRoute } from './DashboardRoute.tsx';
@@ -12,13 +17,20 @@ const EMPTY_WEEK: StubHandler = ({ query }) => ({
   body: { week: query.get('week') ?? '2026-09-20', entries: [] },
 });
 
+const EMPTY_CHORES: StubHandler = () => ({ status: 200, body: [] });
+
 /** PRD › This Week: the Shopping card shows the active list's status and items outstanding. */
-function mount(lists: StubHandler, mealPlan: StubHandler = EMPTY_WEEK): void {
+function mount(
+  lists: StubHandler,
+  mealPlan: StubHandler = EMPTY_WEEK,
+  chores: StubHandler = EMPTY_CHORES,
+): void {
   const stub = createFetchStub({
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
     'GET /api/households/:id/members': () => ({ status: 200, body: oakStreetMembers }),
     'GET /api/households/:id/lists': lists,
     'GET /api/households/:id/meal-plan': mealPlan,
+    'GET /api/households/:id/chores': chores,
   });
   vi.stubGlobal('fetch', stub.fetch);
   renderScreen(<DashboardRoute />);
@@ -53,16 +65,67 @@ describe('the Shopping card', () => {
       await screen.findByRole('heading', { level: 2, name: FIRST_RUN_HEADING }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Create a list' })).toHaveAttribute('href', '/lists');
-    // The unshipped pillars keep their placeholders, so the layout does not reflow.
-    for (const name of ['Bills', 'Chores']) {
-      expect(within(card(name)).getByText('Coming soon')).toBeInTheDocument();
-    }
+    // The unshipped pillar keeps its placeholder, so the layout does not reflow.
+    expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /^Chores/ })).toBeNull();
   });
 
   it('keeps the failure inside the card', async () => {
     mount(() => ({ status: 500, body: problemBody(500, 'Internal Server Error') }));
     expect(await screen.findByText("Couldn't load your lists. Try again.")).toBeInTheDocument();
     expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
+  });
+});
+
+describe('the Chores card', () => {
+  it('names what is due today and what is overdue, overdue first, with the word "Overdue"', async () => {
+    const today = todayInTimezone(profileFixture.timezone);
+    mount(
+      () => ({ status: 200, body: [] }),
+      undefined,
+      () => ({
+        status: 200,
+        body: [
+          // Due in two days: not on the card.
+          cleanBathroomFixture,
+          { ...takeOutTrashFixture, dueDate: today, isOverdue: false },
+          {
+            ...vacuumCommonAreasFixture,
+            dueDate: addDays(today, -3),
+            isOverdue: true,
+          },
+        ],
+      }),
+    );
+    const chores = card('Chores');
+    const items = await within(chores).findAllByRole('listitem');
+    expect(items.map((item) => item.textContent)).toEqual([
+      'Vacuum common areas · Overdue',
+      'Take out trash',
+    ]);
+    expect(within(chores).queryByText('Clean bathroom')).toBeNull();
+  });
+
+  it('reads as empty, not as failed, when nothing is due today', async () => {
+    // A populated Shopping card keeps the first-run panel from replacing the Chores card.
+    mount(
+      () => ({ status: 200, body: [thisWeekFixture] }),
+      undefined,
+      () => ({ status: 200, body: [cleanBathroomFixture] }),
+    );
+    expect(await within(card('Chores')).findByText('Nothing due today')).toBeInTheDocument();
+  });
+
+  it('keeps a failure inside the card', async () => {
+    mount(
+      () => ({ status: 200, body: [thisWeekFixture] }),
+      undefined,
+      () => ({ status: 500, body: problemBody(500, 'Internal Server Error') }),
+    );
+    expect(
+      await within(card('Chores')).findByText("Couldn't load chores. Try again."),
+    ).toBeInTheDocument();
+    expect(await within(card('Shopping')).findByText('12 of 15 left')).toBeInTheDocument();
   });
 });
 

@@ -289,20 +289,24 @@ Total monthly figure at top, normalized per the Requirements document. Then the 
 
 Grouped by Overdue, Today, This week, Later. Each row shows recurrence, next due, assignee, and last-completed relative time. Rotation chores show whose turn it is and who is next. The primary action adds a chore.
 
+Each row's name opens the chore's detail. Its complete action is a separate control, labelled "Done" with the accessible name "Mark <chore name> done", so the name and the action are two tab stops rather than one control nested in the other. The last-completed time is measured from the calendar day the completion was made, in the household timezone, not from the occurrence it closed, so a chore finished early today reads "Last done today".
+
 **Chore sheet** (create and edit, as a pushed screen):
 
 - name
-- recurrence editor: unit (day, week, month, year), interval, and anchor date. The anchor defaults to today for a new chore. A plain-language preview of the next three occurrence dates updates as the fields change.
-- assignment, as either a rotation or a single member. A rotation is an ordered list of members, reorderable by drag handles with up and down buttons as the non-gesture alternative. A single member sets `assigned_to`, and can be left unassigned.
+- recurrence editor: unit (day, week, month, year), interval, and anchor date. The anchor defaults to today for a new chore. A plain-language preview of the next three occurrence dates updates as the fields change. The preview counts from the anchor, so an anchor in the past shows the occurrences that began at it ("Occurs on …"), which is what the recurrence rules compute.
+- assignment, as either a rotation or a single member. A rotation is an ordered list of members, reorderable by drag handles with up and down buttons as the non-gesture alternative; moving a member to the top or bottom disables the button that would go further, and focus moves to the member's other button, so a keyboard user keeps their place. A rotation needs at least one member: saving an empty one is refused inline with "Add at least one member to the rotation." A single member sets `assigned_to`; the single-member choice offers "Unassigned" as an explicit option, so an assignee can be cleared as well as set.
 - delete, in the overflow menu, with confirmation
 
-**Chore detail**, opened by tapping a row, shows the recurrence summary, the next three dates, the rotation order, and the completion history with who completed each occurrence and when; departed members show as "Former member". The most recent completion has a delete action, with confirmation.
+**Chore detail**, opened by tapping a row, shows the recurrence summary, the next three dates, the rotation order, and the completion history with who completed each occurrence and when; departed members show as "Former member". Each history entry also names the occurrence it closed ("For 09/20/2026"), so an early or late completion is legible. The most recent completion has a delete action, with confirmation.
 
 Completing closes the current occurrence, or the upcoming one when done early, and advances the rotation. The completion toast ("Take out trash done. Sam is next.") offers Undo for 5 seconds; undoing deletes the completion and the next due date and rotation revert. An occurrence that was never completed stops showing as overdue once the next occurrence's date arrives. Explicit non-nagging tone: overdue uses danger color but neutral copy.
 
 ### 18. Errands — purple
 
-Flat list, open items first, done collapsed below with who completed each and when. The primary action is quick-add, via a bottom sheet with optional due date and assignee. Tapping an errand opens the same sheet for editing; its overflow menu holds delete.
+Flat list, open items first, done collapsed below with who completed each and when. The primary action is quick-add, via a bottom sheet with optional due date and assignee; the assignee choice offers "Unassigned" explicitly, as the chore sheet does. Tapping an errand opens the same sheet for editing; its overflow menu holds delete.
+
+An open errand past its due date reads "Overdue N days" in the danger color, as an overdue chore does, so the word carries the state and the color only reinforces it. Its checkbox toggles done; while offline it is disabled, with "Needs a connection." beneath the errand's name, and the checkbox's accessible description carries the same line.
 
 ## Accessibility
 

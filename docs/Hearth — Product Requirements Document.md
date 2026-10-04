@@ -242,7 +242,7 @@ Purely functional tracking. No streaks, points, or gamification — the goal is 
 - Optional rotation: an ordered list of household members that advances on each completion, so the system answers "whose turn is it" rather than an argument. A chore without a rotation may be assigned to one member (`assigned_to`) or left unassigned.
 - A completion records who did it and when, and the occurrence it closes
 - A completion can be undone. The completion toast offers Undo for 5 seconds, and the chore's history offers delete on its most recent completion. Only the most recent completion can be deleted. The next due date and the rotation are derived, so both recompute on their own.
-- The list shows when each chore was last completed, so "this has not been done in three weeks" is visible without anyone having to nag
+- The list shows when each chore was last completed, so "this has not been done in three weeks" is visible without anyone having to nag. That time is the calendar day the completion was made, in the household timezone, not the occurrence it closed: a chore completed early for next week still reads as done today.
 
 ### Errands
 

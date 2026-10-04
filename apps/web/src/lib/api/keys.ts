@@ -28,5 +28,9 @@ export const queryKeys = {
   /** A meal-plan week, keyed by its Sunday. */
   mealPlan: (householdId: string, week: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'meal-plan', week] as const,
+  chores: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'chores'] as const,
+  chore: (householdId: string, choreId: string) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'chore', choreId] as const,
+  errands: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'errands'] as const,
   deepHealth: ['health', 'deep'] as const,
 };

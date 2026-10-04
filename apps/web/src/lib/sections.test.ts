@@ -31,8 +31,8 @@ describe('navigation config', () => {
     }
   });
 
-  it('ships Lists and Meals, so Bills and Chores are still coming soon', () => {
-    expect([...RELEASED_PILLARS]).toEqual(['lists', 'meals']);
+  it('ships Lists, Meals, and Chores, so only Bills is still coming soon', () => {
+    expect([...RELEASED_PILLARS]).toEqual(['lists', 'meals', 'chores']);
   });
 });
 

@@ -96,7 +96,9 @@ describe('app shell', () => {
     await userEvent.tab();
     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveFocus();
     await userEvent.keyboard('{Enter}');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Meals' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
+    ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/meals');
     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
       'aria-current',
@@ -104,10 +106,7 @@ describe('app shell', () => {
     );
   });
 
-  it.each([
-    ['/bills', 'Bills', 'bills'],
-    ['/chores', 'Chores', 'chores'],
-  ])(
+  it.each([['/bills', 'Bills', 'bills']])(
     'opens %s as a coming-soon screen in its section, without sub-tabs',
     async (path, label, section) => {
       renderApp(path);
@@ -130,9 +129,13 @@ describe('app shell', () => {
   it.each([
     ['/lists', 'Lists sections'],
     ['/meals', 'Meals sections'],
+    ['/chores', 'Chores sections'],
   ])('opens %s with its sub-tabs instead of the coming-soon state', async (path, groupName) => {
     renderApp(path);
-    expect(await screen.findByRole('radiogroup', { name: groupName })).toBeInTheDocument();
+    // The pillar's route chunk is transformed on first use, which can outlast the default wait.
+    expect(
+      await screen.findByRole('radiogroup', { name: groupName }, { timeout: 5000 }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Coming soon' })).toBeNull();
   });
 

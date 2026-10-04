@@ -12,6 +12,7 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "@hearth/recurrence": "workspace:*",
     "@hearth/shared": "workspace:*",
     "@supabase/supabase-js": "2.116.0",
     "@tanstack/query-async-storage-persister": "5.103.1",

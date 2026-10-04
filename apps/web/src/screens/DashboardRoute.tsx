@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
-import type { MealPlanEntry, MealType, ShoppingList } from '@hearth/shared';
+import type { Chore, MealPlanEntry, MealType, ShoppingList } from '@hearth/shared';
 import { mealTypeLabel } from '../components/meals/meal-copy.ts';
 import type { DashboardCardState } from '../components/dashboard/DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from '../components/dashboard/DashboardCards.tsx';
 import { useProfile } from '../lib/api/hooks.ts';
+import { useChores } from '../lib/api/chore-hooks.ts';
 import { useShoppingLists } from '../lib/api/list-hooks.ts';
 import { useMealPlanWeek } from '../lib/api/meal-hooks.ts';
 import { addDays, todayInTimezone, weekStart } from '../lib/household-date.ts';
@@ -97,6 +98,48 @@ export function shoppingCardState(lists: ReturnType<typeof useShoppingLists>): D
   };
 }
 
+/**
+ * The Chores card's data (PRD › This Week: "chores due, and any overdue"). Overdue chores lead,
+ * both groups ordered by name; `isOverdue` carries the danger styling the row needs (Design ›
+ * Accessibility: color is never the only signal — the card also sorts them to the front).
+ */
+export function choresCardState(
+  chores: ReturnType<typeof useChores>,
+  today: string,
+): DashboardCardState {
+  if (chores.isPending && chores.fetchStatus !== 'paused') return { status: 'loading' };
+  if (chores.data === undefined) {
+    if (chores.isError) {
+      return {
+        status: 'error',
+        message: "Couldn't load chores. Try again.",
+        onRetry: () => {
+          void chores.refetch();
+        },
+      };
+    }
+    return { status: 'empty', message: DASHBOARD_EMPTY_COPY.chores };
+  }
+
+  const due = chores.data.filter((chore) => chore.isOverdue || chore.dueDate === today);
+  if (due.length === 0) return { status: 'empty', message: DASHBOARD_EMPTY_COPY.chores };
+
+  const sorted = [...due].sort((a: Chore, b: Chore) => {
+    if (a.isOverdue !== b.isOverdue) return a.isOverdue ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return {
+    status: 'populated',
+    total: sorted.length,
+    items: sorted.map((chore) => ({
+      id: chore.id,
+      label: chore.name,
+      isOverdue: chore.isOverdue,
+    })),
+  };
+}
+
 /** The dashboard with its data. It ships in the shell, so it fetches only what its cards need. */
 export function DashboardRoute(): ReactElement {
   const profile = useProfile();
@@ -108,6 +151,7 @@ export function DashboardRoute(): ReactElement {
   const tomorrow = today !== undefined ? addDays(today, 1) : undefined;
   const week = today !== undefined ? weekStart(today) : undefined;
   const plan = useMealPlanWeek(householdId, week);
+  const chores = useChores(householdId);
 
   return (
     <DashboardScreen
@@ -115,6 +159,7 @@ export function DashboardRoute(): ReactElement {
       {...(today !== undefined && tomorrow !== undefined
         ? { meals: mealsCardState(plan, today, tomorrow) }
         : {})}
+      {...(today !== undefined ? { chores: choresCardState(chores, today) } : {})}
     />
   );
 }
