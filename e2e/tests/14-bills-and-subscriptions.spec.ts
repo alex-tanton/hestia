@@ -1,9 +1,8 @@
-import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { DESKTOP, PHONE, group, screenshotsInto } from '../support/bills.ts';
 import { expectDashboard, signIn } from '../support/app.ts';
 import { expectAccessible } from '../support/axe.ts';
-import { REPO_ROOT, SEED } from '../support/env.ts';
+import { SEED } from '../support/env.ts';
 
 /**
  * Bills and subscriptions, against the seeded stack (Requirements › "Bills and subscriptions";
@@ -13,20 +12,7 @@ import { REPO_ROOT, SEED } from '../support/env.ts';
  * only record payments and skips.
  */
 
-const SHOTS = join(REPO_ROOT, 'shots', 'u4-4');
-mkdirSync(SHOTS, { recursive: true });
-
-const DESKTOP = { width: 1280, height: 800 } as const;
-const PHONE = { width: 390, height: 844 } as const;
-
-async function shoot(page: Page, name: string): Promise<void> {
-  await page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true });
-}
-
-/** A labelled section on the bills dashboard: "Overdue", "This week", or "Later". */
-function group(page: Page, name: string) {
-  return page.getByRole('region', { name });
-}
+const shoot = screenshotsInto('u4-4');
 
 for (const theme of ['light', 'dark'] as const) {
   test.describe(`bills and subscriptions, read-only (${theme})`, () => {

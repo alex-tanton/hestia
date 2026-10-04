@@ -49,6 +49,47 @@ export async function addListItemStatus(
   return response.status();
 }
 
+/** The bill fields a journey checks through the API rather than the screen (Requirements, "Bills"). */
+export interface BillState {
+  householdId: string | null;
+  currentOccurrenceDate: string;
+  isOverdue: boolean;
+  payments: {
+    occurrenceDate: string;
+    paidDate: string | null;
+    amountPaidCents: number | null;
+    isAuto: boolean;
+    isSkipped: boolean;
+  }[];
+}
+
+/** `GET /api/bills/:id` as that caller: the derived current occurrence and the payment log. */
+export async function billState(
+  request: APIRequestContext,
+  token: string,
+  billId: string,
+): Promise<BillState> {
+  const response = await request.get(`/api/bills/${billId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(response.status(), `GET /api/bills/${billId}`).toBe(200);
+  return (await response.json()) as BillState;
+}
+
+/** The ids of the household's bills the caller can see, as `GET /api/households/:id/bills` lists them. */
+export async function householdBillIds(
+  request: APIRequestContext,
+  token: string,
+  householdId: string,
+): Promise<string[]> {
+  const response = await request.get(`/api/households/${householdId}/bills`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(response.status(), 'GET household bills').toBe(200);
+  const bills = (await response.json()) as { id: string }[];
+  return bills.map((bill) => bill.id);
+}
+
 /**
  * `POST /api/households/:id/members/:userId/remove` as that caller, with whatever reassignments
  * are given. The gating the departure preview shows is a server rule, not a disabled button, so
