@@ -1,3 +1,4 @@
+import { logDroppedCopy } from '../notifications/copy.js';
 import type { FastifyPluginAsync } from 'fastify';
 import {
   addToListRequestSchema,
@@ -54,7 +55,13 @@ export const mealPlanRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, {
     const body = parse(addToListRequestSchema, request.body);
     return ctx.asUser(user, async (db) => {
       const recipeId = await requireMealPlanEntryRecipeId(db, id);
-      return addMissingIngredientsToList(db, body.listId, [recipeId], user.id);
+      return addMissingIngredientsToList(
+        db,
+        body.listId,
+        [recipeId],
+        user.id,
+        logDroppedCopy(request.log),
+      );
     });
   });
 
@@ -64,7 +71,13 @@ export const mealPlanRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, {
     const body = parse(weekAddToListRequestSchema, request.body);
     return ctx.inHousehold(user, id, async (db) => {
       const recipeIds = await recipeIdsForWeek(db, id, body.week);
-      return addMissingIngredientsToList(db, body.listId, recipeIds, user.id);
+      return addMissingIngredientsToList(
+        db,
+        body.listId,
+        recipeIds,
+        user.id,
+        logDroppedCopy(request.log),
+      );
     });
   });
 

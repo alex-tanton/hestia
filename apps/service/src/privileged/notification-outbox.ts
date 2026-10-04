@@ -1,12 +1,14 @@
 import { sql } from 'kysely';
 import { pushKeysSchema, type NotificationType } from '@hearth/shared';
 import type {
+  ClaimOutcome,
   DispatchOutbox,
   DueNotification,
   ExpiredNotification,
   PushSubscriptionRecord,
 } from '../jobs/dispatch-notifications.js';
 import type { JobDatabase } from '../jobs/types.js';
+import { enqueueScheduledNotifications } from './scheduled-reminders.js';
 
 /**
  * The dispatch job's SQL against other users' rows (Technical Architecture, "Scheduled jobs" ›
@@ -23,6 +25,9 @@ import type { JobDatabase } from '../jobs/types.js';
  */
 export function createNotificationOutbox(database: JobDatabase): DispatchOutbox {
   return {
+    enqueueScheduled: (now) =>
+      database.asServiceRole((db) => enqueueScheduledNotifications(db, now)),
+
     expireOverdue: () =>
       database.asServiceRole(async (db) => {
         // A row is retired only when it was never sent and its retry window has closed.
@@ -83,14 +88,38 @@ export function createNotificationOutbox(database: JobDatabase): DispatchOutbox 
       }),
 
     claim: (id) =>
-      database.asServiceRole(async (db) => {
-        const { rows } = await sql<{ id: string }>`
-          update public.notification
-          set sent_at = pg_catalog.now()
-          where id = ${id}::uuid and sent_at is null
-          returning id
+      database.asServiceRole(async (db): Promise<ClaimOutcome> => {
+        // One statement: the condition is read and the row is either stamped or deleted, so no
+        // device is sent for a row whose condition lapsed, and no row is stamped twice. The
+        // `sent_at is null` test is repeated on the write itself: the CTE's read is a snapshot, and
+        // when a run waits on another run's row lock, Postgres re-evaluates only the write's own
+        // WHERE against the newer row. Without the test there, an overlapping run would stamp again.
+        const { rows } = await sql<{ outcome: ClaimOutcome }>`
+          with pending as (
+            select n.id, public.notification_still_holds(n) as holds
+            from public.notification n
+            where n.id = ${id}::uuid and n.sent_at is null
+          ),
+          stamped as (
+            update public.notification n
+            set sent_at = pg_catalog.now()
+            from pending p
+            where n.id = p.id and n.sent_at is null and p.holds
+            returning n.id
+          ),
+          dropped as (
+            delete from public.notification n
+            using pending p
+            where n.id = p.id and n.sent_at is null and not p.holds
+            returning n.id
+          )
+          select case
+            when exists (select 1 from stamped) then 'claimed'
+            when exists (select 1 from dropped) then 'stale'
+            else 'taken'
+          end as outcome
         `.execute(db);
-        return rows.length === 1;
+        return rows[0]?.outcome ?? 'taken';
       }),
 
     release: (id) =>

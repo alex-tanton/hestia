@@ -227,3 +227,5 @@ Notifications are interruptions, so they must earn the tap. Lead with the specif
 | `flyer_refresh` | "New weekly ads" | "Harris Teeter, Food Lion, CVS" |
 
 Batched notifications always state a count rather than listing items. Never send a notification a user cannot act on.
+
+The examples above name the items they were written for. In a live notification, the name of the chore, errand, bill, list, or recipe, and any count, take the place of the example's own, and the wording otherwise stays as written. A bill's title reads "<bill> due <weekday>" before the due date and "<bill> due today" on it. A chore's title is the chore's name and its body is "Your turn this week". An errand's title is its name and its body is "Due today". A rotation's title is "<chore> is yours". A meal reminder whose day holds one meal reads "Only meal planned today" as its body. A count of one reads "1 item" or "1 recipe has", as the count requires.

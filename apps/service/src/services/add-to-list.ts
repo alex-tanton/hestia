@@ -5,6 +5,8 @@ import type { Database } from '../db.js';
 import { aggregateIngredients, type IngredientContribution } from './list-aggregation.js';
 import { detailOf, refreshed, requireList } from './lists.js';
 import { buildMatchCandidates, listMatchOverridesFor } from './matching-candidates.js';
+import type { DroppedCopyReport } from '../notifications/copy.js';
+import { recordListActivity } from './list-activity.js';
 import { toNumber } from './money.js';
 
 /*
@@ -19,6 +21,7 @@ export async function addMissingIngredientsToList(
   listId: string,
   recipeIds: readonly string[],
   userId: string,
+  report?: DroppedCopyReport,
 ): Promise<ShoppingListDetail> {
   const list = await requireList(db, listId);
   const householdId = list.household_id;
@@ -71,6 +74,8 @@ export async function addMissingIngredientsToList(
     }
   }
 
+  // Items actually written, which is what a batch of list activity counts.
+  let added = 0;
   for (const aggregated of aggregateIngredients(onSaleContributions)) {
     const dealId = dealIdByNormalizedName.get(aggregated.normalizedName);
     const deal = dealId === undefined ? undefined : context.dealsById.get(dealId);
@@ -101,6 +106,7 @@ export async function addMissingIngredientsToList(
         price: deal.unit_price,
       })
       .execute();
+    added += 1;
   }
 
   for (const aggregated of aggregateIngredients(toBuyContributions)) {
@@ -126,7 +132,9 @@ export async function addMissingIngredientsToList(
         price: null,
       })
       .execute();
+    added += 1;
   }
 
+  await recordListActivity(db, list, userId, added, new Date(), report);
   return detailOf(db, await refreshed(db, list));
 }

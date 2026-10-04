@@ -54,7 +54,8 @@ describe('stop', () => {
         await gate;
         return [];
       },
-      claim: () => Promise.resolve(true),
+      claim: () => Promise.resolve('taken' as const),
+      enqueueScheduled: () => Promise.resolve({ inserted: 0, dropped: [] }),
       release: () => Promise.resolve(),
       deleteUnsent: () => Promise.resolve(),
       deleteSubscription: () => Promise.resolve(),

@@ -16,6 +16,7 @@ import {
   type UpdateChoreRequest,
 } from '@hearth/shared';
 import type { Database } from '../db.js';
+import { choreRotationCopy, type DroppedCopyReport } from '../notifications/copy.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from '../services/households.js';
 import {
@@ -295,41 +296,56 @@ export async function deleteChore(db: Kysely<Database>, choreId: string): Promis
 }
 
 /**
- * Writes the `chore_rotation` outbox row for whoever now holds the turn (PRD, "Notifications" ›
- * trigger table: "A completion passes a rotating chore's turn to another member"; `target_id` the
- * chore id, `occurrence_key` the occurrence date that was completed, which is exactly what
- * `deleteChoreCompletion` below deletes again on undo). Only the row is written here — sending it
- * is Phase 5's `dispatch-notifications` job (Handoff, "Phase 5 — Cross-cutting"), which is also
- * where per-user quiet hours are applied (see the note on `send_after` below).
+ * Writes the `chore_rotation` outbox row for whoever now holds the turn (Requirements,
+ * "Notifications" › "Types and defaults": a completion passes a rotating chore's turn to another
+ * member). `target_id` is the chore id and `occurrence_key` the occurrence date that was completed,
+ * which is exactly what `deleteChoreCompletion` deletes again on undo.
  *
- * `send_after` is `now()`, not deferred into the recipient's quiet-hours window the way
- * `jobs/refresh-deals.ts` defers `flyer_refresh`: that job runs as service_role and can join
- * `profile` directly, but this row is written by the completing member's own request, and RLS
- * deliberately keeps a member from reading another member's `profile` row at all — "Co-members'
- * names come from `household_members`, never from `profile`" (Technical Architecture, "Database" ›
- * "RLS policy pattern"), which includes quiet hours. Quiet hours ship in Phase 5 (Handoff, "Phase 5
- * — Cross-cutting": "per-user quiet hours"), so deferring the check to the job that already has
- * service-role access, rather than exposing a new privileged read path here, is the simpler,
- * spec-consistent choice (this gap and its resolution are also recorded in Technical Architecture,
- * "Database" › "RLS policy pattern").
+ * The row is written by the completing member's request, so it is the request that applies the new
+ * holder's quiet hours: `public.member_quiet_send_at` moves `send_after` to the end of their window
+ * (Technical Architecture, "Scheduled jobs" › "Dispatch"). The new holder's preference is checked
+ * here for the same reason, since a request cannot read another member's settings directly.
+ *
+ * The copy names the chore and the member whose turn just closed, which is the holder the rotation
+ * had before this completion, not necessarily whoever did the work (Branding, "Notification copy").
  */
 async function enqueueChoreRotation(
   db: Kysely<Database>,
   chore: Pick<ChoreRow, 'id' | 'household_id' | 'name'>,
   recipientUserId: string,
+  previousUserId: string,
   occurrenceDateClosed: CalendarDate,
+  report?: DroppedCopyReport,
 ): Promise<void> {
+  const { rows: wanted } = await sql<{ wanted: boolean }>`
+    select public.notification_wanted(${recipientUserId}::uuid, 'chore_rotation', null) as wanted
+  `.execute(db);
+  if (wanted[0]?.wanted !== true) return;
+
+  const { rows: names } = await sql<{ display_name: string }>`
+    select display_name from public.household_members(${chore.household_id}::uuid)
+    where user_id = ${previousUserId}::uuid
+  `.execute(db);
+  const copy = choreRotationCopy({
+    name: chore.name,
+    previousName: names[0]?.display_name ?? 'Former member',
+  });
+  if (copy === null) {
+    report?.({ type: 'chore_rotation', id: chore.id });
+    return;
+  }
+
   await sql`
     insert into public.notification (user_id, type, target_id, occurrence_key, payload, send_after)
     values (
-      ${recipientUserId}, 'chore_rotation', ${chore.id}, ${occurrenceDateClosed},
+      ${recipientUserId}::uuid, 'chore_rotation', ${chore.id}::uuid, ${occurrenceDateClosed},
       jsonb_build_object(
-        'title', 'Your turn',
-        'body', ${chore.name} || ' is now your turn.',
+        'title', ${copy.title}::text,
+        'body', ${copy.body}::text,
         'householdId', ${chore.household_id}::uuid,
         'target', 'chores'
       ),
-      pg_catalog.now()
+      public.member_quiet_send_at(${recipientUserId}::uuid, pg_catalog.now())
     )
     on conflict (user_id, type, target_id, occurrence_key) do nothing
   `.execute(db);
@@ -371,6 +387,7 @@ export async function completeChore(
   choreId: string,
   userId: string,
   input: CompleteChoreRequest,
+  report?: DroppedCopyReport,
 ): Promise<ChoreDetail> {
   const chore = await requireChoreRow(db, choreId);
   await markHouseholdActive(db, chore.household_id);
@@ -421,12 +438,17 @@ export async function completeChore(
     .execute();
 
   if (chore.rotation_order !== null) {
+    const previousTurn = currentTurn(
+      chore.rotation_order,
+      chore.rotation_offset,
+      completedDates.size,
+    );
     const newTurn = currentTurn(
       chore.rotation_order,
       chore.rotation_offset,
       completedDates.size + 1,
     );
-    await enqueueChoreRotation(db, chore, newTurn, occurrenceToClose);
+    await enqueueChoreRotation(db, chore, newTurn, previousTurn, occurrenceToClose, report);
   }
 
   return getChoreDetail(db, choreId);

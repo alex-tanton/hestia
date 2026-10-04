@@ -1,3 +1,4 @@
+import { logDroppedCopy } from '../notifications/copy.js';
 import type { FastifyPluginAsync } from 'fastify';
 import {
   choreCompletionParamsSchema,
@@ -62,7 +63,9 @@ export const choreRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ct
     const user = await ctx.authenticate(request);
     const { id } = parse(choreIdParamsSchema, request.params);
     const body = parse(completeChoreRequestSchema, request.body ?? {});
-    const chore = await ctx.asUser(user, (db) => completeChore(db, id, user.id, body));
+    const chore = await ctx.asUser(user, (db) =>
+      completeChore(db, id, user.id, body, logDroppedCopy(request.log)),
+    );
     return reply.code(201).send(chore);
   });
 

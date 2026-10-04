@@ -1,3 +1,4 @@
+import { logDroppedCopy } from '../notifications/copy.js';
 import type { FastifyPluginAsync } from 'fastify';
 import {
   addToListRequestSchema,
@@ -78,7 +79,13 @@ export const recipeRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { c
     const body = parse(addToListRequestSchema, request.body);
     return ctx.asUser(user, async (db) => {
       await getRecipe(db, id);
-      return addMissingIngredientsToList(db, body.listId, [id], user.id);
+      return addMissingIngredientsToList(
+        db,
+        body.listId,
+        [id],
+        user.id,
+        logDroppedCopy(request.log),
+      );
     });
   });
 

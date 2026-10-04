@@ -12,6 +12,8 @@ import type {
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from './households.js';
+import type { DroppedCopyReport } from '../notifications/copy.js';
+import { recordListActivity } from './list-activity.js';
 import { fromCents, toCents, toNumber } from './money.js';
 import { toPantryItem } from './pantry.js';
 import { repriceExpiredItems } from './repricing.js';
@@ -303,12 +305,13 @@ export async function addListItem(
   listId: string,
   userId: string,
   input: CreateListItemRequest,
+  report?: DroppedCopyReport,
 ): Promise<ShoppingListDetail> {
   const row = await requireList(db, listId);
   const values =
     input.source === 'manual' ? manualValues(input) : await snapshotOfDeal(db, input.dealId);
 
-  await db
+  const inserted = await db
     .insertInto('shopping_list_item')
     .values({
       ...(input.id === undefined ? {} : { id: input.id }),
@@ -319,7 +322,11 @@ export async function addListItem(
       ...values,
     })
     .onConflict((conflict) => conflict.column('id').doNothing())
-    .execute();
+    .executeTakeFirst();
+  // A replay of an id that already landed inserts nothing, so it is not a second addition.
+  if (Number(inserted.numInsertedOrUpdatedRows ?? 0) > 0) {
+    await recordListActivity(db, row, userId, 1, new Date(), report);
+  }
 
   return detailOf(db, await refreshed(db, row));
 }

@@ -50,7 +50,8 @@ function deps(overrides: Partial<SchedulerDeps> = {}): SchedulerDeps {
       outbox: {
         expireOverdue: () => Promise.resolve([]),
         listDue: () => Promise.resolve([]),
-        claim: () => Promise.resolve(true),
+        claim: () => Promise.resolve('taken' as const),
+        enqueueScheduled: () => Promise.resolve({ inserted: 0, dropped: [] }),
         release: () => Promise.resolve(),
         deleteUnsent: () => Promise.resolve(),
         deleteSubscription: () => Promise.resolve(),

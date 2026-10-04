@@ -550,15 +550,15 @@ Tests and end-to-end runs never contact a push service. They use a test double i
 | `chore_due` | On | The chore's assignee or current rotation member; for errands with a due date, their assignee | 09:00, household timezone |
 | `chore_rotation` | On | The new assignee of a rotating chore | On completion |
 | `list_activity` | On | Other members of the household | Debounced (see Rules) |
-| `meal_reminder` | Off | Opted-in members | 08:00, recipient's timezone, on the meal's date (the date is evaluated in the household timezone) |
-| `weekly_meal_nudge` | Off | Members who opted in for that household | Saturday 09:00, recipient's timezone |
+| `meal_reminder` | Off | Opted-in members | 08:00, household timezone, on the meal's date (the date is evaluated in the household timezone) |
+| `weekly_meal_nudge` | Off | Members who opted in for that household | Saturday 09:00, household timezone, for every recipient |
 | `flyer_refresh` | Off | Opted-in members | The next 09:00, recipient's timezone, after the refresh; at most once per day per household |
 
 Triggers and outbox keys:
 
 | Type | Fires when | `target_id` | `occurrence_key` |
 | --- | --- | --- | --- |
-| `bill_due` | `reminder_days_before` days before an unpaid occurrence, and again on its due date if still unpaid. Archived bills send nothing. | bill id | occurrence date plus `/advance` or `/due` |
+| `bill_due` | `reminder_days_before` days before an unpaid occurrence, and again on its due date if still unpaid. Archived bills send nothing. With `reminder_days_before` at zero, only the due-date reminder is sent. | bill id | occurrence date plus `/advance` or `/due` |
 | `chore_due` | A chore's occurrence date arrives and that occurrence is not yet completed; an open errand's due date arrives | chore or errand id | occurrence or due date |
 | `chore_rotation` | A completion passes a rotating chore's turn to another member. Undoing the completion deletes the unsent row; a push already sent stays sent. | chore id | occurrence date that was completed |
 | `list_activity` | Another member adds items to a list | list id | start timestamp of the batch window |
@@ -570,14 +570,15 @@ A chore that is unassigned and has no rotation sends no push, and neither does a
 
 ### Rules
 
-- **Batching over spam.** List activity collapses into one push per recipient per list, stating a count ("5 new items added to Grocery List"). The first addition opens a batch row whose `occurrence_key` is the batch start. Each further addition before the row is sent updates the count and sets `send_after = least(last_add + 5 minutes, first_add + 15 minutes)`. An addition after the row has been sent opens a new batch. Never one push per item.
+- **Batching over spam.** List activity collapses into one push per recipient per list, stating a count ("5 items added to Grocery List", "1 item added to Grocery List" for one). The first addition opens a batch row whose `occurrence_key` is the batch start. Each further addition before the row is sent updates the count and sets `send_after = least(last_add + 5 minutes, first_add + 15 minutes)`. An addition after the row has been sent opens a new batch. Never one push per item.
 - **Per-user, per-type toggles.** Each user opts in or out per notification type, not one global switch. A member may want bill reminders without chore nudges. `weekly_meal_nudge` is opted into separately for each household.
 - **Bill reminders default to the owner only.** Other members opt in with the single household-bills setting — deliberately the quieter default, since household bills otherwise notify people who cannot act on them.
-- **Quiet hours ship in v1**, as a per-user window (`profile.quiet_hours_start` and `quiet_hours_end`, in the user's timezone; the window may cross midnight). A notification whose `send_after` falls inside the window has `send_after` moved to the end of the window, so it is delivered when the window opens, not dropped. Batching and the outbox key still apply, so a night's list activity arrives as one morning notification per list. There is no urgent-override tier — nothing Hearth sends warrants waking someone.
+- **Quiet hours ship in v1**, as a per-user window (`profile.quiet_hours_start` and `quiet_hours_end`, in the user's timezone; the window may cross midnight). A notification whose `send_after` falls inside the window has `send_after` moved to the end of the window, so it is delivered when the window opens, not dropped. Batching and the outbox key still apply, so a night's list activity arrives as one morning notification per list. There is no urgent-override tier — nothing Hearth sends warrants waking someone. Every addition to a batch re-applies the window, so the batch's send time always reflects its latest addition, and a batch is never split across two windows. A change to quiet hours applies to notifications written after the change; rows already written keep their send time.
 - **Deep links.** Every notification opens the screen it refers to, in its household, and switches the active household to it.
 - **Preference API.** `GET /api/users/me/notification-preferences` returns every type with its effective value, defaults applied to missing rows, and lists `weekly_meal_nudge` once for each household the caller belongs to. `PATCH` takes the type, `enabled`, and, for `weekly_meal_nudge` only, `householdId`. It is idempotent, and a household the caller does not belong to answers `404`. Push subscriptions are registered per device and are unique on their endpoint, so posting the same endpoint again updates its keys.
 - **Departure.** When a member leaves a household or is removed from it, the service deletes that member's `notification_preference` rows for that household. Enqueueing a notification also checks current membership before it writes, so nothing reaches someone for a household they have left.
-- **Copy length.** The title and body of every notification follow the length limit in Branding, "Notification copy". The shared notification schema enforces that limit for every producer.
+- **Conditions at send.** A notification is sent only while its trigger still holds. Just before it is sent, its condition is checked again: a bill still unpaid and not archived for that occurrence, a chore occurrence not yet completed, an errand not yet done, a meal still planned, and for the weekly nudge, the recipient still a member and the coming week still unplanned. A row whose condition no longer holds is deleted unsent, and nothing is pushed for it.
+- **Copy length.** The title and body of every notification follow the length limit in Branding, "Notification copy". The shared notification schema enforces that limit for every producer. A notification whose title or body would exceed the limit is not created, and no line is shortened to fit: the producer drops it and logs only its type and id.
 
 ## Offline behavior
 

@@ -3,6 +3,7 @@ import { RecordingPushTransport } from '../test/push-double.js';
 import {
   deepLinkFor,
   runDispatchNotifications,
+  type ClaimOutcome,
   type DispatchOutbox,
   type DueNotification,
   type ExpiredNotification,
@@ -50,6 +51,11 @@ class MemoryOutbox implements DispatchOutbox {
     this.events = events;
   }
 
+  enqueueScheduled(): Promise<{ inserted: number; dropped: [] }> {
+    this.events.push('enqueue');
+    return Promise.resolve({ inserted: 0, dropped: [] });
+  }
+
   expireOverdue(): Promise<ExpiredNotification[]> {
     const gone = this.expired;
     this.expired = [];
@@ -63,12 +69,12 @@ class MemoryOutbox implements DispatchOutbox {
     return Promise.resolve(open);
   }
 
-  claim(id: string): Promise<boolean> {
+  claim(id: string): Promise<ClaimOutcome> {
     this.events.push(`claim:${id}`);
-    if (this.stamped.includes(id)) return Promise.resolve(false);
+    if (this.stamped.includes(id)) return Promise.resolve('taken');
     this.stamped.push(id);
     this.claimed.push(id);
-    return Promise.resolve(true);
+    return Promise.resolve('claimed');
   }
 
   release(id: string): Promise<void> {
@@ -140,7 +146,7 @@ describe('claim, then send', () => {
 
     await runDispatchNotifications({ outbox, transport, logger });
 
-    expect(events).toStrictEqual(['claim:n1', 'send:sub-a', 'send:sub-b']);
+    expect(events).toStrictEqual(['enqueue', 'claim:n1', 'send:sub-a', 'send:sub-b']);
   });
 
   it('releases the claim when no device accepts, so the next run retries', async () => {
@@ -177,8 +183,8 @@ describe('claim, then send', () => {
 
   it('sends nothing for a row another claimer already holds', async () => {
     class LostClaim extends MemoryOutbox {
-      override claim(): Promise<boolean> {
-        return Promise.resolve(false);
+      override claim(): Promise<ClaimOutcome> {
+        return Promise.resolve('taken');
       }
     }
     const outbox = new LostClaim([row({ id: 'n1' })]);
@@ -189,6 +195,55 @@ describe('claim, then send', () => {
     expect(transport.sent).toStrictEqual([]);
     expect(outbox.released).toStrictEqual([]);
     expect(outcome.sent).toBe(0);
+  });
+
+  it('deletes unsent a row whose condition lapsed before the send, and pushes nothing', async () => {
+    class LapsedCondition extends MemoryOutbox {
+      override claim(id: string): Promise<ClaimOutcome> {
+        this.deletedUnsent.push(id);
+        return Promise.resolve('stale');
+      }
+    }
+    const outbox = new LapsedCondition([row({ id: 'n1' })]);
+    const { transport, lines, run } = harness(outbox);
+
+    const outcome = await run();
+
+    expect(transport.sent).toStrictEqual([]);
+    expect(outbox.claimed).toStrictEqual([]);
+    expect(outcome.stale).toBe(1);
+    expect(
+      lines.some((line) => line.message === 'notification no longer due; deleted unsent'),
+    ).toBe(true);
+  });
+
+  it('leaves a row in place when its condition check throws, and pushes nothing', async () => {
+    class ThrowingCheck extends MemoryOutbox {
+      override claim(): Promise<ClaimOutcome> {
+        return Promise.reject(new Error('connection reset'));
+      }
+    }
+    const outbox = new ThrowingCheck([row({ id: 'n1' })]);
+    const { transport, run } = harness(outbox);
+
+    // The failed statement rolls back with its transaction, so the row is neither stamped nor
+    // deleted; the run ends with the error, as a failed database write ends a run.
+    await expect(run()).rejects.toThrow('connection reset');
+
+    expect(outbox.deletedUnsent).toStrictEqual([]);
+    expect(outbox.stamped).toStrictEqual([]);
+    expect(transport.sent).toStrictEqual([]);
+  });
+
+  it('enqueues the scheduled reminders before it reads the rows due to send', async () => {
+    const events: string[] = [];
+    const outbox = new MemoryOutbox([row({ id: 'n1' })], [], events);
+    const { run } = harness(outbox);
+
+    await run();
+
+    expect(events[0]).toBe('enqueue');
+    expect(events.indexOf('enqueue')).toBeLessThan(events.indexOf('claim:n1'));
   });
 
   it('does not push to the accepting device again when a write fails after it accepted', async () => {

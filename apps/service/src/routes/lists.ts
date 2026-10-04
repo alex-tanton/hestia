@@ -1,3 +1,4 @@
+import { logDroppedCopy } from '../notifications/copy.js';
 import type { FastifyPluginAsync } from 'fastify';
 import {
   createListItemRequestSchema,
@@ -90,7 +91,9 @@ export const listRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx
     const user = await ctx.authenticate(request);
     const { id } = parse(listIdParamsSchema, request.params);
     const body = parse(createListItemRequestSchema, request.body);
-    const list = await ctx.asUser(user, (db) => addListItem(db, id, user.id, body));
+    const list = await ctx.asUser(user, (db) =>
+      addListItem(db, id, user.id, body, logDroppedCopy(request.log)),
+    );
     return reply.code(201).send(list);
   });
 

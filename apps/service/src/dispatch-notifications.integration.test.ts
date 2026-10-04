@@ -55,8 +55,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Deleting the users cascades to their profiles, subscriptions, and outbox rows.
+  // Deleting the users cascades to their profiles, subscriptions, and outbox rows. Personal bills
+  // reference their owner without cascading, so they go first.
   if (userIds.length > 0) {
+    await adminPool.query('delete from public.bill where owner_user_id = any($1::uuid[])', [
+      userIds,
+    ]);
     await adminPool.query('delete from auth.users where id = any($1::uuid[])', [userIds]);
   }
   await handle.close();
@@ -107,13 +111,19 @@ async function queue(
     body?: string;
   },
 ): Promise<string> {
+  // A `bill_due` row is only sent while its bill exists and the occurrence is unpaid, so each row
+  // gets its own personal bill, unpaid for the occurrence named in its key.
+  const bill = await adminPool.query<{ id: string }>(
+    `insert into public.bill (owner_user_id, name, amount, recurrence_unit, anchor_date, visibility)
+     values ($1, 'Rent', 1850.00, 'month', '2020-01-01', 'personal') returning id`,
+    [userId],
+  );
   const { rows } = await adminPool.query<{ id: string }>(
     `insert into public.notification (user_id, type, target_id, occurrence_key, payload, send_after)
-     values ($1, 'bill_due', $2, $3, $4, ${options.sendAfter}) returning id`,
+     values ($1, 'bill_due', $2, '2020-01-01/due', $3, ${options.sendAfter}) returning id`,
     [
       userId,
-      randomUUID(),
-      `k-${randomUUID()}`,
+      bill.rows[0]?.id ?? '',
       JSON.stringify({
         title: options.title ?? 'Rent is due',
         body: options.body ?? 'Due on the 1st.',
@@ -322,6 +332,21 @@ describe('claim before send', () => {
 
     expect(await sentAt(id)).not.toBeNull();
     expect(pushesTo([endpoint])).toHaveLength(2);
+  });
+});
+
+describe('stamping a row', () => {
+  it('stamps a row once: a second claim of a stamped row changes nothing and reports taken', async () => {
+    const endpoint = endpointOf('stamped-once');
+    const userId = await seedUser([endpoint]);
+    const id = await queue(userId, { sendAfter: `now() - interval '1 minute'` });
+
+    expect(await outbox.claim(id)).toBe('claimed');
+    const stampedAt = await sentAt(id);
+    expect(stampedAt).not.toBeNull();
+
+    expect(await outbox.claim(id)).toBe('taken');
+    expect(await sentAt(id)).toStrictEqual(stampedAt);
   });
 });
 
