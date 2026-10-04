@@ -539,6 +539,42 @@ describe('GET /api/health/deep', () => {
   });
 });
 
+describe('notification routes', () => {
+  // Validation runs before any query, so these need no database.
+  it.each([
+    [
+      'PATCH',
+      '/api/users/me/notification-preferences',
+      { type: 'weekly_meal_nudge', enabled: true },
+    ],
+    [
+      'PATCH',
+      '/api/users/me/notification-preferences',
+      { type: 'bill_due', enabled: true, householdId: ID },
+    ],
+    ['PATCH', '/api/users/me/notification-preferences', { type: 'not_a_type', enabled: true }],
+    [
+      'POST',
+      '/api/users/me/push-subscriptions',
+      { endpoint: 'http://push.example.com/a', keys: { p256dh: 'AAAA', auth: 'AAAA' } },
+    ],
+    [
+      'POST',
+      '/api/users/me/push-subscriptions',
+      { endpoint: 'https://push.example.com/a', keys: {} },
+    ],
+    ['DELETE', '/api/users/me/push-subscriptions', { endpoint: 'javascript:alert(1)' }],
+  ] as const)(
+    '%s %s refuses %j with 400 before reaching the database',
+    async (method, url, payload) => {
+      const instance = await app();
+      const response = await instance.inject({ method, url, headers: bearer(), payload });
+      expect(response.statusCode).toBe(400);
+      expect(response.headers['content-type']).toMatch(/^application\/problem\+json/);
+    },
+  );
+});
+
 describe('GET /api/users/me', () => {
   it('reaches the database only as the caller and answers 404 for a missing profile', async () => {
     // The fake database answers every query with no rows.

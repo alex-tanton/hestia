@@ -11,6 +11,7 @@ export * from './api/lists.js';
 export * from './api/matching.js';
 export * from './api/meal-plan.js';
 export * from './api/membership.js';
+export * from './api/notifications.js';
 export * from './api/pantry.js';
 export * from './api/recipes.js';
 export * from './api/system.js';

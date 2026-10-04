@@ -85,6 +85,13 @@ import {
   transferAdminRequestSchema,
 } from './membership.js';
 import {
+  deletePushSubscriptionRequestSchema,
+  notificationPreferenceSchema,
+  notificationPreferencesResponseSchema,
+  pushSubscriptionRequestSchema,
+  updateNotificationPreferenceRequestSchema,
+} from './notifications.js';
+import {
   createPantryItemRequestSchema,
   pantryItemSchema,
   pantryListSchema,
@@ -176,6 +183,37 @@ export const endpoints = [
     summary: 'Change email (re-enter the current password)',
     access: 'user',
     body: changeEmailRequestSchema,
+    response: { status: 204 },
+  },
+  {
+    method: 'GET',
+    path: '/api/users/me/notification-preferences',
+    summary: 'Every notification type’s effective setting, with defaults applied',
+    access: 'user',
+    response: { status: 200, schema: notificationPreferencesResponseSchema },
+  },
+  {
+    method: 'PATCH',
+    path: '/api/users/me/notification-preferences',
+    summary: 'Turn one notification type on or off (per household for the weekly meal nudge)',
+    access: 'user',
+    body: updateNotificationPreferenceRequestSchema,
+    response: { status: 200, schema: notificationPreferenceSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/users/me/push-subscriptions',
+    summary: 'Register this device’s push subscription (idempotent on the endpoint)',
+    access: 'user',
+    body: pushSubscriptionRequestSchema,
+    response: { status: 204 },
+  },
+  {
+    method: 'DELETE',
+    path: '/api/users/me/push-subscriptions',
+    summary: 'Remove a push subscription by its endpoint',
+    access: 'user',
+    body: deletePushSubscriptionRequestSchema,
     response: { status: 204 },
   },
   {

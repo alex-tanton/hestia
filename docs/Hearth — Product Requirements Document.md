@@ -569,6 +569,9 @@ A chore that is unassigned and has no rotation sends no push, and neither does a
 - **Bill reminders default to the owner only.** Other members opt in with the single household-bills setting — deliberately the quieter default, since household bills otherwise notify people who cannot act on them.
 - **Quiet hours ship in v1**, as a per-user window (`profile.quiet_hours_start` and `quiet_hours_end`, in the user's timezone; the window may cross midnight). A notification whose `send_after` falls inside the window has `send_after` moved to the end of the window, so it is delivered when the window opens, not dropped. Batching and the outbox key still apply, so a night's list activity arrives as one morning notification per list. There is no urgent-override tier — nothing Hearth sends warrants waking someone.
 - **Deep links.** Every notification opens the screen it refers to, in its household, and switches the active household to it.
+- **Preference API.** `GET /api/users/me/notification-preferences` returns every type with its effective value, defaults applied to missing rows, and lists `weekly_meal_nudge` once for each household the caller belongs to. `PATCH` takes the type, `enabled`, and, for `weekly_meal_nudge` only, `householdId`. It is idempotent, and a household the caller does not belong to answers `404`. Push subscriptions are registered per device and are unique on their endpoint, so posting the same endpoint again updates its keys.
+- **Departure.** When a member leaves a household or is removed from it, the service deletes that member's `notification_preference` rows for that household. Enqueueing a notification also checks current membership before it writes, so nothing reaches someone for a household they have left.
+- **Copy length.** The title and body of every notification follow the length limit in Branding, "Notification copy". The shared notification schema enforces that limit for every producer.
 
 ## Offline behavior
 

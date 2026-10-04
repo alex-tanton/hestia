@@ -2,7 +2,10 @@ import type { FastifyPluginAsync } from 'fastify';
 import {
   changeEmailRequestSchema,
   changePasswordRequestSchema,
+  deletePushSubscriptionRequestSchema,
+  pushSubscriptionRequestSchema,
   setActiveHouseholdRequestSchema,
+  updateNotificationPreferenceRequestSchema,
   updateProfileRequestSchema,
 } from '@hearth/shared';
 import { newPasswordSchema } from '@hearth/shared/common-passwords';
@@ -10,6 +13,12 @@ import { isRecentRecovery } from '../auth/jwt.js';
 import { parse, type RouteContext } from '../http/context.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from '../services/households.js';
+import {
+  deletePushSubscription,
+  listNotificationPreferences,
+  savePushSubscription,
+  updateNotificationPreference,
+} from '../services/notifications.js';
 import { getProfile, setActiveHousehold, updateProfile } from '../services/users.js';
 
 /** The wire schema with the common-password list applied, which is the full policy. */
@@ -68,6 +77,32 @@ export const userRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx
       throw fail(403, 'The current password is incorrect.');
     }
     await ctx.deps.changeEmail(user.id, body.newEmail);
+    return reply.code(204).send();
+  });
+
+  app.get('/api/users/me/notification-preferences', async (request) => {
+    const user = await ctx.authenticate(request);
+    return ctx.asUser(user, (db) => listNotificationPreferences(db, user.id));
+  });
+
+  app.patch('/api/users/me/notification-preferences', async (request) => {
+    const user = await ctx.authenticate(request);
+    const body = parse(updateNotificationPreferenceRequestSchema, request.body);
+    return ctx.asUser(user, (db) => updateNotificationPreference(db, user.id, body));
+  });
+
+  // Registered per device: the browser's subscription is the unit, and `endpoint` identifies it.
+  app.post('/api/users/me/push-subscriptions', async (request, reply) => {
+    const user = await ctx.authenticate(request);
+    const body = parse(pushSubscriptionRequestSchema, request.body);
+    await ctx.asUser(user, (db) => savePushSubscription(db, user.id, body));
+    return reply.code(204).send();
+  });
+
+  app.delete('/api/users/me/push-subscriptions', async (request, reply) => {
+    const user = await ctx.authenticate(request);
+    const body = parse(deletePushSubscriptionRequestSchema, request.body);
+    await ctx.asUser(user, (db) => deletePushSubscription(db, user.id, body.endpoint));
     return reply.code(204).send();
   });
 
