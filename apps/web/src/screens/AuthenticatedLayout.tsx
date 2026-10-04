@@ -8,6 +8,7 @@ import { SkeletonRows } from '../components/ui/Skeleton.tsx';
 import { useAuthState } from '../lib/api/api-context.tsx';
 import { useProfile, useSwitchHousehold } from '../lib/api/hooks.ts';
 import { ApiError } from '../lib/api/problem.ts';
+import { useNotificationTarget } from '../lib/push/notification-target.ts';
 import { useTimezoneSync } from '../lib/use-timezone-sync.ts';
 
 /** A session is required below this point; without one the sign-in screen is the destination. */
@@ -48,6 +49,7 @@ export function AuthenticatedLayout(): ReactElement {
   const profile = useProfile();
   const switchHousehold = useSwitchHousehold();
   useTimezoneSync(profile.data);
+  useNotificationTarget(profile.data);
 
   const switchTo = switchHousehold.mutate;
   const isRefused = profile.error instanceof ApiError && profile.error.status === 401;

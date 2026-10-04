@@ -23,6 +23,10 @@ ENV VITE_MAGIC_LINK_ENABLED=$HEARTH_MAGIC_LINK_ENABLED
 # service decide what a caller may do.
 ARG ANON_KEY
 ENV VITE_SUPABASE_ANON_KEY=$ANON_KEY
+# The VAPID public key is the half a browser subscribes with (Web Push). It is public by design;
+# the private key is only ever read by the service, which signs each push with it.
+ARG VAPID_PUBLIC_KEY
+ENV VITE_VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
 RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/web... \
  && pnpm --filter @hearth/web build

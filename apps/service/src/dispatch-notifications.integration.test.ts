@@ -28,6 +28,8 @@ let transport: RecordingPushTransport;
 let lines: { level: string; data: Record<string, unknown>; message: string }[];
 let logger: JobLogger;
 const userIds: string[] = [];
+/** The household every queued row names, so a test can assert the push body carries it. */
+const HOUSEHOLD_ID = randomUUID();
 
 const KEYS = { p256dh: 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA', auth: 'tBHItJI5svbpez7KI4CCXg' };
 
@@ -128,7 +130,7 @@ async function queue(
         title: options.title ?? 'Rent is due',
         body: options.body ?? 'Due on the 1st.',
         target: 'bills',
-        householdId: randomUUID(),
+        householdId: HOUSEHOLD_ID,
       }),
     ],
   );
@@ -182,6 +184,7 @@ describe('sending due rows', () => {
       title: 'Rent is due',
       body: 'Due on the 1st.',
       url: '/bills',
+      householdId: HOUSEHOLD_ID,
     });
   });
 

@@ -232,6 +232,7 @@ services:
         HEARTH_REVISION: ${HEARTH_TAG:-dev}
         HEARTH_MAGIC_LINK_ENABLED: ${HEARTH_MAGIC_LINK_ENABLED:-false}
         ANON_KEY: ${ANON_KEY:?set in .env}
+        VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
     restart: unless-stopped
     logging: *logging
     networks: [hearth]

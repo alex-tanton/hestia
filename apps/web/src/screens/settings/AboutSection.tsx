@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { ListRow } from '../../components/ui/ListRow.tsx';
-import { useAuthClient } from '../../lib/api/api-context.tsx';
+import { useApi, useAuthClient } from '../../lib/api/api-context.tsx';
+import { removeDeviceSubscription } from '../../lib/push/device-subscription.ts';
+import { usePushPort } from '../../lib/push/use-push-device.tsx';
 import { ReadOnlyValue, SettingsSection } from './SettingsSection.tsx';
 
 /**
@@ -14,7 +16,20 @@ import { ReadOnlyValue, SettingsSection } from './SettingsSection.tsx';
  */
 export function AboutSection({ isServerOwner }: { isServerOwner: boolean }): ReactElement {
   const auth = useAuthClient();
+  const api = useApi();
+  const port = usePushPort();
   const navigate = useNavigate();
+
+  // Signing out removes this device's push subscription first, while the token that deletes it
+  // is still valid. A failure here must not keep the user signed in.
+  const signOut = async (): Promise<void> => {
+    try {
+      await removeDeviceSubscription(port, api, navigator.onLine);
+    } catch {
+      // Nothing to report: the server prunes the row on the next refused push.
+    }
+    await auth.signOut();
+  };
 
   return (
     <SettingsSection title="About">
@@ -38,7 +53,7 @@ export function AboutSection({ isServerOwner }: { isServerOwner: boolean }): Rea
           variant="secondary"
           className="self-start"
           onClick={() => {
-            void auth.signOut();
+            void signOut();
           }}
         >
           <LogOut aria-hidden size={20} strokeWidth={1.5} />

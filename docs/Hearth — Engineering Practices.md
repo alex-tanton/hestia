@@ -293,7 +293,7 @@ Never committed: `.env`, backups, database dumps, VAPID keys, or anything contai
 
 ### Service worker
 
-Built with **Workbox** via `vite-plugin-pwa`. Hand-rolling a service worker for offline queueing and cache versioning is a known source of subtle bugs.
+Built with **Workbox** via `vite-plugin-pwa` in `injectManifest` mode. `apps/web/src/sw.ts` is the only service worker: the plugin injects the build's precache manifest into it, and the file itself sets the navigation fallback (which excludes `/api`, `/auth`, and `/realtime`), the deal-image cache, and the push and notification-tap handlers. No other caching is hand-rolled.
 
 Caching strategy by asset type:
 
@@ -304,7 +304,7 @@ Caching strategy by asset type:
 | Deal images | Loaded directly from Flipp's image CDN (cross-origin, allowed by the CSP's `img-src`); cache-first, 7-day expiry, 100-entry cap |
 | API responses | Not cached by the service worker; TanStack Query's persisted cache handles this |
 
-**Update handling**: a new service worker activates on next load rather than immediately. When one is waiting, show a subtle "Update available" affordance rather than reloading under the user — a forced reload mid-shopping-trip would be a genuine annoyance.
+**Update handling**: a new service worker activates on next load rather than immediately. When one is waiting, show a subtle "Update available" affordance rather than reloading under the user — a forced reload mid-shopping-trip would be a genuine annoyance. The worker takes over only when the page asks it to, with a `SKIP_WAITING` message sent when the user chooses Reload; it never calls `skipWaiting` on its own.
 
 ### Offline data
 
@@ -337,7 +337,9 @@ The PWA reports unexpected errors to `POST /api/client-error` after passing them
 - Web app manifest with name, section-neutral theme color (the Dashboard slate `#475569`), maskable icons at 192 and 512px, `display: standalone`
 - Install prompt offered after onboarding completes, not on first paint
 - **iOS specifically**: web push only works once the PWA is added to the home screen, so on iOS the notification permission request must follow install, and onboarding should explain the sequence rather than requesting permission that will fail
-- Permission is requested with context — after a user enables their first notification type, never on load
+- Permission is requested with context — after a user enables their first notification type, never on load. The request is made after the preference is saved, so a write that fails never triggers a prompt. A device whose permission is denied is never prompted again, and the screen says where to change it; a dismissed prompt is asked again on the next type-on
+- The VAPID public key is a build-time value like the anon key: the caddy image passes `VAPID_PUBLIC_KEY` as `VITE_VAPID_PUBLIC_KEY`, and a browser subscribes with it. The private key is never in the build. A build without the key reports push as unsupported rather than failing at subscribe time
+- A tap on a notification posts its household and route to an open window, which switches household and then opens the screen. With no window open, the app opens with the household in a `household` query parameter, which it reads once and removes
 
 ### Performance budget
 

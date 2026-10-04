@@ -123,11 +123,22 @@ const TARGET_PATHS: Readonly<Record<string, string>> = {
 };
 
 const targetSchema = z.object({ target: z.string().optional() });
+const householdSchema = z.object({ householdId: z.guid().optional() });
 
 export function deepLinkFor(payload: unknown): string {
   const parsed = targetSchema.safeParse(payload);
   const target = parsed.success ? parsed.data.target : undefined;
   return (target !== undefined ? TARGET_PATHS[target] : undefined) ?? '/';
+}
+
+/**
+ * The household a tap switches the app to before it opens the deep link (PRD, "Notifications" ›
+ * "Rules" › "Deep links"). It is an id, never household content, so it may ride in the push body.
+ */
+export function householdIdFor(payload: unknown): { householdId?: string } {
+  const parsed = householdSchema.safeParse(payload);
+  const householdId = parsed.success ? parsed.data.householdId : undefined;
+  return householdId === undefined ? {} : { householdId };
 }
 
 async function attempt(
@@ -204,6 +215,7 @@ export async function runDispatchNotifications(deps: DispatchDeps): Promise<Disp
       title: copy.data.title,
       body: copy.data.body,
       url: deepLinkFor(row.payload),
+      ...householdIdFor(row.payload),
     });
 
     // The condition is checked again inside the claim, so a bill paid or a chore completed since the

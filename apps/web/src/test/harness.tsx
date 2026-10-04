@@ -15,8 +15,11 @@ import { ToastProvider } from '../components/ui/Toast.tsx';
 import { SectionProvider } from '../lib/section-context.tsx';
 import type { AuthClient, AuthState } from '../lib/auth/auth-client.ts';
 import type { ListRealtimeHandlers, RealtimePort } from '../lib/realtime/realtime-port.ts';
+import type { PushPort } from '../lib/push/push-port.ts';
+import { PushPortProvider } from '../lib/push/use-push-device.tsx';
 import { routes } from '../routes.tsx';
 import { ALEX_ID } from './fixtures.ts';
+import { createPushDouble } from './push-double.ts';
 
 /*
  * A typed stub of the two things every screen talks to: the session and `fetch`. There is no
@@ -171,6 +174,11 @@ export interface RenderOptions {
   persister?: Persister;
   /** Absent unless a test exercises the write queue's own immediate, unthrottled flush. */
   flushPersister?: Persister;
+  /**
+   * The device's push port. Every render gets a double by default, so no screen under test reaches
+   * the browser's push APIs, which jsdom does not have.
+   */
+  pushPort?: PushPort;
   /** A route pattern, when the screen reads params from it. */
   path?: string;
   /** A string, or a `{ pathname, state }` entry where the screen reads router state. */
@@ -186,10 +194,11 @@ export function renderScreen(
     realtime,
     persister,
     flushPersister,
+    pushPort = createPushDouble(),
     path = '*',
     initialEntries = ['/'],
   }: RenderOptions = {},
-): RenderResult & { auth: AuthStub; queryClient: QueryClient } {
+): RenderResult & { auth: AuthStub; queryClient: QueryClient; pushPort: PushPort } {
   const router = createMemoryRouter([{ path, element: ui }], { initialEntries });
   const result = render(
     <AppProviders
@@ -202,12 +211,14 @@ export function renderScreen(
       {/* The shell supplies both around every screen; a screen under test needs them too. */}
       <SectionProvider section="dashboard">
         <ToastProvider>
-          <RouterProvider router={router} />
+          <PushPortProvider port={pushPort}>
+            <RouterProvider router={router} />
+          </PushPortProvider>
         </ToastProvider>
       </SectionProvider>
     </AppProviders>,
   );
-  return { ...result, auth, queryClient };
+  return { ...result, auth, queryClient, pushPort };
 }
 
 /** A realtime port a test drives by hand, recording what each open list subscribed to. */

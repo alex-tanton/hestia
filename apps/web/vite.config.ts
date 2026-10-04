@@ -34,6 +34,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      /*
+       * The service worker is ours, not generated (Engineering Practices › Service worker): `src/sw.ts`
+       * precaches the build and adds the push handlers, and this plugin only injects the precache
+       * manifest into it. Every other caching rule lives in that file.
+       */
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       // Engineering Practices: a waiting service worker must never reload under the user;
       // the shell shows an "Update available" affordance instead.
       registerType: 'prompt',
@@ -57,31 +65,8 @@ export default defineConfig({
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,png,svg,webmanifest}'],
-        // API responses are never cached by the service worker (TanStack Query persists them).
-        navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/realtime\//],
-        runtimeCaching: [
-          {
-            /*
-             * Deal images load straight from Flipp's CDN: cache-first, 7-day expiry, 100-entry
-             * cap (Engineering Practices › PWA implementation). `f.wishabi.net` serves item and
-             * flyer images and `images.wishabi.net` serves merchant logos; they are the only two
-             * hosts the CSP's `img-src` allows (Technical Architecture, "Routing"). Workbox
-             * serializes this matcher into the worker, so the origins are written inline — a
-             * reference to a constant out here would be undefined by the time it runs.
-             * Cross-origin responses are opaque, so status 0 counts as cacheable alongside 200.
-             */
-            urlPattern: ({ url }) =>
-              url.origin === 'https://f.wishabi.net' || url.origin === 'https://images.wishabi.net',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'deal-images',
-              expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
       },
     }),
   ],

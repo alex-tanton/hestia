@@ -463,6 +463,28 @@ describe('copy validation', () => {
   });
 });
 
+describe('push message household', () => {
+  it('carries the household id so a tap can switch to it before the deep link', async () => {
+    const householdId = '11111111-1111-4111-8111-111111111111';
+    const outbox = new MemoryOutbox([
+      row({
+        id: 'n1',
+        payload: { title: 'Rent is due', body: 'Due on the 1st.', target: 'bills', householdId },
+      }),
+    ]);
+    const { transport, run } = harness(outbox);
+
+    await run();
+
+    expect(JSON.parse(transport.sent[0]?.message ?? '')).toStrictEqual({
+      title: 'Rent is due',
+      body: 'Due on the 1st.',
+      url: '/bills',
+      householdId,
+    });
+  });
+});
+
 describe('deepLinkFor', () => {
   it('opens the screen each target names', () => {
     expect(deepLinkFor({ target: 'flyers' })).toBe('/lists/flyers');

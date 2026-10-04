@@ -40,4 +40,9 @@ export const queryKeys = {
   subscriptions: (householdId: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'subscriptions'] as const,
   deepHealth: ['health', 'deep'] as const,
+  /**
+   * The caller's notification preferences. They belong to the user, not a household (a weekly meal
+   * nudge names its household inside the entry), so the key is not household-scoped.
+   */
+  notificationPreferences: ['notification-preferences'] as const,
 };

@@ -208,8 +208,32 @@ Grouped sections:
 - **My Households:** each household with its role and member list, plus a leave action, and a "Join or create a household" action. The admin also sees remove-member and transfer-admin.
 - **Invites** (admin only): create an invite, which shows the link (with a copy action) and the 8-character code once; a list of outstanding invites with creation and expiry dates; a revoke action on each.
 - **Household settings** for the active household: favorite stores, editable by any member, chosen from the merchants near the postal code as the same checkbox list onboarding shows. Name, postal code, and timezone are editable by the admin and read-only for everyone else.
-- **Notifications:** per-type toggles. Turning on the first type on a device asks for push permission and registers that device's push subscription. `weekly_meal_nudge` has its own toggle for each household. The single "Remind me about all household bills" toggle. The quiet-hours window, with start and end times. The per-type toggles ship with push itself and take the coming-soon state until then, since a switch that turns nothing on would be a lie; the quiet-hours window and the household-bill reminder live on the profile and are editable from the first release, and apply as soon as sending starts.
-- **About:** version and sign out. Signing out removes this device's push subscription. For the server owner only, a **System health** entry opens a screen with job freshness (last deal refresh, last notification sent, last backup), the top errors from the last 24 hours, and per-merchant skip rates. Each item is plain text with an "as of" time; nothing on the screen is interactive beyond a refresh action.
+- **Notifications:** per-type toggles, one for each type, each with its name and one line on when it arrives. `weekly_meal_nudge` has its own toggle for each household, named with the household. Above the types sit the single "Remind me about all household bills" toggle and the quiet-hours window, with start and end times; both live on the profile and apply as soon as sending starts. Turning a type on registers this device for push, and that is the only moment the browser's permission prompt appears. The states are listed under "Notifications states" below.
+- **About:** version and sign out. Signing out removes this device's push subscription: online, the server row is deleted first; offline, only the device's own subscription is dropped, and the server row is pruned the next time a push to it is refused. For the server owner only, a **System health** entry opens a screen with job freshness (last deal refresh, last notification sent, last backup), the top errors from the last 24 hours, and per-merchant skip rates. Each item is plain text with an "as of" time; nothing on the screen is interactive beyond a refresh action.
+
+**Notifications states.** Every state below is shown in both themes and announced where it changes.
+
+| State | When | Presentation |
+| --- | --- | --- |
+| Loading | Preferences in flight | Four skeleton rows, labelled "Loading notification types", after the 200ms delay |
+| Populated | Preferences loaded | One switch per type, in the order of the types table in the Requirements document. The weekly meal nudge appears once per household. Each switch has its name as its label and its description as the accessible description |
+| Empty | The server returns no types | "No notification types to turn on yet. Join a household to get reminders." No switches |
+| Error | Preferences fail, not offline | "Couldn't load notification types. Try again.", with a retry that refetches |
+| Offline, nothing cached | Preferences cannot be read and no copy is held | "Notification settings need a connection." |
+| Offline, cached | Preferences held from the last sync | The cached values, every switch disabled. "Needs a connection." sits beside each switch and is part of its description |
+| Saving | A switch has been changed and the write is in flight | "Saving…" in the save-result region. The switch keeps the server's value until the write returns; a further change is ignored until then |
+| Saved | The write returns | "Notification settings saved." |
+| Save failed | The write is refused | "Couldn't save that setting. Try again." The switch shows the server's value |
+| Permission not yet asked | Device has not been asked | No prompt on load. The prompt appears only after a type is saved on |
+| Denied | The browser refused the permission | "Notifications are blocked for Hearth in this browser, so this device won't get them." with a link to the browser's notification settings guidance, opening in a new tab. No prompt is ever shown again. Switches still save |
+| Dismissed | The prompt was closed without an answer | "Notifications stay off on this device until you allow them. Turn a type on again to be asked." |
+| Registration failed | The device could not register after a type was turned on | "Couldn't turn on notifications on this device. Try again." |
+| Unsupported browser | The browser has no push APIs, or the build has no VAPID key | "Notifications aren't available in this browser. Hearth still works without them." No switches |
+| iOS, not on the home screen | iOS Safari, app not installed | The install sequence from onboarding ("On iPhone and iPad, Hearth has to be on the home screen…"), in place of the switches |
+
+A denied permission is final, and is never prompted again, because the browser blocks it. A dismissed prompt is asked again on the next type-on. The denied and dismissed explanations are derived from the browser's permission and the saved types each time Settings opens, so they are shown again on a later visit.
+
+The save-result region is mounted empty and is never `display: none`, so the first result is announced. Toggles are real checkboxes with `role="switch"`, operated with the Space key, and carry a visible focus ring in the section color.
 
 **Leaving and removing.** Leave and remove both open a pushed screen with the departure preview: lists created, chores assigned, errands assigned, and household bills owned. Each item has a picker for a remaining member, and the confirm action stays disabled until every item has been reassigned. Below them, rotations are listed for information only, with no picker: "Take out trash: will be removed from rotation; the turn passes to Sam." When the departing user was viewing this household, the app switches to their longest-held remaining household, or to onboarding's create-or-join step if none is left. When the last member leaves, the preview is replaced by the household-deletion dialog. It names what will be lost, with counts ("This deletes 4 lists, 23 recipes, and 6 chores permanently"), and has a text field. The destructive button is enabled only when the field matches the household name exactly.
 

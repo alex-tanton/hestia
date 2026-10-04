@@ -44,6 +44,10 @@ function settingsHandlers(
       body: MEMBERS[params['id'] ?? ''],
     }),
     'GET /api/households/:id/invites': () => ({ status: 200, body: [inviteFixture] }),
+    'GET /api/users/me/notification-preferences': () => ({
+      status: 200,
+      body: { preferences: [{ type: 'bill_due', householdId: null, enabled: true }] },
+    }),
     ...extra,
   };
 }
@@ -177,7 +181,7 @@ describe('Settings', () => {
     ).toBeInTheDocument();
   });
 
-  it('saves quiet hours and keeps notification types for later', async () => {
+  it('saves quiet hours alongside the notification types', async () => {
     const user = userEvent.setup();
     const stub = renderSettings(
       settingsHandlers(profileFixture, {
@@ -209,7 +213,7 @@ describe('Settings', () => {
       const reminder = await screen.findByLabelText('Remind me about all household bills');
       expect(reminder).toBeDisabled();
       // Design › Offline rules: the reason sits beside the control and in its description.
-      expect(reminder).toHaveAccessibleDescription('Offline. This needs a connection.');
+      expect(reminder).toHaveAccessibleDescription('Needs a connection.');
     } finally {
       onLine.mockRestore();
     }
