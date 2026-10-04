@@ -70,9 +70,19 @@ const envSchema = z.object({
    * pages this points at, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
    */
   HEARTH_RECIPE_FIXTURE_DIR: z.string().min(1).optional(),
+  /*
+   * Web Push (Technical Architecture, "Scheduled jobs" › "Dispatch"). The dispatch job is scheduled
+   * in every service process, so the key pair is required at startup rather than failing on the
+   * first send. Both match the names docker-compose.yml passes through from the host's .env.
+   */
+  VAPID_PUBLIC_KEY: z.string().min(1),
+  VAPID_PRIVATE_KEY: z.string().min(1),
+  // The contact URI sent in each push request's VAPID claims. Optional: when unset it is derived in
+  // `vapidSubjectFor`, so `Env.VAPID_SUBJECT` is always a usable mailto: or https: URI.
+  VAPID_SUBJECT: z.string().min(1).optional(),
 });
 
-export type Env = z.infer<typeof envSchema>;
+export type Env = z.infer<typeof envSchema> & { VAPID_SUBJECT: string };
 
 function parse<T extends z.ZodType>(schema: T, source: NodeJS.ProcessEnv): z.infer<T> {
   const result = schema.safeParse(source);
@@ -82,9 +92,47 @@ function parse<T extends z.ZodType>(schema: T, source: NodeJS.ProcessEnv): z.inf
   return result.data;
 }
 
+function isContactUri(value: string): boolean {
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === 'mailto:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The contact a push service is given in VAPID claims. web-push rejects any other scheme (plain
+ * http included), so the choice is made here and never left to fail on the first send. An explicit
+ * VAPID_SUBJECT wins; otherwise the owner's address as mailto:, otherwise the origin when it is
+ * https. The error names the variables but never echoes their values, which hold household data.
+ */
+export function vapidSubjectFor(env: {
+  VAPID_SUBJECT?: string | undefined;
+  HEARTH_OWNER_EMAIL: string;
+  HEARTH_ORIGIN: string;
+}): string {
+  if (env.VAPID_SUBJECT !== undefined) {
+    if (!isContactUri(env.VAPID_SUBJECT)) {
+      throw new Error('Invalid environment:\nVAPID_SUBJECT must be a mailto: or https: URI');
+    }
+    return env.VAPID_SUBJECT;
+  }
+  if (z.email().safeParse(env.HEARTH_OWNER_EMAIL).success) {
+    return `mailto:${env.HEARTH_OWNER_EMAIL}`;
+  }
+  if (new URL(env.HEARTH_ORIGIN).protocol === 'https:') return env.HEARTH_ORIGIN;
+  throw new Error(
+    'Invalid environment:\nVAPID_SUBJECT is unset and no contact can be derived: set VAPID_SUBJECT ' +
+      'to a mailto: or https: URI, set HEARTH_OWNER_EMAIL to an email address, or serve ' +
+      'HEARTH_ORIGIN over https',
+  );
+}
+
 /** Parses the environment, throwing with every problem listed so startup fails fast. */
 export function parseEnv(source: NodeJS.ProcessEnv): Env {
-  return parse(envSchema, source);
+  const env = parse(envSchema, source);
+  return { ...env, VAPID_SUBJECT: vapidSubjectFor(env) };
 }
 
 const cliEnvSchema = envSchema.pick({

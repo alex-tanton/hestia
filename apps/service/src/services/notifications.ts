@@ -38,7 +38,7 @@ function keyOf(type: NotificationType, householdId: string | null): string {
 }
 
 /**
- * Every type with its effective value (Decision D7). Per-user types appear once; the weekly meal
+ * Every type with its effective value. Per-user types appear once; the weekly meal
  * nudge appears once for each household the caller belongs to, in the order given. A stored row
  * for a household the caller has since left is ignored, since it names no current membership.
  */

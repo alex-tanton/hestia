@@ -17,7 +17,9 @@ import { createScheduler, type Scheduler } from './jobs/index.js';
 import { loadOpenApiDocument } from './openapi.js';
 import { createGoTrueAdmin } from './privileged/gotrue-admin.js';
 import { createJobDatabase } from './privileged/job-database.js';
+import { createNotificationOutbox } from './privileged/notification-outbox.js';
 import { readSystemHealth } from './privileged/service-role-db.js';
+import { createWebPushTransport } from './push/web-push-transport.js';
 import { fetchRecipePage } from './recipes/fetch-recipe.js';
 import { recipeFixtureFetch } from './recipes/fixture-fetch.js';
 import { HostRateLimiter } from './recipes/host-rate-limiter.js';
@@ -110,9 +112,20 @@ const app = await buildApp(
 );
 
 wiring.log = app.log;
+const jobDatabase = createJobDatabase(database.db);
 const scheduler = createScheduler({
-  database: createJobDatabase(database.db),
+  database: jobDatabase,
   logger: app.log,
+  dispatch: {
+    outbox: createNotificationOutbox(jobDatabase),
+    // The push service asks for a contact in each request's VAPID claims; parseEnv has already
+    // resolved it to a mailto: or https: URI, so web-push accepts it.
+    transport: createWebPushTransport({
+      subject: env.VAPID_SUBJECT,
+      publicKey: env.VAPID_PUBLIC_KEY,
+      privateKey: env.VAPID_PRIVATE_KEY,
+    }),
+  },
   refresh: {
     source: dealSource,
     // Held in memory by this process and labelled "since last refresh" by System health.
@@ -129,7 +142,8 @@ const scheduler = createScheduler({
 wiring.scheduler = scheduler;
 scheduler.start();
 
-// Docker stops containers with SIGTERM; finish in-flight requests and release the pool.
+// Docker stops containers with SIGTERM; finish in-flight requests and job runs, then release the
+// pool. The pool closes only after scheduler.stop() resolves, so no run is left writing to it.
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.once(signal, () => {
     app.log.info({ signal }, 'shutting down');

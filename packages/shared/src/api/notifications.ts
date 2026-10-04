@@ -104,7 +104,7 @@ export const deletePushSubscriptionRequestSchema = z.object({ endpoint: pushEndp
 export type DeletePushSubscriptionRequest = z.infer<typeof deletePushSubscriptionRequestSchema>;
 
 /**
- * A notification's title and body (Branding, "Notification copy"; Decision D16). Every producer
+ * A notification's title and body (Branding, "Notification copy"). Every producer
  * validates its copy against this, so an overlong line fails in the producer rather than on the
  * device.
  */

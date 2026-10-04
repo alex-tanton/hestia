@@ -5,6 +5,7 @@ import { FakeDealSource } from '../test/fixture-deal-source.js';
 import { readinessNotBuiltYet } from './refresh-deals.js';
 import {
   createScheduler,
+  DISPATCH_NOTIFICATIONS_SCHEDULE,
   LOG_AUTOPAY_SCHEDULE,
   PRUNE_CACHE_SCHEDULE,
   REFRESH_DEALS_SCHEDULE,
@@ -13,7 +14,7 @@ import {
 import type { JobLogger } from './types.js';
 
 /**
- * Technical Architecture, "Scheduled jobs": the two schedules, in UTC, and the advisory lock that
+ * Technical Architecture, "Scheduled jobs": the schedules, in UTC, and the advisory lock that
  * makes a second run a no-op. The database here is a stub whose `pg_try_advisory_lock` answers
  * nothing, which is exactly the "lock held" case; the lock being granted needs a real Postgres and
  * is covered by `jobs.integration.test.ts`.
@@ -45,6 +46,17 @@ function deps(overrides: Partial<SchedulerDeps> = {}): SchedulerDeps {
       repriceExpiredItems: () => Promise.resolve(0),
       recomputeReadiness: readinessNotBuiltYet,
     },
+    dispatch: {
+      outbox: {
+        expireOverdue: () => Promise.resolve([]),
+        listDue: () => Promise.resolve([]),
+        claim: () => Promise.resolve(true),
+        release: () => Promise.resolve(),
+        deleteUnsent: () => Promise.resolve(),
+        deleteSubscription: () => Promise.resolve(),
+      },
+      transport: { send: () => Promise.resolve({ kind: 'accepted' }) },
+    },
     ...overrides,
   };
 }
@@ -55,13 +67,14 @@ afterEach(() => {
 });
 
 describe('schedules', () => {
-  it('runs refresh-deals at 08:00, log-autopay every 2 minutes, and prune-cache at 04:00', () => {
+  it('runs refresh-deals at 08:00, log-autopay and dispatch-notifications every 2 minutes, and prune-cache at 04:00', () => {
     expect(REFRESH_DEALS_SCHEDULE).toBe('0 8 * * *');
     expect(LOG_AUTOPAY_SCHEDULE).toBe('*/2 * * * *');
+    expect(DISPATCH_NOTIFICATIONS_SCHEDULE).toBe('*/2 * * * *');
     expect(PRUNE_CACHE_SCHEDULE).toBe('0 4 * * *');
   });
 
-  it('registers all three jobs in UTC and destroys them on stop', async () => {
+  it('registers all four jobs in UTC and destroys them on stop', async () => {
     const destroy = vi.fn(() => Promise.resolve());
     const schedule = vi
       .spyOn(cron, 'schedule')
@@ -70,10 +83,11 @@ describe('schedules', () => {
     const scheduler = createScheduler(deps());
     scheduler.start();
 
-    expect(schedule).toHaveBeenCalledTimes(3);
+    expect(schedule).toHaveBeenCalledTimes(4);
     expect(schedule.mock.calls.map((call) => call[0])).toStrictEqual([
       REFRESH_DEALS_SCHEDULE,
       LOG_AUTOPAY_SCHEDULE,
+      DISPATCH_NOTIFICATIONS_SCHEDULE,
       PRUNE_CACHE_SCHEDULE,
     ]);
     for (const call of schedule.mock.calls) {
@@ -81,12 +95,12 @@ describe('schedules', () => {
     }
 
     await scheduler.stop();
-    expect(destroy).toHaveBeenCalledTimes(3);
+    expect(destroy).toHaveBeenCalledTimes(4);
   });
 });
 
 describe('the advisory lock guard', () => {
-  it.each(['refresh-deals', 'log-autopay', 'prune-cache'] as const)(
+  it.each(['refresh-deals', 'log-autopay', 'dispatch-notifications', 'prune-cache'] as const)(
     'skips %s and says so when the lock is held',
     async (job) => {
       const scheduler = createScheduler(deps());

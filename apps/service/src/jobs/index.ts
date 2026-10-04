@@ -1,5 +1,11 @@
 export { withJobLock, type LockOutcome } from './advisory-lock.js';
 export {
+  runDispatchNotifications,
+  type DispatchOutbox,
+  type DispatchOutcome,
+  type PushTransport,
+} from './dispatch-notifications.js';
+export {
   autopayOccurrences,
   runLogAutopay,
   type AutopayBillRow,
@@ -16,6 +22,7 @@ export {
 export { planFlyerRefreshNotifications, planRefresh } from './refresh-plan.js';
 export {
   createScheduler,
+  DISPATCH_NOTIFICATIONS_SCHEDULE,
   PRUNE_CACHE_SCHEDULE,
   REFRESH_DEALS_SCHEDULE,
   type JobName,

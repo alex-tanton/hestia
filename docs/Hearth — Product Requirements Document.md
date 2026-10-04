@@ -536,11 +536,17 @@ Web Push via the Push API and a service worker, authenticated with self-generate
 
 One platform caveat: Android supports web push from a browser tab, but iOS Safari requires the PWA to be installed to the home screen first. Installation is therefore a prerequisite for notifications on iOS and should be prompted during onboarding.
 
+A notification is delivered once at least one of its recipient's devices accepts it. It is sent to every device the recipient has registered, and a device the push service reports as gone is removed from the recipient's account. A device whose push fails for any other reason stays registered. A notification that no device accepts is retried every two minutes until 24 hours after its send time. After that it is dropped without anyone being told, and the only record is a log line naming its type and id. The title and body of every notification are each limited to 60 characters. The limit is enforced by the shared schema and by every producer, and a notification found over it at send time is dropped under the same log rule.
+
+Household-dated reminders, `bill_due` for a household bill and `chore_due` for a household chore, are dated in the household's timezone, and their 09:00 send time is 09:00 in the household's timezone for every recipient. Everyone in the household therefore sees the same calendar day the screens show. Personal items use the recipient's timezone.
+
+Tests and end-to-end runs never contact a push service. They use a test double in place of the real push transport, so no run in CI sends a live push.
+
 ### Types and defaults
 
 | Type | Default | Recipients | Send time |
 | --- | --- | --- | --- |
-| `bill_due` | On | The bill's owner, plus members who have "Remind me about all household bills" on (household bills only) | 09:00, recipient's timezone |
+| `bill_due` | On | The bill's owner, plus members who have "Remind me about all household bills" on (household bills only) | 09:00, household timezone for a household bill; recipient's timezone for a personal bill |
 | `chore_due` | On | The chore's assignee or current rotation member; for errands with a due date, their assignee | 09:00, household timezone |
 | `chore_rotation` | On | The new assignee of a rotating chore | On completion |
 | `list_activity` | On | Other members of the household | Debounced (see Rules) |

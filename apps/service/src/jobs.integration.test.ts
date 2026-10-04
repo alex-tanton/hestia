@@ -10,9 +10,11 @@ import {
   runRefreshDeals,
   type RefreshDeps,
 } from './jobs/refresh-deals.js';
-import { createScheduler } from './jobs/scheduler.js';
+import { createScheduler, type SchedulerDeps } from './jobs/scheduler.js';
 import type { JobDatabase, JobLogger } from './jobs/types.js';
+import { createNotificationOutbox } from './privileged/notification-outbox.js';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
+import { RecordingPushTransport } from './test/push-double.js';
 import { recomputeReadinessForHousehold } from './services/readiness.js';
 import { repriceExpiredItems } from './services/repricing.js';
 import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
@@ -37,6 +39,12 @@ const POSTAL_CODE = '27521';
 const DORMANT_POSTAL_CODE = '27522';
 const QUIET_POSTAL_CODE = '27523';
 const ALL_POSTAL_CODES = [POSTAL_CODE, DORMANT_POSTAL_CODE, QUIET_POSTAL_CODE];
+
+// Scheduler deps for the runs below, which never reach the dispatch job: its own behaviour is
+// covered by dispatch-notifications.integration.test.ts.
+function dispatchDeps(): SchedulerDeps['dispatch'] {
+  return { outbox: createNotificationOutbox(jobDb), transport: new RecordingPushTransport() };
+}
 
 function makeLogger(): JobLogger {
   const record = (level: string) => (data: Record<string, unknown>, message: string) => {
@@ -704,6 +712,7 @@ describe('the scheduler', () => {
     const scheduler = createScheduler({
       database: jobDb,
       logger,
+      dispatch: dispatchDeps(),
       refresh: {
         source,
         publishSkipRates: () => undefined,
@@ -737,6 +746,7 @@ describe('the scheduler', () => {
     const scheduler = createScheduler({
       database: jobDb,
       logger,
+      dispatch: dispatchDeps(),
       refresh: {
         source,
         publishSkipRates: () => undefined,

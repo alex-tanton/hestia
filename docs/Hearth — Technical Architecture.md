@@ -201,7 +201,7 @@ A single `.env` file on the host, never committed. Contents:
 
 - the Postgres password and the `hearth_service` role password
 - the GoTrue JWT secret, and the anon and service-role keys
-- the VAPID key pair
+- the VAPID key pair; `VAPID_SUBJECT` is optional. When it is unset the contact is `mailto:` followed by `HEARTH_OWNER_EMAIL`, or else `HEARTH_ORIGIN` when that is an https URL. A set `VAPID_SUBJECT` must itself be a `mailto:` or `https:` URI. A deployment where neither default is available fails at startup, and the error names the variables without echoing their values.
 - `HEARTH_ORIGIN`
 - `HEARTH_OWNER_EMAIL`
 - `HEARTH_MAGIC_LINK_ENABLED` (default `false`)
@@ -329,7 +329,9 @@ A request over the limit gets `429` with a problem-details body and a `Retry-Aft
 **Dispatch.** Each run does two things.
 
 1. **Enqueue.** For every scheduled type and every recipient whose send time for today has passed in the relevant timezone, the job inserts an outbox row with `on conflict do nothing` on (`user_id`, `type`, `target_id`, `occurrence_key`). Only today's send times are enqueued, so downtime never produces a backlog of stale reminders. Preferences are checked at enqueue time, and so are the conditions: still unpaid, still uncompleted, still unplanned. `list_activity` and `chore_rotation` rows are enqueued by the request that causes them, and `flyer_refresh` rows by `refresh-deals`, not by this step.
-2. **Send.** It selects rows with `sent_at is null and send_after <= now()`, sends each to every one of the recipient's push subscriptions, and stamps `sent_at`.
+2. **Send.** It first deletes every unsent row whose `send_after` is more than 24 hours behind `now()`, logging a warning with each row's type and id only. It then selects rows with `sent_at is null and send_after <= now()` and sends each to every one of the recipient's push subscriptions. Before anything is sent, the row's title and body are validated against the shared copy schema, which caps each at 60 characters; a row that fails is deleted unsent, with the same warning. Each row is claimed before any device is sent it: its `sent_at` is stamped by a conditional update that applies only while `sent_at` is null. If no device accepts the row, the claim is released and the row stays unsent for the next run. If at least one device accepts, the claim stays.
+
+The push transport is injected into the job. In production it is the `web-push` package, signed with the VAPID key pair from the environment; `VAPID_SUBJECT` names the contact in each request and is resolved as described under Secrets. The payload is the row's title and body, plus a deep link derived from the row's target. Tests and E2E always supply a test double in its place, so no CI run calls a push endpoint.
 
 `send_after` is set when a row is written. If it falls inside the recipient's quiet hours, it is moved to the end of the window. Both calculations are SQL functions, `public.next_local_time(after, tz, at_local)` and `public.after_quiet_hours(send_at, tz, quiet_start, quiet_end)`, so every writer of an outbox row — jobs as `service_role`, and the request-written `list_activity` and `chore_rotation` rows as `authenticated` — gets the same answer, resolved in the timezone that owns the time rather than the server's.
 
@@ -338,14 +340,19 @@ A request over the limit gets `429` with a problem-details body and a `Retry-Aft
 Jobs must be safe to run twice — a restart mid-run must not double-send or double-log.
 
 - Each job takes `pg_try_advisory_lock(hashtext('<job name>'))` on a dedicated connection and skips the run if the lock is held.
-- Notification idempotency comes from the outbox's unique key. An enqueue that repeats is a no-op, and `sent_at` is stamped once per row.
+- Notification idempotency comes from the outbox's unique key. An enqueue that repeats is a no-op. Each due row is claimed before any device is sent it, by a conditional update that stamps `sent_at` only while it is null. A claimed row is never selected for sending again, so a rerun sends nothing.
+- A claim is released only when no device accepted the row, so the next run retries it. Once one device has accepted, the claim stays: no device that accepted a notification is sent it again, and a device whose push failed while another accepted the same row is not retried for that row.
+- The cost of claiming first is stated plainly: a crash after a row is claimed and before any device accepts it loses that one notification to the crashed run. It is not retried, and no device is sent it twice. A restart therefore trades a possible missed reminder for a guarantee against duplicates.
 - Deal refresh writes are upserts on (`postal_code`, `external_id`). `log-autopay` relies on the unique (`bill_id`, `occurrence_date`) key. Repricing and readiness recomputation are deterministic from current data.
 - Recurrence is derived on read, so there is nothing to advance and nothing to double-advance.
 
 ### Failure handling
 
 - A failed deal fetch for one postal code does not abort the job for others; each is caught independently
-- Push sends returning 404 or 410 delete the stored subscription — the browser has revoked it
+- Push sends returning 404 or 410 delete the stored subscription — the browser has revoked it. A push that fails for any other reason leaves the subscription in place. A push whose transport throws is treated the same as a failed one, so the recipient's other devices are still sent theirs.
+- A database write that fails during a run ends that run. A row already claimed for a device that accepted it is not sent again; a row claimed but not yet released is lost to that run, as described under Idempotency.
+- A notification that no device accepts is retried by each dispatch run until `send_after` is more than 24 hours past. Then the unsent row is deleted and a warning is logged with its type and id only, never its payload or any household content.
+- A notification whose copy fails validation is deleted unsent, with the same warning, rather than retried; a retry cannot shorten its copy.
 - Any unhandled job or request error is logged and recorded in `app_error` (see Observability)
 
 ## Recipe fetching
