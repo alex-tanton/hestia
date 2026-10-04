@@ -32,5 +32,12 @@ export const queryKeys = {
   chore: (householdId: string, choreId: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'chore', choreId] as const,
   errands: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'errands'] as const,
+  /** The household's bills plus the caller's own personal ones (Requirements › "Bills"). */
+  bills: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'bills'] as const,
+  /** `/bills/:id` names no household, so the cache entry carries it instead (like `recipe`). */
+  bill: (householdId: string, billId: string) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'bill', billId] as const,
+  subscriptions: (householdId: string) =>
+    [...HOUSEHOLD_SCOPE, householdId, 'subscriptions'] as const,
   deepHealth: ['health', 'deep'] as const,
 };

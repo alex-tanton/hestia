@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FIRST_RUN_HEADING } from '../components/dashboard/DashboardFirstRun.tsx';
 import { addDays, todayInTimezone } from '../lib/household-date.ts';
+import { billFixture } from '../test/bills-fixtures.ts';
 import { oakStreetMembers, profileFixture } from '../test/fixtures.ts';
 import {
   cleanBathroomFixture,
@@ -18,12 +19,14 @@ const EMPTY_WEEK: StubHandler = ({ query }) => ({
 });
 
 const EMPTY_CHORES: StubHandler = () => ({ status: 200, body: [] });
+const EMPTY_BILLS: StubHandler = () => ({ status: 200, body: [] });
 
 /** PRD › This Week: the Shopping card shows the active list's status and items outstanding. */
 function mount(
   lists: StubHandler,
   mealPlan: StubHandler = EMPTY_WEEK,
   chores: StubHandler = EMPTY_CHORES,
+  bills: StubHandler = EMPTY_BILLS,
 ): void {
   const stub = createFetchStub({
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
@@ -31,6 +34,7 @@ function mount(
     'GET /api/households/:id/lists': lists,
     'GET /api/households/:id/meal-plan': mealPlan,
     'GET /api/households/:id/chores': chores,
+    'GET /api/households/:id/bills': bills,
   });
   vi.stubGlobal('fetch', stub.fetch);
   renderScreen(<DashboardRoute />);
@@ -65,15 +69,17 @@ describe('the Shopping card', () => {
       await screen.findByRole('heading', { level: 2, name: FIRST_RUN_HEADING }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Create a list' })).toHaveAttribute('href', '/lists');
-    // The unshipped pillar keeps its placeholder, so the layout does not reflow.
-    expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
+    // Bills and Chores both shipped and are empty, so they fold into the same first-run panel
+    // rather than rendering their own "Nothing due" cards.
+    expect(screen.queryByRole('region', { name: /^Bills/ })).toBeNull();
     expect(screen.queryByRole('region', { name: /^Chores/ })).toBeNull();
   });
 
   it('keeps the failure inside the card', async () => {
     mount(() => ({ status: 500, body: problemBody(500, 'Internal Server Error') }));
     expect(await screen.findByText("Couldn't load your lists. Try again.")).toBeInTheDocument();
-    expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
+    // Lists failed, not every shipped card is empty, so Bills still renders its own (empty) card.
+    expect(within(card('Bills')).getByText('Nothing due this week')).toBeInTheDocument();
   });
 });
 
@@ -165,5 +171,67 @@ describe('the Meals card', () => {
     expect(
       within(card('Meals')).getByText('Nothing planned for today or tomorrow'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('the Bills card', () => {
+  it('shows what is due this week, overdue first, and leaves later bills off', async () => {
+    const today = todayInTimezone(profileFixture.timezone);
+    mount(
+      () => ({ status: 200, body: [] }),
+      undefined,
+      undefined,
+      () => ({
+        status: 200,
+        body: [
+          billFixture({
+            id: '30000002-0000-4000-8000-000000000002',
+            name: 'Rent',
+            amountCents: 185_000,
+            currentOccurrenceDate: addDays(today, 30),
+            isOverdue: false,
+          }),
+          billFixture({
+            id: '30000005-0000-4000-8000-000000000005',
+            name: 'Duke Energy',
+            amountCents: 14_230,
+            currentOccurrenceDate: addDays(today, -5),
+            isOverdue: true,
+          }),
+          billFixture({
+            id: '30000001-0000-4000-8000-000000000001',
+            name: 'Spectrum Internet',
+            amountCents: 7_499,
+            currentOccurrenceDate: today,
+            isOverdue: false,
+          }),
+        ],
+      }),
+    );
+    const bills = card('Bills');
+    const items = await within(bills).findAllByRole('listitem');
+    expect(items.map((item) => item.textContent)).toEqual([
+      expect.stringContaining('Duke Energy'),
+      expect.stringContaining('Spectrum Internet'),
+    ]);
+    expect(items[0]).toHaveTextContent('Overdue');
+    expect(within(bills).queryByText('Rent')).toBeNull();
+  });
+
+  it('reads as empty rather than failed when nothing is due this week', async () => {
+    mount(() => ({ status: 200, body: [thisWeekFixture, weekendCookoutFixture] }));
+    await screen.findByText('This Week');
+    expect(within(card('Bills')).getByText('Nothing due this week')).toBeInTheDocument();
+  });
+
+  it('keeps the failure inside the card', async () => {
+    mount(
+      () => ({ status: 200, body: [] }),
+      undefined,
+      undefined,
+      () => ({ status: 500, body: problemBody(500, 'Internal Server Error') }),
+    );
+    expect(await screen.findByText("Couldn't load bills. Try again.")).toBeInTheDocument();
+    expect(within(card('Shopping')).getByText('Nothing left to buy')).toBeInTheDocument();
   });
 });

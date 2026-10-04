@@ -281,6 +281,19 @@ Empty: first-run panel explaining that Hearth tracks bills but never pays them.
 
 Form fields plus payment history. Recurrence editing (unit, interval, first due date) shows a plain-language preview of the next three due dates, since anchored recurrence is easy to misunderstand. Reminder lead time in days (default 3). Payment history entries can be edited or removed, including automatic ones. The overflow menu holds archive and delete.
 
+**Bill sheet** (create and edit, as a pushed screen):
+
+- name
+- amount (dollars; stored and transmitted as integer cents)
+- category (free text, optional)
+- visibility: Household or Personal — set only when adding a bill; a bill's owner cannot move it between household and personal afterward
+- recurrence editor: unit (day, week, month, year, or none for a one-time bill), interval, and first due date (anchor date), with the plain-language next-three-dates preview described above
+- autopay (on/off)
+- reminder lead time in days (default 3)
+- "Track as a subscription" (on/off) — includes the bill in the Subscriptions view (Screen 16); off by default
+
+A bill's visibility is fixed once created, so the edit form omits that field and shows it as read-only context instead.
+
 ### 16. Subscriptions — blue
 
 Total monthly figure at top, normalized per the Requirements document. Then the active household's subscriptions and the user's personal subscriptions ("Personal" badge), sorted by monthly cost descending, with the annualized figure (monthly amount × 12, per the Requirements document) on each row. Items unconfirmed for 60+ days show a "Still using this?" prompt inline with two actions: "Still using", which resets the clock, and "Stop tracking", which archives the bill.

@@ -31,9 +31,13 @@ const HOUSEHOLDS: HouseholdSummary[] = [
  * The shell sits behind the session guard, so its tests need a signed-in session and a profile.
  * Both are stubs: a component test never reaches the network.
  */
-function renderApp(path: string): ReturnType<typeof createMemoryRouter> {
+function renderApp(
+  path: string,
+  extra: Readonly<Record<string, Parameters<typeof createFetchStub>[0][string]>> = {},
+): ReturnType<typeof createMemoryRouter> {
   const stub = createFetchStub({
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+    ...extra,
   });
   vi.stubGlobal('fetch', stub.fetch);
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -96,6 +100,7 @@ describe('app shell', () => {
     await userEvent.tab();
     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveFocus();
     await userEvent.keyboard('{Enter}');
+    // The Meals module is a lazy chunk, so its first load can outlast the default find timeout.
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
     ).toBeInTheDocument();
@@ -104,40 +109,25 @@ describe('app shell', () => {
       'aria-current',
       'page',
     );
-  });
-
-  it.each([['/bills', 'Bills', 'bills']])(
-    'opens %s as a coming-soon screen in its section, without sub-tabs',
-    async (path, label, section) => {
-      renderApp(path);
-      expect(await screen.findByRole('heading', { name: 'Coming soon' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 1, name: label })).toBeInTheDocument();
-      expect(screen.getByRole('main').closest('[data-section]')).toHaveAttribute(
-        'data-section',
-        section,
-      );
-      expect(screen.queryByRole('radio')).toBeNull();
-      expect(within(screen.getByRole('main')).queryByRole('button')).toBeNull();
-    },
-  );
-
-  it('shows a deep link into an unshipped sub-tab as coming soon too', async () => {
-    renderApp('/bills/subscriptions');
-    expect(await screen.findByRole('heading', { name: 'Coming soon' })).toBeInTheDocument();
-  });
+  }, 20_000);
 
   it.each([
     ['/lists', 'Lists sections'],
     ['/meals', 'Meals sections'],
     ['/chores', 'Chores sections'],
-  ])('opens %s with its sub-tabs instead of the coming-soon state', async (path, groupName) => {
-    renderApp(path);
-    // The pillar's route chunk is transformed on first use, which can outlast the default wait.
-    expect(
-      await screen.findByRole('radiogroup', { name: groupName }, { timeout: 5000 }),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Coming soon' })).toBeNull();
-  });
+    ['/bills', 'Bills sections'],
+  ])(
+    'opens %s with its sub-tabs instead of the coming-soon state',
+    async (path, groupName) => {
+      renderApp(path, { 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) });
+      expect(
+        await screen.findByRole('radiogroup', { name: groupName }, { timeout: 10_000 }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Coming soon' })).toBeNull();
+    },
+    // The first load of a lazy pillar module can take several seconds on a loaded machine.
+    20_000,
+  );
 
   it('sends unknown paths to the dashboard', async () => {
     const router = renderApp('/nowhere');
@@ -156,7 +146,8 @@ describe('titleForPath', () => {
     // A shipped pillar names its sub-tab; an unshipped one shows only its tab label.
     ['/lists/pantry', 'Pantry'],
     ['/meals/suggestions', 'Suggestions'],
-    ['/bills/subscriptions', 'Bills'],
+    // A shipped pillar names its sub-tab, so a deep link into Subscriptions shows that, not Bills.
+    ['/bills/subscriptions', 'Subscriptions'],
   ])('%s → %s', (path, title) => {
     expect(titleForPath(path)).toBe(title);
   });
@@ -168,8 +159,8 @@ describe('section context', () => {
   }
 
   it('comes from the route for the shell', async () => {
-    renderApp('/bills');
-    await screen.findByRole('heading', { name: 'Coming soon' });
+    renderApp('/bills', { 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) });
+    await screen.findByRole('radiogroup', { name: 'Bills sections' }, { timeout: 5000 });
     expect(screen.getByRole('main').closest('[data-section]')).toHaveAttribute(
       'data-section',
       'bills',

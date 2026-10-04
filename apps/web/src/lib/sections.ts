@@ -104,6 +104,7 @@ export const RELEASED_PILLARS: ReadonlySet<PillarId> = new Set<PillarId>([
   'lists',
   'meals',
   'chores',
+  'bills',
 ]);
 
 /** The section that owns a pathname. Settings and unknown paths are section-neutral. */

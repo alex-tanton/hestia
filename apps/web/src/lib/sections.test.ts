@@ -31,8 +31,8 @@ describe('navigation config', () => {
     }
   });
 
-  it('ships Lists, Meals, and Chores, so only Bills is still coming soon', () => {
-    expect([...RELEASED_PILLARS]).toEqual(['lists', 'meals', 'chores']);
+  it('ships every pillar, so no tab opens the coming-soon state', () => {
+    expect([...RELEASED_PILLARS]).toEqual(['lists', 'meals', 'chores', 'bills']);
   });
 });
 

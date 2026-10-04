@@ -1,12 +1,14 @@
 import type { ReactElement } from 'react';
-import type { Chore, MealPlanEntry, MealType, ShoppingList } from '@hearth/shared';
+import type { Bill, Chore, MealPlanEntry, MealType, ShoppingList } from '@hearth/shared';
 import { mealTypeLabel } from '../components/meals/meal-copy.ts';
 import type { DashboardCardState } from '../components/dashboard/DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from '../components/dashboard/DashboardCards.tsx';
+import { useBills } from '../lib/api/bills-hooks.ts';
 import { useProfile } from '../lib/api/hooks.ts';
 import { useChores } from '../lib/api/chore-hooks.ts';
 import { useShoppingLists } from '../lib/api/list-hooks.ts';
 import { useMealPlanWeek } from '../lib/api/meal-hooks.ts';
+import { formatCents } from '../lib/format.ts';
 import { addDays, todayInTimezone, weekStart } from '../lib/household-date.ts';
 import { DashboardScreen } from './DashboardScreen.tsx';
 
@@ -53,6 +55,52 @@ export function mealsCardState(
       id: entry.id,
       label: entry.recipeTitle,
       detail: `${entry.plannedDate === today ? 'Today' : 'Tomorrow'} · ${mealTypeLabel(entry.mealType)}`,
+    })),
+  };
+}
+
+/**
+ * The Bills card's data (PRD › This Week: "Bills due this week (household bills plus the user's
+ * personal bills), flagged if overdue"). `weekEnd` is this week's Saturday, so a bill is on the
+ * card exactly when `BillsIndexScreen`'s own Overdue or This week group would show it — the same
+ * `currentOccurrenceDate <= weekEnd` test, since an overdue occurrence's date is always in the
+ * past and therefore already on or before it.
+ */
+export function billsCardState(
+  bills: ReturnType<typeof useBills>,
+  weekEnd: string,
+): DashboardCardState {
+  if (bills.isPending && bills.fetchStatus !== 'paused') return { status: 'loading' };
+  if (bills.data === undefined) {
+    if (bills.isError) {
+      return {
+        status: 'error',
+        message: "Couldn't load bills. Try again.",
+        onRetry: () => {
+          void bills.refetch();
+        },
+      };
+    }
+    return { status: 'empty', message: DASHBOARD_EMPTY_COPY.bills };
+  }
+
+  const dueThisWeek = bills.data
+    .filter((bill) => bill.currentOccurrenceDate <= weekEnd)
+    .sort((a: Bill, b: Bill) =>
+      a.isOverdue !== b.isOverdue
+        ? Number(b.isOverdue) - Number(a.isOverdue)
+        : a.currentOccurrenceDate.localeCompare(b.currentOccurrenceDate),
+    );
+  if (dueThisWeek.length === 0) return { status: 'empty', message: DASHBOARD_EMPTY_COPY.bills };
+
+  return {
+    status: 'populated',
+    total: dueThisWeek.length,
+    items: dueThisWeek.map((bill) => ({
+      id: bill.id,
+      label: bill.name,
+      detail: formatCents(bill.amountCents),
+      isOverdue: bill.isOverdue,
     })),
   };
 }
@@ -146,15 +194,18 @@ export function DashboardRoute(): ReactElement {
   const householdId = profile.data?.activeHouseholdId ?? undefined;
   const timezone = profile.data?.timezone;
   const lists = useShoppingLists(householdId);
+  const bills = useBills(householdId);
 
   const today = timezone !== undefined ? todayInTimezone(timezone) : undefined;
   const tomorrow = today !== undefined ? addDays(today, 1) : undefined;
   const week = today !== undefined ? weekStart(today) : undefined;
+  const weekEnd = week !== undefined ? addDays(week, 6) : undefined;
   const plan = useMealPlanWeek(householdId, week);
   const chores = useChores(householdId);
 
   return (
     <DashboardScreen
+      {...(weekEnd !== undefined ? { bills: billsCardState(bills, weekEnd) } : {})}
       shopping={shoppingCardState(lists)}
       {...(today !== undefined && tomorrow !== undefined
         ? { meals: mealsCardState(plan, today, tomorrow) }
