@@ -306,8 +306,10 @@ A failed fetch with nothing cached answers `503`, which is the error-with-retry 
 
 | Scope | Limit |
 | --- | --- |
-| All of `/api/*` | 300 requests per minute per IP |
+| All of `/api/*` | 300 requests per minute per IP (`HEARTH_RATE_LIMIT_PER_MINUTE`) |
 | `POST /api/client-error` | 10 requests per minute per IP |
+
+`HEARTH_RATE_LIMIT_PER_MINUTE` is a positive integer, default `300`, read by `hearth-service` at startup; a value that is not one fails startup. Production never sets it. The E2E Compose overlay sets `3000`, because every loopback request shares one client address and a full suite run would otherwise exhaust the bucket. The limiter is never disabled in any environment.
 
 A request over the limit gets `429` with a problem-details body and a `Retry-After` header.
 

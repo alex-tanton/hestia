@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { scrubErrorName, scrubErrorText } from '@hearth/shared';
+import { DEFAULT_RATE_LIMIT_PER_MINUTE } from './env.js';
 import { GoTrueError } from './gotrue/http.js';
 import { createRouteContext, type AppDependencies } from './http/context.js';
 import { buildOpenApiDocument } from './openapi.js';
@@ -38,10 +39,10 @@ export interface AppOptions {
   origin: string;
   /** HEARTH_OWNER_EMAIL; empty means nobody is the owner. */
   ownerEmail: string;
+  /** HEARTH_RATE_LIMIT_PER_MINUTE; defaults to production's limit. */
+  rateLimitPerMinute?: number;
   openApiDocument?: () => unknown;
 }
-
-const API_RATE_LIMIT_PER_MINUTE = 300;
 
 function statusOf(error: unknown): number {
   if (typeof error === 'object' && error !== null && 'statusCode' in error) {
@@ -128,7 +129,7 @@ export async function buildApp(
 
   await app.register(rateLimit, {
     global: true,
-    max: API_RATE_LIMIT_PER_MINUTE,
+    max: options.rateLimitPerMinute ?? DEFAULT_RATE_LIMIT_PER_MINUTE,
     timeWindow: '1 minute',
     // Only the service's own routes are limited; every one of them lives under /api.
     allowList: (request) => !request.url.startsWith('/api/'),

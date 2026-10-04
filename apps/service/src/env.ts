@@ -17,6 +17,12 @@ const gotrueUrl = z.url({ protocol: /^https?$/ }).transform((value) => value.rep
 // The public origin, https://<machine>.<tailnet>.ts.net; invite and reset links are built on it.
 const origin = z.url({ protocol: /^https?$/ }).transform((value) => new URL(value).origin);
 
+/**
+ * The per-IP ceiling on `/api/*` (Technical Architecture, "Rate limits"). Production keeps this;
+ * only the E2E overlay raises it, because every loopback request shares one client address.
+ */
+export const DEFAULT_RATE_LIMIT_PER_MINUTE = 300;
+
 const envSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   HOST: z.string().min(1).default('0.0.0.0'),
@@ -28,6 +34,13 @@ const envSchema = z.object({
   HEARTH_ORIGIN: origin,
   // Unset means nobody is the server owner, so System health is closed to everyone.
   HEARTH_OWNER_EMAIL: z.string().trim().default(''),
+  // Requests per minute per client IP across `/api/*`. Must stay a positive integer; a value of 0
+  // would refuse everything, so it is rejected rather than read as "off".
+  HEARTH_RATE_LIMIT_PER_MINUTE: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .default(DEFAULT_RATE_LIMIT_PER_MINUTE),
   GOTRUE_URL: gotrueUrl,
   // GoTrue's HS256 secret: verifies access tokens.
   JWT_SECRET: z.string().min(32),

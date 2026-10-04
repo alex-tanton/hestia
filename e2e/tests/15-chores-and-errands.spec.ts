@@ -2,7 +2,7 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { expectDashboard, signIn } from '../support/app.ts';
-import { expectAccessible } from '../support/axe.ts';
+import { expectAccessible, settleAnimations } from '../support/axe.ts';
 import { REPO_ROOT, SEED } from '../support/env.ts';
 
 /**
@@ -25,7 +25,8 @@ async function shoot(page: Page, name: string, theme: string): Promise<void> {
     ['1280', 1280, 800],
   ] as const) {
     await page.setViewportSize({ width, height });
-    await page.waitForTimeout(150);
+    // The layout change at this width can run a transition; the shot is taken once none is left.
+    await settleAnimations(page);
     await page.screenshot({ path: join(SHOTS, `${name}-${theme}-${label}.png`), fullPage: true });
   }
   await page.setViewportSize({ width: 390, height: 844 });
@@ -96,10 +97,18 @@ for (const theme of ['light', 'dark'] as const) {
       await shoot(page, 'chore-detail', theme);
       await expectAccessible(page, `chore detail (${theme})`);
 
-      // Vacuum's one completion was Casey's, and Casey has left Oak Street (Seed Data, "Chores").
+      // Vacuum's one completion was Casey's. The seed has her gone from Oak Street (Seed Data,
+      // "Chores"), but journey 3 joins her back, so her record is named again (PRD, departure
+      // rules: a name follows the current roster). "Former member" is for someone who has left.
       await page.goto('/chores');
       await page.getByRole('link', { name: /^Vacuum common areas/ }).click();
-      await expect(page.getByText('Former member')).toBeVisible();
+      await expect(
+        page
+          .getByRole('region', { name: 'Completion history' })
+          .getByRole('listitem')
+          .filter({ hasText: 'Casey Nguyen' }),
+      ).toBeVisible();
+      await expect(page.getByText('Former member')).toHaveCount(0);
 
       if (theme === 'light') {
         // Rotation edit on the real service: a pure reorder keeps Alex's turn, and appending Jordan

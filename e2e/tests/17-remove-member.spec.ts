@@ -14,6 +14,10 @@ import { SEED } from '../support/env.ts';
  * are in the "Take out trash" rotation (Seed Data, "E2E departure fixtures"). Each is Oak Street's
  * only membership, so each lands on onboarding's create-or-join step afterwards, which is where
  * Requirements says a user with no membership left belongs.
+ *
+ * This file sorts last in the suite on purpose: its removals take Sam and Jordan out of Oak Street,
+ * and every journey before it expects the full seed. Keep any later journey's number below this one
+ * or move this file again.
  */
 
 const REMOVALS = {

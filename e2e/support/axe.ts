@@ -9,14 +9,33 @@ const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
  * fading reports the blend it is passing through rather than the colors it lands on. Waiting for
  * every animation that has an end is the accurate wait; the loading spinner runs forever, so it
  * is left out rather than waited on.
+ *
+ * A transition exists only from the first style flush after the change that starts it, so a read
+ * taken before that flush sees nothing running and would pass mid-transition. The loop therefore
+ * only settles once a whole frame has passed with nothing running, and waits on each running
+ * animation's own `finished` promise rather than polling for its state.
  */
-async function settleAnimations(page: Page): Promise<void> {
-  await page.waitForFunction(() =>
-    document
-      .getAnimations()
-      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
-      .every((animation) => animation.playState === 'finished' || animation.playState === 'idle'),
-  );
+export async function settleAnimations(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const running = () =>
+      document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.effect?.getComputedTiming().iterations !== Infinity &&
+            animation.playState === 'running',
+        );
+    for (;;) {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          resolve();
+        });
+      });
+      const pending = running();
+      if (pending.length === 0) return;
+      await Promise.all(pending.map((animation) => animation.finished.catch(() => undefined)));
+    }
+  });
 }
 
 /**

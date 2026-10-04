@@ -23,7 +23,23 @@ describe('parseEnv', () => {
       LOG_LEVEL: 'info',
       HEARTH_TRUSTED_PROXIES: ['172.28.0.0/16', '127.0.0.1'],
       HEARTH_OWNER_EMAIL: '',
+      HEARTH_RATE_LIMIT_PER_MINUTE: 300,
     });
+  });
+
+  it('reads the per-IP rate limit as a positive integer and defaults to production’s 300', () => {
+    expect(parseEnv(REQUIRED).HEARTH_RATE_LIMIT_PER_MINUTE).toBe(300);
+    expect(
+      parseEnv({ ...REQUIRED, HEARTH_RATE_LIMIT_PER_MINUTE: '3000' }).HEARTH_RATE_LIMIT_PER_MINUTE,
+    ).toBe(3000);
+  });
+
+  it('refuses a rate limit that is zero, negative, fractional, or not a number', () => {
+    for (const value of ['0', '-5', '2.5', 'many', '']) {
+      expect(() => parseEnv({ ...REQUIRED, HEARTH_RATE_LIMIT_PER_MINUTE: value })).toThrow(
+        /HEARTH_RATE_LIMIT_PER_MINUTE/,
+      );
+    }
   });
 
   it('trusts no proxy when the variable is unset', () => {

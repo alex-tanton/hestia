@@ -44,6 +44,10 @@ services:
       - ../e2e/fixtures/recipes:/app/fixtures/recipes:ro
     environment:
       HEARTH_TRUSTED_PROXIES: ${HEARTH_E2E_SUBNET:?}
+      # Every browser context and API call in the suite comes from the loopback, so they all share
+      # one per-IP bucket. Production's 300 a minute (Technical Architecture, "Rate limits") is
+      # exhausted by a full run; the limiter stays on, just with room for the suite's own traffic.
+      HEARTH_RATE_LIMIT_PER_MINUTE: 3000
       LOG_LEVEL: info
       # The fixture set's own instant (`FIXTURE_NOW`, Technical Architecture › "Development"), so
       # the wrapper's active-flyer window matches what the captures cover regardless of today.

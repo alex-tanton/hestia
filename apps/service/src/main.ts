@@ -104,6 +104,7 @@ const app = await buildApp(
     logger: { level: env.LOG_LEVEL },
     origin: env.HEARTH_ORIGIN,
     ownerEmail: env.HEARTH_OWNER_EMAIL,
+    rateLimitPerMinute: env.HEARTH_RATE_LIMIT_PER_MINUTE,
     openApiDocument: () => openApiDocument,
   },
 );

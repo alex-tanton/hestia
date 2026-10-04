@@ -721,7 +721,7 @@ A household picks **favorite stores** during setup. Favorites scope the default 
 - **When the last member leaves, the household and all its data are deleted**: lists, pantry, recipes, meal plans, match overrides, chores, errands, household bills, favorite stores, and invites. There is nothing to reassign in that case.
   - Deletion is irreversible. The confirmation names what will be lost, with counts ("This deletes 4 lists, 23 recipes, and 6 chores permanently"), and the user must type the household name to confirm.
 - Personal bills belong to the user, not the household. They leave with the user, survive household deletion, and are never reassigned.
-- Historical records (`chore_completion`, `bill_payment_log`) keep the departed user's id and render as "Former member" rather than being rewritten.
+- Historical records (`chore_completion`, `bill_payment_log`) keep the user's id and are never rewritten. A name is shown while that user is a member of the household, and "Former member" while they are not. A user who leaves and later rejoins the same household is named again in their old records, because the name is read from the current roster, not stored on the record.
 - After a departure, the departed user's active household moves to their longest-held remaining membership, or to null (see Multi-household membership). Any of their unsent notifications about that household are deleted, since they could no longer open it.
 
 Technical Architecture specifies how these operations are implemented.
