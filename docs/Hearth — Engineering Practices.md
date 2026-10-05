@@ -176,7 +176,7 @@ Playwright covering, at minimum:
 
 Journey 7 is two files: the list portion is `11-offline-list-sync.spec.ts`, and the chores and errands portion is `18-chores-and-errands-offline.spec.ts`. Journey 10 is `19-notifications.spec.ts`.
 
-Each journey runs in both light and dark themes with `axe-core` assertions, satisfying the accessibility verification requirement. Everything else the suite covers — the Caddy refusal smoke test, the owner reset CLI, the invite paths, the magic-link flag — runs once, because the theme matrix is about the journeys' screens.
+Every screen state the suite reaches is checked with `axe-core` in both light and dark themes, which is the accessibility verification the Handoff's Phase 5 requires for every screen. A journey checks the states it passes through. States that need a special seed, an offline connection, or a dialog a journey does not open (first-run screens, offline screens, notification states, confirmation dialogs) are checked by `e2e/tests/17-accessibility-states.spec.ts`, which runs the same theme loop. Checks that assert on a response rather than a screen, such as the Caddy refusal smoke test, the owner reset CLI, and the magic-link flag, run once.
 
 ### E2E environment
 
