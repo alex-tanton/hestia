@@ -26,8 +26,38 @@ describe('parseEnv', () => {
       HEARTH_TRUSTED_PROXIES: ['172.28.0.0/16', '127.0.0.1'],
       HEARTH_OWNER_EMAIL: '',
       HEARTH_RATE_LIMIT_PER_MINUTE: 300,
+      HEARTH_PUSH_TRANSPORT: 'web-push',
       VAPID_SUBJECT: 'https://hearth.tail1234.ts.net',
     });
+  });
+
+  it('uses the real web-push transport unless the push switch says otherwise', () => {
+    expect(parseEnv(REQUIRED).HEARTH_PUSH_TRANSPORT).toBe('web-push');
+    expect(parseEnv({ ...REQUIRED, HEARTH_PUSH_TRANSPORT: 'web-push' }).HEARTH_PUSH_TRANSPORT).toBe(
+      'web-push',
+    );
+  });
+
+  it('accepts test-double only as the exact value the E2E overlay sets', () => {
+    expect(
+      parseEnv({ ...REQUIRED, HEARTH_PUSH_TRANSPORT: 'test-double' }).HEARTH_PUSH_TRANSPORT,
+    ).toBe('test-double');
+  });
+
+  it('refuses any other push switch value at startup, without a fallback to either transport', () => {
+    for (const value of [
+      'Test-Double',
+      'test_double',
+      'double',
+      'none',
+      'off',
+      '',
+      ' test-double',
+    ]) {
+      expect(() => parseEnv({ ...REQUIRED, HEARTH_PUSH_TRANSPORT: value })).toThrow(
+        /HEARTH_PUSH_TRANSPORT/,
+      );
+    }
   });
 
   it('reads the per-IP rate limit as a positive integer and defaults to production’s 300', () => {

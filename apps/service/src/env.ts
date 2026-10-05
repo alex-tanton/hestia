@@ -80,6 +80,14 @@ const envSchema = z.object({
   // The contact URI sent in each push request's VAPID claims. Optional: when unset it is derived in
   // `vapidSubjectFor`, so `Env.VAPID_SUBJECT` is always a usable mailto: or https: URI.
   VAPID_SUBJECT: z.string().min(1).optional(),
+  /*
+   * Which transport the dispatch job sends through. `web-push` is the only value a real deployment
+   * sees: docker-compose.yml passes the service's environment through by name and never forwards
+   * this one, so only the E2E Compose overlay can select `test-double`. That transport records each
+   * push for the suite to read and contacts no push service. Any other value fails at startup
+   * rather than falling back to either transport.
+   */
+  HEARTH_PUSH_TRANSPORT: z.enum(['web-push', 'test-double']).default('web-push'),
 });
 
 export type Env = z.infer<typeof envSchema> & { VAPID_SUBJECT: string };

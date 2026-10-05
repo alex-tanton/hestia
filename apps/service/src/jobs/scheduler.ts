@@ -40,8 +40,11 @@ export interface SchedulerDeps {
 }
 
 export interface Scheduler {
-  /** Runs one job by name under its lock; returns false when the lock was held. */
-  run: (jobName: JobName) => Promise<boolean>;
+  /**
+   * Runs one job by name under its lock; returns false when the lock was held. `now` replaces the
+   * clock only for dispatch-notifications, and only the E2E push seam passes it.
+   */
+  run: (jobName: JobName, options?: { now?: Date }) => Promise<boolean>;
   /** Queues one on-demand refresh of a dormant postal code behind whatever is already running. */
   queueBackgroundRefresh: (postalCode: string) => void;
   start: () => void;
@@ -79,7 +82,7 @@ export function createScheduler(deps: SchedulerDeps): Scheduler {
     return job;
   };
 
-  const runJob = (jobName: JobName): Promise<boolean> => {
+  const runJob = (jobName: JobName, now: Date | undefined): Promise<boolean> => {
     const logger = deps.logger.child({ job: jobName });
     if (jobName === 'refresh-deals') {
       return guard(jobName, () =>
@@ -90,12 +93,19 @@ export function createScheduler(deps: SchedulerDeps): Scheduler {
       return guard(jobName, () => runLogAutopay({ database: deps.database, logger }));
     }
     if (jobName === 'dispatch-notifications') {
-      return guard(jobName, () => runDispatchNotifications({ ...deps.dispatch, logger }));
+      return guard(jobName, () =>
+        runDispatchNotifications({
+          ...deps.dispatch,
+          logger,
+          ...(now === undefined ? {} : { now: () => now }),
+        }),
+      );
     }
     return guard(jobName, () => runPruneCache({ database: deps.database, logger }));
   };
 
-  const run = (jobName: JobName): Promise<boolean> => track(runJob(jobName));
+  const run = (jobName: JobName, options?: { now?: Date }): Promise<boolean> =>
+    track(runJob(jobName, options?.now));
 
   return {
     run,

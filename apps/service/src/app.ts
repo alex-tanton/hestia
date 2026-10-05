@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import rateLimit from '@fastify/rate-limit';
-import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
+import Fastify, {
+  type FastifyInstance,
+  type FastifyPluginCallback,
+  type FastifyRequest,
+} from 'fastify';
 import { scrubErrorName, scrubErrorText } from '@hearth/shared';
 import { DEFAULT_RATE_LIMIT_PER_MINUTE } from './env.js';
 import { GoTrueError } from './gotrue/http.js';
@@ -42,6 +46,11 @@ export interface AppOptions {
   /** HEARTH_RATE_LIMIT_PER_MINUTE; defaults to production's limit. */
   rateLimitPerMinute?: number;
   openApiDocument?: () => unknown;
+  /**
+   * The E2E push seam (push/test-seam.ts). Only main.ts passes it, and only when the push switch is
+   * `test-double`; every other build registers no test route at all.
+   */
+  testSeam?: FastifyPluginCallback | undefined;
 }
 
 function statusOf(error: unknown): number {
@@ -163,6 +172,7 @@ export async function buildApp(
     ctx,
     openApiDocument: options.openApiDocument ?? buildOpenApiDocument,
   });
+  if (options.testSeam !== undefined) await app.register(options.testSeam);
 
   return app;
 }

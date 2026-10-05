@@ -19,6 +19,8 @@ import { createGoTrueAdmin } from './privileged/gotrue-admin.js';
 import { createJobDatabase } from './privileged/job-database.js';
 import { createNotificationOutbox } from './privileged/notification-outbox.js';
 import { readSystemHealth } from './privileged/service-role-db.js';
+import { RecordingPushTransport } from './push/recording-transport.js';
+import { pushTestSeam } from './push/test-seam.js';
 import { createWebPushTransport } from './push/web-push-transport.js';
 import { fetchRecipePage } from './recipes/fetch-recipe.js';
 import { recipeFixtureFetch } from './recipes/fixture-fetch.js';
@@ -87,6 +89,12 @@ const recipeFetchPage: (pageUrl: string) => Promise<{ body: string }> =
         fetchRecipePage(pageUrl, { userAgent: recipeUserAgent, limiter: recipeFetchLimiter })
     : recipeFixtureFetch({ dir: env.HEARTH_RECIPE_FIXTURE_DIR });
 
+// The E2E push switch (env.ts). Only the Compose overlay selects `test-double`: then pushes are
+// recorded rather than sent, and the seam routes that let the suite run dispatch and read them back
+// are registered. Every other build keeps the web-push transport and has no test route.
+const testDouble = env.HEARTH_PUSH_TRANSPORT === 'test-double';
+const recordingTransport = new RecordingPushTransport();
+
 const app = await buildApp(
   {
     pingDatabase: database.ping,
@@ -108,10 +116,19 @@ const app = await buildApp(
     ownerEmail: env.HEARTH_OWNER_EMAIL,
     rateLimitPerMinute: env.HEARTH_RATE_LIMIT_PER_MINUTE,
     openApiDocument: () => openApiDocument,
+    testSeam: testDouble
+      ? pushTestSeam({
+          serviceRoleKey: env.SERVICE_ROLE_KEY,
+          transport: recordingTransport,
+          dispatch: async (now) =>
+            (await wiring.scheduler?.run('dispatch-notifications', { now })) ?? false,
+        })
+      : undefined,
   },
 );
 
 wiring.log = app.log;
+if (testDouble) app.log.warn('push transport is the E2E test double; no push is sent');
 const jobDatabase = createJobDatabase(database.db);
 const scheduler = createScheduler({
   database: jobDatabase,
@@ -120,11 +137,13 @@ const scheduler = createScheduler({
     outbox: createNotificationOutbox(jobDatabase),
     // The push service asks for a contact in each request's VAPID claims; parseEnv has already
     // resolved it to a mailto: or https: URI, so web-push accepts it.
-    transport: createWebPushTransport({
-      subject: env.VAPID_SUBJECT,
-      publicKey: env.VAPID_PUBLIC_KEY,
-      privateKey: env.VAPID_PRIVATE_KEY,
-    }),
+    transport: testDouble
+      ? recordingTransport
+      : createWebPushTransport({
+          subject: env.VAPID_SUBJECT,
+          publicKey: env.VAPID_PUBLIC_KEY,
+          privateKey: env.VAPID_PRIVATE_KEY,
+        }),
   },
   refresh: {
     source: dealSource,

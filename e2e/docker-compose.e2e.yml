@@ -54,6 +54,10 @@ services:
       HEARTH_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
       HEARTH_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
       HEARTH_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
+      # Pushes are recorded by the service rather than sent, and the suite reads them back through
+      # the service-role seam under /api/test/push (Engineering Practices › Testing). No push service
+      # is reachable from the stack in E2E. Only this file sets the value; production never does.
+      HEARTH_PUSH_TRANSPORT: test-double
 
   kong:
     environment:
