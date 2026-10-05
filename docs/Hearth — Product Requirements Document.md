@@ -85,7 +85,7 @@ The following are admin-only:
 
 When a household is created, `household.timezone` is set from the creator's browser. After that, only the admin can change it.
 
-Dates that belong to the household are evaluated in the household timezone: chore occurrence dates, errand due dates, household-bill due dates, meal-plan dates, and what counts as "today" in any household view. Dates that belong to a person are evaluated in that person's `profile.timezone`: personal-bill due dates, quiet hours, and user-scheduled notification times. `profile.timezone` is detected from the browser and refreshed every time the app opens, not only at sign-in.
+Every date in the app is evaluated in the household timezone: chore occurrence dates, errand due dates, household-bill and personal-bill due dates, meal-plan dates, notification send days, and what counts as "today" in any view. `profile.timezone` is not a date zone. It is the zone for quiet hours only, detected from the browser and refreshed every time the app opens, not only at sign-in.
 
 ## Deals & Lists
 
@@ -540,7 +540,7 @@ One platform caveat: Android supports web push from a browser tab, but iOS Safar
 
 A notification is delivered once at least one of its recipient's devices accepts it. It is sent to every device the recipient has registered, and a device the push service reports as gone is removed from the recipient's account. A device whose push fails for any other reason stays registered. A notification that no device accepts is retried every two minutes until 24 hours after its send time. After that it is dropped without anyone being told, and the only record is a log line naming its type and id. The title and body of every notification are each limited to 60 characters. The limit is enforced by the shared schema and by every producer, and a notification found over it at send time is dropped under the same log rule.
 
-Household-dated reminders, `bill_due` for a household bill and `chore_due` for a household chore, are dated in the household's timezone, and their 09:00 send time is 09:00 in the household's timezone for every recipient. Everyone in the household therefore sees the same calendar day the screens show. Personal items use the recipient's timezone.
+Reminders, `bill_due` and `chore_due`, are dated in the household's timezone, and their 09:00 send time is 09:00 in the household's timezone for every recipient, personal bills included. Everyone in the household therefore sees the same calendar day the screens show.
 
 A device registers for push only when a notification type is turned on there. The browser's permission prompt is shown at that moment and never on load. A device whose permission is denied is told where to change it and is never prompted again. A device whose prompt was dismissed is asked again on the next type-on. A browser without push support, and an iPhone or iPad where the app is not yet on the home screen, is told so in place of the per-type toggles. Signing out removes the device's push subscription.
 
@@ -550,13 +550,13 @@ Tests and end-to-end runs never contact a push service. They use a test double i
 
 | Type | Default | Recipients | Send time |
 | --- | --- | --- | --- |
-| `bill_due` | On | The bill's owner, plus members who have "Remind me about all household bills" on (household bills only) | 09:00, household timezone for a household bill; recipient's timezone for a personal bill |
+| `bill_due` | On | The bill's owner, plus members who have "Remind me about all household bills" on (household bills only) | 09:00, household timezone |
 | `chore_due` | On | The chore's assignee or current rotation member; for errands with a due date, their assignee | 09:00, household timezone |
 | `chore_rotation` | On | The new assignee of a rotating chore | On completion |
 | `list_activity` | On | Other members of the household | Debounced (see Rules) |
 | `meal_reminder` | Off | Opted-in members | 08:00, household timezone, on the meal's date (the date is evaluated in the household timezone) |
 | `weekly_meal_nudge` | Off | Members who opted in for that household | Saturday 09:00, household timezone, for every recipient |
-| `flyer_refresh` | Off | Opted-in members | The next 09:00, recipient's timezone, after the refresh; at most once per day per household |
+| `flyer_refresh` | Off | Opted-in members | The next 09:00, household timezone, after the refresh; at most once per day per household |
 
 Triggers and outbox keys:
 
@@ -688,8 +688,8 @@ where `completion_count` is the number of `chore_completion` rows for the chore.
 ### Timezone
 
 - The household timezone evaluates chore occurrence dates, errand due dates, household-bill due dates, meal-plan dates, and "today" in every household view. The server computes these the same way whatever the viewer's browser timezone.
-- `profile.timezone` evaluates personal-bill due dates, quiet hours, and the send times marked "recipient's timezone" in the Notifications table. It is detected from the browser and refreshed every time the app opens.
-- All timestamps are stored in UTC; dates without a time component (a bill's anchor date) are stored as plain dates and interpreted in the timezone that owns them.
+- `profile.timezone` evaluates quiet hours only. Every other date, personal-bill due dates and notification send days included, uses the household timezone. It is detected from the browser and refreshed every time the app opens.
+- All timestamps are stored in UTC; dates without a time component (a bill's anchor date) are stored as plain dates and interpreted in the household timezone.
 
 ### Deal price normalization
 

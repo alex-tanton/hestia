@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import type { MealPlanEntry, MealType } from '@hearth/shared';
+import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
 import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';
 import { PlannerDay } from '../../components/meals/PlannerDay.tsx';
@@ -11,7 +12,7 @@ import { Button } from '../../components/ui/Button.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { Tabs } from '../../components/ui/Tabs.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
-import { useProfile } from '../../lib/api/hooks.ts';
+import { useHousehold } from '../../lib/api/hooks.ts';
 import {
   useAddMealToList,
   useAddWeekToList,
@@ -38,13 +39,28 @@ function dayLabel(date: string): string {
   return `${weekday} ${month}/${day}`;
 }
 
-/** Design › Screens › 10: Sunday-to-Saturday, mobile day tabs, desktop full grid. */
+/**
+ * Design › Screens › 10: Sunday-to-Saturday, mobile day tabs, desktop full grid. Every week, day and
+ * "today" on the planner is a household date (PRD, "Timezone"), so nothing is drawn until the
+ * household's timezone is known.
+ */
 export function PlannerScreen({ householdId }: { householdId: string }): ReactElement {
+  const household = useHousehold(householdId);
+  const timezone = household.data?.timezone;
+  if (timezone === undefined) return householdFallback(household, 'Loading the week planner');
+  return <PlannerWeek householdId={householdId} timezone={timezone} />;
+}
+
+function PlannerWeek({
+  householdId,
+  timezone,
+}: {
+  householdId: string;
+  timezone: string;
+}): ReactElement {
   const isOnline = useOnlineStatus();
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const toast = useToast();
-  const profile = useProfile();
-  const timezone = profile.data?.timezone ?? 'America/New_York';
   const currentWeek = weekStart(todayInTimezone(timezone));
 
   const [week, setWeek] = useState(currentWeek);

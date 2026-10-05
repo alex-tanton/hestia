@@ -74,7 +74,7 @@ Deal validity is a calendar date in the store's local offset, so the seed comput
 | Rivera Family | 27601 (Raleigh, NC) | `America/New_York` | Alex (admin), Morgan |
 | Empty House | 27705 (Durham, NC) | `America/Los_Angeles` | Casey (admin) |
 
-Alex belongs to two households, which exercises multi-household switching, isolation, and the requirement that no view spans households. Alex's `active_household_id` is Oak Street. Morgan's timezone differs from the Rivera Family household timezone. That exercises the split between the two: household dates follow the household, while quiet hours and personal send times follow the user. Casey's Empty House has no data at all, for first-run and empty-state screens. Casey is also a **former member of Oak Street**, having left 5 weeks ago, so Oak Street's history has records by a departed member, which render as "Former member".
+Alex belongs to two households, which exercises multi-household switching, isolation, and the requirement that no view spans households. Alex's `active_household_id` is Oak Street. Morgan's timezone differs from the Rivera Family household timezone. That exercises the split between the two: every date and send time follows the household, and only quiet hours follow the user. Casey's Empty House has no data at all, for first-run and empty-state screens. Casey is also a **former member of Oak Street**, having left 5 weeks ago, so Oak Street's history has records by a departed member, which render as "Former member".
 
 Notification settings:
 
@@ -128,7 +128,7 @@ Two things the E2E suite needs that `pnpm db:seed` does not create.
 | Oak Street chore "Take out trash" | rotation Alex → Sam → Jordan | The rotation note, which has no picker |
 | Personal bill "Car Insurance", $128.00, monthly | Casey | Survives Empty House's deletion |
 
-Casey's Car Insurance is the personal bill the last-member departure leaves behind. Personal bills belong to the user rather than the household, so it must still be there, still personal, and still Casey's once Empty House is gone.
+Casey's Car Insurance is the personal bill the last-member departure leaves behind. Personal bills belong to the user rather than the household, so it must still be there, still personal, and still Casey's once Empty House is gone. While Casey belongs to no household, the bill is not dated or sent, is not overdue, and cannot be paid until Casey joins one.
 
 ## Deal fixtures
 

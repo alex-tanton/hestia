@@ -725,3 +725,35 @@ describe('the defaults the database applies', () => {
     }
   });
 });
+
+describe('household timezone for personal items', () => {
+  /**
+   * The household is Kiritimati (UTC+14) and Alex's profile is Pago Pago (UTC-11). At 20:00 UTC on
+   * Oct 4 it is 10:00 on Oct 5 in Kiritimati, after that day's 09:00, and still Oct 4 in Pago Pago.
+   */
+  const KIRITIMATI_MORNING = new Date('2026-10-04T20:00:00Z');
+
+  it('a personal bill due today by the household calendar is sent at 09:00 household time', async () => {
+    const home = await makeHome('Pacific/Kiritimati');
+    await adminPool.query(
+      `update public.profile set timezone = 'Pacific/Pago_Pago' where id = $1`,
+      [home.alex.id],
+    );
+    const water = await insertBill({
+      householdId: null,
+      owner: home.alex.id,
+      name: 'Water',
+      amount: '30.00',
+      anchor: '2026-10-05',
+      reminderDaysBefore: 0,
+    });
+
+    await enqueueAt(KIRITIMATI_MORNING);
+
+    const rows = await rowsFor(home.alex.id, 'bill_due', water);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.occurrence_key.startsWith('2026-10-05/')).toBe(true);
+    // 09:00 on Oct 5 in Kiritimati is 19:00 UTC on Oct 4: nothing in Pago Pago's calendar.
+    expect(rows[0]?.send_after.toISOString()).toBe('2026-10-04T19:00:00.000Z');
+  });
+});

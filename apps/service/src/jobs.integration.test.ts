@@ -601,16 +601,22 @@ describe('flyer_refresh outbox rows', () => {
     expect(await notifications(home.userId)).toStrictEqual([]);
   });
 
-  it('sets send_after to the recipient’s next 09:00 local time', async () => {
+  it('sets send_after to the next 09:00 in the household timezone, not the recipient’s', async () => {
+    // Kiritimati is UTC+14 and Pago Pago UTC-11, so the two zones are always a day or more apart:
+    // a 09:00 in the profile's zone can never be the household's 09:00.
     const home = await seedHousehold({
       postalCode: QUIET_POSTAL_CODE,
       favorites: [
         ['2100', 'Food Lion'],
         ['2431', 'Harris Teeter'],
       ],
-      timezone: 'America/Los_Angeles',
+      timezone: 'Pacific/Kiritimati',
       flyerRefreshEnabled: true,
     });
+    await adminPool.query(
+      `update public.profile set timezone = 'Pacific/Pago_Pago' where id = $1`,
+      [home.userId],
+    );
     source.data.flyers = [foodLionFlyer];
     source.data.flyerItems = {
       '8128502': [flyerDeal('8128502', 'fl-1')],
@@ -620,13 +626,17 @@ describe('flyer_refresh outbox rows', () => {
     source.data.flyers = [foodLionFlyer, harrisTeeterFlyer];
     await runRefreshDeals(deps());
 
-    const { rows } = await adminPool.query<{ local: string }>(
-      `select pg_catalog.to_char(n.send_after at time zone p.timezone, 'HH24:MI') as local
-       from public.notification n join public.profile p on p.id = n.user_id
+    const { rows } = await adminPool.query<{ local: string; profile_local: string }>(
+      `select pg_catalog.to_char(n.send_after at time zone h.timezone, 'HH24:MI') as local,
+              pg_catalog.to_char(n.send_after at time zone p.timezone, 'HH24:MI') as profile_local
+       from public.notification n
+       join public.household h on h.id = n.target_id
+       join public.profile p on p.id = n.user_id
        where n.user_id = $1 and n.type = 'flyer_refresh'`,
       [home.userId],
     );
     expect(rows[0]?.local).toBe('09:00');
+    expect(rows[0]?.profile_local).not.toBe('09:00');
   });
 
   it('moves a send time inside quiet hours to the end of the window', async () => {

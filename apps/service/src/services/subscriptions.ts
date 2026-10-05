@@ -54,16 +54,17 @@ interface SubscriptionRow {
   amount: string;
   recurrence_unit: RecurrenceUnit | null;
   interval: number;
-  today: string;
-  confirmed_date: string;
+  /** Null when the owner belongs to no household, so the subscription is not dated. */
+  today: string | null;
+  confirmed_date: string | null;
 }
 
 /**
  * The active household's subscriptions plus the caller's own personal ones (Requirements,
  * "Subscriptions view"), sorted by monthly cost descending. "Today" and the 60-day clock are each
- * read in the owning timezone — the household's for a household bill, the caller's own for a
- * personal one (non-negotiable 8), which `coalesce(household.timezone, profile.timezone)` picks
- * without branching, since a personal bill's owner is always the caller.
+ * read in the household timezone (non-negotiable 8): the bill's own household's, or for a personal
+ * bill its owner's active household's, else the owner's earliest. `coalesce` picks the right one
+ * without branching; the profile's timezone is never a date zone.
  */
 export async function getSubscriptions(
   db: Kysely<Database>,
@@ -72,14 +73,21 @@ export async function getSubscriptions(
 ): Promise<SubscriptionsResponse> {
   const { rows } = await sql<SubscriptionRow>`
     select b.id, b.name, b.visibility, b.amount, b.recurrence_unit, b.interval,
-      (pg_catalog.now() at time zone coalesce(h.timezone, p.timezone))::date::text as today,
+      (pg_catalog.now() at time zone coalesce(h.timezone, ah.timezone, mh.timezone))::date::text as today,
       (coalesce(b.last_used_confirmed_at, b.created_at)
-         at time zone coalesce(h.timezone, p.timezone))::date::text as confirmed_date
+         at time zone coalesce(h.timezone, ah.timezone, mh.timezone))::date::text as confirmed_date
     from public.bill b
     left join public.household h on h.id = b.household_id
     -- Left join: profile RLS only exposes the caller's own row, and a household subscription's
     -- owner is often a housemate, not the caller (bills.ts's BILL_CONTEXT_FROM has the full note).
     left join public.profile p on p.id = b.owner_user_id
+    left join public.household ah on ah.id = p.active_household_id
+    left join lateral (
+      select hm.timezone from public.household_member m
+      join public.household hm on hm.id = m.household_id
+      where m.user_id = b.owner_user_id
+      order by m.joined_at limit 1
+    ) mh on true
     where b.is_subscription = true and b.archived_at is null
       and (
         (b.household_id = ${householdId} and b.visibility = 'household')
@@ -96,7 +104,11 @@ export async function getSubscriptions(
       visibility: row.visibility,
       monthlyCents: monthly,
       annualCents: monthly * 12,
-      needsUsageConfirmation: needsUsageConfirmation(row.today, row.confirmed_date),
+      // Undated (no household timezone) means no clock to measure the 60 days against: no prompt.
+      needsUsageConfirmation:
+        row.today === null || row.confirmed_date === null
+          ? false
+          : needsUsageConfirmation(row.today, row.confirmed_date),
     };
   });
 

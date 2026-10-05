@@ -50,10 +50,10 @@ function makeLogger(): JobLogger {
  */
 const HOUSEHOLD_TZ = 'America/New_York';
 
-/** Today's date (YYYY-MM-DD) in the household timezone. */
-function householdToday(): string {
+/** Today's date (YYYY-MM-DD) in a timezone, the household's unless another is named. */
+function householdToday(zone: string = HOUSEHOLD_TZ): string {
   return new Intl.DateTimeFormat('en-CA', {
-    timeZone: HOUSEHOLD_TZ,
+    timeZone: zone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -61,7 +61,10 @@ function householdToday(): string {
 }
 
 /** A fresh household and its admin, directly as `postgres` (no HTTP layer needed for this job). */
-async function createHousehold(): Promise<{ householdId: string; userId: string }> {
+async function createHousehold(
+  zones: { householdTz?: string; profileTz?: string } = {},
+): Promise<{ householdId: string; userId: string }> {
+  const householdTz = zones.householdTz ?? HOUSEHOLD_TZ;
   const userId = randomUUID();
   await adminPool.query(
     `insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
@@ -69,13 +72,16 @@ async function createHousehold(): Promise<{ householdId: string; userId: string 
     [
       userId,
       `autopay.${userId.slice(0, 8)}@example.com`,
-      JSON.stringify({ display_name: 'Autopay Tester', timezone: HOUSEHOLD_TZ }),
+      JSON.stringify({
+        display_name: 'Autopay Tester',
+        timezone: zones.profileTz ?? HOUSEHOLD_TZ,
+      }),
     ],
   );
   const { rows } = await adminPool.query<{ id: string }>(
     `insert into public.household (name, postal_code, timezone, created_by)
      values ($1, $2, $4, $3) returning id`,
-    [`Autopay ${userId.slice(0, 6)}`, POSTAL_CODE, userId, HOUSEHOLD_TZ],
+    [`Autopay ${userId.slice(0, 6)}`, POSTAL_CODE, userId, householdTz],
   );
   const householdId = rows[0]?.id ?? '';
   await adminPool.query(
@@ -86,7 +92,8 @@ async function createHousehold(): Promise<{ householdId: string; userId: string 
 }
 
 async function insertAutopayBill(fields: {
-  householdId: string;
+  /** Null for a personal bill, which its owner's household dates. */
+  householdId: string | null;
   ownerId: string;
   unit: 'day' | 'week' | 'month' | 'year';
   interval?: number;
@@ -94,12 +101,14 @@ async function insertAutopayBill(fields: {
   createdDaysAgo: number;
   archived?: boolean;
   autopay?: boolean;
+  /** The household timezone that dates the bill; the household's own unless named. */
+  zone?: string;
 }): Promise<string> {
   const { rows } = await adminPool.query<{ id: string }>(
     `insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit,
        "interval", anchor_date, visibility, autopay, created_at, archived_at)
      values ($1, $2, 'Autopay Test Bill', 20.00, $3, $4,
-       (now() at time zone $9)::date - ($5 || ' days')::interval, 'household', $6,
+       (now() at time zone $9)::date - ($5 || ' days')::interval, $10, $6,
        now() - ($7 || ' days')::interval,
        case when $8 then now() else null end)
      returning id`,
@@ -112,7 +121,8 @@ async function insertAutopayBill(fields: {
       fields.autopay ?? true,
       fields.createdDaysAgo,
       fields.archived ?? false,
-      HOUSEHOLD_TZ,
+      fields.zone ?? HOUSEHOLD_TZ,
+      fields.householdId === null ? 'personal' : 'household',
     ],
   );
   return rows[0]?.id ?? '';
@@ -217,6 +227,29 @@ describe('log-autopay', () => {
 
     expect(after).toStrictEqual(first);
     expect(second.inserted).toBe(0);
+  });
+
+  it('dates a personal bill’s "today" by its owner’s household, not the owner’s profile zone', async () => {
+    // Kiritimati is UTC+14 and Pago Pago UTC-11: the owner's profile is always at least a day
+    // behind the household. A bill anchored on the household's today has an occurrence that is due
+    // now for the household and in the future for the profile, so only the household logs it.
+    const household = 'Pacific/Kiritimati';
+    const { userId } = await createHousehold({
+      householdTz: household,
+      profileTz: 'Pacific/Pago_Pago',
+    });
+    const billId = await insertAutopayBill({
+      householdId: null,
+      ownerId: userId,
+      unit: 'month',
+      anchorDaysAgo: 0,
+      createdDaysAgo: 0,
+      zone: household,
+    });
+
+    await runLogAutopay({ database: jobDb, logger: makeLogger() });
+
+    expect(await paymentDates(billId)).toStrictEqual([householdToday(household)]);
   });
 
   it('skips archived bills and non-autopay bills', async () => {

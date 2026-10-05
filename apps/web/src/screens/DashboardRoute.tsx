@@ -4,7 +4,7 @@ import { mealTypeLabel } from '../components/meals/meal-copy.ts';
 import type { DashboardCardState } from '../components/dashboard/DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from '../components/dashboard/DashboardCards.tsx';
 import { useBills } from '../lib/api/bills-hooks.ts';
-import { useProfile } from '../lib/api/hooks.ts';
+import { useHousehold, useProfile } from '../lib/api/hooks.ts';
 import { useChores } from '../lib/api/chore-hooks.ts';
 import { useShoppingLists } from '../lib/api/list-hooks.ts';
 import { useMealPlanWeek } from '../lib/api/meal-hooks.ts';
@@ -192,7 +192,10 @@ export function choresCardState(
 export function DashboardRoute(): ReactElement {
   const profile = useProfile();
   const householdId = profile.data?.activeHouseholdId ?? undefined;
-  const timezone = profile.data?.timezone;
+  const household = useHousehold(householdId);
+  // Every "today" on the dashboard is the household's (PRD, "Timezone"), so the browser's and the
+  // profile's zones never date a card. Until the household is known, the date-dependent cards wait.
+  const timezone = household.data?.timezone;
   const lists = useShoppingLists(householdId);
   const bills = useBills(householdId);
 

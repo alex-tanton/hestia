@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FIRST_RUN_HEADING } from '../components/dashboard/DashboardFirstRun.tsx';
 import { addDays, todayInTimezone } from '../lib/household-date.ts';
 import { billFixture } from '../test/bills-fixtures.ts';
-import { oakStreetMembers, profileFixture } from '../test/fixtures.ts';
+import { oakStreetFixture, oakStreetMembers, profileFixture } from '../test/fixtures.ts';
 import {
   cleanBathroomFixture,
   takeOutTrashFixture,
@@ -30,6 +30,7 @@ function mount(
 ): void {
   const stub = createFetchStub({
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
     'GET /api/households/:id/members': () => ({ status: 200, body: oakStreetMembers }),
     'GET /api/households/:id/lists': lists,
     'GET /api/households/:id/meal-plan': mealPlan,
@@ -85,7 +86,7 @@ describe('the Shopping card', () => {
 
 describe('the Chores card', () => {
   it('names what is due today and what is overdue, overdue first, with the word "Overdue"', async () => {
-    const today = todayInTimezone(profileFixture.timezone);
+    const today = todayInTimezone(oakStreetFixture.timezone);
     mount(
       () => ({ status: 200, body: [] }),
       undefined,
@@ -137,7 +138,7 @@ describe('the Chores card', () => {
 
 describe('the Meals card', () => {
   it("names today's meal, then tomorrow's", async () => {
-    const today = todayInTimezone(profileFixture.timezone);
+    const today = todayInTimezone(oakStreetFixture.timezone);
     mount(
       () => ({ status: 200, body: [] }),
       ({ query }) => ({
@@ -169,14 +170,14 @@ describe('the Meals card', () => {
     mount(() => ({ status: 200, body: [thisWeekFixture, weekendCookoutFixture] }));
     await screen.findByText('This Week');
     expect(
-      within(card('Meals')).getByText('Nothing planned for today or tomorrow'),
+      await within(card('Meals')).findByText('Nothing planned for today or tomorrow'),
     ).toBeInTheDocument();
   });
 });
 
 describe('the Bills card', () => {
   it('shows what is due this week, overdue first, and leaves later bills off', async () => {
-    const today = todayInTimezone(profileFixture.timezone);
+    const today = todayInTimezone(oakStreetFixture.timezone);
     mount(
       () => ({ status: 200, body: [] }),
       undefined,

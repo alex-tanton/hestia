@@ -111,9 +111,9 @@ async function householdsAt(
  * occurrence key) is the dedupe, so a rerun is a no-op (Handoff non-negotiable 7).
  *
  * `occurrence_key` is the run day's date in the household's own timezone, which owns household
- * dates (non-negotiable 8), so a household is told at most once a day. `send_after` is the
- * recipient's next 09:00 local time, moved to the end of their quiet-hours window if it lands
- * inside one.
+ * dates (non-negotiable 8), so a household is told at most once a day. `send_after` is the next
+ * 09:00 in that same household timezone, which every recipient shares, moved to the end of their own
+ * quiet-hours window if it lands inside one (quiet hours alone use the recipient's timezone).
  *
  * `flyer_refresh` defaults to off, so a recipient needs an explicit enabled preference row.
  */
@@ -125,14 +125,14 @@ async function enqueueFlyerRefresh(
   if (householdIds.length === 0) return 0;
   const { rows } = await sql<{ id: string }>`
     with target as (
-      select h.id as household_id, h.name as household_name,
+      select h.id as household_id, h.name as household_name, h.timezone as household_timezone,
              (${at}::timestamptz at time zone h.timezone)::date as occurrence_date
       from public.household h
       where h.id = any(${sql.val(householdIds)}::uuid[])
     ),
     recipient as (
-      select t.household_id, t.household_name, t.occurrence_date, p.id as user_id,
-             p.timezone, p.quiet_hours_start, p.quiet_hours_end
+      select t.household_id, t.household_name, t.household_timezone, t.occurrence_date,
+             p.id as user_id, p.timezone, p.quiet_hours_start, p.quiet_hours_end
       from target t
       join public.household_member m on m.household_id = t.household_id
       join public.profile p on p.id = m.user_id
@@ -141,7 +141,8 @@ async function enqueueFlyerRefresh(
     ),
     scheduled as (
       select r.*,
-             public.next_local_time(${at}::timestamptz, r.timezone, time '09:00') as plain_send_after
+             public.next_local_time(${at}::timestamptz, r.household_timezone, time '09:00')
+               as plain_send_after
       from recipient r
     )
     insert into public.notification (user_id, type, target_id, occurrence_key, payload, send_after)

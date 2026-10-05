@@ -21,11 +21,12 @@ import { fromCents, toCents } from './money.js';
  * reported as not found, never as forbidden, and no function here re-implements the household or
  * personal visibility check the database already enforces.
  *
- * "Today" and a bill's own timezone are read in the same query as the bill (Requirements,
- * "Timezone", non-negotiable 8): a household bill resolves in its household's timezone, a personal
- * bill in its owner's. `coalesce(household.timezone, profile.timezone)` picks the right one without
- * branching, since a household bill always has a household row and a personal bill's owner is
- * always the caller.
+ * "Today" and a bill's dates are read in the same query as the bill (Requirements, "Timezone",
+ * non-negotiable 8): every date is read in the household timezone. A household bill's is its own
+ * household's; a personal bill's is its owner's active household's, since a personal bill belongs
+ * to no household: its owner's active household's, or the owner's earliest household's if none is
+ * active. `coalesce` picks the right one without branching. The profile's timezone is never a date
+ * zone.
  */
 
 interface BillRow {
@@ -45,40 +46,55 @@ interface BillRow {
   last_used_confirmed_at: Date | string | null;
   archived_at: Date | string | null;
   created_at: Date | string;
-  /** The timezone that owns this bill's dates: the household's, or the owner's for a personal bill. */
-  timezone: string;
-  /** "Today" in that timezone, as a calendar date. */
-  today: CalendarDate;
+  /**
+   * The household timezone that dates this bill: its household's, or its owner's active household's
+   * (else the owner's earliest). Null only when the owner belongs to no household at all.
+   */
+  timezone: string | null;
+  /** "Today" in that timezone, as a calendar date; null exactly when `timezone` is. */
+  today: CalendarDate | null;
 }
 
 const BILL_CONTEXT_COLUMNS = sql`
   b.id, b.household_id, b.owner_user_id, b.name, b.amount, b.category, b.recurrence_unit,
   b.interval, b.anchor_date, b.reminder_days_before, b.autopay, b.visibility, b.is_subscription,
   b.last_used_confirmed_at, b.archived_at, b.created_at,
-  coalesce(h.timezone, p.timezone) as timezone,
-  (pg_catalog.now() at time zone coalesce(h.timezone, p.timezone))::date::text as today
+  coalesce(h.timezone, ah.timezone, mh.timezone) as timezone,
+  (pg_catalog.now() at time zone coalesce(h.timezone, ah.timezone, mh.timezone))::date::text as today
 `;
 
 // `profile` RLS only ever lets a caller see their own row (`own_read`: `id = auth.uid()`), so this
 // must be a left join: for a household bill the owner is often someone else, and an inner join
 // would silently drop every such bill for every caller but its own owner. A personal bill's owner
-// is always the caller (RLS already guarantees that), so this never loses `p.timezone` where it's
-// actually needed — only `h.timezone` is ever missing for a personal bill, and it's never read.
+// is always the caller (RLS already guarantees that), so `ah` resolves for it. For a household bill
+// `h` is always present and `ah` is never read.
 const BILL_CONTEXT_FROM = sql`
   from public.bill b
   left join public.household h on h.id = b.household_id
   left join public.profile p on p.id = b.owner_user_id
+  left join public.household ah on ah.id = p.active_household_id
+    left join lateral (
+      select hm.timezone from public.household_member m
+      join public.household hm on hm.id = m.household_id
+      where m.user_id = b.owner_user_id
+      order by m.joined_at limit 1
+    ) mh on true
 `;
 
 function iso(value: Date | string): string {
   return (value instanceof Date ? value : new Date(value)).toISOString();
 }
 
-/** The earliest occurrence with no payment or skip row, and whether it is overdue. */
+/**
+ * The earliest occurrence with no payment or skip row, and whether it is overdue. With no household
+ * timezone there is no "today", so the bill is not dated: it is not overdue, and the anchor stands
+ * in only because the wire schema requires a date. Paying or skipping it is refused (see `payBill`).
+ */
 export function billOccurrence(
   row: Pick<BillRow, 'recurrence_unit' | 'interval' | 'anchor_date' | 'today'>,
   resolvedDates: ReadonlySet<CalendarDate>,
 ): { date: CalendarDate; overdue: boolean } {
+  if (row.today === null) return { date: row.anchor_date, overdue: false };
   if (row.recurrence_unit === null) {
     // A one-time bill (PRD, "Data model › Bills"): its only occurrence is the anchor date itself.
     const resolved = resolvedDates.has(row.anchor_date);
@@ -316,6 +332,7 @@ export async function payBill(
   input: PayBillRequest,
 ): Promise<BillPayment> {
   const row = await requireBillRow(db, id);
+  const today = requireHouseholdToday(row);
   const resolvedDates = await resolvedDatesOf(db, id);
   const occurrence = billOccurrence(row, resolvedDates);
   const amountCents = input.amountPaidCents ?? toCents(row.amount) ?? 0;
@@ -324,7 +341,7 @@ export async function payBill(
     .values({
       bill_id: id,
       occurrence_date: occurrence.date,
-      paid_date: input.paidDate ?? row.today,
+      paid_date: input.paidDate ?? today,
       amount_paid: fromCents(amountCents) ?? '0',
       is_auto: false,
       is_skipped: false,
@@ -335,6 +352,17 @@ export async function payBill(
   return toPayment(paymentRow);
 }
 
+/**
+ * A bill with no household timezone has no current occurrence to record, so paying or skipping it
+ * is refused. The message names no household content.
+ */
+function requireHouseholdToday(row: BillRow): CalendarDate {
+  if (row.today === null) {
+    throw fail(409, 'This bill cannot be paid until its owner joins a household.');
+  }
+  return row.today;
+}
+
 /** Skips the bill's current occurrence: it will not be paid (PRD, "Bills": "a waived month"). */
 export async function skipBill(
   db: Kysely<Database>,
@@ -342,6 +370,7 @@ export async function skipBill(
   userId: string,
 ): Promise<BillPayment> {
   const row = await requireBillRow(db, id);
+  requireHouseholdToday(row);
   const resolvedDates = await resolvedDatesOf(db, id);
   const occurrence = billOccurrence(row, resolvedDates);
   const paymentRow = await db

@@ -3,7 +3,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RecipeDetail } from '@hearth/shared';
-import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
+import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
 import {
   bakedZitiFixture,
@@ -23,6 +23,7 @@ function baseHandlers(
 ): Record<string, StubHandler> {
   return {
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
     'GET /api/recipes/:id': () => ({ status: 200, body: sheetPanChickenFixture }),
     'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekFixture] }),
     'GET /api/households/:id/pantry': () => ({ status: 200, body: [] }),

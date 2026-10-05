@@ -8,7 +8,7 @@ import {
   spectrumInternetFixture,
   spotifyFixture,
 } from '../../test/bills-fixtures.ts';
-import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
+import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { addDays, todayInTimezone } from '../../lib/household-date.ts';
 import {
   createFetchStub,
@@ -23,6 +23,7 @@ function baseHandlers(
 ): Record<string, StubHandler> {
   return {
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
     'GET /api/households/:id/bills': () => ({
       status: 200,
       body: [dukeEnergyFixture, spectrumInternetFixture, spotifyFixture],
@@ -97,7 +98,7 @@ describe('Bills dashboard (Design › Screens › 14)', () => {
   });
 
   it('populated: groups by Overdue, This week, and Later, with badges and money formatted from cents', async () => {
-    const today = todayInTimezone(profileFixture.timezone);
+    const today = todayInTimezone(oakStreetFixture.timezone);
     const thisWeekBill = billFixture({
       id: '30000001-0000-4000-8000-000000000001',
       name: 'Spectrum Internet',

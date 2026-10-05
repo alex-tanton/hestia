@@ -11,9 +11,9 @@ import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
 import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
-import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
+import { Skeleton, SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
-import { useProfile } from '../../lib/api/hooks.ts';
+import { useHousehold } from '../../lib/api/hooks.ts';
 import { useAddRecipeToList, useDeleteRecipe, useRecipeDetail } from '../../lib/api/meal-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { pluralize } from '../../lib/format.ts';
@@ -35,7 +35,8 @@ export function RecipeDetailScreen({
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
   const toast = useToast();
-  const profile = useProfile();
+  const household = useHousehold(householdId);
+  const timezone = household.data?.timezone;
   const recipe = useRecipeDetail(householdId, recipeId);
   const deleteRecipe = useDeleteRecipe(householdId);
   const addToList = useAddRecipeToList(householdId);
@@ -163,16 +164,24 @@ export function RecipeDetailScreen({
         >
           Add missing to list
         </Button>
-        <Button
-          variant="secondary"
-          disabledReason={offlineReason}
-          onClick={() => {
-            setIsPlannerOpen(true);
-          }}
-        >
-          <CalendarPlus aria-hidden size={20} strokeWidth={1.5} />
-          Place on week planner
-        </Button>
+        {/* The planner's default day is today in the household's timezone, so until that zone is
+        known the button is a disabled placeholder rather than an action that opens a dated sheet. */}
+        {timezone === undefined ? (
+          <Button variant="secondary" disabled aria-label="Place on week planner">
+            <Skeleton className="h-5 w-40" />
+          </Button>
+        ) : (
+          <Button
+            variant="secondary"
+            disabledReason={offlineReason}
+            onClick={() => {
+              setIsPlannerOpen(true);
+            }}
+          >
+            <CalendarPlus aria-hidden size={20} strokeWidth={1.5} />
+            Place on week planner
+          </Button>
+        )}
       </div>
 
       <ReadinessBreakdown
@@ -215,10 +224,10 @@ export function RecipeDetailScreen({
         />
       )}
 
-      {isPlannerOpen && profile.data && (
+      {isPlannerOpen && timezone !== undefined && (
         <PlaceOnPlannerSheet
           householdId={householdId}
-          timezone={profile.data.timezone}
+          timezone={timezone}
           recipeId={recipeId}
           recipeTitle={data.title}
           onOpenChange={setIsPlannerOpen}

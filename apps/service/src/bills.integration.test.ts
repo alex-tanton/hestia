@@ -461,3 +461,176 @@ describe('RLS isolation: a stranger gets 404, never 403', () => {
     expectStatus(await as(app, mine.user, 'GET', `/api/bills/${personal.id}`), 200);
   });
 });
+
+/*
+ * Every date is read in the household timezone (non-negotiable 8). The household here is Kiritimati
+ * (UTC+14) and the owner's profile is Pago Pago (UTC-11), so their calendar dates are always a day
+ * or more apart: a service that dated by the profile would classify these bills differently.
+ */
+describe('dates follow the household timezone, not the profile zone', () => {
+  const HOUSEHOLD_ZONE = 'Pacific/Kiritimati';
+  const PROFILE_ZONE = 'Pacific/Pago_Pago';
+  const DAY_MS = 86_400_000;
+
+  /** The calendar date (YYYY-MM-DD) an instant falls on in a timezone. */
+  function dateIn(zone: string, instant: Date): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: zone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(instant);
+  }
+
+  /** Whole days from one calendar date to another. */
+  function daysBetween(later: string, earlier: string): number {
+    return Math.round(
+      (Date.parse(`${later}T00:00:00Z`) - Date.parse(`${earlier}T00:00:00Z`)) / DAY_MS,
+    );
+  }
+
+  /**
+   * An instant whose age in days is `ageDays` by the household's calendar but not by the profile's,
+   * so the two zones would disagree about it. Found by stepping an hour at a time around the target.
+   */
+  function instantAged(ageDays: number): Date {
+    const now = new Date();
+    const householdToday = dateIn(HOUSEHOLD_ZONE, now);
+    const profileToday = dateIn(PROFILE_ZONE, now);
+    for (let hour = -96; hour <= 96; hour += 1) {
+      const instant = new Date(now.getTime() - ageDays * DAY_MS + hour * 3_600_000);
+      if (
+        daysBetween(householdToday, dateIn(HOUSEHOLD_ZONE, instant)) === ageDays &&
+        daysBetween(profileToday, dateIn(PROFILE_ZONE, instant)) !== ageDays
+      ) {
+        return instant;
+      }
+    }
+    throw new Error('no instant at this age separates the two zones');
+  }
+
+  /** The household's yesterday, by its own calendar. */
+  function householdYesterday(): string {
+    const today = dateIn(HOUSEHOLD_ZONE, new Date());
+    return new Date(Date.parse(`${today}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+  }
+
+  /** The profile zone's yesterday: the date a service dating by the profile would call yesterday. */
+  function profileYesterday(): string {
+    const today = dateIn(PROFILE_ZONE, new Date());
+    return new Date(Date.parse(`${today}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+  }
+
+  async function farAwayHome(): Promise<Home> {
+    const user = await signUp(app, 'Alex', PROFILE_ZONE);
+    const response = await as(app, user, 'POST', '/api/households', {
+      name: uniqueName('Household'),
+      postalCode: nextPostalCode(),
+      timezone: HOUSEHOLD_ZONE,
+    });
+    expectStatus(response, 201);
+    return { user, household: response.json<Household>() };
+  }
+
+  async function listedBill(home: Home, id: string): Promise<Bill> {
+    const response = await as(app, home.user, 'GET', `/api/households/${home.household.id}/bills`);
+    expectStatus(response, 200);
+    const found = response.json<Bill[]>().find((bill) => bill.id === id);
+    if (found === undefined) throw new Error('the bill is listed for its household');
+    return found;
+  }
+
+  it('a household bill due yesterday by the household’s calendar is overdue, and the profile’s yesterday is another date', async () => {
+    const home = await farAwayHome();
+    const yesterday = householdYesterday();
+    // The premise that makes this test bite: a profile- or UTC-dated service would name another day.
+    expect(profileYesterday()).not.toBe(yesterday);
+    const bill = await createHouseholdBill(home, { anchorDate: yesterday });
+
+    const listed = await listedBill(home, bill.id);
+    expect(listed.currentOccurrenceDate).toBe(yesterday);
+    expect(listed.isOverdue).toBe(true);
+  });
+
+  it('a personal bill due yesterday by the household’s calendar is overdue too', async () => {
+    // The profile zone is a day behind, so by the profile this bill is not due yet. It belongs to
+    // no household, so its dates come from its owner's active household: the same household zone.
+    const home = await farAwayHome();
+    const yesterday = householdYesterday();
+    const bill = await createPersonalBill(home, { name: 'Water', anchorDate: yesterday });
+
+    const listed = await listedBill(home, bill.id);
+    expect(listed.currentOccurrenceDate).toBe(yesterday);
+    expect(listed.isOverdue).toBe(true);
+  });
+
+  it('a subscription confirmed 60 household days ago needs confirming; 59 days ago does not', async () => {
+    const home = await farAwayHome();
+    const sixty = await createPersonalBill(home, { name: 'Gym', isSubscription: true });
+    const fiftyNine = await createPersonalBill(home, { name: 'Magazine', isSubscription: true });
+    await adminPool.query('update public.bill set last_used_confirmed_at = $2 where id = $1', [
+      sixty.id,
+      instantAged(60).toISOString(),
+    ]);
+    await adminPool.query('update public.bill set last_used_confirmed_at = $2 where id = $1', [
+      fiftyNine.id,
+      instantAged(59).toISOString(),
+    ]);
+
+    const response = await as(
+      app,
+      home.user,
+      'GET',
+      `/api/households/${home.household.id}/subscriptions`,
+    );
+    expectStatus(response, 200);
+    const subscriptions = response.json<SubscriptionsResponse>().subscriptions;
+    expect(subscriptions.find((sub) => sub.id === sixty.id)?.needsUsageConfirmation).toBe(true);
+    expect(subscriptions.find((sub) => sub.id === fiftyNine.id)?.needsUsageConfirmation).toBe(
+      false,
+    );
+  });
+});
+
+describe('a personal bill whose owner belongs to no household', () => {
+  /** A user with no household, and one personal bill of theirs dated in the far past. */
+  async function soloBill(): Promise<{ user: SignedUpUser; billId: string }> {
+    const user = await signUp(app, 'Solo', 'Pacific/Pago_Pago');
+    const { rows } = await adminPool.query<{ id: string }>(
+      `insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit,
+         "interval", anchor_date, visibility)
+       values (null, $1, 'Car Insurance', 128.00, 'month', 1, '2000-01-01', 'personal')
+       returning id`,
+      [user.id],
+    );
+    return { user, billId: rows[0]?.id ?? '' };
+  }
+
+  it('is not overdue, since there is no household date to be overdue against', async () => {
+    const { user, billId } = await soloBill();
+
+    const response = await as(app, user, 'GET', `/api/bills/${billId}`);
+    expectStatus(response, 200);
+    expect(response.json<Bill>().isOverdue).toBe(false);
+  });
+
+  it('refuses a payment with 409, names no household content, and writes nothing', async () => {
+    const { user, billId } = await soloBill();
+
+    const response = await as(app, user, 'POST', `/api/bills/${billId}/pay`, {});
+    expectStatus(response, 409);
+    expect(response.body).toContain('This bill cannot be paid until its owner joins a household.');
+    const { rows } = await adminPool.query<{ n: string }>(
+      'select count(*)::text as n from public.bill_payment_log where bill_id = $1',
+      [billId],
+    );
+    expect(rows[0]?.n).toBe('0');
+  });
+
+  it('refuses a skip the same way', async () => {
+    const { user, billId } = await soloBill();
+
+    const response = await as(app, user, 'POST', `/api/bills/${billId}/skip`, {});
+    expectStatus(response, 409);
+  });
+});

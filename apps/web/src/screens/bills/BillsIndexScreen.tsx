@@ -8,13 +8,14 @@ import {
   OFFLINE_ACTION_REASON,
   skipBillConfirmation,
 } from '../../components/bills/bills-copy.ts';
+import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
-import { useProfile } from '../../lib/api/hooks.ts';
+import { useHousehold } from '../../lib/api/hooks.ts';
 import {
   useBills,
   useCreateHouseholdBill,
@@ -55,7 +56,7 @@ export interface BillsIndexScreenProps {
 export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
-  const profile = useProfile();
+  const household = useHousehold(householdId);
   const bills = useBills(householdId);
   const createHousehold = useCreateHouseholdBill(householdId);
   const createPersonal = useCreatePersonalBill(householdId);
@@ -159,8 +160,10 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
       );
     }
 
-    const today = profile.data ? todayInTimezone(profile.data.timezone) : undefined;
-    if (today === undefined) return <SkeletonRows label="Loading your bills" />;
+    // "This week" runs to the household's Saturday, so the groups wait for the household's zone.
+    const timezone = household.data?.timezone;
+    if (timezone === undefined) return householdFallback(household, 'Loading your bills');
+    const today = todayInTimezone(timezone);
     const weekEnd = addDays(weekStart(today), 6);
     const { overdue, thisWeek, later } = groupBills(data, weekEnd);
 

@@ -50,7 +50,7 @@ These are the constraints most likely to be quietly violated for convenience. Vi
 5. **Recurrence is anchored, never shifting.** Computed from the anchor date and interval, never from the completion timestamp. If a test seems to demand otherwise, the test is wrong.
 6. **Unparseable deal prices are skipped, never stored as null or zero.** A deal with a fabricated price is worse than a missing deal.
 7. **Notifications are deduplicated by the outbox's unique key (user, type, target, occurrence key).** A job rerun must not double-send.
-8. **Dates are evaluated in the timezone that owns them.** Chore dates, errand dates, household-bill dates, meal-plan dates, and "today" in household views use the household timezone. Personal-bill dates, quiet hours, and personal send times use the user's stored timezone. The server's timezone and the browser's live timezone are never used for these.
+8. **Every date is evaluated in the household timezone.** Chore dates, errand dates, household-bill dates, personal-bill dates, meal-plan dates, notification send days, and "today" in every view use the household timezone, whoever is looking. Quiet hours are a time window in the user's stored timezone and are the only exception. The server's timezone and the browser's live timezone are never used for these.
 9. **Offline writes are idempotent.** Client-generated UUIDs, inserts that ignore duplicates, absolute-value updates, and natural unique keys, so that a replayed write never changes anything twice.
 
 ### Product

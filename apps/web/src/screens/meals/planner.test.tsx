@@ -3,7 +3,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MealPlanEntry, MealPlanWeekResponse } from '@hearth/shared';
-import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
+import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
 import {
   bakedZitiFixture,
@@ -15,7 +15,7 @@ import { addDays, todayInTimezone, weekStart } from '../../lib/household-date.ts
 import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';
 import { PlannerScreen } from './PlannerScreen.tsx';
 
-const TIMEZONE = profileFixture.timezone;
+const TIMEZONE = oakStreetFixture.timezone;
 const CURRENT_WEEK = weekStart(todayInTimezone(TIMEZONE));
 const WEDNESDAY = addDays(CURRENT_WEEK, 3);
 const PAST_WEEK = addDays(CURRENT_WEEK, -7);
@@ -70,6 +70,7 @@ function baseHandlers(
 ): Record<string, StubHandler> {
   return {
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
     'GET /api/households/:id/meal-plan': ({ query }) => ({
       status: 200,
       body: weekResponse(query.get('week') ?? CURRENT_WEEK),

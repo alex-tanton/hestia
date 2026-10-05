@@ -26,9 +26,10 @@ import {
  * recipient's quiet hours in SQL and keeps only rows that are due, still wanted, and addressed to a
  * current member. The outbox's unique key makes a rerun a no-op.
  *
- * Household-dated items (household bills, household chores and errands, meals, the nudge) are dated
- * in the household's timezone and sent at the household's clock (Requirements, "Notifications" ›
- * "Delivery"). A personal bill follows its owner's timezone, which is also the recipient's.
+ * Every item is dated in the household's timezone and sent at the household's clock (Requirements,
+ * "Notifications" › "Delivery"), personal bills included: a personal bill is dated by its owner's
+ * active household (else the owner's earliest), since it belongs to no household. Only quiet hours use the recipient's own
+ * timezone, and `writeRows` applies them in SQL.
  */
 
 interface ScheduledRow {
@@ -106,11 +107,19 @@ async function billRows(
   const { rows: bills } = await sql<BillRow>`
     select b.id, b.name, b.amount::text as amount, b.autopay, b.recurrence_unit, b.interval,
       b.anchor_date::text as anchor_date, b.reminder_days_before, b.household_id,
-      b.owner_user_id, coalesce(h.timezone, p.timezone) as tz
+      b.owner_user_id, coalesce(h.timezone, ah.timezone, mh.timezone) as tz
     from public.bill b
     left join public.household h on h.id = b.household_id
     join public.profile p on p.id = b.owner_user_id
+    left join public.household ah on ah.id = p.active_household_id
+    left join lateral (
+      select hm.timezone from public.household_member m
+      join public.household hm on hm.id = m.household_id
+      where m.user_id = b.owner_user_id
+      order by m.joined_at limit 1
+    ) mh on true
     where b.archived_at is null
+      and coalesce(h.timezone, ah.timezone, mh.timezone) is not null
   `.execute(db);
 
   const out: ScheduledRow[] = [];

@@ -16,8 +16,10 @@ import type { JobDatabase, JobLogger } from './types.js';
  * dated on or before today, and (c) is dated on or after the bill's `created_at` date — never
  * backfilling an occurrence from before the bill existed (Engineering Practices, "Testing": the
  * no-backfill rule gets its own named integration test). "Today" and `created_at`'s calendar date
- * are both read in the bill's own timezone: the household's for a household bill, the owner's for
- * a personal one (non-negotiable 8).
+ * are both read in the household timezone (non-negotiable 8): the bill's household's, or for a
+ * personal bill its owner's active household's, else the owner's earliest household's. A personal
+ * bill whose owner belongs to no household has no household timezone, so it is not dated and is
+ * skipped; the app never shows such a bill.
  */
 
 export interface AutopayBillRow {
@@ -75,12 +77,20 @@ export interface LogAutopayOutcome {
 async function logAutopay(db: Kysely<Database>): Promise<LogAutopayOutcome> {
   const { rows } = await sql<AutopayBillRow>`
     select b.id, b.amount, b.recurrence_unit, b.interval, b.anchor_date,
-      (pg_catalog.now() at time zone coalesce(h.timezone, p.timezone))::date::text as today,
-      (b.created_at at time zone coalesce(h.timezone, p.timezone))::date::text as created_date
+      (pg_catalog.now() at time zone coalesce(h.timezone, ah.timezone, mh.timezone))::date::text as today,
+      (b.created_at at time zone coalesce(h.timezone, ah.timezone, mh.timezone))::date::text as created_date
     from public.bill b
     left join public.household h on h.id = b.household_id
     join public.profile p on p.id = b.owner_user_id
+    left join public.household ah on ah.id = p.active_household_id
+    left join lateral (
+      select hm.timezone from public.household_member m
+      join public.household hm on hm.id = m.household_id
+      where m.user_id = b.owner_user_id
+      order by m.joined_at limit 1
+    ) mh on true
     where b.autopay and b.archived_at is null
+      and coalesce(h.timezone, ah.timezone, mh.timezone) is not null
   `.execute(db);
 
   let inserted = 0;
