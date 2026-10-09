@@ -4,6 +4,7 @@ import {
   billPaymentParamsSchema,
   createBillRequestSchema,
   householdIdParamsSchema,
+  moveBillRequestSchema,
   payBillRequestSchema,
   updateBillPaymentRequestSchema,
   updateBillRequestSchema,
@@ -18,6 +19,7 @@ import {
   deleteBillPayment,
   getBill,
   listBills,
+  moveBill,
   payBill,
   skipBill,
   updateBill,
@@ -105,6 +107,13 @@ export const billRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx
     const user = await ctx.authenticate(request);
     const { id } = parse(billIdParamsSchema, request.params);
     return ctx.asUser(user, (db) => confirmBillUsage(db, id));
+  });
+
+  app.post('/api/bills/:id/move', async (request) => {
+    const user = await ctx.authenticate(request);
+    const { id } = parse(billIdParamsSchema, request.params);
+    const body = parse(moveBillRequestSchema, request.body);
+    return ctx.asUser(user, (db) => moveBill(db, id, user.id, body));
   });
 
   app.patch('/api/bills/:id/payments/:paymentId', async (request) => {

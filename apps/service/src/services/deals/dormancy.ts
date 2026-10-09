@@ -90,8 +90,9 @@ export function sameUtcDay(a: Date, b: Date): boolean {
 
 /**
  * A dormant postal code gets at most one on-demand refresh per UTC day. The limit holds whether
- * or not any deal rows exist, because it is `last_on_demand_at` that records the claim — which is
- * why claiming it and queueing the refresh are the same step.
+ * or not any deal rows exist, because it is `last_on_demand_at` that records the claim. This check
+ * only decides whether a claim is worth attempting; the claim itself, committed first, is what
+ * limits the refresh.
  */
 export function shouldQueueOnDemandRefresh(
   bookkeeping: RefreshBookkeeping | undefined,

@@ -38,6 +38,7 @@ import {
   billPaymentSchema,
   billSchema,
   createBillRequestSchema,
+  moveBillRequestSchema,
   payBillRequestSchema,
   subscriptionsResponseSchema,
   updateBillPaymentRequestSchema,
@@ -708,6 +709,15 @@ export const endpoints = [
     summary: '"Still using this?" — resets last_used_confirmed_at to now',
     access: 'user',
     params: billIdParamsSchema,
+    response: { status: 200, schema: billSchema },
+  },
+  {
+    method: 'POST',
+    path: '/api/bills/:id/move',
+    summary: 'Move a bill between its household and its owner alone (owner only; not archived)',
+    access: 'user',
+    params: billIdParamsSchema,
+    body: moveBillRequestSchema,
     response: { status: 200, schema: billSchema },
   },
   {

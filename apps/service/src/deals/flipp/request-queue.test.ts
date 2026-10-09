@@ -52,6 +52,32 @@ afterEach(() => {
 });
 
 describe('the serialized request queue', () => {
+  it('keeps the gap at the minimum when a timer wakes a millisecond early', async () => {
+    // Node timers can fire a millisecond before the clock says the delay has passed. One sleep
+    // then leaves the gap at 499ms, which the e2e discipline check reads as a broken queue.
+    let clock = 0;
+    let wokeEarly = false;
+    const starts: number[] = [];
+    const queue = new FlippRequestQueue({
+      get: () => {
+        starts.push(clock);
+        return Promise.resolve({ status: 200, json: () => Promise.resolve({}) });
+      },
+      userAgent: buildUserAgent('https://hearth.example.ts.net'),
+      now: () => clock,
+      sleep: (ms) => {
+        clock += !wokeEarly && ms > 1 ? ms - 1 : ms;
+        wokeEarly = true;
+        return Promise.resolve();
+      },
+    });
+
+    await queue.request('https://f/1');
+    await queue.request('https://f/2');
+
+    expect(starts[1]! - starts[0]!).toBeGreaterThanOrEqual(MIN_GAP_MS);
+  });
+
   it('runs requests one at a time with at least a 500ms gap', async () => {
     const { queue, calls } = queueWith([200]);
     const results = Promise.all([

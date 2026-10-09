@@ -47,7 +47,8 @@ afterAll(async () => {
 let postalCounter = 71;
 function nextPostalCode(): string {
   postalCounter += 1;
-  return `277${String(postalCounter)}`;
+  // Wraps within two digits so the ZIP stays five digits however many households the file makes.
+  return `277${String(postalCounter % 100).padStart(2, '0')}`;
 }
 
 function expectStatus(response: LightMyRequestResponse, status: number): void {
@@ -632,5 +633,161 @@ describe('a personal bill whose owner belongs to no household', () => {
 
     const response = await as(app, user, 'POST', `/api/bills/${billId}/skip`, {});
     expectStatus(response, 409);
+  });
+});
+
+describe('moving a bill between its household and its owner', () => {
+  /** A housemate added straight to the household, as the co-member test does. */
+  async function addMember(hh: Household, name: string): Promise<SignedUpUser> {
+    const member = await signUp(app, name);
+    await adminPool.query(
+      `insert into public.household_member (household_id, user_id, role) values ($1, $2, 'member')`,
+      [hh.id, member.id],
+    );
+    return member;
+  }
+
+  function move(user: SignedUpUser, billId: string, body: Record<string, unknown>) {
+    return as(app, user, 'POST', `/api/bills/${billId}/move`, body);
+  }
+
+  it('the owner moves a household bill to personal and back, keeping its anchor and history', async () => {
+    const home = await household();
+    const bill = await createHouseholdBill(home, { anchorDate: isoDate(-40) });
+    expectStatus(await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {}), 201);
+    const before = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
+    expectStatus(before, 200);
+    const paid = before.json<BillDetail>();
+    expect(paid.payments).toHaveLength(1);
+
+    const out = await move(home.user, bill.id, { visibility: 'personal' });
+    expectStatus(out, 200);
+    expect(out.json<Bill>()).toMatchObject({
+      id: bill.id,
+      householdId: null,
+      ownerUserId: home.user.id,
+      visibility: 'personal',
+      anchorDate: paid.anchorDate,
+      currentOccurrenceDate: paid.currentOccurrenceDate,
+    });
+
+    const back = await move(home.user, bill.id, {
+      visibility: 'household',
+      householdId: home.household.id,
+    });
+    expectStatus(back, 200);
+    expect(back.json<Bill>()).toMatchObject({
+      householdId: home.household.id,
+      visibility: 'household',
+      anchorDate: paid.anchorDate,
+      currentOccurrenceDate: paid.currentOccurrenceDate,
+    });
+
+    const after = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
+    expectStatus(after, 200);
+    expect(after.json<BillDetail>().payments).toEqual(paid.payments);
+  });
+
+  it('a housemate sees the bill leave their view when it goes personal, and return when it comes back', async () => {
+    const home = await household();
+    const housemate = await addMember(home.household, 'Housemate');
+    const bill = await createHouseholdBill(home);
+    const householdBillIds = async (user: SignedUpUser) =>
+      (await as(app, user, 'GET', `/api/households/${home.household.id}/bills`))
+        .json<Bill[]>()
+        .map((b) => b.id);
+
+    expect(await householdBillIds(housemate)).toContain(bill.id);
+
+    expectStatus(await move(home.user, bill.id, { visibility: 'personal' }), 200);
+    expect(await householdBillIds(housemate)).not.toContain(bill.id);
+    expectStatus(await as(app, housemate, 'GET', `/api/bills/${bill.id}`), 404);
+    // The owner still sees their own personal bill, in the household context they open.
+    expect(await householdBillIds(home.user)).toContain(bill.id);
+
+    expectStatus(
+      await move(home.user, bill.id, { visibility: 'household', householdId: home.household.id }),
+      200,
+    );
+    expect(await householdBillIds(housemate)).toContain(bill.id);
+  });
+
+  it('a housemate who is not the owner cannot move a household bill, and it stays as it was', async () => {
+    const home = await household();
+    const housemate = await addMember(home.household, 'Housemate');
+    const bill = await createHouseholdBill(home);
+
+    const response = await move(housemate, bill.id, { visibility: 'personal' });
+    expectStatus(response, 403);
+    expect(response.json<{ detail: string }>().detail).toBe('Only the bill’s owner can move it.');
+
+    const still = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
+    expect(still.json<Bill>()).toMatchObject({
+      householdId: home.household.id,
+      visibility: 'household',
+    });
+  });
+
+  it('a stranger cannot see a personal bill to move it: 404, never 403', async () => {
+    const home = await household();
+    const stranger = await signUp(app, 'Stranger');
+    const bill = await createPersonalBill(home);
+
+    expectStatus(
+      await move(stranger, bill.id, { visibility: 'household', householdId: home.household.id }),
+      404,
+    );
+  });
+
+  it('an archived bill cannot be moved', async () => {
+    const home = await household();
+    const bill = await createHouseholdBill(home);
+    expectStatus(await as(app, home.user, 'POST', `/api/bills/${bill.id}/archive`), 200);
+
+    const response = await move(home.user, bill.id, { visibility: 'personal' });
+    expectStatus(response, 409);
+    expect(response.json<{ detail: string }>().detail).toBe('An archived bill cannot be moved.');
+  });
+
+  it('a personal bill cannot move into a household the owner does not belong to: 422', async () => {
+    const owner = await household();
+    const elsewhere = await household();
+    const bill = await createPersonalBill(owner);
+
+    const response = await move(owner.user, bill.id, {
+      visibility: 'household',
+      householdId: elsewhere.household.id,
+    });
+    expectStatus(response, 422);
+    expect(
+      await as(app, owner.user, 'GET', `/api/bills/${bill.id}`).then((r) => r.json<Bill>()),
+    ).toMatchObject({ householdId: null, visibility: 'personal' });
+  });
+
+  it('a household bill never moves to another household the owner belongs to: 409', async () => {
+    const home = await household();
+    const other = await household();
+    await adminPool.query(
+      `insert into public.household_member (household_id, user_id, role) values ($1, $2, 'member')`,
+      [other.household.id, home.user.id],
+    );
+    const bill = await createHouseholdBill(home);
+
+    const response = await move(home.user, bill.id, {
+      visibility: 'household',
+      householdId: other.household.id,
+    });
+    expectStatus(response, 409);
+    expect(
+      await as(app, home.user, 'GET', `/api/bills/${bill.id}`).then((r) => r.json<Bill>()),
+    ).toMatchObject({ householdId: home.household.id });
+  });
+
+  it('a body that names neither a valid visibility nor a household is a 400', async () => {
+    const home = await household();
+    const bill = await createHouseholdBill(home);
+
+    expectStatus(await move(home.user, bill.id, { visibility: 'shared' }), 400);
+    expectStatus(await move(home.user, bill.id, { visibility: 'household' }), 400);
   });
 });

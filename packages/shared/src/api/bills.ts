@@ -90,10 +90,9 @@ export const createBillRequestSchema = billFieldsSchema;
 export type CreateBillRequest = z.infer<typeof createBillRequestSchema>;
 
 /**
- * PATCH /bills/:id. Visibility, household, and ownership are deliberately not editable here: the
- * PRD describes no "move a bill" action, and the database's `keep_bill_scope` trigger (Technical
- * Architecture, "Database › RLS policy pattern") exists to guard the invariant, not to back a
- * feature this phase exposes.
+ * PATCH /bills/:id. Visibility, household, and ownership are not editable here: moving a bill
+ * between its household and its owner is its own action, POST /bills/:id/move, so the scope change
+ * is never a side effect of an ordinary edit.
  */
 export const updateBillRequestSchema = billFieldsSchema
   .partial()
@@ -101,6 +100,17 @@ export const updateBillRequestSchema = billFieldsSchema
     message: 'Change at least one field.',
   });
 export type UpdateBillRequest = z.infer<typeof updateBillRequestSchema>;
+
+/**
+ * POST /bills/:id/move (Requirements, "Bills": only a bill's owner can change its visibility, which
+ * moves it between the household and the owner alone). Moving to a household names it; the caller
+ * must belong to it, and a household bill never moves to another household.
+ */
+export const moveBillRequestSchema = z.discriminatedUnion('visibility', [
+  z.object({ visibility: z.literal('personal') }),
+  z.object({ visibility: z.literal('household'), householdId: idSchema }),
+]);
+export type MoveBillRequest = z.infer<typeof moveBillRequestSchema>;
 
 /** POST /bills/:id/pay. Both fields default (paid today, for the bill's full amount). */
 export const payBillRequestSchema = z.object({

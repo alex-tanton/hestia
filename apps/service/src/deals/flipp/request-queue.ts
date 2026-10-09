@@ -184,8 +184,14 @@ export class FlippRequestQueue {
   }
 
   private async waitForGap(): Promise<void> {
-    const wait = this.lastStartedAt + this.options.minGapMs - this.options.now();
-    if (wait > 0) await this.options.sleep(wait);
+    // A timer can wake a millisecond early against the clock, so one sleep is not always enough:
+    // sleep again until the minimum gap has really passed. Before the first request the gap is
+    // negative infinity, so there is nothing to wait for.
+    for (;;) {
+      const wait = this.lastStartedAt + this.options.minGapMs - this.options.now();
+      if (!(wait > 0)) return;
+      await this.options.sleep(wait);
+    }
   }
 
   private recordFailure(url: string, error: FlippRequestError | null): void {

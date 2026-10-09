@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { signupRequestSchema } from './auth.js';
+import { moveBillRequestSchema } from './bills.js';
 import { endpoints } from './contract.js';
 import { createHouseholdRequestSchema, updateHouseholdRequestSchema } from './households.js';
 import { createdInviteSchema } from './invites.js';
@@ -143,6 +144,24 @@ describe('request schemas', () => {
       }).success,
     ).toBe(true);
     expect(updateRecipeRequestSchema.safeParse({ sourceUrl: null }).success).toBe(true);
+  });
+});
+
+describe('bill moves', () => {
+  it('takes a move to personal with no household, or a move into a named household', () => {
+    expect(moveBillRequestSchema.safeParse({ visibility: 'personal' }).success).toBe(true);
+    expect(
+      moveBillRequestSchema.safeParse({ visibility: 'household', householdId: ID }).success,
+    ).toBe(true);
+  });
+
+  it('refuses a move into a household that names no household, or an unknown visibility', () => {
+    expect(moveBillRequestSchema.safeParse({ visibility: 'household' }).success).toBe(false);
+    expect(
+      moveBillRequestSchema.safeParse({ visibility: 'household', householdId: 'not-a-guid' })
+        .success,
+    ).toBe(false);
+    expect(moveBillRequestSchema.safeParse({ visibility: 'shared' }).success).toBe(false);
   });
 });
 

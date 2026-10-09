@@ -5,6 +5,7 @@ import type {
   BillDetail,
   BillPayment,
   CreateBillRequest,
+  MoveBillRequest,
   PayBillRequest,
   UpdateBillPaymentRequest,
   UpdateBillRequest,
@@ -397,6 +398,74 @@ export async function archiveBill(db: Kysely<Database>, id: string): Promise<Bil
     .set({ archived_at: new Date() })
     .where('id', '=', id)
     .where('archived_at', 'is', null)
+    .execute();
+  return toBill(db, await requireBillRow(db, id));
+}
+
+/**
+ * The scope a bill moves to, or the refusal that stops it (PRD, "Bills": only the owner can change
+ * visibility, which moves a bill between its household and the owner alone; a household bill never
+ * moves to another household). Pure, so every refusal is a unit test. The database refuses the same
+ * moves through `keep_bill_scope` and RLS; this check gives each one a clear 4xx first.
+ */
+export function planBillMove(
+  bill: { ownerUserId: string; householdId: string | null; archived: boolean },
+  callerId: string,
+  input: MoveBillRequest,
+): { householdId: string | null; visibility: 'household' | 'personal' } {
+  if (bill.ownerUserId !== callerId) throw fail(403, 'Only the bill’s owner can move it.');
+  if (bill.archived) throw fail(409, 'An archived bill cannot be moved.');
+  if (input.visibility === 'personal') {
+    if (bill.householdId === null) throw fail(409, 'This bill is already personal.');
+    return billScope('personal', null);
+  }
+  if (bill.householdId !== null) {
+    throw fail(
+      409,
+      bill.householdId === input.householdId
+        ? 'This bill is already in that household.'
+        : 'A household bill cannot move to another household.',
+    );
+  }
+  return billScope('household', input.householdId);
+}
+
+/**
+ * POST /bills/:id/move. The owner moves the bill between its household and themselves. The anchor,
+ * the payment history, and every other field stay as they are: only the scope changes, in the
+ * caller's withUserDb transaction, so the household and personal policies both judge the change.
+ * Moving into a household needs a membership, checked here so the refusal is a 422 rather than a
+ * bare permission error from RLS.
+ */
+export async function moveBill(
+  db: Kysely<Database>,
+  id: string,
+  userId: string,
+  input: MoveBillRequest,
+): Promise<Bill> {
+  const row = await requireBillRow(db, id);
+  const target = planBillMove(
+    {
+      ownerUserId: row.owner_user_id,
+      householdId: row.household_id,
+      archived: row.archived_at !== null,
+    },
+    userId,
+    input,
+  );
+  if (target.householdId !== null) {
+    const membership = await db
+      .selectFrom('household_member')
+      .select('user_id')
+      .where('household_id', '=', target.householdId)
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+    if (membership === undefined) throw fail(422, 'Choose a household you belong to.');
+  }
+  await db
+    .updateTable('bill')
+    .set({ household_id: target.householdId, visibility: target.visibility })
+    .where('id', '=', id)
     .execute();
   return toBill(db, await requireBillRow(db, id));
 }

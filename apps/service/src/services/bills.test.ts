@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { billOccurrence, billScope } from './bills.js';
+import { ProblemError } from '../problem.js';
+import { billOccurrence, billScope, planBillMove } from './bills.js';
 
 /*
  * Pure logic only (Engineering Practices, "Testing" — "Recurrence" and "visibility constraint
@@ -77,5 +78,78 @@ describe('billScope — the household_id/visibility pairing (bill_personal_iff_n
 
   it('refuses to build a household bill with no household id', () => {
     expect(() => billScope('household', null)).toThrow();
+  });
+});
+
+describe('planBillMove — who may move a bill, and where to', () => {
+  const OWNER = 'owner-1';
+  const HOUSEHOLD = 'household-1';
+  const OTHER_HOUSEHOLD = 'household-2';
+  const household = { ownerUserId: OWNER, householdId: HOUSEHOLD, archived: false };
+  const personal = { ownerUserId: OWNER, householdId: null, archived: false };
+
+  /** The status and detail of the refusal a move raises. Fails the test if it does not refuse. */
+  function refusal(run: () => unknown): { status: number; detail: string | undefined } {
+    try {
+      run();
+    } catch (error) {
+      if (error instanceof ProblemError) {
+        return { status: error.statusCode, detail: error.problem.detail };
+      }
+      throw error;
+    }
+    throw new Error('expected the move to be refused');
+  }
+
+  it('moves a household bill to its owner alone', () => {
+    expect(planBillMove(household, OWNER, { visibility: 'personal' })).toEqual({
+      householdId: null,
+      visibility: 'personal',
+    });
+  });
+
+  it('moves a personal bill into a household the owner belongs to', () => {
+    expect(
+      planBillMove(personal, OWNER, { visibility: 'household', householdId: OTHER_HOUSEHOLD }),
+    ).toEqual({ householdId: OTHER_HOUSEHOLD, visibility: 'household' });
+  });
+
+  it('refuses a move by anyone but the owner, with 403, whatever the bill', () => {
+    const notOwner = 'member-1';
+    expect(
+      refusal(() => planBillMove(household, notOwner, { visibility: 'personal' })).status,
+    ).toBe(403);
+    expect(
+      refusal(() =>
+        planBillMove(personal, notOwner, { visibility: 'household', householdId: HOUSEHOLD }),
+      ).status,
+    ).toBe(403);
+  });
+
+  it('refuses to move an archived bill, with 409', () => {
+    const archived = { ...household, archived: true };
+    expect(refusal(() => planBillMove(archived, OWNER, { visibility: 'personal' }))).toEqual({
+      status: 409,
+      detail: 'An archived bill cannot be moved.',
+    });
+  });
+
+  it('refuses a move to the scope the bill already has, with 409', () => {
+    expect(refusal(() => planBillMove(personal, OWNER, { visibility: 'personal' })).status).toBe(
+      409,
+    );
+    expect(
+      refusal(() =>
+        planBillMove(household, OWNER, { visibility: 'household', householdId: HOUSEHOLD }),
+      ).detail,
+    ).toBe('This bill is already in that household.');
+  });
+
+  it('never moves a household bill to another household, directly or by name', () => {
+    expect(
+      refusal(() =>
+        planBillMove(household, OWNER, { visibility: 'household', householdId: OTHER_HOUSEHOLD }),
+      ),
+    ).toEqual({ status: 409, detail: 'A household bill cannot move to another household.' });
   });
 });
