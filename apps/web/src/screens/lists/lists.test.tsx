@@ -5,6 +5,10 @@ import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NO_PRICE_LABEL, REPRICED_LABEL } from '../../components/lists/ItemPrice.tsx';
 import { PENDING_SUBTOTAL_LABEL } from '../../components/lists/PendingMark.tsx';
+import {
+  ScreenChromeProvider,
+  useCurrentScreenChrome,
+} from '../../components/shell/screen-chrome.tsx';
 import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import {
@@ -25,6 +29,7 @@ import {
   renderScreen,
   type StubHandler,
 } from '../../test/harness.tsx';
+import { ArchivedListsScreen } from './ArchivedListsScreen.tsx';
 import { ALL_BOUGHT_COPY, ARCHIVED_COPY, ListDetailScreen } from './ListDetailScreen.tsx';
 import { LISTS_EMPTY_COPY, ListsIndexScreen } from './ListsIndexScreen.tsx';
 import { PANTRY_EMPTY_COPY, PANTRY_NO_MATCH_COPY, PantryScreen } from './PantryScreen.tsx';
@@ -183,6 +188,116 @@ describe('Shopping lists index (Design › Screens › 7)', () => {
     const menu = await screen.findByRole('menu');
     expect(within(menu).getByRole('menuitem', { name: 'Unarchive' })).toBeInTheDocument();
     expect(within(menu).queryByRole('menuitem', { name: 'Archive' })).toBeNull();
+  });
+});
+
+function ChromeProbe(): ReactElement {
+  const chrome = useCurrentScreenChrome();
+  return <p data-testid="chrome">{chrome === undefined ? 'none' : JSON.stringify(chrome)}</p>;
+}
+
+describe('ArchivedListsScreen', () => {
+  it('names itself, points the back control at Lists, and shows the archived view', async () => {
+    mount(
+      <ScreenChromeProvider>
+        <ChromeProbe />
+        <ArchivedListsScreen householdId={OAK_STREET_ID} />
+      </ScreenChromeProvider>,
+      baseHandlers({
+        'GET /api/households/:id/lists': () => ({ status: 200, body: [partySuppliesFixture] }),
+      }),
+    );
+    expect(await screen.findByRole('link', { name: /Party Supplies/ })).toBeInTheDocument();
+    const chrome = screen.getByTestId('chrome');
+    expect(chrome).toHaveTextContent('Archived lists');
+    expect(chrome).toHaveTextContent('/lists');
+    expect(chrome).toHaveTextContent('Lists');
+    // The archived view is read-only: no create action for it.
+    expect(screen.queryByRole('button', { name: 'New list' })).toBeNull();
+  });
+});
+
+/** Creating and renaming are the same sheet (ListNameSheet.tsx), opened from the index screen. */
+describe('Creating and renaming a list', () => {
+  it('creates a list, from the sheet, and closes it', async () => {
+    const user = userEvent.setup();
+    const stub = index(
+      baseHandlers({
+        'POST /api/households/:id/lists': ({ body }) => ({
+          status: 201,
+          body: { ...thisWeekDetailFixture, name: (body as { name: string }).name },
+        }),
+      }),
+    );
+    await screen.findByRole('link', { name: /This Week/ });
+    await user.click(screen.getByRole('button', { name: 'New list' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New list' });
+    await user.type(within(dialog).getByLabelText('List name'), 'Game Night');
+    await user.click(within(dialog).getByRole('button', { name: 'Create list' }));
+    await waitFor(() => {
+      const post = stub.calls.find((call) => call.method === 'POST');
+      expect(post?.body).toEqual({ name: 'Game Night' });
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('blocks an empty name before it ever asks the server', async () => {
+    const user = userEvent.setup();
+    const stub = index();
+    await screen.findByRole('link', { name: /This Week/ });
+    await user.click(screen.getByRole('button', { name: 'New list' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New list' });
+    await user.click(within(dialog).getByRole('button', { name: 'Create list' }));
+    expect(await within(dialog).findByText('Enter a name.')).toBeInTheDocument();
+    expect(stub.calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+
+  it('shows the server error without closing the sheet', async () => {
+    const user = userEvent.setup();
+    index(
+      baseHandlers({
+        // 422 is neither in the status table nor >= 500, so the screen's own fallback copy wins.
+        'POST /api/households/:id/lists': () => ({
+          status: 422,
+          body: problemBody(422, 'Unprocessable Entity'),
+        }),
+      }),
+    );
+    await screen.findByRole('link', { name: /This Week/ });
+    await user.click(screen.getByRole('button', { name: 'New list' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New list' });
+    await user.type(within(dialog).getByLabelText('List name'), 'Game Night');
+    await user.click(within(dialog).getByRole('button', { name: 'Create list' }));
+    expect(
+      await within(dialog).findByText("Couldn't create the list. Try again."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('renames an existing list, pre-filled with its current name', async () => {
+    const user = userEvent.setup();
+    const stub = index(
+      baseHandlers({
+        'PATCH /api/lists/:id': ({ body }) => ({
+          status: 200,
+          body: { ...thisWeekDetailFixture, name: (body as { name: string }).name },
+        }),
+      }),
+    );
+    (await screen.findByRole('button', { name: 'More actions for This Week' })).focus();
+    await user.keyboard('{Enter}');
+    await user.click(await screen.findByRole('menuitem', { name: 'Rename' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Rename This Week' });
+    const field = within(dialog).getByLabelText('List name');
+    expect(field).toHaveValue('This Week');
+    await user.clear(field);
+    await user.type(field, 'Weekly Shop');
+    await user.click(within(dialog).getByRole('button', { name: 'Save name' }));
+    await waitFor(() => {
+      const patch = stub.calls.find((call) => call.method === 'PATCH');
+      expect(patch?.body).toEqual({ name: 'Weekly Shop' });
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
 

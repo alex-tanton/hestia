@@ -1,12 +1,15 @@
 import { screen, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
 import { deepHealthFixture, profileFixture } from '../../test/fixtures.ts';
+import { Component as SystemHealthRoute } from './SystemHealthRoute.tsx';
 import { SystemHealthScreen } from './SystemHealthScreen.tsx';
 
 function render(
   isServerOwner: boolean,
   extra: Readonly<Record<string, StubHandler>> = {},
+  element: ReactElement = <SystemHealthScreen />,
 ): {
   calls: { method: string; path: string }[];
 } {
@@ -16,7 +19,7 @@ function render(
     ...extra,
   });
   vi.stubGlobal('fetch', stub.fetch);
-  renderScreen(<SystemHealthScreen />);
+  renderScreen(element);
   return stub;
 }
 
@@ -45,5 +48,12 @@ describe('System health', () => {
     });
     expect(stub.calls.some((call) => call.path === '/api/health/deep')).toBe(false);
     expect(screen.queryByText('Last deal refresh')).not.toBeInTheDocument();
+  });
+});
+
+describe('the lazy route module', () => {
+  it('wires the settings/system-health route to the system health screen', async () => {
+    render(true, {}, <SystemHealthRoute />);
+    expect(await screen.findByText('Last deal refresh')).toBeInTheDocument();
   });
 });

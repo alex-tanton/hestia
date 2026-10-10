@@ -147,6 +147,14 @@ with whatever providers it needs (query client, router), query for elements the 
 that triggers a query or a state update, wrap the assertion in `waitFor` instead of asserting
 immediately after the interaction.
 
+**Naming a test file:** a component test file is named after the component it tests, one-to-one
+(`Toast.test.tsx` next to `Toast.tsx`), unless several small, related components share one file, in
+which case the file is named after their containing module or folder instead (`primitives.test.tsx`
+covers several `components/ui` primitives together, `dashboard.test.tsx` covers the dashboard
+card components, `shell.test.tsx` covers the shell's own small pieces). Either name is fine; what
+matters is that one file maps to either one component or one clearly-related group, not an
+arbitrary mix.
+
 **Running them:**
 
 ```sh

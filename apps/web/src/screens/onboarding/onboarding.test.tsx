@@ -17,9 +17,18 @@ import { CreateHouseholdStep } from './CreateHouseholdStep.tsx';
 import { ForgotPasswordScreen } from './ForgotPasswordScreen.tsx';
 import { IOS_INSTALL_MESSAGE, InstallStep } from './InstallStep.tsx';
 import { JoinHouseholdStep } from './JoinHouseholdStep.tsx';
+import { Component as JoinRoute } from './JoinRoute.tsx';
 import { RESET_LINK_EXPIRED_MESSAGE, SetPasswordScreen } from './SetPasswordScreen.tsx';
 import { SignInScreen } from './SignInScreen.tsx';
 import { SignUpScreen } from './SignUpScreen.tsx';
+
+// The invite link is read from the URL fragment once, at module load (lib/url-hash.ts); mocking
+// the module is the only way a test controls what a fresh `/join` visit saw. `hashHasAuthError`
+// stays real — `set-password` tests in this file rely on it.
+vi.mock('../../lib/url-hash.ts', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/url-hash.ts')>()),
+  initialUrlHash: () => '#token=a-token-from-the-url-fragment',
+}));
 
 function stubFetch(
   handlers: Readonly<Record<string, StubHandler>>,
@@ -297,6 +306,22 @@ describe('joining a household', () => {
     stubFetch({});
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
     expect(await screen.findByLabelText('Invite code')).not.toHaveFocus();
+  });
+});
+
+describe('the /join lazy route module', () => {
+  it('opens straight on the join step and redeems the token from the URL fragment', async () => {
+    const stub = stubFetch({
+      'POST /api/households/join': () => ({ status: 200, body: oakStreetFixture }),
+    });
+    renderScreen(<JoinRoute />);
+
+    // The redeem starts immediately, before any code form would show.
+    expect(screen.getByText('Opening your invite…')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(stub.calls.some((call) => call.path === '/api/households/join')).toBe(true);
+    });
+    expect(stub.calls[0]?.body).toEqual({ tokenOrCode: 'a-token-from-the-url-fragment' });
   });
 });
 

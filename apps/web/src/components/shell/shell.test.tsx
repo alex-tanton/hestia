@@ -1,19 +1,10 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
-import {
-  createMemoryRouter,
-  MemoryRouter,
-  RouterProvider,
-  Route,
-  Routes,
-  useLocation,
-} from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AppProviders } from '../../App.tsx';
-import { routes } from '../../routes.tsx';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
-import { createAuthStub, createFetchStub, testQueryClient } from '../../test/harness.tsx';
+import { createFetchStub, renderApp } from '../../test/harness.tsx';
 import { useSection } from '../../lib/section-context.tsx';
 import { PillarScreen } from '../../screens/PillarScreen.tsx';
 import { HouseholdSwitcher, type HouseholdSummary } from './HouseholdSwitcher.tsx';
@@ -29,24 +20,19 @@ const HOUSEHOLDS: HouseholdSummary[] = [
 
 /**
  * The shell sits behind the session guard, so its tests need a signed-in session and a profile.
- * Both are stubs: a component test never reaches the network.
+ * Both are stubs: a component test never reaches the network. Builds on the shared harness's
+ * `renderApp`, which already mounts the real route tree and providers.
  */
-function renderApp(
+function openPath(
   path: string,
   extra: Readonly<Record<string, Parameters<typeof createFetchStub>[0][string]>> = {},
-): ReturnType<typeof createMemoryRouter> {
+): ReturnType<typeof renderApp> {
   const stub = createFetchStub({
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
     ...extra,
   });
   vi.stubGlobal('fetch', stub.fetch);
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(
-    <AppProviders auth={createAuthStub()} queryClient={testQueryClient()}>
-      <RouterProvider router={router} />
-    </AppProviders>,
-  );
-  return router;
+  return renderApp({ initialEntries: [path] });
 }
 
 function setOnline(isOnline: boolean): void {
@@ -62,7 +48,7 @@ afterEach(() => {
 
 describe('app shell', () => {
   it('has a skip link, banner, main, and a labelled main navigation', async () => {
-    renderApp('/');
+    openPath('/');
     expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
     const skip = screen.getByRole('link', { name: 'Skip to main content' });
     expect(skip).toHaveAttribute('href', '#main');
@@ -74,7 +60,7 @@ describe('app shell', () => {
   });
 
   it('shows the five tabs in order with the active one marked aria-current', async () => {
-    renderApp('/');
+    openPath('/');
     const nav = await screen.findByRole('navigation', { name: 'Main' });
     const links = within(nav).getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
@@ -92,7 +78,7 @@ describe('app shell', () => {
   });
 
   it('moves through the tab bar by keyboard and opens a tab with Enter', async () => {
-    const router = renderApp('/');
+    openPath('/');
     const nav = await screen.findByRole('navigation', { name: 'Main' });
     within(nav).getByRole('link', { name: 'Dashboard' }).focus();
     await userEvent.tab();
@@ -104,7 +90,7 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
     ).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/meals');
+    expect(document.title).toBe('Meals · Hearth');
     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -119,7 +105,7 @@ describe('app shell', () => {
   ])(
     'opens %s with its sub-tabs instead of the coming-soon state',
     async (path, groupName) => {
-      renderApp(path, {
+      openPath(path, {
         'GET /api/households/:id/bills': () => ({ status: 200, body: [] }),
         'GET /api/households/:id/chores': () => ({ status: 200, body: [] }),
         'GET /api/households/:id/errands': () => ({ status: 200, body: [] }),
@@ -135,10 +121,10 @@ describe('app shell', () => {
   );
 
   it('sends unknown paths to the dashboard', async () => {
-    const router = renderApp('/nowhere');
+    openPath('/nowhere');
     expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/');
+      expect(document.title).toBe('This Week · Hearth');
     });
   });
 });
@@ -164,7 +150,7 @@ describe('section context', () => {
   }
 
   it('comes from the route for the shell', async () => {
-    renderApp('/bills', { 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) });
+    openPath('/bills', { 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) });
     await screen.findByRole('radiogroup', { name: 'Bills sections' }, { timeout: 5000 });
     expect(screen.getByRole('main').closest('[data-section]')).toHaveAttribute(
       'data-section',
@@ -245,7 +231,7 @@ describe('OfflineBanner', () => {
 
   it('renders in the shell below the top bar when the app starts offline', async () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    renderApp('/');
+    openPath('/');
     const banner = await screen.findByText(OFFLINE_MESSAGE);
     expect(within(screen.getByRole('banner')).getByText(OFFLINE_MESSAGE)).toBe(banner);
   });

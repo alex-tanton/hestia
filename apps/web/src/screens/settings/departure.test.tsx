@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DeparturePreview } from '@hearth/shared';
 import {
@@ -20,6 +21,7 @@ import {
   SAM_ID,
 } from '../../test/fixtures.ts';
 import { deletionSummary } from './DeleteHouseholdPanel.tsx';
+import { Component as DepartRoute } from './DepartRoute.tsx';
 import { DepartureScreen } from './DepartureScreen.tsx';
 
 const PATH = '/settings/households/:householdId/members/:userId/depart';
@@ -32,6 +34,7 @@ function renderDeparture(
   preview: DeparturePreview,
   members: unknown,
   extra: Readonly<Record<string, StubHandler>> = {},
+  element: ReactElement = <DepartureScreen />,
 ): FetchStub {
   const stub = createFetchStub({
     'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
@@ -43,7 +46,7 @@ function renderDeparture(
     ...extra,
   });
   vi.stubGlobal('fetch', stub.fetch);
-  renderScreen(<DepartureScreen />, {
+  renderScreen(element, {
     path: PATH,
     initialEntries: [entry(preview.householdId, preview.userId)],
   });
@@ -196,5 +199,12 @@ describe('the last member leaving', () => {
     renderDeparture(lastMemberPreviewFixture, riveraFamilyMembers);
     await screen.findByText('You are the last member');
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+});
+
+describe('the lazy route module', () => {
+  it('wires the depart route to the departure screen', async () => {
+    renderDeparture(departurePreviewFixture, oakStreetMembers, {}, <DepartRoute />);
+    expect(await screen.findByRole('button', { name: 'Remove Sam Chen' })).toBeInTheDocument();
   });
 });

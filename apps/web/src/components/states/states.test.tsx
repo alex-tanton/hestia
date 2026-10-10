@@ -3,11 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { BookOpen } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { formatDateTime } from '../../lib/format.ts';
 import { PILLARS } from '../../lib/sections.ts';
 import { SectionProvider } from '../../lib/section-context.tsx';
 import { ComingSoon } from './ComingSoon.tsx';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
+import { StaleNotice } from './StaleNotice.tsx';
 import { EmptyState, ErrorState, OfflineState } from './StateBlocks.tsx';
+import { SubSectionComingSoon } from './SubSectionComingSoon.tsx';
 
 describe('EmptyState', () => {
   it('shows the one-line explanation and its primary action', async () => {
@@ -78,6 +81,50 @@ describe('ComingSoon', () => {
       expect(screen.queryByRole('link')).toBeNull();
     },
   );
+});
+
+describe('StaleNotice', () => {
+  it('names when the shown data last synced and offers a retry', async () => {
+    const onRetry = vi.fn();
+    const updatedAt = new Date('2026-01-15T10:30:00.000Z').getTime();
+    render(<StaleNotice updatedAt={updatedAt} onRetry={onRetry} />);
+    expect(
+      screen.getByText(
+        `Couldn't refresh. Showing what synced as of ${formatDateTime(new Date(updatedAt).toISOString())}.`,
+      ),
+    ).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
+});
+
+describe('SubSectionComingSoon', () => {
+  it("names the sub-section and points at what works now, in the pillar's own color", () => {
+    render(
+      <SectionProvider section="lists">
+        <SubSectionComingSoon section="Deal search" />
+      </SectionProvider>,
+    );
+    expect(
+      screen.getByText(
+        'Deal search arrives with the rest of this release. Your lists and pantry work now.',
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it("falls back to the Lists pillar's icon when the section is the dashboard", () => {
+    render(
+      <SectionProvider section="dashboard">
+        <SubSectionComingSoon section="Flyer browsing" />
+      </SectionProvider>,
+    );
+    expect(
+      screen.getByText(
+        'Flyer browsing arrives with the rest of this release. Your lists and pantry work now.',
+      ),
+    ).toBeVisible();
+  });
 });
 
 describe('ErrorBoundary', () => {
