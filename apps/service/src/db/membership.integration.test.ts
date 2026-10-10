@@ -252,6 +252,12 @@ describe('departure_preview', () => {
           chores: [{ id: world.b.rows.chore, name: 'Trash' }],
           errands: [{ id: world.b.rows.errand, name: 'Post office' }],
           bills: [{ id: world.b.rows.bill, name: 'Rent' }],
+          // public.rebase_rotation (functions.sql): rotation_order=[admin, member, third],
+          // rotation_offset=0, completion_count=1, removed=member. cur = (0+1) mod 3 = 1, which is
+          // member's own index (i=cur=1), so next_cur = cur mod (n-1) = 1 mod 2 = 1 and
+          // new_offset = ((1-1) mod 2 + 2) mod 2 = 0, over the rebased order [admin, third].
+          // turn_holder = new_order[(new_offset + completion_count) mod 2]
+          //             = new_order[(0+1) mod 2] = new_order[1] = third.id.
           rotations: [{ chore_name: 'Dishes', next_turn_user_id: third.id }],
         });
       }

@@ -550,13 +550,16 @@ pnpm db:seed              # re-seed from scratch
   `test-unit` job runs — fails the moment coverage drops below 90% on any of the four metrics in any
   of the three. Each package's `index.ts` (a pure re-export barrel with no logic of its own) is
   excluded from the `coverage.exclude` glob rather than counted against the threshold.
-- **`apps/service`** has no coverage threshold configured either, across any of its three Vitest
-  configs (`vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`).
+- **`apps/service`** has a coverage threshold configured on `vitest.coverage.config.ts`:
+  `thresholds: { statements: 95, branches: 83, functions: 96, lines: 97 }`, each a few points under
+  the suite's actual measured coverage (96.65% / 85.78% / 98.07% / 98.56% as of the coverage unit
+  that added it) rather than the exact number, so ordinary churn doesn't fail CI on noise.
   `pnpm --filter @hearth/service test:coverage` reports coverage across its unit *and* integration
   tests together (a unit-only number would understate what's exercised through the integration
-  suite), but it needs `supabase start` running and is not part of either CI job (`test-unit` runs
-  plain `pnpm test`; `test-integration` runs plain `pnpm test:integration`), so it's a number you
-  pull locally, not a gate.
+  suite). It needs `supabase start` running, so CI's `test-integration` job runs it in place of a
+  plain `pnpm test:integration` (the same job already pays for `supabase start`), enforcing the
+  thresholds on every pull request and push to main; `test-unit` still runs plain `pnpm test`
+  separately, with no coverage step.
 - **`apps/web`** has no `test:coverage` script and no coverage configuration at all — component
   tests aren't measured by line coverage; the E2E journeys are what stand in for coverage on the
   UI.

@@ -492,6 +492,26 @@ describe('bill_due', () => {
     expect(await rowsFor(home.alex.id, 'bill_due', spectrum)).toHaveLength(0);
     expect(pushesTo(alexDevice)).toStrictEqual([]);
   });
+
+  it('drops a reminder whose title would be over the 60-character copy limit, and enqueues nothing for it', async () => {
+    // notificationCopySchema (packages/shared) caps title and body at 60 characters; billRows'
+    // own payloadOf(...) returns null rather than truncating, and the producer must not enqueue a
+    // row at all for it (Branding, "Notification copy": "the builder answers null, and the
+    // producer does not enqueue the row").
+    const home = await makeHome();
+    const longName = 'A'.repeat(70);
+    const tooLong = await insertBill({
+      householdId: home.id,
+      owner: home.alex.id,
+      name: longName,
+      amount: '10.00',
+    });
+
+    const outcome = await outbox.enqueueScheduled(NOW);
+
+    expect(outcome.dropped).toContainEqual({ type: 'bill_due', id: tooLong });
+    expect(await rowsFor(home.alex.id, 'bill_due', tooLong)).toHaveLength(0);
+  });
 });
 
 describe('chore_due and errands', () => {
@@ -582,6 +602,38 @@ describe('chore_due and errands', () => {
     expect(await rowsFor(home.sam.id, 'chore_due', trashId)).toHaveLength(0);
     expect(pushesTo(samDevice)).toStrictEqual([]);
   });
+
+  it('drops a chore reminder whose name alone is over the 60-character copy limit', async () => {
+    const home = await makeHome();
+    const longName = 'B'.repeat(70);
+    const longChore = await adminPool.query<{ id: string }>(
+      `insert into public.chore (household_id, name, recurrence_unit, anchor_date, assigned_to, created_by)
+       values ($1, $2, 'week', '2026-09-27', $3, $4) returning id`,
+      [home.id, longName, home.sam.id, home.alex.id],
+    );
+    const longChoreId = longChore.rows[0]?.id ?? '';
+
+    const outcome = await outbox.enqueueScheduled(NOW);
+
+    expect(outcome.dropped).toContainEqual({ type: 'chore_due', id: longChoreId });
+    expect(await rowsFor(home.sam.id, 'chore_due', longChoreId)).toHaveLength(0);
+  });
+
+  it('drops an errand reminder whose name alone is over the 60-character copy limit', async () => {
+    const home = await makeHome();
+    const longName = 'C'.repeat(70);
+    const longErrand = await adminPool.query<{ id: string }>(
+      `insert into public.errand (household_id, name, due_date, assigned_to, added_by)
+       values ($1, $2, '2026-10-04', $3, $4) returning id`,
+      [home.id, longName, home.jordan.id, home.alex.id],
+    );
+    const longErrandId = longErrand.rows[0]?.id ?? '';
+
+    const outcome = await outbox.enqueueScheduled(NOW);
+
+    expect(outcome.dropped).toContainEqual({ type: 'chore_due', id: longErrandId });
+    expect(await rowsFor(home.jordan.id, 'chore_due', longErrandId)).toHaveLength(0);
+  });
 });
 
 describe('meal_reminder', () => {
@@ -612,6 +664,22 @@ describe('meal_reminder', () => {
     });
     expect(alex[0]?.send_after).toStrictEqual(new Date('2026-10-04T12:00:00Z'));
     expect(await rowsFor(home.sam.id, 'meal_reminder', home.id)).toHaveLength(0);
+  });
+
+  it('drops the reminder when "Today: <title> for <meal>" alone is over the 60-character limit', async () => {
+    const home = await makeHome();
+    await setPreference(home.alex.id, 'meal_reminder', true);
+    const longTitle = 'D'.repeat(50);
+    await adminPool.query(
+      `insert into public.meal_plan_entry (household_id, recipe_title, planned_date, meal_type, added_by)
+       values ($1, $2, '2026-10-04', 'dinner', $3)`,
+      [home.id, longTitle, home.alex.id],
+    );
+
+    const outcome = await outbox.enqueueScheduled(NOW);
+
+    expect(outcome.dropped).toContainEqual({ type: 'meal_reminder', id: home.id });
+    expect(await rowsFor(home.alex.id, 'meal_reminder', home.id)).toHaveLength(0);
   });
 });
 

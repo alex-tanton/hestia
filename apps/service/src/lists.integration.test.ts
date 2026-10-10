@@ -11,9 +11,11 @@ import type {
 import {
   adminPool,
   as,
+  createHouseholdFor,
+  household as sharedHousehold,
   signUp,
   startStack,
-  uniqueName,
+  type HouseholdFixture,
   type SignedUpUser,
   type Stack,
 } from './test/service-stack.js';
@@ -52,27 +54,17 @@ async function createHousehold(
   postalCode = POSTAL_CODE,
   timezone = 'America/New_York',
 ): Promise<Household> {
-  const response = await as(app, user, 'POST', '/api/households', {
-    name: uniqueName('Oak Street'),
-    postalCode,
-    timezone,
-  });
-  expectStatus(response, 201);
-  return response.json<Household>();
+  return createHouseholdFor(app, user, postalCode, timezone);
 }
 
-interface Home {
-  user: SignedUpUser;
-  household: Household;
-}
+type Home = HouseholdFixture;
 
 async function household(
   name = 'Alex Rivera',
   postalCode = POSTAL_CODE,
   timezone = 'America/New_York',
 ): Promise<Home> {
-  const user = await signUp(app, name);
-  return { user, household: await createHousehold(user, postalCode, timezone) };
+  return sharedHousehold(app, name, postalCode, timezone);
 }
 
 async function createList(home: Home, name = 'This Week'): Promise<ShoppingListDetail> {

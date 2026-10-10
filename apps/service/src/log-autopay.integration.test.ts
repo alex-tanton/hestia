@@ -1,11 +1,10 @@
-import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createDatabase, type DatabaseHandle } from './db.js';
 import { billOccurrence } from './services/bills.js';
 import { runLogAutopay } from './jobs/log-autopay.js';
 import type { JobDatabase, JobLogger } from './jobs/types.js';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
-import { adminPool, enableServiceLogin, stackConfig } from './test/service-stack.js';
+import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
 
 /*
  * `log-autopay` against `supabase start` (Technical Architecture, "Scheduled jobs"). It runs as
@@ -65,19 +64,10 @@ async function createHousehold(
   zones: { householdTz?: string; profileTz?: string } = {},
 ): Promise<{ householdId: string; userId: string }> {
   const householdTz = zones.householdTz ?? HOUSEHOLD_TZ;
-  const userId = randomUUID();
-  await adminPool.query(
-    `insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
-     values ($1, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', $2, $3)`,
-    [
-      userId,
-      `autopay.${userId.slice(0, 8)}@example.com`,
-      JSON.stringify({
-        display_name: 'Autopay Tester',
-        timezone: zones.profileTz ?? HOUSEHOLD_TZ,
-      }),
-    ],
-  );
+  const { id: userId } = await seedAuthUser(adminPool, {
+    displayName: 'Autopay Tester',
+    timezone: zones.profileTz ?? HOUSEHOLD_TZ,
+  });
   const { rows } = await adminPool.query<{ id: string }>(
     `insert into public.household (name, postal_code, timezone, created_by)
      values ($1, $2, $4, $3) returning id`,

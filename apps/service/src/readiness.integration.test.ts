@@ -1,16 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import type { Household, MatchOverride, PantryItem, RecipeDetail } from '@hearth/shared';
+import type { MatchOverride, PantryItem, RecipeDetail } from '@hearth/shared';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
 import { recomputeReadinessForHousehold } from './services/readiness.js';
 import {
   adminPool,
   as,
-  signUp,
+  household,
   startStack,
-  uniqueName,
-  type SignedUpUser,
+  type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
 
@@ -58,21 +57,7 @@ function expectStatus(response: LightMyRequestResponse, status: number): void {
   expect(response.statusCode, response.body).toBe(status);
 }
 
-interface Home {
-  user: SignedUpUser;
-  household: Household;
-}
-
-async function household(name: string, postalCode: string): Promise<Home> {
-  const user = await signUp(app, name);
-  const response = await as(app, user, 'POST', '/api/households', {
-    name: uniqueName('Household'),
-    postalCode,
-    timezone: 'America/New_York',
-  });
-  expectStatus(response, 201);
-  return { user, household: response.json<Household>() };
-}
+type Home = HouseholdFixture;
 
 async function favoriteStore(home: Home, merchantId: string, merchantName: string): Promise<void> {
   expectStatus(
@@ -156,7 +141,7 @@ function breakdownEntry(recipe: RecipeDetail, itemName: string) {
 
 /** The Oak Street fixture (Seed Data, "Pantry", "Favorite-store groceries"), built once. */
 async function seedOakStreet(): Promise<Home> {
-  const home = await household('Alex', OAK_POSTAL_CODE);
+  const home = await household(app, 'Alex', OAK_POSTAL_CODE);
   await favoriteStore(home, 'ht-2431', 'Harris Teeter');
   await favoriteStore(home, 'fl-2100', 'Food Lion');
 
@@ -552,7 +537,7 @@ describe('recipe readiness — the Seed Data table', () => {
 describe('recipe readiness — Rivera Family (no pantry, nothing matches at Publix or Walmart)', () => {
   it('both recipes score 0%', async () => {
     app = await stack.newApp();
-    const rivera = await household('Morgan', RIVERA_POSTAL_CODE);
+    const rivera = await household(app, 'Morgan', RIVERA_POSTAL_CODE);
     await favoriteStore(rivera, 'pub-2361', 'Publix');
     await favoriteStore(rivera, 'wm-2175', 'Walmart');
 
@@ -584,7 +569,7 @@ describe('recipe readiness — Rivera Family (no pantry, nothing matches at Publ
 describe('readiness recompute triggers', () => {
   it('recomputes after a pantry write', async () => {
     app = await stack.newApp();
-    const home = await household('Alex', '27526');
+    const home = await household(app, 'Alex', '27526');
     const recipe = await createRecipe(home, 'Simple Soup', ['carrot', 'celery']);
     expect(recipe.readiness?.readinessPercent).toBe(0);
 
@@ -596,7 +581,7 @@ describe('readiness recompute triggers', () => {
 
   it('recomputes after a recipe-ingredient write', async () => {
     app = await stack.newApp();
-    const home = await household('Alex', '27527');
+    const home = await household(app, 'Alex', '27527');
     await addPantryItem(home, 'Garlic');
     const recipe = await createRecipe(home, 'Bare Recipe', ['onion']);
     expect(recipe.readiness?.readinessPercent).toBe(0);
@@ -610,7 +595,7 @@ describe('readiness recompute triggers', () => {
 
   it('recomputes after a match override is created and after it is deleted', async () => {
     app = await stack.newApp();
-    const home = await household('Alex', '27529');
+    const home = await household(app, 'Alex', '27529');
     // Does not naturally token-contain "gravy"; only the override should make it match.
     await addPantryItem(home, 'Brown Sauce');
     const recipe = await createRecipe(home, 'Overridden Recipe', ['gravy']);
@@ -641,7 +626,7 @@ describe('readiness recompute triggers', () => {
 
   it('a simulated deal-refresh recompute (recomputeReadinessForHousehold) picks up a new deal', async () => {
     app = await stack.newApp();
-    const home = await household('Alex', '27530');
+    const home = await household(app, 'Alex', '27530');
     await favoriteStore(home, 'fl-sim', 'Food Lion');
     const recipe = await createRecipe(home, 'Deal Recipe', ['broccoli']);
     expect(recipe.readiness?.readinessPercent).toBe(0);

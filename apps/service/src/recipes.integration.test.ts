@@ -1,15 +1,14 @@
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { normalize } from '@hearth/matching';
-import type { Household, ParseRecipeResponse, Recipe, RecipeDetail } from '@hearth/shared';
+import type { ParseRecipeResponse, Recipe, RecipeDetail } from '@hearth/shared';
 import { RecipeFetchError } from './recipes/fetch-recipe.js';
 import {
   adminPool,
   as,
-  signUp,
+  household as sharedHousehold,
   startStack,
-  uniqueName,
-  type SignedUpUser,
+  type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
 
@@ -37,10 +36,8 @@ function expectStatus(response: LightMyRequestResponse, status: number): void {
   expect(response.statusCode, response.body).toBe(status);
 }
 
-interface Home {
+interface Home extends HouseholdFixture {
   app: FastifyInstance;
-  user: SignedUpUser;
-  household: Household;
 }
 
 async function household(
@@ -48,14 +45,7 @@ async function household(
   name = 'Alex Rivera',
   postalCode = POSTAL_CODE,
 ): Promise<Home> {
-  const user = await signUp(app, name);
-  const response = await as(app, user, 'POST', '/api/households', {
-    name: uniqueName('Oak Street'),
-    postalCode,
-    timezone: 'America/New_York',
-  });
-  expectStatus(response, 201);
-  return { app, user, household: response.json<Household>() };
+  return { app, ...(await sharedHousehold(app, name, postalCode)) };
 }
 
 const MANUAL_RECIPE_BODY = {

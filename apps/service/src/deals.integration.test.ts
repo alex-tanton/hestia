@@ -5,7 +5,6 @@ import type {
   FavoriteStore,
   FlyerItemsResponse,
   FlyersResponse,
-  Household,
   MerchantsResponse,
 } from '@hearth/shared';
 import { createDealsService, type DealsService } from './services/deals/deals.js';
@@ -13,10 +12,10 @@ import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal
 import {
   adminPool,
   as,
+  household as sharedHousehold,
   signUp,
   startStack,
-  uniqueName,
-  type SignedUpUser,
+  type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
 
@@ -80,20 +79,10 @@ function expectStatus(response: LightMyRequestResponse, status: number): void {
   expect(response.statusCode, response.body).toBe(status);
 }
 
-interface Home {
-  user: SignedUpUser;
-  household: Household;
-}
+type Home = HouseholdFixture;
 
 async function household(name = 'Alex Rivera', postalCode = POSTAL_CODE): Promise<Home> {
-  const user = await signUp(app, name);
-  const response = await as(app, user, 'POST', '/api/households', {
-    name: uniqueName('Oak Street'),
-    postalCode,
-    timezone: 'America/New_York',
-  });
-  expectStatus(response, 201);
-  return { user, household: response.json<Household>() };
+  return sharedHousehold(app, name, postalCode);
 }
 
 async function favorite(home: Home, merchantId: string, merchantName: string): Promise<void> {

@@ -9,7 +9,7 @@ import { createNotificationOutbox } from './privileged/notification-outbox.js';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
 import { FakeDealSource } from './test/fixture-deal-source.js';
 import { RecordingPushTransport } from './test/push-double.js';
-import { adminPool, enableServiceLogin, stackConfig } from './test/service-stack.js';
+import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
 
 /*
  * The dispatch send step against `supabase start` (Technical Architecture, "Scheduled jobs" ›
@@ -77,17 +77,8 @@ beforeEach(() => {
 
 /** A user with one push subscription per endpoint, created directly as `postgres`. */
 async function seedUser(endpoints: string[]): Promise<string> {
-  const userId = randomUUID();
+  const { id: userId } = await seedAuthUser(adminPool, { displayName: 'Dispatch Tester' });
   userIds.push(userId);
-  await adminPool.query(
-    `insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
-     values ($1, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', $2, $3)`,
-    [
-      userId,
-      `dispatch.${userId.slice(0, 8)}@example.com`,
-      JSON.stringify({ display_name: 'Dispatch Tester', timezone: 'America/New_York' }),
-    ],
-  );
   for (const endpoint of endpoints) {
     await adminPool.query(
       `insert into public.push_subscription (user_id, endpoint, keys) values ($1, $2, $3)`,

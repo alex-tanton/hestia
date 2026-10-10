@@ -592,94 +592,128 @@ describe('membership', () => {
     );
   });
 
-  it('blocks a removal until everything is reassigned, then ends access at once', async () => {
-    const { admin, member, household } = await householdWithMember();
-    const list = await insertId(
-      `insert into public.shopping_list (household_id, name, created_by)
-       values ($1, 'Groceries', $2) returning id`,
-      [household.id, member.id],
-    );
-    const chore = await insertId(
-      `insert into public.chore (household_id, name, recurrence_unit, anchor_date, assigned_to,
-         created_by)
-       values ($1, 'Trash', 'week', current_date, $2, $3) returning id`,
-      [household.id, member.id, admin.id],
-    );
-    // A chore is rotating or assigned, never both, so the rotation is a second one.
-    const rotating = await insertId(
-      `insert into public.chore (household_id, name, recurrence_unit, anchor_date, created_by,
-         rotation_order)
-       values ($1, 'Dishes', 'week', current_date, $2, array[$2, $3]::uuid[]) returning id`,
-      [household.id, admin.id, member.id],
-    );
-    const errand = await insertId(
-      `insert into public.errand (household_id, name, added_by, assigned_to)
-       values ($1, 'Post office', $2, $3) returning id`,
-      [household.id, admin.id, member.id],
-    );
-    const bill = await insertId(
-      `insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit,
-         anchor_date, visibility)
-       values ($1, $2, 'Internet', 70.00, 'month', current_date, 'household') returning id`,
-      [household.id, member.id],
-    );
+  describe('blocks a removal until everything is reassigned, then ends access at once', () => {
+    // Shared setup, paid once: these five inserts and the household they sit in are read-only in
+    // every negative case below (a refused removal must touch nothing), so only the final,
+    // successful-removal test actually mutates this fixture — and it runs last.
+    let admin: SignedUpUser;
+    let member: SignedUpUser;
+    let household: Household;
+    let removeUrl: string;
+    let list: string;
+    let chore: string;
+    let rotating: string;
+    let errand: string;
+    let bill: string;
 
-    const previewResponse = await as(
-      app,
-      admin,
-      'GET',
-      `/api/households/${household.id}/members/${member.id}/departure-preview`,
-    );
-    expectStatus(previewResponse, 200);
-    const preview = previewResponse.json<DeparturePreview>();
-    expect(preview).toMatchObject({
-      householdId: household.id,
-      userId: member.id,
-      isLastMember: false,
-      lists: [{ id: list, name: 'Groceries' }],
-      chores: [{ id: chore, name: 'Trash' }],
-      errands: [{ id: errand, name: 'Post office' }],
-      bills: [{ id: bill, name: 'Internet' }],
-      rotations: [{ choreId: rotating, choreName: 'Dishes', nextTurnUserId: admin.id }],
+    beforeAll(async () => {
+      ({ admin, member, household } = await householdWithMember());
+      removeUrl = `/api/households/${household.id}/members/${member.id}/remove`;
+      list = await insertId(
+        `insert into public.shopping_list (household_id, name, created_by)
+         values ($1, 'Groceries', $2) returning id`,
+        [household.id, member.id],
+      );
+      chore = await insertId(
+        `insert into public.chore (household_id, name, recurrence_unit, anchor_date, assigned_to,
+           created_by)
+         values ($1, 'Trash', 'week', current_date, $2, $3) returning id`,
+        [household.id, member.id, admin.id],
+      );
+      // A chore is rotating or assigned, never both, so the rotation is a second one.
+      rotating = await insertId(
+        `insert into public.chore (household_id, name, recurrence_unit, anchor_date, created_by,
+           rotation_order)
+         values ($1, 'Dishes', 'week', current_date, $2, array[$2, $3]::uuid[]) returning id`,
+        [household.id, admin.id, member.id],
+      );
+      errand = await insertId(
+        `insert into public.errand (household_id, name, added_by, assigned_to)
+         values ($1, 'Post office', $2, $3) returning id`,
+        [household.id, admin.id, member.id],
+      );
+      bill = await insertId(
+        `insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit,
+           anchor_date, visibility)
+         values ($1, $2, 'Internet', 70.00, 'month', current_date, 'household') returning id`,
+        [household.id, member.id],
+      );
     });
 
-    const removeUrl = `/api/households/${household.id}/members/${member.id}/remove`;
-    expectStatus(await as(app, admin, 'POST', removeUrl, {}), 409);
-    expectStatus(
-      await as(app, admin, 'POST', removeUrl, {
-        reassignments: { [list]: admin.id, [chore]: admin.id, [errand]: admin.id },
-      }),
-      409,
-    );
-    expectStatus(
-      await as(app, admin, 'POST', removeUrl, {
-        reassignments: {
+    it('previews everything the departing member owns, naming who inherits the rotation', async () => {
+      const previewResponse = await as(
+        app,
+        admin,
+        'GET',
+        `/api/households/${household.id}/members/${member.id}/departure-preview`,
+      );
+      expectStatus(previewResponse, 200);
+      const preview = previewResponse.json<DeparturePreview>();
+      expect(preview).toMatchObject({
+        householdId: household.id,
+        userId: member.id,
+        isLastMember: false,
+        lists: [{ id: list, name: 'Groceries' }],
+        chores: [{ id: chore, name: 'Trash' }],
+        errands: [{ id: errand, name: 'Post office' }],
+        bills: [{ id: bill, name: 'Internet' }],
+        rotations: [{ choreId: rotating, choreName: 'Dishes', nextTurnUserId: admin.id }],
+      });
+    });
+
+    describe.each([
+      {
+        name: 'no reassignments at all',
+        reassignments: () => ({}),
+        status: 409,
+      },
+      {
+        name: 'a partial set missing the bill',
+        reassignments: () => ({ [list]: admin.id, [chore]: admin.id, [errand]: admin.id }),
+        status: 409,
+      },
+      {
+        name: 'the bill reassigned to the departing member, who cannot inherit their own bill',
+        reassignments: () => ({
           [list]: admin.id,
           [chore]: admin.id,
           [errand]: admin.id,
           [bill]: member.id,
-        },
-      }),
-      400,
-    );
-    // Nothing happened yet.
-    expectStatus(await as(app, member, 'GET', `/api/households/${household.id}`), 200);
-
-    const removed = await as(app, admin, 'POST', removeUrl, {
-      reassignments: { [list]: admin.id, [chore]: admin.id, [errand]: admin.id, [bill]: admin.id },
+        }),
+        status: 400,
+      },
+    ])('given $name', ({ reassignments, status }) => {
+      it(`answers ${String(status)} and leaves everything untouched`, async () => {
+        expectStatus(
+          await as(app, admin, 'POST', removeUrl, { reassignments: reassignments() }),
+          status,
+        );
+        expectStatus(await as(app, member, 'GET', `/api/households/${household.id}`), 200);
+      });
     });
-    expectStatus(removed, 200);
-    expect(removed.json()).toEqual({ householdDeleted: false, promotedUserId: null });
 
-    expectStatus(await as(app, member, 'GET', `/api/households/${household.id}`), 404);
-    expectStatus(await as(app, member, 'GET', `/api/households/${household.id}/members`), 404);
-    expect((await as(app, member, 'GET', '/api/households')).json<Household[]>()).toEqual([]);
-    expect((await profile(member)).activeHouseholdId).toBeNull();
-    const owners = await adminPool.query<{ created_by: string }>(
-      'select created_by from public.shopping_list where id = $1',
-      [list],
-    );
-    expect(owners.rows[0]?.created_by).toBe(admin.id);
+    it('ends access at once, once every item is reassigned', async () => {
+      const removed = await as(app, admin, 'POST', removeUrl, {
+        reassignments: {
+          [list]: admin.id,
+          [chore]: admin.id,
+          [errand]: admin.id,
+          [bill]: admin.id,
+        },
+      });
+      expectStatus(removed, 200);
+      expect(removed.json()).toEqual({ householdDeleted: false, promotedUserId: null });
+
+      expectStatus(await as(app, member, 'GET', `/api/households/${household.id}`), 404);
+      expectStatus(await as(app, member, 'GET', `/api/households/${household.id}/members`), 404);
+      expect((await as(app, member, 'GET', '/api/households')).json<Household[]>()).toEqual([]);
+      expect((await profile(member)).activeHouseholdId).toBeNull();
+      const owners = await adminPool.query<{ created_by: string }>(
+        'select created_by from public.shopping_list where id = $1',
+        [list],
+      );
+      expect(owners.rows[0]?.created_by).toBe(admin.id);
+    });
   });
 
   it('lets the admin leave, promoting the longest-tenured member', async () => {
@@ -885,6 +919,15 @@ describe('system routes', () => {
     expect(body.merchantSkipRates).toEqual([]);
     expect(body).toHaveProperty('newestDealFetchedAt');
     expect(body).toHaveProperty('newestNotificationSentAt');
+  });
+
+  // Public, unauthenticated, and the only route that pings the real database connection (every
+  // other test's `pingDatabase` is a stub): `test/service-stack.ts` wires the real `db.ts`
+  // `ping` into this stack, so this is what exercises it for real against `supabase start`.
+  it('answers ok when the database is reachable', async () => {
+    const response = await app.inject({ method: 'GET', url: '/api/health' });
+    expectStatus(response, 200);
+    expect(response.json()).toEqual({ status: 'ok', database: 'ok' });
   });
 });
 

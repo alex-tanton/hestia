@@ -10,9 +10,12 @@ import type {
 import {
   adminPool,
   as,
+  household,
   signUp,
   startStack,
   uniqueName,
+  uniquePostalCode,
+  type HouseholdFixture,
   type SignedUpUser,
   type Stack,
 } from './test/service-stack.js';
@@ -44,13 +47,6 @@ afterAll(async () => {
   await stack.close();
 });
 
-let postalCounter = 71;
-function nextPostalCode(): string {
-  postalCounter += 1;
-  // Wraps within two digits so the ZIP stays five digits however many households the file makes.
-  return `277${String(postalCounter % 100).padStart(2, '0')}`;
-}
-
 function expectStatus(response: LightMyRequestResponse, status: number): void {
   expect(response.statusCode, response.body).toBe(status);
 }
@@ -61,21 +57,7 @@ function isoDate(offsetDays: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-interface Home {
-  user: SignedUpUser;
-  household: Household;
-}
-
-async function household(name = 'Alex', postalCode = nextPostalCode()): Promise<Home> {
-  const user = await signUp(app, name);
-  const response = await as(app, user, 'POST', '/api/households', {
-    name: uniqueName('Household'),
-    postalCode,
-    timezone: 'America/New_York',
-  });
-  expectStatus(response, 201);
-  return { user, household: response.json<Household>() };
-}
+type Home = HouseholdFixture;
 
 interface BillFields {
   name?: string;
@@ -118,7 +100,7 @@ async function createPersonalBill(home: Home, overrides: BillFields = {}): Promi
 
 describe('creating and listing bills', () => {
   it('GET /households/:id/bills includes the household’s bills plus the caller’s own personal bills', async () => {
-    const home = await household();
+    const home = await household(app);
     const hh = await createHouseholdBill(home, { name: 'Rent' });
     const personal = await createPersonalBill(home, { name: 'Streaming' });
 
@@ -133,7 +115,7 @@ describe('creating and listing bills', () => {
   });
 
   it('sorts by soonest current occurrence first', async () => {
-    const home = await household();
+    const home = await household(app);
     const later = await createHouseholdBill(home, { name: 'Later', anchorDate: isoDate(20) });
     const soon = await createHouseholdBill(home, { name: 'Soon', anchorDate: isoDate(3) });
 
@@ -145,14 +127,14 @@ describe('creating and listing bills', () => {
   });
 
   it('a bill anchored in the past with nothing paid is current and overdue', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
     expect(bill.currentOccurrenceDate).toBe(isoDate(-10));
     expect(bill.isOverdue).toBe(true);
   });
 
   it('a bill anchored in the future is not overdue', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(15) });
     expect(bill.currentOccurrenceDate).toBe(isoDate(15));
     expect(bill.isOverdue).toBe(false);
@@ -161,7 +143,7 @@ describe('creating and listing bills', () => {
 
 describe('pay and skip', () => {
   it('pay writes the log row for the current occurrence and advances it, anchored not shifted', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
 
     const response = await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
@@ -182,7 +164,7 @@ describe('pay and skip', () => {
   });
 
   it('a payment may be recorded before the due date', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(5) });
     const response = await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
     expectStatus(response, 201);
@@ -190,7 +172,7 @@ describe('pay and skip', () => {
   });
 
   it('skip records that the occurrence will not be paid, and advances the current occurrence', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
 
     const response = await as(app, home.user, 'POST', `/api/bills/${bill.id}/skip`, {});
@@ -205,7 +187,7 @@ describe('pay and skip', () => {
   });
 
   it('a second pay attempt on an already-resolved occurrence rejects rather than double-logging', async () => {
-    const home = await household();
+    const home = await household(app);
     // A one-time bill: paying its only occurrence twice must not silently succeed twice.
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(-1), recurrenceUnit: null });
     expectStatus(await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {}), 201);
@@ -218,7 +200,7 @@ describe('pay and skip', () => {
 
 describe('editing and deleting a payment', () => {
   it('PATCH corrects a recorded payment; DELETE reopens its occurrence', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
     const pay = await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
     const payment = pay.json<BillPayment>();
@@ -248,7 +230,7 @@ describe('editing and deleting a payment', () => {
 
 describe('archive', () => {
   it('hides the bill from the list and the subscriptions view, and keeps its history', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { isSubscription: true });
     await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
 
@@ -276,7 +258,7 @@ describe('archive', () => {
 
 describe('confirm-usage', () => {
   it('"Still using" resets the 60-day clock', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createPersonalBill(home, { isSubscription: true });
     await adminPool.query(
       `update public.bill set last_used_confirmed_at = now() - interval '70 days' where id = $1`,
@@ -311,7 +293,7 @@ describe('confirm-usage', () => {
 
 describe('subscriptions view', () => {
   it('normalizes to monthly cents, sorts descending, and totals correctly', async () => {
-    const home = await household();
+    const home = await household(app);
     // $12.00/week -> 1200 * 52 / 12 = 5200/month exactly.
     const weekly = await createPersonalBill(home, {
       name: 'Weekly thing',
@@ -361,7 +343,7 @@ describe('subscriptions view', () => {
   });
 
   it('an empty household shows the empty state: no subscriptions and a zero total', async () => {
-    const home = await household();
+    const home = await household(app);
     const response = await as(
       app,
       home.user,
@@ -385,7 +367,7 @@ describe('a co-member sees and can act on a household bill they did not create',
     const admin = await signUp(app, 'CoAdminTwo');
     const createRes = await as(app, admin, 'POST', '/api/households', {
       name: uniqueName('Shared2'),
-      postalCode: nextPostalCode(),
+      postalCode: uniquePostalCode(),
       timezone: 'America/New_York',
     });
     expectStatus(createRes, 201);
@@ -428,8 +410,8 @@ describe('a co-member sees and can act on a household bill they did not create',
 
 describe('RLS isolation: a stranger gets 404, never 403', () => {
   it('across every /bills/:id route and the household bills and subscriptions lists', async () => {
-    const mine = await household('Alex');
-    const stranger = await household('Blake');
+    const mine = await household(app, 'Alex');
+    const stranger = await household(app, 'Blake');
     const bill = await createHouseholdBill(mine);
     const personal = await createPersonalBill(mine);
 
@@ -526,7 +508,7 @@ describe('dates follow the household timezone, not the profile zone', () => {
     const user = await signUp(app, 'Alex', PROFILE_ZONE);
     const response = await as(app, user, 'POST', '/api/households', {
       name: uniqueName('Household'),
-      postalCode: nextPostalCode(),
+      postalCode: uniquePostalCode(),
       timezone: HOUSEHOLD_ZONE,
     });
     expectStatus(response, 201);
@@ -652,7 +634,7 @@ describe('moving a bill between its household and its owner', () => {
   }
 
   it('the owner moves a household bill to personal and back, keeping its anchor and history', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(-40) });
     expectStatus(await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {}), 201);
     const before = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
@@ -689,7 +671,7 @@ describe('moving a bill between its household and its owner', () => {
   });
 
   it('a housemate sees the bill leave their view when it goes personal, and return when it comes back', async () => {
-    const home = await household();
+    const home = await household(app);
     const housemate = await addMember(home.household, 'Housemate');
     const bill = await createHouseholdBill(home);
     const householdBillIds = async (user: SignedUpUser) =>
@@ -713,7 +695,7 @@ describe('moving a bill between its household and its owner', () => {
   });
 
   it('a housemate who is not the owner cannot move a household bill, and it stays as it was', async () => {
-    const home = await household();
+    const home = await household(app);
     const housemate = await addMember(home.household, 'Housemate');
     const bill = await createHouseholdBill(home);
 
@@ -729,7 +711,7 @@ describe('moving a bill between its household and its owner', () => {
   });
 
   it('a stranger cannot see a personal bill to move it: 404, never 403', async () => {
-    const home = await household();
+    const home = await household(app);
     const stranger = await signUp(app, 'Stranger');
     const bill = await createPersonalBill(home);
 
@@ -740,7 +722,7 @@ describe('moving a bill between its household and its owner', () => {
   });
 
   it('an archived bill cannot be moved', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home);
     expectStatus(await as(app, home.user, 'POST', `/api/bills/${bill.id}/archive`), 200);
 
@@ -750,8 +732,8 @@ describe('moving a bill between its household and its owner', () => {
   });
 
   it('a personal bill cannot move into a household the owner does not belong to: 422', async () => {
-    const owner = await household();
-    const elsewhere = await household();
+    const owner = await household(app);
+    const elsewhere = await household(app);
     const bill = await createPersonalBill(owner);
 
     const response = await move(owner.user, bill.id, {
@@ -765,8 +747,8 @@ describe('moving a bill between its household and its owner', () => {
   });
 
   it('a household bill never moves to another household the owner belongs to: 409', async () => {
-    const home = await household();
-    const other = await household();
+    const home = await household(app);
+    const other = await household(app);
     await adminPool.query(
       `insert into public.household_member (household_id, user_id, role) values ($1, $2, 'member')`,
       [other.household.id, home.user.id],
@@ -784,7 +766,7 @@ describe('moving a bill between its household and its owner', () => {
   });
 
   it('a body that names neither a valid visibility nor a household is a 400', async () => {
-    const home = await household();
+    const home = await household(app);
     const bill = await createHouseholdBill(home);
 
     expectStatus(await move(home.user, bill.id, { visibility: 'shared' }), 400);

@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import type { Kysely } from 'kysely';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDatabase, type Database, type DatabaseHandle } from './db.js';
@@ -18,7 +17,7 @@ import { RecordingPushTransport } from './test/push-double.js';
 import { recomputeReadinessForHousehold } from './services/readiness.js';
 import { repriceExpiredItems } from './services/repricing.js';
 import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
-import { adminPool, enableServiceLogin, stackConfig } from './test/service-stack.js';
+import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
 
 /*
  * The scheduled jobs against `supabase start`. Jobs run as `service_role`, which is one of the
@@ -129,20 +128,10 @@ async function seedHousehold(options: {
   quietHours?: [string, string];
   flyerRefreshEnabled?: boolean;
 }): Promise<Seeded> {
-  const userId = randomUUID();
-  const email = `job.${userId.slice(0, 8)}@example.com`;
-  await adminPool.query(
-    `insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
-     values ($1, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', $2, $3)`,
-    [
-      userId,
-      email,
-      JSON.stringify({
-        display_name: 'Job Tester',
-        timezone: options.timezone ?? 'America/New_York',
-      }),
-    ],
-  );
+  const { id: userId } = await seedAuthUser(adminPool, {
+    displayName: 'Job Tester',
+    ...(options.timezone === undefined ? {} : { timezone: options.timezone }),
+  });
   if (options.quietHours !== undefined) {
     await adminPool.query(
       'update public.profile set quiet_hours_start = $2, quiet_hours_end = $3 where id = $1',
@@ -768,6 +757,37 @@ describe('the scheduler', () => {
     await scheduler.stop();
 
     expect(await dealCount(DORMANT_POSTAL_CODE)).toBe(1);
+  });
+
+  it('runs refresh-deals and dispatch-notifications themselves under their own real locks', async () => {
+    // `scheduler.test.ts`'s unit tests back the pool with a `DummyDriver`, which never grants an
+    // advisory lock, so `createScheduler`'s `runJob` branches that pick the real job function
+    // (refresh-deals here, and the `now` override for dispatch-notifications) never actually run
+    // there. This is the one place that calls `scheduler.run` with the lock genuinely free.
+    await seedHousehold({ postalCode: POSTAL_CODE, favorites: [['2100', 'Food Lion']] });
+    source.data.flyers = [foodLionFlyer];
+    source.data.flyerItems = { '8128502': [flyerDeal('8128502', 'fl-1')] };
+
+    const scheduler = createScheduler({
+      database: jobDb,
+      logger,
+      dispatch: dispatchDeps(),
+      refresh: {
+        source,
+        publishSkipRates: () => undefined,
+        repriceExpiredItems: (db) => repriceExpiredItems(db, { kind: 'all' }),
+        recomputeReadiness: readinessNotBuiltYet,
+      },
+    });
+
+    await expect(scheduler.run('refresh-deals')).resolves.toBe(true);
+    expect(await dealCount(POSTAL_CODE)).toBeGreaterThan(0);
+
+    // The `now` override is dispatch-notifications' own seam for the E2E push test; passing one
+    // through the scheduler must not make the run itself fail, with or without rows to send.
+    await expect(scheduler.run('dispatch-notifications', { now: new Date() })).resolves.toBe(true);
+
+    await scheduler.stop();
   });
 });
 

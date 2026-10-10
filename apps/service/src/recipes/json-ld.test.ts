@@ -123,4 +123,29 @@ describe('extractRecipeJsonLd', () => {
     })}</script>`;
     expect(extractRecipeJsonLd(html)?.servings).toBe(6);
   });
+
+  it('ignores a node whose @type is neither a string nor an array (not a Recipe)', () => {
+    // hasRecipeType's fallback: @type present but of some other shape entirely (here, a number),
+    // which is neither of the two shapes schema.org actually uses. Falls through to "no Recipe
+    // node found" rather than throwing, the same as a page with no JSON-LD at all.
+    const html = `<script type="application/ld+json">${JSON.stringify({
+      '@type': 42,
+      name: 'Not Actually A Recipe',
+      recipeIngredient: ['1 cup rice'],
+    })}</script>`;
+    expect(extractRecipeJsonLd(html)).toBeUndefined();
+  });
+
+  it('reads the first usable recipeYield out of an array, skipping an unusable leading entry', () => {
+    // readServings' array branch recurses per entry and returns the first that parses; a leading
+    // entry with no digits (readServings returns null for it) must not short-circuit the whole
+    // field to null when a later entry is usable.
+    const html = `<script type="application/ld+json">${JSON.stringify({
+      '@type': 'Recipe',
+      name: 'Array Yield',
+      recipeYield: ['', '8 servings'],
+      recipeIngredient: [],
+    })}</script>`;
+    expect(extractRecipeJsonLd(html)?.servings).toBe(8);
+  });
 });

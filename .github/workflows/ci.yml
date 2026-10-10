@@ -67,7 +67,10 @@ jobs:
       # Applies supabase/migrations/ to a fresh local stack, the database the tests run against.
       - name: Start Supabase
         run: supabase start
-      - run: pnpm test:integration
+      # Runs unit and integration tests together with coverage, enforcing
+      # apps/service/vitest.coverage.config.ts's thresholds, rather than a separate job that would
+      # pay for its own `supabase start`.
+      - run: pnpm --filter @hearth/service test:coverage
 
   test-e2e:
     # E2E is the slow job: pull requests and main only, not every branch push. Most of the time

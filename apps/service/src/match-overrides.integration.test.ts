@@ -1,13 +1,13 @@
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import type { Household, MatchOverride } from '@hearth/shared';
+import type { MatchOverride } from '@hearth/shared';
 import {
   adminPool,
   as,
+  household,
   signUp,
   startStack,
-  uniqueName,
-  type SignedUpUser,
+  type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
 
@@ -37,21 +37,7 @@ function expectStatus(response: LightMyRequestResponse, status: number): void {
   expect(response.statusCode, response.body).toBe(status);
 }
 
-interface Home {
-  user: SignedUpUser;
-  household: Household;
-}
-
-async function household(name = 'Alex Rivera'): Promise<Home> {
-  const user = await signUp(app, name);
-  const response = await as(app, user, 'POST', '/api/households', {
-    name: uniqueName('Oak Street'),
-    postalCode: '27599',
-    timezone: 'America/New_York',
-  });
-  expectStatus(response, 201);
-  return { user, household: response.json<Household>() };
-}
+type Home = HouseholdFixture;
 
 async function createOverride(
   home: Home,
@@ -62,7 +48,7 @@ async function createOverride(
 
 describe('POST /households/:id/match-overrides', () => {
   it('normalizes both names through @hearth/matching before storing them', async () => {
-    const home = await household();
+    const home = await household(app);
     const response = await createOverride(home, {
       ingredientName: 'Cheese!',
       targetKind: 'deal',
@@ -79,7 +65,7 @@ describe('POST /households/:id/match-overrides', () => {
   });
 
   it('creating one that already exists updates its decision rather than duplicating it', async () => {
-    const home = await household();
+    const home = await household(app);
     const first = await createOverride(home, {
       ingredientName: 'cheese',
       targetKind: 'deal',
@@ -108,7 +94,7 @@ describe('POST /households/:id/match-overrides', () => {
   });
 
   it('rejects an invalid target kind or decision', async () => {
-    const home = await household();
+    const home = await household(app);
     expectStatus(
       await createOverride(home, {
         ingredientName: 'cheese',
@@ -130,7 +116,7 @@ describe('POST /households/:id/match-overrides', () => {
   });
 
   it('answers 404 to a member of another household, never 403', async () => {
-    const mine = await household('Alex Rivera');
+    const mine = await household(app, 'Alex Rivera');
     const stranger = await signUp(app, 'Blake Stranger');
     expectStatus(
       await as(app, stranger, 'POST', `/api/households/${mine.household.id}/match-overrides`, {
@@ -146,7 +132,7 @@ describe('POST /households/:id/match-overrides', () => {
 
 describe('DELETE /match-overrides/:id', () => {
   it('removes an override, and a second delete answers 404', async () => {
-    const home = await household();
+    const home = await household(app);
     const created = await createOverride(home, {
       ingredientName: 'cheese',
       targetKind: 'pantry',
@@ -166,8 +152,8 @@ describe('DELETE /match-overrides/:id', () => {
   });
 
   it('answers 404 for another household’s override, never 403', async () => {
-    const mine = await household('Alex Rivera');
-    const stranger = await household('Blake Stranger');
+    const mine = await household(app, 'Alex Rivera');
+    const stranger = await household(app, 'Blake Stranger');
     const created = await createOverride(mine, {
       ingredientName: 'cheese',
       targetKind: 'deal',

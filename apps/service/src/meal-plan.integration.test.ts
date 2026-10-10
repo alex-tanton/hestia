@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type {
-  Household,
   ListItem,
   MealPlanEntry,
   MealPlanWeekResponse,
@@ -13,10 +12,9 @@ import type {
 import {
   adminPool,
   as,
-  signUp,
+  household,
   startStack,
-  uniqueName,
-  type SignedUpUser,
+  type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
 
@@ -42,31 +40,11 @@ afterAll(async () => {
   await stack.close();
 });
 
-let postalCounter = 31;
-function nextPostalCode(): string {
-  postalCounter += 1;
-  return `275${String(postalCounter)}`;
-}
-
 function expectStatus(response: LightMyRequestResponse, status: number): void {
   expect(response.statusCode, response.body).toBe(status);
 }
 
-interface Home {
-  user: SignedUpUser;
-  household: Household;
-}
-
-async function household(name = 'Alex', postalCode = nextPostalCode()): Promise<Home> {
-  const user = await signUp(app, name);
-  const response = await as(app, user, 'POST', '/api/households', {
-    name: uniqueName('Household'),
-    postalCode,
-    timezone: 'America/New_York',
-  });
-  expectStatus(response, 201);
-  return { user, household: response.json<Household>() };
-}
+type Home = HouseholdFixture;
 
 async function favoriteStore(home: Home, merchantId: string, merchantName: string): Promise<void> {
   expectStatus(
@@ -192,7 +170,7 @@ async function planMeal(
 
 describe('week planner', () => {
   it('creates an entry with a readiness snapshot and lists it back by its week', async () => {
-    const home = await household();
+    const home = await household(app);
     const recipe = await createRecipe(home, 'Pancakes', [{ itemName: 'Flour' }]);
     const sunday = await currentSunday(home);
 
@@ -208,7 +186,7 @@ describe('week planner', () => {
   });
 
   it('rejects a week query that is not a Sunday', async () => {
-    const home = await household();
+    const home = await household(app);
     const sunday = await currentSunday(home);
     const monday = addDays(sunday, 1);
     expectStatus(
@@ -264,13 +242,13 @@ describe('week planner', () => {
     // timezone offset from UTC in the ordinary case: this is what ties the formula above back
     // to `currentWeekSunday`'s own behavior, so a drift between the two is at least visible as
     // "the API's Sunday is not today's actual household-timezone Sunday" rather than silent.
-    const home = await household('Alex', nextPostalCode());
+    const home = await household(app, 'Alex');
     const liveSunday = await currentSunday(home);
     expect(liveSunday).toBe(await sundayAt(new Date().toISOString(), 'America/New_York'));
   });
 
   it('an explicit week filters to that week only', async () => {
-    const home = await household();
+    const home = await household(app);
     const recipe = await createRecipe(home, 'Waffles', [{ itemName: 'Flour' }]);
     const sunday = await currentSunday(home);
     const nextWeekSunday = addDays(sunday, 7);
@@ -294,8 +272,41 @@ describe('week planner', () => {
     expect(nextWeek.json<MealPlanWeekResponse>().entries).toHaveLength(1);
   });
 
+  it('a past week is excluded from the default view but still viewable as history (Use Cases, "Plan the week": "Past plan entries")', async () => {
+    const home = await household(app);
+    const recipe = await createRecipe(home, 'Leftover Stew', [{ itemName: 'Beef' }]);
+    const sunday = await currentSunday(home);
+    const pastWeekSunday = addDays(sunday, -7);
+    const entry = await planMeal(home, recipe.id, pastWeekSunday, 'dinner');
+
+    // The default (current-week) view excludes the past entry entirely.
+    const defaultView = await as(
+      app,
+      home.user,
+      'GET',
+      `/api/households/${home.household.id}/meal-plan`,
+    );
+    expectStatus(defaultView, 200);
+    expect(defaultView.json<MealPlanWeekResponse>().entries.map((one) => one.id)).not.toContain(
+      entry.id,
+    );
+
+    // An explicit query for that past week still returns it: past entries are kept indefinitely
+    // and remain viewable as history, just excluded from the active/current week view.
+    const pastView = await as(
+      app,
+      home.user,
+      'GET',
+      `/api/households/${home.household.id}/meal-plan?week=${pastWeekSunday}`,
+    );
+    expectStatus(pastView, 200);
+    const pastBody = pastView.json<MealPlanWeekResponse>();
+    expect(pastBody.week).toBe(pastWeekSunday);
+    expect(pastBody.entries.map((one) => one.id)).toContain(entry.id);
+  });
+
   it('deletes an entry, and a second delete answers 404', async () => {
-    const home = await household();
+    const home = await household(app);
     const recipe = await createRecipe(home, 'Omelette', [{ itemName: 'Eggs' }]);
     const entry = await planMeal(home, recipe.id, await currentSunday(home));
 
@@ -304,7 +315,7 @@ describe('week planner', () => {
   });
 
   it('a deleted recipe keeps its snapshot title and shows a null readiness percent', async () => {
-    const home = await household();
+    const home = await household(app);
     const recipe = await createRecipe(home, 'Mushroom Stroganoff', [{ itemName: 'Mushrooms' }]);
     const sunday = await currentSunday(home);
     await planMeal(home, recipe.id, sunday, 'dinner');
@@ -328,7 +339,7 @@ describe('week planner', () => {
 
 describe('add missing to list', () => {
   it('from a recipe: skips pantry matches and items already on the list, links on-sale items to the deal, keeps the ingredient’s own name', async () => {
-    const home = await household();
+    const home = await household(app);
     await favoriteStore(home, 'ht', 'Harris Teeter');
     await addPantryItem(home, 'Milk');
     await insertDeal({
@@ -389,7 +400,7 @@ describe('add missing to list', () => {
   });
 
   it('answers 404 for a foreign or missing recipe before touching the list', async () => {
-    const home = await household();
+    const home = await household(app);
     const list = await createList(home);
     expectStatus(
       await as(app, home.user, 'POST', `/api/recipes/${randomUUID()}/add-to-list`, {
@@ -400,7 +411,7 @@ describe('add missing to list', () => {
   });
 
   it('from a planned meal: adds the recipe’s missing ingredients, and 404s once its recipe is deleted', async () => {
-    const home = await household();
+    const home = await household(app);
     const list = await createList(home);
     const recipe = await createRecipe(home, 'Simple Salad', [{ itemName: 'Lettuce' }]);
     const entry = await planMeal(home, recipe.id, await currentSunday(home));
@@ -421,7 +432,7 @@ describe('add missing to list', () => {
   });
 
   it('from a whole week: aggregates matching units by summing, and mismatched units by merging into a note', async () => {
-    const home = await household();
+    const home = await household(app);
     const list = await createList(home);
     const sunday = await currentSunday(home);
 
@@ -464,7 +475,7 @@ describe('add missing to list', () => {
   });
 
   it('rejects a non-Sunday week for the whole-week add-to-list', async () => {
-    const home = await household();
+    const home = await household(app);
     const list = await createList(home);
     const sunday = await currentSunday(home);
     expectStatus(
@@ -482,7 +493,7 @@ describe('add missing to list', () => {
 
 describe('suggestions', () => {
   it('ranks recipes by readiness, descending, and reports the deals’ as-of date', async () => {
-    const home = await household();
+    const home = await household(app);
     await favoriteStore(home, 'fl', 'Food Lion');
     await insertDeal({
       merchantId: 'fl',
@@ -510,7 +521,7 @@ describe('suggestions', () => {
   });
 
   it('reports a null as-of date when there are no deals for the postal code at all', async () => {
-    const home = await household();
+    const home = await household(app);
     await createRecipe(home, 'Solo Recipe', [{ itemName: 'Kumquat' }]);
     const response = await as(
       app,
@@ -525,8 +536,8 @@ describe('suggestions', () => {
 
 describe('RLS isolation: a stranger gets 404, never 403', () => {
   it('across the meal plan, suggestions, and add-to-list routes', async () => {
-    const mine = await household('Alex');
-    const stranger = await household('Blake');
+    const mine = await household(app, 'Alex');
+    const stranger = await household(app, 'Blake');
 
     const recipe = await createRecipe(mine, 'Private Recipe', [{ itemName: 'Salt' }]);
     const sunday = await currentSunday(mine);

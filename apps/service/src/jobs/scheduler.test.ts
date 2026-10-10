@@ -98,6 +98,33 @@ describe('schedules', () => {
     await scheduler.stop();
     expect(destroy).toHaveBeenCalledTimes(4);
   });
+
+  it('actually fires each job when cron calls the scheduled callback, not just registers it', async () => {
+    // The test above only asserts registration: `cron.schedule`'s mock never calls back into the
+    // callback it was given, so `start()`'s own `() => void run(jobName)` bodies (one per job)
+    // never ran. This calls each captured callback directly, the way `node-cron` would at the
+    // scheduled minute, to exercise those four bodies for real.
+    const schedule = vi
+      .spyOn(cron, 'schedule')
+      .mockImplementation(
+        () => ({ destroy: vi.fn() }) as unknown as ReturnType<typeof cron.schedule>,
+      );
+
+    const scheduler = createScheduler(deps());
+    scheduler.start();
+
+    for (const call of schedule.mock.calls) {
+      const callback = call[1] as () => void;
+      callback();
+    }
+    await scheduler.stop();
+
+    // deps() backs the pool with emptyDb(), whose DummyDriver never grants any advisory lock, so
+    // each run logs the skip -- proof the callback body actually called run(jobName) and reached
+    // the guard, for all four jobs, rather than the callback never firing at all.
+    const skipped = lines.filter((line) => line.message.includes('another run holds the lock'));
+    expect(skipped).toHaveLength(4);
+  });
 });
 
 describe('the advisory lock guard', () => {

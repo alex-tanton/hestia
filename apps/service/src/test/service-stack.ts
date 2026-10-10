@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
+import type { Household } from '@hearth/shared';
 import pg from 'pg';
 import { buildApp, type AppDependencies } from '../app.js';
 import { createTokenVerifier } from '../auth/jwt.js';
@@ -229,4 +230,89 @@ export function as(
 
 export function uniqueName(prefix: string): string {
   return `${prefix} ${randomUUID().slice(0, 6)}`;
+}
+
+let postalCodeCounter = 0;
+
+/** A postal code unique within this test file's run, so callers never need their own counter. */
+export function uniquePostalCode(): string {
+  postalCodeCounter += 1;
+  return `280${String(postalCodeCounter).padStart(2, '0')}`;
+}
+
+/** The household fixture every integration test file needs: a signed-up user plus their household. */
+export interface HouseholdFixture {
+  user: SignedUpUser;
+  household: Household;
+}
+
+/** Creates a household for an already-signed-up user, through the real API. */
+export async function createHouseholdFor(
+  app: FastifyInstance,
+  user: SignedUpUser,
+  postalCode: string = uniquePostalCode(),
+  timezone = 'America/New_York',
+): Promise<Household> {
+  const response = await as(app, user, 'POST', '/api/households', {
+    name: uniqueName('Household'),
+    postalCode,
+    timezone,
+  });
+  if (response.statusCode !== 201) {
+    throw new Error(`household creation failed: ${String(response.statusCode)} ${response.body}`);
+  }
+  return response.json<Household>();
+}
+
+/**
+ * Signs a fresh user up and creates a household for them in one call — the common fixture that
+ * at least seven integration test files used to hand-roll separately, each with its own
+ * inconsistent signature and its own postal-code counter. Omit `postalCode` for one unique to this
+ * file (via `uniquePostalCode`); pass one explicitly when a test needs several households to share
+ * a postal code (e.g. so they see the same `deal` rows).
+ */
+export async function household(
+  app: FastifyInstance,
+  name = 'Alex',
+  postalCode: string = uniquePostalCode(),
+  timezone = 'America/New_York',
+): Promise<HouseholdFixture> {
+  const user = await signUp(app, name);
+  return { user, household: await createHouseholdFor(app, user, postalCode, timezone) };
+}
+
+/** GoTrue's single-tenant `instance_id` default — every environment uses this same nil UUID. */
+const GOTRUE_INSTANCE_ID = '00000000-0000-0000-0000-000000000000';
+
+/**
+ * Seeds an `auth.users` row directly as `postgres`, for jobs and other tests that need a user
+ * without going through the signup route. Three integration files used to hand-write this same
+ * insert with the same uncommented nil `instance_id`; `adminPool` is the default connection, but a
+ * caller can pass another pool-like client that exposes `query`.
+ */
+export async function seedAuthUser(
+  pool: Pick<pg.Pool, 'query'>,
+  overrides: {
+    id?: string;
+    email?: string;
+    displayName?: string;
+    timezone?: string;
+  } = {},
+): Promise<{ id: string; email: string }> {
+  const id = overrides.id ?? randomUUID();
+  const email = overrides.email ?? `test.${id.slice(0, 8)}@example.com`;
+  await pool.query(
+    `insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+     values ($1, $2, 'authenticated', 'authenticated', $3, $4)`,
+    [
+      id,
+      GOTRUE_INSTANCE_ID,
+      email,
+      JSON.stringify({
+        display_name: overrides.displayName ?? 'Test User',
+        timezone: overrides.timezone ?? 'America/New_York',
+      }),
+    ],
+  );
+  return { id, email };
 }

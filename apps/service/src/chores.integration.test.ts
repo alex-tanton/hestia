@@ -8,6 +8,7 @@ import {
   signUp,
   startStack,
   uniqueName,
+  uniquePostalCode,
   type SignedUpUser,
   type Stack,
 } from './test/service-stack.js';
@@ -43,12 +44,6 @@ function defined(value: string | undefined): string {
   return value;
 }
 
-let postalCounter = 61;
-function nextPostalCode(): string {
-  postalCounter += 1;
-  return `276${String(postalCounter)}`;
-}
-
 interface Home {
   admin: SignedUpUser;
   household: Household;
@@ -65,7 +60,7 @@ async function createHome(extraMembers = 0): Promise<Home> {
   const admin = await signUp(app, 'Admin');
   const created = await as(app, admin, 'POST', '/api/households', {
     name: uniqueName('Household'),
-    postalCode: nextPostalCode(),
+    postalCode: uniquePostalCode(),
     timezone: 'America/New_York',
   });
   expectStatus(created, 201);

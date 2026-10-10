@@ -81,4 +81,32 @@ describe('HostRateLimiter', () => {
     // sleeps out the whole gap — never both reading `last` as unset and skipping the wait.
     expect(clock.sleeps).toEqual([1_000]);
   });
+
+  it('really sleeps with the real clock and timer when no fakes are given', async () => {
+    // Every other test overrides both `now` and `sleep`, which never exercises the constructor's
+    // own defaults (`Date.now` and a real `setTimeout`-backed sleep). minGapMs is tiny so the test
+    // stays fast; the only thing under test is that the default sleep actually waits and resolves.
+    const limiter = new HostRateLimiter({ minGapMs: 20 });
+    const start = Date.now();
+    await limiter.wait('default.example.com');
+    await limiter.wait('default.example.com');
+    expect(Date.now() - start).toBeGreaterThanOrEqual(15);
+  });
+
+  it('drops an old entry on the next wait for any host, rather than growing the map forever', async () => {
+    // Pruning is purely a memory bound: by the time an entry is old enough to prune, its own gap
+    // has also naturally elapsed, so a pruned host and an unpruned-but-expired one wait the same
+    // (zero) amount either way — this cannot be told apart from the outside by timing alone. What
+    // this does assert is that `wait()` on an unrelated host, long after an earlier one, still
+    // triggers the deletion pass (the `if (at < cutoff)` branch in `prune()`) without throwing or
+    // otherwise disturbing a later wait for the pruned host's own name.
+    const clock = fakeClock();
+    const limiter = new HostRateLimiter({ minGapMs: 1_000, now: clock.now, sleep: clock.sleep });
+    await limiter.wait('stale.example.com');
+    // PRUNE_AFTER_GAPS (10) gaps later: 'stale.example.com' is now well past pruning age.
+    clock.advance(1_000 * 11);
+    await limiter.wait('fresh.example.com');
+    await limiter.wait('stale.example.com');
+    expect(clock.sleeps).toEqual([]);
+  });
 });
