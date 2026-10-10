@@ -25,25 +25,22 @@ describe('updateBillRequestSchema', () => {
     expect(updateBillRequestSchema.safeParse({ category: null }).success).toBe(true);
   });
 
-  it('an empty body still parses, since several fields default even through .partial()', () => {
-    // This is the refine's blind spot, not a bug in the test: category/recurrenceUnit/interval/
-    // reminderDaysBefore/autopay/isSubscription all default, so `Object.values(body).some(v =>
-    // v !== undefined)` is always true for this schema — the "change at least one field" refine
-    // can never actually reject anything here (contrast updateBillPaymentRequestSchema below,
-    // whose fields have no defaults, where the same refine genuinely blocks an empty PATCH).
-    // Route-level guards, not this schema, are what must refuse a truly empty PATCH /bills/:id.
+  it('refuses an empty body', () => {
+    // category/recurrenceUnit/interval/reminderDaysBefore/autopay/isSubscription all default on
+    // create, but the update schema unwraps those defaults before marking every field optional —
+    // so an absent key stays genuinely undefined here, rather than being silently populated with
+    // its create-time default, and the "change at least one field" refine correctly rejects `{}`.
     const result = updateBillRequestSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts a PATCH that sets a field to its own default value on purpose', () => {
+    // false is autopay's default, but sending it explicitly is a real, intentional change, not an
+    // empty request — the schema must distinguish "caller sent this value" from "caller sent
+    // nothing and a default was injected," which is exactly what unwrapping the default enables.
+    const result = updateBillRequestSchema.safeParse({ autopay: false });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toEqual({
-        category: null,
-        recurrenceUnit: null,
-        interval: 1,
-        reminderDaysBefore: 3,
-        autopay: false,
-        isSubscription: false,
-      });
-    }
+    if (result.success) expect(result.data).toEqual({ autopay: false });
   });
 });
 

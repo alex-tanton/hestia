@@ -62,9 +62,11 @@ type Home = HouseholdFixture;
 interface BillFields {
   name?: string;
   amountCents?: number;
+  category?: string | null;
   anchorDate?: string;
   recurrenceUnit?: 'day' | 'week' | 'month' | 'year' | null;
   interval?: number;
+  reminderDaysBefore?: number;
   autopay?: boolean;
   isSubscription?: boolean;
 }
@@ -138,6 +140,99 @@ describe('creating and listing bills', () => {
     const bill = await createHouseholdBill(home, { anchorDate: isoDate(15) });
     expect(bill.currentOccurrenceDate).toBe(isoDate(15));
     expect(bill.isOverdue).toBe(false);
+  });
+});
+
+describe('updating a bill', () => {
+  it('PATCH /bills/:id rejects an empty body and leaves the bill unchanged', async () => {
+    const home = await household(app);
+    const bill = await createHouseholdBill(home, { name: 'Rent', autopay: true });
+
+    const response = await as(app, home.user, 'PATCH', `/api/bills/${bill.id}`, {});
+    expectStatus(response, 400);
+
+    const after = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
+    expectStatus(after, 200);
+    const detail = after.json<BillDetail>();
+    expect(detail.name).toBe('Rent');
+    expect(detail.autopay).toBe(true);
+  });
+
+  // Guards against the bug 1030b35 fixed: a legitimate partial PATCH silently reset category,
+  // recurrenceUnit, interval, reminderDaysBefore, autopay, and isSubscription to their create-time
+  // defaults, because the old schema re-applied `.default(...)` to absent keys. Every field
+  // `billFieldsSchema` governs is given a distinguishable, non-default value here and re-read after
+  // the PATCH, so a regression can't hide behind an assertion that only checks the field that was
+  // actually meant to change.
+  it('PATCH /bills/:id changing only the name leaves every other field unchanged, including the six that used to silently reset', async () => {
+    const home = await household(app);
+    const original = await createHouseholdBill(home, {
+      name: 'Original Name',
+      amountCents: 23456,
+      anchorDate: isoDate(-12),
+      category: 'Utilities',
+      recurrenceUnit: 'week',
+      interval: 3,
+      reminderDaysBefore: 9,
+      autopay: true,
+      isSubscription: true,
+    });
+
+    const response = await as(app, home.user, 'PATCH', `/api/bills/${original.id}`, {
+      name: 'Renamed Bill',
+    });
+    expectStatus(response, 200);
+
+    const after = await as(app, home.user, 'GET', `/api/bills/${original.id}`);
+    expectStatus(after, 200);
+    const detail = after.json<BillDetail>();
+    expect(detail.name).toBe('Renamed Bill');
+    expect(detail.amountCents).toBe(original.amountCents);
+    expect(detail.anchorDate).toBe(original.anchorDate);
+    expect(detail.category).toBe(original.category);
+    expect(detail.recurrenceUnit).toBe(original.recurrenceUnit);
+    expect(detail.interval).toBe(original.interval);
+    expect(detail.reminderDaysBefore).toBe(original.reminderDaysBefore);
+    expect(detail.autopay).toBe(original.autopay);
+    expect(detail.isSubscription).toBe(original.isSubscription);
+    expect(detail.visibility).toBe(original.visibility);
+    expect(detail.householdId).toBe(original.householdId);
+  });
+
+  // Same guard, from the other direction: explicitly setting one of the six previously-buggy
+  // fields to a non-default value must persist exactly that value and touch nothing else.
+  it('PATCH /bills/:id setting autopay to a non-default value persists it and changes nothing else', async () => {
+    const home = await household(app);
+    const original = await createHouseholdBill(home, {
+      name: 'Static Name',
+      amountCents: 9999,
+      anchorDate: isoDate(-5),
+      category: 'Insurance',
+      recurrenceUnit: 'month',
+      interval: 2,
+      reminderDaysBefore: 5,
+      autopay: false,
+      isSubscription: false,
+    });
+    expect(original.autopay).toBe(false);
+
+    const response = await as(app, home.user, 'PATCH', `/api/bills/${original.id}`, {
+      autopay: true,
+    });
+    expectStatus(response, 200);
+
+    const after = await as(app, home.user, 'GET', `/api/bills/${original.id}`);
+    expectStatus(after, 200);
+    const detail = after.json<BillDetail>();
+    expect(detail.autopay).toBe(true);
+    expect(detail.name).toBe(original.name);
+    expect(detail.amountCents).toBe(original.amountCents);
+    expect(detail.anchorDate).toBe(original.anchorDate);
+    expect(detail.category).toBe(original.category);
+    expect(detail.recurrenceUnit).toBe(original.recurrenceUnit);
+    expect(detail.interval).toBe(original.interval);
+    expect(detail.reminderDaysBefore).toBe(original.reminderDaysBefore);
+    expect(detail.isSubscription).toBe(original.isSubscription);
   });
 });
 

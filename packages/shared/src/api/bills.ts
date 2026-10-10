@@ -93,8 +93,28 @@ export type CreateBillRequest = z.infer<typeof createBillRequestSchema>;
  * PATCH /bills/:id. Visibility, household, and ownership are not editable here: moving a bill
  * between its household and its owner is its own action, POST /bills/:id/move, so the scope change
  * is never a side effect of an ordinary edit.
+ *
+ * Built from `billFieldsSchema.shape` rather than `billFieldsSchema.partial()` directly: six of
+ * those fields carry `.default(...)` for create, and a default fires on an absent key even through
+ * `.partial()` — so a plain `.partial()` would silently inject those defaults for a key the caller
+ * never sent, make the refine below see a "changed" value that was never actually submitted, and
+ * let `{}` parse as if it changed six fields. Unwrapping the default off each of those six fields
+ * before marking everything optional means an absent key stays genuinely `undefined`, so the refine
+ * only sees a field as "changed" when the caller actually sent it — including a field sent with its
+ * own default value (e.g. `{ autopay: false }`), which is a real, intentional change.
  */
-export const updateBillRequestSchema = billFieldsSchema
+export const updateBillRequestSchema = z
+  .object({
+    name: billFieldsSchema.shape.name,
+    amountCents: billFieldsSchema.shape.amountCents,
+    category: billFieldsSchema.shape.category.unwrap(),
+    recurrenceUnit: billFieldsSchema.shape.recurrenceUnit.unwrap(),
+    interval: billFieldsSchema.shape.interval.unwrap(),
+    anchorDate: billFieldsSchema.shape.anchorDate,
+    reminderDaysBefore: billFieldsSchema.shape.reminderDaysBefore.unwrap(),
+    autopay: billFieldsSchema.shape.autopay.unwrap(),
+    isSubscription: billFieldsSchema.shape.isSubscription.unwrap(),
+  })
   .partial()
   .refine((body) => Object.values(body).some((value) => value !== undefined), {
     message: 'Change at least one field.',
