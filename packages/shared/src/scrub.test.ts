@@ -315,4 +315,11 @@ describe('scrubFields', () => {
       method: '[redacted]',
     });
   });
+
+  it('redacts a code that is not an uppercase Postgres-style code', () => {
+    // '23505' in the earlier test looks like a code by coincidence; this checks the redacted
+    // side of that same ternary, which no other test exercises (lowercase, and free text).
+    expect(scrubFields({ code: 'not_a_code!' })).toEqual({ code: '[redacted]' });
+    expect(scrubFields({ code: 'Validation failed' })).toEqual({ code: '[redacted]' });
+  });
 });

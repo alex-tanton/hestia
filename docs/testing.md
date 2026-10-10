@@ -535,14 +535,13 @@ pnpm db:seed              # re-seed from scratch
 
 ## Coverage
 
-- **`packages/recurrence`** is the only package with a coverage threshold actually configured and
-  enforced: `packages/recurrence/vitest.config.ts` sets `thresholds: { lines: 90, branches: 90,
-  functions: 90, statements: 90 }`, and its `test`/`test:coverage` scripts both run with
-  `--coverage`, so `pnpm test` — which CI's `test-unit` job runs — fails the moment coverage drops
-  below 90% on any of the four metrics.
-- **`packages/matching`** reports coverage (`pnpm --filter @hearth/matching test:coverage`) but its
-  `vitest.config.ts` configures no `thresholds`, so nothing currently fails the build if its
-  coverage drops, even though it is held to the same 90%+ expectation as a goal.
+- **`packages/recurrence`**, **`packages/matching`**, and **`packages/shared`** — the three pure-logic
+  packages with no I/O — each configure and enforce a coverage threshold: every one of their
+  `vitest.config.ts` sets `thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 }`,
+  and their `test`/`test:coverage` scripts both run with `--coverage`, so `pnpm test` — which CI's
+  `test-unit` job runs — fails the moment coverage drops below 90% on any of the four metrics in any
+  of the three. Each package's `index.ts` (a pure re-export barrel with no logic of its own) is
+  excluded from the `coverage.exclude` glob rather than counted against the threshold.
 - **`apps/service`** has no coverage threshold configured either, across any of its three Vitest
   configs (`vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`).
   `pnpm --filter @hearth/service test:coverage` reports coverage across its unit *and* integration

@@ -258,4 +258,12 @@ describe('no match', () => {
     const result = matchIngredient('cheese', [candidate('bread')]);
     expect(result).toStrictEqual({ matched: false });
   });
+
+  it('an ingredient that tokenizes to nothing cannot contain-match any candidate', () => {
+    // normalize() never produces an empty normalized name for real input (it falls back to the
+    // punctuation-stripped original instead), but matchIngredient takes a bare string and must
+    // stay total rather than match everything when given one anyway.
+    const result = matchIngredient('', [candidate('cheese')]);
+    expect(result.matched).toBe(false);
+  });
 });
