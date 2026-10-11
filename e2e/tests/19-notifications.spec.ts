@@ -9,7 +9,7 @@ import {
 } from '../support/app.ts';
 import { accessToken } from '../support/api.ts';
 import { expectAccessible } from '../support/axe.ts';
-import { queryValue } from '../support/db.ts';
+import { query, queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
 import { parsePushBody, recordedDeliveries, runDispatchAt } from '../support/push.ts';
 
@@ -124,14 +124,19 @@ function reminderDay(now: Date): { date: string; clock: Date } {
   return { date: yesterday, clock: new Date(`${yesterday}T17:00:00Z`) };
 }
 
-/** The dish the day's reminder names: its first planned meal, in the order the producer uses. */
+/**
+ * The dish the day's reminder names: its first planned meal, in the order the producer uses, or
+ * '' when the day has none planned yet (Saturday in Seed Data, until `ensureDinnerOn` plans one).
+ * Unlike `queryValue`, zero rows is an expected outcome here, not a bug to throw on.
+ */
 function firstMealOn(oakId: string, date: string): string {
-  return queryValue(
+  const rows = query(
     `select recipe_title from public.meal_plan_entry
       where household_id = '${oakId}' and planned_date = '${date}'
       order by case meal_type when 'breakfast' then 0 when 'lunch' then 1 else 2 end, created_at, id
       limit 1`,
   );
+  return rows[0]?.[0] ?? '';
 }
 
 /**
