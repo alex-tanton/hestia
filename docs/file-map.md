@@ -20,6 +20,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `.github/` | Continuous integration and deployment automation (GitHub Actions), plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
 | `README.md` | The entry point: prerequisites, local development, deployment, and backup/restore steps. |
+| `CONTRIBUTING.md` | How changes land: which go straight to `main`, which need a pull request, and the commit rules. |
 | `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` | Define the monorepo's workspaces and pin every dependency's exact version. |
 | `tsconfig.base.json` | Shared TypeScript compiler settings every workspace builds on. |
 | `eslint.config.js`, `.prettierrc.json`, `.prettierignore` | Code style and quality rules enforced across the repo. |
