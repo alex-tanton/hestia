@@ -3,6 +3,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['src/**/*.test.ts'],
+    setupFiles: ['../../test/clock-setup.mjs'],
+    globalSetup: ['../../test/global-tz.mjs'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
