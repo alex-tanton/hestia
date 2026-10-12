@@ -1,0 +1,12 @@
+feat(service): add owner-only bill move and close small spec gaps
+
+Adds POST /bills/:id/move so a bill owner can move it between household and personal (PRD,
+Bills), with its refusals and an untouched anchor and payment history.
+
+Fixes the Flipp request queue to hold the minimum gap on a timer that wakes early, fixing the
+intermittent rate-discipline failure.
+
+Enforces the recurrence package coverage gate at 90%. Corrects the Design bill sheet and
+Technical Architecture text to match the move endpoint and the dormancy claim behaviour.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

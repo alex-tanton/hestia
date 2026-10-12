@@ -1,0 +1,11 @@
+feat(web): add shopping list, pantry, and realtime screens with offline queue
+
+Adds screens 7/8/9 (lists, list detail, pantry) with all six states, realtime sync over the
+list:<listId> channel, and the offline write queue (TanStack paused mutations, idb-keyval
+persistence, per-list scope ordering, idempotent replay). Reviewer verified two subtle offline
+bugs by revert-testing: onlineManager defaulting online on reload (would have silently dropped a
+genuinely-offline write, violating non-negotiable 9) and a durability gap where a queued write
+could sit unflushed past a real browser restart. Also fixes an axe heading-order violation and
+ports the focus-into-replacement a11y pattern to three earlier forms.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

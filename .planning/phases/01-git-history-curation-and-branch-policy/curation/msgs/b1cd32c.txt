@@ -1,0 +1,13 @@
+feat(service): send due notifications through Web Push
+
+The dispatch-notifications job (every 2 minutes) sends each due outbox row to every push
+subscription of its recipient, as the Dispatch step of the Technical Architecture scheduled jobs.
+Each row is claimed by stamping sent_at before any device is sent it, so no device is pushed the
+same notification twice; the claim is released only when no device accepted it. Subscriptions the
+push service reports gone are deleted; other failures keep the subscription. Rows past their
+24-hour retry window are deleted unsent, and copy that fails validation is rejected unsent. The
+cross-user reads and writes sit in privileged/notification-outbox.ts behind service_role. The
+VAPID subject is derived in env.ts when unset, and the scheduler stop() waits for in-flight runs
+so main.ts closes the pool only after them.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
