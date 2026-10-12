@@ -3,7 +3,7 @@
 # docker-compose.yml); tagged with the commit SHA by scripts/deploy.sh, so the PWA, routing, and
 # headers roll back together.
 
-FROM node:24.21.0-bookworm-slim AS build
+FROM node:26.11.1-bookworm-slim AS build
 ENV CI=true HUSKY=0
 RUN corepack enable
 WORKDIR /repo
@@ -31,7 +31,7 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/web... \
  && pnpm --filter @hearth/web build
 
-FROM caddy:2.11.4-alpine
+FROM caddy:2.11.7-alpine
 ARG HEARTH_REVISION=dev
 LABEL org.opencontainers.image.revision=$HEARTH_REVISION
 COPY docker/Caddyfile /etc/caddy/Caddyfile

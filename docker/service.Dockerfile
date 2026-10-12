@@ -2,7 +2,7 @@
 # hearth-service: the Fastify API, job runner, and hearth-admin CLI. Built from the repository
 # root (see docker-compose.yml); tagged with the commit SHA by scripts/deploy.sh.
 
-FROM node:24.21.0-bookworm-slim AS source
+FROM node:26.11.1-bookworm-slim AS source
 ENV CI=true HUSKY=0
 RUN corepack enable
 WORKDIR /repo
@@ -23,7 +23,7 @@ FROM source AS prod-deps
 RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hearth/service
 
-FROM node:24.21.0-bookworm-slim
+FROM node:26.11.1-bookworm-slim
 ARG HEARTH_REVISION=dev
 LABEL org.opencontainers.image.revision=$HEARTH_REVISION
 ENV NODE_ENV=production
