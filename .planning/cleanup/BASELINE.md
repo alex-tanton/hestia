@@ -23,7 +23,7 @@ Other facts:
 
 ## Results
 
-Run 1 and run 2 are two full passes over untouched d3da748. `test:integration` and `test:coverage` come from CI, not from this session (path b): run 1 is the `pull_request` run 38206071791, run 2 is the `push` run 38254024046, both on head d3da748. Their logs could not be downloaded (HTTP 403 from the log host), so those two rows carry the job's step conclusion and no test counts.
+Run 1 and run 2 are two full passes over untouched d3da748. `test:integration` and `test:coverage` were first recorded from CI (path b) because Docker was not usable in the session. They were re-measured later in the same session on a fresh detached d3da748 worktree against the local `supabase start` stack (path a), so those rows now carry real counts. The CI step conclusions are kept in the Integration section as a cross-check.
 
 | Command | Run | Exit | Passed | Failed | Duration | Log |
 |---------|-----|------|--------|--------|----------|-----|
@@ -45,10 +45,10 @@ Run 1 and run 2 are two full passes over untouched d3da748. `test:integration` a
 | test:matching | 2 | 0 | 156 | 0 | 1s | logs/baseline/run2-matching.log, run2-matching.json |
 | test:e2e-unit | 1 | 0 | 6 | 0 | 1s | logs/baseline/run1-e2e-unit.log |
 | test:e2e-unit | 2 | 0 | 6 | 0 | 1s | logs/baseline/run2-e2e-unit.log |
-| test:integration | 1 | 0 (CI step success) | n/a (CI log unavailable) | n/a | 6m14s (CI job) | https://github.com/alex-tanton/hearth/actions/runs/38206071791 ; logs/baseline/run1-coverage.log |
-| test:integration | 2 | 0 (CI step success) | n/a (CI log unavailable) | n/a | 6m25s (CI job) | https://github.com/alex-tanton/hearth/actions/runs/38254024046 ; logs/baseline/run2-coverage.log |
-| test:coverage | 1 | 0 (CI step success) | n/a (CI log unavailable) | n/a | 6m14s (CI job) | https://github.com/alex-tanton/hearth/actions/runs/38206071791 ; logs/baseline/run1-coverage.log |
-| test:coverage | 2 | 0 (CI step success) | n/a (CI log unavailable) | n/a | 6m25s (CI job) | https://github.com/alex-tanton/hearth/actions/runs/38254024046 ; logs/baseline/run2-coverage.log |
+| test:integration | 1 | 0 | 426 | 0 | 4m24s | logs/baseline/docker-run1-integration.log |
+| test:integration | 2 | 0 | 426 | 0 | 4m28s | logs/baseline/docker-run2-integration.log |
+| test:coverage | 1 | 0 | 1142 | 0 | 5m9s | logs/baseline/docker-run1-coverage.log |
+| test:coverage | 2 | 0 | 1142 | 0 | 5m31s | logs/baseline/docker-run2-coverage.log |
 | build | 1 | 0 | n/a | n/a | 3s | logs/baseline/run1-build.log |
 | build | 2 | 0 | n/a | n/a | 3s | logs/baseline/run2-build.log |
 
@@ -99,12 +99,13 @@ Run instants (UTC, Monday 2026-10-12): run 1 web 22:14:55Z, run 2 web 22:17:42Z,
 
 ## Integration
 
-path (b): CI runs 38206071791, 38254024046
+path (a): measured locally against `supabase start` (migrations applied from `supabase/migrations/`), on a fresh detached d3da748 worktree that stayed clean (`git status --porcelain` empty). Cross-checked against CI runs 38206071791 and 38254024046.
 
-- Run 1 = `pull_request` run 38206071791 (2026-10-12T05:00Z); run 2 = `push` run 38254024046 (2026-10-12T13:12Z); both head d3da748, both listed by `gh run list --workflow CI --commit d3da748...`. No run was triggered or re-run.
-- `test-integration` job: success in both runs. Its steps "Start Supabase" and "Run pnpm --filter @hearth/service test:coverage" concluded `success` in both, so `test:coverage` met its thresholds in each run (a threshold miss makes the Vitest command exit non-zero and fails the step).
-- Pass/fail counts and failing names for the integration files: not available. The job logs could not be downloaded (HTTP 403 from the Actions log host), and CI runs integration files only inside `test:coverage`, so there is no separate `test:integration` log either. Both rows record the step conclusion only.
-- The same two CI runs concluded `test-unit` failure (step "Run pnpm test"), `test-e2e` success, `lint` success, `typecheck` success and `build` success.
+- Stack: `supabase start -x studio,postgres-meta,mailpit,postgrest,storage-api,imgproxy,edge-runtime,logflare,vector,supavisor` (db, auth, realtime, kong), Postgres on 127.0.0.1:54322. The excluded services are not used by the integration tests. The `postgres`, `gotrue` and `realtime` images came from Docker Hub tagged under their `public.ecr.aws` names, because ECR Public returned `Data limit exceeded` for anonymous pulls.
+- `test:integration` (`pnpm --filter @hearth/service test:integration`): 20 files, 426 tests, all passed in run 1 and run 2.
+- `test:coverage` (`pnpm --filter @hearth/service test:coverage`): 74 files, 1142 tests (716 unit + 426 integration), all passed in both runs; thresholds met. Statements 96.77% (3094/3197), branches 86.55% (1474/1703), functions 98.07% (867/884), lines 98.66% (2744/2781), identical in both runs.
+- No failures and no flakiness in either run. Run 1 and run 2 differ only in duration. The measurements ran at 2026-10-12 (about 23:05 to 23:30 UTC), on Monday, in the machine zone UTC.
+- CI cross-check: run 1 = `pull_request` run 38206071791, run 2 = `push` run 38254024046, both head d3da748. The `test-integration` job succeeded in both, with "Start Supabase" and the `test:coverage` step concluding `success`, consistent with the local result. The same CI runs concluded `test-unit` failure (step "Run pnpm test", the `favorites` web test above), `test-e2e` success, `lint` success, `typecheck` success and `build` success. CI job logs remain unreadable (HTTP 403 from the Actions log host).
 
 ## Notes
 
@@ -114,4 +115,4 @@ path (b): CI runs 38206071791, 38254024046
 - `test:recurrence`'s script includes `--coverage`; no threshold failed.
 - Typecheck run 1 was run during Task 1 and was not timed.
 - `main` at the time of measuring is `89eb558`, which is d3da748 plus one docs commit; its only changes outside `.planning/` and `.claude/` are to `.gitignore`, `.dockerignore` and `.prettierignore`. None of them is application code, and the measured tree is d3da748 itself, so they do not affect these results. The primary checkout was on branch `claude/trusting-lovelace-y4r87h` (two docs-only commits ahead of `main`), not on `main`.
-- The CI-log 403 means the integration counts are a gap in this baseline. A session with Docker (path a), or an owner-supplied job log, would fill them; later phases that compare integration results must treat the integration rows as pass/fail at job level only.
+- The integration counts were a gap in the first version of this baseline (CI logs unreadable, Docker daemon not started). They were filled in the same session once Docker was running and the local Supabase stack was up; see Integration.
