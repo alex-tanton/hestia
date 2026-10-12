@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
 import {
   misoSoupFixture,
@@ -13,6 +13,22 @@ import {
   SUGGESTIONS_NO_DEALS_COPY,
 } from '../../components/meals/meal-copy.ts';
 import { SuggestionsScreen } from './SuggestionsScreen.tsx';
+
+// The deals as-of date renders an instant in the viewer's zone, and the dates below were written
+// for a New York viewer. `format.ts` builds its DATE_TIME formatter when the module loads, so the
+// zone has to change before the imports run, which `vi.hoisted` guarantees. The expected text stays
+// a literal on purpose: rebuilding it from the instant in the zone the component uses would only
+// test the component against itself.
+const viewerZone = vi.hoisted(() => {
+  const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  process.env['TZ'] = 'America/New_York';
+  return previous;
+});
+
+afterAll(() => {
+  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.
+  process.env['TZ'] = viewerZone;
+});
 
 function mount(handlers: Record<string, StubHandler>): ReturnType<typeof createFetchStub> {
   const stub = createFetchStub({
