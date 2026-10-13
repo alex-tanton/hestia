@@ -14,7 +14,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - **Evidence**: Dead-code removal requires tooling or test proof; ambiguous cases are reported, not deleted
 - **Verification**: Every bug fix ships with a regression test; full suite and CI must remain green
 - **Tech stack**: Existing stack (pnpm, TypeScript, Fastify, React/Vite, Postgres/Supabase, Playwright) — no framework migrations
-- **Git**: `main` is curated and published (Phase 1, `origin/main` from d3da748), and every push to it runs CI and a deploy (only `docs/` is exempt). Work on branches or worktrees and land changes through pull requests per `CONTRIBUTING.md`; never force-push or rewrite published history without the owner's approval
+- **Git**: `main` is curated and published (`origin/main`), and every push to it runs CI and a deploy (only `docs/` is exempt). Work on branches or worktrees and land changes through pull requests per `CONTRIBUTING.md`; never force-push or rewrite published history without the owner's approval
 - **Docs**: Specs in `docs/` are the only source of truth; no review, decision-log, or ADR files are added there
 
 <!-- GSD:project-end -->
@@ -30,7 +30,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - SQL - schema, RLS policies, and functions in `supabase/migrations/*.sql` (8 migration files, applied in filename order)
 - HTML/CSS - `apps/web/index.html`, `apps/web/src/index.css` (Tailwind v4 utilities)
 - Shell - deployment and secrets scripts in `scripts/deploy.sh`, `scripts/generate-secrets.sh`, `docker/caddy-entrypoint.sh`, `docker/kong-entrypoint.sh`, and the CLI wrapper `apps/service/bin/hearth-admin`
-- Node ESM `.mjs` - build helpers `apps/web/scripts/check-build.mjs`, `apps/web/scripts/generate-icons.mjs`
+- Node ESM `.mjs` - build helpers `apps/web/scripts/check-build.mjs`, `apps/web/scripts/generate-icons.mjs`; test harness `test/clock-setup.mjs`, `test/global-tz.mjs`, and the date and time-zone sweep `scripts/test-sweep.mjs`
 
 ## Runtime
 
@@ -75,11 +75,11 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Zod 4.6.5 in `packages/shared` and `apps/web` (same validation schemas on both sides)
 - `@date-fns/tz` 1.5.0 and date-fns 4.4.0 in `packages/recurrence`
 - fastest-levenshtein 1.0.16 in `packages/matching`
-- Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web` uses jsdom)
+- Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web` uses jsdom). Every unit config (and the service coverage config) loads `test/clock-setup.mjs` as a setup file, which pins `Date`, and `test/global-tz.mjs` as `globalSetup`, which validates `TZ`; the integration config loads only `global-tz.mjs`. `pnpm test:sweep` and `pnpm test:sweep:integration` (`scripts/test-sweep.mjs`) run the suites across a fixed date and time-zone matrix; see `docs/testing.md`
 - `@vitest/coverage-v8` 5.0.1 - coverage
 - jsdom 30.1.0 - DOM environment for `apps/web`
 - @testing-library/react 16.3.3, @testing-library/dom 10.4.2, @testing-library/jest-dom 7.0.1, @testing-library/user-event 14.6.7 - component tests
-- `@playwright/test` 1.63.0 and `@axe-core/playwright` 4.13.0 - end-to-end and accessibility checks (`e2e/playwright.config.ts`)
+- `@playwright/test` 1.63.0 and `@axe-core/playwright` 4.13.0 - end-to-end and accessibility checks (`e2e/playwright.config.ts`, which pins the browser to `America/New_York` and `en-US`)
 - Supabase CLI 2.117.0 (`supabase/setup-cli@v3` in CI) - local Postgres/GoTrue/Realtime stack for integration tests
 - tsup 8.5.1 - bundles the service to `dist/main.js` (`apps/service/tsup.config.ts`); `apps/service/src/write-openapi.ts` emits the OpenAPI document during `build`
 - tsx 4.23.13 - runs TypeScript directly in `dev`, scripts, and the seed tooling
@@ -88,6 +88,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Husky 9.1.7 and lint-staged 17.5.1 - git hooks in `.husky/pre-commit` and `.husky/commit-msg`; `.lintstagedrc.json`
 - @commitlint/cli and @commitlint/config-conventional 21.2.2 - conventional-commit enforcement (`commitlint.config.js`)
 - kysely-codegen 0.20.0 - `pnpm db:types` regenerates `apps/service/src/db/types.ts`
+- knip 6.41.0 - report-only scan for unused files, exports, and dependencies; config `knip.json`, run with `pnpm knip` or `pnpm knip:production` (CI does not run it)
 - Playwright 1.63.0 - E2E runner
 
 ## Key Dependencies
@@ -171,7 +172,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Copy/string catalogs: `*-copy.ts` next to the feature, e.g. `apps/web/src/components/bills/bills-copy.ts`, `apps/web/src/components/chores/chore-copy.ts`, `apps/web/src/screens/deals/deal-copy.ts`.
 - Screens: `*Screen.tsx` under `apps/web/src/screens/<feature>/`; route wrappers `*Route.tsx` (`apps/web/src/screens/settings/SettingsRoute.tsx`, `apps/web/src/pillars/bills/BillsRoute.tsx`).
 - Route handler modules: one per resource in `apps/service/src/routes/` (`bills.ts`, `chores.ts`, `deals.ts`, `meal-plan.ts`).
-- Tests: `<name>.test.ts(x)` co-located, or `<name>.integration.test.ts` for database/route integration (see TESTING.md).
+- Tests: `<name>.test.ts(x)` co-located, or `<name>.integration.test.ts` for database/route integration (see `docs/testing.md`).
+- Test time: unit and component tests run with `Date` pinned to `2026-10-14T12:00:00.000Z` (`HEARTH_TEST_NOW` overrides it), and ESLint `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test files and test helpers. Do not set `TZ` by hand; see "Dates and time zones" in `docs/testing.md`.
 - Migrations: timestamped SQL, `supabase/migrations/YYYYMMDDHHMMSS_<name>.sql`.
 - camelCase for everything callable. Service and domain functions are verbs: `listBills`, `createHouseholdBill`, `payBill`, `archiveBill` (`apps/service/src/services/bills.ts`).
 - React components: PascalCase function declarations with an explicit return type, e.g. `export function Button({...}: ButtonProps): ReactElement` in `apps/web/src/components/ui/Button.tsx`.
@@ -194,7 +196,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - ESLint flat config at `eslint.config.js`:
 - Lint runs with `--max-warnings=0`: `pnpm lint` (CI and pre-commit).
 - TypeScript is strict (`tsconfig.base.json`): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noPropertyAccessFromIndexSignature`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`, `erasableSyntaxOnly`. Run with `pnpm typecheck`.
-- Type-escape hatches are rare: `eslint-disable` appears only twice in source (`apps/service/src/cli.test.ts:65`, `apps/web/src/components/chores/RotationEditor.tsx:132`), and `any` casts appear in only 3 non-test locations. Prefer a narrowed type or a Zod parse over `as`.
+- Type-escape hatches are rare: `eslint-disable` appears only six times in source: `apps/service/src/cli.test.ts:65` and `apps/web/src/components/chores/RotationEditor.tsx:132`, plus four `no-restricted-syntax` opt-outs for real-clock reads, each with a reason (`apps/service/src/deals/flipp/request-queue.test.ts` twice, `apps/service/src/test/zone-dates.ts`, `e2e/support/clock.ts`). Source has no explicit `any` (`strictTypeChecked` forbids it); the only double casts are two `as unknown as DealRow[]` in `apps/service/src/services/deals/storage.ts`. Prefer a narrowed type or a Zod parse over `as`.
 - ESM everywhere (`"type": "module"`). Service and packages use NodeNext resolution: relative imports end in `.js` even though the source is `.ts`, e.g. `import { ProblemError } from '../problem.js';` (`apps/service/src/services/bills.test.ts`).
 - Web uses Bundler resolution with explicit `.ts`/`.tsx` extensions: `import { useApi } from './api-context.tsx';` (`apps/web/src/lib/api/bills-hooks.ts`), enabled by `allowImportingTsExtensions`.
 - Use `import type { ... }` for type-only imports (`verbatimModuleSyntax`), inline as `import { x, type Y }` when mixed (`apps/web/src/components/ui/Button.tsx`).

@@ -67,9 +67,15 @@ controlled, not inherited from the machine.
 
 - **The clock pin.** Every unit and component test runs with `Date` pinned by
   `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
-  Wednesday). The setup file runs in every workspace's Vitest config, re-pins before each test and
-  restores after it, and skips `*.integration.test.*` files. A test overrides the instant with
+  Wednesday). Every workspace's unit Vitest config (and the service coverage config) loads the setup
+  file; the integration config does not, and the setup file skips `*.integration.test.*` files in
+  any case. It re-pins before each test and restores after it. A test overrides the instant with
   `vi.setSystemTime`.
+- **The pin does not move.** Under the pin `Date.now()` and `new Date()` stay frozen while real
+  timers run, and `performance.now()` is the real clock. A test of elapsed time, a deadline or a
+  wait loop measures with `performance.now()` or installs fake timers in the test body.
+  `vi.useRealTimers()` does not unpin `Date`: the next read is the pin again, not the machine
+  clock. Only `*.integration.test.*` files see the machine clock.
 - **Text rendered in the viewer's zone.** A test that asserts a stamp the browser formats in the
   viewer's zone (such as the deals "As of" line) keeps a literal expected string and pins that
   file's zone in a `vi.hoisted` block, restoring it in `afterAll`, as
@@ -77,9 +83,9 @@ controlled, not inherited from the machine.
 - **Integration tests** run on the real clock, because the database clock cannot be pinned. They
   take dates from `apps/service/src/test/zone-dates.ts`: `currentInstant` (the one real-clock
   read), `dateInZone`, `householdDate`, and the helpers `addDays` and `daysBetween`.
-- **The zone hook.** `test/global-tz.mjs` is a Vitest `globalSetup`. It validates `TZ` as an IANA
-  zone, fails the run on a bad value, prints one `[test-clock]` line, and does nothing when `TZ` is
-  unset.
+- **The zone hook.** `test/global-tz.mjs` is a Vitest `globalSetup`, loaded by every workspace's
+  Vitest config including the integration one. It validates `TZ` as an IANA zone, fails the run on
+  a bad value, prints one `[test-clock]` line, and does nothing when `TZ` is unset.
 - **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
   its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
@@ -108,8 +114,12 @@ controlled, not inherited from the machine.
   the shell or force `TZ=UTC` for a whole suite.
 - **The lint rule.** ESLint's `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test
   files, `e2e/`, the test helper folders and `test/**/*.mjs`; production modules are not covered.
-  Read the clock through the helper instead. A read that must stay carries
-  `// eslint-disable-next-line no-restricted-syntax -- {reason}` on the line directly above it.
+  Read the clock through a helper where one exists: `currentInstant()` from
+  `apps/service/src/test/zone-dates.ts` in service tests, and from `e2e/support/clock.ts` in E2E.
+  `apps/web`, `packages/*` and `test/` have no such helper, so pass an explicit instant to the
+  `Date` constructor there, even though the lint message names `currentInstant()` everywhere. A
+  read that must stay carries `// eslint-disable-next-line no-restricted-syntax -- {reason}` on the
+  line directly above it.
 
 ## Integration tests
 

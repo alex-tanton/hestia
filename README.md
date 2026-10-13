@@ -33,15 +33,17 @@ pnpm --filter @hearth/web dev        # PWA dev server
 pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
 ```
 
-| Command                 | Runs                                            |
-| ----------------------- | ----------------------------------------------- |
-| `pnpm lint`             | ESLint                                          |
-| `pnpm format`           | Prettier (write); `pnpm format:check` to verify |
-| `pnpm typecheck`        | `tsc --noEmit` in every workspace               |
-| `pnpm test`             | Vitest unit and component tests                 |
-| `pnpm test:integration` | Vitest against `supabase start`                 |
-| `pnpm test:e2e`         | Playwright against the Compose stack (below)    |
-| `pnpm build`            | Production builds of web and service            |
+| Command                 | Runs                                             |
+| ----------------------- | ------------------------------------------------ |
+| `pnpm lint`             | ESLint                                           |
+| `pnpm format`           | Prettier (write); `pnpm format:check` to verify  |
+| `pnpm typecheck`        | `tsc --noEmit` in every workspace                |
+| `pnpm test`             | Vitest unit and component tests                  |
+| `pnpm test:integration` | Vitest against `supabase start`                  |
+| `pnpm test:sweep`       | Unit tests across pinned dates and time zones    |
+| `pnpm test:e2e`         | Playwright against the Compose stack (below)     |
+| `pnpm build`            | Production builds of web and service             |
+| `pnpm knip`             | Report of unused files, exports and dependencies |
 
 `pnpm --filter @hearth/service test:coverage` reports the service's coverage over its unit and
 integration tests together, so it needs `supabase start` running too.
@@ -117,7 +119,7 @@ The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABL
 | `supabase db reset`     | Recreates the local database and applies every migration                  |
 | `pnpm db:types`         | Regenerates `apps/service/src/db/types.ts` from the migrated local schema |
 | `pnpm db:seed`          | Creates the Seed Data users through GoTrue, then applies the seed SQL     |
-| `pnpm test:integration` | RLS and database tests; each test rolls back its own transaction          |
+| `pnpm test:integration` | RLS, database and route tests; isolation is in `docs/testing.md`          |
 
 Run `pnpm db:types` after every new migration and commit the result. `pnpm db:seed` needs `psql`
 on the path. It creates the five seed users (password `hearth-seed-pass-2026`) and prints the
