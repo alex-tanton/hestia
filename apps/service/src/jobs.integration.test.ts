@@ -18,6 +18,7 @@ import { recomputeReadinessForHousehold } from './services/readiness.js';
 import { repriceExpiredItems } from './services/repricing.js';
 import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
 import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
+import { currentInstant } from './test/zone-dates.js';
 
 /*
  * The scheduled jobs against `supabase start`. Jobs run as `service_role`, which is one of the
@@ -80,7 +81,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  clock = new Date();
+  clock = currentInstant();
   source = new FakeDealSource();
   lines = [];
   logger = makeLogger();
@@ -785,7 +786,9 @@ describe('the scheduler', () => {
 
     // The `now` override is dispatch-notifications' own seam for the E2E push test; passing one
     // through the scheduler must not make the run itself fail, with or without rows to send.
-    await expect(scheduler.run('dispatch-notifications', { now: new Date() })).resolves.toBe(true);
+    await expect(scheduler.run('dispatch-notifications', { now: currentInstant() })).resolves.toBe(
+      true,
+    );
 
     await scheduler.stop();
   });
@@ -832,7 +835,7 @@ describe('prune-cache', () => {
     );
 
     const outcome = await withServiceRoleDb(handle.db, (db: Kysely<Database>) =>
-      pruneCache(db, new Date()),
+      pruneCache(db, currentInstant()),
     );
 
     expect(outcome.deals).toBeGreaterThanOrEqual(1);

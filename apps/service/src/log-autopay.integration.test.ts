@@ -5,6 +5,7 @@ import { runLogAutopay } from './jobs/log-autopay.js';
 import type { JobDatabase, JobLogger } from './jobs/types.js';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
 import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
+import { addDays, currentInstant, dateInZone } from './test/zone-dates.js';
 
 /*
  * `log-autopay` against `supabase start` (Technical Architecture, "Scheduled jobs"). It runs as
@@ -51,12 +52,7 @@ const HOUSEHOLD_TZ = 'America/New_York';
 
 /** Today's date (YYYY-MM-DD) in a timezone, the household's unless another is named. */
 function householdToday(zone: string = HOUSEHOLD_TZ): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: zone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
+  return dateInZone(zone, currentInstant());
 }
 
 /** A fresh household and its admin, directly as `postgres` (no HTTP layer needed for this job). */
@@ -175,11 +171,7 @@ describe('log-autopay', () => {
       const dates = await paymentDates(billId);
 
       const today = householdToday();
-      const dayOffset = (n: number): string => {
-        const d = new Date(`${today}T00:00:00Z`);
-        d.setUTCDate(d.getUTCDate() - n);
-        return d.toISOString().slice(0, 10);
-      };
+      const dayOffset = (n: number): string => addDays(today, -n);
       expect(dates).toStrictEqual([dayOffset(14), dayOffset(7), dayOffset(0)]);
       expect(dates).not.toContain(dayOffset(21));
       expect(dates).not.toContain(dayOffset(28));

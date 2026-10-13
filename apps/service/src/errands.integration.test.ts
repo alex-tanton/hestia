@@ -11,6 +11,7 @@ import {
   type SignedUpUser,
   type Stack,
 } from './test/service-stack.js';
+import { currentInstant } from './test/zone-dates.js';
 
 /*
  * Errands, against real Postgres (Technical Architecture, "API surface" › "Errands"; PRD, "Chores
@@ -195,7 +196,7 @@ describe('errands: offline done', () => {
     const home = await createHome();
     const member = await inviteMember(home);
     const errand = await createErrand(home, { name: 'Mail rent check' });
-    const doneAt = new Date(Date.now() - 60_000).toISOString();
+    const doneAt = new Date(currentInstant().getTime() - 60_000).toISOString();
 
     await markDone(home.admin, errand.id, doneAt);
     const replay = await markDone(member, errand.id, doneAt);
@@ -207,7 +208,7 @@ describe('errands: offline done', () => {
   it('stores the moment the member acted, not the moment the request landed', async () => {
     const home = await createHome();
     const errand = await createErrand(home, { name: 'Return Amazon package' });
-    const doneAt = new Date(Date.now() - 2 * 60 * 60_000).toISOString();
+    const doneAt = new Date(currentInstant().getTime() - 2 * 60 * 60_000).toISOString();
 
     const done = await markDone(home.admin, errand.id, doneAt);
 
@@ -217,13 +218,13 @@ describe('errands: offline done', () => {
   it('clamps a done time in the future to now', async () => {
     const home = await createHome();
     const errand = await createErrand(home, { name: 'Renew car registration' });
-    const doneAt = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+    const doneAt = new Date(currentInstant().getTime() + 24 * 60 * 60_000).toISOString();
 
     const done = await markDone(home.admin, errand.id, doneAt);
 
     const completedAt = done.completedAt;
     if (completedAt === null) throw new Error('expected a completion time');
-    expect(Date.parse(completedAt)).toBeLessThanOrEqual(Date.now());
+    expect(Date.parse(completedAt)).toBeLessThanOrEqual(currentInstant().getTime());
   });
 });
 
