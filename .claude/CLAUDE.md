@@ -224,7 +224,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 ## Logging
 
 - Log via `request.log.error(...)` in the global error handler (`apps/service/src/app.ts`, around lines 113 to 120). Do not log raw request bodies or secrets.
-- `console.*` appears only in tooling scripts and the test harness (`apps/web/scripts/check-build.mjs`, `apps/service/scripts/normalize-fixtures.ts`, `packages/matching/scripts/fuzzy-benchmark.ts`, `supabase/seed/seed-users.ts`, `scripts/test-sweep.mjs`, `test/global-tz.mjs`), never under a `src/` directory of shipped code. Do not add `console.*` to shipped code.
+- `console.log` appears only in `packages/matching/scripts/fuzzy-benchmark.ts`, a throwaway benchmark. Do not add `console.*` to shipped code.
 - The in-memory test app in `apps/service/src/test/fake-app.ts` is built with `logger: false`, so tests stay quiet.
 
 ## Comments

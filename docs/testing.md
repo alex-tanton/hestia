@@ -69,18 +69,8 @@ controlled, not inherited from the machine.
   `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
   Wednesday). Every workspace's unit Vitest config (and the service coverage config) loads the setup
   file; the integration config does not, and the setup file skips `*.integration.test.*` files in
-  any case. It re-pins `Date` before each test, and after each test calls `vi.useRealTimers()` and
-  re-pins.
-- **Giving `HEARTH_TEST_NOW`.** Use an ISO-8601 instant ending in `Z` or an explicit offset, such as
-  `2026-10-17T02:30:00.000Z`. A date-only value means midnight UTC. A date-time with no offset is
-  read in the machine's `TZ`, so it names a different instant in each zone. A value `Date.parse`
-  rejects throws from the setup file in every test file; `test/global-tz.mjs` only echoes it and
-  does not check it.
-- **Overriding the instant.** A test sets its own with `vi.setSystemTime` or
-  `vi.useFakeTimers()` in `beforeEach` or in the test body. Called at module scope or in
-  `beforeAll`, the override does not last: the per-test re-pin and the `afterEach`
-  `vi.useRealTimers()` discard it without an error, so the test reads the pinned instant instead,
-  and fake timers installed there are gone after the first test.
+  any case. It re-pins before each test and restores after it. A test overrides the instant with
+  `vi.setSystemTime`.
 - **The pin does not move.** Under the pin `Date.now()` and `new Date()` stay frozen while real
   timers run, and `performance.now()` is the real clock. A test of elapsed time, a deadline or a
   wait loop measures with `performance.now()` or installs fake timers in the test body.
@@ -94,12 +84,8 @@ controlled, not inherited from the machine.
   take dates from `apps/service/src/test/zone-dates.ts`: `currentInstant` (the one real-clock
   read), `dateInZone`, `householdDate`, and the helpers `addDays` and `daysBetween`.
 - **The zone hook.** `test/global-tz.mjs` is a Vitest `globalSetup`, loaded by every workspace's
-  Vitest config including the integration one. It does nothing when `TZ` is unset. Otherwise it
-  accepts a name that `Intl` knows as an IANA zone or alias and that Node, as the process default,
-  resolves to the same zone (`America/New_York`, `Asia/Tokyo`, `UTC`, `Etc/UTC`), prints one
-  `[test-clock]` line, and fails the run on anything else. It rejects unknown names, a different
-  case (`america/new_york`), POSIX forms (`:America/New_York`, `UTC+3`), and `GMT`, which `Intl`
-  reports as `UTC` but the process resolves to the offset `+00:00`; write `UTC` instead.
+  Vitest config including the integration one. It validates `TZ` as an IANA zone, fails the run on
+  a bad value, prints one `[test-clock]` line, and does nothing when `TZ` is unset.
 - **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
   its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
