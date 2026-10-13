@@ -102,7 +102,15 @@ export default tseslint.config(
   {
     // Tests read time from the pinned clock (test/clock-setup.mjs). A real-clock read goes through
     // a currentInstant helper or carries a next-line opt-out with a reason (docs/testing.md).
-    files: ['e2e/**/*.ts'],
+    files: [
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.ts',
+      'e2e/**/*.ts',
+      'apps/service/src/test/**/*.ts',
+      'apps/web/src/test/**/*.{ts,tsx}',
+      'apps/web/src/test-setup.ts',
+      'test/**/*.mjs',
+    ],
     rules: {
       'no-restricted-syntax': [
         'error',

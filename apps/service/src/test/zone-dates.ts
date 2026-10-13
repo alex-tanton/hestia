@@ -12,6 +12,7 @@ const DAY_MS = 86_400_000;
  * are compared against cannot be pinned; unit tests get the shared pin from `test/clock-setup.mjs`.
  */
 export function currentInstant(): Date {
+  // eslint-disable-next-line no-restricted-syntax -- the one clock read: real in integration tests, pinned in unit tests
   return new Date();
 }
 
