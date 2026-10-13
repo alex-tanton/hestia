@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { expectDashboard, signIn } from '../support/app.ts';
 import { expectAccessible, settleAnimations } from '../support/axe.ts';
+import { addDays, currentInstant, dateInZone } from '../support/clock.ts';
 import { REPO_ROOT, SEED } from '../support/env.ts';
 
 /**
@@ -150,7 +151,10 @@ for (const theme of ['light', 'dark'] as const) {
         await page.getByRole('button', { name: 'Add an errand' }).click();
         const sheet = page.getByRole('dialog', { name: 'Add an errand' });
         await sheet.getByLabel('Name').fill('Mail the warranty card');
-        await sheet.getByLabel('Due date').fill('2026-12-01');
+        // A month out in the household's zone: a fixed calendar date would fall behind the suite's
+        // "today" and turn the new errand into an overdue one once that day has passed.
+        const due = addDays(dateInZone('America/New_York', currentInstant()), 30);
+        await sheet.getByLabel('Due date').fill(due);
         await sheet.getByRole('button', { name: 'Save errand' }).click();
         await expect(page.getByRole('button', { name: /^Mail the warranty card/ })).toBeVisible();
 

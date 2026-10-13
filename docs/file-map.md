@@ -15,7 +15,8 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `supabase/` | Configuration, database migrations, and seed data for the self-hosted Supabase stack. |
 | `docker/` | Everything needed to build and run the production stack with Docker Compose. |
 | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
-| `scripts/` | Small operational scripts for deployment and secret generation. |
+| `scripts/` | Small operational scripts for deployment and secret generation, plus the test date and time-zone sweep. |
+| `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests. |
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
 | `.github/` | Continuous integration and deployment automation (GitHub Actions), plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |

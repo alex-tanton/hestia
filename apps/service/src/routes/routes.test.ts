@@ -6,6 +6,7 @@ import { GoTrueError } from '../gotrue/http.js';
 import type { ErrorRecord } from '../services/errors.js';
 import { errorFingerprint } from '../services/errors.js';
 import { bearer, makeTestApp, signToken, TEST_OWNER_EMAIL, userClaims } from '../test/fake-app.js';
+import { currentInstant } from '../test/zone-dates.js';
 
 const apps: FastifyInstance[] = [];
 const ID = '3f2b8c1e-9a4d-4e6f-8b1a-2c3d4e5f6a7b';
@@ -229,7 +230,7 @@ describe('POST /api/users/me/password', () => {
   it('skips re-verification in a session that began from a reset link', async () => {
     const client = gotrue();
     const instance = await app({ gotrue: client });
-    const now = Math.floor(Date.now() / 1000);
+    const now = Math.floor(currentInstant().getTime() / 1000);
     const response = await instance.inject({
       method: 'POST',
       url,

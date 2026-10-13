@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createFetchStub,
   problemBody,
@@ -17,6 +17,22 @@ import {
 } from '../../test/deal-fixtures.ts';
 import { HouseholdSettingsSection } from '../settings/HouseholdSettingsSection.tsx';
 import { FAVORITES_OFFLINE_MESSAGE, FavoriteStores } from './FavoriteStores.tsx';
+
+// The "As of" stamp renders an instant in the viewer's zone, and the literal below was written for
+// a New York viewer. `format.ts` builds its DATE_TIME formatter when the module loads, so the zone
+// has to change before the imports run, which `vi.hoisted` guarantees. The expected text stays a
+// literal on purpose: rebuilding it from the instant in the zone the component uses would only
+// test the component against itself.
+const viewerZone = vi.hoisted(() => {
+  const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  process.env['TZ'] = 'America/New_York';
+  return previous;
+});
+
+afterAll(() => {
+  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.
+  process.env['TZ'] = viewerZone;
+});
 
 function stub(handlers: Readonly<Record<string, StubHandler>>): FetchStub {
   const created = createFetchStub({

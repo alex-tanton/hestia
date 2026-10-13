@@ -6,7 +6,7 @@ Four layers, each catching a different class of bug:
 
 | Layer | Tool | Runs where | Catches |
 | --- | --- | --- | --- |
-| Unit | Vitest (one file, `node --test`, in `e2e/support`) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
+| Unit | Vitest (two files, `node --test`, in `e2e/support`) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
 | Integration | Vitest against a real Postgres | `supabase start`'s local Postgres/GoTrue | Bugs in SQL, RLS policies, transactions, and the service's route layer |
 | Component (frontend) | Vitest + Testing Library | jsdom (a simulated browser DOM, no real browser) | Bugs in how a React component renders and reacts to state |
 | End-to-end | Playwright | A real Chromium browser against the full Docker Compose stack | Bugs that only show up with real HTTP, real Caddy routing, and a real browser |
@@ -23,9 +23,10 @@ page, tests substitute a fixture or a test double instead.
 - `apps/service/src/deals/money.test.ts` next to `money.ts`
 - `apps/web/src/lib/money.test.ts` next to `money.ts`
 
-The one exception is `e2e/support/run-identity.test.ts`, which tests the pure run-naming logic in
-`run-identity.ts` (Compose project/network/image-tag derivation) with Node's built-in test runner
-(`node --test`) instead of Vitest, so it needs no dependencies and no Docker to run.
+The two exceptions are `e2e/support/run-identity.test.ts`, which tests the pure run-naming logic in
+`run-identity.ts` (Compose project/network/image-tag derivation), and `e2e/support/clock.test.ts`,
+which tests the household-clock helpers in `clock.ts`. Both use Node's built-in test runner
+(`node --test`) instead of Vitest, so they need no dependencies and no Docker to run.
 
 **What they're for:** pure logic with no I/O — no database, no HTTP, no filesystem. This is where
 correctness actually lives for three areas that get deliberately exhaustive, table-driven coverage:
@@ -39,7 +40,7 @@ memory with `apps/service/src/test/fake-app.ts`, which wires fake dependencies (
 `DummyDriver`, no real database, no GoTrue) and drives it with Fastify's `inject()`. These still
 count as unit tests: nothing touches a socket or a real database.
 
-**Runner:** Vitest everywhere except the one `node --test` file above.
+**Runner:** Vitest everywhere except the two `node --test` files above.
 
 **How to run them:**
 
@@ -56,8 +57,59 @@ file looks like `packages/recurrence/src/occurrence.test.ts` or
 table-driven cases) from `vitest`, import the function under test by its relative path, and group
 assertions under `describe` blocks named after the function. Favor `it.each` tables over one `it`
 per case when checking many inputs against the same rule, the way `money.test.ts` and
-`occurrence.test.ts` do. No test setup or teardown is normally needed; if the module touches
-`Date.now()` or similar, fix the instant explicitly in the test rather than letting it vary.
+`occurrence.test.ts` do. No test setup or teardown is normally needed. The clock is already pinned
+(see Dates and time zones below); a test that needs a different instant sets it explicitly.
+
+### Dates and time zones
+
+Tests must pass on any weekday and in any household time zone, so the clock and the zone are
+controlled, not inherited from the machine.
+
+- **The clock pin.** Every unit and component test runs with `Date` pinned by
+  `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
+  Wednesday). The setup file runs in every workspace's Vitest config, re-pins before each test and
+  restores after it, and skips `*.integration.test.*` files. A test overrides the instant with
+  `vi.setSystemTime`.
+- **Text rendered in the viewer's zone.** A test that asserts a stamp the browser formats in the
+  viewer's zone (such as the deals "As of" line) keeps a literal expected string and pins that
+  file's zone in a `vi.hoisted` block, restoring it in `afterAll`, as
+  `apps/web/src/screens/deals/favorites.test.tsx` does with `America/New_York`.
+- **Integration tests** run on the real clock, because the database clock cannot be pinned. They
+  take dates from `apps/service/src/test/zone-dates.ts`: `currentInstant` (the one real-clock
+  read), `dateInZone`, `householdDate`, and the helpers `addDays` and `daysBetween`.
+- **The zone hook.** `test/global-tz.mjs` is a Vitest `globalSetup`. It validates `TZ` as an IANA
+  zone, fails the run on a bad value, prints one `[test-clock]` line, and does nothing when `TZ` is
+  unset.
+- **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
+  its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
+  service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
+  takes `--workspace`, `--cell`, `--only`, `--log-dir` and `--list`, and prints
+  `sweep: {passed}/{total} passed`.
+
+  | Unit cell | Instant (UTC) | `TZ` | What it covers |
+  | --- | --- | --- | --- |
+  | `default` | pinned default | unset | The plain run CI makes |
+  | `wed-tokyo` | 2026-10-14 12:00 | `Asia/Tokyo` | A weekday in a UTC-positive zone |
+  | `sat-utc-fri-la` | 2026-10-17 02:30 | `America/Los_Angeles` | Saturday in UTC, still Friday in a UTC-negative zone |
+  | `sun-utc-mon-kiritimati` | 2026-10-18 22:30 | `Pacific/Kiritimati` | Sunday in UTC, already Monday at UTC+14 |
+  | `newyear-pago-pago` | 2027-01-01 00:30 | `Pacific/Pago_Pago` | A year boundary, still the old year at UTC-11 |
+  | `dst-start-new-york` | 2026-03-08 07:30 | `America/New_York` | The spring-forward day |
+
+  | Integration cell | `TZ` | What it covers |
+  | --- | --- | --- |
+  | `default` | unset | The plain run CI makes |
+  | `la` | `America/Los_Angeles` | A UTC-negative machine zone |
+  | `kiritimati` | `Pacific/Kiritimati` | The furthest UTC-positive zone (UTC+14) |
+  | `pago-pago` | `Pacific/Pago_Pago` | The furthest UTC-negative zone (UTC-11) |
+  | `tokyo` | `Asia/Tokyo` | A mid UTC-positive zone |
+
+- **Setting `TZ`.** Set it only through the sweep, or through an `env` object passed to a spawned
+  process. The hook then validates it, and the sweep checks that it took effect. Never export it in
+  the shell or force `TZ=UTC` for a whole suite.
+- **The lint rule.** ESLint's `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test
+  files, `e2e/`, the test helper folders and `test/**/*.mjs`; production modules are not covered.
+  Read the clock through the helper instead. A read that must stay carries
+  `// eslint-disable-next-line no-restricted-syntax -- {reason}` on the line directly above it.
 
 ## Integration tests
 
@@ -186,6 +238,13 @@ and would otherwise catch a mid-transition color) and then runs `@axe-core/playw
 WCAG 2.1 A/AA tags, failing the test on any violation. States no ordinary journey passes through
 (first-run screens, offline states, confirmation dialogs, notification states) are covered instead
 by `e2e/tests/17-accessibility-states.spec.ts`, which runs the same theme loop.
+
+**Clock and browser zone:** E2E stays on the real clock, since no seam pins the stack's. A spec
+that needs a date derives it at run time through `e2e/support/clock.ts` (`currentInstant`,
+`dateInZone`, `hourInZone`, `addDays`) in the household's zone, or reads the seeded value from the
+database, and never assumes a weekday. `e2e/playwright.config.ts` runs the browser in
+`America/New_York` with locale `en-US`, so rendered times do not depend on the runner's zone (CI
+runs in UTC). The seed households run on New York time, so calendar dates already follow them.
 
 **Seed data:** every run seeds the same local-dev fixtures described in Seed data below, then layers
 `e2e/fixtures/e2e-seed.sql` on top — Casey's personal "Car Insurance" bill (survives Empty House's

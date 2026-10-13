@@ -9,6 +9,7 @@ import {
 } from '../support/app.ts';
 import { accessToken } from '../support/api.ts';
 import { expectAccessible } from '../support/axe.ts';
+import { addDays, currentInstant, dateInZone, hourInZone } from '../support/clock.ts';
 import { query, queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
 import { parsePushBody, recordedDeliveries, runDispatchAt } from '../support/push.ts';
@@ -85,32 +86,6 @@ function subscriptionRows(endpoint: string): string {
 
 const NEW_YORK = 'America/New_York';
 
-/** The calendar date `at` falls on in Oak Street's zone, in the form Seed Data dates meals by. */
-function newYorkDate(at: Date): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: NEW_YORK,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(at);
-}
-
-function newYorkHour(at: Date): number {
-  return Number(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: NEW_YORK,
-      hour: 'numeric',
-      hourCycle: 'h23',
-    }).format(at),
-  );
-}
-
-function addDays(date: string, days: number): string {
-  const day = new Date(`${date}T12:00:00Z`);
-  day.setUTCDate(day.getUTCDate() + days);
-  return day.toISOString().slice(0, 10);
-}
-
 /**
  * The day whose 08:00 reminder the dispatch run sends now, and the clock to run it at. The job deletes
  * an unsent row once its send time is more than 24 hours behind the database clock, so the day is
@@ -118,8 +93,8 @@ function addDays(date: string, days: number): string {
  * reminders of its clock's date, so yesterday is run at a time inside that date.
  */
 function reminderDay(now: Date): { date: string; clock: Date } {
-  const today = newYorkDate(now);
-  if (newYorkHour(now) >= 8) return { date: today, clock: now };
+  const today = dateInZone(NEW_YORK, now);
+  if (hourInZone(NEW_YORK, now) >= 8) return { date: today, clock: now };
   const yesterday = addDays(today, -1);
   return { date: yesterday, clock: new Date(`${yesterday}T17:00:00Z`) };
 }
@@ -197,7 +172,7 @@ test.describe('notifications — meal reminder with the push double (light)', ()
     // The dispatch job runs at the chosen instant for the reminder day, and the reminder is written
     // and sent in that run.
     const oakStreet = oakStreetId();
-    const { date, clock } = reminderDay(new Date());
+    const { date, clock } = reminderDay(currentInstant());
     await ensureDinnerOn(request, token, oakStreet, date);
     const dish = firstMealOn(oakStreet, date);
     expect(await runDispatchAt(request, clock)).toBe(true);

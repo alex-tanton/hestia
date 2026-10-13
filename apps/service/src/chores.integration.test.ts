@@ -12,6 +12,7 @@ import {
   type SignedUpUser,
   type Stack,
 } from './test/service-stack.js';
+import { currentInstant } from './test/zone-dates.js';
 
 /*
  * Chores, completions, rotation, and undo, against real Postgres (Technical Architecture, "API
@@ -387,7 +388,7 @@ describe('chores: offline completion', () => {
     const body = {
       id: randomUUID(),
       occurrenceDate: before.dueDate,
-      doneAt: new Date(Date.now() - 60_000).toISOString(),
+      doneAt: new Date(currentInstant().getTime() - 60_000).toISOString(),
     };
 
     const first = await complete(alex, choreId, body);
@@ -402,7 +403,7 @@ describe('chores: offline completion', () => {
   it('stores the moment the member acted, not the moment the request landed', async () => {
     const home = await createHome(1);
     const { alex, choreId } = await queuedChore(home);
-    const doneAt = new Date(Date.now() - 2 * 60 * 60_000).toISOString();
+    const doneAt = new Date(currentInstant().getTime() - 2 * 60 * 60_000).toISOString();
 
     const detail = await complete(alex, choreId, { id: randomUUID(), doneAt });
 
@@ -412,13 +413,13 @@ describe('chores: offline completion', () => {
   it('clamps an action time in the future to now', async () => {
     const home = await createHome(1);
     const { alex, choreId } = await queuedChore(home);
-    const doneAt = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+    const doneAt = new Date(currentInstant().getTime() + 24 * 60 * 60_000).toISOString();
 
     const detail = await complete(alex, choreId, { id: randomUUID(), doneAt });
 
     const completedAt = detail.completions[0]?.completedAt;
     if (completedAt === undefined) throw new Error('expected a completion');
-    expect(Date.parse(completedAt)).toBeLessThanOrEqual(Date.now());
+    expect(Date.parse(completedAt)).toBeLessThanOrEqual(currentInstant().getTime());
   });
 });
 

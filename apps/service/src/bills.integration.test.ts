@@ -19,6 +19,7 @@ import {
   type SignedUpUser,
   type Stack,
 } from './test/service-stack.js';
+import { currentInstant, dateInZone, daysBetween, householdDate } from './test/zone-dates.js';
 
 /*
  * Bills, the payment log, skip, archive, confirm-usage, and the subscriptions view, against
@@ -30,6 +31,7 @@ import {
  *
  * Dates use generous offsets (well clear of "today") rather than exact boundaries, since none of
  * these tests are about timezone-edge precision — that is meal-plan.integration.test.ts's job.
+ * "Today" is the default household's today (`homeDate`), not the UTC calendar's.
  */
 
 let stack: Stack;
@@ -51,10 +53,13 @@ function expectStatus(response: LightMyRequestResponse, status: number): void {
   expect(response.statusCode, response.body).toBe(status);
 }
 
-function isoDate(offsetDays: number): string {
-  const date = new Date();
-  date.setUTCDate(date.getUTCDate() + offsetDays);
-  return date.toISOString().slice(0, 10);
+// The zone of the households these tests create: `household()` and `signUp()` in
+// test/service-stack.ts default to it, and the service dates a bill by its household's zone.
+const HOME_ZONE = 'America/New_York';
+
+/** The default household's calendar date, `offsetDays` from its today (not the UTC calendar's). */
+function homeDate(offsetDays: number): string {
+  return householdDate(HOME_ZONE, offsetDays);
 }
 
 type Home = HouseholdFixture;
@@ -75,7 +80,7 @@ function billBody(overrides: BillFields = {}): Record<string, unknown> {
   return {
     name: 'Test Bill',
     amountCents: 15000,
-    anchorDate: isoDate(-10),
+    anchorDate: homeDate(-10),
     recurrenceUnit: 'month',
     interval: 1,
     ...overrides,
@@ -118,8 +123,8 @@ describe('creating and listing bills', () => {
 
   it('sorts by soonest current occurrence first', async () => {
     const home = await household(app);
-    const later = await createHouseholdBill(home, { name: 'Later', anchorDate: isoDate(20) });
-    const soon = await createHouseholdBill(home, { name: 'Soon', anchorDate: isoDate(3) });
+    const later = await createHouseholdBill(home, { name: 'Later', anchorDate: homeDate(20) });
+    const soon = await createHouseholdBill(home, { name: 'Soon', anchorDate: homeDate(3) });
 
     const response = await as(app, home.user, 'GET', `/api/households/${home.household.id}/bills`);
     const bills = response.json<Bill[]>();
@@ -130,15 +135,15 @@ describe('creating and listing bills', () => {
 
   it('a bill anchored in the past with nothing paid is current and overdue', async () => {
     const home = await household(app);
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
-    expect(bill.currentOccurrenceDate).toBe(isoDate(-10));
+    const bill = await createHouseholdBill(home, { anchorDate: homeDate(-10) });
+    expect(bill.currentOccurrenceDate).toBe(homeDate(-10));
     expect(bill.isOverdue).toBe(true);
   });
 
   it('a bill anchored in the future is not overdue', async () => {
     const home = await household(app);
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(15) });
-    expect(bill.currentOccurrenceDate).toBe(isoDate(15));
+    const bill = await createHouseholdBill(home, { anchorDate: homeDate(15) });
+    expect(bill.currentOccurrenceDate).toBe(homeDate(15));
     expect(bill.isOverdue).toBe(false);
   });
 });
@@ -169,7 +174,7 @@ describe('updating a bill', () => {
     const original = await createHouseholdBill(home, {
       name: 'Original Name',
       amountCents: 23456,
-      anchorDate: isoDate(-12),
+      anchorDate: homeDate(-12),
       category: 'Utilities',
       recurrenceUnit: 'week',
       interval: 3,
@@ -206,7 +211,7 @@ describe('updating a bill', () => {
     const original = await createHouseholdBill(home, {
       name: 'Static Name',
       amountCents: 9999,
-      anchorDate: isoDate(-5),
+      anchorDate: homeDate(-5),
       category: 'Insurance',
       recurrenceUnit: 'month',
       interval: 2,
@@ -239,12 +244,12 @@ describe('updating a bill', () => {
 describe('pay and skip', () => {
   it('pay writes the log row for the current occurrence and advances it, anchored not shifted', async () => {
     const home = await household(app);
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
+    const bill = await createHouseholdBill(home, { anchorDate: homeDate(-10) });
 
     const response = await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
     expectStatus(response, 201);
     const payment = response.json<BillPayment>();
-    expect(payment.occurrenceDate).toBe(isoDate(-10));
+    expect(payment.occurrenceDate).toBe(homeDate(-10));
     expect(payment.amountPaidCents).toBe(15000);
     expect(payment.isAuto).toBe(false);
     expect(payment.recordedBy).toBe(home.user.id);
@@ -253,38 +258,41 @@ describe('pay and skip', () => {
     const body = detail.json<BillDetail>();
     // Anchored on the 1st-of-type rule: the next occurrence is one month after the anchor, not
     // one month after whenever the payment happened to be recorded.
-    expect(body.currentOccurrenceDate).not.toBe(isoDate(-10));
+    expect(body.currentOccurrenceDate).not.toBe(homeDate(-10));
     expect(body.isOverdue).toBe(false);
     expect(body.payments.map((p) => p.id)).toContain(payment.id);
   });
 
   it('a payment may be recorded before the due date', async () => {
     const home = await household(app);
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(5) });
+    const bill = await createHouseholdBill(home, { anchorDate: homeDate(5) });
     const response = await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
     expectStatus(response, 201);
-    expect(response.json<BillPayment>().occurrenceDate).toBe(isoDate(5));
+    expect(response.json<BillPayment>().occurrenceDate).toBe(homeDate(5));
   });
 
   it('skip records that the occurrence will not be paid, and advances the current occurrence', async () => {
     const home = await household(app);
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
+    const bill = await createHouseholdBill(home, { anchorDate: homeDate(-10) });
 
     const response = await as(app, home.user, 'POST', `/api/bills/${bill.id}/skip`, {});
     expectStatus(response, 201);
     const payment = response.json<BillPayment>();
     expect(payment.isSkipped).toBe(true);
-    expect(payment.occurrenceDate).toBe(isoDate(-10));
+    expect(payment.occurrenceDate).toBe(homeDate(-10));
     expect(payment.amountPaidCents).toBeNull();
 
     const detail = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
-    expect(detail.json<BillDetail>().currentOccurrenceDate).not.toBe(isoDate(-10));
+    expect(detail.json<BillDetail>().currentOccurrenceDate).not.toBe(homeDate(-10));
   });
 
   it('a second pay attempt on an already-resolved occurrence rejects rather than double-logging', async () => {
     const home = await household(app);
     // A one-time bill: paying its only occurrence twice must not silently succeed twice.
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(-1), recurrenceUnit: null });
+    const bill = await createHouseholdBill(home, {
+      anchorDate: homeDate(-1),
+      recurrenceUnit: null,
+    });
     expectStatus(await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {}), 201);
     const again = await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
     // The bill has no further occurrence, so the server resolves the same current occurrence
@@ -296,7 +304,7 @@ describe('pay and skip', () => {
 describe('editing and deleting a payment', () => {
   it('PATCH corrects a recorded payment; DELETE reopens its occurrence', async () => {
     const home = await household(app);
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(-10) });
+    const bill = await createHouseholdBill(home, { anchorDate: homeDate(-10) });
     const pay = await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {});
     const payment = pay.json<BillPayment>();
 
@@ -318,7 +326,7 @@ describe('editing and deleting a payment', () => {
     const body = detail.json<BillDetail>();
     expect(body.payments).toHaveLength(0);
     // Reopened: the occurrence that was just paid is current and overdue again.
-    expect(body.currentOccurrenceDate).toBe(isoDate(-10));
+    expect(body.currentOccurrenceDate).toBe(homeDate(-10));
     expect(body.isOverdue).toBe(true);
   });
 });
@@ -541,6 +549,63 @@ describe('RLS isolation: a stranger gets 404, never 403', () => {
 });
 
 /*
+ * Regression guard (TIME-05): a bill's date is a date in its household's zone, never the UTC date.
+ * The guard needs no clock pin. Pacific/Kiritimati (UTC+14) has a different calendar date from UTC
+ * from 10:00Z onward, and Pacific/Pago_Pago (UTC-11) has a different one before 11:00Z, so at every
+ * instant at least one of the two households straddles the UTC date. A helper that counts days on
+ * the UTC calendar therefore anchors the "today" bill on the wrong day for one of them at any hour
+ * of any day, and a zone-correct helper passes for both.
+ */
+describe.each(['Pacific/Kiritimati', 'Pacific/Pago_Pago'])(
+  'one-off bills are dated by the household calendar in %s',
+  (zone) => {
+    async function homeIn(): Promise<Home> {
+      const user = await signUp(app, 'Alex');
+      const response = await as(app, user, 'POST', '/api/households', {
+        name: uniqueName('Household'),
+        postalCode: uniquePostalCode(),
+        timezone: zone,
+      });
+      expectStatus(response, 201);
+      return { user, household: response.json<Household>() };
+    }
+
+    async function listedBill(home: Home, id: string): Promise<Bill> {
+      const response = await as(
+        app,
+        home.user,
+        'GET',
+        `/api/households/${home.household.id}/bills`,
+      );
+      expectStatus(response, 200);
+      const found = response.json<Bill[]>().find((bill) => bill.id === id);
+      if (found === undefined) throw new Error('the bill is listed for its household');
+      return found;
+    }
+
+    it('a bill anchored at the household’s today is not overdue', async () => {
+      const home = await homeIn();
+      const today = householdDate(zone, 0);
+      const bill = await createHouseholdBill(home, { anchorDate: today, recurrenceUnit: null });
+
+      const listed = await listedBill(home, bill.id);
+      expect(listed.currentOccurrenceDate).toBe(today);
+      expect(listed.isOverdue).toBe(false);
+    });
+
+    it('a bill anchored at the household’s yesterday is overdue', async () => {
+      const home = await homeIn();
+      const yesterday = householdDate(zone, -1);
+      const bill = await createHouseholdBill(home, { anchorDate: yesterday, recurrenceUnit: null });
+
+      const listed = await listedBill(home, bill.id);
+      expect(listed.currentOccurrenceDate).toBe(yesterday);
+      expect(listed.isOverdue).toBe(true);
+    });
+  },
+);
+
+/*
  * Every date is read in the household timezone (non-negotiable 8). The household here is Kiritimati
  * (UTC+14) and the owner's profile is Pago Pago (UTC-11), so their calendar dates are always a day
  * or more apart: a service that dated by the profile would classify these bills differently.
@@ -550,36 +615,19 @@ describe('dates follow the household timezone, not the profile zone', () => {
   const PROFILE_ZONE = 'Pacific/Pago_Pago';
   const DAY_MS = 86_400_000;
 
-  /** The calendar date (YYYY-MM-DD) an instant falls on in a timezone. */
-  function dateIn(zone: string, instant: Date): string {
-    return new Intl.DateTimeFormat('en-CA', {
-      timeZone: zone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(instant);
-  }
-
-  /** Whole days from one calendar date to another. */
-  function daysBetween(later: string, earlier: string): number {
-    return Math.round(
-      (Date.parse(`${later}T00:00:00Z`) - Date.parse(`${earlier}T00:00:00Z`)) / DAY_MS,
-    );
-  }
-
   /**
    * An instant whose age in days is `ageDays` by the household's calendar but not by the profile's,
    * so the two zones would disagree about it. Found by stepping an hour at a time around the target.
    */
   function instantAged(ageDays: number): Date {
-    const now = new Date();
-    const householdToday = dateIn(HOUSEHOLD_ZONE, now);
-    const profileToday = dateIn(PROFILE_ZONE, now);
+    const now = currentInstant();
+    const householdToday = dateInZone(HOUSEHOLD_ZONE, now);
+    const profileToday = dateInZone(PROFILE_ZONE, now);
     for (let hour = -96; hour <= 96; hour += 1) {
       const instant = new Date(now.getTime() - ageDays * DAY_MS + hour * 3_600_000);
       if (
-        daysBetween(householdToday, dateIn(HOUSEHOLD_ZONE, instant)) === ageDays &&
-        daysBetween(profileToday, dateIn(PROFILE_ZONE, instant)) !== ageDays
+        daysBetween(householdToday, dateInZone(HOUSEHOLD_ZONE, instant)) === ageDays &&
+        daysBetween(profileToday, dateInZone(PROFILE_ZONE, instant)) !== ageDays
       ) {
         return instant;
       }
@@ -589,14 +637,12 @@ describe('dates follow the household timezone, not the profile zone', () => {
 
   /** The household's yesterday, by its own calendar. */
   function householdYesterday(): string {
-    const today = dateIn(HOUSEHOLD_ZONE, new Date());
-    return new Date(Date.parse(`${today}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+    return householdDate(HOUSEHOLD_ZONE, -1);
   }
 
   /** The profile zone's yesterday: the date a service dating by the profile would call yesterday. */
   function profileYesterday(): string {
-    const today = dateIn(PROFILE_ZONE, new Date());
-    return new Date(Date.parse(`${today}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+    return householdDate(PROFILE_ZONE, -1);
   }
 
   async function farAwayHome(): Promise<Home> {
@@ -730,7 +776,7 @@ describe('moving a bill between its household and its owner', () => {
 
   it('the owner moves a household bill to personal and back, keeping its anchor and history', async () => {
     const home = await household(app);
-    const bill = await createHouseholdBill(home, { anchorDate: isoDate(-40) });
+    const bill = await createHouseholdBill(home, { anchorDate: homeDate(-40) });
     expectStatus(await as(app, home.user, 'POST', `/api/bills/${bill.id}/pay`, {}), 201);
     const before = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
     expectStatus(before, 200);

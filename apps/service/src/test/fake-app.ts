@@ -12,6 +12,7 @@ import { createTokenVerifier } from '../auth/jwt.js';
 import type { Database } from '../db.js';
 import { createDealsService } from '../services/deals/deals.js';
 import { fixtureDealSource } from './fixture-deal-source.js';
+import { currentInstant } from './zone-dates.js';
 
 /** Helpers for unit tests that drive the app with inject() and no database or GoTrue. */
 
@@ -35,7 +36,7 @@ export function signToken(
 }
 
 export function userClaims(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(currentInstant().getTime() / 1000);
   return {
     sub: randomUUID(),
     email: 'member@example.com',
