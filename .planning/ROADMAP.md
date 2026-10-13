@@ -64,7 +64,7 @@ Plans:
   4. Writing a bare `new Date()` or `Date.now()` in a test file or under `e2e/` fails lint.
   5. knip runs with explicit entry points (`sw.ts`, seed, e2e global setup, package exports), planted canaries behave as expected (known-dead is reported, known-live is not), findings are triaged into proven-dead, config-gap, test-only, and uncertain, and a jscpd duplication scan is recorded.
 
-**Plans:** 8/9 plans executed
+**Plans:** 9/9 plans executed
 
 Plans:
 **Wave 1**
@@ -90,7 +90,7 @@ Plans:
 - [x] 02-07-PLAN.md — knip on the combined Phase 2 tree, full triage ledger and owner candidates, jscpd baseline (source-only per D-12 plus a test-inclusive scan at the same thresholds)
 
 **Wave 8** *(blocked on Wave 7 completion)*
-- [ ] 02-08-PLAN.md — Restack knip onto the clock branch, pre-publication proof, owner gate, clock PR into main and knip PR stacked on it, both green
+- [x] 02-08-PLAN.md — Restack knip onto the clock branch, pre-publication proof, owner gate, clock PR into main and knip PR stacked on it, both green
 
 ### Phase 3: Evidence-Gated Removal
 
@@ -161,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
-| 2. Baseline, Net Stabilization, and Analysis | 8/9 | In Progress | - |
+| 2. Baseline, Net Stabilization, and Analysis | 9/9 | In Progress | - |
 | 3. Evidence-Gated Removal | 0/TBD | Not started | - |
 | 4. Bug Fixes With Regression Tests | 0/TBD | Not started | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
