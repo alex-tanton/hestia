@@ -64,30 +64,30 @@ Plans:
   4. Writing a bare `new Date()` or `Date.now()` in a test file or under `e2e/` fails lint.
   5. knip runs with explicit entry points (`sw.ts`, seed, e2e global setup, package exports), planted canaries behave as expected (known-dead is reported, known-live is not), findings are triaged into proven-dead, config-gap, test-only, and uncertain, and a jscpd duplication scan is recorded.
 
-**Plans:** 9 plans
+**Plans:** 8/9 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 02-01-PLAN.md — Baseline of untouched main (d3da748) on Node 24, twice, with the seven time-dependent web files across zones; checks the cloud toolchain first, and takes the integration rows from CI when the session has no Docker
+- [x] 02-01-PLAN.md — Baseline of untouched main (d3da748) on Node 24, twice, with the seven time-dependent web files across zones; checks the cloud toolchain first, and takes the integration rows from CI when the session has no Docker
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 02-02-PLAN.md — Shared clock pin, TZ hook and sweep runner (tracer on favorites.test.tsx, literal oracle with a pinned viewer zone), then the seven web files green in all six cells
-- [ ] 02-06-PLAN.md — Owner package-legitimacy gate, knip 6.41.0 with explicit D-10 entries, canary calibration on a scratch branch
+- [x] 02-02-PLAN.md — Shared clock pin, TZ hook and sweep runner (tracer on favorites.test.tsx, literal oracle with a pinned viewer zone), then the seven web files green in all six cells
+- [x] 02-06-PLAN.md — Owner package-legitimacy gate, knip 6.41.0 with explicit D-10 entries, canary calibration on a scratch branch
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 02-03-PLAN.md — Service and package unit suites on the pin; every unit suite green in all six cells
+- [x] 02-03-PLAN.md — Service and package unit suites on the pin; every unit suite green in all six cells
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 02-04-PLAN.md — Zone-correct helpers, bills date fix behind a red-then-green two-zone guard (proven by title, locally or through a draft PR's CI when there is no Docker), integration audit and zone sweep
+- [x] 02-04-PLAN.md — Zone-correct helpers, bills date fix behind a red-then-green two-zone guard (proven by title, locally or through a draft PR's CI when there is no Docker), integration audit and zone sweep
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 02-05-PLAN.md — E2E household clock helper for specs 16 and 19, and the bare-clock lint ban across tests, e2e and test helpers
+- [x] 02-05-PLAN.md — E2E household clock helper for specs 16 and 19, and the bare-clock lint ban across tests, e2e and test helpers
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 02-09-PLAN.md — Playwright zone pin, weekday audit ledger over every E2E spec, root sweep scripts and the clock docs
+- [x] 02-09-PLAN.md — Playwright zone pin, weekday audit ledger over every E2E spec, root sweep scripts and the clock docs
 
 **Wave 7** *(blocked on Wave 6 completion)*
-- [ ] 02-07-PLAN.md — knip on the combined Phase 2 tree, full triage ledger and owner candidates, jscpd baseline (source-only per D-12 plus a test-inclusive scan at the same thresholds)
+- [x] 02-07-PLAN.md — knip on the combined Phase 2 tree, full triage ledger and owner candidates, jscpd baseline (source-only per D-12 plus a test-inclusive scan at the same thresholds)
 
 **Wave 8** *(blocked on Wave 7 completion)*
 - [ ] 02-08-PLAN.md — Restack knip onto the clock branch, pre-publication proof, owner gate, clock PR into main and knip PR stacked on it, both green
@@ -161,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
-| 2. Baseline, Net Stabilization, and Analysis | 0/9 | Planned | - |
+| 2. Baseline, Net Stabilization, and Analysis | 8/9 | In Progress | - |
 | 3. Evidence-Gated Removal | 0/TBD | Not started | - |
 | 4. Bug Fixes With Regression Tests | 0/TBD | Not started | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
