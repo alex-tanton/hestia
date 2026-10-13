@@ -69,7 +69,11 @@ controlled, not inherited from the machine.
   `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
   Wednesday). The setup file runs in every workspace's Vitest config, re-pins before each test and
   restores after it, and skips `*.integration.test.*` files. A test overrides the instant with
-  `vi.setSystemTime`.
+  `vi.setSystemTime` or `vi.useFakeTimers`; where the override is installed decides how long it
+  lasts. In a test body or a `beforeEach` it ends with that test. At module scope or in a
+  `beforeAll` the suite owns the clock: it stays for every test in that scope, as the tests leave
+  it, and the suite removes it in an `afterAll` with `vi.useRealTimers()`, after which the pin
+  returns at the start of the next test.
 - **Text rendered in the viewer's zone.** A test that asserts a stamp the browser formats in the
   viewer's zone (such as the deals "As of" line) keeps a literal expected string and pins that
   file's zone in a `vi.hoisted` block, restoring it in `afterAll`, as

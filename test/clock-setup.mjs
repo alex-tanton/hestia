@@ -3,8 +3,17 @@
  * the wall clock. `docs/testing.md` describes the clock pin and the sweep that varies it.
  *
  * The instant comes from `HEARTH_TEST_NOW`, otherwise `DEFAULT_TEST_NOW`. Only `Date` is frozen
- * and no fake timers are installed, so real timers keep running for `waitFor`. A test that needs
- * a different instant sets its own with `vi.setSystemTime`, which takes over until the test ends.
+ * and no fake timers are installed, so real timers keep running for `waitFor`.
+ *
+ * Overriding the clock (`docs/testing.md` states the same contract):
+ * - In a test body or a `beforeEach` (`vi.setSystemTime`, `vi.useFakeTimers`): the override takes
+ *   over until that test ends, then real timers and the pin are restored for the next test.
+ * - At module scope or in a `beforeAll`: the suite owns the clock. It stays installed for every
+ *   test in that scope, exactly as the tests leave it (a test that advances fake timers advances
+ *   them for the next test), and the suite removes it in an `afterAll` with
+ *   `vi.useRealTimers()`. The pin is not re-applied over it.
+ * - After `vi.useRealTimers()` the pin comes back at the start of the next test. Code that runs
+ *   between that call and the next test (a sibling suite's `beforeAll`) sees the native clock.
  *
  * The pin is a `Date` of its own rather than `vi.setSystemTime`. Vitest's mock leaves
  * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hearth/recurrence`)
@@ -64,15 +73,32 @@ if (!testPath.includes('.integration.test.')) {
     configurable: true,
   });
 
-  // Covers module scope and `beforeAll`.
+  // Covers module scope and `beforeAll` until a test file installs a clock of its own.
   globalThis.Date = PinnedDate;
 
-  // Re-pins after a test that called `vi.useRealTimers()` in its own `afterEach`.
+  // A clock the file installed in `beforeAll` or at module scope: fake timers, or a `Date` that is
+  // neither the pin nor the native one. (After `vi.useRealTimers()` the native `Date` is back, and
+  // that is not a clock to keep: the pin returns.)
+  const suiteClockInstalled = () =>
+    vi.isFakeTimers() || (globalThis.Date !== PinnedDate && globalThis.Date !== NativeDate);
+
+  // Whether the current test started with a clock installed by its file or suite.
+  let suiteClock = false;
+
   beforeEach(() => {
-    globalThis.Date = PinnedDate;
+    // Hooks run outside in, so a `beforeAll` has already run and a test's own `beforeEach` has
+    // not: what is installed now was installed for the whole scope, not for this test.
+    suiteClock = suiteClockInstalled();
+    if (!suiteClock) globalThis.Date = PinnedDate;
   });
 
   afterEach(() => {
+    if (suiteClock) {
+      // The suite owns its clock and cleans it up itself; the pin leaves it as the tests left it.
+      // Only a clock a test tore down (`vi.useRealTimers()`) is put back to the pin.
+      if (globalThis.Date === NativeDate) globalThis.Date = PinnedDate;
+      return;
+    }
     vi.useRealTimers();
     globalThis.Date = PinnedDate;
   });
