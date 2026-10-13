@@ -94,7 +94,8 @@ controlled, not inherited from the machine.
   its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
   takes `--workspace`, `--cell`, `--only`, `--log-dir` and `--list`, and prints
-  `sweep: {passed}/{total} passed`.
+  `sweep: {passed}/{total} passed`. An `--only` that selects no test file exits 2 with a message
+  before anything runs, instead of passing an empty run.
 
   | Unit cell | Instant (UTC) | `TZ` | What it covers |
   | --- | --- | --- | --- |
