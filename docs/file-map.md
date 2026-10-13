@@ -25,6 +25,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `tsconfig.base.json` | Shared TypeScript compiler settings every workspace builds on. |
 | `eslint.config.js`, `.prettierrc.json`, `.prettierignore` | Code style and quality rules enforced across the repo. |
 | `commitlint.config.js`, `.lintstagedrc.json` | Rules for commit message format and pre-commit checks. |
+| `knip.json` | Configuration for the knip report of unused files, exports and dependencies (`pnpm knip`, `pnpm knip:production`); report-only. |
 | `.nvmrc` | Pins the Node.js version contributors and CI should use. |
 | `.gitattributes`, `.gitignore`, `.dockerignore` | Tell Git and Docker which files to normalize, ignore, or exclude from builds. |
 | `.env.example` | A template for the real, never-committed configuration file used in production. |
@@ -171,6 +172,7 @@ shopping list.
 | ESLint, `eslint.config.js` | A linter: it scans code for likely bugs, risky patterns, and style inconsistencies beyond what the type checker catches. | Enforces project-specific rules too, such as which parts of the service are allowed to use privileged database access. |
 | Prettier, `.prettierrc.json`, `.prettierignore` | An automatic code formatter — it rewrites code into one consistent style so contributors don't argue over formatting. | Keeps every file formatted the same way regardless of who wrote it. |
 | commitlint, `commitlint.config.js` | Checks that every commit message follows the Conventional Commits format (a `type(scope): subject` style) with an approved list of types and scopes. | Keeps commit history readable and consistent, and scopes it to the project's actual areas (web, service, shared, etc.). |
+| knip, `knip.json` | A tool that reads every workspace and reports files, exports and dependencies that nothing uses. It only reports; it never edits or deletes anything. | Finds unused code across workspaces, which the linter and type checker cannot see. Phase 3 removes only what knip plus a text search and tests prove dead. |
 | Husky, `.husky/` | Installs Git hooks — small scripts that run automatically at points like "before a commit is created." | Runs linting, formatting, and type-checking before a commit, and checks the commit message, so problems are caught before they're even committed. |
 | lint-staged, `.lintstagedrc.json` | Runs linters and formatters only on the files actually being committed, not the whole repo. | Keeps the pre-commit check fast. |
 | Vitest | The test runner used for unit, component, and integration tests throughout the repo (in `apps/web`, `apps/service`, and the packages) — distinct from Playwright, which drives full end-to-end journeys in `e2e/`. | Fast, consistent testing across every workspace. |
