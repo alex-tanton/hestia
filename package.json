@@ -14,6 +14,8 @@
     "typecheck": "pnpm -r --parallel typecheck",
     "test": "pnpm -r test",
     "test:integration": "pnpm -r --if-present test:integration",
+    "test:sweep": "node scripts/test-sweep.mjs",
+    "test:sweep:integration": "node scripts/test-sweep.mjs --suite integration",
     "db:types": "pnpm --filter @hearth/service db:types",
     "db:seed": "pnpm --filter @hearth/service db:seed",
     "fixtures:normalize": "pnpm --filter @hearth/service fixtures:normalize",
