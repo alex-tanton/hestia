@@ -3,7 +3,9 @@
   "ignoreExportsUsedInFile": true,
   "ignoreBinaries": ["supabase", "psql"],
   "workspaces": {
-    ".": {},
+    ".": {
+      "entry": ["test/*.mjs!", "scripts/test-sweep.mjs!"]
+    },
     "apps/service": {
       "entry": ["src/main.ts!", "src/cli.ts!", "src/write-openapi.ts!"],
       "project": ["src/**/*.ts!", "scripts/**/*.ts", "!src/test/**!"]
