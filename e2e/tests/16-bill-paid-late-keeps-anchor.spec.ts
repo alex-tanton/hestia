@@ -3,6 +3,7 @@ import { accessToken, billState, householdBillIds } from '../support/api.ts';
 import { expectDashboard, signIn } from '../support/app.ts';
 import { expectAccessible } from '../support/axe.ts';
 import { DESKTOP, PHONE, group, screenshotsInto } from '../support/bills.ts';
+import { currentInstant, dateInZone } from '../support/clock.ts';
 import { SEED } from '../support/env.ts';
 
 /**
@@ -20,18 +21,6 @@ import { SEED } from '../support/env.ts';
 const HOUSEHOLD_TZ = 'America/New_York';
 const shoot = screenshotsInto('u4-journey5');
 
-/** Today's calendar date in the household's timezone, as YYYY-MM-DD. */
-function householdToday(): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: HOUSEHOLD_TZ,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
-  return `${part('year')}-${part('month')}-${part('day')}`;
-}
-
 /** The given day of the month, `months` away from `date` (YYYY-MM-DD). */
 function shiftMonths(date: string, months: number, day: number): string {
   const [year = 1970, month = 1] = date.split('-').map(Number);
@@ -47,7 +36,7 @@ function shown(date: string): string {
 }
 
 function fixture(theme: 'light' | 'dark') {
-  const today = householdToday();
+  const today = dateInZone(HOUSEHOLD_TZ, currentInstant());
   return {
     name: `Gas late ${theme}`,
     today,

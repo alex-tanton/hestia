@@ -1,0 +1,46 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "ignoreBinaries": ["supabase", "psql"],
+  "workspaces": {
+    ".": {
+      "entry": ["test/*.mjs!", "scripts/test-sweep.mjs!"]
+    },
+    "apps/service": {
+      "entry": ["src/main.ts!", "src/cli.ts!", "src/write-openapi.ts!"],
+      "project": ["src/**/*.ts!", "scripts/**/*.ts", "!src/test/**!"]
+    },
+    "apps/web": {
+      "entry": ["index.html", "src/main.tsx!", "src/sw.ts!"],
+      "project": ["src/**/*.{ts,tsx}!", "scripts/**/*.mjs", "!src/test/**!", "!src/test-setup.ts!"]
+    },
+    "packages/shared": {
+      "entry": ["src/index.ts!", "src/common-passwords.ts!"],
+      "project": ["src/**/*.ts!"],
+      "includeEntryExports": true
+    },
+    "packages/recurrence": {
+      "entry": ["src/index.ts!"],
+      "project": ["src/**/*.ts!"],
+      "includeEntryExports": true
+    },
+    "packages/matching": {
+      "entry": ["src/index.ts!"],
+      "project": ["src/**/*.ts!"],
+      "includeEntryExports": true
+    },
+    "e2e": {
+      "entry": [
+        "playwright.config.ts",
+        "global-setup.ts",
+        "global-teardown.ts",
+        "tests/**/*.spec.ts",
+        "support/*.test.ts"
+      ]
+    },
+    "supabase/seed": {
+      "entry": ["seed-users.ts"],
+      "project": ["*.ts"]
+    }
+  }
+}

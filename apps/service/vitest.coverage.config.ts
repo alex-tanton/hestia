@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.ts'],
     exclude: ['node_modules/**'],
+    // The setup pins the clock for unit files and leaves `.integration.test.` files on the real one.
+    setupFiles: ['../../test/clock-setup.mjs'],
+    globalSetup: ['../../test/global-tz.mjs'],
     fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 30_000,

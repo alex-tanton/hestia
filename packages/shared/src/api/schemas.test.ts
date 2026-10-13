@@ -79,7 +79,7 @@ describe('request schemas', () => {
   });
 
   it('only accepts Crockford codes in a created invite', () => {
-    const invite = { id: ID, createdBy: ID, createdAt: new Date().toISOString() };
+    const invite = { id: ID, createdBy: ID, createdAt: '2026-10-14T12:00:00.000Z' };
     const base = { invite: { ...invite, expiresAt: invite.createdAt }, link: 'https://h.test/j' };
     expect(createdInviteSchema.safeParse({ ...base, code: '0123ABCZ' }).success).toBe(true);
     for (const code of ['0123ABCU', '0123ABCI', '0123abcz', '0123ABC']) {

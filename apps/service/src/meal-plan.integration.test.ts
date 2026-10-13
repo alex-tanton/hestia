@@ -17,6 +17,7 @@ import {
   type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
+import { currentInstant } from './test/zone-dates.js';
 
 /*
  * The week planner, "Add missing to list", and suggestions against `supabase start` (Technical
@@ -244,7 +245,7 @@ describe('week planner', () => {
     // "the API's Sunday is not today's actual household-timezone Sunday" rather than silent.
     const home = await household(app, 'Alex');
     const liveSunday = await currentSunday(home);
-    expect(liveSunday).toBe(await sundayAt(new Date().toISOString(), 'America/New_York'));
+    expect(liveSunday).toBe(await sundayAt(currentInstant().toISOString(), 'America/New_York'));
   });
 
   it('an explicit week filters to that week only', async () => {
