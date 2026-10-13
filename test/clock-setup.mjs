@@ -21,6 +21,10 @@
  * `TZDate` answers in the machine's zone, which is wrong in every negative-offset zone. This pin
  * is in place before any test module is imported, so it has to look like `Date` to such code and
  * construct instances of whatever class extends it.
+ *
+ * Where the pin still differs from the native `Date`: `Function.prototype.toString.call(Date)`
+ * prints this file's function, not `[native code]`, and a test that checks that is checking the
+ * pin. `Date.length` is 7 and `instanceof Date` is true for natively created dates, as native.
  */
 
 import { afterEach, beforeEach, expect, vi } from 'vitest';
@@ -44,9 +48,13 @@ if (!testPath.includes('.integration.test.')) {
   const pinned = pinnedInstant();
 
   // The current time: the pin, or whatever a test installed over it with `vi.setSystemTime` or
-  // fake timers, so a class extending the pin still follows the clock the test chose.
-  // eslint-disable-next-line no-restricted-syntax -- reads the clock a test installed over the pin, not the real one
-  const currentTime = () => (globalThis.Date === PinnedDate ? pinned : globalThis.Date.now());
+  // fake timers, so a class extending the pin still follows the clock the test chose. A subclass
+  // installed as the global `Date` without its own `now` inherits this function, which must not
+  // ask it again.
+  const currentTime = () => {
+    const installed = globalThis.Date;
+    return installed === PinnedDate || installed.now === currentTime ? pinned : installed.now();
+  };
 
   function PinnedDate(...args) {
     if (new.target === undefined) return new NativeDate(currentTime()).toString();
@@ -65,6 +73,17 @@ if (!testPath.includes('.integration.test.')) {
   });
   Object.setPrototypeOf(PinnedDate, NativeDate);
   Object.defineProperty(PinnedDate, 'name', { value: 'Date', configurable: true });
+  Object.defineProperty(PinnedDate, 'length', { value: 7, configurable: true });
+  // A date made natively (`structuredClone(new Date())`, a file's `mtime`) has the native
+  // prototype, not the pin's copy; it is still a `Date`. A subclass keeps the ordinary check.
+  Object.defineProperty(PinnedDate, Symbol.hasInstance, {
+    value(candidate) {
+      return this === PinnedDate
+        ? Object.prototype.isPrototypeOf.call(NativeDate.prototype, candidate)
+        : Function.prototype[Symbol.hasInstance].call(this, candidate);
+    },
+    configurable: true,
+  });
   Object.defineProperty(PinnedDate, 'now', {
     value: currentTime,
     writable: true,

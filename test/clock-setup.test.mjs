@@ -33,6 +33,7 @@ function expectPassed(result, names) {
 }
 
 const SCENARIOS = `
+import { statSync } from 'node:fs';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const PIN = '2026-10-14T12:00:00.000Z';
@@ -80,6 +81,37 @@ describe('default pin', () => {
     expect(Date.prototype.constructor).toBe(Date);
     expect(Object.getOwnPropertyNames(Date.prototype)).toContain('getTime');
     expect(new Date()).toBeInstanceOf(Date);
+  });
+});
+
+describe('the pin looks like the native Date', () => {
+  it('has the native length', () => {
+    expect(Date.length).toBe(7);
+  });
+
+  it('accepts dates created natively as instances', () => {
+    expect(structuredClone(new Date())).toBeInstanceOf(Date);
+    expect(statSync(process.cwd()).mtime).toBeInstanceOf(Date);
+    expect(Object.create(null) instanceof Date).toBe(false);
+    expect({} instanceof Date).toBe(false);
+  });
+
+  it('does not make a subclass accept plain dates', () => {
+    class Stamp extends Date {}
+    expect(new Date() instanceof Stamp).toBe(false);
+    expect(new Stamp() instanceof Date).toBe(true);
+  });
+
+  it('a subclass installed as the global Date follows the pin without recursing', () => {
+    class Installed extends Date {}
+    const pinned = globalThis.Date;
+    globalThis.Date = Installed;
+    try {
+      expect(Date.now()).toBe(Date.parse(PIN));
+      expect(new Installed().toISOString()).toBe(PIN);
+    } finally {
+      globalThis.Date = pinned;
+    }
   });
 });
 
@@ -254,6 +286,10 @@ describe('clock-setup: the default pin, overrides and restoration', () => {
     'default pin Date() called as a function returns the pinned time as a string',
     'default pin a subclass is constructed at the pin and keeps its own class',
     'default pin keeps the name and the prototype shape of Date',
+    'the pin looks like the native Date has the native length',
+    'the pin looks like the native Date accepts dates created natively as instances',
+    'the pin looks like the native Date does not make a subclass accept plain dates',
+    'the pin looks like the native Date a subclass installed as the global Date follows the pin without recursing',
     'an override lasts until its test ends a test sets the system time',
     'an override lasts until its test ends the next test is pinned again',
     'an override lasts until its test ends a test installs fake timers',
