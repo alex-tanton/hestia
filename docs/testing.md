@@ -117,8 +117,12 @@ controlled, not inherited from the machine.
 - **Setting `TZ`.** Set it only through the sweep, or through an `env` object passed to a spawned
   process. The hook then validates it, and the sweep checks that it took effect. Never export it in
   the shell or force `TZ=UTC` for a whole suite.
-- **The lint rule.** ESLint's `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test
-  files, `e2e/`, the test helper folders and `test/**/*.mjs`; production modules are not covered.
+- **The lint rule.** ESLint's `no-restricted-syntax` bans reads of the real clock in test files
+  (`*.test.*`, `*.spec.*`), `e2e/`, the test helper folders and `test/**/*.mjs`: bare `new Date()`,
+  `new Date(undefined)`, `Date()`, `Date.now` in any spelling (`globalThis.Date.now()`,
+  `Date['now']()`, an alias or a reference) and an `Intl.DateTimeFormat` formatter called with no
+  instant. `performance.now()` is allowed (it measures elapsed time, not the calendar); a formatter
+  held in a variable and `process.hrtime()` are not detected. Production modules are not covered.
   Read the clock through the helper instead. A read that must stay carries
   `// eslint-disable-next-line no-restricted-syntax -- {reason}` on the line directly above it.
 

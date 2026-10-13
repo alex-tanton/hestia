@@ -45,6 +45,7 @@ if (!testPath.includes('.integration.test.')) {
 
   // The current time: the pin, or whatever a test installed over it with `vi.setSystemTime` or
   // fake timers, so a class extending the pin still follows the clock the test chose.
+  // eslint-disable-next-line no-restricted-syntax -- reads the clock a test installed over the pin, not the real one
   const currentTime = () => (globalThis.Date === PinnedDate ? pinned : globalThis.Date.now());
 
   function PinnedDate(...args) {
