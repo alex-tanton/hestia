@@ -99,5 +99,25 @@ export default tseslint.config(
     files: ['**/*.test.{ts,tsx}', '**/*.spec.ts', 'e2e/**/*.ts'],
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
   },
+  {
+    // Tests read time from the pinned clock (test/clock-setup.mjs). A real-clock read goes through
+    // a currentInstant helper or carries a next-line opt-out with a reason (docs/testing.md).
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+          message:
+            'Read time from the pinned test clock: pass an explicit instant to the Date constructor or call currentInstant(). A real-clock read needs a next-line eslint-disable with a reason (docs/testing.md).',
+        },
+        {
+          selector: "CallExpression[callee.object.name='Date'][callee.property.name='now']",
+          message:
+            'Read time from the pinned test clock: pass an explicit instant to the Date constructor or call currentInstant(). A real-clock read needs a next-line eslint-disable with a reason (docs/testing.md).',
+        },
+      ],
+    },
+  },
   prettier,
 );
