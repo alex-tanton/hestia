@@ -314,3 +314,26 @@ describe('integration file', () => {
   const result = runVitestProject({ files: { 'db.integration.test.mjs': FIXTURE } });
   expectPassed(result, ['integration file is left on the native Date']);
 });
+
+describe('clock-setup: an invalid HEARTH_TEST_NOW', () => {
+  const FIXTURE = `
+import { describe, expect, it } from 'vitest';
+
+describe('never runs', () => {
+  it('is not reached', () => {
+    expect(true).toBe(true);
+  });
+});
+`;
+  for (const value of ['Oct 5 2030', '2030-10-05', 'garbage']) {
+    it(`fails the run with a message naming it: ${value}`, () => {
+      const result = runVitestProject({
+        files: { 'never.test.mjs': FIXTURE },
+        env: { HEARTH_TEST_NOW: value },
+      });
+      assert.notEqual(result.status, 0);
+      assert.match(result.output, /HEARTH_TEST_NOW=/);
+      assert.match(result.output, /ISO-8601/);
+    });
+  }
+});

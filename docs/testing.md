@@ -67,7 +67,9 @@ controlled, not inherited from the machine.
 
 - **The clock pin.** Every unit and component test runs with `Date` pinned by
   `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
-  Wednesday). The setup file runs in every workspace's Vitest config, re-pins before each test and
+  Wednesday). `HEARTH_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
+  (`2030-10-05T23:30:00+02:00`); a value without one is read in the machine's zone and is
+  rejected. The setup file runs in every workspace's Vitest config, re-pins before each test and
   restores after it, and skips `*.integration.test.*` files. A test overrides the instant with
   `vi.setSystemTime` or `vi.useFakeTimers`; where the override is installed decides how long it
   lasts. In a test body or a `beforeEach` it ends with that test. At module scope or in a
@@ -83,7 +85,11 @@ controlled, not inherited from the machine.
   read), `dateInZone`, `householdDate`, and the helpers `addDays` and `daysBetween`.
 - **The zone hook.** `test/global-tz.mjs` is a Vitest `globalSetup`. It validates `TZ` as an IANA
   zone, fails the run on a bad value, prints one `[test-clock]` line, and does nothing when `TZ` is
-  unset.
+  unset. It accepts every `TZ` value Node runs on as a zone, including UTC aliases (`GMT`,
+  `Etc/UTC`) and the POSIX leading-colon form (`:America/New_York`). It fails the run for an
+  unknown zone, a wrong letter case (Node falls back to UTC) and POSIX offset strings such as
+  `UTC+3`. It also checks `HEARTH_TEST_NOW` before any test runs, so a bad value is one message,
+  not an error in every test file.
 - **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
   its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also

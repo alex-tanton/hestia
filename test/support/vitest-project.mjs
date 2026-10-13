@@ -54,8 +54,10 @@ export function runVitestProject({ files, env = {} }) {
     );
 
     let tests = [];
+    let fileMessages = '';
     try {
       const parsed = JSON.parse(readFileSync(report, 'utf8'));
+      fileMessages = parsed.testResults.map((file) => file.message).join('\n');
       tests = parsed.testResults.flatMap((file) =>
         file.assertionResults.map((result) => ({
           fullName: result.fullName,
@@ -68,7 +70,7 @@ export function runVitestProject({ files, env = {} }) {
     }
     return {
       status: run.status,
-      output: `${run.stdout}\n${run.stderr}`,
+      output: `${run.stdout}\n${run.stderr}\n${fileMessages}`,
       tests,
     };
   } finally {

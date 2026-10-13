@@ -24,6 +24,7 @@
  */
 
 import { afterEach, beforeEach, expect, vi } from 'vitest';
+import { parseTestNow } from './test-now.mjs';
 
 // A Wednesday, midday UTC, mid-month, away from the US daylight-saving changes.
 const DEFAULT_TEST_NOW = '2026-10-14T12:00:00.000Z';
@@ -33,11 +34,7 @@ const NativeDate = globalThis.Date;
 function pinnedInstant() {
   const configured = process.env['HEARTH_TEST_NOW'];
   if (configured === undefined || configured === '') return NativeDate.parse(DEFAULT_TEST_NOW);
-  const instant = NativeDate.parse(configured);
-  if (Number.isNaN(instant)) {
-    throw new Error(`HEARTH_TEST_NOW="${configured}" is not a valid instant`);
-  }
-  return instant;
+  return parseTestNow(configured);
 }
 
 const testPath = expect.getState().testPath ?? '';
