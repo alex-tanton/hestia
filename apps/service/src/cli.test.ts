@@ -105,6 +105,10 @@ describe('hearth-admin, invoked directly as a script', () => {
 
   const ENV_KEYS = ['GOTRUE_URL', 'SERVICE_ROLE_KEY', 'HEARTH_ORIGIN'] as const;
 
+  // Cache-busting token for the re-import below. The clock cannot serve: the shared pin freezes
+  // it, so a second import would repeat the query string and hit the module cache.
+  let importCount = 0;
+
   /**
    * The `invokedDirectly` block (lines 60-74) only runs once, at module load, when
    * `import.meta.url === pathToFileURL(process.argv[1]).href` — which no in-process call to
@@ -143,7 +147,7 @@ describe('hearth-admin, invoked directly as a script', () => {
       process.env['HEARTH_ORIGIN'] = 'https://hearth.example.test';
       process.exitCode = undefined;
 
-      await import(/* @vite-ignore */ `./cli.ts?invoked-directly=${String(Date.now())}`);
+      await import(/* @vite-ignore */ `./cli.ts?invoked-directly=${String(++importCount)}`);
 
       return { exitCode: process.exitCode, out, err };
     } finally {

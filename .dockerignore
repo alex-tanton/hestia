@@ -9,6 +9,8 @@
 .husky
 .env*
 docs
+.planning
+.claude
 docker
 !docker/Caddyfile
 !docker/caddy-entrypoint.sh

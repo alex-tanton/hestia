@@ -29,6 +29,7 @@ import {
   type SignedUpUser,
   type Stack,
 } from './test/service-stack.js';
+import { currentInstant } from './test/zone-dates.js';
 
 /*
  * The service end to end against `supabase start`: real GoTrue, real Postgres as hearth_service,
@@ -1071,7 +1072,7 @@ describe('forged tokens', () => {
     const user = await signUp(app, 'Forgery');
     const secret = stackConfig().jwtSecret;
     const base = { sub: user.id, role: 'authenticated', aud: 'authenticated', email: user.email };
-    const now = Math.floor(Date.now() / 1000);
+    const now = Math.floor(currentInstant().getTime() / 1000);
 
     const expired = await as(
       app,
@@ -1101,7 +1102,9 @@ describe('forged tokens', () => {
       string,
       unknown
     >;
-    claims['amr'] = [{ method: 'recovery', timestamp: Math.floor(Date.now() / 1000) }];
+    claims['amr'] = [
+      { method: 'recovery', timestamp: Math.floor(currentInstant().getTime() / 1000) },
+    ];
     const rewritten = `${head ?? ''}.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.${signature ?? ''}`;
     expectStatus(
       await as(app, { ...user, token: rewritten }, 'POST', '/api/users/me/password', {

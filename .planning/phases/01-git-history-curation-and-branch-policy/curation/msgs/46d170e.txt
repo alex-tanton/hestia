@@ -1,0 +1,9 @@
+docs: record flipp spike endpoints and raw 27514 fixtures
+
+Add 23 unmodified Flipp captures for postal code 27514 under e2e/fixtures/flipp/raw/ and record
+the Phase 0 spike in the specs: Technical Architecture Flipp wrapper Endpoints (paths, params,
+fields, quirks), CSP img-src hosts, flyer-item fetch-once caching and item-detail pricing through
+the rate-limited queue; PRD price-normalization rows for newly observed forms (skip rather than
+fabricate); Seed Data fixture index and stable merchant ids; Handoff known unknowns.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>

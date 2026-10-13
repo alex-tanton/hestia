@@ -73,7 +73,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
-    setupFiles: ['src/test-setup.ts'],
+    setupFiles: ['src/test-setup.ts', '../../test/clock-setup.mjs'],
+    globalSetup: ['../../test/global-tz.mjs'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],

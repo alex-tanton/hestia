@@ -18,6 +18,7 @@ import {
   type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
+import { currentInstant } from './test/zone-dates.js';
 
 /*
  * Deals, flyers, merchants, and favorite stores against `supabase start`: real Postgres as
@@ -43,7 +44,7 @@ const OTHER_POSTAL_CODE = '27519';
 const DORMANT_POSTAL_CODE = '27520';
 
 beforeEach(async () => {
-  clock = new Date();
+  clock = currentInstant();
   source = new FakeDealSource();
   queued = [];
   deals = createDealsService({

@@ -18,3 +18,5 @@ shots/
 
 supabase/.temp/
 supabase/.branches/
+.planning/research/.cache/
+.planning/cleanup/logs/

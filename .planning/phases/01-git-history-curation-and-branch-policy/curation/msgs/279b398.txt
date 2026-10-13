@@ -1,0 +1,11 @@
+feat(docker): add compose stack, caddy routing, backups, and deploy
+
+Adds the seven-service production Compose stack (db, auth, realtime, kong, hearth-service, caddy,
+backup) with pinned images, a fixed bridge subnet, and only Caddy published on 127.0.0.1:8080;
+Caddy routing, security headers, signup/user-update refusals, and strict client-IP passthrough;
+the NOINHERIT hearth_service role migration with its login set from .env; nightly and pre-deploy
+backups with a documented restore; generate-secrets.sh; and the health-gated deploy.sh with
+rollback. Technical Architecture (Deployment, Secrets, Backups) and Engineering Practices (Git
+and CI) record the resulting layout.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>

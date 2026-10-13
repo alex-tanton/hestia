@@ -1,0 +1,43 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": null,
+  "phases": [
+    {
+      "number": "1",
+      "name": "Git History Curation and Branch Policy",
+      "status": "complete"
+    },
+    {
+      "number": "2",
+      "name": "Baseline, Net Stabilization, and Analysis",
+      "status": "in_progress"
+    },
+    {
+      "number": "3",
+      "name": "Evidence-Gated Removal",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "Bug Fixes With Regression Tests",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "Redundancy Reduction and Text Sync",
+      "status": "pending"
+    },
+    {
+      "number": "6",
+      "name": "CI Enforcement and Lock-in",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 2 of 6 · 17% · executing"
+  },
+  "updated_at": "2026-10-12T21:51:07.854Z"
+}

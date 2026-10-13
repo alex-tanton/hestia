@@ -24,6 +24,7 @@ function transport(statuses: (number | 'throw')[]) {
   const calls: Call[] = [];
   let index = 0;
   const get = (url: string, headers: Record<string, string>): Promise<HttpResponse> => {
+    // eslint-disable-next-line no-restricted-syntax -- reads the fake-timer clock installed in beforeEach
     calls.push({ url, headers, at: Date.now() });
     const status = statuses[Math.min(index, statuses.length - 1)] ?? 200;
     index += 1;
@@ -170,6 +171,7 @@ describe('the circuit breaker', () => {
 
     // The breaker names the instant it reopens: half an hour after the fifth failure.
     const openUntil = (error as CircuitOpenError).openUntil;
+    // eslint-disable-next-line no-restricted-syntax -- reads the fake-timer clock installed in beforeEach
     await vi.advanceTimersByTimeAsync(openUntil - 1_000 - Date.now());
     expect(queue.isOpen).toBe(true);
 

@@ -9,3 +9,5 @@ BUILD_PROMPT.md
 **/test-results/
 supabase/.temp/
 supabase/.branches/
+.planning/
+.claude/

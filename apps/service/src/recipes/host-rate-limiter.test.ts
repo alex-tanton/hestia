@@ -83,14 +83,17 @@ describe('HostRateLimiter', () => {
   });
 
   it('really sleeps with the real clock and timer when no fakes are given', async () => {
+    // Measures real elapsed time. The shared pin freezes `Date`, and `vi.useRealTimers()` does not
+    // unpin it, so the elapsed time is read from `performance.now()` for this one test; the
+    // limiter's default `now` stays the pinned `Date.now`, which still makes the second call wait.
     // Every other test overrides both `now` and `sleep`, which never exercises the constructor's
     // own defaults (`Date.now` and a real `setTimeout`-backed sleep). minGapMs is tiny so the test
     // stays fast; the only thing under test is that the default sleep actually waits and resolves.
     const limiter = new HostRateLimiter({ minGapMs: 20 });
-    const start = Date.now();
+    const start = performance.now();
     await limiter.wait('default.example.com');
     await limiter.wait('default.example.com');
-    expect(Date.now() - start).toBeGreaterThanOrEqual(15);
+    expect(performance.now() - start).toBeGreaterThanOrEqual(15);
   });
 
   it('drops an old entry on the next wait for any host, rather than growing the map forever', async () => {
