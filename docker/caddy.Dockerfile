@@ -31,7 +31,7 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/web... \
  && pnpm --filter @hearth/web build
 
-FROM caddy:2.11.4-alpine
+FROM caddy:2.11.7-alpine
 ARG HEARTH_REVISION=dev
 LABEL org.opencontainers.image.revision=$HEARTH_REVISION
 COPY docker/Caddyfile /etc/caddy/Caddyfile

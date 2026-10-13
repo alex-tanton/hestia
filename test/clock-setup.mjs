@@ -12,8 +12,8 @@
  *   test in that scope, exactly as the tests leave it (a test that advances fake timers advances
  *   them for the next test), and the suite removes it in an `afterAll` with
  *   `vi.useRealTimers()`. The pin is not re-applied over it.
- * - After `vi.useRealTimers()` the pin comes back at the start of the next test. Code that runs
- *   between that call and the next test (a sibling suite's `beforeAll`) sees the native clock.
+ * - After `vi.useRealTimers()` the pin is back, so a suite's `afterAll` cleanup never exposes the
+ *   machine clock to the next suite.
  *
  * The pin is a `Date` of its own rather than `vi.setSystemTime`. Vitest's mock leaves
  * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hearth/recurrence`)
@@ -94,8 +94,7 @@ if (!testPath.includes('.integration.test.')) {
   globalThis.Date = PinnedDate;
 
   // A clock the file installed in `beforeAll` or at module scope: fake timers, or a `Date` that is
-  // neither the pin nor the native one. (After `vi.useRealTimers()` the native `Date` is back, and
-  // that is not a clock to keep: the pin returns.)
+  // neither the pin nor the native one. The native `Date` is not a clock to keep: the pin returns.
   const suiteClockInstalled = () =>
     vi.isFakeTimers() || (globalThis.Date !== PinnedDate && globalThis.Date !== NativeDate);
 
