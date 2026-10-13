@@ -99,6 +99,21 @@ Make the unit, component, integration, and E2E tests pass deterministically on a
 
 </specifics>
 
+### Owner decisions after verification (2026-10-13)
+Made by the owner in the session that verified Phase 2. They refine or supersede the decisions above where stated.
+- **D-13 (supersedes the baseline choice in D-12):** Phase 5 (RED-03) compares duplication against the **test-inclusive** jscpd baseline from `TRIAGE.md`: 96 clones, 85 of them test-involved, 1.87% of lines. The source-only figure (11 clones, 0.47%) stays recorded but is not the comparison point.
+- **D-14:** TIME-03's weekend E2E run (`test-e2e` on a Saturday and a Sunday in New York) is **deferred by the owner**: nothing waits on it. The verifier's one behavior-unverified truth stays recorded as such.
+- **D-15:** `vitest` is declared as an exact-pinned (5.0.1) root devDependency, through a pull request.
+- **D-16:** `packages/matching/scripts/fuzzy-benchmark.ts` is deleted, with its references, through a pull request.
+- **D-17:** The five code-review warnings (WR-01 to WR-05) are fixed now, each with a regression test, through one pull request. The review's info items stay open.
+- **D-18 (owner candidates, `OWNER-CANDIDATES.md`):**
+  - `packages/matching`, `packages/recurrence` and `packages/shared` are **internal**: an export with no importer anywhere, tests included, may be removed in Phase 3 after Phase 3's own proof. Exports used only by tests stay.
+  - `apps/service/src/jobs/index.ts`: keep the barrel and its test; Phase 3 may drop only re-export lines with no use anywhere (the zero-use type re-exports). The 12 test-only runtime re-exports stay.
+  - `BILLS_LIST_EMPTY_COPY` is the canonical name (it is the one imported); the unused alias `BILLS_EMPTY_COPY` may go.
+  - The 19 test-only items are kept as they are.
+  - Settled as keep, pending any objection: `tailwindcss` in `apps/web` (CSS `@import` knip cannot follow), `tsx` in `supabase/seed`, the Flipp fixture exports and `normalized-fixtures.ts`, and the whole D-10 standing list.
+  - The 6 proven-dead items remain Phase 3 candidates behind its three-part proof.
+
 <deferred>
 ## Deferred Ideas
 
