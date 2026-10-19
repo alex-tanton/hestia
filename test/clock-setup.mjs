@@ -14,6 +14,11 @@
  *   `vi.useRealTimers()`. The pin is not re-applied over it.
  * - After `vi.useRealTimers()` the pin is back, so a suite's `afterAll` cleanup never exposes the
  *   machine clock to the next suite.
+ * - A `Date` subclass a test installs as the global (a hand-rolled clock mock) has the pin as its
+ *   base clock: an inherited `now`, or `super.now()` inside an override, answers with the pin, so
+ *   `static now() { return super.now() + 1; }` returns the pin plus one. An override that calls a
+ *   captured pin by name (`RealDate.now() + 1`) instead of `super` ends rather than recursing, but
+ *   its adjustment is applied twice.
  *
  * The pin is a `Date` of its own rather than `vi.setSystemTime`. Vitest's mock leaves
  * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hearth/recurrence`)
@@ -21,6 +26,12 @@
  * `TZDate` answers in the machine's zone, which is wrong in every negative-offset zone. This pin
  * is in place before any test module is imported, so it has to look like `Date` to such code and
  * construct instances of whatever class extends it.
+ *
+ * Running again in the same global: with `isolate: false` Vitest runs this file once per test
+ * file in one global (no config sets that today). The pin remembers the native class it replaced,
+ * so each run builds a single pin over the native `Date` rather than another over the previous
+ * pin, `instanceof Date` stays true for natively created dates, and an integration file in that
+ * global gets the native `Date` back.
  *
  * Where the pin still differs from the native `Date`: `Function.prototype.toString.call(Date)`
  * prints this file's function, not `[native code]`, and a test that checks that is checking the
@@ -33,7 +44,12 @@ import { parseTestNow } from './test-now.mjs';
 // A Wednesday, midday UTC, mid-month, away from the US daylight-saving changes.
 const DEFAULT_TEST_NOW = '2026-10-14T12:00:00.000Z';
 
-const NativeDate = globalThis.Date;
+// The native `Date`, also when this file runs again in a global that already holds a pin (Vitest
+// with `isolate: false` runs the setup files once per test file in the same global): the pin
+// remembers the class it replaced, so a second load builds one pin over the native class instead
+// of a second pin over the first. A clock a test left installed inherits the marker from the pin.
+const NATIVE = Symbol.for('hearth.nativeDate');
+const NativeDate = globalThis.Date[NATIVE] ?? globalThis.Date;
 
 function pinnedInstant() {
   const configured = process.env['HEARTH_TEST_NOW'];
@@ -43,17 +59,33 @@ function pinnedInstant() {
 
 const testPath = expect.getState().testPath ?? '';
 
-// Integration tests compare against the Postgres clock, which cannot be pinned.
-if (!testPath.includes('.integration.test.')) {
+// Integration tests compare against the Postgres clock, which cannot be pinned. A pin an earlier
+// file left in a shared global is taken out.
+if (testPath.includes('.integration.test.')) {
+  globalThis.Date = NativeDate;
+} else {
   const pinned = pinnedInstant();
 
   // The current time: the pin, or whatever a test installed over it with `vi.setSystemTime` or
-  // fake timers, so a class extending the pin still follows the clock the test chose. A subclass
-  // installed as the global `Date` without its own `now` inherits this function, which must not
-  // ask it again.
-  const currentTime = () => {
+  // fake timers, so a class extending the pin still follows the clock the test chose.
+  //
+  // It is also the base clock of a `Date` subclass installed as the global (a hand-rolled clock
+  // mock). Such a subclass reaches it as `super.now()`, or by inheriting `now` unchanged, with
+  // that subclass as the receiver. Asking the installed class again from there would recurse for
+  // ever and would apply the subclass's own adjustment twice, so a call whose receiver is the
+  // installed class answers with the pin. `reading` ends any other loop, such as an override that
+  // names a captured pin (`RealDate.now()`) instead of `super`: it terminates, but that
+  // override's adjustment is then applied twice.
+  let reading = false;
+  const currentTime = function () {
     const installed = globalThis.Date;
-    return installed === PinnedDate || installed.now === currentTime ? pinned : installed.now();
+    if (reading || installed === PinnedDate || this === installed) return pinned;
+    reading = true;
+    try {
+      return installed.now();
+    } finally {
+      reading = false;
+    }
   };
 
   function PinnedDate(...args) {
@@ -84,6 +116,7 @@ if (!testPath.includes('.integration.test.')) {
     },
     configurable: true,
   });
+  Object.defineProperty(PinnedDate, NATIVE, { value: NativeDate, configurable: true });
   Object.defineProperty(PinnedDate, 'now', {
     value: currentTime,
     writable: true,
