@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { after, describe, it } from 'node:test';
@@ -129,6 +129,59 @@ describe('test-sweep: an --only that selects no test fails the sweep', () => {
     );
     assert.notEqual(run.status, 0);
     assert.equal(existsSync(logs), false);
+  });
+});
+
+describe('test-sweep: a listing that cannot run exits 2 with a message, not a crash', () => {
+  /** Runs the sweep for one `--only` with `pathDirectory` as the whole of `PATH`. */
+  function sweepWithPath(pathDirectory) {
+    const run = spawnSync(
+      process.execPath,
+      [SWEEP, '--workspace', 'shared', '--cell', 'default', '--only', 'src/a.test.ts'],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        env: { ...process.env, PATH: pathDirectory },
+      },
+    );
+    return { status: run.status, stdout: run.stdout, stderr: run.stderr };
+  }
+
+  function assertCleanFailure(run, expectedMessage) {
+    assert.equal(run.status, 2, `${run.stdout}\n${run.stderr}`);
+    assert.match(
+      run.stderr,
+      /^test-sweep: could not list the test files for --only src\/a\.test\.ts/m,
+    );
+    assert.match(run.stderr, expectedMessage);
+    assert.doesNotMatch(run.stderr, /undefined|null/);
+    assert.doesNotMatch(run.stderr, /^\s+at /m);
+    assert.doesNotMatch(run.stdout, /result=|sweep: /);
+  }
+
+  it('pnpm cannot be spawned', () => {
+    const run = sweepWithPath(join(scratch, 'no-such-bin-directory'));
+    assertCleanFailure(run, /ENOENT/);
+  });
+
+  it('vitest list fails, and the message carries what it printed', () => {
+    const bin = join(scratch, 'failing-pnpm');
+    mkdirSync(bin, { recursive: true });
+    const stub = join(bin, 'pnpm');
+    writeFileSync(stub, '#!/bin/sh\necho "broken vitest config: boom" >&2\nexit 3\n');
+    chmodSync(stub, 0o755);
+    const run = sweepWithPath(bin);
+    assertCleanFailure(run, /broken vitest config: boom/);
+  });
+
+  it('vitest list fails without printing anything, and the exit status is named', () => {
+    const bin = join(scratch, 'silent-pnpm');
+    mkdirSync(bin, { recursive: true });
+    const stub = join(bin, 'pnpm');
+    writeFileSync(stub, '#!/bin/sh\nexit 4\n');
+    chmodSync(stub, 0o755);
+    const run = sweepWithPath(bin);
+    assertCleanFailure(run, /status 4/);
   });
 });
 
