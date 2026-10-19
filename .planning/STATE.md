@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: evidence-gated-removal
 status: executing
-stopped_at: Completed 03-06-PLAN.md
-last_updated: "2026-10-19T22:23:38.726Z"
+stopped_at: Completed 03-07-PLAN.md
+last_updated: "2026-10-19T23:28:25.214Z"
 last_activity: 2026-10-19
 last_activity_desc: Phase 02 complete, transitioned to Phase 3
-state_head: a11f41e5fa73e24861f2086bc65e848dc4f0fe7a
+state_head: 0e5e5271616055ac61269d7a19e7d2206d331958
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 20
+  completed_plans: 21
   percent: 33
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 03 (evidence-gated-removal) — EXECUTING
-Plan: 03-02 complete; waiting on the owner to squash-merge PR 1 (#12) before 03-03
-Status: Executing (wave 2 next: PR 1 owner gate)
-Last activity: 2026-10-19 — Phase 02 complete, transitioned to Phase 3
+Plan: 03-07 complete; PR 2 (#13) is open with six green CI jobs, waiting on the owner's squash merge before 03-08
+Status: Executing (wave 8 next: PR 3 landing, after PR 2 is merged)
+Last activity: 2026-10-19 — Plan 03-07: PR 2 opened and CI green
 
 Progress: [███░░░░░░░] 33%
 
@@ -66,6 +66,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 3 P04 | 30min | 2 tasks | 3 files |
 | Phase 03 P05 | 25min | 3 tasks | 12 files |
 | Phase 03 P06 | 30min | 2 tasks | 3 files |
+| Phase 03 P07 | resumed | 3 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,7 @@ Recent decisions affecting current work:
 - [Phase 2]: Clock pin is a subclass-safe `Date`, not `vi.setSystemTime` (it breaks `@date-fns/tz` in negative-offset zones); PR #8 later made suite-level overrides survive and covered the pin with 167 harness tests run by `pnpm test`
 - [Phase 2]: Owner decisions after verification (D-13 to D-18 in 02-CONTEXT.md): Phase 5 uses the test-inclusive jscpd baseline; weekend E2E run deferred; vitest declared at the root; fuzzy benchmark deleted; packages are internal; the jobs barrel keeps its test
 - [Phase 03]: A2=remove honored: 18 unused z.infer aliases removed from packages/shared, schemas kept
+- [Phase 03]: Plan 03-07: gate-pr2=approve; PR 2 (#13) opened at head 5f5b090 with six green CI jobs (test-e2e passed on attempt 3 after two ECR toomanyrequests re-runs); awaiting the owner's squash merge
 
 ### Pending Todos
 
@@ -116,6 +118,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-19T22:23:38.637Z
-Stopped at: Completed 03-06-PLAN.md
+Last session: 2026-10-19T23:28:25.148Z
+Stopped at: Completed 03-07-PLAN.md
 Resume file: None
