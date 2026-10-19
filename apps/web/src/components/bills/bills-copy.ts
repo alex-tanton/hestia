@@ -13,10 +13,8 @@ export const OFFLINE_ACTION_REASON = 'Needs a connection.';
  * (Handoff non-negotiable 11 — "Hearth never moves money") made honest and explicit up front,
  * rather than discovered the first time someone looks for a "Pay now" button that does not exist.
  */
-export const BILLS_EMPTY_COPY =
+export const BILLS_LIST_EMPTY_COPY =
   'Hearth tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.';
-
-export const BILLS_LIST_EMPTY_COPY = BILLS_EMPTY_COPY;
 
 /** Design › Screens › 14: "Skip the March 12 Duke Energy bill? It won't be marked paid." */
 export function skipBillConfirmation(bill: Pick<Bill, 'name' | 'currentOccurrenceDate'>): string {
