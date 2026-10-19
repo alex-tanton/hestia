@@ -16,7 +16,7 @@
     {
       "number": "3",
       "name": "Evidence-Gated Removal",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "4",
@@ -36,8 +36,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step (plan phase 3)",
-    "reason": "Phase 3 of 6 — needs a plan"
+    "label": "Advance to the next step",
+    "reason": "Phase 03 of 6 · 33% · executing"
   },
-  "updated_at": "2026-10-19T13:45:26.129Z"
+  "updated_at": "2026-10-19T20:21:18.507Z"
 }
