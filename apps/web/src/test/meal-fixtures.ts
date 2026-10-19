@@ -1,6 +1,5 @@
 import type {
   MatchOverride,
-  MealPlanEntry,
   Recipe,
   RecipeDetail,
   RecipeListResponse,
@@ -541,43 +540,6 @@ export const riveraSuggestionsFixture: SuggestionsResponse = {
  */
 export const CURRENT_WEEK_SUNDAY = '2026-09-27';
 export const PREVIOUS_WEEK_SUNDAY = '2026-09-20';
-
-export const wednesdayZitiEntry: MealPlanEntry = {
-  id: 'e0000001-0000-4000-8000-000000000001',
-  householdId: OAK_STREET_ID,
-  recipeId: BAKED_ZITI_ID,
-  recipeTitle: 'Baked Ziti',
-  readinessPercent: 71,
-  plannedDate: '2026-09-30',
-  mealType: 'dinner',
-  addedBy: ALEX_ID,
-  createdAt: CREATED_AT,
-};
-
-export const wednesdaySaladEntry: MealPlanEntry = {
-  id: 'e0000001-0000-4000-8000-000000000002',
-  householdId: OAK_STREET_ID,
-  recipeId: GREEK_SALAD_ID,
-  recipeTitle: 'Greek Salad',
-  readinessPercent: 29,
-  plannedDate: '2026-09-30',
-  mealType: 'dinner',
-  addedBy: ALEX_ID,
-  createdAt: CREATED_AT,
-};
-
-/** The deleted-recipe snapshot fixture: null `recipeId`, the title and nothing else survives. */
-export const deletedRecipeEntry: MealPlanEntry = {
-  id: 'e0000002-0000-4000-8000-000000000001',
-  householdId: OAK_STREET_ID,
-  recipeId: null,
-  recipeTitle: 'Mushroom Stroganoff',
-  readinessPercent: null,
-  plannedDate: '2026-09-22',
-  mealType: 'dinner',
-  addedBy: ALEX_ID,
-  createdAt: '2026-09-10T12:00:00.000Z',
-};
 
 function baseRecipe(detail: RecipeDetail): Recipe {
   return {
