@@ -6,6 +6,11 @@ base=7d14b7775fa653e11ac85020564340ac5ba176cf
 
 The working branch `claude/trusting-lovelace-y4r87h` absorbed `origin/main` through the plain merge `4e25543` (pushed `df9f298..4e25543`, no force). Code branches are cut from `origin/main` at the `base=` SHA, never from the working branch. Research measured everything on the same SHA, so there is no base drift.
 
+A1=remove (owner, 2026-10-19)
+A2=remove (owner, 2026-10-19)
+A8=remove (owner, 2026-10-19)
+OQ1=accept (owner, 2026-10-19)
+
 ## Counts
 
 Totals are the `total` line of the normalized knip summaries (`scripts/knip-summary.mjs` output format). Base summaries: `.planning/cleanup/knip/phase3-before-{default,production,nonode}-summary.txt`. "nonode" is the throwaway config with the `node` plugin disabled, which also shows exports under `test/` directories (D-08); it is never committed.
