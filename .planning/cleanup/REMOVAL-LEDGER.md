@@ -152,4 +152,43 @@ dbseed-status=proven locally (dbseed=exit0, `supabase db reset` then `pnpm db:se
 
 ## Stale-reference sweep
 
+Plan 03-06, run in `../hearth-refs` (branch `chore/stale-references`, base `7d14b77`, after the two `BUILD_PROMPT.md` removals in commit `d9d61bb850e3bca6b10ac279b0b36665159db052`). Scope: tracked files except paths under `.planning/`, `.claude/`, `e2e/fixtures/` and `supabase/migrations/`, and except `pnpm-lock.yaml`; 618 text files scanned. Token pattern `(apps|packages|docker|scripts|e2e|supabase|test|docs)/[A-Za-z0-9._@/*-]*[A-Za-z0-9_*-]`. A token exists when the path is in the tree or `git ls-files` lists it (a token with `*` counts as a glob). Every miss, with its `file:line`, is in `$L/03-06-path-misses.tsv`.
+
+path-sweep: 642 tokens, 385 exist or are globs, 257 misses: class a 163, class b 12, class c 0, class d 82, class e 0.
+
+- a (relative to the citing file's directory or workspace, 163 hits, 22 distinct tokens): `test/harness.tsx`, `test/fixtures.ts`, `test/*-fixtures.ts`, `test/fake-app`, `test/service-stack`, `test/zone-dates`, `test/world`, `test/integration-db`, `test/push-double`, `test/fixture-deal-source` (imports in `apps/web/src` and `apps/service/src` tests, resolving under `src/test/`), `scripts/check-build.mjs`, `scripts/generate-icons.mjs` (`apps/web/package.json`), `scripts/normalize-fixtures.ts` (`apps/service/package.json`), and the three `docs/testing.md` lines 219, 220, 222 naming `test/integration-db.ts`, `test/world.ts` and `test/service-stack.ts` (relative to `apps/service/src/`, all three files exist there). Each resolved against an ancestor directory of the citing file, with `.js` read as `.ts`/`.tsx`.
+- b (generated output, 12 hits): `apps/service/dist` and `apps/web/dist` (Dockerfile `COPY --from` sources), `e2e/playwright-report` and `e2e/test-results` (`.dockerignore`, the CI artifact upload), `supabase/.temp` and `supabase/.branches` (`.gitignore`, `.prettierignore`, `eslint.config.js`; Supabase CLI working directories). These are live exclusions for output that exists after a build or run, not stale.
+- c (created at run time): none.
+- d (not a path, 82 hits, 49 distinct tokens): URL segments (`/api/test/push/dispatch`, `/api/test/push/deliveries`, `https://*.test/...` recipe and push endpoints in tests, the E2E push helper and `supabase/seed/seed.sql`, the `supabase.com/docs/guides/local-development/cli/config` link in `supabase/config.toml`), package and image names (`vitest/config`, `@vitest/coverage-v8`, `@supabase/supabase-js`, `public.ecr.aws/supabase/{postgres,gotrue,realtime}`, `supabase/setup-cli@v3`, `docker/dockerfile:1`), container-side mount targets (`99-roles.sql` and `99-jwt.sql` in `docker/docker-compose.yml`; the host files are `docker/db/roles.sql` and `docker/db/jwt.sql`), synthetic file names handed to ESLint in `test/eslint-clock-ban.test.mjs` (`probe` files that are never created) and prose (`test/hook timeouts`, `docs/testing.md:180`).
+- e (stale): none. Outside the two `BUILD_PROMPT.md` entries Task 1 removed, no ignore, config, workflow, Dockerfile, script, docs or source token points at a missing path, so no further edit was made on `chore/stale-references`, and no `docs/` or source comment was touched.
+
+Observation for Phase 5 (RED-04), not a stale path and not edited: `apps/service/vitest.coverage.config.ts:40` says "as of the coverage unit (test/service-coverage-and-fixtures)", a build-process label that names no file in the repository. The classifier read it as prose (class d).
+
+The orphan-docs re-check (a `docs/`, `README.md` or `CONTRIBUTING.md` line naming a symbol PR 2 removed entirely) is not part of this plan: it runs in plan 03-07 against the `refactor/dead-exports` tip.
+
 ## Leftovers audit
+
+tracked-ignored: none (`git ls-files -ci --exclude-standard` prints nothing on `chore/stale-references`).
+
+pattern-audit: `.env.example` only. Over the 673 tracked files outside `.planning/` and `.claude/`, the extended pattern for build output, logs, `*.tsbuildinfo`, backups, editor files, extra lockfiles and env files matched one path, `.env.example`, the documented template. Paths only were printed; no env-shaped file other than the template is tracked, and no contents were read.
+
+lockfiles: `pnpm-lock.yaml` (no `package-lock.json`, `yarn.lock`, `npm-shrinkwrap.json` or `bun.lockb` is tracked).
+
+Ten largest tracked files (bytes), all kept:
+
+| Bytes | File | Why it stays |
+| --- | --- | --- |
+| 1248141 | `e2e/fixtures/flipp/raw/data-27514.json` | Flipp raw capture, E2E fixture (D-10 standing list) |
+| 411436 | `e2e/fixtures/flipp/raw/search-27514-cvs.json` | Flipp raw capture, E2E fixture (D-10) |
+| 393059 | `pnpm-lock.yaml` | the one lockfile, `--frozen-lockfile` in CI and Docker |
+| 330624 | `e2e/fixtures/flipp/raw/merchants-27514.json` | Flipp raw capture (D-10) |
+| 227246 | `e2e/fixtures/flipp/raw/flyer-items-publix-8128353.json` | Flipp raw capture (D-10) |
+| 202865 | `e2e/fixtures/flipp/raw/flyer-items-harris-teeter-8132883.json` | Flipp raw capture (D-10) |
+| 174648 | `e2e/fixtures/flipp/raw/search-27514-harris-teeter.json` | Flipp raw capture (D-10) |
+| 173708 | `e2e/fixtures/flipp/raw/search-27514-milk.json` | Flipp raw capture (D-10) |
+| 173452 | `e2e/fixtures/flipp/raw/flyer-items-lowes-foods-8132169.json` | Flipp raw capture (D-10) |
+| 171460 | `e2e/fixtures/flipp/raw/flyer-items-ng-harris-teeter-8132883.json` | Flipp raw capture (D-10) |
+
+Tracked generated files that are meant to be committed, and stay: `apps/service/src/db/types.ts` (regenerated by `pnpm db:types`; the local run in "CI evidence" showed it byte-identical to a fresh generation) and `apps/web/public/icons/icon-192.png` and `icon-512.png` (written by `apps/web/scripts/generate-icons.mjs`, script `icons`). The tracked Phase 2 evidence under `.planning/cleanup/knip/` (17 files) and `.planning/cleanup/jscpd/` (3 files) is intentional; `.planning/cleanup/logs/` is gitignored (`.gitignore:22`). Nothing the tooling cannot prove generated or leftover was found, so nothing goes to Kept from this audit.
+
+path-sweep: see "Stale-reference sweep" above (642 tokens, 257 misses, none stale).
