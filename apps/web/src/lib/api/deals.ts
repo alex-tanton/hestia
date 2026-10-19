@@ -7,7 +7,6 @@ import {
 } from '@tanstack/react-query';
 import {
   dealSearchResponseSchema,
-  favoriteStoreListSchema,
   flyerItemsResponseSchema,
   flyersResponseSchema,
   merchantsResponseSchema,
@@ -16,7 +15,6 @@ import {
   type DealScope,
   type DealSearchResponse,
   type DealSort,
-  type FavoriteStore,
   type FlyerItemsResponse,
   type FlyersResponse,
   type MerchantsResponse,
@@ -164,23 +162,6 @@ export function useMerchants(householdId: string | undefined): UseQueryResult<Me
         method: 'GET',
         path: `/api/households/${String(householdId)}/merchants`,
         schema: merchantsResponseSchema,
-        signal,
-      }),
-  });
-}
-
-export function useFavoriteStores(
-  householdId: string | undefined,
-): UseQueryResult<FavoriteStore[]> {
-  const api = useApi();
-  return useQuery({
-    queryKey: dealKeys.favoriteStores(householdId ?? ''),
-    enabled: householdId !== undefined,
-    queryFn: ({ signal }) =>
-      api.request({
-        method: 'GET',
-        path: `/api/households/${String(householdId)}/favorite-stores`,
-        schema: favoriteStoreListSchema,
         signal,
       }),
   });

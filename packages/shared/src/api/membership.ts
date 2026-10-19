@@ -49,4 +49,3 @@ export type DepartResult = z.infer<typeof departResultSchema>;
 
 /** POST /api/households/:id/transfer-admin */
 export const transferAdminRequestSchema = z.object({ userId: idSchema });
-export type TransferAdminRequest = z.infer<typeof transferAdminRequestSchema>;

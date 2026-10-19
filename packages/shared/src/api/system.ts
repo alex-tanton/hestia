@@ -10,7 +10,6 @@ export const clientErrorRequestSchema = z.object({
   message: z.string().max(4000),
   route: z.string().max(2000).optional(),
 });
-export type ClientErrorRequest = z.infer<typeof clientErrorRequestSchema>;
 
 /** GET /api/health */
 export const healthResponseSchema = z.object({

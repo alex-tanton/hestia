@@ -8,10 +8,8 @@ import { itemNameSchema } from './lists.js';
  * breakdown; the correction applies household-wide until removed.
  */
 export const matchTargetKindSchema = z.enum(['deal', 'pantry']);
-export type MatchTargetKind = z.infer<typeof matchTargetKindSchema>;
 
 export const matchDecisionSchema = z.enum(['force_match', 'force_no_match']);
-export type MatchDecision = z.infer<typeof matchDecisionSchema>;
 
 export const matchOverrideSchema = z.object({
   id: idSchema,

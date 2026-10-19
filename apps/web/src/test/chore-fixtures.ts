@@ -4,9 +4,8 @@ import { ALEX_ID, JORDAN_ID, OAK_STREET_ID, SAM_ID } from './fixtures.ts';
 
 /*
  * Seed Data › "Chores" and "Errands", mirrored as test oracles (same convention as
- * `meal-fixtures.ts`). `TODAY` is a Sunday — the same one `meal-fixtures.ts` uses as
- * `CURRENT_WEEK_SUNDAY` — so "this week" runs `TODAY` through `addDays(TODAY, 6)` with no
- * day-of-week guesswork in the tests that group by it.
+ * `meal-fixtures.ts`). `TODAY` is a Sunday, so "this week" runs `TODAY` through
+ * `addDays(TODAY, 6)` with no day-of-week guesswork in the tests that group by it.
  */
 
 export const TODAY = '2026-09-27';

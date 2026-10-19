@@ -56,4 +56,3 @@ export const memberListSchema = z.array(memberSchema);
 export const joinHouseholdRequestSchema = z.object({
   tokenOrCode: z.string().trim().min(1, 'Enter an invite code.').max(200),
 });
-export type JoinHouseholdRequest = z.infer<typeof joinHouseholdRequestSchema>;
