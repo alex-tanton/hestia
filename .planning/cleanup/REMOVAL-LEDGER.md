@@ -68,7 +68,16 @@ pr1-ci=lint:success typecheck:success test-unit:success test-integration:success
 
 PR 1 (#12, `build/unused-deps` into `main`) is open and unmerged, mergeable state clean; the owner's squash merge is pending. The six jobs ran once on the PR head, and `test-e2e` built the service and Caddy images through Compose, so that is the Docker-build evidence for the `tsx` removal.
 
-Throwaway evidence pending the owner's choice: commit `8401de9` on local branch `ci/db-types-evidence` (worktree `/home/user/hearth-dbtypes`, adds 33 lines to `test-integration` in `.github/workflows/ci.yml` only) could not be pushed. GitHub rejected the push: "refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml` without `workflow` scope". No workaround was tried. No throwaway draft is open, so `dbtypes-*` and `dbseed` evidence is not collected yet and no `dbseed-status=` line is written; the owner chooses between granting `workflow` scope (or pushing that branch from outside this session) and `approve-pr1-only`.
+Throwaway CI run replaced by a local run (owner override, 2026-10-19). The throwaway commit `8401de9` could not be pushed: GitHub rejected it ("refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml` without `workflow` scope"), and the owner could not push it either. The owner then asked for the run to happen in this environment instead. This is local evidence, not CI evidence (phase rule on CI-only evidence overridden by the owner). Setup: Docker 29.8.2, `supabase start` (v2.117.0) with the optional services excluded (studio, imgproxy, edge-runtime, logflare, vector, supavisor, mailpit, storage-api, postgrest, postgres-meta), run in `/home/user/hearth-deps` on the PR 1 tip `e7a7dbc` (seed `tsx` removed), the same two procedures as the throwaway steps. Logs: `$L/03-02-local-{dbtypes1,dbtypes2,dbreset,dbseed}.log` (gitignored).
+
+dbtypes-source=local-docker (owner-authorized, 2026-10-19)
+dbtypes-run1-vs-run2=same
+dbtypes-run2-vs-committed=same
+dbtypes-diffstat=empty
+dbseed=exit0
+dbseed-status=proven locally (dbseed=exit0, `supabase db reset` then `pnpm db:seed`, local Docker run, not CI)
+
+`pnpm db:types` ran twice against the migrated database and both outputs were byte-identical to the committed `apps/service/src/db/types.ts` (no drift, codegen deterministic, so OQ1's determinism question is answered for this stack). `pnpm db:seed` created the five seed users and seeded households, members, favorites, notification settings and invites after `supabase db reset`, with `tsx` resolved through the service package. The throwaway branch stays local, is never pushed, and no draft was opened.
 
 ## Stale-reference sweep
 

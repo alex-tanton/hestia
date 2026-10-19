@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 03 (evidence-gated-removal) — EXECUTING
-Plan: 03-01 complete; 03-02 next
+Plan: 03-02 complete; waiting on the owner to squash-merge PR 1 (#12) before 03-03
 Status: Executing (wave 2 next: PR 1 owner gate)
 Last activity: 2026-10-19 — Phase 02 complete, transitioned to Phase 3
 
