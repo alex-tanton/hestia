@@ -101,7 +101,6 @@ export type PushSubscriptionRequest = z.infer<typeof pushSubscriptionRequestSche
 
 /** DELETE /api/users/me/push-subscriptions */
 export const deletePushSubscriptionRequestSchema = z.object({ endpoint: pushEndpointSchema });
-export type DeletePushSubscriptionRequest = z.infer<typeof deletePushSubscriptionRequestSchema>;
 
 /**
  * A notification's title and body (Branding, "Notification copy"). Every producer
