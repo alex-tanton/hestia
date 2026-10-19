@@ -10,7 +10,8 @@
  * Cells run one after another and the child inherits the zone, so every Vitest worker, under the
  * forks or the threads pool, runs in it. The sweep exits 0 only when every run passed; a child
  * killed by a signal counts as a failure. An `--only` that selects no test file exits 2 before
- * any run, because Vitest would otherwise pass an empty run.
+ * any run, because Vitest would otherwise pass an empty run; so does an `--only` whose listing
+ * fails (a broken Vitest config, a `pnpm` that cannot be spawned), with the cause on stderr.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -138,8 +139,15 @@ function selectedTestFiles(suite, workspace, only) {
     ['--filter', `@hearth/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
     { cwd: REPO_ROOT, env, encoding: 'utf8' },
   );
-  if (list.status !== 0) {
-    throw new Error(`could not list the test files for --only ${only}:\n${list.stderr}`);
+  if (list.error !== undefined || list.status !== 0) {
+    // `error` is set when pnpm cannot be spawned (then `status` and `stderr` are null); otherwise
+    // Vitest ran and failed, e.g. on a broken config. Neither is a failed cell, so exit 2.
+    const exit = `pnpm exited with status ${String(list.status ?? list.signal)}`;
+    const why =
+      list.error?.message ??
+      (list.stderr.trim() === '' ? exit : `${exit}:\n${list.stderr.trimEnd()}`);
+    console.error(`test-sweep: could not list the test files for --only ${only}: ${why}`);
+    process.exit(2);
   }
   return list.stdout.split('\n').filter((line) => line.trim() !== '');
 }
