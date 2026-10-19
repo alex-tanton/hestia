@@ -105,7 +105,7 @@ Plans:
   4. The owner receives a list of candidates tooling could not prove dead (dynamic imports, Docker/Supabase config, string-reachable code) with the evidence for each, and none of them were deleted.
   5. Typecheck, lint, unit, integration, and E2E suites and both Docker builds pass after the removals, with no diff under `supabase/migrations/` and no change in application behavior.
 
-**Plans:** 4/9 plans executed
+**Plans:** 5/9 plans executed
 
 Plans:
 **Wave 1**
@@ -121,7 +121,7 @@ Plans:
 - [x] 03-04-PLAN.md — PR 2: unused entries of the jobs, matching and recurrence barrels
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 03-05-PLAN.md — PR 2: the 18 shared `z.infer` aliases per the owner's A2 answer, then a branch-wide green run
+- [x] 03-05-PLAN.md — PR 2: the 18 shared `z.infer` aliases per the owner's A2 answer, then a branch-wide green run
 
 **Wave 6** *(blocked on Wave 5 completion)*
 - [ ] 03-06-PLAN.md — PR 3 content: the stale `BUILD_PROMPT.md` ignore entries, path sweep, leftover audit and orphan-docs re-check
@@ -190,7 +190,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
-| 3. Evidence-Gated Removal | 4/9 | In Progress | - |
+| 3. Evidence-Gated Removal | 5/9 | In Progress | - |
 | 4. Bug Fixes With Regression Tests | 0/TBD | Not started | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |

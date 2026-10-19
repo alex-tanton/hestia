@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: evidence-gated-removal
 status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-10-19T22:05:13.513Z"
+stopped_at: Completed 03-05-PLAN.md
+last_updated: "2026-10-19T22:17:49.051Z"
 last_activity: 2026-10-19
 last_activity_desc: Phase 02 complete, transitioned to Phase 3
-state_head: af777d908174ffe3fdeeae40fdbc3efae3bad210
+state_head: 025a6a5b358e2bf611391bd0579908f04a36c51a
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 18
+  completed_plans: 19
   percent: 33
 ---
 
@@ -64,6 +64,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 01 P05 | ~35min | 3 tasks | 2 files |
 | Phase 03 P03 | 1h | 3 tasks | 6 files |
 | Phase 3 P04 | 30min | 2 tasks | 3 files |
+| Phase 03 P05 | 25min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,7 @@ Recent decisions affecting current work:
 - [Phase 2]: Development moved to Claude Code cloud sessions. `.planning/` and `.claude/CLAUDE.md` are tracked on `main` (`commit_docs: true`); the plans run on Linux against `.planning/environment/cloud-setup.sh`, with Docker optional (no Docker: integration and E2E evidence comes from PR CI). Work branches `test/deterministic-clock` and `chore/knip-config` are backup-pushed after each plan with no PR; PRs open only at 02-08's gate (or 02-04's early-CI draft). Raw logs under `.planning/cleanup/logs/` are gitignored and never committed.
 - [Phase 2]: Clock pin is a subclass-safe `Date`, not `vi.setSystemTime` (it breaks `@date-fns/tz` in negative-offset zones); PR #8 later made suite-level overrides survive and covered the pin with 167 harness tests run by `pnpm test`
 - [Phase 2]: Owner decisions after verification (D-13 to D-18 in 02-CONTEXT.md): Phase 5 uses the test-inclusive jscpd baseline; weekend E2E run deferred; vitest declared at the root; fuzzy benchmark deleted; packages are internal; the jobs barrel keeps its test
+- [Phase 03]: A2=remove honored: 18 unused z.infer aliases removed from packages/shared, schemas kept
 
 ### Pending Todos
 
@@ -113,6 +115,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-19T22:05:13.406Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-10-19T22:17:48.980Z
+Stopped at: Completed 03-05-PLAN.md
 Resume file: None
