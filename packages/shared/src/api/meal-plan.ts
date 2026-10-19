@@ -37,7 +37,6 @@ export type MealPlanWeekResponse = z.infer<typeof mealPlanWeekResponseSchema>;
 
 /** GET /households/:id/meal-plan?week=YYYY-MM-DD */
 export const mealPlanQuerySchema = z.object({ week: calendarDateSchema.optional() });
-export type MealPlanQuery = z.infer<typeof mealPlanQuerySchema>;
 
 /** POST /households/:id/meal-plan */
 export const createMealPlanEntryRequestSchema = z.object({
@@ -52,10 +51,8 @@ export type CreateMealPlanEntryRequest = z.infer<typeof createMealPlanEntryReque
  * single recipe, a single planned meal, or a whole planned week; only the route differs.
  */
 export const addToListRequestSchema = z.object({ listId: idSchema });
-export type AddToListRequest = z.infer<typeof addToListRequestSchema>;
 
 export const weekAddToListRequestSchema = z.object({
   week: calendarDateSchema,
   listId: idSchema,
 });
-export type WeekAddToListRequest = z.infer<typeof weekAddToListRequestSchema>;

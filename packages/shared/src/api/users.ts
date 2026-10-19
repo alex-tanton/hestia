@@ -11,7 +11,6 @@ import {
 } from './common.js';
 
 export const quietHoursSchema = z.object({ start: timeOfDaySchema, end: timeOfDaySchema });
-export type QuietHours = z.infer<typeof quietHoursSchema>;
 
 export const membershipSchema = z.object({
   householdId: idSchema,
@@ -52,7 +51,6 @@ export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
 
 /** PUT /api/users/me/active-household */
 export const setActiveHouseholdRequestSchema = z.object({ householdId: idSchema });
-export type SetActiveHouseholdRequest = z.infer<typeof setActiveHouseholdRequestSchema>;
 
 /**
  * POST /api/users/me/password. `currentPassword` may be left out only in a session that began

@@ -18,18 +18,8 @@ export {
   previewOccurrences,
 } from './occurrence.js';
 
-export { currentBillOccurrence, type BillOccurrenceState } from './bills.js';
+export { currentBillOccurrence } from './bills.js';
 
-export {
-  currentChoreOccurrence,
-  occurrenceToComplete,
-  type ChoreOccurrenceState,
-} from './chores.js';
+export { currentChoreOccurrence, occurrenceToComplete } from './chores.js';
 
-export {
-  currentTurn,
-  currentTurnIndex,
-  rebaseRotationOnDeparture,
-  rebaseRotationOnEdit,
-  type RebasedRotation,
-} from './rotation.js';
+export { currentTurn, rebaseRotationOnDeparture, rebaseRotationOnEdit } from './rotation.js';

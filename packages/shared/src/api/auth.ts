@@ -28,4 +28,3 @@ export const sessionResponseSchema = z.looseObject({
   refresh_token: z.string(),
   user: z.looseObject({ id: z.string() }),
 });
-export type SessionResponse = z.infer<typeof sessionResponseSchema>;

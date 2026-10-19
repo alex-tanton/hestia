@@ -39,12 +39,6 @@ export function listWriteScope(listId: string): { id: string } {
   return { id: `list:${listId}` };
 }
 
-export function listIdOfWrite(key: MutationKey | undefined): string | undefined {
-  if (key?.[0] !== LIST_WRITE_PREFIX) return undefined;
-  const listId: unknown = key[1];
-  return typeof listId === 'string' ? listId : undefined;
-}
-
 export interface AddListItemVariables {
   kind: 'add-item';
   householdId: string;

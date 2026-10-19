@@ -1,7 +1,5 @@
 import type {
   MatchOverride,
-  MealPlanEntry,
-  MealPlanWeekResponse,
   Recipe,
   RecipeDetail,
   RecipeListResponse,
@@ -20,7 +18,6 @@ export const SHEET_PAN_CHICKEN_ID = 'c0000001-0000-4000-8000-000000000001';
 export const BAKED_ZITI_ID = 'c0000001-0000-4000-8000-000000000002';
 export const GRILLED_CHEESE_ID = 'c0000001-0000-4000-8000-000000000003';
 export const PAD_THAI_ID = 'c0000001-0000-4000-8000-000000000004';
-export const GREEK_SALAD_ID = 'c0000001-0000-4000-8000-000000000005';
 export const TUNA_POKE_BOWL_ID = 'c0000001-0000-4000-8000-000000000006';
 export const MISO_SOUP_ID = 'c0000001-0000-4000-8000-000000000007';
 
@@ -534,63 +531,6 @@ export const riveraSuggestionsFixture: SuggestionsResponse = {
   recipes: [tunaPokeBowlFixture, misoSoupFixture],
   dealsAsOf: '2026-09-19T09:00:00.000Z',
 };
-
-/*
- * Seed Data › "Meal plan": Oak Street's current week has seven entries, including two in
- * Wednesday's dinner slot (Baked Ziti and Greek Salad). The previous week has one entry with a
- * null `recipe_id` and the snapshot title "Mushroom Stroganoff", standing for a deleted recipe.
- */
-export const CURRENT_WEEK_SUNDAY = '2026-09-27';
-export const PREVIOUS_WEEK_SUNDAY = '2026-09-20';
-
-export const wednesdayZitiEntry: MealPlanEntry = {
-  id: 'e0000001-0000-4000-8000-000000000001',
-  householdId: OAK_STREET_ID,
-  recipeId: BAKED_ZITI_ID,
-  recipeTitle: 'Baked Ziti',
-  readinessPercent: 71,
-  plannedDate: '2026-09-30',
-  mealType: 'dinner',
-  addedBy: ALEX_ID,
-  createdAt: CREATED_AT,
-};
-
-export const wednesdaySaladEntry: MealPlanEntry = {
-  id: 'e0000001-0000-4000-8000-000000000002',
-  householdId: OAK_STREET_ID,
-  recipeId: GREEK_SALAD_ID,
-  recipeTitle: 'Greek Salad',
-  readinessPercent: 29,
-  plannedDate: '2026-09-30',
-  mealType: 'dinner',
-  addedBy: ALEX_ID,
-  createdAt: CREATED_AT,
-};
-
-export const currentWeekFixture: MealPlanWeekResponse = {
-  week: CURRENT_WEEK_SUNDAY,
-  entries: [wednesdayZitiEntry, wednesdaySaladEntry],
-};
-
-/** The deleted-recipe snapshot fixture: null `recipeId`, the title and nothing else survives. */
-export const deletedRecipeEntry: MealPlanEntry = {
-  id: 'e0000002-0000-4000-8000-000000000001',
-  householdId: OAK_STREET_ID,
-  recipeId: null,
-  recipeTitle: 'Mushroom Stroganoff',
-  readinessPercent: null,
-  plannedDate: '2026-09-22',
-  mealType: 'dinner',
-  addedBy: ALEX_ID,
-  createdAt: '2026-09-10T12:00:00.000Z',
-};
-
-export const previousWeekFixture: MealPlanWeekResponse = {
-  week: PREVIOUS_WEEK_SUNDAY,
-  entries: [deletedRecipeEntry],
-};
-
-export const emptyWeekFixture = (week: string): MealPlanWeekResponse => ({ week, entries: [] });
 
 function baseRecipe(detail: RecipeDetail): Recipe {
   return {

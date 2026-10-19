@@ -8,7 +8,6 @@ import { calendarDateSchema, idSchema, timestampSchema } from './common.js';
  */
 
 export const errandStatusSchema = z.enum(['open', 'done']);
-export type ErrandStatus = z.infer<typeof errandStatusSchema>;
 
 export const errandNameSchema = z.string().trim().min(1, 'Enter a name.').max(200);
 
