@@ -5,6 +5,48 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// Names a test can reach the global object by.
+const GLOBAL = '/^(globalThis|global|window|self)$/';
+
+// Real-clock reads in test code: the pin freezes Date, but these read "now" without saying which
+// instant. `new Date(someValue)`, `Date.UTC` and `Date.parse` take an instant and are fine.
+const CLOCK_READS = [
+  // new Date(), new globalThis.Date(), new (Date as X)()
+  "NewExpression[callee.name='Date'][arguments.length=0]",
+  `NewExpression[callee.object.name=${GLOBAL}][callee.property.name='Date'][arguments.length=0]`,
+  "NewExpression[arguments.length=0] > TSAsExpression.callee > Identifier.expression[name='Date']",
+  "NewExpression[arguments.length=0] > TSAsExpression.callee > TSAsExpression.expression > Identifier.expression[name='Date']",
+  // new Date(undefined), new Date(void 0), new Date(...[]), Reflect.construct(Date, [])
+  "NewExpression[callee.name='Date'][arguments.length=1][arguments.0.type='Identifier'][arguments.0.name='undefined']",
+  "NewExpression[callee.name='Date'][arguments.length=1][arguments.0.type='UnaryExpression'][arguments.0.operator='void']",
+  "NewExpression[callee.name='Date'] > SpreadElement[argument.type='ArrayExpression'][argument.elements.length=0]",
+  "CallExpression[callee.object.name='Reflect'][callee.property.name='construct'][arguments.0.name='Date'][arguments.1.elements.length=0]",
+  // Date() as a function returns the current time as a string.
+  "CallExpression[callee.name='Date']",
+  `CallExpression[callee.object.name=${GLOBAL}][callee.property.name='Date']`,
+  // Date.now in any spelling, as a call, an alias or a reference: Date['now'], globalThis.Date.now,
+  // const read = Date.now, { now: Date.now }
+  "MemberExpression[object.name='Date'][computed=false][property.name='now']",
+  "MemberExpression[object.name='Date'][computed=true][property.value='now']",
+  `MemberExpression[object.object.name=${GLOBAL}][object.property.name='Date'][computed=false][property.name='now']`,
+  `MemberExpression[object.object.name=${GLOBAL}][object.property.name='Date'][computed=true][property.value='now']`,
+  // const { now } = Date
+  "VariableDeclarator[init.name='Date'] > ObjectPattern > Property[key.name='now']",
+  `VariableDeclarator[init.object.name=${GLOBAL}][init.property.name='Date'] > ObjectPattern > Property[key.name='now']`,
+];
+
+// A formatter with no instant formats the real "now", which the pin does not cover.
+const FORMATTER_READS = [
+  "CallExpression[arguments.length=0][callee.property.name=/^(format|formatToParts)$/][callee.object.callee.object.name='Intl'][callee.object.callee.property.name='DateTimeFormat']",
+  "CallExpression[arguments.length=1][arguments.0.type='Identifier'][arguments.0.name='undefined'][callee.property.name=/^(format|formatToParts)$/][callee.object.callee.object.name='Intl'][callee.object.callee.property.name='DateTimeFormat']",
+];
+
+const CLOCK_MESSAGE =
+  'Read time from the pinned test clock: pass an explicit instant to the Date constructor or call currentInstant(). A real-clock read needs a next-line eslint-disable with a reason (docs/testing.md).';
+
+const FORMATTER_MESSAGE =
+  'A formatter given no instant formats the real clock, which the test pin does not cover: pass the instant to format(). A real-clock read needs a next-line eslint-disable with a reason (docs/testing.md).';
+
 export default tseslint.config(
   {
     ignores: [
@@ -97,9 +139,12 @@ export default tseslint.config(
   {
     // Tests read time from the pinned clock (test/clock-setup.mjs). A real-clock read goes through
     // a currentInstant helper or carries a next-line opt-out with a reason (docs/testing.md).
+    // The selectors catch the shapes below; a read hidden behind a variable (a formatter built
+    // once and called later) or `process.hrtime()` is out of reach of a selector. `performance
+    // .now()` is allowed on purpose: it measures elapsed time, so it cannot tie a result to the
+    // day or the zone.
     files: [
-      '**/*.test.{ts,tsx}',
-      '**/*.spec.ts',
+      '**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}',
       'e2e/**/*.ts',
       'apps/service/src/test/**/*.ts',
       'apps/web/src/test/**/*.{ts,tsx}',
@@ -109,16 +154,8 @@ export default tseslint.config(
     rules: {
       'no-restricted-syntax': [
         'error',
-        {
-          selector: "NewExpression[callee.name='Date'][arguments.length=0]",
-          message:
-            'Read time from the pinned test clock: pass an explicit instant to the Date constructor or call currentInstant(). A real-clock read needs a next-line eslint-disable with a reason (docs/testing.md).',
-        },
-        {
-          selector: "CallExpression[callee.object.name='Date'][callee.property.name='now']",
-          message:
-            'Read time from the pinned test clock: pass an explicit instant to the Date constructor or call currentInstant(). A real-clock read needs a next-line eslint-disable with a reason (docs/testing.md).',
-        },
+        ...CLOCK_READS.map((selector) => ({ selector, message: CLOCK_MESSAGE })),
+        ...FORMATTER_READS.map((selector) => ({ selector, message: FORMATTER_MESSAGE })),
       ],
     },
   },

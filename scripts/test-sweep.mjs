@@ -9,7 +9,8 @@
  *
  * Cells run one after another and the child inherits the zone, so every Vitest worker, under the
  * forks or the threads pool, runs in it. The sweep exits 0 only when every run passed; a child
- * killed by a signal counts as a failure.
+ * killed by a signal counts as a failure. An `--only` that selects no test file exits 2 before
+ * any run, because Vitest would otherwise pass an empty run.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -124,6 +125,25 @@ function commandFor(suite, workspace, only) {
   return `pnpm --filter @hearth/${workspace} ${script}${filter}`;
 }
 
+/**
+ * The test files `only` selects in `workspace`, asked of Vitest itself, so it uses the same
+ * config and filter rules as the run. Every workspace's `test` script passes `--passWithNoTests`,
+ * so a filter that selects nothing would otherwise exit 0 and be counted as a pass.
+ */
+function selectedTestFiles(suite, workspace, only) {
+  const config = suite === 'integration' ? ['--config', 'vitest.integration.config.ts'] : [];
+  const env = cellEnvironment({ now: undefined, tz: undefined });
+  const list = spawnSync(
+    'pnpm',
+    ['--filter', `@hearth/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
+    { cwd: REPO_ROOT, env, encoding: 'utf8' },
+  );
+  if (list.status !== 0) {
+    throw new Error(`could not list the test files for --only ${only}:\n${list.stderr}`);
+  }
+  return list.stdout.split('\n').filter((line) => line.trim() !== '');
+}
+
 function main() {
   const { options, list } = parseArguments(process.argv.slice(2));
   if (list) {
@@ -163,6 +183,20 @@ function main() {
     const [single] = workspaces;
     if (workspaces.length !== 1 || single === undefined || !VITEST_WORKSPACES.includes(single)) {
       usageError('--only needs a single Vitest workspace');
+    }
+  }
+
+  if (options.only !== undefined) {
+    const [single] = workspaces;
+    if (
+      single !== undefined &&
+      selectedTestFiles(options.suite, single, options.only).length === 0
+    ) {
+      console.error(
+        `test-sweep: --only ${options.only} matches no test file in @hearth/${single} ` +
+          `(${options.suite} suite); a sweep that runs nothing is not a pass`,
+      );
+      return 2;
     }
   }
 

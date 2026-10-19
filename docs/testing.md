@@ -67,10 +67,16 @@ controlled, not inherited from the machine.
 
 - **The clock pin.** Every unit and component test runs with `Date` pinned by
   `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
-  Wednesday). Every workspace's unit Vitest config (and the service coverage config) loads the setup
+  Wednesday). `HEARTH_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
+  (`2030-10-05T23:30:00+02:00`); a value without one is read in the machine's zone and is
+  rejected. Every workspace's unit Vitest config (and the service coverage config) loads the setup
   file; the integration config does not, and the setup file skips `*.integration.test.*` files in
   any case. It re-pins before each test and restores after it. A test overrides the instant with
-  `vi.setSystemTime`.
+  `vi.setSystemTime` or `vi.useFakeTimers`; where the override is installed decides how long it
+  lasts. In a test body or a `beforeEach` it ends with that test. At module scope or in a
+  `beforeAll` the suite owns the clock: it stays for every test in that scope, as the tests leave
+  it, and the suite removes it in an `afterAll` with `vi.useRealTimers()`, after which the pin is
+  back.
 - **The pin does not move.** Under the pin `Date.now()` and `new Date()` stay frozen while real
   timers run, and `performance.now()` is the real clock. A test of elapsed time, a deadline or a
   wait loop measures with `performance.now()` or installs fake timers in the test body.
@@ -85,12 +91,18 @@ controlled, not inherited from the machine.
   read), `dateInZone`, `householdDate`, and the helpers `addDays` and `daysBetween`.
 - **The zone hook.** `test/global-tz.mjs` is a Vitest `globalSetup`, loaded by every workspace's
   Vitest config including the integration one. It validates `TZ` as an IANA zone, fails the run on
-  a bad value, prints one `[test-clock]` line, and does nothing when `TZ` is unset.
+  a bad value, prints one `[test-clock]` line, and does nothing when `TZ` is unset. It accepts every
+  `TZ` value Node runs on as a zone, including UTC aliases (`GMT`, `Etc/UTC`) and the POSIX
+  leading-colon form (`:America/New_York`). It fails the run for an unknown zone, a wrong letter
+  case (Node falls back to UTC) and POSIX offset strings such as `UTC+3`. It also checks
+  `HEARTH_TEST_NOW` before any test runs, so a bad value is one message, not an error in every test
+  file.
 - **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
   its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
   takes `--workspace`, `--cell`, `--only`, `--log-dir` and `--list`, and prints
-  `sweep: {passed}/{total} passed`.
+  `sweep: {passed}/{total} passed`. An `--only` that selects no test file exits 2 with a message
+  before anything runs, instead of passing an empty run.
 
   | Unit cell | Instant (UTC) | `TZ` | What it covers |
   | --- | --- | --- | --- |
@@ -112,8 +124,12 @@ controlled, not inherited from the machine.
 - **Setting `TZ`.** Set it only through the sweep, or through an `env` object passed to a spawned
   process. The hook then validates it, and the sweep checks that it took effect. Never export it in
   the shell or force `TZ=UTC` for a whole suite.
-- **The lint rule.** ESLint's `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test
-  files, `e2e/`, the test helper folders and `test/**/*.mjs`; production modules are not covered.
+- **The lint rule.** ESLint's `no-restricted-syntax` bans reads of the real clock in test files
+  (`*.test.*`, `*.spec.*`), `e2e/`, the test helper folders and `test/**/*.mjs`: bare `new Date()`,
+  `new Date(undefined)`, `Date()`, `Date.now` in any spelling (`globalThis.Date.now()`,
+  `Date['now']()`, an alias or a reference) and an `Intl.DateTimeFormat` formatter called with no
+  instant. `performance.now()` is allowed (it measures elapsed time, not the calendar); a formatter
+  held in a variable and `process.hrtime()` are not detected. Production modules are not covered.
   Read the clock through a helper where one exists: `currentInstant()` from
   `apps/service/src/test/zone-dates.ts` in service tests, and from `e2e/support/clock.ts` in E2E.
   `apps/web`, `packages/*` and `test/` have no such helper, so pass an explicit instant to the
