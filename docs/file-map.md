@@ -16,7 +16,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `docker/` | Everything needed to build and run the production stack with Docker Compose. |
 | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
 | `scripts/` | Small operational scripts for deployment and secret generation, plus the test date and time-zone sweep. |
-| `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests. |
+| `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
 | `.github/` | Continuous integration and deployment automation (GitHub Actions), plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
@@ -151,6 +151,7 @@ shopping list.
 | --- | --- |
 | `deploy.sh` | Builds and deploys the production stack: backs up the database, applies pending migrations, swaps in new containers, and rolls back automatically if the new version fails a health check. |
 | `test-sweep.mjs` | Runs the unit or service integration test suite once per cell of a fixed matrix of pinned dates and time zones, each cell in its own process (`pnpm test:sweep`, `pnpm test:sweep:integration`). |
+| `test-sweep.test.mjs` | Harness test for the sweep: argument checks, an `--only` that selects nothing, a listing that cannot run, and one real single-cell run. Run by `pnpm test:harness`. |
 | `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |
 
 ## 9. docs/
@@ -182,3 +183,20 @@ shopping list.
 | `.dockerignore` | Lists files and folders excluded when building a Docker image. | Keeps build context small and makes sure secrets, test artifacts, and unrelated folders never end up inside a built image. |
 | `.gitattributes` | Tells Git how to handle certain files — here, normalizing line endings to LF for text files and marking binary files (images, archives) so Git doesn't try to treat them as text. | Prevents line-ending mismatches between contributors on different operating systems. |
 | CI, `.github/workflows/` | GitHub Actions automation: `ci.yml` runs checks (lint, typecheck, tests) on every pull request and push; `deploy.yml` deploys a passing `main` commit to production. `dependabot.yml` opens automated pull requests to keep dependencies up to date. | Catches problems before merge and automates getting a verified change into production. |
+
+## 11. test/
+
+Shared test setup for the unit suites, plus the harness tests that check it. Both kinds of file are
+plain Node ES modules (`.mjs`). The harness tests use Node's built-in runner (`node --test`) and run
+through `pnpm test:harness`, which `pnpm test` runs before any workspace suite. How the pieces work
+is in `docs/testing.md`, under "Dates and time zones".
+
+| File | Purpose |
+| --- | --- |
+| `clock-setup.mjs` | Vitest setup file loaded by every workspace's unit config: pins `Date` to `HEARTH_TEST_NOW` (default `2026-10-14T12:00:00.000Z`) so a test does not depend on the wall clock. Skips `*.integration.test.*` files. |
+| `global-tz.mjs` | Vitest `globalSetup` loaded by every workspace's Vitest config: validates `TZ` and `HEARTH_TEST_NOW` before any test runs. |
+| `test-now.mjs` | Parses `HEARTH_TEST_NOW` into an instant; shared by the pin and the zone hook. |
+| `clock-setup.test.mjs` | Harness test for the clock pin, run from inside real Vitest workers. |
+| `global-tz.test.mjs` | Harness test for the zone hook, one child process per case. |
+| `eslint-clock-ban.test.mjs` | Harness test for the ESLint rule that bans real-clock reads in test files. |
+| `support/vitest-project.mjs` | Helper for the harness tests: writes a throwaway Vitest project in a temporary directory and runs it with the clock setup file. |
