@@ -105,17 +105,17 @@ Plans:
   4. The owner receives a list of candidates tooling could not prove dead (dynamic imports, Docker/Supabase config, string-reachable code) with the evidence for each, and none of them were deleted.
   5. Typecheck, lint, unit, integration, and E2E suites and both Docker builds pass after the removals, with no diff under `supabase/migrations/` and no change in application behavior.
 
-**Plans:** 9 plans
+**Plans:** 3/9 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 03-01-PLAN.md — Tracer: commit the knip normalizer and remove the seed `tsx` on `build/unused-deps`; start the removal ledger; DEAD-01 null result; owner decides A1, A2, A8 and OQ1
+- [x] 03-01-PLAN.md — Tracer: commit the knip normalizer and remove the seed `tsx` on `build/unused-deps`; start the removal ledger; DEAD-01 null result; owner decides A1, A2, A8 and OQ1
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 03-02-PLAN.md — Owner gate, PR 1 into main with six green jobs, and a throwaway draft for the `db:types` and `db:seed` CI evidence
+- [x] 03-02-PLAN.md — Owner gate, PR 1 into main with six green jobs, and a throwaway draft for the `db:types` and `db:seed` CI evidence
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 03-03-PLAN.md — PR 2 web slice: the six proven-dead items, the bills alias, and the meal-fixture cascade to a fixed point under the throwaway config
+- [x] 03-03-PLAN.md — PR 2 web slice: the six proven-dead items, the bills alias, and the meal-fixture cascade to a fixed point under the throwaway config
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 03-04-PLAN.md — PR 2: unused entries of the jobs, matching and recurrence barrels
@@ -190,7 +190,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
-| 3. Evidence-Gated Removal | 0/9 | Planned | - |
+| 3. Evidence-Gated Removal | 3/9 | In Progress | - |
 | 4. Bug Fixes With Regression Tests | 0/TBD | Not started | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |
