@@ -89,13 +89,10 @@ export type ShoppingListDetail = z.infer<typeof shoppingListDetailSchema>;
 
 /** GET /api/households/:id/lists?archived=true */
 export const listsQuerySchema = z.object({ archived: z.enum(['true', 'false']).optional() });
-export type ListsQuery = z.infer<typeof listsQuerySchema>;
 
 export const createListRequestSchema = z.object({ name: listNameSchema });
-export type CreateListRequest = z.infer<typeof createListRequestSchema>;
 
 export const updateListRequestSchema = z.object({ name: listNameSchema });
-export type UpdateListRequest = z.infer<typeof updateListRequestSchema>;
 
 /** A store is its id and its name together; the snapshot is useless with one of them missing. */
 function storePair(body: {

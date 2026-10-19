@@ -1,4 +1,4 @@
-import type { Chore, ChoreDetail, Member, RecurrenceUnit } from '@hearth/shared';
+import type { Chore, Member, RecurrenceUnit } from '@hearth/shared';
 import { addDays, weekStart } from '../../lib/household-date.ts';
 
 /*
@@ -206,6 +206,3 @@ export function allChoreCopyStrings(): string[] {
     formatLastCompleted(null, '2026-09-20'),
   ];
 }
-
-/** `ChoreDetail` carries everything `Chore` does, so a detail reads from either copy helper. */
-export type ChoreLike = Chore | ChoreDetail;

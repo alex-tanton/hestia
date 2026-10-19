@@ -113,7 +113,6 @@ const pageNumber = z.coerce.number().int().min(1).max(1_000);
 
 /** GET /api/households/:id/recipes */
 export const recipesQuerySchema = z.object({ page: pageNumber.default(1) });
-export type RecipesQuery = z.infer<typeof recipesQuerySchema>;
 
 export const recipeListResponseSchema = z.object({
   recipes: z.array(recipeSchema),
@@ -168,7 +167,6 @@ export type UpdateRecipeRequest = z.infer<typeof updateRecipeRequestSchema>;
 
 /** POST /api/households/:id/recipes/parse. Never saves; the client reviews and edits the result. */
 export const parseRecipeRequestSchema = z.object({ url: z.url('Enter a valid URL.') });
-export type ParseRecipeRequest = z.infer<typeof parseRecipeRequestSchema>;
 
 export const parsedIngredientSchema = z.object({
   rawText: z.string(),
