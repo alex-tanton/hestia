@@ -17,7 +17,7 @@ Phase 2 is infrastructure and analysis, so it has no user-facing behavior to exe
 ### 1. E2E on a different weekday (TIME-03)
 expected: The CI test-e2e job passes all 19 specs on a Saturday and a Sunday in New York, and once just after New York midnight.
 result: skipped
-reason: "Owner deferral (D-14, 2026-10-13): 'Ignore running test-e2e on a weekend for now, it would take days to wait for the opportunity.' No scheduled run exercises it; the weekend 2026-10-17/18 produced no ci.yml run, checked 2026-10-19."
+reason: "Deferred follow-up: Ignore running test-e2e on a weekend for now, it would take days to wait for the opportunity. (owner, 2026-10-13, D-14). No scheduled run exercises it; the weekend of 2026-10-17/18 produced no ci.yml run, checked 2026-10-19."
 
 ### 2. Owner candidate list review (BASE-03)
 expected: The owner decides keep or may-go for each OWNER-CANDIDATES.md item class before Phase 3 removes anything.
@@ -55,3 +55,9 @@ blocked: 0
 ## Gaps
 
 [none]
+
+## Deferred Follow-Ups
+
+- test: 1
+  idea: "Ignore running test-e2e on a weekend for now, it would take days to wait for the opportunity."
+  deferred_at: 2026-10-13
