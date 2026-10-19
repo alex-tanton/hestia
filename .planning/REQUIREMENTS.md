@@ -16,18 +16,18 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Baseline and analysis
 
-- [ ] **BASE-01**: A baseline of typecheck, lint, test and build results on untouched `main` is recorded
-- [ ] **BASE-02**: knip is configured with explicit entry points (`sw.ts`, seed, e2e global setup, package exports) and calibrated with canaries
-- [ ] **BASE-03**: Findings are triaged into proven-dead, config-gap, test-only and uncertain, with the uncertain list handed to the owner
-- [ ] **BASE-04**: A duplication scan is recorded
+- [x] **BASE-01**: A baseline of typecheck, lint, test and build results on untouched `main` is recorded
+- [x] **BASE-02**: knip is configured with explicit entry points (`sw.ts`, seed, e2e global setup, package exports) and calibrated with canaries
+- [x] **BASE-03**: Findings are triaged into proven-dead, config-gap, test-only and uncertain, with the uncertain list handed to the owner
+- [x] **BASE-04**: A duplication scan is recorded
 
 ### Test determinism
 
-- [ ] **TIME-01**: Unit and component tests pin "now" and timezone through a global hook, and the 7 failing time-dependent web test files are fixed
-- [ ] **TIME-02**: Service and package suites are swept for date and timezone dependence and fixed
-- [ ] **TIME-03**: E2E expectations are derived from seed data with no weekday assumptions
-- [ ] **TIME-04**: A lint rule bans bare `new Date()` and `Date.now()` in tests and `e2e/`
-- [ ] **TIME-05**: The UTC-versus-household-zone date helper flake in `bills.integration.test.ts` is fixed
+- [x] **TIME-01**: Unit and component tests pin "now" and timezone through a global hook, and the 7 failing time-dependent web test files are fixed
+- [x] **TIME-02**: Service and package suites are swept for date and timezone dependence and fixed
+- [x] **TIME-03**: E2E expectations are derived from seed data with no weekday assumptions (done and green in CI on one calendar day; the weekend confirmation run is deferred by the owner, see the Phase 2 UAT)
+- [x] **TIME-04**: A lint rule bans bare `new Date()` and `Date.now()` in tests and `e2e/`
+- [x] **TIME-05**: The UTC-versus-household-zone date helper flake in `bills.integration.test.ts` is fixed
 - [ ] **TIME-06**: CI runs unit and component tests across a date/timezone matrix on `main` and nightly
 
 ### Dead code and hygiene
@@ -106,15 +106,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GIT-02 | Phase 1 | Complete |
 | GIT-03 | Phase 1 | Complete |
 | GIT-04 | Phase 1 | Complete |
-| BASE-01 | Phase 2 | Pending |
-| BASE-02 | Phase 2 | Pending |
-| BASE-03 | Phase 2 | Pending |
-| BASE-04 | Phase 2 | Pending |
-| TIME-01 | Phase 2 | Pending |
-| TIME-02 | Phase 2 | Pending |
-| TIME-03 | Phase 2 | Pending |
-| TIME-04 | Phase 2 | Pending |
-| TIME-05 | Phase 2 | Pending |
+| BASE-01 | Phase 2 | Complete |
+| BASE-02 | Phase 2 | Complete |
+| BASE-03 | Phase 2 | Complete |
+| BASE-04 | Phase 2 | Complete |
+| TIME-01 | Phase 2 | Complete |
+| TIME-02 | Phase 2 | Complete |
+| TIME-03 | Phase 2 | Complete |
+| TIME-04 | Phase 2 | Complete |
+| TIME-05 | Phase 2 | Complete |
 | DEAD-01 | Phase 3 | Pending |
 | DEAD-02 | Phase 3 | Pending |
 | DEAD-03 | Phase 3 | Pending |

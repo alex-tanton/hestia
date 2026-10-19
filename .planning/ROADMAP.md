@@ -13,7 +13,7 @@ This milestone takes an LLM-built household PWA to a base the owner can trust be
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Git History Curation and Branch Policy** - Publish a curated, owner-approved history to `origin` and write down how work lands afterward (completed 2026-10-12)
-- [ ] **Phase 2: Baseline, Net Stabilization, and Analysis** - Make the test suite deterministic on any day and timezone, and produce a calibrated, triaged dead-code and duplication analysis
+- [x] **Phase 2: Baseline, Net Stabilization, and Analysis** - Make the test suite deterministic on any day and timezone, and produce a calibrated, triaged dead-code and duplication analysis (completed 2026-10-19)
 - [ ] **Phase 3: Evidence-Gated Removal** - Remove proven-dead files, exports, dependencies, and stale references; hand uncertain candidates to the owner
 - [ ] **Phase 4: Bug Fixes With Regression Tests** - Fix the known bugs and robustness gaps, each guarded by a test that failed before the fix
 - [ ] **Phase 5: Redundancy Reduction and Text Sync** - Reduce duplicated CI, fixtures, and stale comments, and bring docs in line with the final code
@@ -64,7 +64,7 @@ Plans:
   4. Writing a bare `new Date()` or `Date.now()` in a test file or under `e2e/` fails lint.
   5. knip runs with explicit entry points (`sw.ts`, seed, e2e global setup, package exports), planted canaries behave as expected (known-dead is reported, known-live is not), findings are triaged into proven-dead, config-gap, test-only, and uncertain, and a jscpd duplication scan is recorded.
 
-**Plans:** 9/9 plans executed
+**Plans:** 9/9 plans complete
 
 Plans:
 **Wave 1**
@@ -161,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
-| 2. Baseline, Net Stabilization, and Analysis | 9/9 | In Progress | - |
+| 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 0/TBD | Not started | - |
 | 4. Bug Fixes With Regression Tests | 0/TBD | Not started | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |

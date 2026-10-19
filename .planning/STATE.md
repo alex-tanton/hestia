@@ -1,43 +1,43 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 2
-current_phase_name: Baseline, Net Stabilization, and Analysis
-status: executing
-stopped_at: Phase 2 planned (9 plans, cloud-portable)
-last_updated: "2026-10-12T21:51:07.832Z"
-last_activity: 2026-10-12
-last_activity_desc: Phase 2 plans made cloud-portable and committed to main
-state_head: d3da748223fb85432fc06defaa25ac00ac4ed258
+current_phase: 3
+current_phase_name: Evidence-Gated Removal
+status: planning
+stopped_at: Phase 02 complete, ready to plan Phase 3
+last_updated: "2026-10-19T13:45:26.115Z"
+last_activity: 2026-10-19
+last_activity_desc: Phase 02 complete, transitioned to Phase 3
+state_head: 4b44f19121fc5623ca776bec6c6acf601f9cf850
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 14
-  completed_plans: 5
-  percent: 17
+  completed_plans: 14
+  percent: 33
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-11)
+See: .planning/PROJECT.md (updated 2026-10-19)
 
 **Core value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
-**Current focus:** Phase 2 — Baseline, Net Stabilization, and Analysis
+**Current focus:** Phase 3 — Evidence-Gated Removal
 
 ## Current Position
 
-Phase: 2 (Baseline, Net Stabilization, and Analysis) — READY TO EXECUTE
+Phase: 3 — Evidence-Gated Removal
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-12 — Phase 2 plans made cloud-portable; planning docs tracked on `main`
+Status: Ready to plan
+Last activity: 2026-10-19 — Phase 02 complete, transitioned to Phase 3
 
-Progress: [██░░░░░░░░] 17%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 14
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -46,6 +46,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 5 | - | - |
+| 02 | 9 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -82,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Plan 01-05: candidate tip changed after Gate 2 to d3da748223fb85432fc06defaa25ac00ac4ed258 (83eae2c plus a ci.yml-only pre-pull commit); pushed fast-forward to origin/curated-main; PR #1 CI: lint, typecheck, test-integration, test-e2e (102/102), build pass; test-unit fails on the one known timezone web test (Phase 2 TIME-01 class, unproven)
 - [Phase 01]: Plan 01-05: Gate 3 recorded as push-main-accept-red for d3da748 (owner reply approve-gate-3, 2026-10-12, red job test-unit). First push rejected by ruleset "Main PR Enforcement" (GH013); owner changed the ruleset and re-confirmed ("A done, re-confirm gate 3"); second plain push succeeded: origin/main 7da55e3..d3da748, PR #1 marked MERGED by GitHub; local main moved without disturbing .planning/ and .claude/; GIT-01..04 complete
 - [Phase 2]: Development moved to Claude Code cloud sessions. `.planning/` and `.claude/CLAUDE.md` are tracked on `main` (`commit_docs: true`); the plans run on Linux against `.planning/environment/cloud-setup.sh`, with Docker optional (no Docker: integration and E2E evidence comes from PR CI). Work branches `test/deterministic-clock` and `chore/knip-config` are backup-pushed after each plan with no PR; PRs open only at 02-08's gate (or 02-04's early-CI draft). Raw logs under `.planning/cleanup/logs/` are gitignored and never committed.
+- [Phase 2]: Clock pin is a subclass-safe `Date`, not `vi.setSystemTime` (it breaks `@date-fns/tz` in negative-offset zones); PR #8 later made suite-level overrides survive and covered the pin with 167 harness tests run by `pnpm test`
+- [Phase 2]: Owner decisions after verification (D-13 to D-18 in 02-CONTEXT.md): Phase 5 uses the test-inclusive jscpd baseline; weekend E2E run deferred; vitest declared at the root; fuzzy benchmark deleted; packages are internal; the jobs barrel keeps its test
 
 ### Pending Todos
 
@@ -90,8 +93,11 @@ None yet.
 ### Blockers/Concerns
 
 - [Phase 1]: The "Main PR Enforcement" ruleset (id 23693495) was changed by the owner to permit the main push (the API now returns 404 for it, so it appears deleted rather than disabled). Nothing is enforced on main now; if it is re-created, a required check plus the red test-unit (favorites.test.tsx timezone test, Phase 2 TIME-01 class) will block PRs. CONTRIBUTING.md says branch protection is not configured; reconcile in Phase 6. Owner may cancel a queued Deploy run and delete origin/curated-main.
-- [Phase 2]: Only the web suite (715 tests) was swept for date/timezone dependence; service and package suites are unswept. Clock probes ran on Node 26, CI pins Node 24, so re-run on Node 24.
-- [Phase 2]: E2E weekday strategy is open: seed-derived expectations versus a server clock seam (a behavior change).
+- [Phase 3]: Three of the six proven-dead rows in `.planning/cleanup/TRIAGE.md` (`currentWeekFixture`, `emptyWeekFixture`, `previousWeekFixture` in `apps/web/src/test/meal-fixtures.ts`) no longer appear in a fresh `pnpm knip` run: the root `test:harness` script (PR #8) makes knip's Node plugin treat `test/**` files as entries, so a fresh default run gives 54 findings (recorded: 59) and 79 production (recorded: 80). Re-establish the tool evidence for those three before deleting anything; decide whether `knip.json` should stop that side effect
+- [Phase 3]: `../hearth-aside/bin/knip-summary.mjs` (outside the repo) normalizes the knip reports and is cited by TRIAGE.md; it is lost with the cloud container unless committed
+- [Phase 2]: TIME-03's weekend E2E confirmation is deferred by the owner; CI `test-e2e` has run on one calendar day only
+- [Phase 2]: The second code review (02-REVIEW-FIXES.md, of PR #8's code) has 0 critical, 6 warnings and 6 infos, all open; the owner has not yet decided whether to fix them
+- [Phase 6]: `main` has no branch protection and the Deploy job waits on an unregistered self-hosted runner; Dependabot PR #9 (29 npm updates) failed CI on 2026-10-16 and security alert dependabot/1 is unexamined
 - [Phase 4]: The offline-duplicate root cause is unproven; reproduce `useAddDealToList` (client id minted inside `mutationFn`) before fixing.
 - [Phase 6]: `db:types` determinism is unverified (run twice before gating); `braces` advisory has no upstream patch; web coverage thresholds need an enforce-or-remove decision.
 
@@ -105,6 +111,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-12T21:51:07.832Z
-Stopped at: Phase 2 planned (9 plans, cloud-portable)
-Resume file: .planning/environment/CLOUD-ENVIRONMENT.md (set up the session, then `/gsd-execute-phase 2`)
+Last session: 2026-10-19
+Stopped at: Phase 02 complete, ready to plan Phase 3
+Resume file: None
