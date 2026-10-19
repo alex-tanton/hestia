@@ -2,8 +2,8 @@ import { distance } from 'fastest-levenshtein';
 
 /**
  * Requirements, "Matching mechanics": token containment needs a per-token similarity of at least
- * 0.85. `fastest-levenshtein` won the Phase 3 benchmark (`scripts/fuzzy-benchmark.ts`;
- * Engineering Practices, "Key libraries") over `fuse.js` — tied at 12/12 on Seed Data's matching
+ * 0.85. `fastest-levenshtein` won the Phase 3 benchmark (Engineering Practices,
+ * "Key libraries") over `fuse.js` — tied at 12/12 on Seed Data's matching
  * test cases, 2-3x faster over hundreds of real deal names.
  */
 export const FUZZY_THRESHOLD = 0.85;

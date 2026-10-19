@@ -9,15 +9,13 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests",
-    "bench:fuzzy": "tsx scripts/fuzzy-benchmark.ts"
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "fastest-levenshtein": "1.0.16"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "5.0.1",
-    "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vitest": "5.0.1"
   }
