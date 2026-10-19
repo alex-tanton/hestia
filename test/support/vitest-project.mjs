@@ -18,10 +18,11 @@ const VITEST_BIN = join(REPO_ROOT, 'packages', 'shared', 'node_modules', 'vitest
 /**
  * Writes `files` (name to source) into a fresh project and runs Vitest over it with the clock
  * setup file. `env` is layered over the parent environment minus `TZ` and `HEARTH_TEST_NOW`, so a
- * run never inherits the sweep's cell. Returns one entry per test (`fullName`, `status`,
+ * run never inherits the sweep's cell. `testConfig` is merged into the project's `test` options
+ * (for example `{ isolate: false }`). Returns one entry per test (`fullName`, `status`,
  * `message`) plus the exit status and the combined output.
  */
-export function runVitestProject({ files, env = {} }) {
+export function runVitestProject({ files, env = {}, testConfig = {} }) {
   const directory = mkdtempSync(join(tmpdir(), 'hearth-clock-'));
   try {
     for (const [name, source] of Object.entries(files)) {
@@ -31,7 +32,11 @@ export function runVitestProject({ files, env = {} }) {
     }
     writeFileSync(
       join(directory, 'vitest.config.mjs'),
-      `export default { test: { include: ['**/*.test.mjs'], setupFiles: [${JSON.stringify(CLOCK_SETUP)}] } };\n`,
+      `export default { test: ${JSON.stringify({
+        include: ['**/*.test.mjs'],
+        setupFiles: [CLOCK_SETUP],
+        ...testConfig,
+      })} };\n`,
     );
     const report = join(directory, 'report.json');
     const childEnvironment = { ...process.env };

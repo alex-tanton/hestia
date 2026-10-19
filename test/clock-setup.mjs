@@ -14,6 +14,11 @@
  *   `vi.useRealTimers()`. The pin is not re-applied over it.
  * - After `vi.useRealTimers()` the pin is back, so a suite's `afterAll` cleanup never exposes the
  *   machine clock to the next suite.
+ * - A `Date` subclass a test installs as the global (a hand-rolled clock mock) has the pin as its
+ *   base clock: an inherited `now`, or `super.now()` inside an override, answers with the pin, so
+ *   `static now() { return super.now() + 1; }` returns the pin plus one. An override that calls a
+ *   captured pin by name (`RealDate.now() + 1`) instead of `super` ends rather than recursing, but
+ *   its adjustment is applied twice.
  *
  * The pin is a `Date` of its own rather than `vi.setSystemTime`. Vitest's mock leaves
  * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hearth/recurrence`)
@@ -48,12 +53,25 @@ if (!testPath.includes('.integration.test.')) {
   const pinned = pinnedInstant();
 
   // The current time: the pin, or whatever a test installed over it with `vi.setSystemTime` or
-  // fake timers, so a class extending the pin still follows the clock the test chose. A subclass
-  // installed as the global `Date` without its own `now` inherits this function, which must not
-  // ask it again.
-  const currentTime = () => {
+  // fake timers, so a class extending the pin still follows the clock the test chose.
+  //
+  // It is also the base clock of a `Date` subclass installed as the global (a hand-rolled clock
+  // mock). Such a subclass reaches it as `super.now()`, or by inheriting `now` unchanged, with
+  // that subclass as the receiver. Asking the installed class again from there would recurse for
+  // ever and would apply the subclass's own adjustment twice, so a call whose receiver is the
+  // installed class answers with the pin. `reading` ends any other loop, such as an override that
+  // names a captured pin (`RealDate.now()`) instead of `super`: it terminates, but that
+  // override's adjustment is then applied twice.
+  let reading = false;
+  const currentTime = function () {
     const installed = globalThis.Date;
-    return installed === PinnedDate || installed.now === currentTime ? pinned : installed.now();
+    if (reading || installed === PinnedDate || this === installed) return pinned;
+    reading = true;
+    try {
+      return installed.now();
+    } finally {
+      reading = false;
+    }
   };
 
   function PinnedDate(...args) {

@@ -115,7 +115,84 @@ describe('the pin looks like the native Date', () => {
   });
 });
 
+describe('a Date subclass installed as the global Date', () => {
+  const PIN_MS = Date.parse(PIN);
+  const pinnedDate = globalThis.Date;
+  const install = (subclass) => {
+    globalThis.Date = subclass;
+  };
+  afterEach(() => {
+    globalThis.Date = pinnedDate;
+  });
+
+  it('whose now() adds to super.now() sees the pin plus its own adjustment, once', () => {
+    class Skewed extends Date {
+      static now() {
+        return super.now() + 1;
+      }
+    }
+    install(Skewed);
+    expect(Date.now()).toBe(PIN_MS + 1);
+  });
+
+  it('two levels of super.now() add each adjustment once', () => {
+    class Skewed extends Date {
+      static now() {
+        return super.now() + 1;
+      }
+    }
+    class MoreSkewed extends Skewed {
+      static now() {
+        return super.now() + 20;
+      }
+    }
+    install(MoreSkewed);
+    expect(Date.now()).toBe(PIN_MS + 21);
+  });
+
+  it('whose now() ignores super still answers for itself', () => {
+    class Fixed extends Date {
+      static now() {
+        return 42;
+      }
+    }
+    install(Fixed);
+    expect(Date.now()).toBe(42);
+    expect(Fixed.now()).toBe(42);
+  });
+
+  it('whose now() names a captured pin instead of super ends rather than recursing', () => {
+    const Captured = pinnedDate;
+    class ByName extends Captured {
+      static now() {
+        return Captured.now() + 1;
+      }
+    }
+    install(ByName);
+    expect(Date.now()).toBeGreaterThanOrEqual(PIN_MS + 1);
+  });
+
+  it('is not asked by a class that extended the pin earlier, unless it is the global', () => {
+    class Stamp extends pinnedDate {}
+    class Skewed extends Date {
+      static now() {
+        return super.now() + 1;
+      }
+    }
+    expect(Stamp.now()).toBe(PIN_MS);
+    install(Skewed);
+    expect(Stamp.now()).toBe(PIN_MS + 1);
+  });
+});
+
 describe('an override lasts until its test ends', () => {
+  it('a class that extended the pin follows a clock the test sets', () => {
+    class Stamp extends Date {}
+    vi.setSystemTime(new Date('2044-01-01T00:00:00.000Z'));
+    expect(Stamp.now()).toBe(Date.parse('2044-01-01T00:00:00.000Z'));
+    expect(new Stamp().toISOString()).toBe('2044-01-01T00:00:00.000Z');
+  });
+
   it('a test sets the system time', () => {
     vi.setSystemTime(new Date('2040-01-01T00:00:00.000Z'));
     expect(stamp()).toBe('2040-01-01T00:00:00.000Z');
@@ -290,6 +367,12 @@ describe('clock-setup: the default pin, overrides and restoration', () => {
     'the pin looks like the native Date accepts dates created natively as instances',
     'the pin looks like the native Date does not make a subclass accept plain dates',
     'the pin looks like the native Date a subclass installed as the global Date follows the pin without recursing',
+    'a Date subclass installed as the global Date whose now() adds to super.now() sees the pin plus its own adjustment, once',
+    'a Date subclass installed as the global Date two levels of super.now() add each adjustment once',
+    'a Date subclass installed as the global Date whose now() ignores super still answers for itself',
+    'a Date subclass installed as the global Date whose now() names a captured pin instead of super ends rather than recursing',
+    'a Date subclass installed as the global Date is not asked by a class that extended the pin earlier, unless it is the global',
+    'an override lasts until its test ends a class that extended the pin follows a clock the test sets',
     'an override lasts until its test ends a test sets the system time',
     'an override lasts until its test ends the next test is pinned again',
     'an override lasts until its test ends a test installs fake timers',

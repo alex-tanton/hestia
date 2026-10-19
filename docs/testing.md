@@ -76,7 +76,11 @@ controlled, not inherited from the machine.
   lasts. In a test body or a `beforeEach` it ends with that test. At module scope or in a
   `beforeAll` the suite owns the clock: it stays for every test in that scope, as the tests leave
   it, and the suite removes it in an `afterAll` with `vi.useRealTimers()`, after which the pin is
-  back.
+  back. A `Date` subclass a test assigns to `globalThis.Date` has the pin as its base clock: an
+  inherited `now` or `super.now()` in an override returns the pin, so
+  `static now() { return super.now() + 1; }` returns the pin plus one. An override that calls a
+  captured `Date` by name instead of `super` ends rather than recursing, but its adjustment is
+  applied twice.
 - **The pin does not move.** Under the pin `Date.now()` and `new Date()` stay frozen while real
   timers run, and `performance.now()` is the real clock. A test of elapsed time, a deadline or a
   wait loop measures with `performance.now()` or installs fake timers in the test body.
