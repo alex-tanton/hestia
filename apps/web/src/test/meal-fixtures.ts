@@ -1,7 +1,6 @@
 import type {
   MatchOverride,
   MealPlanEntry,
-  MealPlanWeekResponse,
   Recipe,
   RecipeDetail,
   RecipeListResponse,
@@ -567,11 +566,6 @@ export const wednesdaySaladEntry: MealPlanEntry = {
   createdAt: CREATED_AT,
 };
 
-export const currentWeekFixture: MealPlanWeekResponse = {
-  week: CURRENT_WEEK_SUNDAY,
-  entries: [wednesdayZitiEntry, wednesdaySaladEntry],
-};
-
 /** The deleted-recipe snapshot fixture: null `recipeId`, the title and nothing else survives. */
 export const deletedRecipeEntry: MealPlanEntry = {
   id: 'e0000002-0000-4000-8000-000000000001',
@@ -584,13 +578,6 @@ export const deletedRecipeEntry: MealPlanEntry = {
   addedBy: ALEX_ID,
   createdAt: '2026-09-10T12:00:00.000Z',
 };
-
-export const previousWeekFixture: MealPlanWeekResponse = {
-  week: PREVIOUS_WEEK_SUNDAY,
-  entries: [deletedRecipeEntry],
-};
-
-export const emptyWeekFixture = (week: string): MealPlanWeekResponse => ({ week, entries: [] });
 
 function baseRecipe(detail: RecipeDetail): Recipe {
   return {
