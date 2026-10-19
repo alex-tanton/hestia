@@ -80,7 +80,11 @@ controlled, not inherited from the machine.
   inherited `now` or `super.now()` in an override returns the pin, so
   `static now() { return super.now() + 1; }` returns the pin plus one. An override that calls a
   captured `Date` by name instead of `super` ends rather than recursing, but its adjustment is
-  applied twice.
+  applied twice. The setup file is safe to run again in a global that already holds the pin, as
+  Vitest does for every test file under `isolate: false` (no config sets it today): the pin
+  remembers the native `Date` it replaced, so each run installs one pin over the native class,
+  natively created dates stay `instanceof Date`, and an integration file in that global gets the
+  native `Date` back.
 - **The pin does not move.** Under the pin `Date.now()` and `new Date()` stay frozen while real
   timers run, and `performance.now()` is the real clock. A test of elapsed time, a deadline or a
   wait loop measures with `performance.now()` or installs fake timers in the test body.

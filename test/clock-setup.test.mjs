@@ -397,6 +397,67 @@ describe('clock-setup: the default pin, overrides and restoration', () => {
   ]);
 });
 
+// With `isolate: false` Vitest runs every file's setup files again in the same global, one file
+// after another. Each fixture file counts its position in that sequence on `globalThis`, so the
+// test names prove the files shared a global; with isolation they would all say "position 1".
+const SHARED_GLOBAL_FILE = `
+import { describe, expect, it } from 'vitest';
+
+const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
+// Padding keeps the unit files larger than the integration file, which Vitest then runs last.
+// ${'x'.repeat(4000)}
+
+describe(\`file at position \${position}\`, () => {
+  it('sits on a single pin over the native Date', () => {
+    const base = Object.getPrototypeOf(Date);
+    expect(Function.prototype.toString.call(base)).toContain('[native code]');
+  });
+
+  it('accepts natively created dates as instances', () => {
+    expect(structuredClone(new Date()) instanceof Date).toBe(true);
+    expect(new Date() instanceof Date).toBe(true);
+  });
+
+  it('is pinned, and a test override ends with its test', () => {
+    expect(new Date().toISOString()).toBe('2026-10-14T12:00:00.000Z');
+    expect(Date.now()).toBe(Date.parse('2026-10-14T12:00:00.000Z'));
+  });
+});
+`;
+
+const SHARED_GLOBAL_INTEGRATION_FILE = `
+import { describe, expect, it } from 'vitest';
+
+const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
+
+describe(\`integration file at position \${position}\`, () => {
+  it('is left on the native Date, not on a pin an earlier file installed', () => {
+    expect(Function.prototype.toString.call(Date)).toContain('[native code]');
+    expect(Date.now()).not.toBe(Date.parse('2026-10-14T12:00:00.000Z'));
+  });
+});
+`;
+
+describe('clock-setup: loaded again in the same global (isolate: false)', () => {
+  const result = runVitestProject({
+    files: {
+      'one.test.mjs': SHARED_GLOBAL_FILE,
+      'two.test.mjs': SHARED_GLOBAL_FILE,
+      'three.test.mjs': SHARED_GLOBAL_FILE,
+      'db.integration.test.mjs': SHARED_GLOBAL_INTEGRATION_FILE,
+    },
+    testConfig: { isolate: false, fileParallelism: false },
+  });
+  expectPassed(result, [
+    ...[1, 2, 3].flatMap((position) => [
+      `file at position ${position} sits on a single pin over the native Date`,
+      `file at position ${position} accepts natively created dates as instances`,
+      `file at position ${position} is pinned, and a test override ends with its test`,
+    ]),
+    'integration file at position 4 is left on the native Date, not on a pin an earlier file installed',
+  ]);
+});
+
 describe('clock-setup: HEARTH_TEST_NOW', () => {
   const FIXTURE = `
 import { describe, expect, it } from 'vitest';

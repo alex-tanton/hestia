@@ -27,6 +27,12 @@
  * is in place before any test module is imported, so it has to look like `Date` to such code and
  * construct instances of whatever class extends it.
  *
+ * Running again in the same global: with `isolate: false` Vitest runs this file once per test
+ * file in one global (no config sets that today). The pin remembers the native class it replaced,
+ * so each run builds a single pin over the native `Date` rather than another over the previous
+ * pin, `instanceof Date` stays true for natively created dates, and an integration file in that
+ * global gets the native `Date` back.
+ *
  * Where the pin still differs from the native `Date`: `Function.prototype.toString.call(Date)`
  * prints this file's function, not `[native code]`, and a test that checks that is checking the
  * pin. `Date.length` is 7 and `instanceof Date` is true for natively created dates, as native.
@@ -38,7 +44,12 @@ import { parseTestNow } from './test-now.mjs';
 // A Wednesday, midday UTC, mid-month, away from the US daylight-saving changes.
 const DEFAULT_TEST_NOW = '2026-10-14T12:00:00.000Z';
 
-const NativeDate = globalThis.Date;
+// The native `Date`, also when this file runs again in a global that already holds a pin (Vitest
+// with `isolate: false` runs the setup files once per test file in the same global): the pin
+// remembers the class it replaced, so a second load builds one pin over the native class instead
+// of a second pin over the first. A clock a test left installed inherits the marker from the pin.
+const NATIVE = Symbol.for('hearth.nativeDate');
+const NativeDate = globalThis.Date[NATIVE] ?? globalThis.Date;
 
 function pinnedInstant() {
   const configured = process.env['HEARTH_TEST_NOW'];
@@ -48,8 +59,11 @@ function pinnedInstant() {
 
 const testPath = expect.getState().testPath ?? '';
 
-// Integration tests compare against the Postgres clock, which cannot be pinned.
-if (!testPath.includes('.integration.test.')) {
+// Integration tests compare against the Postgres clock, which cannot be pinned. A pin an earlier
+// file left in a shared global is taken out.
+if (testPath.includes('.integration.test.')) {
+  globalThis.Date = NativeDate;
+} else {
   const pinned = pinnedInstant();
 
   // The current time: the pin, or whatever a test installed over it with `vi.setSystemTime` or
@@ -102,6 +116,7 @@ if (!testPath.includes('.integration.test.')) {
     },
     configurable: true,
   });
+  Object.defineProperty(PinnedDate, NATIVE, { value: NativeDate, configurable: true });
   Object.defineProperty(PinnedDate, 'now', {
     value: currentTime,
     writable: true,
