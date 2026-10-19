@@ -13,6 +13,7 @@ OQ1=accept (owner, 2026-10-19)
 gate-pr1=approve-both (owner, 2026-10-19)
 knip-summary=keep-reported (owner, 2026-10-19)
 gate-pr2=approve (owner, 2026-10-19)
+gate-pr3=approve (owner, 2026-10-19)
 
 pr1=12
 pr1-head=e7a7dbcabf9523518795f92edec7ac49df87d3ca
