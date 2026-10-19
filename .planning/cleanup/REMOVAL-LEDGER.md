@@ -13,6 +13,9 @@ OQ1=accept (owner, 2026-10-19)
 gate-pr1=approve-both (owner, 2026-10-19)
 knip-summary=keep-reported (owner, 2026-10-19)
 
+pr1=12
+pr1-head=e7a7dbcabf9523518795f92edec7ac49df87d3ca
+
 PR 1 pre-gate state (plan 03-02 Task 1, 2026-10-19): no pull request is open and the throwaway branch `ci/db-types-evidence` is not created; both wait for the owner's `gate-pr1` answer (Task 2). `origin/main` is still `7d14b77`, an ancestor of `build/unused-deps` tip `e7a7dbc` (no merge needed). On Node 24.21.0, pnpm 10.34.5, `TZ` unset, in `/home/user/hearth-deps`: `pnpm install --frozen-lockfile`, `lint`, `format:check`, `typecheck`, `test` (matching 156, shared 148, recurrence 77, service 725, web 715 tests) and `build` all exit 0 (`$L/03-02-{frozen,lint,format-check,typecheck,test,build}.log`); `commitlint --from origin/main --to HEAD` exit 0 over both commits; `git push --dry-run origin build/unused-deps` prints "Everything up-to-date". The diff against `origin/main` is exactly `docs/file-map.md`, `package.json`, `pnpm-lock.yaml`, `scripts/knip-summary.mjs`, `supabase/seed/package.json`, with nothing under `.planning`, `.claude`, `supabase/migrations`, `.github`, `docker` or `db/types.ts`, and no secret-shaped added line. Re-measured on the tip: `knip:production` total 80 versus base 79, the single added line `files	scripts/knip-summary.mjs	-`. Open for the owner at the gate: (a) add `scripts/knip-summary.mjs!` to `knip.json` `entry`, (b) keep the line reported and list it on the owner list, (c) drop the normalizer commit. Note: the body of commit `8c82091` says knip "treats it as an entry and does not report it"; that is true for default mode only. The branch is pushed, so the body is not rewritten; PR 1's body states the production behavior correctly.
 
 ## Counts
@@ -60,6 +63,12 @@ D-08 hidden entry: `knip --debug` on the committed config lists the entry patter
 | --- | --- | --- |
 
 ## CI evidence
+
+pr1-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success (CI run 39325433012, pull_request, head e7a7dbc, 2026-10-19; no re-run needed)
+
+PR 1 (#12, `build/unused-deps` into `main`) is open and unmerged, mergeable state clean; the owner's squash merge is pending. The six jobs ran once on the PR head, and `test-e2e` built the service and Caddy images through Compose, so that is the Docker-build evidence for the `tsx` removal.
+
+Throwaway evidence pending the owner's choice: commit `8401de9` on local branch `ci/db-types-evidence` (worktree `/home/user/hearth-dbtypes`, adds 33 lines to `test-integration` in `.github/workflows/ci.yml` only) could not be pushed. GitHub rejected the push: "refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml` without `workflow` scope". No workaround was tried. No throwaway draft is open, so `dbtypes-*` and `dbseed` evidence is not collected yet and no `dbseed-status=` line is written; the owner chooses between granting `workflow` scope (or pushing that branch from outside this session) and `approve-pr1-only`.
 
 ## Stale-reference sweep
 
