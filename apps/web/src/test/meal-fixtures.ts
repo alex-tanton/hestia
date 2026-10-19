@@ -18,7 +18,6 @@ export const SHEET_PAN_CHICKEN_ID = 'c0000001-0000-4000-8000-000000000001';
 export const BAKED_ZITI_ID = 'c0000001-0000-4000-8000-000000000002';
 export const GRILLED_CHEESE_ID = 'c0000001-0000-4000-8000-000000000003';
 export const PAD_THAI_ID = 'c0000001-0000-4000-8000-000000000004';
-export const GREEK_SALAD_ID = 'c0000001-0000-4000-8000-000000000005';
 export const TUNA_POKE_BOWL_ID = 'c0000001-0000-4000-8000-000000000006';
 export const MISO_SOUP_ID = 'c0000001-0000-4000-8000-000000000007';
 
@@ -532,14 +531,6 @@ export const riveraSuggestionsFixture: SuggestionsResponse = {
   recipes: [tunaPokeBowlFixture, misoSoupFixture],
   dealsAsOf: '2026-09-19T09:00:00.000Z',
 };
-
-/*
- * Seed Data › "Meal plan": Oak Street's current week has seven entries, including two in
- * Wednesday's dinner slot (Baked Ziti and Greek Salad). The previous week has one entry with a
- * null `recipe_id` and the snapshot title "Mushroom Stroganoff", standing for a deleted recipe.
- */
-export const CURRENT_WEEK_SUNDAY = '2026-09-27';
-export const PREVIOUS_WEEK_SUNDAY = '2026-09-20';
 
 function baseRecipe(detail: RecipeDetail): Recipe {
   return {
