@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 
 ## Current Position
 
-Phase: 03 (evidence-gated-removal) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
+Phase: 03 (evidence-gated-removal) — EXECUTING
+Plan: 03-01 complete; 03-02 next
+Status: Executing (wave 2 next: PR 1 owner gate)
 Last activity: 2026-10-19 — Phase 02 complete, transitioned to Phase 3
 
 Progress: [███░░░░░░░] 33%
