@@ -169,6 +169,7 @@ Reported by `knip --production` only (final production summary): no production c
 ## Notes for the owner
 
 - `BUILD_PROMPT.md` was never tracked. With the `.prettierignore` entry gone (PR 3), an untracked local copy in your checkout would now be checked by `pnpm format:check`; move it out of the checkout or ignore it locally. CI is unaffected.
+- Main CI: `test-e2e` is red on the main runs for PR 1 (`51c077e`) and PR 2 (`aefe63a`) because of the registry pre-pull flake. They were not re-run, so Deploy does not pick up superseded commits; each pull request's own CI run was green on an identical tree. PR 3's main run (`9819e7c`) is green after one re-run; two E2E tests (`17-accessibility-states.spec.ts:527`, `19-notifications.spec.ts:141`) flaked once there.
 - Phase 5 (RED-05) owns the codebase-map files under `.planning/codebase/` that still name removed barrel entries (ledger, Stale-reference sweep, `orphan-docs:`); nothing was edited there.
 - Observation for Phase 5 (RED-04): `apps/service/vitest.coverage.config.ts` line 40 cites a build-process label, `test/service-coverage-and-fixtures`, that names no file in the repository.
 
