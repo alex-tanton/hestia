@@ -3,16 +3,16 @@ status: testing
 phase: 04-bug-fixes-with-regression-tests
 source: [04-VERIFICATION.md]
 started: 2026-10-20T17:58:53Z
-updated: 2026-10-20T22:44:20Z
+updated: 2026-10-20T23:10:00Z
 ---
 
 ## Current Test
 
-number: 3
-name: Rotation drag in Firefox and Chromium (WR-03)
+number: 4
+name: Owner acknowledgement of WR-02: held deal-add id scope
 expected: |
-  The row reorders by drag, or the owner accepts that Up and Down are the only guaranteed path.
-awaiting: user response
+  Fix merged to main (PR 19), or the owner accepts the per-card scope.
+awaiting: PR 19 CI and the owner's squash merge
 
 ## Tests
 
@@ -31,21 +31,22 @@ result: pass (owner decision, 2026-10-20: keep the `otp` route because magic lin
 ### 3. Rotation drag in Firefox and Chromium (WR-03)
 Drag a rotation member's handle in the chores rotation editor.
 expected: The row reorders by drag, or the owner accepts that Up and Down are the only guaranteed path.
-result: [pending]
+result: skipped
+note: "Owner decision 2026-10-20: not tested because the owner cannot test it. Firefox pointer drag is unverified (research A1, review WR-03); Up and Down are the guaranteed path. Revisit when a browser check is possible."
 
 ### 4. Owner acknowledgement of WR-02: held deal-add id scope
 The held id lives in a per-card hook instance.
 expected: The owner accepts that a lost-response retry after the card unmounts (filter change, paging, navigation) mints a new id and can still add the deal twice, or asks for the id to be held at QueryClient scope.
 result: [pending]
-note: "Fix pushed on branch fix/held-deal-id (c69569a70c8d31c601961f6713abeaf949d03b50), no pull request. Owner decision 2026-10-20: hold the id at QueryClient scope. Awaiting the owner's PR and squash merge; not yet on main. Held ids are also scoped to the signed-in user and never expire; see .planning/cleanup/FIX-LEDGER-HELD-ID.md."
+note: "Fix pushed on branch fix/held-deal-id (c69569a70c8d31c601961f6713abeaf949d03b50), pull request 19 is open. Owner decision 2026-10-20: hold the id at QueryClient scope. Awaiting the owner's PR and squash merge; not yet on main. Held ids are also scoped to the signed-in user and never expire; see .planning/cleanup/FIX-LEDGER-HELD-ID.md."
 
 ## Summary
 
 total: 4
 passed: 2
 issues: 0
-pending: 2
-skipped: 0
+pending: 1
+skipped: 1
 blocked: 0
 
 ## Gaps
