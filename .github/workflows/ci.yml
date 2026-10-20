@@ -78,6 +78,12 @@ jobs:
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: read
+    env:
+      # The `secrets` context cannot be read in a step `if:`, so the job env carries the name.
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -92,6 +98,27 @@ jobs:
         with:
           version: 2.117.0
       - run: pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
+      # GHCR pulls run as this run's own read-only token instead of anonymously. The images are
+      # public, so anonymous pulls work too: a failed login must not fail the job before the
+      # script's public.ecr.aws fallback can run.
+      - name: Log in to ghcr.io
+        continue-on-error: true
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Authenticated Docker Hub pulls get a higher rate limit. This runs only when the owner has
+      # set the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repository secrets (a read-only token); forks
+      # and Dependabot runs do not receive them and skip it. Anonymous pulls still work, so a failed
+      # login must not fail the job before the pre-pull's own retries can run.
+      - name: Log in to Docker Hub (optional)
+        if: env.DOCKERHUB_USERNAME != ''
+        continue-on-error: true
+        uses: docker/login-action@v4
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       # Anonymous pulls from public.ecr.aws are rate limited per IP and hosted runners share IPs,
       # so `docker compose up` could fail with toomanyrequests before any test ran. The script
       # pre-pulls the stack's images so Compose finds them locally. The three Supabase images come
@@ -99,7 +126,7 @@ jobs:
       # public.ecr.aws names Compose uses, falling back to public.ecr.aws. The rest come from Docker
       # Hub. Each image gets up to six attempts with growing backoff. The list is read from the
       # Compose file and Dockerfiles, so Dependabot bumps need no edit here, and it includes the
-      # BuildKit `# syntax=` frontend.
+      # BuildKit `# syntax=` frontend. The logins above make the pulls authenticated where possible.
       - run: bash scripts/ci-prepull-images.sh
       # Exactly the local command: Playwright's global setup builds and starts the stack from an
       # empty database, and its teardown drops it (Engineering Practices, "E2E environment").
