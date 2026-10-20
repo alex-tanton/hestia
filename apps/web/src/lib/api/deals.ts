@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import {
   useMutation,
   useQuery,
@@ -239,21 +240,33 @@ export interface AddDealToList {
  * Adding a deal to a list sends the deal's id and nothing else: the service reads the `deal` row
  * and takes the snapshot itself, so a client can never invent a price (Technical Architecture,
  * "API surface"). The row id is client-generated, which is what makes a replayed add a no-op
- * (Handoff non-negotiable 9).
+ * (Handoff non-negotiable 9), and it is held across a retry: a tap after an error carries the id
+ * of the add that failed, and only a success starts the next add with a fresh one.
  */
 export function useAddDealToList(
   householdId: string,
 ): UseMutationResult<void, Error, AddDealToList> {
   const api = useApi();
   const queryClient = useQueryClient();
+  // A response lost after the request landed shows an error, and the next tap must carry the same
+  // id so the service's `on conflict (id) do nothing` makes it a replay rather than a second
+  // item. Ids are held per list and deal because the primary key is the id alone: an id reused
+  // for another list would be swallowed while the toast says "Added". Only a success starts the
+  // next add; nothing is cleared on an error.
+  const held = useRef<Map<string, string>>(new Map());
   return useMutation({
-    mutationFn: ({ listId, dealId }: AddDealToList) =>
-      api.send({
+    mutationFn: ({ listId, dealId }: AddDealToList) => {
+      const key = `${listId}:${dealId}`;
+      const id = held.current.get(key) ?? crypto.randomUUID();
+      held.current.set(key, id);
+      return api.send({
         method: 'POST',
         path: `/api/lists/${listId}/items`,
-        body: { source: 'from_deal', id: crypto.randomUUID(), dealId },
-      }),
-    onSuccess: async () => {
+        body: { source: 'from_deal', id, dealId },
+      });
+    },
+    onSuccess: async (_data, { listId, dealId }) => {
+      held.current.delete(`${listId}:${dealId}`);
       await queryClient.invalidateQueries({ queryKey: dealKeys.lists(householdId) });
     },
   });

@@ -1,4 +1,4 @@
-import type { Kysely } from 'kysely';
+import { sql, type Kysely } from 'kysely';
 import { matchIngredient } from '@hearth/matching';
 import type { ShoppingListDetail } from '@hearth/shared';
 import type { Database } from '../db.js';
@@ -25,6 +25,16 @@ export async function addMissingIngredientsToList(
 ): Promise<ShoppingListDetail> {
   const list = await requireList(db, listId);
   const householdId = list.household_id;
+
+  // "Already on the list" is read before anything is written, so two overlapping calls for one
+  // list (a retry that arrives while the first request is still running, or two members adding
+  // together) would each see an empty list and each add every ingredient. Serialising them per
+  // list makes the second call read the first one's rows. The lock is transaction-scoped, so it
+  // is released when this request's transaction ends. It is always taken before
+  // `recordListActivity`'s own list-activity lock, which fixes the order between the two.
+  await sql`select pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(${`add-to-list:${listId}`}, 0))`.execute(
+    db,
+  );
 
   const existingItems = await db
     .selectFrom('shopping_list_item')
