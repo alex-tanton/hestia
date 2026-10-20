@@ -1,0 +1,1499 @@
+diff --git a/apps/service/src/meal-plan.integration.test.ts b/apps/service/src/meal-plan.integration.test.ts
+index 0b1e266..fe9a9d3 100644
+--- a/apps/service/src/meal-plan.integration.test.ts
++++ b/apps/service/src/meal-plan.integration.test.ts
+@@ -400,6 +400,85 @@ describe('add missing to list', () => {
+     expect(allItems(secondPass).filter((item) => item.itemName === 'Bread')).toHaveLength(1);
+   });
+ 
++  describe('when the same call arrives again', () => {
++    async function recipeAndList(): Promise<{
++      home: Home;
++      list: ShoppingListDetail;
++      recipeId: string;
++    }> {
++      const home = await household(app);
++      const list = await createList(home);
++      const recipe = await createRecipe(home, 'Cheese Toast', [
++        { itemName: 'Cheese' },
++        { itemName: 'Bread', quantity: 2 },
++        { itemName: 'Butter', quantity: 1, unit: 'tbsp' },
++      ]);
++      return { home, list, recipeId: recipe.id };
++    }
++
++    const addToList = (
++      home: Home,
++      recipeId: string,
++      listId: string,
++    ): Promise<LightMyRequestResponse> =>
++      as(app, home.user, 'POST', `/api/recipes/${recipeId}/add-to-list`, { listId });
++
++    const idsOf = (list: ShoppingListDetail): string[] =>
++      allItems(list)
++        .map((item) => item.id)
++        .toSorted();
++
++    it('a replay after a lost response changes nothing, item for item', async () => {
++      const { home, list, recipeId } = await recipeAndList();
++
++      const first = await addToList(home, recipeId, list.id);
++      expectStatus(first, 200);
++      const replay = await addToList(home, recipeId, list.id);
++      expectStatus(replay, 200);
++
++      expect(idsOf(first.json<ShoppingListDetail>())).toHaveLength(3);
++      expect(idsOf(replay.json<ShoppingListDetail>())).toEqual(
++        idsOf(first.json<ShoppingListDetail>()),
++      );
++    });
++
++    it('two calls in flight at once add each ingredient once', async () => {
++      const { home, list, recipeId } = await recipeAndList();
++
++      const [one, other] = await Promise.all([
++        addToList(home, recipeId, list.id),
++        addToList(home, recipeId, list.id),
++      ]);
++      expectStatus(one, 200);
++      expectStatus(other, 200);
++
++      const after = await as(app, home.user, 'GET', `/api/lists/${list.id}`);
++      expectStatus(after, 200);
++      expect(
++        allItems(after.json<ShoppingListDetail>())
++          .map((item) => item.normalizedName)
++          .toSorted(),
++      ).toEqual(['bread', 'butter', 'cheese']);
++    });
++
++    it('adds an ingredient again once its item is bought, since only needed and in-cart items count as on the list', async () => {
++      const { home, list, recipeId } = await recipeAndList();
++      const first = (await addToList(home, recipeId, list.id)).json<ShoppingListDetail>();
++      const bread = itemNamed(first, 'Bread');
++      expectStatus(
++        await as(app, home.user, 'PATCH', `/api/lists/${list.id}/items/${bread.id}`, {
++          status: 'bought',
++        }),
++        200,
++      );
++
++      const again = (await addToList(home, recipeId, list.id)).json<ShoppingListDetail>();
++
++      expect(allItems(again).filter((item) => item.normalizedName === 'bread')).toHaveLength(2);
++      expect(allItems(again)).toHaveLength(4);
++    });
++  });
++
+   it('answers 404 for a foreign or missing recipe before touching the list', async () => {
+     const home = await household(app);
+     const list = await createList(home);
+diff --git a/apps/service/src/services/add-to-list.ts b/apps/service/src/services/add-to-list.ts
+index 5edb04f..ccffbc4 100644
+--- a/apps/service/src/services/add-to-list.ts
++++ b/apps/service/src/services/add-to-list.ts
+@@ -1,4 +1,4 @@
+-import type { Kysely } from 'kysely';
++import { sql, type Kysely } from 'kysely';
+ import { matchIngredient } from '@hearth/matching';
+ import type { ShoppingListDetail } from '@hearth/shared';
+ import type { Database } from '../db.js';
+@@ -26,6 +26,15 @@ export async function addMissingIngredientsToList(
+   const list = await requireList(db, listId);
+   const householdId = list.household_id;
+ 
++  // "Already on the list" is read before anything is written, so two overlapping calls for one
++  // list (a retry that arrives while the first request is still running, or two members adding
++  // together) would each see an empty list and each add every ingredient. Serialising them per
++  // list makes the second one read the first one's rows. The lock is transaction-scoped, so it is
++  // released when this request's transaction ends.
++  await sql`select pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(${`add-to-list:${listId}`}, 0))`.execute(
++    db,
++  );
++
+   const existingItems = await db
+     .selectFrom('shopping_list_item')
+     .select('normalized_name')
+diff --git a/apps/web/src/components/chores/RotationEditor.test.tsx b/apps/web/src/components/chores/RotationEditor.test.tsx
+new file mode 100644
+index 0000000..abe381f
+--- /dev/null
++++ b/apps/web/src/components/chores/RotationEditor.test.tsx
+@@ -0,0 +1,152 @@
++import { fireEvent, render, screen, within } from '@testing-library/react';
++import userEvent from '@testing-library/user-event';
++import { useState, type ReactElement } from 'react';
++import { describe, expect, it, vi } from 'vitest';
++import { ALEX_ID, JORDAN_ID, SAM_ID, oakStreetMembers } from '../../test/fixtures.ts';
++import { RotationEditor } from './RotationEditor.tsx';
++
++/*
++ * Design › Accessibility › Keyboard: "Full operation without a pointer". Every case here drives the
++ * editor with userEvent's keyboard only; the pointer path (drag) has its own case at the end.
++ */
++
++function Harness({
++  initial = [ALEX_ID, SAM_ID, JORDAN_ID],
++  disabledReason,
++  onOrder,
++}: {
++  initial?: string[];
++  disabledReason?: string;
++  onOrder?: (order: string[]) => void;
++}): ReactElement {
++  const [order, setOrder] = useState(initial);
++  return (
++    <RotationEditor
++      members={oakStreetMembers}
++      order={order}
++      disabledReason={disabledReason}
++      onChange={(next) => {
++        setOrder(next);
++        onOrder?.(next);
++      }}
++    />
++  );
++}
++
++function names(): string[] {
++  return within(screen.getByRole('list'))
++    .getAllByRole('listitem')
++    .map((item) => item.textContent.replace(/^\d+\.\s*/, ''));
++}
++
++function focusedName(): string {
++  const active = document.activeElement;
++  if (!(active instanceof HTMLElement)) return '';
++  return active.getAttribute('aria-label') ?? active.textContent;
++}
++
++describe('the rotation editor, keyboard only', () => {
++  it('reaches every enabled control in order, and skips the edge buttons that are disabled', async () => {
++    const user = userEvent.setup();
++    render(<Harness />);
++
++    const visited: string[] = [];
++    for (let step = 0; step < 7; step += 1) {
++      await user.tab();
++      visited.push(focusedName());
++    }
++    expect(visited).toEqual([
++      'Move Alex Rivera down',
++      'Remove Alex Rivera from rotation',
++      'Move Sam Chen up',
++      'Move Sam Chen down',
++      'Remove Sam Chen from rotation',
++      'Move Jordan Blake up',
++      'Remove Jordan Blake from rotation',
++    ]);
++    // Past the last control, focus leaves the editor.
++    await user.tab();
++    expect(document.body).toHaveFocus();
++
++    expect(screen.getByRole('button', { name: 'Move Alex Rivera up' })).toBeDisabled();
++    expect(screen.getByRole('button', { name: 'Move Jordan Blake down' })).toBeDisabled();
++  });
++
++  it('moves a member with Enter, and focus follows the member', async () => {
++    const user = userEvent.setup();
++    render(<Harness />);
++
++    screen.getByRole('button', { name: 'Move Sam Chen down' }).focus();
++    await user.keyboard('{Enter}');
++
++    expect(names()).toEqual(['Alex Rivera', 'Jordan Blake', 'Sam Chen']);
++    // Sam is last now, so "down" is disabled and focus lands on the row's other move button.
++    expect(focusedName()).toBe('Move Sam Chen up');
++  });
++
++  it('moves a member with Space', async () => {
++    const user = userEvent.setup();
++    render(<Harness />);
++
++    screen.getByRole('button', { name: 'Move Jordan Blake up' }).focus();
++    await user.keyboard(' ');
++
++    expect(names()).toEqual(['Alex Rivera', 'Jordan Blake', 'Sam Chen']);
++    expect(focusedName()).toBe('Move Jordan Blake up');
++  });
++
++  it('removes a member with Enter, and focus lands on the member who took the place', async () => {
++    const user = userEvent.setup();
++    render(<Harness />);
++
++    screen.getByRole('button', { name: 'Remove Sam Chen from rotation' }).focus();
++    await user.keyboard('{Enter}');
++
++    expect(names()).toEqual(['Alex Rivera', 'Jordan Blake']);
++    expect(focusedName()).toBe('Remove Jordan Blake from rotation');
++  });
++
++  it('puts focus on the heading when the last member is removed', async () => {
++    const user = userEvent.setup();
++    render(<Harness initial={[ALEX_ID]} />);
++
++    screen.getByRole('button', { name: 'Remove Alex Rivera from rotation' }).focus();
++    await user.keyboard('{Enter}');
++
++    expect(screen.getByRole('heading', { name: 'Rotation order' })).toHaveFocus();
++  });
++
++  it('is operable by no one while it is unavailable', async () => {
++    const user = userEvent.setup();
++    const onOrder = vi.fn();
++    render(<Harness disabledReason="Needs a connection." onOrder={onOrder} />);
++
++    for (const button of screen.getAllByRole('button', { name: /^(Move|Remove) / })) {
++      expect(button).toBeDisabled();
++    }
++    await user.tab();
++    await user.keyboard('{Enter}');
++    expect(onOrder).not.toHaveBeenCalled();
++    expect(screen.getByText('Needs a connection.')).toBeInTheDocument();
++  });
++});
++
++describe('the rotation editor, pointer', () => {
++  it('reorders by dragging a member’s handle onto another row', () => {
++    const onOrder = vi.fn();
++    render(<Harness onOrder={onOrder} />);
++
++    const handle = screen.getByRole('button', { name: 'Drag Alex Rivera to reorder' });
++    expect(handle).toHaveAttribute('draggable', 'true');
++    // The list item keeps plain list semantics: it is not the drag source or a drop target.
++    expect(screen.getAllByRole('listitem')[0]).not.toHaveAttribute('draggable');
++    const target = screen.getByText('3. Jordan Blake').closest('[role="presentation"]');
++    expect(target).not.toBeNull();
++
++    fireEvent.dragStart(handle);
++    fireEvent.dragOver(target!);
++    fireEvent.drop(target!);
++
++    expect(onOrder).toHaveBeenCalledWith([SAM_ID, JORDAN_ID, ALEX_ID]);
++  });
++});
+diff --git a/apps/web/src/components/chores/RotationEditor.tsx b/apps/web/src/components/chores/RotationEditor.tsx
+index 77e9a34..81426e8 100644
+--- a/apps/web/src/components/chores/RotationEditor.tsx
++++ b/apps/web/src/components/chores/RotationEditor.tsx
+@@ -108,7 +108,7 @@ export function RotationEditor({
+ 
+   const handleDrop =
+     (dropIndex: number) =>
+-    (event: DragEvent<HTMLLIElement>): void => {
++    (event: DragEvent<HTMLDivElement>): void => {
+       event.preventDefault();
+       if (dragIndex === null || dragIndex === dropIndex) return;
+       onChange(moveIndex(order, dragIndex, dropIndex));
+@@ -126,74 +126,75 @@ export function RotationEditor({
+       {order.length === 0 && <p className="text-body-sm text-secondary">{ROTATION_EMPTY_COPY}</p>}
+       <ol className="flex flex-col gap-2">
+         {order.map((userId, index) => (
+-          // Drag is a pointer convenience on top of the Up/Down/Remove buttons below, which are
+-          // the real, tested, keyboard-operable mechanism (Accessibility › Keyboard: a
+-          // single-pointer gesture always needs a non-gesture alternative).
+-          // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+-          <li
+-            key={userId}
+-            data-member={userId}
+-            draggable={!isUnavailable}
+-            onDragStart={() => {
+-              setDragIndex(index);
+-            }}
+-            onDragOver={(event) => {
+-              event.preventDefault();
+-            }}
+-            onDrop={handleDrop(index)}
+-            onDragEnd={() => {
+-              setDragIndex(null);
+-            }}
+-            className="flex min-h-11 items-center gap-2 rounded-md border border-border bg-base px-2 py-1.5"
+-          >
+-            <GripVertical
+-              aria-hidden
+-              size={20}
+-              strokeWidth={1.5}
+-              className="shrink-0 cursor-grab text-muted"
+-            />
+-            <span className="min-w-0 flex-1 truncate text-body text-primary">
+-              {`${String(index + 1)}. ${nameOf(userId)}`}
+-            </span>
+-            <Button
+-              variant="ghost"
+-              isIconOnly
+-              data-member={userId}
+-              data-control="up"
+-              aria-label={`Move ${nameOf(userId)} up`}
+-              disabled={index === 0 || isUnavailable}
+-              onClick={() => {
+-                move(index, -1);
++          <li key={userId} data-member={userId} className="rounded-md border border-border bg-base">
++            {/* The row is the drop target. It carries no role of its own: the <li> keeps the
++                list semantics, and every control inside stays operable without a pointer. */}
++            <div
++              role="presentation"
++              onDragOver={(event) => {
++                event.preventDefault();
+               }}
++              onDrop={handleDrop(index)}
++              className="flex min-h-11 items-center gap-2 px-2 py-1.5"
+             >
+-              <ArrowUp aria-hidden size={18} strokeWidth={1.5} />
+-            </Button>
+-            <Button
+-              variant="ghost"
+-              isIconOnly
+-              data-member={userId}
+-              data-control="down"
+-              aria-label={`Move ${nameOf(userId)} down`}
+-              disabled={index === order.length - 1 || isUnavailable}
+-              onClick={() => {
+-                move(index, 1);
+-              }}
+-            >
+-              <ArrowDown aria-hidden size={18} strokeWidth={1.5} />
+-            </Button>
+-            <Button
+-              variant="ghost"
+-              isIconOnly
+-              data-member={userId}
+-              data-control="remove"
+-              aria-label={`Remove ${nameOf(userId)} from rotation`}
+-              disabled={isUnavailable}
+-              onClick={() => {
+-                remove(index);
+-              }}
+-            >
+-              <Trash2 aria-hidden size={18} strokeWidth={1.5} />
+-            </Button>
++              <button
++                type="button"
++                draggable={!isUnavailable}
++                tabIndex={-1}
++                aria-label={`Drag ${nameOf(userId)} to reorder`}
++                onDragStart={() => {
++                  setDragIndex(index);
++                }}
++                onDragEnd={() => {
++                  setDragIndex(null);
++                }}
++                className="inline-flex min-h-11 min-w-11 shrink-0 cursor-grab items-center justify-center text-muted"
++              >
++                <GripVertical aria-hidden size={20} strokeWidth={1.5} />
++              </button>
++              <span className="min-w-0 flex-1 truncate text-body text-primary">
++                {`${String(index + 1)}. ${nameOf(userId)}`}
++              </span>
++              <Button
++                variant="ghost"
++                isIconOnly
++                data-member={userId}
++                data-control="up"
++                aria-label={`Move ${nameOf(userId)} up`}
++                disabled={index === 0 || isUnavailable}
++                onClick={() => {
++                  move(index, -1);
++                }}
++              >
++                <ArrowUp aria-hidden size={18} strokeWidth={1.5} />
++              </Button>
++              <Button
++                variant="ghost"
++                isIconOnly
++                data-member={userId}
++                data-control="down"
++                aria-label={`Move ${nameOf(userId)} down`}
++                disabled={index === order.length - 1 || isUnavailable}
++                onClick={() => {
++                  move(index, 1);
++                }}
++              >
++                <ArrowDown aria-hidden size={18} strokeWidth={1.5} />
++              </Button>
++              <Button
++                variant="ghost"
++                isIconOnly
++                data-member={userId}
++                data-control="remove"
++                aria-label={`Remove ${nameOf(userId)} from rotation`}
++                disabled={isUnavailable}
++                onClick={() => {
++                  remove(index);
++                }}
++              >
++                <Trash2 aria-hidden size={18} strokeWidth={1.5} />
++              </Button>
++            </div>
+           </li>
+         ))}
+       </ol>
+diff --git a/apps/web/src/lib/api/deals.ts b/apps/web/src/lib/api/deals.ts
+index 78c019d..34b654a 100644
+--- a/apps/web/src/lib/api/deals.ts
++++ b/apps/web/src/lib/api/deals.ts
+@@ -1,3 +1,4 @@
++import { useRef } from 'react';
+ import {
+   useMutation,
+   useQuery,
+@@ -246,14 +247,26 @@ export function useAddDealToList(
+ ): UseMutationResult<void, Error, AddDealToList> {
+   const api = useApi();
+   const queryClient = useQueryClient();
++  // The id of the add in flight or last failed, for one list and deal. A response lost after the
++  // request landed shows an error, and the next tap must carry the same id so the service's
++  // `on conflict (id) do nothing` makes it a replay; only a success starts the next add.
++  const attempt = useRef<{ listId: string; dealId: string; id: string } | null>(null);
+   return useMutation({
+-    mutationFn: ({ listId, dealId }: AddDealToList) =>
+-      api.send({
++    mutationFn: ({ listId, dealId }: AddDealToList) => {
++      const held = attempt.current;
++      const current =
++        held?.listId === listId && held.dealId === dealId
++          ? held
++          : { listId, dealId, id: crypto.randomUUID() };
++      attempt.current = current;
++      return api.send({
+         method: 'POST',
+         path: `/api/lists/${listId}/items`,
+-        body: { source: 'from_deal', id: crypto.randomUUID(), dealId },
+-      }),
++        body: { source: 'from_deal', id: current.id, dealId },
++      });
++    },
+     onSuccess: async () => {
++      attempt.current = null;
+       await queryClient.invalidateQueries({ queryKey: dealKeys.lists(householdId) });
+     },
+   });
+diff --git a/apps/web/src/screens/deals/deal-card.test.tsx b/apps/web/src/screens/deals/deal-card.test.tsx
+index b35278c..d3d5073 100644
+--- a/apps/web/src/screens/deals/deal-card.test.tsx
++++ b/apps/web/src/screens/deals/deal-card.test.tsx
+@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+ import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
++import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
+ import { OAK_STREET_ID } from '../../test/fixtures.ts';
+ import {
+   broccoliDeal,
+@@ -183,3 +184,104 @@ describe('adding a deal to a list', () => {
+     expect(within(sheet).getByRole('button', { name: 'Go to Lists' })).toBeInTheDocument();
+   });
+ });
++
++describe('adding a deal after a lost response', () => {
++  /** The server's `shopping_list_item` ids: `on conflict (id) do nothing` keeps one row per id. */
++  function itemStore(): { rows: Map<string, string>; insert: StubHandler } {
++    const rows = new Map<string, string>();
++    const insert: StubHandler = ({ body, params }) => {
++      const { id } = body as { id: string };
++      if (!rows.has(id)) rows.set(id, params['id'] ?? '');
++      return { status: 201, body: {} };
++    };
++    return { rows, insert };
++  }
++
++  it('sends the same item id on the retry, so the deal lands once', async () => {
++    const user = userEvent.setup();
++    const store = itemStore();
++    let posts = 0;
++    const stub = stubFetch({
++      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
++      'POST /api/lists/:id/items': (request) => {
++        posts += 1;
++        const response = store.insert(request);
++        // The first request lands, but its response never reaches the browser.
++        if (posts === 1) throw new TypeError('Failed to fetch');
++        return response;
++      },
++    });
++    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
++    const add = await screen.findByRole('button', {
++      name: "Add Egg-Land's Best Extra Large Eggs to a list",
++    });
++
++    await user.click(add);
++    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
++    await user.click(add);
++    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
++
++    const ids = stub.calls
++      .filter((call) => call.method === 'POST')
++      .map((call) => (call.body as { id: string }).id);
++    expect(ids).toHaveLength(2);
++    expect(ids[1]).toBe(ids[0]);
++    expect(store.rows.size).toBe(1);
++  });
++
++  it('mints a new id once an add succeeds, so adding the same deal twice still works', async () => {
++    const user = userEvent.setup();
++    const store = itemStore();
++    stubFetch({
++      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
++      'POST /api/lists/:id/items': store.insert,
++    });
++    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
++    const add = await screen.findByRole('button', {
++      name: "Add Egg-Land's Best Extra Large Eggs to a list",
++    });
++
++    await user.click(add);
++    await waitFor(() => {
++      expect(store.rows.size).toBe(1);
++    });
++    await user.click(add);
++    await waitFor(() => {
++      expect(store.rows.size).toBe(2);
++    });
++  });
++
++  it('does not carry a failed add’s id to a different list', async () => {
++    const user = userEvent.setup();
++    const store = itemStore();
++    let posts = 0;
++    stubFetch({
++      'GET /api/households/:id/lists': () => ({
++        status: 200,
++        body: [thisWeekList, weekendCookoutList],
++      }),
++      'POST /api/lists/:id/items': (request) => {
++        posts += 1;
++        const response = store.insert(request);
++        if (posts === 1) throw new TypeError('Failed to fetch');
++        return response;
++      },
++    });
++    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
++    const add = await screen.findByRole('button', { name: 'Add Broccoli Crowns to a list' });
++
++    await user.click(add);
++    await user.click(
++      within(await screen.findByRole('dialog')).getByRole('button', { name: /This Week/ }),
++    );
++    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
++
++    await user.click(add);
++    await user.click(
++      within(await screen.findByRole('dialog')).getByRole('button', { name: /Weekend Cookout/ }),
++    );
++    expect(await screen.findByText('Added to Weekend Cookout.')).toBeInTheDocument();
++    // Both lists hold the deal: a reused id would have been swallowed by `on conflict (id)`.
++    expect(new Set(store.rows.values())).toEqual(new Set([thisWeekList.id, weekendCookoutList.id]));
++  });
++});
+diff --git a/docker/kong.yml b/docker/kong.yml
+index 9fa83ab..88271a4 100644
+--- a/docker/kong.yml
++++ b/docker/kong.yml
+@@ -1,7 +1,13 @@
+ # Kong declarative config: auth and realtime only (Technical Architecture, "Compose layout").
+ # There are deliberately no rest, graphql, storage, functions, analytics, or meta routes.
+ # $SUPABASE_ANON_KEY and $SUPABASE_SERVICE_KEY are substituted by kong-entrypoint.sh.
+-_format_version: '2.1'
++#
++# GoTrue is an allowlist: only the calls supabase-js makes for sign-in, token refresh, sign-out and
++# the session checks, plus the email-link /verify, have a route, each with its method. Everything
++# else under /auth/v1 ends at the auth-v1-denied route. The paths are exact regexes (`~/...$`),
++# which Kong ranks above the denied route's prefix; they need _format_version 3.0, because under
++# 2.1 Kong rewrites a regex path and refuses the leading `~`.
++_format_version: '3.0'
+ _transform: true
+ 
+ consumers:
+@@ -19,22 +25,93 @@ acls:
+     group: admin
+ 
+ services:
+-  # The email links GoTrue issues (password recovery) are opened in a browser with no apikey.
+-  - name: auth-v1-open
++  # The email links GoTrue issues (password recovery) are opened in a browser with no apikey,
++  # and verifyOtp posts the magic-link code here.
++  - name: auth-v1-verify
+     url: http://auth:9999/verify
+     routes:
+-      - name: auth-v1-open
++      - name: auth-v1-verify
+         strip_path: true
++        methods:
++          - GET
++          - POST
+         paths:
+-          - /auth/v1/verify
++          - ~/auth/v1/verify/?$
+ 
+-  - name: auth-v1
+-    url: http://auth:9999/
++  # signInWithPassword and every token refresh.
++  - name: auth-v1-token
++    url: http://auth:9999/token
++    routes:
++      - name: auth-v1-token
++        strip_path: true
++        methods:
++          - POST
++        paths:
++          - ~/auth/v1/token/?$
++    plugins:
++      - name: key-auth
++        config:
++          hide_credentials: false
++      - name: acl
++        config:
++          hide_groups_header: true
++          allow:
++            - admin
++            - anon
++
++  # signOut.
++  - name: auth-v1-logout
++    url: http://auth:9999/logout
++    routes:
++      - name: auth-v1-logout
++        strip_path: true
++        methods:
++          - POST
++        paths:
++          - ~/auth/v1/logout/?$
++    plugins:
++      - name: key-auth
++        config:
++          hide_credentials: false
++      - name: acl
++        config:
++          hide_groups_header: true
++          allow:
++            - admin
++            - anon
++
++  # The session checks setSession and the URL-fragment sign-in make. PUT /user (a password or
++  # email change) is not here: only hearth-service makes it, directly on auth:9999.
++  - name: auth-v1-user
++    url: http://auth:9999/user
++    routes:
++      - name: auth-v1-user
++        strip_path: true
++        methods:
++          - GET
++        paths:
++          - ~/auth/v1/user/?$
++    plugins:
++      - name: key-auth
++        config:
++          hide_credentials: false
++      - name: acl
++        config:
++          hide_groups_header: true
++          allow:
++            - admin
++            - anon
++
++  # signInWithOtp, used only when the build enables magic link.
++  - name: auth-v1-otp
++    url: http://auth:9999/otp
+     routes:
+-      - name: auth-v1-all
++      - name: auth-v1-otp
+         strip_path: true
++        methods:
++          - POST
+         paths:
+-          - /auth/v1/
++          - ~/auth/v1/otp/?$
+     plugins:
+       - name: key-auth
+         config:
+@@ -46,6 +123,44 @@ services:
+             - admin
+             - anon
+ 
++  # Creating and listing users with the service-role key: the E2E seed (supabase/seed) does it
++  # through the stack. The anon key is refused by the acl.
++  - name: auth-v1-admin-users
++    url: http://auth:9999/admin/users
++    routes:
++      - name: auth-v1-admin-users
++        strip_path: true
++        methods:
++          - GET
++          - POST
++        paths:
++          - ~/auth/v1/admin/users/?$
++    plugins:
++      - name: key-auth
++        config:
++          hide_credentials: false
++      - name: acl
++        config:
++          hide_groups_header: true
++          allow:
++            - admin
++
++  # Anything else under /auth/v1 (signup, recover, settings, admin, jwks, the rest of GoTrue's
++  # surface) is refused here, before any key check, whoever asks. hearth-service reaches GoTrue
++  # directly on auth:9999 and never through Kong.
++  - name: auth-v1-denied
++    url: http://auth:9999/
++    routes:
++      - name: auth-v1-denied
++        strip_path: true
++        paths:
++          - /auth/v1
++    plugins:
++      - name: request-termination
++        config:
++          status_code: 403
++          message: Access is forbidden.
++
+   # supabase-js sends the apikey in the WebSocket URL's query string.
+   - name: realtime-v1-ws
+     url: http://realtime-dev.supabase-realtime:4000/socket
+diff --git a/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts b/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts
+index fe2a2a3..8684ae9 100644
+--- a/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts
++++ b/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts
+@@ -68,3 +68,75 @@ test('the refusal is method-restricted, so sign-in still reaches GoTrue', async
+   const token = await accessToken(request, SEED.alex.email);
+   expect(token.length).toBeGreaterThan(0);
+ });
++
++/**
++ * Kong is the second layer. These are paths and methods Caddy passes through to it, and Kong
++ * refuses them itself: its refusing route answers 403 with its own body, which tells it apart from
++ * Caddy's empty 403 and from anything GoTrue would have answered (docker/kong.yml: GoTrue is an
++ * allowlist, so only the calls supabase-js makes for sign-in, refresh and sign-out have a route).
++ */
++
++const KONG_REFUSAL = 'Access is forbidden.';
++
++const KONG_REFUSED: readonly (readonly [method: string, path: string])[] = [
++  // GoTrue endpoints the PWA never calls.
++  ['POST', '/auth/v1/recover'],
++  ['GET', '/auth/v1/settings'],
++  ['GET', '/auth/v1/.well-known/jwks.json'],
++  ['POST', '/auth/v1/invite'],
++  ['POST', '/auth/v1/admin/generate_link'],
++  ['GET', '/auth/v1/admin/users/00000000-0000-4000-8000-000000000000'],
++  ['GET', '/auth/v1/authorize'],
++  // A path the PWA does call, with a method it does not.
++  ['GET', '/auth/v1/token'],
++  ['PUT', '/auth/v1/token'],
++  ['DELETE', '/auth/v1/logout'],
++  ['POST', '/auth/v1/user'],
++  ['PUT', '/auth/v1/admin/users'],
++  // The same refusals in the spellings Caddy normalizes: Kong must not be reachable by one either.
++  ['POST', '/auth/v1/%72ecover'],
++  ['POST', '/auth/v1/x/../recover'],
++  ['POST', '//auth/v1/recover'],
++  ['POST', '/auth/v1/recover/'],
++  ['POST', '/auth/v1/recover?redirect_to=%2F'],
++];
++
++test('Kong refuses every GoTrue path and method that has no route, with or without a key', async () => {
++  const apikey = readStackEnv()['ANON_KEY'] ?? '';
++  for (const [method, path] of KONG_REFUSED) {
++    for (const headers of [{}, { apikey }]) {
++      const response = await rawRequest(method, path, headers);
++      expect(response.status, `${method} ${path}`).toBe(403);
++      expect(response.body, `${method} ${path}`).toContain(KONG_REFUSAL);
++    }
++  }
++});
++
++test('Kong answers the calls the PWA makes itself', async () => {
++  const apikey = readStackEnv()['ANON_KEY'] ?? '';
++  const refused = (body: string): boolean => body.includes(KONG_REFUSAL);
++
++  // Sign-in and refresh: a bad grant is GoTrue's 400, not a refusal.
++  const grant = await rawRequest('POST', '/auth/v1/token?grant_type=password', { apikey });
++  expect(grant.status).toBe(400);
++  expect(refused(grant.body)).toBe(false);
++  const refresh = await rawRequest('POST', '/auth/v1/token?grant_type=refresh_token', { apikey });
++  expect(refused(refresh.body)).toBe(false);
++
++  // Sign-out and the session check need a bearer token, which GoTrue says.
++  const logout = await rawRequest('POST', '/auth/v1/logout?scope=local', { apikey });
++  expect(refused(logout.body)).toBe(false);
++  const user = await rawRequest('GET', '/auth/v1/user', { apikey });
++  expect(user.status).toBe(401);
++  expect(refused(user.body)).toBe(false);
++
++  // The email link opens with no apikey at all.
++  const verify = await rawRequest('GET', '/auth/v1/verify?token=nope&type=recovery');
++  expect(refused(verify.body)).toBe(false);
++  expect(verify.status).toBeLessThan(500);
++
++  // Admin is the service-role key's alone: the anon key is turned away by the ACL, not the refusal.
++  const admin = await rawRequest('GET', '/auth/v1/admin/users', { apikey });
++  expect(admin.status).toBe(403);
++  expect(refused(admin.body)).toBe(false);
++});
+diff --git a/package.json b/package.json
+index 07e59d5..7b7f052 100644
+--- a/package.json
++++ b/package.json
+@@ -13,7 +13,7 @@
+     "format:check": "prettier --check .",
+     "typecheck": "pnpm -r --parallel typecheck",
+     "test": "pnpm test:harness && pnpm -r test",
+-    "test:harness": "node --test test/clock-setup.test.mjs test/global-tz.test.mjs scripts/test-sweep.test.mjs test/eslint-clock-ban.test.mjs",
++    "test:harness": "node --test test/clock-setup.test.mjs test/global-tz.test.mjs scripts/test-sweep.test.mjs test/eslint-clock-ban.test.mjs test/eslint-service-role-fence.test.mjs",
+     "test:integration": "pnpm -r --if-present test:integration",
+     "test:sweep": "node scripts/test-sweep.mjs",
+     "test:sweep:integration": "node scripts/test-sweep.mjs --suite integration",
+diff --git a/packages/shared/src/api/patch-schemas.test.ts b/packages/shared/src/api/patch-schemas.test.ts
+new file mode 100644
+index 0000000..17fc611
+--- /dev/null
++++ b/packages/shared/src/api/patch-schemas.test.ts
+@@ -0,0 +1,118 @@
++import { describe, expect, it } from 'vitest';
++import { z } from 'zod';
++import { endpoints } from './contract.js';
++import * as api from '../index.js';
++
++/*
++ * A PATCH body sets only the fields it names. A schema that fills in a default for a field the
++ * caller left out would reset that field on every partial update, so no PATCH body schema may
++ * default, prefault, or catch a field. The endpoint list in `contract.ts` is what the service
++ * validates against, so it is the registry of which schemas are PATCH bodies.
++ */
++
++const DEFAULTING = new Set(['default', 'prefault', 'catch']);
++// Wrappers a field's schema can sit behind; `pipe` is followed through its input side.
++const WRAPPERS = new Set(['optional', 'nullable', 'nonoptional', 'readonly', ...DEFAULTING]);
++
++interface Def {
++  type: string;
++  innerType?: z.ZodType;
++  in?: z.ZodType;
++  shape?: Record<string, z.ZodType>;
++}
++
++const defOf = (schema: z.ZodType): Def => schema._zod.def;
++
++/** The object schema under any `pipe` (a transform or a refine-and-transform on the body). */
++function objectShape(schema: z.ZodType): Record<string, z.ZodType> {
++  let current = schema;
++  for (let input = defOf(current).in; defOf(current).type === 'pipe' && input;) {
++    current = input;
++    input = defOf(current).in;
++  }
++  const { type, shape } = defOf(current);
++  if (type !== 'object' || shape === undefined) {
++    throw new Error(`a PATCH body must be an object schema, found ${type}`);
++  }
++  return shape;
++}
++
++/** The fields whose schema, through any wrappers, supplies a value the caller did not send. */
++function defaultingFields(schema: z.ZodType): string[] {
++  return Object.entries(objectShape(schema))
++    .filter(([, field]) => {
++      let current: z.ZodType | undefined = field;
++      for (let depth = 0; current !== undefined && depth < 12; depth += 1) {
++        const { type, innerType, in: input } = defOf(current);
++        if (DEFAULTING.has(type)) return true;
++        current = type === 'pipe' ? input : WRAPPERS.has(type) ? innerType : undefined;
++      }
++      return false;
++    })
++    .map(([name]) => name);
++}
++
++const patchEndpoints = endpoints.filter((endpoint) => endpoint.method === 'PATCH');
++
++describe('PATCH body schemas', () => {
++  it('are found in the contract', () => {
++    // Eleven today. A new PATCH endpoint is covered below by being in the list; a body-less one
++    // would have nothing to guard, so it is refused.
++    expect(patchEndpoints.length).toBeGreaterThan(0);
++    for (const endpoint of patchEndpoints) {
++      expect('body' in endpoint, `${endpoint.method} ${endpoint.path} has no body schema`).toBe(
++        true,
++      );
++    }
++  });
++
++  it.each(patchEndpoints.map((endpoint) => [endpoint.path, endpoint.body] as const))(
++    '%s injects no default for a field left out',
++    (_path, body) => {
++      expect(defaultingFields(body)).toEqual([]);
++      // An empty body is refused (at least one field is required) or parses to nothing; it never
++      // parses to a body the caller did not write.
++      const parsed = body.safeParse({});
++      expect(parsed.success ? Object.keys(parsed.data) : []).toEqual([]);
++    },
++  );
++
++  it('are every exported update*RequestSchema, so none is wired in unregistered', () => {
++    const registered = new Set<unknown>(patchEndpoints.map((endpoint) => endpoint.body));
++    const named = Object.entries(api).filter(([name]) =>
++      /^update[A-Z]\w*RequestSchema$/.test(name),
++    );
++    expect(named.length).toBeGreaterThan(0);
++    for (const [name, schema] of named) {
++      expect(registered.has(schema), `${name} is not the body of any PATCH endpoint`).toBe(true);
++    }
++  });
++});
++
++describe('the guard itself', () => {
++  const mutants: [string, z.ZodType][] = [
++    [
++      'a .partial() over a defaulted field',
++      z.object({ a: z.number().default(1), b: z.string() }).partial(),
++    ],
++    ['a default behind optional', z.object({ a: z.number().default(1).optional() })],
++    ['a default under optional', z.object({ a: z.number().optional().default(1) })],
++    ['a nullable default', z.object({ a: z.string().nullable().default(null) })],
++    ['a prefault', z.object({ a: z.number().prefault(2) })],
++    ['a catch', z.object({ a: z.number().catch(0).optional() })],
++    ['a default under a refine', z.object({ a: z.number().default(1) }).refine((v) => v.a > 0)],
++    ['a default under a transform', z.object({ a: z.number().default(1) }).transform((v) => v)],
++  ];
++  it.each(mutants)('flags %s', (_name, schema) => {
++    expect(defaultingFields(schema)).toEqual(['a']);
++  });
++
++  it('leaves a clean schema alone', () => {
++    const clean = z.object({ a: z.number().optional(), b: z.string().nullable().optional() });
++    expect(defaultingFields(clean)).toEqual([]);
++  });
++
++  it('refuses a body that is not an object, rather than passing it unchecked', () => {
++    expect(() => defaultingFields(z.string())).toThrow(/object schema/);
++  });
++});
+diff --git a/scripts/deploy.sh b/scripts/deploy.sh
+index d78bb56..87b1503 100755
+--- a/scripts/deploy.sh
++++ b/scripts/deploy.sh
+@@ -86,14 +86,15 @@ log "backing up the database"
+ compose exec -T backup /backup.sh || fail "backup failed; nothing migrated or restarted"
+ 
+ # 4. Migrations, with the Supabase CLI against the Compose database. The database publishes no
+-# port, so the CLI connects to the container's address on the Compose network.
++# port, so the CLI connects to the container's address on the Compose network. The password goes
++# in PGPASSWORD for this one command, never in the URL: a command line shows in the process list.
+ db_container="$(compose ps --quiet db)"
+ db_ip="$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+   "$db_container")"
+ [[ -n "$db_ip" ]] || fail "cannot find the db container's address; nothing restarted"
+ log "applying pending migrations"
+-supabase migration up --workdir "$repo_root" \
+-  --db-url "postgresql://postgres:$(env_value POSTGRES_PASSWORD)@${db_ip}:5432/postgres?sslmode=disable" ||
++PGPASSWORD="$(env_value POSTGRES_PASSWORD)" supabase migration up --workdir "$repo_root" \
++  --db-url "postgresql://postgres@${db_ip}:5432/postgres?sslmode=disable" ||
+   fail "migration failed; nothing restarted (the backup above is the restore point)"
+ 
+ # hearth_service's LOGIN and password come from .env, not a migration; re-applying them is
+diff --git a/scripts/deploy.test.mjs b/scripts/deploy.test.mjs
+new file mode 100644
+index 0000000..818c7f8
+--- /dev/null
++++ b/scripts/deploy.test.mjs
+@@ -0,0 +1,148 @@
++/*
++ * Tests for `scripts/deploy.sh`: that the database password never appears on the command line of
++ * anything the script runs (a process list, `set -x` and CI logs all show argv). The real script
++ * runs to the end against stub `docker`, `supabase` and `curl` binaries put first on `PATH`; each
++ * stub appends its argv, and the password variable it was given, to a log the test reads. Nothing
++ * here starts a container or touches a database. Run by `pnpm test` through the root
++ * `test:harness` script.
++ */
++
++import assert from 'node:assert/strict';
++import { spawnSync } from 'node:child_process';
++import {
++  chmodSync,
++  mkdirSync,
++  mkdtempSync,
++  readFileSync,
++  rmSync,
++  symlinkSync,
++  writeFileSync,
++} from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join, resolve } from 'node:path';
++import { after, describe, it } from 'node:test';
++
++const REPO_ROOT = resolve(import.meta.dirname, '..');
++const DEPLOY = join(REPO_ROOT, 'scripts', 'deploy.sh');
++const SHA = '0123456789abcdef0123456789abcdef01234567';
++
++const scratch = mkdtempSync(join(tmpdir(), 'hearth-deploy-'));
++after(() => {
++  rmSync(scratch, { recursive: true, force: true });
++});
++
++// Answers the few queries deploy.sh makes and logs everything: "<name>\t<arg>\t<arg>..." then
++// "ENV\t<name>\tPGPASSWORD=<value or <unset>>". Anything else succeeds silently.
++const STUB = `#!/usr/bin/env bash
++name="$(basename "$0")"
++{
++  printf '%s' "$name"
++  for arg in "$@"; do printf '\\t%s' "$arg"; done
++  printf '\\n'
++  printf 'ENV\\t%s\\tPGPASSWORD=%s\\n' "$name" "\${PGPASSWORD-<unset>}"
++} >> "$STUB_LOG"
++if [[ "$name" == docker ]]; then
++  case "$*" in
++    "image inspect --format {{.Id}} "*) echo "sha256:stub" ;;
++    *"ps --quiet db"*) echo "db-container" ;;
++    "inspect --format "*) echo "172.16.238.5" ;;
++  esac
++fi
++exit 0
++`;
++
++/** Runs deploy.sh with `password` as POSTGRES_PASSWORD; returns the script's result and the stub log. */
++function deploy(password) {
++  const directory = mkdtempSync(join(scratch, 'run-'));
++  const bin = join(directory, 'bin');
++  mkdirSync(bin);
++  writeFileSync(join(directory, 'stub.sh'), STUB);
++  chmodSync(join(directory, 'stub.sh'), 0o755);
++  for (const name of ['docker', 'supabase', 'curl'])
++    symlinkSync(join(directory, 'stub.sh'), join(bin, name));
++  const envFile = join(directory, 'env');
++  writeFileSync(envFile, `POSTGRES_PASSWORD=${password}\nHEARTH_SERVICE_DB_PASSWORD=other\n`);
++  const log = join(directory, 'log');
++  writeFileSync(log, '');
++
++  const environment = Object.fromEntries(
++    Object.entries(process.env).filter(([key]) => key !== 'PGPASSWORD'),
++  );
++  const run = spawnSync('bash', [DEPLOY], {
++    cwd: REPO_ROOT,
++    encoding: 'utf8',
++    env: {
++      ...environment,
++      PATH: `${bin}:${process.env['PATH'] ?? ''}`,
++      HEARTH_ENV_FILE: envFile,
++      HEARTH_DEPLOY_SHA: SHA,
++      STUB_LOG: log,
++    },
++  });
++  const lines = readFileSync(log, 'utf8')
++    .split('\n')
++    .filter((line) => line !== '');
++  const calls = lines.filter((line) => !line.startsWith('ENV\t')).map((line) => line.split('\t'));
++  const envs = lines.filter((line) => line.startsWith('ENV\t')).map((line) => line.split('\t'));
++  return { run, calls, envs };
++}
++
++describe('deploy.sh: the database password', () => {
++  const password = 'sentinel-Pw-9f3a7c1e5b2d';
++  const { run, calls, envs } = deploy(password);
++
++  it('runs to the end against the stubs', () => {
++    assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
++    // Without this the checks below could pass because the script never reached the step.
++    assert.ok(
++      calls.some((call) => call[0] === 'supabase' && call[1] === 'migration' && call[2] === 'up'),
++      'the migration step did not run',
++    );
++  });
++
++  it('is on no command line', () => {
++    for (const call of calls) {
++      assert.ok(
++        !call.join(' ').includes(password),
++        `argv of ${call[0]} holds the password: ${call.join(' ')}`,
++      );
++    }
++  });
++
++  it('is not printed by the script either', () => {
++    assert.ok(!run.stdout.includes(password) && !run.stderr.includes(password));
++  });
++
++  it('reaches the migration command through its environment, and nothing else', () => {
++    const migration = calls.findIndex((call) => call[0] === 'supabase' && call[2] === 'up');
++    const supabaseEnvs = envs.filter((entry) => entry[1] === 'supabase');
++    assert.ok(migration >= 0);
++    assert.deepEqual(
++      supabaseEnvs.map((entry) => entry[2]),
++      [`PGPASSWORD=${password}`],
++    );
++    const others = envs.filter((entry) => entry[1] !== 'supabase');
++    assert.ok(others.length > 0);
++    for (const entry of others) assert.equal(entry[2], 'PGPASSWORD=<unset>', `${entry[1]} saw it`);
++  });
++
++  it('leaves the connection string as user and host only', () => {
++    const call = calls.find((entry) => entry[0] === 'supabase' && entry[2] === 'up') ?? [];
++    const url = new URL(call[call.indexOf('--db-url') + 1] ?? '');
++    assert.equal(url.username, 'postgres');
++    assert.equal(url.password, '');
++    assert.equal(url.host, '172.16.238.5:5432');
++  });
++});
++
++describe('deploy.sh: a password with URL-reserved characters', () => {
++  it('arrives intact, which a password inside a URL would not', () => {
++    const password = 'p@ss/w:rd#1?x%y';
++    const { run, envs } = deploy(password);
++    assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
++    assert.deepEqual(
++      envs.filter((entry) => entry[1] === 'supabase').map((entry) => entry[2]),
++      [`PGPASSWORD=${password}`],
++    );
++  });
++});
+diff --git a/test/eslint-service-role-fence.test.mjs b/test/eslint-service-role-fence.test.mjs
+new file mode 100644
+index 0000000..f179975
+--- /dev/null
++++ b/test/eslint-service-role-fence.test.mjs
+@@ -0,0 +1,118 @@
++/*
++ * Probes for the service-role fence in `eslint.config.js`: outside `main.ts`, `cli.ts`, tests, and
++ * `apps/service/src/privileged/`, a module may not import from `privileged/` (the only code that
++ * builds a `service_role` client, which bypasses RLS), statically or with `import('...')`. Each
++ * probe is a snippet linted under a path in the service tree with the repo's real config. A bad
++ * probe must raise the fence at error severity; a good one must not. Run by `pnpm test` through
++ * the root `test:harness` script.
++ *
++ * Out of reach of the fence, so not probed and not claimed: a dynamic import whose specifier is a
++ * variable or template literal, `require`, a raw `set local role service_role` in SQL, and code
++ * outside `apps/service/src`. `docs/testing.md` lists the same limits.
++ */
++
++import assert from 'node:assert/strict';
++import { describe, it } from 'node:test';
++import { ESLint } from 'eslint';
++import tseslint from 'typescript-eslint';
++import { REPO_ROOT } from './support/vitest-project.mjs';
++
++// The probes are virtual files, which the type-aware project service cannot find; the fence reads
++// syntax only, so type information is switched off for them.
++const eslint = new ESLint({
++  cwd: REPO_ROOT,
++  overrideConfig: tseslint.config(tseslint.configs.disableTypeChecked),
++});
++
++const FENCE_RULES = new Set(['@typescript-eslint/no-restricted-imports', 'no-restricted-syntax']);
++
++/** The fence's reports for `code` linted as if it lived at `filePath`. */
++async function fenceMessages(code, filePath) {
++  const [result] = await eslint.lintText(code, { filePath });
++  assert.ok(result, 'no lint result');
++  const fatal = result.messages.filter((message) => message.fatal);
++  assert.deepEqual(fatal, [], `the probe did not parse: ${JSON.stringify(fatal)}`);
++  return result.messages.filter((message) => FENCE_RULES.has(message.ruleId));
++}
++
++const SERVICE_MODULE = 'apps/service/src/routes/probe.ts';
++
++const BAD = [
++  "import { withServiceRoleDb } from '../privileged/service-role-db.js';",
++  "import { createJobDatabase } from '../privileged/job-database.js';",
++  "import * as admin from '../../privileged/gotrue-admin.js';",
++  "import '../privileged/service-role-db.js';",
++  "export { readSystemHealth } from '../privileged/service-role-db.js';",
++  "export * from '../privileged/service-role-db.js';",
++  // A type-only import is allowed; one value beside it is not.
++  "import { type SystemHealthRow, readSystemHealth } from '../privileged/service-role-db.js';",
++  // no-restricted-imports sees static imports only.
++  "const loaded = await import('../privileged/service-role-db.js');",
++  "void import('../privileged/notification-outbox.js').then(() => undefined);",
++];
++
++const GOOD = [
++  "import type { SystemHealthRow } from '../privileged/service-role-db.js';",
++  "import { type SystemHealthRow } from '../privileged/service-role-db.js';",
++  "import { fail } from '../problem.js';",
++  "const loaded = await import('../problem.js');",
++];
++
++describe('service-role fence: imports the fence must report', () => {
++  for (const code of BAD) {
++    it(code, async () => {
++      const messages = await fenceMessages(code, SERVICE_MODULE);
++      assert.ok(messages.length >= 1, 'not reported');
++      assert.ok(
++        messages.every((message) => message.severity === 2),
++        'reported below error severity',
++      );
++    });
++  }
++});
++
++describe('service-role fence: imports it must leave alone', () => {
++  for (const code of GOOD) {
++    it(code, async () => {
++      assert.deepEqual(await fenceMessages(code, SERVICE_MODULE), []);
++    });
++  }
++});
++
++describe('service-role fence: where it applies', () => {
++  const value = "import { withServiceRoleDb } from '../privileged/service-role-db.js';";
++
++  // Every directory of the service, including the files the audit named (routes/users.ts,
++  // http/context.ts).
++  const fenced = [
++    'apps/service/src/routes/users.ts',
++    'apps/service/src/http/context.ts',
++    'apps/service/src/services/lists.ts',
++    'apps/service/src/jobs/scheduler.ts',
++    'apps/service/src/db/user-db.ts',
++    'apps/service/src/app.ts',
++    'apps/service/src/env.ts',
++    'apps/service/src/push/test-seam.ts',
++  ];
++  for (const filePath of fenced) {
++    it(`${filePath} is fenced`, async () => {
++      assert.ok((await fenceMessages(value, filePath)).length >= 1, 'not covered');
++    });
++  }
++
++  // The sanctioned callers.
++  const exempt = [
++    'apps/service/src/main.ts',
++    'apps/service/src/cli.ts',
++    'apps/service/src/privileged/probe.ts',
++    'apps/service/src/privileged/nested/probe.ts',
++    'apps/service/src/routes/probe.test.ts',
++    'apps/service/src/probe.integration.test.ts',
++    'apps/service/src/test/probe.ts',
++  ];
++  for (const filePath of exempt) {
++    it(`${filePath} may import privileged/`, async () => {
++      assert.deepEqual(await fenceMessages(value, filePath), []);
++    });
++  }
++});
+diff --git a/test/kong-routes.test.mjs b/test/kong-routes.test.mjs
+new file mode 100644
+index 0000000..15ddd27
+--- /dev/null
++++ b/test/kong-routes.test.mjs
+@@ -0,0 +1,223 @@
++/*
++ * Static checks on `docker/kong.yml`, the declarative config for the gateway in front of GoTrue.
++ * GoTrue is an allowlist (Technical Architecture, "Routing"): each call the browser makes has a
++ * route with its method, and everything else under /auth/v1 ends at one refusing route. This test
++ * pins that table exactly, so a route added, a method widened, or an ACL group added fails here
++ * before it reaches a host. It cannot start Kong; `e2e/tests/08-caddy-refuses-gotrue-endpoints
++ * .spec.ts` and the sign-in journeys prove the running gateway behaves as this file says.
++ * Run by `pnpm test` through the root `test:harness` script.
++ */
++
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import { describe, it } from 'node:test';
++import { parse } from 'yaml';
++import { REPO_ROOT } from './support/vitest-project.mjs';
++
++const kong = parse(readFileSync(join(REPO_ROOT, 'docker', 'kong.yml'), 'utf8'));
++const compose = parse(readFileSync(join(REPO_ROOT, 'docker', 'docker-compose.yml'), 'utf8'));
++
++/** Every route with the service and plugins it hangs off, flattened. */
++const routes = kong.services.flatMap((service) =>
++  (service.routes ?? []).map((route) => ({
++    name: route.name,
++    upstream: service.url,
++    methods: [...(route.methods ?? [])].sort(),
++    paths: route.paths ?? [],
++    stripPath: route.strip_path,
++    plugins: Object.fromEntries(
++      (service.plugins ?? []).map((plugin) => [plugin.name, plugin.config]),
++    ),
++  })),
++);
++
++const gotrue = routes.filter((route) => route.paths.some((path) => /^~?\/auth\/v1/.test(path)));
++
++const KEYED = { 'key-auth': { hide_credentials: false } };
++const aclOf = (...allow) => ({ acl: { hide_groups_header: true, allow } });
++
++// The whole GoTrue surface Kong exposes. Each upstream is the one GoTrue path the route serves.
++const ALLOWED = [
++  ['auth-v1-verify', 'http://auth:9999/verify', ['GET', 'POST'], '~/auth/v1/verify/?$', {}],
++  [
++    'auth-v1-token',
++    'http://auth:9999/token',
++    ['POST'],
++    '~/auth/v1/token/?$',
++    { ...KEYED, ...aclOf('admin', 'anon') },
++  ],
++  [
++    'auth-v1-logout',
++    'http://auth:9999/logout',
++    ['POST'],
++    '~/auth/v1/logout/?$',
++    { ...KEYED, ...aclOf('admin', 'anon') },
++  ],
++  [
++    'auth-v1-user',
++    'http://auth:9999/user',
++    ['GET'],
++    '~/auth/v1/user/?$',
++    { ...KEYED, ...aclOf('admin', 'anon') },
++  ],
++  [
++    'auth-v1-otp',
++    'http://auth:9999/otp',
++    ['POST'],
++    '~/auth/v1/otp/?$',
++    { ...KEYED, ...aclOf('admin', 'anon') },
++  ],
++  [
++    'auth-v1-admin-users',
++    'http://auth:9999/admin/users',
++    ['GET', 'POST'],
++    '~/auth/v1/admin/users/?$',
++    { ...KEYED, ...aclOf('admin') },
++  ],
++];
++const DENIED = [
++  'auth-v1-denied',
++  'http://auth:9999/',
++  [],
++  '/auth/v1',
++  {
++    'request-termination': { status_code: 403, message: 'Access is forbidden.' },
++  },
++];
++
++describe('kong.yml: the GoTrue allowlist', () => {
++  it('declares format 3.0, which regex paths need', () => {
++    assert.equal(kong._format_version, '3.0');
++  });
++
++  it('has exactly the allowed routes, methods, auth and refusal', () => {
++    const shape = (route) => [
++      route.name,
++      route.upstream,
++      route.methods,
++      route.paths.join(),
++      route.plugins,
++    ];
++    assert.deepEqual(
++      gotrue.map(shape),
++      [...ALLOWED, DENIED].map(([name, upstream, methods, path, plugins]) => [
++        name,
++        upstream,
++        methods,
++        path,
++        plugins,
++      ]),
++    );
++  });
++
++  it('gives every allowed route a method, an exact path, and a path-stripped upstream', () => {
++    for (const route of gotrue.filter((one) => one.name !== DENIED[0])) {
++      assert.ok(route.methods.length > 0, `${route.name} has no methods`);
++      assert.ok(
++        route.paths.every((path) => path.startsWith('~/') && path.endsWith('$')),
++        `${route.name} path is not an exact regex`,
++      );
++      assert.equal(route.stripPath, true, `${route.name} must strip its path`);
++      assert.ok(
++        route.upstream.startsWith('http://auth:9999/') &&
++          route.upstream.length > 'http://auth:9999/'.length,
++      );
++    }
++  });
++
++  it('keeps /verify open and everything else key-authenticated', () => {
++    for (const route of gotrue) {
++      const open = route.name === 'auth-v1-verify' || route.name === DENIED[0];
++      assert.equal('key-auth' in route.plugins, !open, route.name);
++    }
++  });
++
++  it('never lets the anon key reach admin', () => {
++    const admin = gotrue.find((route) => route.name === 'auth-v1-admin-users');
++    assert.deepEqual(admin?.plugins['acl']?.allow, ['admin']);
++  });
++
++  it('leaves the realtime routes alone', () => {
++    const realtime = routes.filter((route) =>
++      route.paths.some((path) => path.startsWith('/realtime/v1')),
++    );
++    assert.deepEqual(
++      realtime.map((route) => [route.name, route.paths.join()]),
++      [
++        ['realtime-v1-ws', '/realtime/v1/'],
++        ['realtime-v1-rest', '/realtime/v1/api'],
++        ['realtime-v1-rest-tenants', '/realtime/v1/api/tenants'],
++        ['realtime-v1-rest-openapi', '/realtime/v1/api/openapi'],
++      ],
++    );
++  });
++
++  it('only uses plugins the Compose file enables', () => {
++    const enabled = new Set(String(compose.services.kong.environment.KONG_PLUGINS).split(','));
++    const used = new Set(routes.flatMap((route) => Object.keys(route.plugins)));
++    for (const plugin of used) assert.ok(enabled.has(plugin), `${plugin} is not in KONG_PLUGINS`);
++  });
++});
++
++// What Kong would do with a request, for the calls below: a route whose regex path and method both
++// match wins over the refusing prefix route. This models the router for this file only; the E2E
++// probes are the proof against the real thing.
++function decide(method, path) {
++  const hit = gotrue.find(
++    (route) =>
++      route.name !== DENIED[0] &&
++      route.methods.includes(method) &&
++      route.paths.some((pattern) => new RegExp(`^${pattern.slice(1)}`).test(path)),
++  );
++  return hit?.name ?? (path.startsWith('/auth/v1') ? DENIED[0] : 'no route');
++}
++
++describe('kong.yml: the calls the browser makes', () => {
++  // supabase-js 2.116.0 (auth-js GoTrueClient / GoTrueAdminApi), as apps/web/src/lib/auth uses it.
++  const CALLS = [
++    ['POST', '/auth/v1/token', 'signInWithPassword, refreshSession, auto refresh', 'auth-v1-token'],
++    ['POST', '/auth/v1/logout', 'signOut (any scope)', 'auth-v1-logout'],
++    [
++      'GET',
++      '/auth/v1/user',
++      'setSession after /api/signup; the URL-fragment sign-in',
++      'auth-v1-user',
++    ],
++    ['GET', '/auth/v1/verify', 'the recovery email link', 'auth-v1-verify'],
++    ['POST', '/auth/v1/verify', 'verifyOtp (magic link)', 'auth-v1-verify'],
++    ['POST', '/auth/v1/otp', 'signInWithOtp (magic link)', 'auth-v1-otp'],
++    ['POST', '/auth/v1/admin/users', 'the E2E seed creating a user', 'auth-v1-admin-users'],
++    ['GET', '/auth/v1/admin/users', 'the E2E seed listing users', 'auth-v1-admin-users'],
++  ];
++  for (const [method, path, because, route] of CALLS) {
++    it(`${method} ${path} (${because}) reaches ${route}`, () => {
++      assert.equal(decide(method, path), route);
++    });
++  }
++
++  const REFUSED = [
++    ['POST', '/auth/v1/signup'],
++    ['PUT', '/auth/v1/user'],
++    ['POST', '/auth/v1/recover'],
++    ['GET', '/auth/v1/settings'],
++    ['GET', '/auth/v1/.well-known/jwks.json'],
++    ['GET', '/auth/v1/health'],
++    ['GET', '/auth/v1/authorize'],
++    ['POST', '/auth/v1/invite'],
++    ['POST', '/auth/v1/admin/generate_link'],
++    ['GET', '/auth/v1/admin/users/00000000-0000-4000-8000-000000000000'],
++    ['PUT', '/auth/v1/admin/users'],
++    ['GET', '/auth/v1/token'],
++    ['PUT', '/auth/v1/token'],
++    ['DELETE', '/auth/v1/logout'],
++    ['POST', '/auth/v1/user'],
++    ['GET', '/auth/v1/'],
++    ['GET', '/auth/v1'],
++  ];
++  for (const [method, path] of REFUSED) {
++    it(`${method} ${path} is refused`, () => {
++      assert.equal(decide(method, path), DENIED[0]);
++    });
++  }
++});
