@@ -21,7 +21,7 @@
     {
       "number": "4",
       "name": "Bug Fixes With Regression Tests",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "5",
@@ -36,8 +36,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step (plan phase 4)",
-    "reason": "Phase 4 of 6 — needs a plan"
+    "label": "Advance to the next step",
+    "reason": "Phase 4 of 6 · 50% · executing"
   },
-  "updated_at": "2026-10-20T00:49:19.261Z"
+  "updated_at": "2026-10-20T13:36:35.071Z"
 }
