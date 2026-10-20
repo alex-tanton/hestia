@@ -8,10 +8,10 @@ updated: 2026-10-20T19:23:37Z
 
 ## Current Test
 
-number: 2
-name: Owner decision on WR-01: `POST /auth/v1/otp` open to the anon key
+number: 3
+name: Rotation drag in Firefox and Chromium (WR-03)
 expected: |
-  The owner keeps the route (research A5) or deletes it (one service and one table row in `docker/kong.yml` and `apps/service/src/kong-routes.test.ts`). If a user row is created, the comment in `apps/service/src/routes/auth.ts` ("no way around /api/signup") is false and the exposure needs a decision.
+  The row reorders by drag, or the owner accepts that Up and Down are the only guaranteed path.
 awaiting: user response
 
 ## Tests
@@ -41,9 +41,9 @@ result: [pending]
 ## Summary
 
 total: 4
-passed: 1
+passed: 2
 issues: 0
-pending: 3
+pending: 2
 skipped: 0
 blocked: 0
 
