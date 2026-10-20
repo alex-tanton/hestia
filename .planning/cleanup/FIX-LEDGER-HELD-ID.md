@@ -5,7 +5,7 @@ branch=fix/held-deal-id
 worktree=../hearth-held-id
 commits=c57ba1ad712760f7314ae3dc1cca1517cadf2f7f c69569a70c8d31c601961f6713abeaf949d03b50
 pushed=c69569a70c8d31c601961f6713abeaf949d03b50
-pr=none (the owner opens it and squash-merges)
+pr=19 (opened 2026-10-20 at c69569a70c8d31c601961f6713abeaf949d03b50; the owner squash-merges)
 
 Raw logs are `.planning/cleanup/logs/261020-v7v-*.log` (gitignored).
 
