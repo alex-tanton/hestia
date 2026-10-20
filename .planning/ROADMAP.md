@@ -148,7 +148,7 @@ Plans:
   4. Service-role client usage outside `apps/service/src/privileged/` is audited, and a test proves the ESLint fence fails when it is violated.
   5. Running `deploy.sh` never places the database password on a process command line (a stubbed-argv test shows this), and Kong denies the unused GoTrue paths in addition to Caddy while the normal sign-in and token-refresh flows still pass.
 
-**Plans:** 4/8 plans executed
+**Plans:** 5/8 plans executed
 
 Plans:
 **Wave 1**
@@ -161,7 +161,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion and on the owner's merge of PR 1)*
 - [ ] 04-04-PLAN.md — PR 2 landing: sync after PR 1's merge, local proof, owner gate, six green jobs
-- [ ] 04-06-PLAN.md — PR 3 content, part 2 on `fix/kong-allowlist`: tracer Kong allowlist (format 3.0, static test red 13 of 32 then green), deploy and testing docs
+- [x] 04-06-PLAN.md — PR 3 content, part 2 on `fix/kong-allowlist`: tracer Kong allowlist (format 3.0, static test red 13 of 32 then green), deploy and testing docs
 
 **Wave 4** *(blocked on Wave 3 completion and on the owner's merge of PR 2)*
 - [ ] 04-07-PLAN.md — PR 3 landing: sync after PR 2's merge, local proof, owner gate, red `test-e2e` run on the old Kong, allowlist fast-forward, six green jobs
@@ -211,6 +211,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
-| 4. Bug Fixes With Regression Tests | 4/8 | In Progress | - |
+| 4. Bug Fixes With Regression Tests | 5/8 | In Progress | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |
