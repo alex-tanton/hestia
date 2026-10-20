@@ -41,13 +41,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Bug fixes (each with a regression test)
 
-- [ ] **FIX-01**: Offline list-add replay is reproduced with a failing test, then fixed (stable ID in `useAddDealToList`)
-- [ ] **FIX-02**: Recipe add-to-list idempotency is checked and fixed if it leaks duplicates
+- [x] **FIX-01**: Offline list-add replay is reproduced with a failing test, then fixed (stable ID in `useAddDealToList`)
+- [x] **FIX-02**: Recipe add-to-list idempotency is checked and fixed if it leaks duplicates
 - [x] **FIX-03**: A structural test guards every PATCH schema against default-injection
-- [ ] **FIX-04**: The `RotationEditor` accessibility suppression is replaced with proper keyboard semantics
+- [x] **FIX-04**: The `RotationEditor` accessibility suppression is replaced with proper keyboard semantics
 - [x] **FIX-05**: Service-role client usage is audited, and a test proves the lint fence fails when violated
-- [ ] **FIX-06**: `deploy.sh` no longer passes the database password on the command line
-- [ ] **FIX-07**: Kong denies the unused GoTrue paths, not only Caddy, with positive-flow tests
+- [x] **FIX-06**: `deploy.sh` no longer passes the database password on the command line
+- [x] **FIX-07**: Kong denies the unused GoTrue paths, not only Caddy, with positive-flow tests
 
 ### Redundancy and docs
 
@@ -121,13 +121,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEAD-04 | Phase 3 | Complete |
 | DEAD-05 | Phase 3 | Complete |
 | DEAD-06 | Phase 3 | Complete |
-| FIX-01 | Phase 4 | Pending |
-| FIX-02 | Phase 4 | Pending |
+| FIX-01 | Phase 4 | Complete |
+| FIX-02 | Phase 4 | Complete |
 | FIX-03 | Phase 4 | Complete |
-| FIX-04 | Phase 4 | Pending |
+| FIX-04 | Phase 4 | Complete |
 | FIX-05 | Phase 4 | Complete |
-| FIX-06 | Phase 4 | Pending |
-| FIX-07 | Phase 4 | Pending |
+| FIX-06 | Phase 4 | Complete |
+| FIX-07 | Phase 4 | Complete |
 | RED-01 | Phase 5 | Pending |
 | RED-02 | Phase 5 | Pending |
 | RED-03 | Phase 5 | Pending |
