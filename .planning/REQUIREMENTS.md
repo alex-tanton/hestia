@@ -36,7 +36,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **DEAD-02**: Proven-dead exports and types are removed
 - [x] **DEAD-03**: Unused dependencies are removed with the lockfile in the same commit (the `fuse.js` benchmark cluster, unused `tsx` in seed)
 - [x] **DEAD-04**: Stale references are removed (e.g. `BUILD_PROMPT.md` in ignore files)
-- [x] **DEAD-05**: No tracked generated or leftover files remain, and `db/types.ts` has a drift check
+- [x] **DEAD-05**: No tracked generated or leftover files remain, and `db/types.ts` has a drift check (one-time check done in Phase 3; the permanent check is CI-03)
 - [x] **DEAD-06**: Candidates tooling cannot prove dead are reported to the owner, not deleted
 
 ### Bug fixes (each with a regression test)
