@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 4
 current_phase_name: Bug Fixes With Regression Tests
 status: executing
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-10-20T14:30:10.676Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-10-20T15:11:11.326Z"
 last_activity: 2026-10-20
 last_activity_desc: Phase 4 execution started
-state_head: 4a411efafebe45931533b112123f23ea94d504e5
+state_head: 2570d44d5490ee0ceab901ebbf04f8c8d65f35ea
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 31
-  completed_plans: 26
+  completed_plans: 27
   percent: 50
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 4 (Bug Fixes With Regression Tests) — EXECUTING
-Plan: 4 of 8
+Plan: 5 of 8
 Status: Ready to execute
 Last activity: 2026-10-20 — Phase 4 execution started
 
@@ -73,6 +73,7 @@ Progress: [█████░░░░░] 50%
 | Phase 04 P01 | 12min | 3 tasks | 6 files |
 | Phase 04 P03 | 10min | 2 tasks | 5 files |
 | Phase 04 P05 | 10min | 3 tasks | 7 files |
+| Phase 04 P02 | 51min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase 04]: Plan 04-01: FIX-01 held-id map keyed by list and deal (d4b01b2); FIX-04 drag handle as a draggable button with a role=presentation drop row, no eslint-disable (f1e16fd); FIX-02 tests on fix/list-adds-rotation (1571f07), per-list advisory lock one commit ahead on fix/list-adds-lock (2e357e5). Red/green in FIX-LEDGER-WEB.md; FIX-02 red/green pending PR 1 CI (04-02)
 - [Phase 04]: Plan 04-03: test/guard-tests (72b0668) holds the FIX-05 28-probe fence test (audit 0 violations, 4 mutations killed with 15/10/2/17 failures) and the FIX-03 registry-driven PATCH guard (autopay mutation killed); tests, harness wiring and docs only, no PR yet (04-04)
 - [Phase 04]: 04-05: PGPASSWORD prefix assignment with a password-free URL (T-04-13 accepted, D-09); Kong probes ship before the Kong fix; yaml@2.9.1 approved by the owner, installed by 04-06
+- [Phase 04]: 04-02: PR 1 (#15) opened with owner gate approve; FIX-02 red/green recorded from CI; test-e2e passed on attempt 2 after one owner-approved re-run of an unrelated attempt-1 failure
 
 ### Pending Todos
 
@@ -131,6 +133,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-20T14:30:10.592Z
-Stopped at: Completed 04-05-PLAN.md
+Last session: 2026-10-20T15:11:11.214Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
