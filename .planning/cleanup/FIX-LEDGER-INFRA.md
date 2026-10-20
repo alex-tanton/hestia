@@ -24,6 +24,8 @@ Raw logs are under `.planning/cleanup/logs/` (gitignored) as `04-05-{fix}-{red,g
 - Plan 04-05 Task 1: `fix/deploy-kong` was cut from `origin/test/guard-tests` at 72b0668741791409946a7fd7cd071d51fdf99a9d and pushed at e05a2203a6819c96c98643db28beaa58dfa55926. Its diff against `origin/main` is PR 2's four files plus `docs/deploy.md`, `docs/testing.md`, `package.json` (the `test:harness` line only), `scripts/deploy.sh` and `scripts/deploy.test.mjs`.
 - Plan 04-05 Task 2: the Kong probes sit on `fix/deploy-kong` with `docker/kong.yml` equal to `origin/main`'s (`git diff --quiet origin/main -- docker/kong.yml`), so PR 3's `test-e2e` run can fail on them (04-07). e2e typecheck, ESLint `--max-warnings=0` and Prettier on the spec: exit=0.
 
+gate-yaml=approve (owner, 2026-10-20)
+
 pr3-head-candidate=1f3f36cd8f180c496976ffb9fee01c76cb15d954
 
 ## CI
