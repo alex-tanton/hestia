@@ -3,15 +3,15 @@ status: testing
 phase: 04-bug-fixes-with-regression-tests
 source: [04-VERIFICATION.md]
 started: 2026-10-20T17:58:53Z
-updated: 2026-10-20T17:58:53Z
+updated: 2026-10-20T19:23:37Z
 ---
 
 ## Current Test
 
-number: 1
-name: Kong host step (FIX-07 in production)
+number: 2
+name: Owner decision on WR-01: `POST /auth/v1/otp` open to the anon key
 expected: |
-  Sign-in, sign-out, token refresh and the recovery link all work after the Kong recreate; an outside `POST /auth/v1/recover` answers 403 with body `Access is forbidden.`
+  The owner keeps the route (research A5) or deletes it (one service and one table row in `docker/kong.yml` and `apps/service/src/kong-routes.test.ts`). If a user row is created, the comment in `apps/service/src/routes/auth.ts` ("no way around /api/signup") is false and the exposure needs a decision.
 awaiting: user response
 
 ## Tests
@@ -19,7 +19,9 @@ awaiting: user response
 ### 1. Kong host step (FIX-07 in production)
 Take a manual backup, run `hearth-compose up -d --force-recreate kong` on the host, then sign in to the PWA, sign out and in again, force a token refresh (keep a session past its access-token lifetime, or reload), and open a recovery link from `hearth-admin reset-password {email}`. From outside the host, POST to `/auth/v1/recover`.
 expected: Sign-in, sign-out, token refresh and the recovery link all work; the POST answers 403 with `Access is forbidden.`
-result: [pending]
+result: pass
+note: "User: pass, I do not have the application deployed. Not exercised against a live deployment; no production Kong exists to recreate."
+
 
 ### 2. Owner decision on WR-01: `POST /auth/v1/otp` open to the anon key
 On a running stack, POST to `/auth/v1/otp` with the anon key and a fresh email, then check `auth.users`.
@@ -39,9 +41,9 @@ result: [pending]
 ## Summary
 
 total: 4
-passed: 0
+passed: 1
 issues: 0
-pending: 4
+pending: 3
 skipped: 0
 blocked: 0
 
