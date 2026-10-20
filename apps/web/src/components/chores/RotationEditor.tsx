@@ -108,7 +108,7 @@ export function RotationEditor({
 
   const handleDrop =
     (dropIndex: number) =>
-    (event: DragEvent<HTMLLIElement>): void => {
+    (event: DragEvent<HTMLDivElement>): void => {
       event.preventDefault();
       if (dragIndex === null || dragIndex === dropIndex) return;
       onChange(moveIndex(order, dragIndex, dropIndex));
@@ -126,74 +126,77 @@ export function RotationEditor({
       {order.length === 0 && <p className="text-body-sm text-secondary">{ROTATION_EMPTY_COPY}</p>}
       <ol className="flex flex-col gap-2">
         {order.map((userId, index) => (
-          // Drag is a pointer convenience on top of the Up/Down/Remove buttons below, which are
-          // the real, tested, keyboard-operable mechanism (Accessibility › Keyboard: a
-          // single-pointer gesture always needs a non-gesture alternative).
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-          <li
-            key={userId}
-            data-member={userId}
-            draggable={!isUnavailable}
-            onDragStart={() => {
-              setDragIndex(index);
-            }}
-            onDragOver={(event) => {
-              event.preventDefault();
-            }}
-            onDrop={handleDrop(index)}
-            onDragEnd={() => {
-              setDragIndex(null);
-            }}
-            className="flex min-h-11 items-center gap-2 rounded-md border border-border bg-base px-2 py-1.5"
-          >
-            <GripVertical
-              aria-hidden
-              size={20}
-              strokeWidth={1.5}
-              className="shrink-0 cursor-grab text-muted"
-            />
-            <span className="min-w-0 flex-1 truncate text-body text-primary">
-              {`${String(index + 1)}. ${nameOf(userId)}`}
-            </span>
-            <Button
-              variant="ghost"
-              isIconOnly
-              data-member={userId}
-              data-control="up"
-              aria-label={`Move ${nameOf(userId)} up`}
-              disabled={index === 0 || isUnavailable}
-              onClick={() => {
-                move(index, -1);
+          <li key={userId} data-member={userId} className="rounded-md border border-border bg-base">
+            {/* The row is the drop target and carries no role of its own, so the <li> keeps its
+                list semantics. The handle is the drag source, a real button kept out of the Tab
+                order (tabIndex -1): Up and Down below are the non-gesture alternative that
+                Design › 17 requires, and a focusable control that did nothing would only be noise. */}
+            <div
+              role="presentation"
+              onDragOver={(event) => {
+                event.preventDefault();
               }}
+              onDrop={handleDrop(index)}
+              className="flex min-h-11 items-center gap-2 px-2 py-1.5"
             >
-              <ArrowUp aria-hidden size={18} strokeWidth={1.5} />
-            </Button>
-            <Button
-              variant="ghost"
-              isIconOnly
-              data-member={userId}
-              data-control="down"
-              aria-label={`Move ${nameOf(userId)} down`}
-              disabled={index === order.length - 1 || isUnavailable}
-              onClick={() => {
-                move(index, 1);
-              }}
-            >
-              <ArrowDown aria-hidden size={18} strokeWidth={1.5} />
-            </Button>
-            <Button
-              variant="ghost"
-              isIconOnly
-              data-member={userId}
-              data-control="remove"
-              aria-label={`Remove ${nameOf(userId)} from rotation`}
-              disabled={isUnavailable}
-              onClick={() => {
-                remove(index);
-              }}
-            >
-              <Trash2 aria-hidden size={18} strokeWidth={1.5} />
-            </Button>
+              <button
+                type="button"
+                draggable={!isUnavailable}
+                tabIndex={-1}
+                aria-label={`Drag ${nameOf(userId)} to reorder`}
+                onDragStart={() => {
+                  setDragIndex(index);
+                }}
+                onDragEnd={() => {
+                  setDragIndex(null);
+                }}
+                className="inline-flex min-h-11 min-w-11 shrink-0 cursor-grab items-center justify-center text-muted"
+              >
+                <GripVertical aria-hidden size={20} strokeWidth={1.5} />
+              </button>
+              <span className="min-w-0 flex-1 truncate text-body text-primary">
+                {`${String(index + 1)}. ${nameOf(userId)}`}
+              </span>
+              <Button
+                variant="ghost"
+                isIconOnly
+                data-member={userId}
+                data-control="up"
+                aria-label={`Move ${nameOf(userId)} up`}
+                disabled={index === 0 || isUnavailable}
+                onClick={() => {
+                  move(index, -1);
+                }}
+              >
+                <ArrowUp aria-hidden size={18} strokeWidth={1.5} />
+              </Button>
+              <Button
+                variant="ghost"
+                isIconOnly
+                data-member={userId}
+                data-control="down"
+                aria-label={`Move ${nameOf(userId)} down`}
+                disabled={index === order.length - 1 || isUnavailable}
+                onClick={() => {
+                  move(index, 1);
+                }}
+              >
+                <ArrowDown aria-hidden size={18} strokeWidth={1.5} />
+              </Button>
+              <Button
+                variant="ghost"
+                isIconOnly
+                data-member={userId}
+                data-control="remove"
+                aria-label={`Remove ${nameOf(userId)} from rotation`}
+                disabled={isUnavailable}
+                onClick={() => {
+                  remove(index);
+                }}
+              >
+                <Trash2 aria-hidden size={18} strokeWidth={1.5} />
+              </Button>
+            </div>
           </li>
         ))}
       </ol>
