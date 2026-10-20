@@ -93,37 +93,14 @@ jobs:
           version: 2.117.0
       - run: pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
       # Anonymous pulls from public.ecr.aws are rate limited per IP and hosted runners share IPs,
-      # so `docker compose up` can fail with toomanyrequests before any test runs. Pre-pull the
-      # images the stack needs with backoff so Compose finds them in the local cache. The list is
-      # read from the Compose file and Dockerfiles so Dependabot bumps need no edit here. The
-      # Dockerfile frontend (# syntax=) is pulled by BuildKit during --build, so it is included.
-      - run: |
-          set -euo pipefail
-          images=$(
-            {
-              sed -nE 's/^[[:space:]]*image:[[:space:]]*//p' docker/docker-compose.yml |
-                { grep -vE '^hearth-|^prodrigestivill/' || true; }
-              sed -nE 's/^FROM[[:space:]]+(--[^[:space:]]+[[:space:]]+)*([^[:space:]]+).*/\2/p' docker/*.Dockerfile |
-                { grep -E '[:/]' || true; }
-              grep -h '^# syntax=' docker/*.Dockerfile | sed 's/^# syntax=//' || true
-            } | sort -u
-          )
-          echo "Pre-pulling images:"
-          echo "$images"
-          for image in $images; do
-            for attempt in 1 2 3 4 5 6; do
-              if docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image"; then
-                continue 2
-              fi
-              if [ "$attempt" -eq 6 ]; then
-                echo "::error::Could not pull $image after $attempt attempts"
-                exit 1
-              fi
-              delay=$((attempt * 30))
-              echo "Pull of $image failed (attempt $attempt of 6); retrying in ${delay}s"
-              sleep "$delay"
-            done
-          done
+      # so `docker compose up` could fail with toomanyrequests before any test ran. The script
+      # pre-pulls the stack's images so Compose finds them locally. The three Supabase images come
+      # from their ghcr.io/supabase mirror (same publisher, same digests) and are tagged with the
+      # public.ecr.aws names Compose uses, falling back to public.ecr.aws. The rest come from Docker
+      # Hub. Each image gets up to six attempts with growing backoff. The list is read from the
+      # Compose file and Dockerfiles, so Dependabot bumps need no edit here, and it includes the
+      # BuildKit `# syntax=` frontend.
+      - run: bash scripts/ci-prepull-images.sh
       # Exactly the local command: Playwright's global setup builds and starts the stack from an
       # empty database, and its teardown drops it (Engineering Practices, "E2E environment").
       - run: pnpm test:e2e

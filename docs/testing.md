@@ -6,7 +6,7 @@ Four layers, each catching a different class of bug:
 
 | Layer | Tool | Runs where | Catches |
 | --- | --- | --- | --- |
-| Unit | Vitest, plus eight `node --test` files: two in `e2e/support`, six harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
+| Unit | Vitest, plus nine `node --test` files: two in `e2e/support`, seven harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
 | Integration | Vitest against a real Postgres | `supabase start`'s local Postgres/GoTrue | Bugs in SQL, RLS policies, transactions, and the service's route layer |
 | Component (frontend) | Vitest + Testing Library | jsdom (a simulated browser DOM, no real browser) | Bugs in how a React component renders and reacts to state |
 | End-to-end | Playwright | A real Chromium browser against the full Docker Compose stack | Bugs that only show up with real HTTP, real Caddy routing, and a real browser |
@@ -26,10 +26,10 @@ page, tests substitute a fixture or a test double instead.
 The exceptions use Node's built-in test runner (`node --test`) instead of Vitest, so they need no
 dependencies and no Docker to run. Two are in `e2e/support`: `run-identity.test.ts`, which tests the
 pure run-naming logic in `run-identity.ts` (Compose project/network/image-tag derivation), and
-`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other six are the
+`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other seven are the
 harness tests (the four for the clock pin, the zone hook, the sweep and the lint ban, plus the
-service-role fence probe and the deploy script's password test), described under Dates and time
-zones below.
+service-role fence probe, the deploy script's password test and the CI image pre-pull test),
+described under Dates and time zones below.
 
 **What they're for:** pure logic with no I/O — no database, no HTTP, no filesystem. This is where
 correctness actually lives for three areas that get deliberately exhaustive, table-driven coverage:
@@ -43,13 +43,13 @@ memory with `apps/service/src/test/fake-app.ts`, which wires fake dependencies (
 `DummyDriver`, no real database, no GoTrue) and drives it with Fastify's `inject()`. These still
 count as unit tests: nothing touches a socket or a real database.
 
-**Runner:** Vitest everywhere except the eight `node --test` files above.
+**Runner:** Vitest everywhere except the nine `node --test` files above.
 
 **How to run them:**
 
 ```sh
 pnpm test                              # the harness tests, then every workspace's unit + component tests
-pnpm test:harness                      # only the six harness tests
+pnpm test:harness                      # only the seven harness tests
 pnpm --filter @hearth/recurrence test  # one workspace
 pnpm --filter @hearth/matching test
 pnpm --filter @hearth/service test     # excludes *.integration.test.ts (vitest.config.ts)
@@ -164,6 +164,16 @@ controlled, not inherited from the machine.
     passwords. It checks that no command line carries a database password, that the script prints
     none, that only the migration command sees `PGPASSWORD`, and that a password with URL-reserved
     characters arrives intact. Nothing starts a container or touches a database.
+  - `scripts/ci-prepull-images.test.mjs` runs the real `scripts/ci-prepull-images.sh`, which CI's
+    `test-e2e` job uses to pre-pull the Compose stack's images, against stub `docker` and `sleep`
+    binaries placed first on `PATH` and fixture `docker/` folders. It checks that each
+    `public.ecr.aws/supabase` image is pulled from its `ghcr.io/supabase` mirror first and tagged
+    with its ECR name, that a failed mirror pull falls back to ECR within each attempt, that Docker
+    Hub images are pulled directly, that a present image is skipped, that the hearth-built and
+    backup images are never pulled, that an unsafe image name is refused before any pull, and that
+    six failed attempts end in an `::error::` annotation, with the delays scaled by
+    `CI_PREPULL_DELAY_SCALE`. One case reads the real `docker/` files. Nothing pulls an image or
+    needs a Docker daemon.
 - **The Kong route table.** `apps/service/src/kong-routes.test.ts` is a Vitest test in the service
   unit suite. It reads `docker/kong.yml` (and the Compose `KONG_PLUGINS` value) through the
   service's `yaml` devDependency and pins the GoTrue allowlist: the routes, their methods and
