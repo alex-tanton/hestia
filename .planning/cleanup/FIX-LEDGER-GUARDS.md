@@ -37,6 +37,11 @@ audit-violations=0
 
 ## Gates and decisions
 
+pr1-merged=1b0e69f2414cf3619b8941a8596842edee6d274d
+pr2-ready=f246c74ec58e88b93020eafa3320c4d4cdca129b
+
+- 04-04 Task 1: PR 1 (#15) is merged; `origin/main` is 1b0e69f. `test/guard-tests` took it by a plain merge (no conflict, no lockfile change) and is pushed at f246c74. Its diff against `origin/main` is exactly the four PR 2 files, and `package.json` changes only the `test:harness` line. Frozen install, lint, format:check, typecheck, `pnpm test` (harness 215/215 with the fence probe; shared 172/172 with the PATCH guard, 24 cases), `pnpm build`, commitlint and knip (nothing beyond the Phase 3 baseline) pass; the full unit sweep is 36/36. No pull request exists yet; the owner gate (`gate-pr2=`) is pending.
+
 - Plan 04-03 has no owner gate. PR 2 is opened in 04-04 after PR 1 is merged (D-11); `test/guard-tests` is based on `origin/main` at 9819e7c and is pushed at 72b0668741791409946a7fd7cd071d51fdf99a9d.
 - The branch diff against `origin/main` is exactly `docs/testing.md`, `package.json` (the `test:harness` line only), `packages/shared/src/api/patch-schemas.test.ts` and `test/eslint-service-role-fence.test.mjs`; `eslint.config.js` and `bills.ts` are unchanged.
 - Known gaps of the fence, written in the test header and `docs/testing.md`, not closed here (no fence change without a finding): a dynamic import of a variable or template literal, `require`, a raw `set local role service_role`, and code outside `apps/service/src`. The audit found none of them in use.

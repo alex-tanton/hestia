@@ -26,6 +26,7 @@ pr1-ready=W:1571f0778aab255b9c4b75b7489e2b90725c27d9 C:2e357e59b97eefd10eef478f5
 gate-pr1=approve (owner, 2026-10-20)
 pr1=15
 pr1-head-red=1571f0778aab255b9c4b75b7489e2b90725c27d9
+pr1-merged=1b0e69f2414cf3619b8941a8596842edee6d274d
 fix02-red=run:39440151507 job:118687530778 https://github.com/alex-tanton/hearth/actions/runs/39440151507/job/118687530778
 
 ## CI
