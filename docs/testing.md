@@ -164,6 +164,11 @@ controlled, not inherited from the machine.
     passwords. It checks that no command line carries a database password, that the script prints
     none, that only the migration command sees `PGPASSWORD`, and that a password with URL-reserved
     characters arrives intact. Nothing starts a container or touches a database.
+- **The Kong route table.** `apps/service/src/kong-routes.test.ts` is a Vitest test in the service
+  unit suite. It reads `docker/kong.yml` (and the Compose `KONG_PLUGINS` value) through the
+  service's `yaml` devDependency and pins the GoTrue allowlist: the routes, their methods and
+  exact paths, the ACL groups, the refusing route, and which browser calls reach which route.
+  There is still no Docker; E2E spec 08 and the sign-in journeys prove the running gateway.
 - **Setting `TZ`.** Set it only through the sweep, or through an `env` object passed to a spawned
   process. The hook then validates it, and the sweep checks that it took effect. Never export it in
   the shell or force `TZ=UTC` for a whole suite.
