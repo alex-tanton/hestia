@@ -21,4 +21,3 @@ supabase
 backups
 *.dump
 *.sql.gz
-BUILD_PROMPT.md
