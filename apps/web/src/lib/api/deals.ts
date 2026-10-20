@@ -1,8 +1,8 @@
-import { useRef } from 'react';
 import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
   type UseMutationResult,
   type UseQueryResult,
 } from '@tanstack/react-query';
@@ -236,6 +236,17 @@ export interface AddDealToList {
   dealId: string;
 }
 
+const heldDealAdds = new WeakMap<QueryClient, Map<string, string>>();
+
+function heldDealAddIds(queryClient: QueryClient): Map<string, string> {
+  let ids = heldDealAdds.get(queryClient);
+  if (ids === undefined) {
+    ids = new Map();
+    heldDealAdds.set(queryClient, ids);
+  }
+  return ids;
+}
+
 /**
  * Adding a deal to a list sends the deal's id and nothing else: the service reads the `deal` row
  * and takes the snapshot itself, so a client can never invent a price (Technical Architecture,
@@ -252,13 +263,15 @@ export function useAddDealToList(
   // id so the service's `on conflict (id) do nothing` makes it a replay rather than a second
   // item. Ids are held per list and deal because the primary key is the id alone: an id reused
   // for another list would be swallowed while the toast says "Added". Only a success starts the
-  // next add; nothing is cleared on an error.
-  const held = useRef<Map<string, string>>(new Map());
+  // next add; nothing is cleared on an error. Ids are held per QueryClient, not per hook
+  // instance, so a retry survives the card unmounting (a filter change, paging, navigating away
+  // and back).
   return useMutation({
     mutationFn: ({ listId, dealId }: AddDealToList) => {
+      const held = heldDealAddIds(queryClient);
       const key = `${listId}:${dealId}`;
-      const id = held.current.get(key) ?? crypto.randomUUID();
-      held.current.set(key, id);
+      const id = held.get(key) ?? crypto.randomUUID();
+      held.set(key, id);
       return api.send({
         method: 'POST',
         path: `/api/lists/${listId}/items`,
@@ -266,7 +279,7 @@ export function useAddDealToList(
       });
     },
     onSuccess: async (_data, { listId, dealId }) => {
-      held.current.delete(`${listId}:${dealId}`);
+      heldDealAddIds(queryClient).delete(`${listId}:${dealId}`);
       await queryClient.invalidateQueries({ queryKey: dealKeys.lists(householdId) });
     },
   });

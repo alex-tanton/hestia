@@ -327,4 +327,35 @@ describe('adding a deal after a lost response', () => {
     expect(toThisWeek[1]).toBe(toThisWeek[0]);
     expect([...store.rows.values()].filter((listId) => listId === thisWeekList.id)).toHaveLength(1);
   });
+
+  it('sends the same item id after the card unmounts, so the deal lands once', async () => {
+    const user = userEvent.setup();
+    const store = itemStore();
+    const stub = stubFetch({
+      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
+      'POST /api/lists/:id/items': losingResponses(store, [1]),
+    });
+    const first = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
+    await user.click(
+      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
+    );
+    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+
+    // A filter change, paging, or leaving and coming back unmounts the card. The page keeps its one
+    // QueryClient and its session, so the fresh card shares both with the first.
+    first.unmount();
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />, {
+      queryClient: first.queryClient,
+      auth: first.auth,
+    });
+    await user.click(
+      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
+    );
+    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+
+    const ids = idsPostedTo(stub, thisWeekList.id);
+    expect(ids).toHaveLength(2);
+    expect(ids[1]).toBe(ids[0]);
+    expect(store.rows.size).toBe(1);
+  });
 });
