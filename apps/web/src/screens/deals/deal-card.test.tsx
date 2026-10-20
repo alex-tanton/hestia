@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
 import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
 import { OAK_STREET_ID } from '../../test/fixtures.ts';
 import {
@@ -181,5 +182,149 @@ describe('adding a deal to a list', () => {
     const sheet = await screen.findByRole('dialog');
     expect(within(sheet).getByText(/No lists yet/)).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: 'Go to Lists' })).toBeInTheDocument();
+  });
+});
+
+describe('adding a deal after a lost response', () => {
+  /**
+   * The server's `shopping_list_item` rows by id: `on conflict (id) do nothing` keeps the first
+   * row an id lands, whatever list a later request names, so a row's value is the list it landed
+   * on.
+   */
+  function itemStore(): { rows: Map<string, string>; insert: StubHandler } {
+    const rows = new Map<string, string>();
+    const insert: StubHandler = ({ body, params }) => {
+      const { id } = body as { id: string };
+      if (!rows.has(id)) rows.set(id, params['id'] ?? '');
+      return { status: 201, body: {} };
+    };
+    return { rows, insert };
+  }
+
+  /** A `POST /api/lists/:id/items` handler whose chosen calls land and then lose their response. */
+  function losingResponses(
+    store: ReturnType<typeof itemStore>,
+    lost: readonly number[],
+  ): StubHandler {
+    let posts = 0;
+    return (request) => {
+      posts += 1;
+      const response = store.insert(request);
+      // The request lands, but the response never reaches the browser: fetch rejects.
+      if (lost.includes(posts)) throw new TypeError('Failed to fetch');
+      return response;
+    };
+  }
+
+  const idsPostedTo = (stub: ReturnType<typeof createFetchStub>, listId: string): string[] =>
+    stub.calls
+      .filter((call) => call.method === 'POST' && call.path === `/api/lists/${listId}/items`)
+      .map((call) => (call.body as { id: string }).id);
+
+  it('sends the same item id on the retry, so the deal lands once', async () => {
+    const user = userEvent.setup();
+    const store = itemStore();
+    const stub = stubFetch({
+      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
+      'POST /api/lists/:id/items': losingResponses(store, [1]),
+    });
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
+    const add = await screen.findByRole('button', {
+      name: "Add Egg-Land's Best Extra Large Eggs to a list",
+    });
+
+    await user.click(add);
+    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+    await user.click(add);
+    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+
+    const ids = idsPostedTo(stub, thisWeekList.id);
+    expect(ids).toHaveLength(2);
+    expect(ids[1]).toBe(ids[0]);
+    expect(store.rows.size).toBe(1);
+  });
+
+  it('mints a new id once an add succeeds, so adding the same deal twice still works', async () => {
+    const user = userEvent.setup();
+    const store = itemStore();
+    stubFetch({
+      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
+      'POST /api/lists/:id/items': store.insert,
+    });
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
+    const add = await screen.findByRole('button', {
+      name: "Add Egg-Land's Best Extra Large Eggs to a list",
+    });
+
+    await user.click(add);
+    await waitFor(() => {
+      expect(store.rows.size).toBe(1);
+    });
+    await user.click(add);
+    await waitFor(() => {
+      expect(store.rows.size).toBe(2);
+    });
+  });
+
+  it('does not carry the id of a failed add to a different list', async () => {
+    const user = userEvent.setup();
+    const store = itemStore();
+    stubFetch({
+      'GET /api/households/:id/lists': () => ({
+        status: 200,
+        body: [thisWeekList, weekendCookoutList],
+      }),
+      'POST /api/lists/:id/items': losingResponses(store, [1]),
+    });
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
+    const add = await screen.findByRole('button', { name: 'Add Broccoli Crowns to a list' });
+
+    await user.click(add);
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: /This Week/ }),
+    );
+    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+
+    await user.click(add);
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: /Weekend Cookout/ }),
+    );
+    expect(await screen.findByText('Added to Weekend Cookout.')).toBeInTheDocument();
+
+    // Both lists hold the deal: a reused id would have been swallowed by `on conflict (id)`.
+    expect(new Set(store.rows.values())).toEqual(new Set([thisWeekList.id, weekendCookoutList.id]));
+  });
+
+  it('keeps the id of a failed add for its list while the deal goes to another list', async () => {
+    const user = userEvent.setup();
+    const store = itemStore();
+    const stub = stubFetch({
+      'GET /api/households/:id/lists': () => ({
+        status: 200,
+        body: [thisWeekList, weekendCookoutList],
+      }),
+      'POST /api/lists/:id/items': losingResponses(store, [1]),
+    });
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
+    const add = await screen.findByRole('button', { name: 'Add Broccoli Crowns to a list' });
+    const addTo = async (listName: RegExp): Promise<void> => {
+      await user.click(add);
+      await user.click(
+        within(await screen.findByRole('dialog')).getByRole('button', { name: listName }),
+      );
+    };
+
+    await addTo(/This Week/);
+    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+    await addTo(/Weekend Cookout/);
+    expect(await screen.findByText('Added to Weekend Cookout.')).toBeInTheDocument();
+    await addTo(/This Week/);
+    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+
+    // The retry of the first add reuses its id, so This Week holds the deal once.
+    const toThisWeek = idsPostedTo(stub, thisWeekList.id);
+    expect(toThisWeek).toHaveLength(2);
+    expect(toThisWeek[1]).toBe(toThisWeek[0]);
+    expect([...store.rows.values()].filter((listId) => listId === thisWeekList.id)).toHaveLength(1);
   });
 });
