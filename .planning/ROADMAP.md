@@ -148,7 +148,26 @@ Plans:
   4. Service-role client usage outside `apps/service/src/privileged/` is audited, and a test proves the ESLint fence fails when it is violated.
   5. Running `deploy.sh` never places the database password on a process command line (a stubbed-argv test shows this), and Kong denies the unused GoTrue paths in addition to Caddy while the normal sign-in and token-refresh flows still pass.
 
-**Plans**: TBD
+**Plans:** 8 plans
+
+Plans:
+**Wave 1**
+- [ ] 04-01-PLAN.md — PR 1 content: tracer FIX-01 (held deal-add id, red then green), FIX-04 (rotation editor without the suppression, keyboard tests), FIX-02 tests on the PR head and the per-list lock on `fix/list-adds-lock`
+- [ ] 04-03-PLAN.md — PR 2 content: tracer FIX-05 (service-role audit, fence probes, four killed config mutations), FIX-03 (registry-driven PATCH default guard, killed schema mutation)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 04-02-PLAN.md — PR 1 landing: local proof, owner gate (incl. the CLAUDE.md lines), red `test-integration` run, lock fast-forward, six green jobs
+- [ ] 04-05-PLAN.md — PR 3 content, part 1 (stacked on PR 2): tracer FIX-06 (scoped `PGPASSWORD`, stubbed-argv test red then green), Kong E2E probes, owner `yaml@2.9.1` legitimacy gate
+
+**Wave 3** *(blocked on Wave 2 completion and on the owner's merge of PR 1)*
+- [ ] 04-04-PLAN.md — PR 2 landing: sync after PR 1's merge, local proof, owner gate, six green jobs
+- [ ] 04-06-PLAN.md — PR 3 content, part 2 on `fix/kong-allowlist`: tracer Kong allowlist (format 3.0, static test red 13 of 32 then green), deploy and testing docs
+
+**Wave 4** *(blocked on Wave 3 completion and on the owner's merge of PR 2)*
+- [ ] 04-07-PLAN.md — PR 3 landing: sync after PR 2's merge, local proof, owner gate, red `test-e2e` run on the old Kong, allowlist fast-forward, six green jobs
+
+**Wave 5** *(blocked on Wave 4 completion and on the owner's merge of PR 3)*
+- [ ] 04-08-PLAN.md — Phase close on the final `main`: every fix green there, the FIX-LEDGER index, `main` CI, the owner's Kong host step
 **UI hint**: yes
 
 ### Phase 5: Redundancy Reduction and Text Sync
@@ -191,6 +210,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
-| 4. Bug Fixes With Regression Tests | 0/TBD | Not started | - |
+| 4. Bug Fixes With Regression Tests | 0/8 | Planned | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |
