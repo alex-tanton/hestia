@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
 import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
-import { OAK_STREET_ID } from '../../test/fixtures.ts';
+import { OAK_STREET_ID, SAM_ID } from '../../test/fixtures.ts';
 import {
   broccoliDeal,
   eggsDeal,
@@ -357,5 +357,37 @@ describe('adding a deal after a lost response', () => {
     expect(ids).toHaveLength(2);
     expect(ids[1]).toBe(ids[0]);
     expect(store.rows.size).toBe(1);
+  });
+
+  it('mints a fresh id when another user signs in on the same page', async () => {
+    const user = userEvent.setup();
+    const store = itemStore();
+    const stub = stubFetch({
+      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
+      'POST /api/lists/:id/items': losingResponses(store, [1]),
+    });
+    const first = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
+    await user.click(
+      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
+    );
+    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+
+    // Alex signs out and Sam signs in without a reload, so the page's one QueryClient carries over.
+    first.unmount();
+    first.auth.setState({ status: 'signed-out', userId: null });
+    first.auth.setState({ status: 'signed-in', userId: SAM_ID });
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />, {
+      queryClient: first.queryClient,
+      auth: first.auth,
+    });
+    await user.click(
+      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
+    );
+    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+
+    const ids = idsPostedTo(stub, thisWeekList.id);
+    expect(ids).toHaveLength(2);
+    expect(ids[1]).not.toBe(ids[0]);
+    expect(store.rows.size).toBe(2);
   });
 });

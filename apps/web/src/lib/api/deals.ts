@@ -21,7 +21,7 @@ import {
   type MerchantsResponse,
   type ShoppingList,
 } from '@hearth/shared';
-import { useApi } from './api-context.tsx';
+import { useApi, useAuthClient } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE } from './keys.ts';
 
 /*
@@ -236,15 +236,20 @@ export interface AddDealToList {
   dealId: string;
 }
 
-const heldDealAdds = new WeakMap<QueryClient, Map<string, string>>();
+interface HeldDealAdds {
+  userId: string | null;
+  ids: Map<string, string>;
+}
 
-function heldDealAddIds(queryClient: QueryClient): Map<string, string> {
-  let ids = heldDealAdds.get(queryClient);
-  if (ids === undefined) {
-    ids = new Map();
-    heldDealAdds.set(queryClient, ids);
-  }
-  return ids;
+const heldDealAdds = new WeakMap<QueryClient, HeldDealAdds>();
+
+function heldDealAddIds(queryClient: QueryClient, userId: string | null): Map<string, string> {
+  const held = heldDealAdds.get(queryClient);
+  if (held?.userId === userId) return held.ids;
+  // Another user's held ids are dropped, not reused.
+  const fresh: HeldDealAdds = { userId, ids: new Map() };
+  heldDealAdds.set(queryClient, fresh);
+  return fresh.ids;
 }
 
 /**
@@ -259,16 +264,18 @@ export function useAddDealToList(
 ): UseMutationResult<void, Error, AddDealToList> {
   const api = useApi();
   const queryClient = useQueryClient();
+  const auth = useAuthClient();
   // A response lost after the request landed shows an error, and the next tap must carry the same
   // id so the service's `on conflict (id) do nothing` makes it a replay rather than a second
   // item. Ids are held per list and deal because the primary key is the id alone: an id reused
   // for another list would be swallowed while the toast says "Added". Only a success starts the
   // next add; nothing is cleared on an error. Ids are held per QueryClient, not per hook
   // instance, so a retry survives the card unmounting (a filter change, paging, navigating away
-  // and back).
+  // and back). They are also held per signed-in user, because the page keeps one QueryClient for
+  // its whole life and does not clear it on sign-out.
   return useMutation({
     mutationFn: ({ listId, dealId }: AddDealToList) => {
-      const held = heldDealAddIds(queryClient);
+      const held = heldDealAddIds(queryClient, auth.getState().userId);
       const key = `${listId}:${dealId}`;
       const id = held.get(key) ?? crypto.randomUUID();
       held.set(key, id);
@@ -279,7 +286,7 @@ export function useAddDealToList(
       });
     },
     onSuccess: async (_data, { listId, dealId }) => {
-      heldDealAddIds(queryClient).delete(`${listId}:${dealId}`);
+      heldDealAddIds(queryClient, auth.getState().userId).delete(`${listId}:${dealId}`);
       await queryClient.invalidateQueries({ queryKey: dealKeys.lists(householdId) });
     },
   });
