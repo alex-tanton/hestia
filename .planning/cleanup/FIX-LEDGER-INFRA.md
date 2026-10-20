@@ -29,7 +29,9 @@ gate-yaml=approve (owner, 2026-10-20)
 
 kong-parse=skipped (no daemon)
 
-kong-allowlist-tip=5c800a0b37efe451ec781ddd2bf3a6c69826c68d
+kong-allowlist-tip=1e482269fc1424811a3a5d01b1e9973a3a570c22
+
+docs-commit=1e482269fc1424811a3a5d01b1e9973a3a570c22
 
 pr3-head-candidate=1f3f36cd8f180c496976ffb9fee01c76cb15d954
 
