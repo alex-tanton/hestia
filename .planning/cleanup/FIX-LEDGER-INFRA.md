@@ -57,3 +57,5 @@ pr3-merged=48c111f79ecde910636805976752c94b5f615802
 ## CI
 
 PR 3 is https://github.com/alex-tanton/hearth/pull/18 (`fix/deploy-kong` into `main`), open and unmerged at head 7c0efdc0855e002606fc2924d00b85dac101bf6a, waiting for the owner's squash merge and the host step (`hearth-compose up -d --force-recreate kong`). Red run 39457296052 (job 118753127163); green run 39460683347 (six jobs `success`). Both E2E runs needed a second attempt because of failures outside the Kong work: attempt 1 of run A failed the push-reminder test, attempt 1 of run B failed two spec 17 accessibility-state tests; spec 08 behaved the same in every attempt of its head.
+
+main-ci-pr3=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run:39465074029 attempt:2 sha:48c111f (attempt 1 test-e2e job 118774234646 failed on a registry rate limit pulling the gotrue image, `toomanyrequests`; no test ran; the owner re-ran the run). See `FIX-LEDGER.md`.

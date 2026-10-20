@@ -12,7 +12,9 @@ This is the one place to find each fix's fails-before and passes-after proof. Th
 
 main-ci-pr1=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run:39448163354 sha:1b0e69f (https://github.com/alex-tanton/hearth/actions/runs/39448163354)
 main-ci-pr2=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success run:39453673854 sha:7da1461 (failed job https://github.com/alex-tanton/hearth/actions/runs/39453673854/job/118734797533)
-main-ci-pr3=pending run:39465074029 sha:48c111f (https://github.com/alex-tanton/hearth/actions/runs/39465074029); at 17:25Z lint:success typecheck:success test-unit:success build:success, test-integration and test-e2e in progress; final conclusions to be filled in
+main-ci-pr3=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run:39465074029 attempt:2 sha:48c111f (https://github.com/alex-tanton/hearth/actions/runs/39465074029; attempt-2 jobs: test-e2e 118779326521, lint 118779328491, test-unit 118779328754, typecheck 118779371813, build 118779388800, test-integration 118779394959)
+
+PR 3's attempt 1 had `test-e2e` (job 118774234646) `failure` at `Run set -euo pipefail` because `public.ecr.aws/supabase/gotrue:v2.196.0` could not be pulled (`toomanyrequests: Data limit exceeded`, 6 attempts): a registry rate limit, no test ran, never red evidence. The owner re-ran the run at 17:29:33Z and attempt 2 is `success` on all six jobs. Log: `04-08-main-e2e-attempt1.log` (gitignored).
 
 PR 2's `test-e2e` red is a runner-setup failure, not a test failure. Job 118734797533 failed at the step `Run pnpm/action-setup@v6` after 3 seconds; every later step (`setup-node`, install, `supabase/setup-cli`, Playwright install, `pnpm test:e2e`) was `skipped`, so no E2E test ran. It was recorded, not re-run: PR 2 was superseded on `main` by PR 3's squash, and a successful re-run would have made Deploy pick up an older commit (Phase 3 precedent). The content of PR 2 is proven on `main` by the CI of 48c111f, which contains it, and by the local run below on a detached checkout of 48c111f.
 
@@ -60,6 +62,13 @@ CI job URLs below were each checked through `gh api repos/alex-tanton/hearth/act
 - Firefox drag (research A1): the rotation drag handle is a native `<button>`; Firefox may not start a drag from a button. Up and Down are the guaranteed path. Optional follow-up: a `span role="presentation" draggable` handle plus `dataTransfer.setData`.
 - Kept Kong routes: `admin/users` (A2, service-role key only; the E2E seed uses it) and `otp` (A5, for when the magic-link build flag is turned on). Each is one service and one table row to delete if the owner wants it denied.
 - Known gaps of the service-role fence, written in the test header and `docs/testing.md`, not closed here: a dynamic import of a variable or template literal, `require`, a raw `set local role service_role`, and code outside `apps/service/src`. The audit found none of them in use.
-- Main CI reds: PR 2's squash (7da1461) has `test-e2e` job 118734797533 `failure` at `pnpm/action-setup@v6` (runner setup, nothing ran); not re-run on purpose (see above). PR 3's squash is covered in `main-ci-pr3=`.
+- Main CI reds: PR 2's squash (7da1461) has `test-e2e` job 118734797533 `failure` at `pnpm/action-setup@v6` (runner setup, nothing ran); not re-run on purpose (see above). PR 3's squash (48c111f) is green on all six jobs on attempt 2; attempt 1's `test-e2e` was a registry rate limit (see above).
 - E2E flakiness seen across the phase, outside the files the phase touched: PR 1 attempt 1 (spec 17, `notification type: saving, then a failed save`), PR 3 red run attempt 1 (the push-reminder test), PR 3 green run attempt 1 (two spec 17 accessibility-state tests). Each passed on a re-run; none was counted as red evidence. Worth a look in a later phase.
 - `.claude/CLAUDE.md` was updated in PR 1 (`gate-pr1=approve`): the `eslint-disable` count is now five, and the example directive no longer names the removed suppression. Phase 5 RED-05 has nothing left to sync for these two lines.
+- Deploy for 48c111f is still queued on the self-hosted runner (`deploy-pr3=` below); an earlier Deploy run for the same sha (39466389042) was cancelled as superseded. Not touched.
+- Branches on `origin`: `fix/list-adds-rotation`, `test/guard-tests` and `fix/deploy-kong` are gone from `origin` (not deleted by the executor; most likely delete-on-merge or the owner). `fix/list-adds-lock` (edd41ec) and `fix/kong-allowlist` (7c0efdc) are still there, as are all five local branches. The executor deleted no branch, local or remote.
+
+## Deploy and Kong host step
+
+deploy-pr3=39468151212 pending (Deploy run for 48c111f, queued on the self-hosted runner `hearth`, no conclusion at 17:43Z; run 39466389042 for the same sha is completed cancelled)
+kong-recreate=pending-owner
