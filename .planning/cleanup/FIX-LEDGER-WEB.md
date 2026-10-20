@@ -23,5 +23,6 @@ Raw logs are under `.planning/cleanup/logs/` (gitignored) as `04-01-{fix}-{red,g
 ## Gates and decisions
 
 pr1-ready=W:1571f0778aab255b9c4b75b7489e2b90725c27d9 C:2e357e59b97eefd10eef478f5912710347454a36
+gate-pr1=approve (owner, 2026-10-20)
 
 ## CI
