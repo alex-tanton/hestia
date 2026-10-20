@@ -40,6 +40,7 @@ audit-violations=0
 pr1-merged=1b0e69f2414cf3619b8941a8596842edee6d274d
 pr2-ready=f246c74ec58e88b93020eafa3320c4d4cdca129b
 gate-pr2=approve (owner, 2026-10-20)
+pr2-merged=7da14613cd4060086c3ce8daeb13ffcfb0afd20b
 
 - 04-04 Task 1: PR 1 (#15) is merged; `origin/main` is 1b0e69f. `test/guard-tests` took it by a plain merge (no conflict, no lockfile change) and is pushed at f246c74. Its diff against `origin/main` is exactly the four PR 2 files, and `package.json` changes only the `test:harness` line. Frozen install, lint, format:check, typecheck, `pnpm test` (harness 215/215 with the fence probe; shared 172/172 with the PATCH guard, 24 cases), `pnpm build`, commitlint and knip (nothing beyond the Phase 3 baseline) pass; the full unit sweep is 36/36. No pull request exists yet; the owner gate (`gate-pr2=`) is pending.
 

@@ -35,6 +35,14 @@ docs-commit=1e482269fc1424811a3a5d01b1e9973a3a570c22
 
 pr3-head-candidate=1f3f36cd8f180c496976ffb9fee01c76cb15d954
 
+pr2-merged=7da14613cd4060086c3ce8daeb13ffcfb0afd20b
+pr3-ready=F:19f16fb35a65b6f523149c802dc375c9da77ed4d K:7c0efdc0855e002606fc2924d00b85dac101bf6a
+
+- 04-07 Task 1: PR 2 (#16) is merged as the squash `7da1461` on `origin/main` (one commit, the four PR 2 files; read with git, because the GitHub CLI token was invalid in this session). `origin/main` went into the working branch by a plain merge, then into `fix/deploy-kong` (F) as `19f16fb`. The two conflicted files (`package.json`, `docs/testing.md`) took F's side in every conflicted hunk; F's `test:harness` line is `origin/main`'s plus ` scripts/deploy.test.mjs`, and nothing else in `package.json` differs. `fix/deploy-kong` went into `fix/kong-allowlist` (K) as `7c0efdc` with no conflict. `pnpm-lock.yaml` needed no merge work (K's three `yaml` importer lines apply as they were). Both branches were pushed as plain fast-forwards (`1f3f36c..19f16fb`, `1e48226..7c0efdc`).
+- Content: K's diff against `origin/main` is the ten PR 3 files (`apps/service/package.json`, `apps/service/src/kong-routes.test.ts`, `docker/kong.yml`, `docs/deploy.md`, `docs/testing.md`, the spec 08 file, `package.json`, `pnpm-lock.yaml`, `scripts/deploy.sh`, `scripts/deploy.test.mjs`), `apps/service/package.json` differs only by `"yaml": "2.9.1"`, and the secret pattern matches nothing in the added lines. F's diff is the six files without the Kong change, the two `apps/service` files and the lockfile.
+- Local proof, Node v24.21.0, `TZ` unset, logs `04-07-*` in the gitignored logs folder, each ending `exit=0`: at K's tip frozen install, lint, `format:check`, typecheck, `pnpm test` (harness 221/221 with the deploy test and the fence probe; service 757, including the Kong route test, web 726), `pnpm build` (app shell 198.0 KB against the 200 KB budget), commitlint `--from origin/main --to HEAD`, `bash -n scripts/deploy.sh`; the unit sweep is 36/36. At F's tip (the red-run head) frozen install, lint, typecheck and test pass, so run A can fail only on the Kong probes. knip exits 1 as on the Phase 3 baseline and reports no line beyond `phase3-after-default-summary.txt` (`04-07-knip-new.txt` is empty).
+- The PR body is drafted in the gitignored `04-07-pr3.md` (FIX-06, FIX-07 with the allowlist table, the CI plan, the host step with `hearth-compose up -d --force-recreate kong`, `## Risks & Dependencies`). No pull request exists for `fix/deploy-kong`.
+
 ## CI
 
 No pull request yet (04-07).
