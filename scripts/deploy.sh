@@ -86,14 +86,16 @@ log "backing up the database"
 compose exec -T backup /backup.sh || fail "backup failed; nothing migrated or restarted"
 
 # 4. Migrations, with the Supabase CLI against the Compose database. The database publishes no
-# port, so the CLI connects to the container's address on the Compose network.
+# port, so the CLI connects to the container's address on the Compose network. The password goes
+# in PGPASSWORD for this one command, never in the URL, because a command line shows in the
+# process list.
 db_container="$(compose ps --quiet db)"
 db_ip="$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
   "$db_container")"
 [[ -n "$db_ip" ]] || fail "cannot find the db container's address; nothing restarted"
 log "applying pending migrations"
-supabase migration up --workdir "$repo_root" \
-  --db-url "postgresql://postgres:$(env_value POSTGRES_PASSWORD)@${db_ip}:5432/postgres?sslmode=disable" ||
+PGPASSWORD="$(env_value POSTGRES_PASSWORD)" supabase migration up --workdir "$repo_root" \
+  --db-url "postgresql://postgres@${db_ip}:5432/postgres?sslmode=disable" ||
   fail "migration failed; nothing restarted (the backup above is the restore point)"
 
 # hearth_service's LOGIN and password come from .env, not a migration; re-applying them is

@@ -6,7 +6,7 @@ Four layers, each catching a different class of bug:
 
 | Layer | Tool | Runs where | Catches |
 | --- | --- | --- | --- |
-| Unit | Vitest, plus seven `node --test` files: two in `e2e/support`, five harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
+| Unit | Vitest, plus eight `node --test` files: two in `e2e/support`, six harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
 | Integration | Vitest against a real Postgres | `supabase start`'s local Postgres/GoTrue | Bugs in SQL, RLS policies, transactions, and the service's route layer |
 | Component (frontend) | Vitest + Testing Library | jsdom (a simulated browser DOM, no real browser) | Bugs in how a React component renders and reacts to state |
 | End-to-end | Playwright | A real Chromium browser against the full Docker Compose stack | Bugs that only show up with real HTTP, real Caddy routing, and a real browser |
@@ -26,9 +26,10 @@ page, tests substitute a fixture or a test double instead.
 The exceptions use Node's built-in test runner (`node --test`) instead of Vitest, so they need no
 dependencies and no Docker to run. Two are in `e2e/support`: `run-identity.test.ts`, which tests the
 pure run-naming logic in `run-identity.ts` (Compose project/network/image-tag derivation), and
-`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other five are the
+`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other six are the
 harness tests (the four for the clock pin, the zone hook, the sweep and the lint ban, plus the
-service-role fence probe), described under Dates and time zones below.
+service-role fence probe and the deploy script's password test), described under Dates and time
+zones below.
 
 **What they're for:** pure logic with no I/O — no database, no HTTP, no filesystem. This is where
 correctness actually lives for three areas that get deliberately exhaustive, table-driven coverage:
@@ -42,13 +43,13 @@ memory with `apps/service/src/test/fake-app.ts`, which wires fake dependencies (
 `DummyDriver`, no real database, no GoTrue) and drives it with Fastify's `inject()`. These still
 count as unit tests: nothing touches a socket or a real database.
 
-**Runner:** Vitest everywhere except the seven `node --test` files above.
+**Runner:** Vitest everywhere except the eight `node --test` files above.
 
 **How to run them:**
 
 ```sh
 pnpm test                              # the harness tests, then every workspace's unit + component tests
-pnpm test:harness                      # only the five harness tests
+pnpm test:harness                      # only the six harness tests
 pnpm --filter @hearth/recurrence test  # one workspace
 pnpm --filter @hearth/matching test
 pnpm --filter @hearth/service test     # excludes *.integration.test.ts (vitest.config.ts)
@@ -158,6 +159,11 @@ controlled, not inherited from the machine.
     and test code are exempt. It does not cover four gaps: a dynamic import whose specifier is a
     variable or template literal, `require`, a raw `set local role service_role` in SQL, and
     code outside `apps/service/src`.
+  - `scripts/deploy.test.mjs` runs the real `scripts/deploy.sh` to the end against stub `docker`,
+    `supabase` and `curl` binaries placed first on `PATH`, with a fake env file and made-up
+    passwords. It checks that no command line carries a database password, that the script prints
+    none, that only the migration command sees `PGPASSWORD`, and that a password with URL-reserved
+    characters arrives intact. Nothing starts a container or touches a database.
 - **Setting `TZ`.** Set it only through the sweep, or through an `env` object passed to a spawned
   process. The hook then validates it, and the sweep checks that it took effect. Never export it in
   the shell or force `TZ=UTC` for a whole suite.

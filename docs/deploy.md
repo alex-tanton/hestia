@@ -150,8 +150,9 @@ of the first few fail:
    running, without recreating any that are.
 4. Takes a backup with `hearth-compose exec -T backup /backup.sh`. **A failed backup aborts the
    deploy** — nothing is migrated or restarted.
-5. Applies pending migrations with `supabase migration up` against the Compose database. **A
-   failed migration aborts the deploy**; the backup just taken is the restore point.
+5. Applies pending migrations with `supabase migration up` against the Compose database. The CLI
+   gets the database password in `PGPASSWORD`, set for that one command and never on its command
+   line. **A failed migration aborts the deploy**; the backup just taken is the restore point.
 6. Re-applies the `hearth_service` login from `.env` (`docker/db/hearth-service-login.sql`) —
    idempotent, and picks up a rotated password.
 7. Tags the new images `current` and recreates `hearth-service` and `caddy` on them.
