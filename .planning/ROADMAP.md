@@ -148,7 +148,7 @@ Plans:
   4. Service-role client usage outside `apps/service/src/privileged/` is audited, and a test proves the ESLint fence fails when it is violated.
   5. Running `deploy.sh` never places the database password on a process command line (a stubbed-argv test shows this), and Kong denies the unused GoTrue paths in addition to Caddy while the normal sign-in and token-refresh flows still pass.
 
-**Plans:** 2/8 plans executed
+**Plans:** 3/8 plans executed
 
 Plans:
 **Wave 1**
@@ -157,7 +157,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 04-02-PLAN.md — PR 1 landing: local proof, owner gate (incl. the CLAUDE.md lines), red `test-integration` run, lock fast-forward, six green jobs
-- [ ] 04-05-PLAN.md — PR 3 content, part 1 (stacked on PR 2): tracer FIX-06 (scoped `PGPASSWORD`, stubbed-argv test red then green), Kong E2E probes, owner `yaml@2.9.1` legitimacy gate
+- [x] 04-05-PLAN.md — PR 3 content, part 1 (stacked on PR 2): tracer FIX-06 (scoped `PGPASSWORD`, stubbed-argv test red then green), Kong E2E probes, owner `yaml@2.9.1` legitimacy gate
 
 **Wave 3** *(blocked on Wave 2 completion and on the owner's merge of PR 1)*
 - [ ] 04-04-PLAN.md — PR 2 landing: sync after PR 1's merge, local proof, owner gate, six green jobs
@@ -211,6 +211,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
-| 4. Bug Fixes With Regression Tests | 2/8 | In Progress | - |
+| 4. Bug Fixes With Regression Tests | 3/8 | In Progress | - |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |
