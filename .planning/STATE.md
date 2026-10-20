@@ -135,6 +135,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 261020-v7v | Fix WR-02: hold the deal-add item id at QueryClient scope (branch fix/held-deal-id, pushed, no PR, awaiting the owner's merge) | 2026-10-20 | c69569a | [261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien](./quick/261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien/) |
+| 261020-wnk | CI: pull the Supabase E2E images from GHCR first with ECR fallback, plus GHCR and optional Docker Hub logins (branch ci/pull-supabase-from-ghcr, 2 local commits, NOT pushed: token lacks workflow scope; no PR) | 2026-10-20 | d25d8e6 | [261020-wnk-make-ci-image-pulls-robust-against-regis](./quick/261020-wnk-make-ci-image-pulls-robust-against-regis/) |
 
 ## Deferred Items
 
