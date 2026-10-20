@@ -32,12 +32,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Dead code and hygiene
 
-- [ ] **DEAD-01**: Proven-dead files are removed
-- [ ] **DEAD-02**: Proven-dead exports and types are removed
-- [ ] **DEAD-03**: Unused dependencies are removed with the lockfile in the same commit (the `fuse.js` benchmark cluster, unused `tsx` in seed)
-- [ ] **DEAD-04**: Stale references are removed (e.g. `BUILD_PROMPT.md` in ignore files)
-- [ ] **DEAD-05**: No tracked generated or leftover files remain, and `db/types.ts` has a drift check
-- [ ] **DEAD-06**: Candidates tooling cannot prove dead are reported to the owner, not deleted
+- [x] **DEAD-01**: Proven-dead files are removed
+- [x] **DEAD-02**: Proven-dead exports and types are removed
+- [x] **DEAD-03**: Unused dependencies are removed with the lockfile in the same commit (the `fuse.js` benchmark cluster, unused `tsx` in seed)
+- [x] **DEAD-04**: Stale references are removed (e.g. `BUILD_PROMPT.md` in ignore files)
+- [x] **DEAD-05**: No tracked generated or leftover files remain, and `db/types.ts` has a drift check
+- [x] **DEAD-06**: Candidates tooling cannot prove dead are reported to the owner, not deleted
 
 ### Bug fixes (each with a regression test)
 
@@ -115,12 +115,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TIME-03 | Phase 2 | Complete |
 | TIME-04 | Phase 2 | Complete |
 | TIME-05 | Phase 2 | Complete |
-| DEAD-01 | Phase 3 | Pending |
-| DEAD-02 | Phase 3 | Pending |
-| DEAD-03 | Phase 3 | Pending |
-| DEAD-04 | Phase 3 | Pending |
-| DEAD-05 | Phase 3 | Pending |
-| DEAD-06 | Phase 3 | Pending |
+| DEAD-01 | Phase 3 | Complete |
+| DEAD-02 | Phase 3 | Complete |
+| DEAD-03 | Phase 3 | Complete |
+| DEAD-04 | Phase 3 | Complete |
+| DEAD-05 | Phase 3 | Complete |
+| DEAD-06 | Phase 3 | Complete |
 | FIX-01 | Phase 4 | Pending |
 | FIX-02 | Phase 4 | Pending |
 | FIX-03 | Phase 4 | Pending |

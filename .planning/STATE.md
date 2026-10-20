@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: evidence-gated-removal
 status: executing
-stopped_at: "Completed 03-08-PLAN.md (PR 3 #14 open, CI green, awaiting owner squash merge)"
-last_updated: "2026-10-20T00:08:15.714Z"
+stopped_at: Completed 03-09-PLAN.md
+last_updated: "2026-10-20T00:42:45.732Z"
 last_activity: 2026-10-19
 last_activity_desc: Phase 02 complete, transitioned to Phase 3
-state_head: 54153956f292a59ac314735f2fdf054b5133a654
+state_head: 2bcd94b99b5b17af66d3a65b36c39948ed2d8a8b
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 22
+  completed_plans: 23
   percent: 33
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 03 (evidence-gated-removal) — EXECUTING
-Plan: 03-07 complete; PR 2 (#13) is open with six green CI jobs, waiting on the owner's squash merge before 03-08
-Status: Executing (wave 8 next: PR 3 landing, after PR 2 is merged)
-Last activity: 2026-10-19 — Plan 03-07: PR 2 opened and CI green
+Plan: 03-09 complete (all 9 plans of Phase 3 executed; PRs 1 to 3 merged, final main 9819e7c)
+Status: Phase 3 awaiting verification and phase close (run by the orchestrator)
+Last activity: 2026-10-20 — Plan 03-09: final-tree proof and owner list
 
 Progress: [███░░░░░░░] 33%
 
@@ -68,6 +68,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 03 P06 | 30min | 2 tasks | 3 files |
 | Phase 03 P07 | resumed | 3 tasks | 1 files |
 | Phase 03 P08 | resumed session | 3 tasks | 1 files |
+| Phase 03 P09 | 2 sessions | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,7 @@ Recent decisions affecting current work:
 - [Phase 2]: Owner decisions after verification (D-13 to D-18 in 02-CONTEXT.md): Phase 5 uses the test-inclusive jscpd baseline; weekend E2E run deferred; vitest declared at the root; fuzzy benchmark deleted; packages are internal; the jobs barrel keeps its test
 - [Phase 03]: A2=remove honored: 18 unused z.infer aliases removed from packages/shared, schemas kept
 - [Phase 03]: Plan 03-07: gate-pr2=approve; PR 2 (#13) opened at head 5f5b090 with six green CI jobs (test-e2e passed on attempt 3 after two ECR toomanyrequests re-runs); awaiting the owner's squash merge
+- [Phase 03]: Plan 03-09: final-tree proof on 9819e7c (knip default 1, production 28, nonode 1); knip-summary kept reported; DEAD-05 complete per OQ1=accept and local db:types evidence (permanent check Phase 6 CI-03); main test-e2e red on 51c077e and aefe63a (registry flake, owner-accepted, not re-run), green on 9819e7c after one re-run
 
 ### Pending Todos
 
@@ -100,6 +102,9 @@ None yet.
 
 ### Blockers/Concerns
 
+- [Phase 3]: Main CI gap: `test-e2e` is red on the main runs for 51c077e (PR 1) and aefe63a (PR 2) from the registry pre-pull flake; the owner chose not to re-run them so Deploy does not pick up superseded commits (each PR's own CI was green on an identical tree). 9819e7c is green after one re-run; `17-accessibility-states.spec.ts:527` and `19-notifications.spec.ts:141` flaked once there (look at them in Phase 6)
+- [Phase 3]: DEAD-05 is marked complete on the owner-authorized local Docker run (`pnpm db:types` twice, both equal to the committed file; `pnpm db:seed` exit 0), not CI; the permanent drift check is Phase 6 CI-03
+- [Phase 3]: `knip:production` reports `scripts/knip-summary.mjs` as a files line (owner decision keep-reported); revisit with Phase 6 CI-01, together with the `**/test/**` hidden-entry blind spot of the committed knip config
 - [Phase 1]: The "Main PR Enforcement" ruleset (id 23693495) was changed by the owner to permit the main push (the API now returns 404 for it, so it appears deleted rather than disabled). Nothing is enforced on main now; if it is re-created, a required check plus the red test-unit (favorites.test.tsx timezone test, Phase 2 TIME-01 class) will block PRs. CONTRIBUTING.md says branch protection is not configured; reconcile in Phase 6. Owner may cancel a queued Deploy run and delete origin/curated-main.
 - [Phase 3]: Three of the six proven-dead rows in `.planning/cleanup/TRIAGE.md` (`currentWeekFixture`, `emptyWeekFixture`, `previousWeekFixture` in `apps/web/src/test/meal-fixtures.ts`) no longer appear in a fresh `pnpm knip` run: the root `test:harness` script (PR #8) makes knip's Node plugin treat `test/**` files as entries, so a fresh default run gives 54 findings (recorded: 59) and 79 production (recorded: 80). Re-establish the tool evidence for those three before deleting anything; decide whether `knip.json` should stop that side effect
 - [Phase 3]: `../hearth-aside/bin/knip-summary.mjs` (outside the repo) normalizes the knip reports and is cited by TRIAGE.md; it is lost with the cloud container unless committed
@@ -119,6 +124,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-20T00:08:15.653Z
-Stopped at: Completed 03-08-PLAN.md (PR 3 #14 open, CI green, awaiting owner squash merge)
+Last session: 2026-10-20T00:42:45.671Z
+Stopped at: Completed 03-09-PLAN.md
 Resume file: None
