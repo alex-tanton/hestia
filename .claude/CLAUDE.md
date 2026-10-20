@@ -196,7 +196,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - ESLint flat config at `eslint.config.js`:
 - Lint runs with `--max-warnings=0`: `pnpm lint` (CI and pre-commit).
 - TypeScript is strict (`tsconfig.base.json`): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noPropertyAccessFromIndexSignature`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`, `erasableSyntaxOnly`. Run with `pnpm typecheck`.
-- Type-escape hatches are rare: `eslint-disable` appears only six times in source: `apps/service/src/cli.test.ts:65` and `apps/web/src/components/chores/RotationEditor.tsx:132`, plus four `no-restricted-syntax` opt-outs for real-clock reads, each with a reason (`apps/service/src/deals/flipp/request-queue.test.ts` twice, `apps/service/src/test/zone-dates.ts`, `e2e/support/clock.ts`). Source has no explicit `any` (`strictTypeChecked` forbids it); the only double casts are two `as unknown as DealRow[]` in `apps/service/src/services/deals/storage.ts`. Prefer a narrowed type or a Zod parse over `as`.
+- Type-escape hatches are rare: `eslint-disable` appears only five times in source: `apps/service/src/cli.test.ts:65`, plus four `no-restricted-syntax` opt-outs for real-clock reads, each with a reason (`apps/service/src/deals/flipp/request-queue.test.ts` twice, `apps/service/src/test/zone-dates.ts`, `e2e/support/clock.ts`). Source has no explicit `any` (`strictTypeChecked` forbids it); the only double casts are two `as unknown as DealRow[]` in `apps/service/src/services/deals/storage.ts`. Prefer a narrowed type or a Zod parse over `as`.
 - ESM everywhere (`"type": "module"`). Service and packages use NodeNext resolution: relative imports end in `.js` even though the source is `.ts`, e.g. `import { ProblemError } from '../problem.js';` (`apps/service/src/services/bills.test.ts`).
 - Web uses Bundler resolution with explicit `.ts`/`.tsx` extensions: `import { useApi } from './api-context.tsx';` (`apps/web/src/lib/api/bills-hooks.ts`), enabled by `allowImportingTsExtensions`.
 - Use `import type { ... }` for type-only imports (`verbatimModuleSyntax`), inline as `import { x, type Y }` when mixed (`apps/web/src/components/ui/Button.tsx`).
@@ -233,7 +233,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Document invariants and non-obvious constraints, e.g. why opacity floors are 95%/97% in `apps/web/src/components/ui/Button.tsx`, or why the service role is fenced in `eslint.config.js`.
 - Module-level block comments (`/* ... */` or `/** ... */`) open files that carry a rule set, such as `apps/web/src/lib/api/bills-hooks.ts` and `apps/web/src/test/harness.tsx`.
 - Used on exported functions and types whose contract is not obvious from the signature, e.g. `errorFingerprint` in `apps/service/src/services/errors.ts` and `ProblemError` in `apps/service/src/problem.ts`. Not required on every export.
-- Single-line `//` comments explain a lint or ESLint directive, like `// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions`, and should always be followed by a reason.
+- Single-line `//` comments explain a lint or ESLint directive, like `// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors`, and should always be followed by a reason.
 
 ## Function Design
 
