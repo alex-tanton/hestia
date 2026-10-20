@@ -9,6 +9,7 @@ Raw logs are under `.planning/cleanup/logs/` (gitignored) as `04-03-{fix}-{red,g
 
 | FIX | Test | Red (unfixed) | Green (fixed) | Commit |
 | --- | --- | --- | --- | --- |
+| FIX-03 | `packages/shared/src/api/patch-schemas.test.ts` (24 cases: registry found and non-empty, 11 PATCH bodies, the `update*RequestSchema` cross-check, the three non-PATCH defaulted schemas, 8 mutant schemas, a clean schema, a non-object body) | The property holds today, so the red is a real schema mutation: in `../hearth-guard-tests` `packages/shared/src/api/bills.ts`, `updateBillRequestSchema`'s `autopay: billFieldsSchema.shape.autopay.unwrap(),` became `autopay: billFieldsSchema.shape.autopay,` (restored with `git checkout --`, confirmed clean). `pnpm --filter @hearth/shared exec vitest run src/api/patch-schemas.test.ts`: exit=1, 1 failed / 23 passed. FAIL `PATCH body schemas > /api/bills/:id injects no default for a field left out`: `AssertionError: expected [ 'autopay' ] to deeply equal []`. | Same command on the unmutated tree: exit=0, `Tests  24 passed (24)`. Whole shared suite: exit=0, 172 passed. Shared typecheck, ESLint `--max-warnings=0` and Prettier on the file: exit=0. | 72b0668741791409946a7fd7cd071d51fdf99a9d (`test/guard-tests`) |
 | FIX-05 | `test/eslint-service-role-fence.test.mjs` (28 ESLint API probes: 9 bad imports, 4 good imports, 8 fenced paths, 7 exempt paths), run by `pnpm test:harness` | The fence holds today, so there is no bug to fail against; the red is four one-line mutations of the fence block in `eslint.config.js`, each run with `node --test test/eslint-service-role-fence.test.mjs` in `../hearth-guard-tests`, each restored with `git checkout -- eslint.config.js` and confirmed clean. m1 (line 110, `'error'` to `'warn'` on `@typescript-eslint/no-restricted-imports`): exit=1, 15 failed / 13 passed. m2 (`'apps/service/src/routes/**',` added to `ignores`): exit=1, 10 failed / 18 passed. m3 (selector regex `/privileged/` to `/no-such-module/`): exit=1, 2 failed / 26 passed (the two dynamic-import probes). m4 (`files` pointed at `apps/none/**/*.ts`): exit=1, 17 failed / 11 passed. m1 fails 15, not the 7 the research saw, because the fenced-path cases also assert error severity. | Same command on the unmutated config: exit=0, `pass 28`, `fail 0`. `pnpm test:harness`: 215 tests, exit=0. ESLint `--max-warnings=0` and Prettier on the test, `package.json` and `docs/testing.md`: exit=0. The audit (below) records 0 violations. | ba7d50116bd1e0db91360d26dd879165f3be2612 (`test/guard-tests`) |
 
 ## Service-role audit
@@ -36,4 +37,10 @@ audit-violations=0
 
 ## Gates and decisions
 
+- Plan 04-03 has no owner gate. PR 2 is opened in 04-04 after PR 1 is merged (D-11); `test/guard-tests` is based on `origin/main` at 9819e7c and is pushed at 72b0668741791409946a7fd7cd071d51fdf99a9d.
+- The branch diff against `origin/main` is exactly `docs/testing.md`, `package.json` (the `test:harness` line only), `packages/shared/src/api/patch-schemas.test.ts` and `test/eslint-service-role-fence.test.mjs`; `eslint.config.js` and `bills.ts` are unchanged.
+- Known gaps of the fence, written in the test header and `docs/testing.md`, not closed here (no fence change without a finding): a dynamic import of a variable or template literal, `require`, a raw `set local role service_role`, and code outside `apps/service/src`. The audit found none of them in use.
+
 ## CI
+
+No pull request yet (04-04).
