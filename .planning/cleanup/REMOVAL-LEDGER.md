@@ -27,6 +27,9 @@ base-after-pr2=aefe63a52c469d8ba18b9a16f85f3c18034cd26f
 
 pr3=14
 pr3-head=d8a5dbecaf3e96d92a8a1089e4fe8fa60955cd22
+pr3-merged=9819e7c1436a8ad984f459c9fcb3e62fa68e0806
+base-after-pr3=9819e7c1436a8ad984f459c9fcb3e62fa68e0806
+final=9819e7c1436a8ad984f459c9fcb3e62fa68e0806
 
 PR 2 (#13) was squash-merged by the owner on 2026-10-19 (`merged_at` 2026-10-19T23:41:28Z, merge commit `aefe63a52c469d8ba18b9a16f85f3c18034cd26f`, subject `refactor: remove proven-dead exports, types and re-exports`, 20 files, 14 insertions, 162 deletions). `origin/main` is now `aefe63a`, with `51c077e` (PR 1) as its parent. Plan 03-08 merged it into the working branch (merge commit `af19157`) and into `chore/stale-references` (merge commit `d8a5dbecaf3e96d92a8a1089e4fe8fa60955cd22`) with plain merges that had no conflict. PR 3's branch keeps its single content commit `d9d61bb`; `git diff --name-status origin/main...HEAD` still lists only `.dockerignore` and `.prettierignore`, both `M`, 0 added and 2 deleted lines.
 
@@ -42,9 +45,9 @@ Totals are the `total` line of the normalized knip summaries (`scripts/knip-summ
 
 | Config | Base | PR 2 tip | Final |
 | --- | --- | --- | --- |
-| default (committed `knip.json`) | 54 | 1 | |
-| production (`knip:production`) | 79 | 28 | |
-| nonode (throwaway config) | 57 | 1 | |
+| default (committed `knip.json`) | 54 | 1 | 1 |
+| production (`knip:production`) | 79 | 28 | 28 |
+| nonode (throwaway config) | 57 | 1 | 1 |
 
 PR 2 tip (plan 03-07, `refactor/dead-exports` merged with `origin/main` `51c077e`, tip `5f5b090df761eb3eb067e4c889c2a475bdf63b5`): default 54 to 1, production 79 to 28, nonode 57 to 1. Default: 53 base lines left (the seed `tsx` line, removed by PR 1, plus the 52 lines of PR 2: 14 `exports`, 37 `types`, 1 `duplicates`) and none joined; the one line left is `devDependencies apps/web/package.json tailwindcss`, a D-04 keep. Nonode: 56 base lines left, none joined; the one line left is the same `tailwindcss`. Production: 52 base lines left, one joined, `files scripts/knip-summary.mjs -` (the owner's `knip-summary=keep-reported`, see Kept); the production reference for this tip is therefore base 79 + 1 = 80, and 28 is 80 minus 52. The 28 remaining production lines are 2 `files` lines (`normalized-fixtures.ts`, `knip-summary.mjs`) and 26 `exports` lines (14 in `apps/service/src/jobs/index.ts`, the test-only runtime re-exports kept by D-02; the rest are test-only or production-unused exports kept by D-01 and D-04), all of them already on the owner list or in Kept. The ledger check (`<ledger_check>`) exits 0 on the three base and tip pairs once the Kept row below is in place; before it, its only output was the knip-summary line. Summaries: `$K/phase3-pr2-{default,production,nonode}-summary.txt`.
 
@@ -227,3 +230,35 @@ path-sweep: see "Stale-reference sweep" above (642 tokens, 257 misses, none stal
 pr3-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success (CI run 39343696567, pull_request, head d8a5dbecaf3e96d92a8a1089e4fe8fa60955cd22, completed 2026-10-20T00:06:29Z; test-e2e passed on run attempt 2 after one re-run of the documented ECR pre-pull flake)
 
 PR 3 (#14, `chore/stale-references` into `main`) is open and unmerged, mergeable state clean; the owner's squash merge is pending. `lint`, `typecheck`, `test-unit`, `test-integration` and `build` passed on attempt 1 and were not re-run. `test-e2e` failed on attempt 1 in the image pre-pull step, `Could not pull public.ecr.aws/supabase/gotrue:v2.196.0 after 6 attempts` with `toomanyrequests: Data limit exceeded` (`$L/03-08-job-test-e2e.log`), before `pnpm test:e2e` ran; `rerun-failed-jobs` was called once (limit three) and attempt 2 passed, building the service and Caddy images through Compose with the edited `.dockerignore`. No ignore-file commit was reverted, so nothing moved from Removals to Kept. The PR head never changed from `d8a5dbe`; its only non-merge commit is `d9d61bb`.
+
+## Final tree (plan 03-09)
+
+PR 3 (#14, `chore/stale-references`) was squash-merged by the owner on 2026-10-20 (`merged_at` 2026-10-20T00:12:46Z), merge commit `9819e7c1436a8ad984f459c9fcb3e62fa68e0806`, subject `chore: drop stale BUILD_PROMPT.md ignore entries`, which is now `origin/main`. The working branch absorbed it with the plain merge `04ee3b9` (no conflict, pushed `54e3026..04ee3b9`). The Removals table's PR column still reads "not open" because it was written before the merges; PR 1 is #12 (`51c077e`), PR 2 is #13 (`aefe63a`), PR 3 is #14 (`9819e7c`).
+
+Final-tree checks ran in the detached read-only worktree `../hearth-final` at `final` (Node 24.21.0, pnpm 10.34.5, `TZ` unset; `pnpm install --frozen-lockfile` exit 0; normalizer sha256 `74b6e969...cb12`), removed afterwards.
+
+final-knip: default total 1, production total 28, nonode total 1 (summaries `$K/phase3-after-{default,production,nonode}-summary.txt`). The three final summaries are byte-identical (`cmp`) to the PR 2 tip summaries `$K/phase3-pr2-*`, so PR 3 (two ignore-file lines) changed no finding. The ledger check (`<ledger_check>`) exits 0 on the three base and final pairs. Default keeps only `devDependencies apps/web/package.json tailwindcss` (D-04); nonode the same line. Production keeps 26 `exports` lines (14 in `jobs/index.ts`, D-02, and 12 test-only or production-unused exports, D-01 and D-04) and 2 `files` lines. The research expectation of a default total of 1 holds.
+
+dead01: default final summary has no `files` line. Owner decision `knip-summary=keep-reported` changes the plan's production expectation: the production final summary has exactly two `files` lines, `apps/service/src/deals/flipp/normalized-fixtures.ts` (D-04 keep) and `scripts/knip-summary.mjs` (Kept; owner list). `git show --diff-filter=D --name-only --format= 51c077e aefe63a 9819e7c` prints nothing: none of the three squash commits deletes a file.
+
+guards: migrations unchanged; no protected or standing-list path in the three squash commits; no file deleted. Detail: `git diff --stat 7d14b77 origin/main -- supabase/migrations` prints nothing, and `git show --name-only --format=` over the three squash commits lists no path under `supabase/migrations/`, `docker/`, `.github/`, `apps/service/src/privileged/`, `.planning/`, `.claude/`, `e2e/fixtures/`, `apps/service/src/deals/flipp/` or `apps/service/src/recipes/fixtures/` and none of `apps/service/src/db/types.ts`, `eslint.config.js`, `knip.json`, `scripts/deploy.sh`, `scripts/generate-secrets.sh`, `apps/service/src/push/web-push.d.ts`.
+
+leftovers-final: `git ls-files -ci --exclude-standard` prints nothing on the final tree; the pattern audit over the 674 tracked files outside `.planning/` and `.claude/` matches `.env.example` only (run as a path-name filter in a script because the shell guard blocks command lines that contain the env-file pattern; no file content was read); `git grep -n -I -F -e BUILD_PROMPT -- . ':!.planning' ':!.claude'` exits 1.
+
+dead05=complete (OQ1=accept; dbtypes-run1-vs-run2=same; dbtypes-run2-vs-committed=same; `git diff --quiet e7a7dbc origin/main -- supabase/migrations apps/service/src/db/types.ts` exits 0, so the evidence transfers to the final tree). The leftover half is shown on the final tree above. The drift-check half rests on the owner-authorized local Docker run (`dbtypes-source=local-docker`), not on CI, because GitHub rejected the throwaway workflow push; the permanent drift check stays Phase 6 (CI-03), as D-15 says.
+
+dbseed-status stays as written by plan 03-02 (`proven locally`, `dbseed=exit0`, local Docker run); it is proven, so there is no `owner-accepted-unproven` Kept row.
+
+suites-final: `pnpm test` exit 0 (matching 156, shared 148, recurrence 77, service 725, web 715 tests; `test:harness` included), `pnpm build` exit 0, unit sweep `sweep: 36/36 passed` (`$L/03-09-{test,build,sweep}.log`, `$L/03-09-sweep/summary.txt`).
+
+main-ci-pr1=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success (CI run 39334927102, push, attempt 1, head 51c077e; test-e2e failed in the image pre-pull step, `Could not pull public.ecr.aws/supabase/gotrue:v2.196.0 after 6 attempts` with `toomanyrequests`, before `pnpm test:e2e` ran; log `$L/03-09-main-e2e-pr1.log`)
+main-ci-pr2=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success (CI run 39343120287, push, attempt 1, head aefe63a; same pre-pull `toomanyrequests` failure; log `$L/03-09-main-e2e-pr2.log`)
+main-ci-pr3=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success (CI run 39346293068, push, attempt 1, head 9819e7c; images built and 100 of 102 E2E tests passed, 2 failed: `17-accessibility-states.spec.ts:527` light variant, no unchecked notification switch found, and `19-notifications.spec.ts:141` light variant, header read "Rivera Family" instead of "Oak Street"; the dark variant of the first passed, and the second has no dark variant in the run; log `$L/03-09-main-e2e-pr3.log`)
+
+main-ci-note: the `test-e2e` job is red on all three squash commits, so the plan's gate "all six jobs success on each squash commit" is NOT met and nothing was re-run. Rule 10 allows re-runs only for the registry pre-pull flake, and re-running the PR 1 and PR 2 push runs would send an old SHA to the Deploy workflow (it deploys the CI run's `head_sha` once the run succeeds), so those re-runs need an owner decision; PR 3's failures are test failures, not the flake. Mitigating evidence: each pull request's own CI run was fully green on a tree identical to its squash commit (git tree ids equal: PR 1 head `e7a7dbc` and `51c077e` are `e0576cc3b3b6`, PR 2 head `5f5b090` and `aefe63a` are `aad41a6cb4b5`, PR 3 head `d8a5dbe` and `9819e7c` are `33cc9fe415bf`), see `pr1-ci`, `pr2-ci` and `pr3-ci` above, and the PR 3 E2E run on attempt 2 passed all tests with the same tree. The two PR 3 push-run failures are therefore flaky E2E tests, not a regression from Phase 3; they are unconfirmed until a re-run.
+
+owner-list: refreshed on 9819e7c1436a8ad984f459c9fcb3e62fa68e0806; completeness check passed; 40 entries
+
+open-items: none
+
+leftover-for-owner: local worktrees `/home/user/hearth-deps` (`build/unused-deps`), `/home/user/hearth-exports` (`refactor/dead-exports`), `/home/user/hearth-refs` (`chore/stale-references`) and `/home/user/hearth-dbtypes` (`ci/db-types-evidence`, throwaway, never pushed) remain; the scratch directory `/home/user/hearth-aside` is not a worktree. `git ls-remote --heads origin` shows none of the four code and throwaway branches on the remote (GitHub removed the three PR branches at merge; the throwaway was never pushed); the owner may delete the local branches and worktrees. Remote branches on `origin` other than `main` are `claude/trusting-lovelace-y4r87h` (this working branch), `claude/sleepy-hypatia-d82idc` and a Dependabot branch (untouched).
