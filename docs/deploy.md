@@ -74,7 +74,13 @@ Two services exist purely to route and protect traffic, configured by files in `
 - **Kong** (`docker/kong.yml`, started by `docker/kong-entrypoint.sh`) is a minimal declarative API
   gateway in front of GoTrue and Realtime only — there are deliberately no `rest`, `storage`,
   `functions`, or `analytics` routes. It key-authenticates callers as `anon` or `service_role` and
-  only allows those two groups through.
+  only allows those two groups through. GoTrue is an allowlist: Kong routes only the calls the PWA
+  makes for sign-in, token refresh, sign-out and the session check (`token`, `logout`, `user`),
+  the magic-link `otp`, the email-link `verify` (no key, because the link opens in a browser), and
+  `admin/users` for the service-role key only (the E2E seed). Everything else under `/auth/v1`
+  (signup, recover, settings, the rest of `admin`, and any other method on an allowed path) is
+  refused by Kong with a 403 `Access is forbidden.`, whatever key is sent. Caddy's two refusals
+  stay the first layer in front of it.
 
 ## Environment variables
 
@@ -150,8 +156,9 @@ of the first few fail:
    running, without recreating any that are.
 4. Takes a backup with `hearth-compose exec -T backup /backup.sh`. **A failed backup aborts the
    deploy** — nothing is migrated or restarted.
-5. Applies pending migrations with `supabase migration up` against the Compose database. **A
-   failed migration aborts the deploy**; the backup just taken is the restore point.
+5. Applies pending migrations with `supabase migration up` against the Compose database. The CLI
+   gets the database password in `PGPASSWORD`, set for that one command and never on its command
+   line. **A failed migration aborts the deploy**; the backup just taken is the restore point.
 6. Re-applies the `hearth_service` login from `.env` (`docker/db/hearth-service-login.sql`) —
    idempotent, and picks up a rotated password.
 7. Tags the new images `current` and recreates `hearth-service` and `caddy` on them.
@@ -165,6 +172,12 @@ commit is harmless. The five newest SHA-tagged images of each kind are kept.
 A deploy never recreates `db`, `auth`, `realtime`, `kong`, or `backup`. After changing their
 configuration or image tag, take a backup by hand and apply the change with
 `hearth-compose up -d --wait`.
+
+Compose also does not recreate a running service when only a bind-mounted file changed, and
+`docker/kong.yml` is bind-mounted. After merging a `docker/kong.yml` change, take a backup by hand
+and run `hearth-compose up -d --force-recreate kong` on the host. Sign-ins can fail for a few
+seconds while Kong restarts. To roll back a Kong change, revert it, let the deploy finish and run
+the same command again.
 
 ## Manual rollback
 
