@@ -3,7 +3,7 @@ status: testing
 phase: 04-bug-fixes-with-regression-tests
 source: [04-VERIFICATION.md]
 started: 2026-10-20T17:58:53Z
-updated: 2026-10-20T19:23:37Z
+updated: 2026-10-20T22:44:20Z
 ---
 
 ## Current Test
@@ -37,6 +37,7 @@ result: [pending]
 The held id lives in a per-card hook instance.
 expected: The owner accepts that a lost-response retry after the card unmounts (filter change, paging, navigation) mints a new id and can still add the deal twice, or asks for the id to be held at QueryClient scope.
 result: [pending]
+note: "Fix pushed on branch fix/held-deal-id (c69569a70c8d31c601961f6713abeaf949d03b50), no pull request. Owner decision 2026-10-20: hold the id at QueryClient scope. Awaiting the owner's PR and squash merge; not yet on main. Held ids are also scoped to the signed-in user and never expire; see .planning/cleanup/FIX-LEDGER-HELD-ID.md."
 
 ## Summary
 
