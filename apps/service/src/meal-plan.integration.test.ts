@@ -400,6 +400,85 @@ describe('add missing to list', () => {
     expect(allItems(secondPass).filter((item) => item.itemName === 'Bread')).toHaveLength(1);
   });
 
+  describe('when the same call arrives again', () => {
+    async function recipeAndList(): Promise<{
+      home: Home;
+      list: ShoppingListDetail;
+      recipeId: string;
+    }> {
+      const home = await household(app);
+      const list = await createList(home);
+      const recipe = await createRecipe(home, 'Cheese Toast', [
+        { itemName: 'Cheese' },
+        { itemName: 'Bread', quantity: 2 },
+        { itemName: 'Butter', quantity: 1, unit: 'tbsp' },
+      ]);
+      return { home, list, recipeId: recipe.id };
+    }
+
+    const addToList = (
+      home: Home,
+      recipeId: string,
+      listId: string,
+    ): Promise<LightMyRequestResponse> =>
+      as(app, home.user, 'POST', `/api/recipes/${recipeId}/add-to-list`, { listId });
+
+    const idsOf = (list: ShoppingListDetail): string[] =>
+      allItems(list)
+        .map((item) => item.id)
+        .toSorted();
+
+    it('a replay after a lost response changes nothing, item for item', async () => {
+      const { home, list, recipeId } = await recipeAndList();
+
+      const first = await addToList(home, recipeId, list.id);
+      expectStatus(first, 200);
+      const replay = await addToList(home, recipeId, list.id);
+      expectStatus(replay, 200);
+
+      expect(idsOf(first.json<ShoppingListDetail>())).toHaveLength(3);
+      expect(idsOf(replay.json<ShoppingListDetail>())).toEqual(
+        idsOf(first.json<ShoppingListDetail>()),
+      );
+    });
+
+    it('two calls in flight at once add each ingredient once', async () => {
+      const { home, list, recipeId } = await recipeAndList();
+
+      const [one, other] = await Promise.all([
+        addToList(home, recipeId, list.id),
+        addToList(home, recipeId, list.id),
+      ]);
+      expectStatus(one, 200);
+      expectStatus(other, 200);
+
+      const after = await as(app, home.user, 'GET', `/api/lists/${list.id}`);
+      expectStatus(after, 200);
+      expect(
+        allItems(after.json<ShoppingListDetail>())
+          .map((item) => item.normalizedName)
+          .toSorted(),
+      ).toEqual(['bread', 'butter', 'cheese']);
+    });
+
+    it('adds an ingredient again once its item is bought, since only needed and in-cart items count as on the list', async () => {
+      const { home, list, recipeId } = await recipeAndList();
+      const first = (await addToList(home, recipeId, list.id)).json<ShoppingListDetail>();
+      const bread = itemNamed(first, 'Bread');
+      expectStatus(
+        await as(app, home.user, 'PATCH', `/api/lists/${list.id}/items/${bread.id}`, {
+          status: 'bought',
+        }),
+        200,
+      );
+
+      const again = (await addToList(home, recipeId, list.id)).json<ShoppingListDetail>();
+
+      expect(allItems(again).filter((item) => item.normalizedName === 'bread')).toHaveLength(2);
+      expect(allItems(again)).toHaveLength(4);
+    });
+  });
+
   it('answers 404 for a foreign or missing recipe before touching the list', async () => {
     const home = await household(app);
     const list = await createList(home);
