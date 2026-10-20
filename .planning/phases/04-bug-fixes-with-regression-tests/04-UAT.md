@@ -26,7 +26,7 @@ note: "User: pass, I do not have the application deployed. Not exercised against
 ### 2. Owner decision on WR-01: `POST /auth/v1/otp` open to the anon key
 On a running stack, POST to `/auth/v1/otp` with the anon key and a fresh email, then check `auth.users`.
 expected: The owner keeps the route (research A5) or deletes it (one service and one table row in `docker/kong.yml` and `apps/service/src/kong-routes.test.ts`). If a user row is created, the comment in `apps/service/src/routes/auth.ts` ("no way around /api/signup") is false and the exposure needs a decision.
-result: [pending]
+result: pass (owner decision, 2026-10-20: keep the `otp` route because magic links are planned). Not checked on a running stack; the reviewer's claim that the anon key can create users through it stays unverified. Revisit when magic links are added.
 
 ### 3. Rotation drag in Firefox and Chromium (WR-03)
 Drag a rotation member's handle in the chores rotation editor.
