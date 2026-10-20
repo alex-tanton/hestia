@@ -3,11 +3,11 @@ gsd_state_version: "1.0"
 current_phase: 4
 current_phase_name: Bug Fixes With Regression Tests
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-10-20T13:36:35.053Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-10-20T13:49:55.151Z"
 last_activity: 2026-10-20
 last_activity_desc: Phase 4 execution started
-state_head: 92f69bfcfed97fe9238e774df8af5382afd02cdb
+state_head: b0d26059411d05e12d044f3a8d606b9390537d6d
 progress:
   total_phases: 6
   completed_phases: 3
@@ -28,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 4 (Bug Fixes With Regression Tests) — EXECUTING
-Plan: 1 of 8
-Status: Executing Phase 4
+Plan: 2 of 8
+Status: Ready to execute
 Last activity: 2026-10-20 — Phase 4 execution started
 
 Progress: [█████░░░░░] 50%
@@ -70,6 +70,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03 P07 | resumed | 3 tasks | 1 files |
 | Phase 03 P08 | resumed session | 3 tasks | 1 files |
 | Phase 03 P09 | 2 sessions | 2 tasks | 5 files |
+| Phase 04 P01 | 12min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,7 @@ Recent decisions affecting current work:
 - [Phase 03]: A2=remove honored: 18 unused z.infer aliases removed from packages/shared, schemas kept
 - [Phase 03]: Plan 03-07: gate-pr2=approve; PR 2 (#13) opened at head 5f5b090 with six green CI jobs (test-e2e passed on attempt 3 after two ECR toomanyrequests re-runs); awaiting the owner's squash merge
 - [Phase 03]: Plan 03-09: final-tree proof on 9819e7c (knip default 1, production 28, nonode 1); knip-summary kept reported; DEAD-05 complete per OQ1=accept and local db:types evidence (permanent check Phase 6 CI-03); main test-e2e red on 51c077e and aefe63a (registry flake, owner-accepted, not re-run), green on 9819e7c after one re-run
+- [Phase 04]: Plan 04-01: FIX-01 held-id map keyed by list and deal (d4b01b2); FIX-04 drag handle as a draggable button with a role=presentation drop row, no eslint-disable (f1e16fd); FIX-02 tests on fix/list-adds-rotation (1571f07), per-list advisory lock one commit ahead on fix/list-adds-lock (2e357e5). Red/green in FIX-LEDGER-WEB.md; FIX-02 red/green pending PR 1 CI (04-02)
 
 ### Pending Todos
 
@@ -125,6 +127,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-20T01:00:15.919Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-bug-fixes-with-regression-tests/04-CONTEXT.md
+Last session: 2026-10-20T13:49:55.058Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

@@ -148,7 +148,7 @@ Plans:
   4. Service-role client usage outside `apps/service/src/privileged/` is audited, and a test proves the ESLint fence fails when it is violated.
   5. Running `deploy.sh` never places the database password on a process command line (a stubbed-argv test shows this), and Kong denies the unused GoTrue paths in addition to Caddy while the normal sign-in and token-refresh flows still pass.
 
-**Plans:** 8 plans
+**Plans:** 0/8 plans executed
 
 Plans:
 **Wave 1**
@@ -168,6 +168,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion and on the owner's merge of PR 3)*
 - [ ] 04-08-PLAN.md — Phase close on the final `main`: every fix green there, the FIX-LEDGER index, `main` CI, the owner's Kong host step
+
 **UI hint**: yes
 
 ### Phase 5: Redundancy Reduction and Text Sync
