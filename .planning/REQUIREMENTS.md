@@ -43,9 +43,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **FIX-01**: Offline list-add replay is reproduced with a failing test, then fixed (stable ID in `useAddDealToList`)
 - [ ] **FIX-02**: Recipe add-to-list idempotency is checked and fixed if it leaks duplicates
-- [ ] **FIX-03**: A structural test guards every PATCH schema against default-injection
+- [x] **FIX-03**: A structural test guards every PATCH schema against default-injection
 - [ ] **FIX-04**: The `RotationEditor` accessibility suppression is replaced with proper keyboard semantics
-- [ ] **FIX-05**: Service-role client usage is audited, and a test proves the lint fence fails when violated
+- [x] **FIX-05**: Service-role client usage is audited, and a test proves the lint fence fails when violated
 - [ ] **FIX-06**: `deploy.sh` no longer passes the database password on the command line
 - [ ] **FIX-07**: Kong denies the unused GoTrue paths, not only Caddy, with positive-flow tests
 
@@ -123,9 +123,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEAD-06 | Phase 3 | Complete |
 | FIX-01 | Phase 4 | Pending |
 | FIX-02 | Phase 4 | Pending |
-| FIX-03 | Phase 4 | Pending |
+| FIX-03 | Phase 4 | Complete |
 | FIX-04 | Phase 4 | Pending |
-| FIX-05 | Phase 4 | Pending |
+| FIX-05 | Phase 4 | Complete |
 | FIX-06 | Phase 4 | Pending |
 | FIX-07 | Phase 4 | Pending |
 | RED-01 | Phase 5 | Pending |
