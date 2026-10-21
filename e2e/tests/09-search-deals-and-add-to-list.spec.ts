@@ -4,15 +4,14 @@ import { expectAccessible } from '../support/axe.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Journey 2 (Engineering Practices › E2E journeys): search deals, add an item to a list from the
- * result, verify its store and price snapshot, check it off, and see it move to the Bought group
- * (Requirements › "Deal search and browse", "Shopping lists"; Design › Screens › 5 and 8).
+ * Journey 2: search deals, add an item to a list from the result, verify its store and price
+ * snapshot, check it off, and see it move to the Bought group.
  *
- * Both targets are real 27514 favorite-store groceries (Seed Data, "Favorite-store groceries"),
- * seeded by `supabase/seed/seed.sql`, at Food Lion, one of Oak Street's favorites. Neither is
- * already on "This Week". Each theme searches for and adds a different one, so the two runs never
- * touch the same row; each search is a `deal_query_cache` hit this unit's `e2e-seed.sql` warms, so
- * neither run ever calls Flipp (non-negotiable 17; see `12-deal-rate-discipline.spec.ts`).
+ * Both targets are real 27514 favorite-store groceries, seeded by `supabase/seed/seed.sql`, at Food
+ * Lion, one of Oak Street's favorites. Neither is already on "This Week". Each theme searches for
+ * and adds a different one, so the two runs never touch the same row; each search is a
+ * `deal_query_cache` hit this unit's `e2e-seed.sql` warms, so neither run ever calls Flipp
+ * (see `12-deal-rate-discipline.spec.ts`).
  */
 
 const TARGETS = {
@@ -43,7 +42,7 @@ for (const theme of ['light', 'dark'] as const) {
       await card.getByRole('button', { name: `Add ${target.name} to a list` }).click();
 
       // Oak Street has two active lists ("This Week" and "Weekend Cookout"), so the picker opens
-      // rather than adding straight away (Design › `DealCard`).
+      // rather than adding straight away.
       const picker = page.getByRole('dialog', { name: 'Add to which list?' });
       await expect(picker).toBeVisible();
       await expectAccessible(page, `add-to-list picker (${theme})`);

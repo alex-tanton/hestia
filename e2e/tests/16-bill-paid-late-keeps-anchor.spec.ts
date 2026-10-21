@@ -8,8 +8,7 @@ import { SEED } from '../support/env.ts';
 
 /**
  * Phase 4, journey 5: a monthly household bill is paid late, and its next due date stays on the
- * anchor's schedule rather than moving to completion plus one interval (Requirements, "Recurrence
- * is anchored and derived on read"; Design › Screens › 14 and 15; Seed Data › "Bills").
+ * anchor's schedule rather than moving to completion plus one interval.
  *
  * The bill is created here, not taken from the seed, so the dates can be pinned to the run: the
  * anchor is the 10th three months before this month in the household's timezone. The first three
@@ -30,7 +29,7 @@ function shiftMonths(date: string, months: number, day: number): string {
   return `${String(y)}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-/** How the app shows a calendar date: MM/DD/YYYY (Design › Screens › 14). */
+/** How the app shows a calendar date: MM/DD/YYYY. */
 function shown(date: string): string {
   return `${date.slice(5, 7)}/${date.slice(8, 10)}/${date.slice(0, 4)}`;
 }
@@ -78,7 +77,7 @@ for (const theme of ['light', 'dark'] as const) {
       await page.getByRole('option', { name: 'Monthly' }).click();
       await sheet.getByLabel('Every').fill('1');
       await sheet.getByLabel('First due date').fill(f.first);
-      // The sheet's preview runs the anchored rule forward from the anchor (Design › Screens › 15).
+      // The sheet's preview runs the anchored rule forward from the anchor.
       await expect(sheet).toContainText(
         `Next due dates: ${shown(f.first)}, ${shown(f.second)}, and ${shown(f.third)}.`,
       );

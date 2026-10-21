@@ -37,7 +37,7 @@ export function queryValue(sql: string): string {
 
 /**
  * Runs the owner CLI where it actually lives — a bin on the service container's PATH, reached
- * with `docker compose exec` (Technical Architecture, "Auth configuration").
+ * with `docker compose exec`.
  */
 export function hearthAdmin(args: readonly string[]): {
   status: number;

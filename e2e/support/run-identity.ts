@@ -1,9 +1,9 @@
 /**
- * Naming and placement for one E2E run, free of I/O so it can be checked without Docker
- * (Engineering Practices › Testing, "E2E environment"). Two runs on one machine must never share a
- * Compose project, network, image tag, state directory, or host port, so everything a run uses is
- * derived from its id. The one thing an id cannot settle is which subnet is free; that is settled
- * by Docker, which refuses an overlapping network, so it is handled where the network is created.
+ * Naming and placement for one E2E run, free of I/O so it can be checked without Docker.
+ * Two runs on one machine must never share a Compose project, network, image tag, state directory,
+ * or host port, so everything a run uses is derived from its id. The one thing an id cannot settle
+ * is which subnet is free; that is settled by Docker, which refuses an overlapping network, so it
+ * is handled where the network is created.
  */
 
 const RUN_ID_PATTERN = /^[a-z0-9]{1,16}$/;

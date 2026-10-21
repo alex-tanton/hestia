@@ -5,12 +5,12 @@ import { queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Handoff, Phase 1 "Done when": a user signs up with a password, creates a household, invites a
- * second user, and that user joins by link and a third by code. Journey 1 covers the signup and
- * the household; this covers the invite, both ways in.
+ * A user signs up with a password, creates a household, invites a second user, and that user joins
+ * by link and a third by code. Journey 1 covers the signup and the household; this covers the
+ * invite, both ways in.
  *
- * Morgan takes the link the admin has just created; Casey types the code Seed Data publishes for
- * Oak Street's outstanding invite, which also checks that a seeded invite is redeemable.
+ * Morgan takes the link the admin has just created; Casey types the code the seed data publishes
+ * for Oak Street's outstanding invite, which also checks that a seeded invite is redeemable.
  */
 
 function memberCount(householdName: string): number {

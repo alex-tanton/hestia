@@ -11,10 +11,10 @@ import { SEED } from '../support/env.ts';
 
 /**
  * Journey 9: switch household, and assert no data from the previous household remains visible.
- * Alex belongs to Oak Street and Rivera Family (Seed Data, "Households"), which is the fixture
- * this exists for. In Phase 1 the household-scoped surfaces are the switcher, Household settings,
- * and the admin's invite list; My Households is the caller's own membership list, one of the two
- * responses Requirements lets span households, so both names belong there.
+ * Alex belongs to Oak Street and Rivera Family, which is the fixture this exists for. In Phase 1
+ * the household-scoped surfaces are the switcher, Household settings, and the admin's invite list;
+ * My Households is the caller's own membership list, one of the two responses Requirements lets
+ * span households, so both names belong there.
  */
 
 const NO_INVITES = 'No invites are outstanding. Create one to add someone to this household.';
@@ -45,7 +45,7 @@ for (const theme of ['light', 'dark'] as const) {
       await openSettings(page);
       await expect(page.getByLabel('Household name')).toHaveValue(SEED.oakStreet.name);
       await expect(page.getByLabel('ZIP code')).toHaveValue(SEED.oakStreet.postalCode);
-      // Seed Data, "Edge-case fixtures": Oak Street has an outstanding invite, so it has a
+      // Oak Street has an outstanding invite, so it has a
       // revocable row here. Its expired and revoked invites are not outstanding and never show.
       await expect(page.getByRole('button', { name: 'Revoke' })).not.toHaveCount(0);
       await expect(page.getByText(NO_INVITES)).toHaveCount(0);

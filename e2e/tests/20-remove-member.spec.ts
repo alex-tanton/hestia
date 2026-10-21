@@ -7,13 +7,13 @@ import { SEED } from '../support/env.ts';
 
 /**
  * Journey 8: remove a member, assert the reassignment prompt appears and blocks until resolved,
- * and that the removed user loses access immediately (Handoff, Phase 1 "Done when").
+ * and that the removed user loses access immediately.
  *
  * The two themes remove two different Oak Street members, because a removal cannot be repeated:
  * Sam owns a list, an open errand, and a household bill, Jordan owns a list and a bill, and both
- * are in the "Take out trash" rotation (Seed Data, "E2E departure fixtures"). Each is Oak Street's
- * only membership, so each lands on onboarding's create-or-join step afterwards, which is where
- * Requirements says a user with no membership left belongs.
+ * are in the "Take out trash" rotation. Each is Oak Street's only membership, so each lands on
+ * onboarding's create-or-join step afterwards, which is where Requirements says a user with no
+ * membership left belongs.
  *
  * This file sorts last in the suite on purpose: its removals take Sam and Jordan out of Oak Street,
  * and every journey before it expects the full seed. Keep any later journey's number below this one

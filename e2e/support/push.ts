@@ -2,10 +2,10 @@ import { expect, type APIRequestContext } from '@playwright/test';
 import { readStackEnv } from './env.ts';
 
 /*
- * The E2E push double, from the suite's side (Engineering Practices › Testing, "E2E environment").
- * The stack records each push instead of sending it (HEARTH_PUSH_TRANSPORT=test-double), and these
- * helpers run the dispatch job at a chosen instant and read the record back. Both go through the
- * service-role seam, so they need the run's own generated key from `.env`.
+ * The E2E push double, from the suite's side. The stack records each push instead of sending it
+ * (HEARTH_PUSH_TRANSPORT=test-double), and these helpers run the dispatch job at a chosen instant
+ * and read the record back. Both go through the service-role seam, so they need the run's own
+ * generated key from `.env`.
  */
 
 /** One push as the service recorded it: the subscription it was for and the JSON it carried. */
@@ -14,7 +14,7 @@ export interface Delivery {
   message: string;
 }
 
-/** The body the service sends for a notification (Technical Architecture, "Dispatch"). */
+/** The body the service sends for a notification. */
 export interface PushBody {
   title: string;
   body: string;

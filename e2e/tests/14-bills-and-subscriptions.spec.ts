@@ -5,8 +5,7 @@ import { expectAccessible } from '../support/axe.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Bills and subscriptions, against the seeded stack (Requirements › "Bills and subscriptions";
- * Design › Screens › 2, 14, 15, 16; Seed Data › "Bills"). Figures and orders are the Seed Data
+ * Bills and subscriptions, against the seeded stack. Figures and orders are the seed data's
  * oracles: Alex sees Spectrum Internet and Spotify for $86.98 a month, Sam sees Spectrum Internet
  * and Adobe for $134.98, and Adobe is invisible to Alex. Hearth never moves money, so the journeys
  * only record payments and skips.
@@ -25,7 +24,7 @@ for (const theme of ['light', 'dark'] as const) {
       await signIn(page, SEED.alex.email);
       await expectDashboard(page, SEED.oakStreet.name);
 
-      // Design › Screen 2: the Bills card flags the overdue bill in words, not only color.
+      // The Bills card flags the overdue bill in words, not only color.
       const card = page.getByRole('region', { name: /^Bills/ });
       await expect(card.getByText('Duke Energy')).toBeVisible();
       await expect(card.getByText('Overdue')).toBeVisible();
@@ -40,7 +39,7 @@ for (const theme of ['light', 'dark'] as const) {
       // each row's own labels; the grouping rule itself is covered by the unit tests.
       await expect(page.getByRole('link', { name: /^Spectrum Internet/ })).toContainText('Autopay');
       await expect(page.getByRole('link', { name: /^Spotify/ })).toContainText('Personal');
-      // Sam's personal bill is invisible to Alex (Seed Data › "Bills").
+      // Sam's personal bill is invisible to Alex.
       await expect(page.getByText('Adobe Creative Cloud')).toHaveCount(0);
       await expectAccessible(page, `bills dashboard (${theme})`);
       await shoot(page, `bills-${theme}-1280`);
@@ -134,7 +133,7 @@ test.describe('bills and subscriptions, writes', () => {
     await page.goto('/bills/subscriptions');
 
     // The API flags Adobe (confirmed 70 days ago) and not Spectrum for Sam. The client only
-    // renders the flag it is given (Requirements, "Subscriptions view").
+    // renders the flag it is given.
     const adobe = page.getByRole('listitem').filter({ hasText: 'Adobe Creative Cloud' });
     const spectrum = page.getByRole('listitem').filter({ hasText: 'Spectrum Internet' });
     await expect(adobe).toContainText('Still using this?');

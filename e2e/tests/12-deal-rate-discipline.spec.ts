@@ -5,27 +5,27 @@ import { flippRequestLines, serviceLogLines, urlOf, type ServiceLogLine } from '
 import { SEED } from '../support/env.ts';
 
 /**
- * Handoff, Phase 2 "Done when": "Rate discipline is observable in logs: one refresh per active
- * postal code, flyer items only for favorited merchants, serialized, backed off on failure."
+ * Rate discipline is observable in logs: one refresh per active postal code, flyer items only for
+ * favorited merchants, serialized, backed off on failure.
  *
- * E2E never calls Flipp live (non-negotiable 17): the Compose overlay points hearth-service at the
- * checked-in raw captures instead of `backflipp.wishabi.com` (`e2e/docker-compose.e2e.yml`,
+ * E2E never calls Flipp live: the Compose overlay points hearth-service at the checked-in raw
+ * captures instead of `backflipp.wishabi.com` (`e2e/docker-compose.e2e.yml`,
  * `HEARTH_FLIPP_FIXTURE_DIR`), so every "flipp request" log line this run has printed came from the
  * fixture transport.
  *
- * The raw captures only cover 27514 (Seed Data, "Deal fixtures"): `FlippDealSource.listMerchants`
- * also asks for the active flyers at whatever postal code it is given (it only lists a merchant if
- * it has one), so the earlier journeys' own households genuinely do reach Flipp for 27601 (Rivera
- * Family) and 27705 (Empty House) — and genuinely get a real "no data here" 404, exactly as the
- * live endpoint would answer for a location it has nothing for. That is not a fetch this suite
- * failed to avoid; it is the resilience path the wrapper is specified to have, and the discipline
- * this test can actually check is that even that path stays serialized and backs off correctly
- * rather than hammering the endpoint.
+ * The raw captures only cover 27514: `FlippDealSource.listMerchants` also asks for the active
+ * flyers at whatever postal code it is given (it only lists a merchant if it has one), so the
+ * earlier journeys' own households genuinely do reach Flipp for 27601 (Rivera Family) and 27705
+ * (Empty House) — and genuinely get a real "no data here" 404, exactly as the live endpoint would
+ * answer for a location it has nothing for. That is not a fetch this suite failed to avoid; it is
+ * the resilience path the wrapper is specified to have, and the discipline this test can actually
+ * check is that even that path stays serialized and backs off correctly rather than hammering the
+ * endpoint.
  *
  * This runs last, so it also covers everything earlier in the suite: journey 1's onboarding made
  * the one merchants-directory request every run needs, and journey 2's two theme runs searched a
  * warm `deal_query_cache` row each and made no request at all — the proof that a cache-served
- * action never reaches Flipp (Technical Architecture › "Rate discipline").
+ * action never reaches Flipp.
  */
 
 /**
@@ -54,9 +54,8 @@ test('deal search and flyer browsing keep the discipline the logs promise', asyn
     if (gapMs !== null) expect(gapMs as number).toBeGreaterThanOrEqual(500);
   }
 
-  // The merchant directory is one global, postal-code-agnostic request (Technical Architecture ›
-  // "Caching and storage"), fetched once no matter how many households' merchants screens the
-  // suite has opened by now.
+  // The merchant directory is one global, postal-code-agnostic request, fetched once no matter how
+  // many households' merchants screens the suite has opened by now.
   const merchantsLines = before.filter((line) => urlOf(line) === '/flipp/merchants');
   expect(merchantsLines).toHaveLength(1);
   expect(merchantsLines[0]?.['status']).toBe(200);
@@ -89,8 +88,7 @@ test('deal search and flyer browsing keep the discipline the logs promise', asyn
 
   // Oak Street's own postal code, 27514, is the one the captures cover: fetched once, ever, no
   // matter how many members or journeys open its Flyers screen — "no fetch is ever triggered
-  // directly by a user action that a cache could serve" (Technical Architecture › "Rate
-  // discipline").
+  // directly by a user action that a cache could serve".
   const FLYERS_URL = '/flipp/flyers?postal_code=27514';
   const afterFirstVisit = flippRequestLines(serviceLogLines());
   const flyersLines = afterFirstVisit.filter((line) => urlOf(line) === FLYERS_URL);
