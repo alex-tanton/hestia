@@ -186,3 +186,34 @@ Before pushing either branch again, run `git merge --no-edit claude/eloquent-may
 Next, in order: 05-09 (PR C, `apps/web` comments, about 476 lines), 05-10 (non-TS files, root configs, 46 test titles; also decide the 3 root config lines in `commitlint.config.js` and `eslint.config.js`), 05-11 (open and land PR C: owner merge), 05-12 (finish PR D: sync, maps, `.claude/CLAUDE.md`), 05-13 (land PR D and close the phase: owner merge).
 
 Open items for the owner: squash-merges of PR C and PR D; journey 7 e2e test (`e2e/tests/18-chores-and-errands-offline.spec.ts:140`) flaked once on `main` and passed on one approved rerun; if a PR touches `.github/workflows` and GitHub refuses for the `workflow` scope, use the `apply.sh` hand-off with `export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` on Windows Git Bash and a save-to-file invocation.
+
+### Start-up checklist and standing rules for the next session (read before dispatching executors)
+
+Start-up, in order:
+1. You must be on `claude/eloquent-mayer-szjtjf` at tip `origin/claude/eloquent-mayer-szjtjf` (`git fetch origin && git status -sb`). `main` carries only the older `.planning/` state, so do not read STATE from it.
+2. Run `/gsd-execute-phase 5`. Expected: 8 of 13 plans have SUMMARYs, 05-09 is ready (wave 6), and `blocked_by` is empty. The first dispatch is 05-09.
+3. Recreate the PR C worktree before 05-09 (the old ones lived in a previous container): `git fetch origin && git worktree add /home/user/hearth-citations refactor/drop-spec-citations` (if the branch is not checked out locally, `git worktree add -b refactor/drop-spec-citations /home/user/hearth-citations origin/refactor/drop-spec-citations`). For PR D later: `git worktree add -b docs/sync-specs /home/user/hearth-docs-sync origin/docs/sync-specs`. Use the same paths the plans and ledgers name. Tip check after adding: `refactor/drop-spec-citations` = `da58b20`, `docs/sync-specs` = `158fd52`.
+4. `config.json` has `workflow.use_worktrees: false`, so executors run one at a time on the primary checkout, with code branches in separate `git worktree` directories as above. Do not run two executors at once: they all commit to this branch.
+
+Corrections to the plan text:
+- Every plan names the working branch (WB) `claude/vigilant-gates-a4ihid`. That branch never existed. WB is `claude/eloquent-mayer-szjtjf` everywhere (plan files, ledgers and commands). Tell executors this in the dispatch prompt.
+- `.planning/` files go in the PRs (D-04), so each of `refactor/drop-spec-citations` and `docs/sync-specs` needs `git merge --no-edit claude/eloquent-mayer-szjtjf` run in its worktree before every push.
+
+Environment rules that earlier executors followed:
+- Use Node 24: `export PATH=/opt/node-v24/bin:$PATH` (default `node` there was 22.22; `/opt/node-v24/bin/node` is 24.21.0). Re-check it exists in a new container; otherwise install Node 24 per `.nvmrc`.
+- Commitlint (`commitlint.config.js`) allows scopes `web, service, shared, recurrence, matching, db, e2e, docker` or no scope; subjects must stay within the repo's length rule (keep to 71 characters or fewer). Never use `--no-verify`. Husky runs typecheck and lint-staged on every commit.
+- Commit planning files path-limited (`git commit -- <paths>`), then check the file mode of any script (`git ls-tree`); path-limited commits reset the executable bit, so run `git update-index --chmod=+x` first for scripts.
+- Leave the untracked `.planning/milestone.lock` alone (add `.planning/milestone.lock` to `.git/info/exclude` if the stop hook complains).
+- `GH_TOKEN` is passed through the environment for the session and is never written to a file, log or commit. It lacks the `workflow` scope, so pushes that add or change `.github/workflows/*` fail; use the D-22 hand-off (patches under `.planning/cleanup/patches/` plus an `apply.sh` for the owner). PR C and PR D should touch no workflow files, so none is expected.
+- Never rerun a CI job without the owner's explicit OK (registry `toomanyrequests` flakes are the only allowed exception, up to the number the plan states). A red job that is not a registry flake becomes a decision for the owner.
+- Never force-push, never merge a PR (the owner squash-merges), and never add files under `docs/` beyond editing the seven existing specs.
+
+Comment-only proof tooling for PR C (`.planning/cleanup/tools/`):
+- `citation-inventory.mjs` (modes `inventory`, `apply-pure`, `queue`), `comment-only-check.mjs` (compiler-print comparison, `--titles` mode, directive guard), `comment-only-controls.sh` (six self-checks).
+- In the controls output, controls 3, 4 and 6 are negative controls, so `FAIL FAIL` is the correct result for them. Controls 1, 2 and 5 must print `OK OK`.
+- Ledger: `.planning/cleanup/TEXT-SYNC-LEDGER.md`, with per-batch TSVs under `.planning/cleanup/text-sync/`. Citation recount at plan 05-06: 1,116 lines in 456 files (592 pure, 239 mixed, 240 prose, 45 titles); 340 service sites are done; 15 service test titles are deferred to 05-10.
+
+Open decisions already known for later plans: three root config lines (`commitlint.config.js` once, `eslint.config.js` twice) match the citation vocabulary and are outside every plan's scope so far, so decide in 05-10 whether to include them (D-09 names "the two root JS configs", so they likely belong there). The knip tool reports `.planning/cleanup/tools/expand-compare.mjs` and `jscpd-compare.mjs` as unused files; Phase 6's CI-01 must account for them.
+
+PR C wording the owner may want to look at when it opens: `services/bills.ts` `updateBillPayment` ("(autopay-logged ones included)") and `services/subscriptions.ts` `monthlyCents` (lists the conversion factors), both rewritten because the cited spec text could not be recovered.
+
