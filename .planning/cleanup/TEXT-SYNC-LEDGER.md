@@ -129,6 +129,7 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | seed-ts | `supabase/seed/*.ts` | 8 | 5 | 3 | 94756a9 | comment-only OK | gates OK |
 | e2e | `e2e/*.ts`, `e2e/tests`, `e2e/support`, `e2e/setup` | 115 | 72 | 42 | 7437ac5 | comment-only OK | gates OK |
 | service-http | `apps/service` routes, http, auth, db, gotrue, push, privileged, test helpers, top-level source, scripts, `vitest.coverage.config.ts` | 50 | 41 | 9 | 4b73f76 | comment-only OK | gates OK |
+| service-domain | `apps/service/src` services, chores, deals, jobs, notifications, recipes (non-test) | 184 | 134 | 50 | d210844 | comment-only OK | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -161,6 +162,13 @@ tests-before-c.service-unit=757
 service-role fence, dispatch step 1, no nagging for overdue chores, password re-verification, no live
 outbound fetch in tests, the 80% target). Service unit suite after: 757 passed. The commit subject
 was shortened to 66 characters before the first push (phase rule 4).
+
+`service-domain` notes: 57 files; the 184 sites are 134 `pure`, 41 `mixed` and 9 `prose` rows of the base
+inventory (no `title`). The 50 rewritten sites keep their rules as plain words (equal weighting and
+half-up rounding in `readiness.ts`, the no-backfill rule in `log-autopay.ts`, the rotation and
+undo rules in `chores.ts`, the rate discipline in the Flipp wrapper, the integer-cents rule in
+`deals/money.ts`, the notification kinds in `notifications/copy.ts`). Service unit suite after: 757
+passed.
 
 ## Titles
 
