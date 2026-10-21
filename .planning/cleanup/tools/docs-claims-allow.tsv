@@ -29,3 +29,6 @@ supabase/setup-cli@v3	GitHub Action reference used by .github/workflows/ci.yml, 
 virtual:pwa-register/react	build-time virtual module of vite-plugin-pwa, not a file
 import('../privileged/…')	syntax example of a dynamic import, with an ellipsis for the file
 **/*.test.ts,**/*.test.tsx,**/*.spec.ts	comma-joined ignore globs of the jscpd command, not a path
+components/icons	named in a negation: the doc says no such directory exists in the web app
+Dialog.tsx	named in a negation: the doc says there is no general-purpose Dialog.tsx, only the alert-dialog wrapper
+lg:pl-56	Tailwind utility class, not a script (the colon makes it look like one)
