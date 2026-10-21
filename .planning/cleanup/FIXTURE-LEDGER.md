@@ -36,15 +36,15 @@ One row per cross-file test clone pair of the `05-02-before` scan that has a sid
 | 4 | `apps/service/src/api.integration.test.ts` 32-53 | `apps/service/src/lists.integration.test.ts` 21-42 | 22 | A | removed | 948432f |
 | 5 | `apps/service/src/api.integration.test.ts` 32-60 | `apps/service/src/notifications.integration.test.ts` 20-41 | 29 | A | removed | 948432f |
 | 6 | `apps/service/src/api.integration.test.ts` 39-57 | `apps/service/src/match-overrides.integration.test.ts` 21-38 | 19 | A | removed | 948432f |
-| 7 | `apps/service/src/chores.integration.test.ts` 7-40 | `apps/service/src/errands.integration.test.ts` 6-38 | 34 | A | pending | |
-| 8 | `apps/service/src/chores.integration.test.ts` 56-67 | `apps/service/src/errands.integration.test.ts` 45-54 | 12 | A | pending | |
+| 7 | `apps/service/src/chores.integration.test.ts` 7-40 | `apps/service/src/errands.integration.test.ts` 6-38 | 34 | A | removed | b3bf88f |
+| 8 | `apps/service/src/chores.integration.test.ts` 56-67 | `apps/service/src/errands.integration.test.ts` 45-54 | 12 | A | kept: createHome differs; chores adds `extraMembers` and a `members` list, errands returns a smaller `Home`, so only the 12-line prefix (admin sign-up, household POST) is shared | |
 | 9 | `apps/service/src/dispatch-notifications.integration.test.ts` 36-55 | `apps/service/src/jobs.integration.test.ts` 49-68 | 20 | B | pending | |
 | 10 | `apps/service/src/dispatch-notifications.integration.test.ts` 36-47 | `apps/service/src/jobs/scheduler.test.ts` 25-36 | 12 | B | pending | |
 | 11 | `apps/service/src/dispatch-notifications.integration.test.ts` 37-46 | `apps/service/src/jobs/dispatch-notifications.test.ts` 110-119 | 10 | B | pending | |
-| 12 | `apps/service/src/lists.integration.test.ts` 19-42 | `apps/service/src/match-overrides.integration.test.ts` 10-34 | 24 | A | pending | |
-| 13 | `apps/service/src/lists.integration.test.ts` 89-100 | `apps/service/src/meal-plan.integration.test.ts` 119-132 | 12 | A | pending | |
-| 14 | `apps/service/src/match-overrides.integration.test.ts` 29-42 | `apps/service/src/meal-plan.integration.test.ts` 37-50 | 14 | A | pending | |
-| 15 | `apps/service/src/meal-plan.integration.test.ts` 42-60 | `apps/service/src/readiness.integration.test.ts` 54-72 | 19 | A | pending | |
+| 12 | `apps/service/src/lists.integration.test.ts` 19-42 | `apps/service/src/match-overrides.integration.test.ts` 10-34 | 24 | A | removed | b3bf88f |
+| 13 | `apps/service/src/lists.integration.test.ts` 89-100 | `apps/service/src/meal-plan.integration.test.ts` 119-132 | 12 | A | kept: `itemNamed` differs; meal-plan's error also lists the items it saw, and `createList` has a different default name | |
+| 14 | `apps/service/src/match-overrides.integration.test.ts` 29-42 | `apps/service/src/meal-plan.integration.test.ts` 37-50 | 14 | A | removed | b3bf88f |
+| 15 | `apps/service/src/meal-plan.integration.test.ts` 42-60 | `apps/service/src/readiness.integration.test.ts` 54-72 | 19 | A | kept: `addPantryItem` differs (returns void in meal-plan, the item in readiness) and readiness reassigns its own `app`, so a stack-bound `favoriteStore` in the helper would read an `app` readiness never sets | |
 
 ## Test counts
 
@@ -60,17 +60,32 @@ here (no Supabase stack); their counts are compared in PR B's CI (05-05).
 | ----- | ----- | ------ | ---------------- | ---------- | --------------- | ---- |
 | 05-02-before | `base=` | 99 | 1472 | 61 | 50 | before any edit |
 | 05-02-t1 | after commit 948432f | 98 | 1459 | 60 | 49 | api on the shared hooks |
+| 05-02-t2a | after commit b3bf88f | 90 | 1241 | 52 | 41 | seven files on the hooks, three on `expectStatus` only; step 4 moved nothing |
+| 05-02-t2 | same tree as t2a | 90 | 1241 | 52 | 41 | identical totals to t2a |
 
 Reports: `.planning/cleanup/jscpd/phase5-{label}/jscpd-report.json`; read them with
 `node .planning/cleanup/tools/jscpd-compare.mjs {report} --list cross-test --root ../hearth-fixtures-wip`.
 
 ## Gates
 
+Hook variants (diffs in `.planning/cleanup/logs/05-02-variant-{name}.diff`, gitignored): api is
+identical to the helper; bills, chores, errands, lists, match-overrides, meal-plan and notifications
+differ only by the explanatory comment above the `beforeEach` app (it lives in the helper now);
+readiness keeps its hooks (its `beforeAll` also deletes the rows for six hardcoded postal codes, and
+its tests and one nested `beforeAll` reassign `app`, which an imported binding cannot do); deals
+builds its app with an injected deals service and recipes builds one app per test, so both keep their
+hooks. All eleven integration files import `expectStatus`; none defines its own.
+
 Task 1 (`../hearth-fixtures-wip` at 948432f): service typecheck passes; `eslint --max-warnings=0` and
 `prettier --check` pass on `stack-hooks.ts` and `api.integration.test.ts`; the service unit suite
 reports 757 passed (log `05-02-t1-service-unit.log`); the pre-commit hook (lint-staged, root
 typecheck) and commitlint pass. A throwaway test confirmed that an exported `let` reassigned in a
 `beforeEach` registered by a helper module is read live by the importing test file.
+
+Task 2 (`../hearth-fixtures-wip` at b3bf88f): service typecheck, `eslint --max-warnings=0` and
+`prettier --check` over `apps/service/src` pass; the unit suite reports 757 passed
+(`05-02-t2-service-unit.log`); per touched file the count of lines matching the citation vocabulary
+equals the base, and the count of `it`/`describe`/`test` declarations equals the base.
 
 ## CI
 
