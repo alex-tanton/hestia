@@ -10,7 +10,8 @@
  * that start with `/`, `~` or `@` (host paths, URL routes and package names), and bare words.
  * A path-like token (a `/`, a known extension, a dot-file or a tracked top-level name) must match
  * `git ls-files` exactly, then as a directory prefix, then as one unique suffix; an ambiguous
- * suffix is reported as `ambiguous`. A token with `*` is matched as a glob against the end of a tracked path.
+ * suffix is reported as `ambiguous`. A token with `*` is matched as a glob against a tracked path
+ * or one of its directories.
  * A `pnpm` token resolves its script against the root package.json, or, with `--filter {name}`,
  * against that workspace; `-r` accepts any workspace. A bare token shaped like `test:coverage` is
  * a script name and must exist in some workspace.
@@ -111,7 +112,7 @@ function checkPath(raw) {
     const source = token
       .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
       .replace(/\*\*|\*/g, (star) => (star === '**' ? '.*' : '[^/]*'));
-    const rx = new RegExp(`(^|/)${source}$`);
+    const rx = new RegExp(`(^|/)${source}(/|$)`);
     return tracked.some((path) => rx.test(path)) ? undefined : 'missing';
   }
   if (trackedSet.has(token)) return undefined;
