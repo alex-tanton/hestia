@@ -184,7 +184,41 @@ Plans:
   4. The 262 stale spec citations are removed as comment-only edits, verified by identical transformed output, with `supabase/migrations/` untouched.
   5. `docs/` and `.planning/codebase/` match the code: statements spot-checked against the repo hold (for example, `hearth-admin` is described as hand-written), and no review, decision-log, or ADR file was added under `docs/`.
 
-**Plans**: TBD
+**Plans:** 13 plans
+
+Plans:
+**Wave 1**
+- [ ] 05-01-PLAN.md — PR A content: tracer composite setup action in all six jobs (expansion proof), seed typecheck once, Dependabot directory, two workflow comments; push with GH_TOKEN or owner patch hand-off
+- [ ] 05-02-PLAN.md — PR B content, service: tracer shared integration stack hooks, every integration file on them, shared job logger; jscpd at most 90
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 05-03-PLAN.md — PR A landing: open, six green jobs, before/after job steps from CI, owner squash merge
+- [ ] 05-04-PLAN.md — PR B content, web: tracer browser stubs, cluster C helpers, household clock, WithQueue, deals table; jscpd at most 80
+
+**Wave 3** *(blocked on Wave 2 completion and on the owner's merge of PR A)*
+- [ ] 05-05-PLAN.md — PR B landing: WB sync past PR A (workflow-scope ladder), cherry-picked head, final scan below 96, six green jobs, owner merge
+
+**Wave 4** *(blocked on Wave 3 completion and on the owner's merge of PR B)*
+- [ ] 05-06-PLAN.md — PR C start: tracer recount and proof tools with negative controls, packages, seed and E2E TypeScript cleared
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 05-07-PLAN.md — PR C: apps/service comments cleared in three proven batches
+- [ ] 05-08-PLAN.md — PR D content: docs claims checker, claim-by-claim audit of the seven specs, README citations, behavioral sample
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 05-09-PLAN.md — PR C: apps/web comments (incl. JSX) cleared in three proven batches
+
+**Wave 7** *(blocked on Wave 6 completion)*
+- [ ] 05-10-PLAN.md — PR C: non-TS code and config files, recipe HTML fixtures, and the 46 test titles in their own commit
+
+**Wave 8** *(blocked on Wave 7 completion)*
+- [ ] 05-11-PLAN.md — PR C landing: whole-range proof, post-condition, six green jobs, owner merge
+
+**Wave 9** *(blocked on Wave 8 completion and on the owner's merge of PR C)*
+- [ ] 05-12-PLAN.md — PR D finish: docs for this phase's files, map regeneration (operator), D-11 Comments text, CLAUDE.md regenerated, RED-04 count restated
+
+**Wave 10** *(blocked on Wave 9 completion)*
+- [ ] 05-13-PLAN.md — PR D landing and phase close: repo-wide post-conditions, phase index, six green jobs, owner merge
 
 ### Phase 6: CI Enforcement and Lock-in
 
@@ -212,5 +246,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
-| 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
+| 5. Redundancy Reduction and Text Sync | 0/13 | Planned | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |
