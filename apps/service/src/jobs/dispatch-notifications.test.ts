@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { recordingJobLogger, type JobLogLine } from '../test/job-logger.js';
 import { RecordingPushTransport } from '../test/push-double.js';
 import {
   deepLinkFor,
@@ -9,7 +10,6 @@ import {
   type ExpiredNotification,
   type PushSubscriptionRecord,
 } from './dispatch-notifications.js';
-import type { JobLogger } from './types.js';
 
 /*
  * The send step (Technical Architecture, "Scheduled jobs" › "Dispatch", "Failure handling").
@@ -99,29 +99,10 @@ class MemoryOutbox implements DispatchOutbox {
   }
 }
 
-interface Line {
-  level: string;
-  data: Record<string, unknown>;
-  message: string;
-}
-
-function recordingLogger(): { logger: JobLogger; lines: Line[] } {
-  const lines: Line[] = [];
-  const record = (level: string) => (data: Record<string, unknown>, message: string) => {
-    lines.push({ level, data, message });
-  };
-  const self: JobLogger = {
-    info: record('info'),
-    warn: record('warn'),
-    error: record('error'),
-    child: () => self,
-  };
-  return { logger: self, lines };
-}
-
 function harness(outbox: MemoryOutbox) {
   const transport = new RecordingPushTransport();
-  const { logger, lines } = recordingLogger();
+  const lines: JobLogLine[] = [];
+  const logger = recordingJobLogger(lines);
   const run = () => runDispatchNotifications({ outbox, transport, logger });
   return { transport, lines, run };
 }
@@ -142,7 +123,7 @@ describe('claim, then send', () => {
     const events: string[] = [];
     const outbox = new MemoryOutbox([row({ id: 'n1' })], [], events);
     const transport = eventedTransport(events);
-    const { logger } = recordingLogger();
+    const logger = recordingJobLogger([]);
 
     await runDispatchNotifications({ outbox, transport, logger });
 
