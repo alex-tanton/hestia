@@ -321,3 +321,21 @@ The final `Tests  N passed` line of the `test-integration` job (the coverage run
 suite, 76 files) is 1190 on PR B's head (job 119425701010, log `05-05-pr-test-integration.log`) and
 1190 on `main`'s last green run (run 39653516611 attempt 2 on `ac8ef34`, job 119414327218, log
 `05-05-main-test-integration.log`). The integration files on the shared hooks execute every test.
+
+## Merge (05-05)
+
+The owner squash-merged PR #27 on 2026-10-21 at 19:23:45Z with the title
+`test: share integration and web test fixtures`.
+
+pr-b-merged=a660d58101321dbfa0d98c2ceb93783e06ed161c
+
+### main's CI on the squash commit
+
+`CI` run 39661257811 on `a660d58` (event push, branch main), attempt 1, concluded `success` with no
+rerun. Job ids: build 119434530306, lint 119434530627, typecheck 119434530446, test-unit
+119434530598, test-integration 119434530316, test-e2e 119434530606.
+
+main-ci-after-b=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=39661257811
+
+Deploy run 39662881431 for `a660d58` was `pending` (waiting for the self-hosted `hearth` runner, as
+for any merge) when last read.
