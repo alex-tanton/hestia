@@ -4,10 +4,10 @@ current_phase: 5
 current_phase_name: Redundancy Reduction and Text Sync
 status: planning
 stopped_at: Phase 4 complete, ready to plan Phase 5
-last_updated: "2026-10-21T00:49:32.266Z"
+last_updated: "2026-10-21T03:47:26.590Z"
 last_activity: 2026-10-21
 last_activity_desc: Phase 4 complete, transitioned to Phase 5
-state_head: 6358a06ceb743c16968d3b6da2bfacc70e5ec7de
+state_head: 0a9d89dcd449d3738e27645d66d0648b98d554f1
 progress:
   total_phases: 6
   completed_phases: 4
@@ -137,6 +137,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 261020-v7v | Fix WR-02: hold the deal-add item id at QueryClient scope (branch fix/held-deal-id, pushed, no PR, awaiting the owner's merge) | 2026-10-20 | c69569a | [261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien](./quick/261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien/) |
 | 261020-wnk | CI: pull the Supabase E2E images from GHCR first with ECR fallback, plus GHCR and optional Docker Hub logins (branch ci/pull-supabase-from-ghcr, 2 local commits, NOT pushed: token lacks workflow scope; no PR) | 2026-10-20 | d25d8e6 | [261020-wnk-make-ci-image-pulls-robust-against-regis](./quick/261020-wnk-make-ci-image-pulls-robust-against-regis/) |
+| 3 | Document the cloud-sandbox CA workaround for running e2e (.claude/CLAUDE.md, branch claude/admiring-cerf-5q7am1, not pushed) | 2026-10-21 | 0a9d89d | — |
 
 ## Deferred Items
 
