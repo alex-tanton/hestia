@@ -1,165 +1,227 @@
 ---
-last_mapped_commit: b96ca32ac1130c09f8aa3066d715181ddf3fb31a
-last_mapped_at: 2026-10-11
+last_mapped_commit: 431e646ab110c804b7229cecc9e151d343790b3a
+last_mapped_at: 2026-10-21
 ---
 # Codebase Concerns
 
-**Analysis Date:** 2026-10-11
+**Analysis Date:** 2026-10-21
 
 ## Tech Debt
 
-**Date-dependent end-to-end and unit tests:**
-- Issue: Tests read the wall clock directly (about 28 `new Date()` / `Date.now()` call sites across `e2e/` and `apps/*/src/**/*.test.*`). The most recent commit `b96ca32` fixed an E2E helper, `firstMealOn()` in `e2e/tests/19-notifications.spec.ts`, that threw on any day without a seeded dinner (Saturdays), aborting the journey and leaking state into later tests. Other date-keyed fixtures may share the weakness; this was not audited test by test.
-- Files: `e2e/tests/19-notifications.spec.ts`, `apps/web/src/screens/chores/household-timezone.test.tsx`, `apps/web/src/screens/bills/household-timezone.test.tsx`
-- Impact: Failures that depend on the day of the week or the household timezone appear and disappear with the calendar, which makes CI flaky and hides real regressions.
-- Fix approach: Pin "now" with fake timers or a fixed clock seed in unit and component tests. In E2E, derive expected days from the seeded data rather than assuming a weekday, and add a test that runs the suite under a non-default clock.
+**Unchecked type casts on Kysely query results:**
+- Issue: Two query results are force-cast through `unknown` instead of being typed by the query builder.
+- Files: `apps/service/src/services/deals/storage.ts` (lines ~181 and ~198, `as unknown as DealRow[]`)
+- Impact: The compiler no longer verifies that the selected `DEAL_COLUMNS` match `DealRow`. A column rename in the schema or the select list would type-check and fail at runtime.
+- Fix approach: Use `.$castTo<DealRow>()` or a `selectAll`/explicit `select` typed against `Database`, and add an integration test that round-trips a deal row.
 
-**Cloned schema defaults in shared API contracts:**
-- Issue: Zod `.default(...)` on a field pulls the default in whenever a key is absent. Combined with `.partial()`, this silently rewrites stored values. The bug fixed in `1030b35` made any partial `PATCH /bills/:id` reset six bill fields to their create-time defaults. The fix builds the update schema from `billFieldsSchema.shape` with the defaults unwrapped.
-- Files: `packages/shared/src/api/bills.ts` (lines 77-84 define the defaults, 97-118 the workaround), `packages/shared/src/api/membership.ts:39`, `packages/shared/src/api/deals.ts:82-148`, `apps/service/src/services/bills.ts`
-- Impact: Any new PATCH schema built with `.partial()` on a schema that has defaults reproduces the data-loss bug, and the failure is silent.
-- Fix approach: Add a rule to the shared package: PATCH/update schemas must be derived from unwrapped field shapes, never from `.partial()` on a create schema. Cover each new PATCH schema with a test that sends `{ name }` alone and asserts other columns are unchanged, which is the pattern in `95b0bd2`.
+**Dead-code and unused-export scan is not enforced:**
+- Issue: `knip` is configured (`knip.json`, `package.json` scripts `knip`, `knip:production`, `knip:summary`) but is report-only and not run in `.github/workflows/ci.yml`.
+- Files: `knip.json`, `package.json`, `.github/workflows/ci.yml`
+- Impact: Unused files, exports, and dependencies accumulate silently. This is the main vector for the dead-code cleanup the milestone targets.
+- Fix approach: Run `pnpm knip` once, triage results into removals versus ambiguous cases, then add a CI step (or a documented pre-merge step) so regressions are caught.
 
-**Remaining known transitive vulnerability:**
-- Issue: `braces` is still present as a transitive dev dependency. Commit `b96ca32` says it "has no upstream patch yet and remains, confirmed against the live advisory." The other three findings were cleared by bumping dependencies and adding `pnpm.overrides` for `esbuild` 0.28.2 in `package.json`.
-- Files: `pnpm-lock.yaml`, `package.json` (`pnpm.overrides`)
-- Impact: Build-time and dev-tool exposure only. It is not in the production runtime path as far as the repo shows.
-- Fix approach: Re-run `pnpm audit` on a schedule and add a pnpm override once a patched `braces` release exists. Record the accepted risk in this file until then.
+**Swallowed errors in offline write queueing:**
+- Issue: The queue helpers resolve to `undefined` on any mutation failure, so callers cannot distinguish "queued and failed" from "succeeded with no data".
+- Files: `apps/web/src/lib/offline/chore-errand-writes.ts` (`mutation.execute(variables).catch(() => undefined)`, lines ~139 and ~152), `apps/web/src/lib/error-reporting.ts` (line ~29), `apps/web/src/screens/settings/NotificationTypes.tsx` (line ~96)
+- Impact: Failed chore or errand writes can disappear without any user-visible signal or error record. Silent failures are hard to diagnose during manual review.
+- Fix approach: Record the failure through the existing error-reporting path and surface a toast or retry state; add a regression test that a rejected online write is reported.
 
-**Accessibility suppression:**
-- Issue: One ESLint rule is disabled inline for `jsx-a11y/no-noninteractive-element-interactions`.
-- Files: `apps/web/src/components/chores/RotationEditor.tsx:132`
-- Impact: The suppressed element may be unreachable by keyboard or screen reader.
-- Fix approach: Replace the interactive handler on a non-interactive element with a real `button` or `role` plus keyboard handling, then remove the suppression.
+**Coverage and test-harness files in the repo tree:**
+- Issue: Generated HTML coverage reports exist under `packages/recurrence/coverage/` (e.g. `rotation.ts.html`, `occurrence.ts.html`). `coverage/` is ignored by `.gitignore`, so they are local artifacts only, but they are present in the working tree of the checkout.
+- Files: `packages/recurrence/coverage/`, `.gitignore`
+- Impact: Low for git history, but they inflate directory listings and searches (`rg`, Glob) and confuse exploration tooling.
+- Fix approach: Delete the local coverage directories before review; consider `pnpm clean` that removes every `coverage/` directory.
 
-**Large files:**
-- Issue: Several integration test files exceed 800 lines, and the service composition files are large.
-- Files: `apps/service/src/api.integration.test.ts` (1165 lines), `apps/service/src/lists.integration.test.ts` (1087), `apps/service/src/jobs.integration.test.ts` (956), `apps/service/src/db/policies.integration.test.ts` (929), `apps/service/src/services/bills.ts` (533), `apps/service/src/privileged/scheduled-reminders.ts` (495)
-- Impact: Harder to review and slower to change safely. Not a correctness issue by itself.
-- Fix approach: Split by domain when next touched. Keep shared fixtures in `apps/service/src/test/`.
+**Large data and fixture files in source trees:**
+- Issue: `packages/shared/src/data/common-passwords.ts` is ~10,000 lines and `apps/web/src/test/meal-fixtures.ts` is ~560 lines, both inside source directories.
+- Files: `packages/shared/src/data/common-passwords.ts`, `apps/web/src/test/meal-fixtures.ts`
+- Impact: Inflates diff reviews and bundle analysis if the password list is imported into the client bundle through `@hearth/shared`.
+- Fix approach: Confirm the web bundle does not include the password list (tree-shaking through the barrel `packages/shared/src/index.ts`). If it does, move it behind a service-only entry point.
+
+**Large modules with mixed responsibilities:**
+- Issue: Several files exceed 400 lines and combine validation, queries, and business rules.
+- Files: `apps/service/src/services/bills.ts` (~533 lines), `apps/service/src/chores/chores.ts` (~506), `apps/service/src/privileged/scheduled-reminders.ts` (~495), `apps/service/src/deals/flipp/flipp-deal-source.ts` (~470), `apps/web/src/screens/lists/ListDetailScreen.tsx` (~452), `apps/service/src/services/lists.ts` (~403), `apps/web/src/lib/api/meal-hooks.ts` (~395), `apps/service/src/services/deals/deals.ts` (~391), `apps/web/src/screens/chores/ChoreFormScreen.tsx` (~383)
+- Impact: Harder to review and to test in isolation; higher chance of regressions when touched.
+- Fix approach: Split along the existing seams (query layer, rules, presentation) only when a bug fix or feature touches the file; do not refactor speculatively.
 
 ## Known Bugs
 
-**Offline list writes can duplicate on replay:**
-- Symptoms: A queued add-item mutation that replays after a reload or a dropped response could create a second item.
-- Files: `apps/web/src/lib/offline/write-queue.ts`, `apps/web/src/lib/offline/use-write-queue.ts`, `apps/web/src/lib/offline/list-cache.ts`
-- Trigger: The write is sent, the response is lost (network drop, tab closed), and the paused mutation is retried. The write-queue module header states "no server-side dedupe", so nothing on the server recognises the second request.
-- Workaround: None in code. Users can delete the duplicate row.
-
-**Recipe and deal behaviour depends on unofficial Flipp endpoints:**
-- Symptoms: Deal search and flyers stop returning data if the upstream changes its response shape or host.
-- Files: `apps/service/src/deals/flipp/flipp-deal-source.ts`, `apps/service/src/deals/flipp/normalized-fixtures.ts`, `apps/service/src/deals/flipp/request-queue.ts`, CSP image hosts in `docker/Caddyfile`
-- Trigger: Upstream schema change or throttling. Fixtures under `e2e/fixtures/flipp/` cover the shape as captured, so drift is detected only by re-capture.
-- Workaround: `HEARTH_FLIPP_FIXTURE_DIR` swaps in captured fixtures, used only by the E2E overlay.
+No open bug entries are recorded in the repository at this time. `docs/` is the source of truth for documented bugs; check the milestone plan under `.planning/` before assuming a defect is tracked.
 
 ## Security Considerations
 
-**Public auth endpoints reachable through the gateway:**
-- Risk: Caddy refuses `POST /auth/v1/signup*` and `PUT /auth/v1/user*` at the proxy. Every other GoTrue path under `/auth/v1/*` is proxied to Kong, which only checks the `apikey` (anon or service-role key). The anon key is public by design in the web bundle, so any GoTrue route Kong allows for `anon` is reachable from the internet through Funnel. Enforcement of "signup and password change go only through hearth-service" depends on the Caddy path matcher, which must keep matching the refused routes after any Caddy or Kong change.
-- Files: `docker/Caddyfile` (`@refused_signup`, `@refused_user`, `@kong`), `docker/kong.yml` (`auth-v1-all`, ACL `allow: [admin, anon]`)
-- Current mitigation: Refusal rules in Caddy, the ACL, and an E2E test that asserts the refusal (`e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts`), plus magic-link disabled (`e2e/tests/07-magic-link-disabled.spec.ts`).
-- Recommendations: Enumerate which GoTrue paths the `anon` ACL actually needs, and deny the rest in Kong, not only in Caddy. Extend `08-caddy-refuses-gotrue-endpoints.spec.ts` to cover the full list of refused paths.
+**Recipe import fetch: validated DNS, pinned connection:**
+- Risk: Recipe import fetches user-supplied URLs server-side (SSRF surface).
+- Files: `apps/service/src/recipes/fetch-recipe.ts`, `apps/service/src/recipes/private-address.ts`
+- Current mitigation: Only `http`/`https` are accepted (`parseFetchableUrl`); every resolved address is checked against private, loopback, and link-local ranges (including `169.254.0.0/16`); the connection is pinned to the validated address via a custom `lookup` to block DNS rebinding; redirects are refused; per-host rate limiting in `apps/service/src/recipes/host-rate-limiter.ts`.
+- Recommendations: Confirm the private-range table covers IPv6 (`::1`, `fc00::/7`, `fe80::/10`, IPv4-mapped `::ffff:` forms) with a unit test in `apps/service/src/recipes/private-address.test.ts`. Add a regression test for an IPv4-mapped IPv6 literal if one is missing.
 
-**Content-Security-Policy allows inline styles:**
-- Risk: `style-src 'unsafe-inline'` weakens CSP against style injection. Script execution is still restricted by `script-src 'self'`.
-- Files: `docker/Caddyfile` (`header` block)
-- Current mitigation: `script-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`.
-- Recommendations: Move inline styles to hashed or nonce'd style, or accept the risk explicitly and document it in `docs/architecture.md`.
+**Trusted proxy configuration controls client IP:**
+- Risk: `trustProxy` decides which address the per-IP rate limiter sees. A misconfigured `HEARTH_TRUSTED_PROXIES` lets clients spoof `X-Forwarded-For` and bypass `/api/*` rate limits, or makes all clients share one bucket.
+- Files: `apps/service/src/app.ts` (line ~95, `trustProxy: options.trustedProxies.length > 0 ? ... : false`), `apps/service/src/main.ts` (line ~113), `apps/service/src/env.ts`, `.env.example`
+- Current mitigation: Trust is off by default; the value is validated by Zod at startup.
+- Recommendations: Document the exact expected value for the Compose topology (Caddy on the Docker network) in `README.md`, and add an env-validation test that rejects `0.0.0.0/0`-style wildcards.
 
-**Service-role key scope:**
-- Risk: The service-role key bypasses RLS. Its use is meant to be limited to the privileged modules, but it also appears outside them.
-- Files: `apps/service/src/routes/users.ts`, `apps/service/src/http/context.ts`, `apps/service/src/cli.ts`, `apps/service/src/main.ts`, `apps/service/src/privileged/*.ts`
-- Current mitigation: The `privileged/` directory and `jwt.ts` verification gate the access; `docker/db/hearth-service-login.sql` limits the database role `hearth_service`.
-- Recommendations: Audit each import of the service-role client against the RLS rule in `docs/architecture.md`, and add a lint rule or test that restricts it to `apps/service/src/privileged/`.
+**Test-only seams gated by environment variables:**
+- Risk: `HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`, and `HEARTH_PUSH_TRANSPORT=test-double` replace real external transports. If set in production they would serve fixtures and fake push delivery.
+- Files: `apps/service/src/main.ts` (lines ~56-90), `apps/service/src/app.ts` (`testSeam` option, line ~50), `apps/service/src/push/test-seam.ts`, `apps/service/src/env.ts`
+- Current mitigation: Documented as E2E-only; the push test route is registered only when the switch is `test-double`; the production Compose file does not set them.
+- Recommendations: Have `env.ts` refuse these variables when `NODE_ENV=production` or when `HEARTH_ORIGIN` is the public origin, and add a test that asserts the refusal.
 
-**Deploy runs on the production host from `main`:**
-- Risk: The `deploy.yml` job runs on a self-hosted runner on the production box, checking out the commit that passed CI. It runs migrations against the live database and restarts containers. Image rollback does not reverse migrations.
-- Files: `.github/workflows/deploy.yml`, `scripts/deploy.sh`, `docker/db/hearth-service-login.sql`
-- Current mitigation: Trigger limited to successful `push` to `main`; the job re-checks the CI run event; a backup runs before migrations; health gate with automatic image rollback.
-- Recommendations: Require that every migration be backward compatible with the previous image, or document the manual restore procedure in `docs/deploy.md`. The database password is passed on the `supabase migration up --db-url` command line, so it appears in process listings and in any `set -x` trace; prefer an environment variable or a `.pgpass` file.
+**Service-role access surface:**
+- Risk: `service_role` bypasses RLS. Any code path that reaches `apps/service/src/privileged/` outside its intended callers widens the blast radius of an injection or logic error.
+- Files: `apps/service/src/privileged/service-role-db.ts`, `apps/service/src/privileged/gotrue-admin.ts`, `apps/service/src/privileged/job-database.ts`, `eslint.config.js`
+- Current mitigation: ESLint `no-restricted-imports` fences the module to `main.ts`, `cli.ts`, and narrow injected functions.
+- Recommendations: Keep the lint rule in CI (it runs under `pnpm lint`); add an integration test that a `service_role` session cannot be obtained from a route handler.
 
-**Backups stay on the host:**
-- Risk: The backup container writes to `BACKUP_DIR` on the same machine as the database, so a disk or host loss removes both.
-- Files: `docker/docker-compose.yml`, `apps/service/src/env.ts` (`BACKUP_DIR`), `apps/service/src/services/backups.ts`
-- Current mitigation: System health reports the newest backup time.
-- Recommendations: Confirm an off-host copy exists (not visible in the repo) and document its location and restore test in `docs/deploy.md`.
+**Error recording writes as `anon`:**
+- Risk: `recordAppError` writes through `public.record_app_error` using the `anon` role. Any unauthenticated caller path that can trigger error records can fill the table.
+- Files: `apps/service/src/db/user-db.ts` (`withAnonDb`), `apps/service/src/services/errors.ts`, `supabase/migrations/20260919070200_functions.sql`
+- Current mitigation: Raw names, messages, and routes are scrubbed (`packages/shared/src/scrub.ts`); 5xx details are not returned to clients.
+- Recommendations: Confirm `record_app_error` enforces a row cap or per-fingerprint rate limit in SQL; if not, add one and a test.
+
+**Post-deploy health check and rollback:**
+- Risk: Deploy health gating depends on `GET /api/health` through Caddy within 60 seconds; a passing health check on a broken write path would not roll back.
+- Files: `scripts/deploy.sh`, `.github/workflows/deploy.yml`
+- Current mitigation: The script rolls back both images on health failure and aborts before restart on build, backup, or migration failure. The deploy job re-checks the CI run came from a push to `main`.
+- Recommendations: Add a smoke check that exercises an authenticated read after deploy. Note that migrations are applied before the health gate and are not rolled back automatically; the pre-deploy backup in `scripts/deploy.sh` is the only recovery path.
 
 ## Performance Bottlenecks
 
-**Deal refresh fan-out:**
-- Problem: Refreshing deals issues upstream Flipp requests that scale with the number of stores and searches.
-- Files: `apps/service/src/jobs/refresh-deals.ts`, `apps/service/src/deals/flipp/request-queue.ts`, `apps/service/src/services/deals/cache.ts`
-- Cause: Requests are throttled by a queue with a fixed gap, so a larger store list means a longer refresh.
-- Improvement path: Batch by store, and keep the request queue's rate gap. Measure with the existing fixtures before changing the schedule.
+**In-process job scheduling and in-memory queues:**
+- Problem: The Flipp request queue, the recipe host rate limiter, and deal skip rates live in process memory.
+- Files: `apps/service/src/deals/flipp/request-queue.ts`, `apps/service/src/recipes/host-rate-limiter.ts`, `apps/service/src/services/skip-rates.ts`, `apps/service/src/main.ts`
+- Cause: Designed for one service process (`ARCHITECTURE.md` assumption). Advisory locks in `apps/service/src/jobs/advisory-lock.ts` only prevent overlapping job runs, not multi-instance rate-limit sharing.
+- Improvement path: Keep the single-instance constraint explicit in `docs/architecture.md`; if horizontal scaling is ever needed, move these limiters to Postgres or Redis.
 
-**Recipe host rate limiting is per host, in memory:**
-- Problem: `HostRateLimiter` keeps state in process memory, so it resets on restart and does not apply across multiple service instances.
-- Files: `apps/service/src/recipes/host-rate-limiter.ts`
-- Cause: Single-process design, consistent with the single-box deployment.
-- Improvement path: Acceptable while the service is a single container. Move to a shared store only if the service is scaled out.
+**Notification dispatch and deal refresh loops:**
+- Problem: `apps/service/src/jobs/dispatch-notifications.ts` and `apps/service/src/jobs/refresh-deals.ts` iterate households and items in application code.
+- Files: `apps/service/src/jobs/dispatch-notifications.ts`, `apps/service/src/jobs/refresh-deals.ts`, `apps/service/src/privileged/scheduled-reminders.ts`
+- Cause: Per-row work inside a loop; no batching visible in these modules at the sampled depth.
+- Improvement path: Measure against seeded data (`supabase/seed/`) before changing; batch writes only if measurements show a problem.
+
+**Client persisted query cache:**
+- Problem: TanStack Query state is persisted to IndexedDB on every change through `idb-keyval`.
+- Files: `apps/web/src/lib/offline/persist.ts`, `apps/web/src/lib/api/query-client.ts`
+- Cause: Whole-cache serialization on write.
+- Improvement path: Confirm persistence is throttled; limit persisted query keys to those needed offline.
 
 ## Fragile Areas
 
-**Trusted-proxy and client-IP resolution:**
-- Files: `docker/Caddyfile` (`trusted_proxies static`, `trusted_proxies_strict`, `client_ip_headers X-Forwarded-For`), `apps/service/src/env.ts` (`HEARTH_TRUSTED_PROXIES`), `apps/service/src/app.ts` (rate limit keyed by IP)
-- Why fragile: The trusted gateway address comes from `HEARTH_HOST_GATEWAY`. If it is wrong after a Compose network change, clients can spoof `X-Forwarded-For`, which defeats the per-IP rate limit, 300 per minute by default. The E2E overlay raises the limit because every loopback request shares one address.
-- Safe modification: Change the Compose subnet and `HEARTH_HOST_GATEWAY` together, and confirm with `e2e/tests/` that rate limiting still works through Caddy.
-- Test coverage: The E2E overlay bypasses the per-IP limit, so production-level rate limiting is not exercised end to end.
+**Time-zone and date-pinned logic:**
+- Files: `packages/recurrence/src/bills.ts`, `packages/recurrence/src/chores.ts` (or the rotation module), `apps/service/src/jobs/dispatch-notifications.ts`, `apps/service/src/jobs/refresh-deals.ts`, `apps/service/src/services/bills.ts`, `apps/service/src/services/invites.ts`
+- Why fragile: Production code reads `new Date()` and `Date.now()` directly in several services and jobs (for example `apps/service/src/services/bills.ts` `archived_at: new Date()`, `apps/service/src/services/invites.ts` `expires_at > new Date()`). Behavior depends on the process time zone. The test harness pins `Date` and `TZ` (`test/clock-setup.mjs`, `test/global-tz.mjs`), so a bug that appears only in a real time zone is not caught by unit tests.
+- Safe modification: Inject a clock (the pattern used by `deps.now` in `apps/service/src/jobs/prune-cache.ts`) into any new time-dependent logic. Run `pnpm test:sweep` before merging recurrence changes.
+- Test coverage: The sweep (`scripts/test-sweep.mjs`) covers the matrix; SQL-side `now()` in `supabase/migrations/20260919070200_functions.sql` is not covered by the TypeScript pinning.
 
-**Offline list queue and cache:**
-- Files: `apps/web/src/lib/offline/write-queue.ts`, `apps/web/src/lib/offline/list-cache.ts`, `apps/web/src/lib/offline/persist.ts`, `apps/web/src/lib/offline/chore-errand-writes.ts`
-- Why fragile: Correctness depends on TanStack Query paused-mutation persistence and on the `setMutationDefaults` registration happening before rehydration. The order of registration and scope IDs (`list:<id>`) are implicit contracts.
-- Safe modification: Keep registration in one module, and extend `apps/web/src/lib/offline/write-queue.test.tsx` for each new mutation kind.
-- Test coverage: Unit and component tests exist (`write-queue.test.tsx`, `chores-offline-queue.test.tsx`, `errands-offline-queue.test.tsx`). No test covers a reload between a sent write and its response.
+**Schema and generated types drift:**
+- Files: `apps/service/src/db/types.ts`, `supabase/migrations/*.sql`, `apps/service/src/services/deals/storage.ts`
+- Why fragile: `types.ts` is generated by `pnpm db:types` against a live database. A migration without regeneration leaves types stale, and the casts noted above hide the drift.
+- Safe modification: Regenerate types after every migration; remove the `as unknown as` casts before changing deal columns.
+- Test coverage: Integration tests run against a fresh `supabase start` in CI (`test-integration` job), which catches runtime breaks but not stale types in a PR that does not touch the schema.
 
-**Anchored recurrence logic:**
-- Files: `packages/recurrence/src/bills.ts`, `packages/recurrence/src/chores.ts`, `packages/recurrence/src/rotation.ts`, `apps/service/src/chores/occurrence.ts`
-- Why fragile: Dates are computed in the household timezone, and the same rules run in the web client and the service. A change in one place without the other shows different due dates on the dashboard and in reminders.
-- Safe modification: Change only in `packages/recurrence`, and run both `recurrence` and the service's `chores.integration.test.ts` and `bills.integration.test.ts`.
-- Test coverage: Good unit coverage in `packages/recurrence/src/*.test.ts`. Timezone edge cases around DST are the gap to check.
+**Shared Zod schemas on client and server:**
+- Files: `packages/shared/src/api/contract.ts` (~878 lines), `packages/shared/src/api/*.ts`, `apps/web/src/lib/api/*-hooks.ts`
+- Why fragile: One contract file governs every request and response. A narrowing change breaks both the service and the web build at once.
+- Safe modification: Change schemas additively; run `pnpm typecheck` and both unit suites.
+- Test coverage: `packages/shared` coverage is excluded by `packages/*/vitest.config.ts` (barrel exclusion); the contract file itself relies on route tests.
+
+**Offline write queue and realtime:**
+- Files: `apps/web/src/lib/offline/write-queue.ts`, `apps/web/src/lib/offline/persist.ts`, `apps/web/src/lib/realtime/supabase-realtime.ts`, `apps/web/src/lib/realtime/use-list-realtime.ts`
+- Why fragile: Paused TanStack mutations are persisted and replayed; realtime events can race with replay and cache hydration. Ordering depends on registering mutation defaults before hydration (`apps/web/src/main.tsx`).
+- Safe modification: Keep defaults registration before hydrate; add a regression test for any new queueable mutation.
+- Test coverage: Unit tests exist (`apps/web/src/lib/offline/chore-errand-writes.test.ts`); no end-to-end test of offline replay was found in the sampled files.
+
+**Service worker:**
+- Files: `apps/web/src/sw.ts`, `apps/web/src/sw.test.ts`, `apps/web/src/lib/push/service-worker-handlers.ts`, `apps/web/vite.config.ts`
+- Why fragile: `vite-plugin-pwa` with `registerType: 'prompt'` and Workbox routes registered by index (`mock.calls[0]`, `mock.calls[1]` in `sw.test.ts`). Route order matters and is asserted by position.
+- Safe modification: Assert routes by matcher identity rather than call index when changing the route list.
 
 ## Scaling Limits
 
-**Single-host deployment:**
-- Current capacity: One Compose stack on one machine (`docker/docker-compose.yml`), with Postgres, GoTrue, Realtime, Kong, Caddy, the service, and backup.
-- Limit: Host CPU, memory, and disk, plus the single database. There is no failover.
-- Scaling path: Acceptable for a household-scale app (documented in `docs/architecture.md`). Any multi-household growth beyond that needs a managed database and a second service instance, which also requires moving the in-memory rate limiter and the job scheduler lock (`apps/service/src/jobs/advisory-lock.ts`) into shared storage.
+**Single service instance:**
+- Current capacity: One Fastify process, one Postgres pool (`apps/service/src/db.ts`), in-process cron.
+- Limit: Running two instances duplicates cron work (advisory locks only partially protect it) and splits in-memory rate limits.
+- Scaling path: Documented constraint; any scale-out requires moving schedulers and limiters out of process.
+
+**Global per-IP rate limit:**
+- Current capacity: `HEARTH_RATE_LIMIT_PER_MINUTE`, default 300, on `/api/*` (`apps/service/src/app.ts`).
+- Limit: Behind Caddy and Tailscale Funnel, many household members may share an apparent IP unless the proxy trust is correct.
+- Scaling path: Verify trust configuration (see Security); tune the default against real traffic.
+
+**Database backups and retention:**
+- Current capacity: Daily dump at `0 2 * * *`, retention 14 days, 8 weeks, 6 months (`docker/docker-compose.yml` backup service) on the second disk at `BACKUP_DIR`.
+- Limit: Single host and single disk pair; no off-site copy is configured in the repository.
+- Scaling path: Add an off-host copy of `BACKUP_DIR` and a restore test to the runbook in `README.md`.
 
 ## Dependencies at Risk
 
-**Unofficial Flipp API:**
-- Risk: Deal data comes from undocumented Flipp endpoints with no contract.
-- Impact: Deal search and flyers stop working on an upstream change.
-- Migration plan: Keep the `DealSource` seam in `apps/service/src/deals/deal-source.ts` as the only entry point, so a replacement source needs no changes in routes or the web app.
+**Pre-release or fast-moving pins:**
+- Risk: Several dependencies are pinned at very recent major or minor versions (`typescript` 6.0.3, `vitest` 5.0.1, `tailwindcss` 4.3.3, `vite` 8.3.0, `react-router` 8.4.0, `eslint` 10.11.0, `@playwright/test` 1.63.0, `@tanstack/react-query` 5.103.1).
+- Files: `package.json`, `apps/*/package.json`, `packages/*/package.json`, `pnpm-lock.yaml`
+- Impact: Breaking changes surface as CI failures in minor bumps; the lockfile and `saveExact: true` limit silent drift.
+- Migration plan: Keep `pnpm install --frozen-lockfile` in CI; review Dependabot PRs (`.github/dependabot.yml`) weekly; pin Docker base images by digest where the Dockerfiles currently pin tags (`docker/service.Dockerfile`, `docker/caddy.Dockerfile`).
 
-**Transitive `braces` dependency:** see Tech Debt above.
+**Forced override of esbuild:**
+- Risk: `pnpm.overrides` forces `esbuild` to `0.28.2` in the root `package.json`, which masks transitive version resolution from `vite` and `tsup`.
+- Files: `package.json` (`pnpm.overrides`), `pnpm-workspace.yaml`
+- Impact: A security or behavior fix in a newer esbuild is not picked up automatically; a transitive peer requirement may be broken.
+- Migration plan: Remove the override when the upstream `vite`/`tsup` range allows the patched version; confirm with `pnpm why esbuild`.
+
+**Scraping and parsing libraries:**
+- Risk: `cheerio` 1.2.0 and `parse-ingredient` 3.0.0 parse untrusted remote HTML and text.
+- Files: `apps/service/src/recipes/json-ld.ts`, `apps/service/src/recipes/ingredient-parser.ts`
+- Impact: Parser bugs or pathological inputs affect recipe import latency and availability.
+- Migration plan: Add a size cap and timeout on the response body if one is not already applied in `fetch-recipe.ts`; keep parser fixtures in `apps/service/src/recipes/fixtures/`.
 
 ## Missing Critical Features
 
-**Off-host backup verification:**
-- Problem: The repo does not show an off-host copy or a scheduled restore test.
-- Blocks: Confident recovery after host loss.
+**Bug and regression tracking is outside the code:**
+- Problem: No in-repo issue list for documented bugs; the milestone requires each fix to ship with a regression test.
+- Blocks: Verifying that every known bug has a test before the manual review.
+
+**Structured error alerting:**
+- Problem: Server errors are recorded to Postgres (`public.record_app_error`) but no alerting or notification path to the owner was found in the sampled code.
+- Blocks: Learning of production failures without checking the database.
 
 ## Test Coverage Gaps
 
-**Production-level rate limiting:**
-- What's not tested: Per-IP limits through the real Caddy and trusted-proxy chain, since the E2E overlay raises the limit.
-- Files: `apps/service/src/env.ts`, `docker/Caddyfile`, `e2e/docker-compose.e2e.yml`
-- Risk: A proxy misconfiguration would not be caught before deploy.
-- Priority: Medium
-
-**Offline replay after a lost response:**
-- What's not tested: A queued list write that reaches the server but whose response is lost, then replays.
-- Files: `apps/web/src/lib/offline/write-queue.ts`, `e2e/tests/11-offline-list-sync.spec.ts`
-- Risk: Duplicate list items, as described under Known Bugs.
+**Real-time-zone behavior:**
+- What's not tested: Behavior when the process `TZ` differs from the pinned test zone outside the sweep matrix, and SQL `now()` in migrations.
+- Files: `apps/service/src/services/bills.ts`, `apps/service/src/services/invites.ts`, `supabase/migrations/20260919070200_functions.sql`
+- Risk: Date-boundary bugs (bill due dates, invite expiry) appear only for users in specific zones.
 - Priority: High
 
-**Date and timezone edges:**
-- What's not tested: Weekday-dependent and DST-boundary behaviour in E2E, given the `firstMealOn()` failure fixed in `b96ca32`.
-- Files: `e2e/tests/19-notifications.spec.ts`, `packages/recurrence/src/*.test.ts`
-- Risk: Calendar-dependent flakiness and missed regressions.
+**Offline write failure paths:**
+- What's not tested: Rejected queued mutations and the silent `catch(() => undefined)` branches.
+- Files: `apps/web/src/lib/offline/chore-errand-writes.ts`, `apps/web/src/lib/offline/write-queue.ts`
+- Risk: Lost chore or errand completions with no visible error.
+- Priority: High
+
+**Recipe private-address edge cases:**
+- What's not tested (as far as sampled): IPv6 private ranges and IPv4-mapped IPv6 literals in `apps/service/src/recipes/private-address.ts`.
+- Files: `apps/service/src/recipes/private-address.test.ts`, `apps/service/src/recipes/private-address.ts`
+- Risk: SSRF to internal addresses via an IPv6 form not in the range table.
+- Priority: High
+
+**Environment guard for test seams:**
+- What's not tested: A refusal when fixture or push test-double variables are set in a production-like configuration.
+- Files: `apps/service/src/env.ts`, `apps/service/src/main.ts`
+- Risk: Fixture transports serving production traffic if the Compose overlay leaks into production.
+- Priority: Medium
+
+**Scheduler and job failure paths:**
+- What's not tested (as far as sampled): Behavior when an advisory lock is held by another process during a long-running job.
+- Files: `apps/service/src/jobs/advisory-lock.ts`, `apps/service/src/jobs/scheduler.ts`
+- Risk: Duplicate notifications or skipped refreshes.
+- Priority: Medium
+
+**Stale-type detection:**
+- What's not tested: That `apps/service/src/db/types.ts` matches the migrations at PR time.
+- Files: `apps/service/src/db/types.ts`, `package.json` (`db:types`)
+- Risk: Type-level drift masked by the casts in `apps/service/src/services/deals/storage.ts`.
 - Priority: Medium
 
 ---
 
-*Concerns audit: 2026-10-11*
+*Concerns audit: 2026-10-21*
