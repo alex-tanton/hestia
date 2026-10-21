@@ -15,7 +15,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `supabase/` | Configuration, database migrations, and seed data for the self-hosted Supabase stack. |
 | `docker/` | Everything needed to build and run the production stack with Docker Compose. |
 | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
-| `scripts/` | Small operational scripts for deployment and secret generation, plus the test date and time-zone sweep and the knip report normalizer. |
+| `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, with harness tests for the scripts that have one. |
 | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
 | `.github/` | Continuous integration and deployment automation (GitHub Actions), plus dependency updates. |
@@ -57,7 +57,7 @@ used for operational tasks like resetting a user's password.
 
 | Subfolder | Purpose |
 | --- | --- |
-| `routes` | The HTTP endpoints grouped by feature (auth, bills, chores, deals, errands, households, lists, meal plans, recipes, system, users). |
+| `routes` | The HTTP endpoints grouped by feature (auth, bills, chores, deals, errands, health, households, lists, match overrides, meal plans, recipes, system, users). |
 | `services` | The business logic behind each feature — the rules and calculations that routes and jobs call into. |
 | `jobs` | Scheduled background work: dispatching notifications, logging autopay, refreshing deals and meal plans, pruning stale data, and the scheduler that runs them. |
 | `privileged` | The small, deliberately isolated set of operations allowed to use elevated database or auth-provider access (for example, the owner CLI and system-level notification delivery). Everything else in the service is restricted to the narrow, non-privileged access a regular request gets. |
@@ -71,7 +71,7 @@ used for operational tasks like resetting a user's password.
 | `notifications` | Composing and planning the notifications sent to users. |
 | `push` | Sending web push notifications to installed PWAs. |
 | `test` | Shared fixtures and harnesses used by the service's own automated tests. |
-| `bin` | The built `hearth-admin` command-line executable. |
+| `bin` | The `hearth-admin` command-line entry point: a hand-written POSIX shell wrapper that runs the bundled `dist/cli.js` (built from `src/cli.ts`). The service image links it onto the `PATH`. |
 | `scripts` | Operational helper scripts for the service (for example, regenerating database types). |
 
 ## 4. packages/
@@ -150,6 +150,9 @@ shopping list.
 | Script | Purpose |
 | --- | --- |
 | `deploy.sh` | Builds and deploys the production stack: backs up the database, applies pending migrations, swaps in new containers, and rolls back automatically if the new version fails a health check. |
+| `deploy.test.mjs` | Harness test for `deploy.sh`: runs the real script against stub `docker`, `supabase` and `curl` binaries and checks that the database password reaches the Supabase CLI through its environment and appears in no argument. Run by `pnpm test:harness`. |
+| `ci-prepull-images.sh` | Pre-pulls the images the end-to-end stack needs, with retries and a `ghcr.io` mirror tried first for the three Supabase images, so a rate-limited registry does not fail `docker compose up` in CI. |
+| `ci-prepull-images.test.mjs` | Harness test for the pre-pull script, run against stub `docker` and `sleep` binaries so no image is pulled. Run by `pnpm test:harness`. |
 | `test-sweep.mjs` | Runs the unit or service integration test suite once per cell of a fixed matrix of pinned dates and time zones, each cell in its own process (`pnpm test:sweep`, `pnpm test:sweep:integration`). |
 | `test-sweep.test.mjs` | Harness test for the sweep: argument checks, an `--only` that selects nothing, a listing that cannot run, and one real single-cell run. Run by `pnpm test:harness`. |
 | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
@@ -200,4 +203,5 @@ is in `docs/testing.md`, under "Dates and time zones".
 | `clock-setup.test.mjs` | Harness test for the clock pin, run from inside real Vitest workers. |
 | `global-tz.test.mjs` | Harness test for the zone hook, one child process per case. |
 | `eslint-clock-ban.test.mjs` | Harness test for the ESLint rule that bans real-clock reads in test files. |
+| `eslint-service-role-fence.test.mjs` | Harness test for the ESLint fence that keeps modules outside `main.ts`, `cli.ts`, tests and `apps/service/src/privileged/` from importing that folder: bad and good snippets are linted with the repo's real config. |
 | `support/vitest-project.mjs` | Helper for the harness tests: writes a throwaway Vitest project in a temporary directory and runs it with the clock setup file. |
