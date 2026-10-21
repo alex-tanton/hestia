@@ -1,12 +1,11 @@
 import { onlineManager, type QueryClient } from '@tanstack/react-query';
-import { act, configure, screen, waitFor, within } from '@testing-library/react';
+import { configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OFFLINE_ACTION_REASON } from '../../components/chores/chore-copy.ts';
 import { PENDING_CLASSES, PENDING_ROW_LABEL } from '../../components/lists/PendingMark.tsx';
 import { queryKeys } from '../../lib/api/keys.ts';
-import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
+import { setOnline } from '../../test/browser.ts';
 import {
   RETURN_PACKAGE_ID,
   errandListFixture,
@@ -19,7 +18,7 @@ import {
   oakStreetMembers,
   profileFixture,
 } from '../../test/fixtures.ts';
-import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
+import { createFetchStub, renderScreen, type StubHandler, WithQueue } from '../../test/harness.tsx';
 import { ErrandsListScreen } from './ErrandsListScreen.tsx';
 
 /*
@@ -31,19 +30,6 @@ configure({ asyncUtilTimeout: 5000 });
 
 const DONE_AT = '2026-09-27T16:00:00.000Z';
 const DONE_CHECKBOX = `Mark ${returnPackageFixture.name} as done`;
-
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
-}
-
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
 
 function mountErrands(extra: Readonly<Record<string, StubHandler>> = {}): {
   stub: ReturnType<typeof createFetchStub>;

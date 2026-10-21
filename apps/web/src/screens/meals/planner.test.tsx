@@ -1,8 +1,8 @@
-import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { MealPlanEntry, MealPlanWeekResponse } from '@hearth/shared';
+import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
 import {
@@ -98,33 +98,7 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
   return stub;
 }
 
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
-
-function stubMobileMatchMedia(): void {
-  // The phone layout is the primary design target: day tabs, not the desktop grid.
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-}
-
-beforeEach(() => {
-  setOnline(true);
-  stubMobileMatchMedia();
-});
-
-afterEach(() => {
-  onlineManager.setOnline(true);
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerBrowserStubs();
 
 describe('Week planner (Design › Screens › 10)', () => {
   it('loading: announces it with skeletons', () => {

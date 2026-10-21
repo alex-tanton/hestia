@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
-import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
+import { createFetchStub, renderScreen, type StubHandler, stubFetch } from '../../test/harness.tsx';
 import { OAK_STREET_ID, SAM_ID } from '../../test/fixtures.ts';
 import {
   broccoliDeal,
@@ -14,14 +14,6 @@ import {
 } from '../../test/deal-fixtures.ts';
 import { DealCard } from './DealCard.tsx';
 import { isAllowedImageUrl } from './DealImage.tsx';
-
-function stubFetch(
-  handlers: Readonly<Record<string, StubHandler>>,
-): ReturnType<typeof createFetchStub> {
-  const stub = createFetchStub(handlers);
-  vi.stubGlobal('fetch', stub.fetch);
-  return stub;
-}
 
 afterEach(() => {
   vi.unstubAllGlobals();

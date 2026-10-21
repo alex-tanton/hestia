@@ -2,22 +2,21 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  createFetchStub,
   problemBody,
   renderScreen,
   type FetchStub,
   type StubHandler,
+  stubFetch,
 } from '../../test/harness.tsx';
-import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import {
   eggsDeal,
   flyerItemsResponse,
   flyersResponse,
   harrisTeeterFlyer,
   HARRIS_TEETER_FLYER,
-  merchantsResponse,
   pumpkinDeal,
   thisWeekList,
+  dealScreenHandlers,
 } from '../../test/deal-fixtures.ts';
 import { FLYERS_OFFLINE_MESSAGE, FlyersScreen } from './FlyersScreen.tsx';
 import { FlyerItemsScreen } from './FlyerItemsScreen.tsx';
@@ -39,15 +38,12 @@ afterAll(() => {
 });
 
 function stub(handlers: Readonly<Record<string, StubHandler>>): FetchStub {
-  const created = createFetchStub({
-    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
-    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
-    'GET /api/households/:id/merchants': () => ({ status: 200, body: merchantsResponse() }),
-    'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
-    ...handlers,
-  });
-  vi.stubGlobal('fetch', created.fetch);
-  return created;
+  return stubFetch(
+    dealScreenHandlers({
+      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
+      ...handlers,
+    }),
+  );
 }
 
 beforeEach(() => {

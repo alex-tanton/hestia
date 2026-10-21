@@ -1,9 +1,7 @@
 import { onlineManager } from '@tanstack/react-query';
-import { act, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import {
   BANNED_GAMIFICATION_WORDS,
   ERRANDS_ALL_DONE_COPY,
@@ -11,6 +9,7 @@ import {
   OFFLINE_ACTION_REASON,
   allChoreCopyStrings,
 } from '../../components/chores/chore-copy.ts';
+import { setOnline, stubCoarsePointer } from '../../test/browser.ts';
 import {
   ALEX_ID,
   OAK_STREET_ID,
@@ -31,6 +30,7 @@ import {
   problemBody,
   renderScreen,
   type StubHandler,
+  WithQueue,
 } from '../../test/harness.tsx';
 import { ErrandsListScreen } from './ErrandsListScreen.tsx';
 
@@ -42,14 +42,6 @@ configure({ asyncUtilTimeout: 5000 });
  * Errands (Design › Screens › 18). The clock is pinned to Seed Data's "today" (a Sunday, noon in
  * New York), so the due dates and completion stamps in the fixtures read as they are written.
  */
-
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
 
 function mount(
   handlers: Readonly<Record<string, StubHandler>> = {},
@@ -70,12 +62,6 @@ function mount(
   return stub;
 }
 
-/* Marking done is a queued write; the shell that mounts the queue registers its defaults. */
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
-}
-
 /** Radix opens a menu on its trigger's keyboard activation, which is how a keyboard user opens it. */
 async function openMenu(user: UserEvent, trigger: HTMLElement): Promise<void> {
   trigger.focus();
@@ -94,11 +80,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-09-27T16:00:00.000Z'));
   setOnline(true);
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
+  stubCoarsePointer();
 });
 
 afterEach(() => {

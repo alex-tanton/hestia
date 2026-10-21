@@ -1,13 +1,13 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { stubCoarsePointer } from '../../test/browser.ts';
 import {
   createFetchStub,
   problemBody,
   renderScreen,
   type StubHandler,
 } from '../../test/harness.tsx';
-import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import {
   broccoliDeal,
   dealFixtures,
@@ -17,6 +17,7 @@ import {
   merchantsResponse,
   searchResponse,
   thisWeekList,
+  dealScreenHandlers,
 } from '../../test/deal-fixtures.ts';
 import { DealSearchScreen, SEARCH_OFFLINE_MESSAGE } from './DealSearchScreen.tsx';
 
@@ -46,17 +47,16 @@ function stubDeals(
   extra: Readonly<Record<string, StubHandler>> = {},
 ): Recorded {
   const searches: URLSearchParams[] = [];
-  const stub = createFetchStub({
-    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
-    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
-    'GET /api/households/:id/merchants': () => ({ status: 200, body: merchantsResponse() }),
-    'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
-    'GET /api/households/:id/deals/search': (request) => {
-      searches.push(request.query);
-      return search(request);
-    },
-    ...extra,
-  });
+  const stub = createFetchStub(
+    dealScreenHandlers({
+      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
+      'GET /api/households/:id/deals/search': (request) => {
+        searches.push(request.query);
+        return search(request);
+      },
+      ...extra,
+    }),
+  );
   vi.stubGlobal('fetch', stub.fetch);
   return { calls: stub.calls, searches };
 }
@@ -73,12 +73,7 @@ async function search(term: string): Promise<void> {
 
 beforeEach(() => {
   setOnline(true);
-  // The phone layout is the primary design target, where Select renders the platform picker.
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
+  stubCoarsePointer();
 });
 
 afterEach(() => {

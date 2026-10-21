@@ -1,7 +1,7 @@
-import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import {
   billDetailFixture,
   dukeEnergyFixture,
@@ -35,38 +35,7 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
   return stub;
 }
 
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
-
-beforeEach(() => {
-  setOnline(true);
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-});
-
-afterEach(() => {
-  onlineManager.setOnline(true);
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
-
-/** Opens an overflow menu from the keyboard, as the lists tests do: a pointer click does not open a Radix menu under jsdom. */
-async function openMenu(
-  user: ReturnType<typeof userEvent.setup>,
-  triggerName: string,
-): Promise<void> {
-  const trigger = await screen.findByRole('button', { name: triggerName });
-  trigger.focus();
-  await user.keyboard('{Enter}');
-}
+registerBrowserStubs();
 
 describe('Bill detail (Design › Screens › 15)', () => {
   it('loading: announces it with skeletons', () => {
