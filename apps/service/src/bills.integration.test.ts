@@ -1,5 +1,4 @@
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type {
   Bill,
   BillDetail,
@@ -12,13 +11,12 @@ import {
   as,
   household,
   signUp,
-  startStack,
   uniqueName,
   uniquePostalCode,
   type HouseholdFixture,
   type SignedUpUser,
-  type Stack,
 } from './test/service-stack.js';
+import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant, dateInZone, daysBetween, householdDate } from './test/zone-dates.js';
 
 /*
@@ -34,24 +32,7 @@ import { currentInstant, dateInZone, daysBetween, householdDate } from './test/z
  * "Today" is the default household's today (`homeDate`), not the UTC calendar's.
  */
 
-let stack: Stack;
-let app: FastifyInstance;
-
-beforeAll(async () => {
-  stack = await startStack();
-});
-
-beforeEach(async () => {
-  app = await stack.newApp();
-});
-
-afterAll(async () => {
-  await stack.close();
-});
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
+registerStackHooks();
 
 // The zone of the households these tests create: `household()` and `signUp()` in
 // test/service-stack.ts default to it, and the service dates a bill by its household's zone.

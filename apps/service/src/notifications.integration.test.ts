@@ -1,15 +1,7 @@
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Household, NotificationPreferencesResponse } from '@hearth/shared';
-import {
-  adminPool,
-  as,
-  signUp,
-  startStack,
-  uniqueName,
-  type SignedUpUser,
-  type Stack,
-} from './test/service-stack.js';
+import { adminPool, as, signUp, uniqueName, type SignedUpUser } from './test/service-stack.js';
+import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
  * Notification preferences and push subscriptions through the service against `supabase start`:
@@ -19,24 +11,7 @@ import {
 const PUSH_ENDPOINT = 'https://push.example.com/send/alpha';
 const KEYS = { p256dh: 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA', auth: 'tBHItJI5svbpez7KI4CCXg' };
 
-let stack: Stack;
-let app: FastifyInstance;
-
-beforeAll(async () => {
-  stack = await startStack();
-});
-
-beforeEach(async () => {
-  app = await stack.newApp();
-});
-
-afterAll(async () => {
-  await stack.close();
-});
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
+registerStackHooks();
 
 async function createHousehold(user: SignedUpUser): Promise<Household> {
   const response = await as(app, user, 'POST', '/api/households', {

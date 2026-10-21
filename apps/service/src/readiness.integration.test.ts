@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { MatchOverride, PantryItem, RecipeDetail } from '@hearth/shared';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
@@ -12,6 +12,7 @@ import {
   type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
+import { expectStatus } from './test/stack-hooks.js';
 
 /*
  * Recipe readiness against `supabase start` (Requirements, "Deal-matched suggestions"; Seed Data,
@@ -52,10 +53,6 @@ afterAll(async () => {
 
 const OAK_POSTAL_CODE = '27524';
 const RIVERA_POSTAL_CODE = '27525';
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
 
 type Home = HouseholdFixture;
 

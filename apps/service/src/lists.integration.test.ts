@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type {
   Household,
   ListItem,
@@ -14,11 +13,10 @@ import {
   createHouseholdFor,
   household as sharedHousehold,
   signUp,
-  startStack,
   type HouseholdFixture,
   type SignedUpUser,
-  type Stack,
 } from './test/service-stack.js';
+import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
  * Lists, items, and the pantry against `supabase start`: real Postgres as hearth_service, every
@@ -26,28 +24,11 @@ import {
  * each test makes its own users, household, and deals.
  */
 
-let stack: Stack;
-let app: FastifyInstance;
-
-beforeAll(async () => {
-  stack = await startStack();
-});
-
-beforeEach(async () => {
-  app = await stack.newApp();
-});
-
-afterAll(async () => {
-  await stack.close();
-});
+registerStackHooks();
 
 // A postal code of this file's own: deals are shared by postal code and these rows commit, so
 // reusing a fixture's code would change what another test file sees.
 const POSTAL_CODE = '27517';
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
 
 async function createHousehold(
   user: SignedUpUser,
