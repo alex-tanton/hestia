@@ -1,10 +1,8 @@
 import { onlineManager } from '@tanstack/react-query';
 import { act, configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Chore, ChoreDetail } from '@hearth/shared';
-import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import {
   BANNED_GAMIFICATION_WORDS,
   CHORES_EMPTY_COPY,
@@ -44,6 +42,7 @@ import {
   problemBody,
   renderScreen,
   type StubHandler,
+  WithQueue,
 } from '../../test/harness.tsx';
 import { addDays } from '../../lib/household-date.ts';
 import { ChoreDetailScreen } from './ChoreDetailScreen.tsx';
@@ -80,15 +79,6 @@ function mountList(
     </WithQueue>,
   );
   return stub;
-}
-
-/*
- * Completion is a queued write, and the queue's defaults are registered by the shell that mounts it
- * (AppShell → useWriteQueue), so a screen that completes a chore is mounted under it, as in the app.
- */
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
 }
 
 function mountDetail(

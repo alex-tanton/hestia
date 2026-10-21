@@ -1,7 +1,7 @@
 import { onlineManager } from '@tanstack/react-query';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NO_PRICE_LABEL, REPRICED_LABEL } from '../../components/lists/ItemPrice.tsx';
 import { PENDING_SUBTOTAL_LABEL } from '../../components/lists/PendingMark.tsx';
@@ -9,7 +9,6 @@ import {
   ScreenChromeProvider,
   useCurrentScreenChrome,
 } from '../../components/shell/screen-chrome.tsx';
-import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import { setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import {
@@ -29,17 +28,12 @@ import {
   problemBody,
   renderScreen,
   type StubHandler,
+  WithQueue,
 } from '../../test/harness.tsx';
 import { ArchivedListsScreen } from './ArchivedListsScreen.tsx';
 import { ALL_BOUGHT_COPY, ARCHIVED_COPY, ListDetailScreen } from './ListDetailScreen.tsx';
 import { LISTS_EMPTY_COPY, ListsIndexScreen } from './ListsIndexScreen.tsx';
 import { PANTRY_EMPTY_COPY, PANTRY_NO_MATCH_COPY, PantryScreen } from './PantryScreen.tsx';
-
-/** The queue lives in the shell, so a screen under test gets it the same way. */
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
-}
 
 function baseHandlers(
   extra: Readonly<Record<string, StubHandler>> = {},

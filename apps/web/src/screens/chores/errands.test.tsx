@@ -1,9 +1,7 @@
 import { onlineManager } from '@tanstack/react-query';
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import {
   BANNED_GAMIFICATION_WORDS,
   ERRANDS_ALL_DONE_COPY,
@@ -32,6 +30,7 @@ import {
   problemBody,
   renderScreen,
   type StubHandler,
+  WithQueue,
 } from '../../test/harness.tsx';
 import { ErrandsListScreen } from './ErrandsListScreen.tsx';
 
@@ -61,12 +60,6 @@ function mount(
     </WithQueue>,
   );
   return stub;
-}
-
-/* Marking done is a queued write; the shell that mounts the queue registers its defaults. */
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
 }
 
 /** Radix opens a menu on its trigger's keyboard activation, which is how a keyboard user opens it. */
