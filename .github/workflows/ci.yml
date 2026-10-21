@@ -104,7 +104,7 @@ jobs:
       # BuildKit `# syntax=` frontend. The logins above make the pulls authenticated where possible.
       - run: bash scripts/ci-prepull-images.sh
       # Exactly the local command: Playwright's global setup builds and starts the stack from an
-      # empty database, and its teardown drops it (Engineering Practices, "E2E environment").
+      # empty database, and its teardown drops it.
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7
         if: failure()
