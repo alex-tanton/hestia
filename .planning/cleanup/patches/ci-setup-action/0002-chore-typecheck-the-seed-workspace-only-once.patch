@@ -1,0 +1,32 @@
+From cfc666a51427ac4237dfad91f979eb99e1745e45 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 21 Oct 2026 17:49:33 +0000
+Subject: [PATCH 2/3] chore: typecheck the seed workspace only once
+
+- apps/service typecheck is now just `tsc --noEmit` (D-14). The second command typechecked
+  supabase/seed again; @hearth/seed has its own typecheck script, which `pnpm -r typecheck` runs.
+- Before: `apps/service typecheck$ tsc --noEmit && tsc --noEmit -p ../../supabase/seed` plus
+  `supabase/seed typecheck$ tsc --noEmit`. After: the seed is typechecked once.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MqJ2Cux3rut83bCEjam9rE
+---
+ apps/service/package.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/apps/service/package.json b/apps/service/package.json
+index 9ac382e..714a122 100644
+--- a/apps/service/package.json
++++ b/apps/service/package.json
+@@ -10,7 +10,7 @@
+     "dev": "tsx watch src/main.ts",
+     "build": "tsup && tsx src/write-openapi.ts",
+     "start": "node dist/main.js",
+-    "typecheck": "tsc --noEmit && tsc --noEmit -p ../../supabase/seed",
++    "typecheck": "tsc --noEmit",
+     "test": "vitest run --passWithNoTests",
+     "test:coverage": "vitest run --coverage --config vitest.coverage.config.ts",
+     "test:integration": "vitest run --config vitest.integration.config.ts",
+-- 
+2.43.0
+

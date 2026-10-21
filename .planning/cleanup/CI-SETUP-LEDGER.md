@@ -35,9 +35,52 @@ Steps per job, before and after (the Supabase CLI step stays inline in the two j
 
 ## RED-02 seed typecheck
 
+Before (`.planning/cleanup/logs/05-01-typecheck-before.log`):
+
+```text
+apps/service typecheck$ tsc --noEmit && tsc --noEmit -p ../../supabase/seed
+supabase/seed typecheck$ tsc --noEmit
+```
+
+After (`05-01-typecheck-after.log`):
+
+```text
+apps/service typecheck$ tsc --noEmit
+supabase/seed typecheck$ tsc --noEmit
+```
+
+typecheck-after=seed once
+
+Workspace test counts are equal before and after (`Tests  N passed`): matching 156, shared 172,
+recurrence 77, service 757, web 728. `pnpm test:harness` passes on Node 24.
+
 ## Workflow comments (RED-04)
 
+deploy-yaml-equal=yes
+workflow-citations=0
+
+The comment above `deploy.yml`'s `changes` step and the one above `pnpm test:e2e` in `ci.yml` no
+longer cite the retired spec; the parsed `deploy.yml` equals its base and `expand-compare.mjs` still
+prints OK. `git grep -nE -f cit-rx.txt -- .github` prints nothing. Dependabot's `github-actions`
+entry scans `/` and `/.github/actions/setup`.
+
 ## Push
+
+Branch `ci/setup-action` in `../hearth-ci-setup` has three commits on `base=`:
+86666b2 (composite action), cfc666a (single seed typecheck), 2344443 (Dependabot directory and
+comments). Its diff against `phase-base` is exactly the five files `.github/actions/setup/action.yml`,
+`.github/dependabot.yml`, `.github/workflows/ci.yml`, `.github/workflows/deploy.yml` and
+`apps/service/package.json`.
+
+Push with `GH_TOKEN` was refused by GitHub:
+`refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml` without `workflow` scope`.
+The refused content is not pushed through any other ref.
+
+pr-a-push=fallback
+tree=fd704a4c1fbb066fb7402eaee02a950aae456177
+owner-command=git fetch origin && bash <(git show origin/claude/eloquent-mayer-szjtjf:.planning/cleanup/patches/ci-setup-action/apply.sh)
+
+The three patches and `apply.sh` are under `.planning/cleanup/patches/ci-setup-action/`.
 
 ## CI
 
