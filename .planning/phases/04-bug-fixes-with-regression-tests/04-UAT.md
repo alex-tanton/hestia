@@ -3,7 +3,7 @@ status: complete
 phase: 04-bug-fixes-with-regression-tests
 source: [04-VERIFICATION.md]
 started: 2026-10-20T17:58:53Z
-updated: 2026-10-21T00:40:00Z
+updated: 2026-10-21T00:42:21.998Z
 ---
 
 ## Current Test
@@ -28,6 +28,7 @@ result: pass (owner decision, 2026-10-20: keep the `otp` route because magic lin
 Drag a rotation member's handle in the chores rotation editor.
 expected: The row reorders by drag, or the owner accepts that Up and Down are the only guaranteed path.
 result: skipped
+reason: "Deferred follow-up: skipped on purpose (owner, 2026-10-21); the owner cannot test it, Up and Down are the guaranteed reorder path. Revisit when a browser check is possible."
 note: "Owner decision 2026-10-20: not tested because the owner cannot test it. Firefox pointer drag is unverified (research A1, review WR-03); Up and Down are the guaranteed path. Revisit when a browser check is possible."
 
 ### 4. Owner acknowledgement of WR-02: held deal-add id scope
@@ -44,5 +45,11 @@ issues: 0
 pending: 0
 skipped: 1
 blocked: 0
+
+## Deferred Follow-Ups
+
+- test: 3
+  idea: "Check rotation-handle drag in Firefox and Chromium when a browser check is possible; Up and Down remain the guaranteed path (WR-03)."
+  deferred_at: 2026-10-21
 
 ## Gaps
