@@ -186,6 +186,8 @@ Plans:
 
 **Plans:** 13 plans
 
+**Scope note:** seven plans exceed the 100k-token smart-zone estimate (05-04 110k, 05-06 140k, 05-07 130k, 05-08 140k, 05-09 150k, 05-10 130k, 05-12 110k; confidence low, no calibration samples yet). This is accepted and the plans are not re-sliced: the work is mechanical, gated per batch, and executed in worktrees.
+
 Plans:
 **Wave 1**
 - [ ] 05-01-PLAN.md — PR A content: tracer composite setup action in all six jobs (expansion proof), seed typecheck once, Dependabot directory, two workflow comments; push with GH_TOKEN or owner patch hand-off
@@ -196,7 +198,7 @@ Plans:
 - [ ] 05-04-PLAN.md — PR B content, web: tracer browser stubs, cluster C helpers, household clock, WithQueue, deals table; jscpd at most 80
 
 **Wave 3** *(blocked on Wave 2 completion and on the owner's merge of PR A)*
-- [ ] 05-05-PLAN.md — PR B landing: WB sync past PR A (workflow-scope ladder), cherry-picked head, final scan below 96, six green jobs, owner merge
+- [ ] 05-05-PLAN.md — PR B landing: WB sync past PR A (one ordinary merge; on a workflow-scope refusal, the D-22 owner hand-off only), cherry-picked head, final scan below 96, six green jobs, owner merge
 
 **Wave 4** *(blocked on Wave 3 completion and on the owner's merge of PR B)*
 - [ ] 05-06-PLAN.md — PR C start: tracer recount and proof tools with negative controls, packages, seed and E2E TypeScript cleared

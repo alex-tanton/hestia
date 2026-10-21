@@ -521,25 +521,32 @@ Behavioral sample for the ledger (choose at least 10): the nine rows above, plus
 | A9 | The 11 "other" non-comment, non-string TS matches are JSX `{/* */}` comments (one inspected: `ChoreListRow.tsx:79`; all are in `.tsx` components) | Pitfall 1 | If any is JSX text, the AST proof will flag it and it moves to manual review. |
 | A10 | "Phase N" mentions that are not part of a Handoff citation (about 40 lines, for example `Phase 3 owns the 0.85 fuzzy threshold`) are product-phase references to the retired plan, not spec citations | Open Questions | If the owner wants them gone too, the sweep grows by about 40 lines and risks confusion with GSD phase numbers. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Scope of "citations" versus D-08's example list (needs planner decision, flag to owner)**
    - What we know: D-08 says "all citations of the old spec's sections" with `(Technical Architecture ...)`, `(Requirements ...)`, `(Design › ...)` as examples. The code also cites Engineering Practices, Branding, Seed Data, PRD, `Handoff non-negotiable N`, `Handoff, Phase N "Done when"` (counts above). Narrow vs full is 582 vs 1,118 lines.
    - What's unclear: whether the owner expected only the narrow set.
    - Recommendation: use the full vocabulary (the retired set is the seven deleted documents; leaving `non-negotiable 8` cites a deleted document just as much). State the real counts in the ledger and the PR body.
+   - **RESOLVED (D-21):** the full retired-spec vocabulary is in scope (`.planning/cleanup/tools/cit-rx.txt`), with the real counts recorded in the ledger and migrations left untouched.
 
 2. **String-literal test titles (27 files, 46 matches)**
    - Recommendation: edit them in a separate commit proved with the title-normalised mode and labelled "not comment-only; Vitest test names change". Alternative: leave and list as retained. Success Criterion 4 says "comment-only", so the owner should know titles are being treated differently.
+   - **RESOLVED (D-19):** all 46 titles are edited to one consistent style in their own commit labelled NOT comment-only, proved with the title-normalised AST mode (plan 05-10).
 
 3. **HTML fixtures (3 files)**: recommended retain and ledger (Pitfall 6).
+   - **RESOLVED (D-20):** the owner chose to include the three recipe HTML fixtures, with recorded proof that no E2E assertion depends on the removed text (plan 05-10).
 
 4. **Non-Handoff "Phase N" references (~40 lines)** and **bare `Seed Data` product-term uses** (README.md:121): recommend leave and ledger as "not spec citations"; owner may widen.
+   - **RESOLVED (assumption A10 as applied in the plans):** "Phase N" lines that match nothing in the vocabulary are left and counted as `count-phase-mentions=` (05-06); `Seed Data` matches the vocabulary, so it is rewritten as lower-case "the seed data" (citation rules) and README.md:121 is one of the README citation lines handled in 05-08.
 
 5. **Workflow-file push scope (Pitfall 9)**: the owner must push PR A (or grant `workflow` scope). Confirm who pushes before the plan assigns the task to an executor.
+   - **RESOLVED (D-22):** Claude pushes with the session's `GH_TOKEN`; on a `workflow`-scope refusal, the only routes are patch files plus one owner command (05-01 for PR A, 05-05 for the WB sync), the owner's own push, or the same push after the owner grants the scope. No other ref, merge shape or branch name is used.
 
 6. **`docker/kong.yml` comment edit**: recommend include (D-09) with the no-recreate note; the owner may prefer to defer it to avoid any host action.
+   - **RESOLVED (D-09):** `docker/kong.yml` is in scope; 05-10 proves it parses to the same configuration, so no Kong recreate is needed on the host.
 
 7. **`ROADMAP.md`/`REQUIREMENTS.md` still say "262 stale spec citations"**: update wording to the recorded count when the phase closes (planning-file edit, allowed by D-04).
+   - **RESOLVED (D-04, plan 05-12):** 05-12 restates the RED-04 wording in `ROADMAP.md` and `REQUIREMENTS.md` with the recorded count; the planning files ride in PR D under D-04.
 
 ## Environment Availability
 
