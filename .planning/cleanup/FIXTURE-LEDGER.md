@@ -38,9 +38,9 @@ One row per cross-file test clone pair of the `05-02-before` scan that has a sid
 | 6 | `apps/service/src/api.integration.test.ts` 39-57 | `apps/service/src/match-overrides.integration.test.ts` 21-38 | 19 | A | removed | 948432f |
 | 7 | `apps/service/src/chores.integration.test.ts` 7-40 | `apps/service/src/errands.integration.test.ts` 6-38 | 34 | A | removed | b3bf88f |
 | 8 | `apps/service/src/chores.integration.test.ts` 56-67 | `apps/service/src/errands.integration.test.ts` 45-54 | 12 | A | kept: createHome differs; chores adds `extraMembers` and a `members` list, errands returns a smaller `Home`, so only the 12-line prefix (admin sign-up, household POST) is shared | |
-| 9 | `apps/service/src/dispatch-notifications.integration.test.ts` 36-55 | `apps/service/src/jobs.integration.test.ts` 49-68 | 20 | B | pending | |
-| 10 | `apps/service/src/dispatch-notifications.integration.test.ts` 36-47 | `apps/service/src/jobs/scheduler.test.ts` 25-36 | 12 | B | pending | |
-| 11 | `apps/service/src/dispatch-notifications.integration.test.ts` 37-46 | `apps/service/src/jobs/dispatch-notifications.test.ts` 110-119 | 10 | B | pending | |
+| 9 | `apps/service/src/dispatch-notifications.integration.test.ts` 36-55 | `apps/service/src/jobs.integration.test.ts` 49-68 | 20 | B | removed | 053f371 |
+| 10 | `apps/service/src/dispatch-notifications.integration.test.ts` 36-47 | `apps/service/src/jobs/scheduler.test.ts` 25-36 | 12 | B | removed | 053f371 |
+| 11 | `apps/service/src/dispatch-notifications.integration.test.ts` 37-46 | `apps/service/src/jobs/dispatch-notifications.test.ts` 110-119 | 10 | B | removed | 053f371 |
 | 12 | `apps/service/src/lists.integration.test.ts` 19-42 | `apps/service/src/match-overrides.integration.test.ts` 10-34 | 24 | A | removed | b3bf88f |
 | 13 | `apps/service/src/lists.integration.test.ts` 89-100 | `apps/service/src/meal-plan.integration.test.ts` 119-132 | 12 | A | kept: `itemNamed` differs; meal-plan's error also lists the items it saw, and `createList` has a different default name | |
 | 14 | `apps/service/src/match-overrides.integration.test.ts` 29-42 | `apps/service/src/meal-plan.integration.test.ts` 37-50 | 14 | A | removed | b3bf88f |
@@ -49,9 +49,11 @@ One row per cross-file test clone pair of the `05-02-before` scan that has a sid
 ## Test counts
 
 tests-before.service-unit=757
+tests-after.service-unit=757
 
 `pnpm --filter @hearth/service test` at `base=` (log `05-02-service-unit-before.log`): 56 files, 757
-tests. This equals the 757 recorded by 05-01 for the service workspace. Integration files do not run
+tests. This equals the 757 recorded by 05-01 for the service workspace. After the last commit
+(053f371, log `05-02-service-unit-after.log`) the suite again reports 56 files and 757 tests. Integration files do not run
 here (no Supabase stack); their counts are compared in PR B's CI (05-05).
 
 ## Scans
@@ -62,6 +64,21 @@ here (no Supabase stack); their counts are compared in PR B's CI (05-05).
 | 05-02-t1 | after commit 948432f | 98 | 1459 | 60 | 49 | api on the shared hooks |
 | 05-02-t2a | after commit b3bf88f | 90 | 1241 | 52 | 41 | seven files on the hooks, three on `expectStatus` only; step 4 moved nothing |
 | 05-02-t2 | same tree as t2a | 90 | 1241 | 52 | 41 | identical totals to t2a |
+| 05-02 | after commit 053f371 | 87 | 1199 | 49 | 38 | recording job logger shared; final service scan |
+
+after-05-02-clones=87
+after-05-02-duplicated-lines=1199
+service-cross-test-left=3
+
+The final scan is 12 below the starting 99 and 9 below the Phase 2 baseline of 96, within the Phase 5
+bar of at most 90. No clone pair in it names `stack-hooks.ts` or `job-logger.ts`. Of its 49 cross-file
+pairs, 38 have a test, test-helper or e2e side; the 3 with a side under `apps/service/` are rows 8, 13
+and 15 above, each `kept:` with its semantic difference. The web side (05-04) is not touched here.
+
+Row 9 needed no `createJobTestDb()` helper: once `makeLogger()` was shared, the remaining
+`beforeAll` text of the two job integration files fell below the scan's 8-line and 60-token floor, so
+the pair is gone and `enableServiceLogin`, `createDatabase` and the `jobDb` construction stay in
+their files in their original order.
 
 Reports: `.planning/cleanup/jscpd/phase5-{label}/jscpd-report.json`; read them with
 `node .planning/cleanup/tools/jscpd-compare.mjs {report} --list cross-test --root ../hearth-fixtures-wip`.
@@ -86,6 +103,12 @@ Task 2 (`../hearth-fixtures-wip` at b3bf88f): service typecheck, `eslint --max-w
 `prettier --check` over `apps/service/src` pass; the unit suite reports 757 passed
 (`05-02-t2-service-unit.log`); per touched file the count of lines matching the citation vocabulary
 equals the base, and the count of `it`/`describe`/`test` declarations equals the base.
+
+Task 3 (`../hearth-fixtures-wip` at 053f371): service typecheck, `eslint --max-warnings=0` and
+`prettier` over the touched files pass; the unit suite (scheduler and dispatch-notifications unit
+tests included) reports 757 passed, equal to `tests-before.service-unit`; per touched file the
+citation-line count and the `it`/`describe` declaration count equal the base.
+`git diff --name-only 4e39165..053f371` in the worktree lists only files under `apps/service/src/`.
 
 ## CI
 
