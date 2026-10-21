@@ -1,8 +1,7 @@
 import { createHmac, randomUUID } from 'node:crypto';
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { Kysely, PostgresDialect, sql } from 'kysely';
 import pg from 'pg';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import type {
   CreatedInvite,
   DeparturePreview,
@@ -23,12 +22,11 @@ import {
   signIn,
   signUp,
   stackConfig,
-  startStack,
   TEST_ORIGIN,
   uniqueName,
   type SignedUpUser,
-  type Stack,
 } from './test/service-stack.js';
+import { app, expectStatus, registerStackHooks, stack } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
@@ -36,25 +34,7 @@ import { currentInstant } from './test/zone-dates.js';
  * every request through withUserDb. Each test makes its own users and households.
  */
 
-let stack: Stack;
-let app: FastifyInstance;
-
-beforeAll(async () => {
-  stack = await startStack();
-});
-
-beforeEach(async () => {
-  // A fresh app per test, so the in-memory per-IP rate limits never carry over.
-  app = await stack.newApp();
-});
-
-afterAll(async () => {
-  await stack.close();
-});
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
+registerStackHooks();
 
 async function createHousehold(
   user: SignedUpUser,
