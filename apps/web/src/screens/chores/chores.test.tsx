@@ -14,6 +14,7 @@ import {
   allChoreCopyStrings,
 } from '../../components/chores/chore-copy.ts';
 import { formatCalendarDate } from '../../lib/format.ts';
+import { setOnline, stubCoarsePointer } from '../../test/browser.ts';
 import {
   OAK_STREET_ID,
   ALEX_ID,
@@ -62,14 +63,6 @@ configure({ asyncUtilTimeout: 5000 });
 const PROFILE: StubHandler = () => ({ status: 200, body: profileFixture });
 const MEMBERS: StubHandler = () => ({ status: 200, body: oakStreetMembers });
 const HOUSEHOLD: StubHandler = () => ({ status: 200, body: oakStreetFixture });
-
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
 
 function mountList(
   handlers: Readonly<Record<string, StubHandler>>,
@@ -158,11 +151,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-09-27T16:00:00.000Z'));
   setOnline(true);
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
+  stubCoarsePointer();
 });
 
 afterEach(() => {

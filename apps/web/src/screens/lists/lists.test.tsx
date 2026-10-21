@@ -1,5 +1,5 @@
 import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,6 +10,7 @@ import {
   useCurrentScreenChrome,
 } from '../../components/shell/screen-chrome.tsx';
 import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
+import { setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import {
   PARTY_SUPPLIES_ID,
@@ -84,15 +85,6 @@ function detail(
     <ListDetailScreen householdId={OAK_STREET_ID} listId={listId} userId={profileFixture.id} />,
     handlers,
   );
-}
-
-/** Both halves of "offline": the banner reads `navigator`, the queue reads TanStack's manager. */
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
 }
 
 beforeEach(() => {

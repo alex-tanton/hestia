@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import {
   billDetailFixture,
   dukeEnergyFixture,
@@ -8,7 +9,6 @@ import {
   waterAndSewerFixture,
   waterSkippedPaymentFixture,
 } from '../../test/bills-fixtures.ts';
-import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
 import {
   createFetchStub,
@@ -36,16 +36,6 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
 }
 
 registerBrowserStubs();
-
-/** Opens an overflow menu from the keyboard, as the lists tests do: a pointer click does not open a Radix menu under jsdom. */
-async function openMenu(
-  user: ReturnType<typeof userEvent.setup>,
-  triggerName: string,
-): Promise<void> {
-  const trigger = await screen.findByRole('button', { name: triggerName });
-  trigger.focus();
-  await user.keyboard('{Enter}');
-}
 
 describe('Bill detail (Design › Screens › 15)', () => {
   it('loading: announces it with skeletons', () => {

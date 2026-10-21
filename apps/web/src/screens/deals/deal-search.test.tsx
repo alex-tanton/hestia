@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { stubCoarsePointer } from '../../test/browser.ts';
 import {
   createFetchStub,
   problemBody,
@@ -73,12 +74,7 @@ async function search(term: string): Promise<void> {
 
 beforeEach(() => {
   setOnline(true);
-  // The phone layout is the primary design target, where Select renders the platform picker.
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
+  stubCoarsePointer();
 });
 
 afterEach(() => {

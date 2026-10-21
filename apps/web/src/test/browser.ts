@@ -1,5 +1,6 @@
 import { onlineManager } from '@tanstack/react-query';
-import { act } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 /*
@@ -9,7 +10,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
  * file's own.
  */
 
-/** Takes the browser online or offline, in the browser's eyes and in TanStack Query's. */
+/** Both halves of "offline": the banner reads `navigator`, the queue reads TanStack's manager. */
 export function setOnline(isOnline: boolean): void {
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
   act(() => {
@@ -18,7 +19,11 @@ export function setOnline(isOnline: boolean): void {
   });
 }
 
-/** Makes `(pointer: coarse)` match, as on a phone; every other media query does not match. */
+/**
+ * Makes `(pointer: coarse)` match, as on a phone; every other media query does not match. The
+ * phone layout is the primary design target: day tabs, not the desktop grid, and Select renders
+ * the platform picker.
+ */
 export function stubCoarsePointer(): void {
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: query === '(pointer: coarse)',
@@ -39,4 +44,11 @@ export function registerBrowserStubs(): void {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
+}
+
+/** Opens an overflow menu from the keyboard, as the lists tests do: a pointer click does not open a Radix menu under jsdom. */
+export async function openMenu(user: UserEvent, triggerName: string): Promise<void> {
+  const trigger = await screen.findByRole('button', { name: triggerName });
+  trigger.focus();
+  await user.keyboard('{Enter}');
 }
