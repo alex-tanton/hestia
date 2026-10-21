@@ -154,11 +154,11 @@ apps/service/src/main.ts	49	49	comment	pure	// across requests and jobs alike (H
 apps/service/src/main.ts	56	56	comment	pure	// Only the E2E Compose overlay sets HEARTH_FLIPP_FIXTURE_DIR (non-negotiable 17): every other
 apps/service/src/main.ts	81	81	comment	pure	// way flippQueue holds Flipp's rate discipline (Technical Architecture, "Recipe fetching").
 apps/service/src/match-overrides.integration.test.ts	8	9	comment	pure	* Match overrides against `supabase start` (Technical Architecture, "API surface"; Requirements,
-apps/service/src/meal-plan.integration.test.ts	18	19	comment	mixed	* Architecture, "API surface" — "Meal plan"; Requirements, "Add missing to list", "Deal-matched
+apps/service/src/meal-plan.integration.test.ts	18	19	comment	pure	* Architecture, "API surface" — "Meal plan"; Requirements, "Add missing to list", "Deal-matched
 apps/service/src/meal-plan.integration.test.ts	181	181	string	title	it('computes the current week’s Sunday in the household’s own timezone, not a naive UTC date (non-negotiable 8)', async () => {
 apps/service/src/meal-plan.integration.test.ts	202	203	comment	mixed	// 2026-10-04 is a Sunday, 2026-10-03 a Saturday (Technical Architecture and Seed Data agree
 apps/service/src/meal-plan.integration.test.ts	253	253	string	title	it('a past week is excluded from the default view but still viewable as history (Use Cases, "Plan the week": "Past plan entries")', async () => {
-apps/service/src/notification-producers.integration.test.ts	25	26	comment	mixed	* The notification producers against `supabase start` (Requirements, "Notifications"; Technical
+apps/service/src/notification-producers.integration.test.ts	25	26	comment	pure	* The notification producers against `supabase start` (Requirements, "Notifications"; Technical
 apps/service/src/notification-producers.integration.test.ts	499	500	comment	mixed	// row at all for it (Branding, "Notification copy": "the builder answers null, and the
 apps/service/src/notifications/copy.test.ts	16	16	string	title	describe('notification copy length (Branding, "Notification copy": at most 60 characters)', () => {
 apps/service/src/notifications/copy.ts	8	8	comment	pure	* Notification copy (Branding, "Notification copy"). Every producer builds its title and body here
@@ -193,7 +193,7 @@ apps/service/src/readiness.integration.test.ts	284	284	string	title	describe('re
 apps/service/src/readiness.integration.test.ts	419	419	comment	pure	// The force-no-match override (Seed Data, "Recipes"): changes no score above, because
 apps/service/src/readiness.integration.test.ts	494	495	comment	pure	// Matching test cases endorses for "eggs" against "Egg Noodles, 12 oz", not a defect (Seed Data,
 apps/service/src/realtime.integration.test.ts	15	15	comment	pure	* Realtime propagation for lists (Requirements, "Real-time sharing"). The PWA subscribes to
-apps/service/src/recipes.integration.test.ts	18	19	comment	mixed	* withUserDb, so RLS is what decides each assertion (Requirements, "Recipe library"; Technical
+apps/service/src/recipes.integration.test.ts	18	19	comment	pure	* withUserDb, so RLS is what decides each assertion (Requirements, "Recipe library"; Technical
 apps/service/src/recipes.integration.test.ts	20	21	comment	pure	* households. `parseRecipeUrl` is stubbed per app instance — never the network (Handoff
 apps/service/src/recipes.integration.test.ts	21	21	comment	pure	* non-negotiable 17) — since the fetch mechanics themselves are unit-tested in `recipes/`.
 apps/service/src/recipes.integration.test.ts	328	328	comment	prose	// The week planner API is a later unit; a raw row here proves the FK behaves as the PRD
@@ -550,7 +550,7 @@ apps/web/src/lib/money.ts	24	24	comment	prose	/** Design › `DealCard`: "$2.49/
 apps/web/src/lib/offline/chore-errand-writes.test.ts	33	33	comment	mixed	* Unit tests for the queued chore and errand writes (Engineering Practices › The write queue). They
 apps/web/src/lib/offline/chore-errand-writes.ts	16	17	comment	mixed	* Queued chore completion and errand done (Engineering Practices › The write queue; Requirements ›
 apps/web/src/lib/offline/chore-errand-writes.ts	32	32	comment	pure	/** Client-generated; a replay with the same id is a no-op (Handoff non-negotiable 9). */
-apps/web/src/lib/offline/chore-errand-writes.ts	212	212	comment	mixed	* Practices; Design, "Offline rules"). Without it the control is disabled with "Needs a connection."
+apps/web/src/lib/offline/chore-errand-writes.ts	212	212	comment	pure	* Practices; Design, "Offline rules"). Without it the control is disabled with "Needs a connection."
 apps/web/src/lib/offline/chore-errand-writes.ts	226	226	comment	pure	* (PRD, "Recurrence is anchored and derived on read").
 apps/web/src/lib/offline/list-cache.ts	10	10	comment	pure	* back visibly on failure (Design › Loading rules).
 apps/web/src/lib/offline/list-cache.ts	13	13	comment	pure	* the client never does money arithmetic (Technical Architecture, "API surface"). A group holding
@@ -914,8 +914,8 @@ e2e/tests/12-deal-rate-discipline.spec.ts	28	28	comment	pure	* action never reac
 e2e/tests/12-deal-rate-discipline.spec.ts	57	58	comment	pure	// The merchant directory is one global, postal-code-agnostic request (Technical Architecture ›
 e2e/tests/12-deal-rate-discipline.spec.ts	92	93	comment	pure	// directly by a user action that a cache could serve" (Technical Architecture › "Rate
 e2e/tests/13-recipe-import-and-readiness.spec.ts	7	7	comment	pure	* Journey 4 (Engineering Practices › "E2E journeys"): import a recipe by URL, view its readiness
-e2e/tests/13-recipe-import-and-readiness.spec.ts	8	10	comment	mixed	* breakdown, and add its missing ingredients to a list (Requirements, "Recipe library",
-e2e/tests/13-recipe-import-and-readiness.spec.ts	9	10	comment	mixed	* "Deal-matched suggestions", "Add missing to list"; Design › Screens › 11 and 12; Handoff, Phase
+e2e/tests/13-recipe-import-and-readiness.spec.ts	8	10	comment	pure	* breakdown, and add its missing ingredients to a list (Requirements, "Recipe library",
+e2e/tests/13-recipe-import-and-readiness.spec.ts	9	10	comment	pure	* "Deal-matched suggestions", "Add missing to list"; Design › Screens › 11 and 12; Handoff, Phase
 e2e/tests/13-recipe-import-and-readiness.spec.ts	12	12	comment	prose	* layer: Seed Data's own readiness percentages, and that a match-override correction is reachable.
 e2e/tests/13-recipe-import-and-readiness.spec.ts	14	15	comment	pure	* Every URL pasted is a fixture the E2E stack serves in-process (Engineering Practices › "E2E
 e2e/tests/13-recipe-import-and-readiness.spec.ts	19	19	comment	pure	* (Technical Architecture, "Recipe fetching") would refuse the Compose network's own subnet just

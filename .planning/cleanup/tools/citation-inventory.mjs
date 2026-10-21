@@ -398,7 +398,7 @@ const PURE_TOKEN = new RegExp(
 );
 
 function isPure(inner) {
-  let value = inner.replace(/"[^"]*"/g, 'Q').replace(/“[^”]*”/g, 'Q');
+  let value = inner.replace(/\s+/g, ' ').replace(/"[^"]*"/g, 'Q').replace(/“[^”]*”/g, 'Q');
   // Capitalised words after a section separator name a section of the retired document.
   value = value.replace(
     /›\s*[A-Z0-9][\w&/-]*(?:\s+(?:and|&|[A-Z0-9][\w&/-]*))*/g,

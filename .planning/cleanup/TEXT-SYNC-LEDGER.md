@@ -45,7 +45,17 @@ matches); a parenthetical that wraps over several lines is one row per matching 
 last line in `end_line`. No reconciliation was needed.
 
 By kind: comment 1063, string 45, html-text 4, prose 4 (jsx-text 0, code 0).
-By class: pure 586, mixed 245, prose 240 (232 comment, 4 html-text, 4 markdown), title 45.
+
+Correction recorded during the e2e batch: the first inventory run classified a parenthetical that
+wraps in the middle of `Phase N` (the logical text holds `Phase` newline `3`) as `mixed`. The pure
+test now collapses whitespace first, `inventory-base.tsv` was regenerated from a detached worktree
+at `base=` (`../hearth-base-05-06`), and six rows moved from `mixed` to `pure` (one in each of
+`meal-plan.integration.test.ts`, `notification-producers.integration.test.ts`,
+`recipes.integration.test.ts`, `chore-errand-writes.ts`, and two in the e2e recipe journey). Row
+count and the other columns are unchanged: 1116 rows, `pure` 592, `mixed` 239. The batch TSVs were
+regenerated from the corrected inventory; the recurrence, matching, shared and seed-ts counts did
+not change.
+By class: pure 592, mixed 239, prose 240 (232 comment, 4 html-text, 4 markdown), title 45.
 
 By area (rows):
 
@@ -117,17 +127,26 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | matching | `packages/matching` | 26 | 6 | 14 | 2b8808c | comment-only OK | gates OK |
 | shared | `packages/shared` | 68 | 50 | 18 | 94af15d | comment-only OK | gates OK |
 | seed-ts | `supabase/seed/*.ts` | 8 | 5 | 3 | 94756a9 | comment-only OK | gates OK |
+| e2e | `e2e/*.ts`, `e2e/tests`, `e2e/support`, `e2e/setup` | 115 | 72 | 42 | 7437ac5 | comment-only OK | gates OK |
 
-Batch notes: `sites` counts matching lines of the base inventory; `removed` counts lines whose
-parenthetical `apply-pure` deleted (class `pure`); `rewritten` counts the lines edited by hand;
-`matching` also leaves 6 test titles (`describe` strings in `fixtures.test.ts` and `matcher.test.ts`)
-with disposition `left:title` for 05-10. Gates per batch: ESLint `--max-warnings=0` and Prettier
-`--check` on the changed files, the workspace typecheck, and the workspace tests with an unchanged
-count (recurrence 77, matching 156, shared 172; `@hearth/seed` has no tests, so its gates are the
-typecheck and ESLint). Each commit was re-checked with `comment-only-check.mjs --base HEAD~1 --head
-HEAD`, and `git diff --exit-code {phase-base} -- supabase/migrations` is empty after every batch.
-After the three batches `citation-inventory.mjs inventory` over `packages` and `supabase/seed/*.ts`
-lists 6 rows, all class `title`.
+Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
+`pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
+tool had left it); `rewritten` counts the mixed and prose lines edited by hand so the rule they
+carried stays as plain words; `left:title` rows stay for 05-10 (6 in `matching`, 1 in `e2e`).
+
+Gates per batch: ESLint `--max-warnings=0` and Prettier `--check` on the changed files, the
+workspace typecheck, and the workspace tests with an unchanged count (recurrence 77, matching 156,
+shared 172, e2e support tests 15 before and after; `@hearth/seed` has no tests, so its gates are
+the typecheck and ESLint). Each commit was re-checked with `comment-only-check.mjs --base HEAD~1
+--head HEAD`, and `git diff --exit-code {phase-base} -- supabase/migrations` is empty after every
+batch. After the batches, `citation-inventory.mjs inventory` over `packages` and
+`supabase/seed/*.ts` lists 6 rows and over the E2E TypeScript 1 row, all class `title`.
+`e2e/fixtures/**` and `e2e/docker-compose.e2e.yml` are unchanged (05-10).
+
+Not classified by the codemod: nothing was left unclassified. Three kinds of site always needed
+a human: a quoted rule after the reference (rewritten to plain words), a sentence whose subject is
+a retired document (restated as the rule, `the seed data` for the seed fixtures), and a lone
+citation that was the only content of a comment (deleted with the comment).
 
 ## Titles
 
