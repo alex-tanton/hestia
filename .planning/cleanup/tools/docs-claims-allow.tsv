@@ -1,0 +1,7 @@
+tests/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in tests/
+fixtures/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in fixtures/
+support/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in support/
+setup/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in setup/
+.env	the real configuration file at /srv/hearth/.env, never committed (only .env.example is tracked)
+.mjs	the bare file extension, named in prose to say the test/ files are Node ES modules
+dist/cli.js	build output of tsup (apps/service/dist), gitignored and never tracked
