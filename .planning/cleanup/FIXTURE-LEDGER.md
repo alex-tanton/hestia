@@ -129,36 +129,36 @@ copy is gone. `open` means not decided yet in this plan's current task.
 | 3 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-79 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 43-54 | 13 | E | removed | 96e17d6 |
 | 4 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-76 | `apps/web/src/screens/lists/lists.test.tsx` 86-96 | 10 | C | removed | 96e17d6 |
 | 5 | `apps/web/src/lib/offline/write-queue.test.tsx` 68-79 | `apps/web/src/screens/meals/planner.test.tsx` 99-109 | 12 | C | removed | 96e17d6 |
-| 6 | `apps/web/src/screens/bills/bill-detail.test.tsx` 34-71 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-75 | 38 | C | open |  |
-| 7 | `apps/web/src/screens/bills/bill-detail.test.tsx` 47-57 | `apps/web/src/screens/chores/chores.test.tsx` 160-170 | 11 | C | open |  |
-| 8 | `apps/web/src/screens/bills/bill-detail.test.tsx` 43-55 | `apps/web/src/screens/deals/deal-search.test.tsx` 71-84 | 13 | C | open |  |
-| 9 | `apps/web/src/screens/bills/bill-detail.test.tsx` 36-47 | `apps/web/src/screens/lists/lists.test.tsx` 87-99 | 12 | C | open |  |
-| 10 | `apps/web/src/screens/bills/bill-detail.test.tsx` 34-59 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 53-78 | 26 | C | open |  |
-| 11 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/bills/subscriptions.test.tsx` 99-108 | 9 | C | open |  |
-| 12 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-51 | `apps/web/src/screens/bills/subscriptions.test.tsx` 36-49 | 14 | C | open |  |
-| 13 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/lists/lists.test.tsx` 132-140 | 9 | C | open |  |
-| 14 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-48 | `apps/web/src/screens/meals/planner.test.tsx` 97-107 | 11 | C | open |  |
-| 15 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/meals/recipe-library.test.tsx` 115-123 | 9 | C | open |  |
-| 16 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-63 | `apps/web/src/screens/meals/recipe-library.test.tsx` 40-66 | 26 | C | open |  |
+| 6 | `apps/web/src/screens/bills/bill-detail.test.tsx` 34-71 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-75 | 38 | C | removed | b6569aa |
+| 7 | `apps/web/src/screens/bills/bill-detail.test.tsx` 47-57 | `apps/web/src/screens/chores/chores.test.tsx` 160-170 | 11 | C | removed | b6569aa |
+| 8 | `apps/web/src/screens/bills/bill-detail.test.tsx` 43-55 | `apps/web/src/screens/deals/deal-search.test.tsx` 71-84 | 13 | C | removed | b6569aa |
+| 9 | `apps/web/src/screens/bills/bill-detail.test.tsx` 36-47 | `apps/web/src/screens/lists/lists.test.tsx` 87-99 | 12 | C | removed | b6569aa |
+| 10 | `apps/web/src/screens/bills/bill-detail.test.tsx` 34-59 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 53-78 | 26 | C | removed | b6569aa |
+| 11 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/bills/subscriptions.test.tsx` 99-108 | 9 | C | kept: the retry assertion sits inside each screen's own test and names its own endpoint (`/bills`, `/subscriptions`, `/lists`, `/recipes`); a helper would hide what each test asserts |  |
+| 12 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-51 | `apps/web/src/screens/bills/subscriptions.test.tsx` 36-49 | 14 | C | removed | b6569aa |
+| 13 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/lists/lists.test.tsx` 132-140 | 9 | C | kept: the retry assertion sits inside each screen's own test and names its own endpoint (`/bills`, `/subscriptions`, `/lists`, `/recipes`); a helper would hide what each test asserts |  |
+| 14 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-48 | `apps/web/src/screens/meals/planner.test.tsx` 97-107 | 11 | C | removed | b6569aa |
+| 15 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/meals/recipe-library.test.tsx` 115-123 | 9 | C | kept: the retry assertion sits inside each screen's own test and names its own endpoint (`/bills`, `/subscriptions`, `/lists`, `/recipes`); a helper would hide what each test asserts |  |
+| 16 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-63 | `apps/web/src/screens/meals/recipe-library.test.tsx` 40-66 | 26 | C | removed | b6569aa |
 | 17 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/chores/household-timezone.test.tsx` 55-70 | 16 | D | open |  |
 | 18 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/household-timezone.test.tsx` 103-118 | 16 | D | open |  |
-| 19 | `apps/web/src/screens/bills/subscriptions.test.tsx` 41-58 | `apps/web/src/screens/lists/lists.test.tsx` 91-108 | 18 | C | open |  |
-| 20 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 46-54 | `apps/web/src/screens/chores/chores.test.tsx` 66-74 | 9 | E | open |  |
+| 19 | `apps/web/src/screens/bills/subscriptions.test.tsx` 41-58 | `apps/web/src/screens/lists/lists.test.tsx` 91-108 | 18 | C | removed | b6569aa |
+| 20 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 46-54 | `apps/web/src/screens/chores/chores.test.tsx` 66-74 | 9 | E | removed | b6569aa |
 | 21 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 39-54 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 33-48 | 16 | E | open |  |
 | 22 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 54-62 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 48-56 | 9 | E | open |  |
 | 23 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 87-104 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 83-99 | 18 | E | open |  |
-| 24 | `apps/web/src/screens/chores/chores.test.tsx` 153-175 | `apps/web/src/screens/chores/errands.test.tsx` 90-111 | 23 | C | open |  |
-| 25 | `apps/web/src/screens/chores/chores.test.tsx` 388-397 | `apps/web/src/screens/chores/errands.test.tsx` 351-360 | 10 | C | open |  |
-| 26 | `apps/web/src/screens/chores/chores.test.tsx` 64-74 | `apps/web/src/screens/chores/errands.test.tsx` 39-54 | 11 | C | open |  |
+| 24 | `apps/web/src/screens/chores/chores.test.tsx` 153-175 | `apps/web/src/screens/chores/errands.test.tsx` 90-111 | 23 | C | kept: the hook pair is the fake clock plus the pointer stub with a leading `onlineManager` reset in `afterEach`, a variant of both `registerHouseholdClock` and `registerBrowserStubs`; `openMenu(user, element)` takes the trigger element, not its name |  |
+| 25 | `apps/web/src/screens/chores/chores.test.tsx` 388-397 | `apps/web/src/screens/chores/errands.test.tsx` 351-360 | 10 | C | kept: the gamification-words assertion block belongs to each screen's own copy test and mounts a different screen |  |
+| 26 | `apps/web/src/screens/chores/chores.test.tsx` 64-74 | `apps/web/src/screens/chores/errands.test.tsx` 39-54 | 11 | C | removed | b6569aa |
 | 27 | `apps/web/src/screens/deals/deal-card.test.tsx` 16-30 | `apps/web/src/screens/onboarding/onboarding.test.tsx` 31-45 | 15 | F | open |  |
 | 28 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/favorites.test.tsx` 19-35 | 17 | F | open |  |
 | 29 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/flyers.test.tsx` 23-39 | 17 | F | open |  |
-| 30 | `apps/web/src/screens/deals/deal-search.test.tsx` 75-89 | `apps/web/src/screens/deals/flyers.test.tsx` 54-67 | 15 | F | open |  |
+| 30 | `apps/web/src/screens/deals/deal-search.test.tsx` 75-89 | `apps/web/src/screens/deals/flyers.test.tsx` 54-67 | 15 | F | removed | b6569aa |
 | 31 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 15-31 | 17 | F | open |  |
 | 32 | `apps/web/src/screens/deals/favorites.test.tsx` 26-41 | `apps/web/src/screens/deals/flyers.test.tsx` 30-45 | 16 | F | open |  |
 | 33 | `apps/web/src/screens/deals/favorites.test.tsx` 26-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 22-33 | 12 | F | open |  |
 | 34 | `apps/web/src/screens/meals/household-timezone.test.tsx` 103-119 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 26-42 | 17 | D | open |  |
-| 35 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 67-80 | `apps/web/src/screens/meals/recipe-library.test.tsx` 55-68 | 14 | C | open |  |
+| 35 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 67-80 | `apps/web/src/screens/meals/recipe-library.test.tsx` 55-68 | 14 | C | removed | b6569aa |
 <!-- web-rows-end -->
 
 Web tests (`pnpm --filter @hearth/web test` in `../hearth-fixtures-wip` at `base=`, log
@@ -171,6 +171,27 @@ tests-before.web=728
 | Label | Where | Clones | Duplicated lines | Cross-file | Cross-file test | Note |
 | ----- | ----- | ------ | ---------------- | ---------- | --------------- | ---- |
 | 05-04-t1 | after commit 96e17d6 | 85 | 1151 | 47 | 36 | `browser.ts` with `setOnline` and the stub pair; bill-detail and write-queue adopt it |
+| 05-04-t2 | after commit b6569aa | 70 | 932 | 32 | 21 | `registerBrowserStubs` in bills-index, planner, recipe-detail, recipe-library; `setOnline`, `stubCoarsePointer` and `openMenu` elsewhere |
+
+## Web cluster C variants
+
+Diffs in `.planning/cleanup/logs/05-04-variant-*.diff` (gitignored). Every local `setOnline` in
+bill-detail, write-queue, bills-index, subscriptions, lists, planner, recipe-detail, recipe-library,
+chores and errands equals the helper body (only `export` differs) and was replaced by the import.
+Kept in place, with the difference:
+
+- `deal-search.test.tsx` `setOnline`: only spies on `navigator.onLine` (no `onlineManager`, no event);
+  its `afterEach` has no `onlineManager` reset. It adopts only `stubCoarsePointer()`.
+- `shell.test.tsx` `setOnline`: no `onlineManager.setOnline`, only the window event; its `afterEach`
+  restores mocks only. Not part of any scan pair; untouched.
+- subscriptions and lists hooks (`setOnline(true)` before; online reset, unstub, restore after): no
+  pointer stub, so `registerBrowserStubs()` would add one; they keep their hooks.
+- chores and errands hooks: fake `Date` clock, `setOnline(true)`, pointer stub; `afterEach` resets
+  `onlineManager`, then real timers, unstub, restore. They adopt `setOnline` and `stubCoarsePointer()`.
+- `openMenu`: bill-detail and bills-index bodies are identical (`user`, trigger name) and use the
+  helper; chores and errands share a second body (`user`, trigger element) that stays local.
+- `mountWithFetchStub` was not added: after the helper edits no `createFetchStub` plus `vi.stubGlobal`
+  plus `renderScreen` sequence remains as a scan pair, so it would remove zero pairs.
 
 ## CI
 
