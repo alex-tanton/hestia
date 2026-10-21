@@ -167,7 +167,8 @@ decorative motion — only these discrete enter/exit transitions.
 
 - **Notification length limit.** Notification title and body are each capped at **60 characters**,
   enforced in the shared zod schema: `title: z.string().trim().min(1).max(60)` and
-  `body: z.string().trim().min(1).max(60)` (`packages/shared/src/api/notifications.ts:112-113`).
+  `body: z.string().trim().min(1).max(60)` (`notificationCopySchema` in
+  `packages/shared/src/api/notifications.ts`).
   A producer that would exceed this doesn't truncate — `apps/service/src/notifications/copy.ts`
   validates the built copy against this schema and returns `null` if it fails, and the row is
   simply never enqueued (the caller logs only the notification's `type` and `id`, via
@@ -176,13 +177,14 @@ decorative motion — only these discrete enter/exit transitions.
   builds every stored error message through `scrubErrorReport` (`packages/shared/src/scrub.ts`)
   before it's recorded. The scrubber works by shape, not an allow-list of fields: it strips every
   email address, JWT/bearer token, decimal number, long number, and any value following a
-  key name that denotes money or household content (`packages/shared/src/scrub.ts:4-13`, pattern
-  list around line 78), then hard-truncates the result to 500 characters
-  (`SCRUBBED_MESSAGE_MAX_LENGTH`, `packages/shared/src/scrub.ts:16`). The source comment states the
-  rule directly: a recorded error "must never carry a bill amount, list or pantry contents, recipe
-  data, an email address, or an auth token" (`packages/shared/src/scrub.ts:4-5`).
-- **Queued/dropped-change copy counts, never names.** The PWA's "Queued change refused" pattern
-  ("1 change couldn't be saved...") is mirrored in the dropped-notification path: the service
+  key name that denotes money or household content (the `RULES`, `SECRET_KEYS` and `CONTENT_KEYS`
+  lists in `packages/shared/src/scrub.ts`), then hard-truncates the result to 500 characters
+  (`SCRUBBED_MESSAGE_MAX_LENGTH` in the same file). The file's header comment states the rule
+  directly: a recorded error "must never carry a bill amount, list or pantry contents, recipe
+  data, an email address, or an auth token".
+- **Queued/dropped-change copy counts, never names.** The PWA's refused-write message
+  ("1 change couldn't be saved...", `apps/web/src/lib/offline/chore-errand-writes.ts`) is
+  mirrored in the dropped-notification path: the service
   reports what was dropped by type and id only, never by content, matching the same
   "count, don't name" rule.
 - **Notification wording patterns** (`apps/service/src/notifications/copy.ts`): a bill due
