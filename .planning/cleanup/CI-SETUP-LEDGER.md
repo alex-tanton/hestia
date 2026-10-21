@@ -150,6 +150,31 @@ prints `supabase/seed typecheck$ tsc --noEmit` once, and the service's line is
 
 ci-seed-typecheck=once
 
+## Merge
+
+The owner squash-merged PR #26 on 2026-10-21 at 18:31:35Z with the title
+`ci: share one setup action across the CI jobs`.
+
+pr-a-merged=ac8ef34bb913418e425eca1157fb9249b6017733
+
+### main's CI on the squash commit
+
+`CI` run 39653516611 on `ac8ef34` (event push, branch main) concluded `failure`: five of six jobs
+are `success` (lint, typecheck, test-unit, test-integration, build) and `test-e2e` failed.
+
+main-ci-after-a=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success run=39653516611
+
+The `test-e2e` failure is one test out of 104 (103 passed, job 119407681323, log saved as
+`05-03-main-test-e2e.log`): `tests/18-chores-and-errands-offline.spec.ts:140`, "journey 7 - chores
+and errands (light)". After `page.reload()` at line 122 it waited 15 s for the 'Water plants' row
+to contain "Waiting to sync" and found no matching element. It is not a `toomanyrequests` registry
+failure. The same test passed in its dark variant in this run, and in both variants in PR A's run
+39650921896 (same tree) and in `main`'s previous run 39645569683. The failing lines do not touch the
+CI setup action. No rerun, revert or rewrite was done; this needs the owner's decision.
+
+Deploy run 39654799904 for `ac8ef34` is queued; its job is gated on `conclusion == 'success'`, so
+with this CI result it will skip and `ac8ef34` is not deployed.
+
 ## Gates and decisions
 
 - The plan names the working branch `claude/vigilant-gates-a4ihid`. The session's checkout is on `claude/eloquent-mayer-szjtjf`, which is the only working branch that exists (no `claude/vigilant-gates-a4ihid` locally or on `origin`), and the orchestrator directed commits to it. This plan therefore treats `claude/eloquent-mayer-szjtjf` as WB; later plans must do the same or the owner must say otherwise.
