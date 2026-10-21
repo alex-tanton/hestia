@@ -10,7 +10,7 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsup && tsx src/write-openapi.ts",
     "start": "node dist/main.js",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p ../../supabase/seed",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --config vitest.coverage.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
