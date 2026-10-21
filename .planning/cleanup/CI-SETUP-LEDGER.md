@@ -175,6 +175,25 @@ CI setup action. No rerun, revert or rewrite was done; this needs the owner's de
 Deploy run 39654799904 for `ac8ef34` is queued; its job is gated on `conclusion == 'success'`, so
 with this CI result it will skip and `ac8ef34` is not deployed.
 
+### Owner decision and rerun
+
+owner-decision=the owner approved exactly one rerun of the failed job as an exception to the registry-flake-only rule; the first failure was test-e2e tests/18-chores-and-errands-offline.spec.ts:140 (journey 7, light), not a `toomanyrequests` failure
+
+The orchestrator queued the one rerun of run 39653516611 (`rerun-failed-jobs`); no further rerun
+was or will be queued. Attempt 2 completed `success`. The attempt-1 failure above is kept as is.
+
+main-ci-after-a-rerun=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=39653516611 attempt=2
+
+Attempt 2 job ids: test-e2e 119414325006, test-integration 119414327218, test-unit 119414327622,
+build 119414372494, typecheck 119414401011, lint 119414405656. The first Deploy run (39654799904)
+for `ac8ef34` ended `cancelled` while CI was red. After the rerun succeeded a new Deploy run,
+39657035815, was created for `ac8ef34`; it was `pending` (waiting for the self-hosted `hearth`
+runner, as for any merge) when last read, so no deploy has started yet.
+
+The `journey 7` failure passed on rerun with no code change, which is consistent with a timing
+flake in the offline queue test after `page.reload()`. It is outside this plan's scope and is not
+fixed here; it is reported for the owner.
+
 ## Gates and decisions
 
 - The plan names the working branch `claude/vigilant-gates-a4ihid`. The session's checkout is on `claude/eloquent-mayer-szjtjf`, which is the only working branch that exists (no `claude/vigilant-gates-a4ihid` locally or on `origin`), and the orchestrator directed commits to it. This plan therefore treats `claude/eloquent-mayer-szjtjf` as WB; later plans must do the same or the owner must say otherwise.
