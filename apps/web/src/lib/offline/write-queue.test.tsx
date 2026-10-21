@@ -9,6 +9,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PENDING_CLASSES, PENDING_ROW_LABEL } from '../../components/lists/PendingMark.tsx';
 import { ListDetailScreen } from '../../screens/lists/ListDetailScreen.tsx';
+import { setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import {
   createFetchStub,
@@ -65,14 +66,6 @@ function deferred(): Deferred {
     resolve = settle;
   });
   return { promise, resolve };
-}
-
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
 }
 
 /** `idb-keyval` stands in as a plain map; nothing here needs IndexedDB itself. */

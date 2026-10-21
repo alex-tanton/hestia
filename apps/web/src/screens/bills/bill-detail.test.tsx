@@ -1,7 +1,6 @@
-import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   billDetailFixture,
   dukeEnergyFixture,
@@ -9,6 +8,7 @@ import {
   waterAndSewerFixture,
   waterSkippedPaymentFixture,
 } from '../../test/bills-fixtures.ts';
+import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
 import {
   createFetchStub,
@@ -35,28 +35,7 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
   return stub;
 }
 
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
-
-beforeEach(() => {
-  setOnline(true);
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-});
-
-afterEach(() => {
-  onlineManager.setOnline(true);
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerBrowserStubs();
 
 /** Opens an overflow menu from the keyboard, as the lists tests do: a pointer click does not open a Radix menu under jsdom. */
 async function openMenu(
