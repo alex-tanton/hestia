@@ -124,7 +124,7 @@ copy is gone. `open` means not decided yet in this plan's current task.
 | # | File A (lines) | File B (lines) | Lines | Cluster | Disposition | Commit |
 | - | -------------- | -------------- | ----- | ------- | ----------- | ------ |
 <!-- web-rows-start -->
-| 1 | `apps/web/src/App.test.tsx` 48-57 | `apps/web/src/screens/settings/settings.test.tsx` 37-46 | 10 | G | open |  |
+| 1 | `apps/web/src/App.test.tsx` 48-57 | `apps/web/src/screens/settings/settings.test.tsx` 37-46 | 10 | G | kept: two-file duplicate shorter than a helper; HOUSEHOLDS and MEMBERS are each file's own tables and the shared lines are two handler entries |  |
 | 2 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-76 | `apps/web/src/screens/bills/bill-detail.test.tsx` 35-44 | 10 | C | removed | 96e17d6 |
 | 3 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-79 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 43-54 | 13 | E | removed | 96e17d6 |
 | 4 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-76 | `apps/web/src/screens/lists/lists.test.tsx` 86-96 | 10 | C | removed | 96e17d6 |
@@ -140,24 +140,24 @@ copy is gone. `open` means not decided yet in this plan's current task.
 | 14 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-48 | `apps/web/src/screens/meals/planner.test.tsx` 97-107 | 11 | C | removed | b6569aa |
 | 15 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/meals/recipe-library.test.tsx` 115-123 | 9 | C | kept: the retry assertion sits inside each screen's own test and names its own endpoint (`/bills`, `/subscriptions`, `/lists`, `/recipes`); a helper would hide what each test asserts |  |
 | 16 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-63 | `apps/web/src/screens/meals/recipe-library.test.tsx` 40-66 | 26 | C | removed | b6569aa |
-| 17 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/chores/household-timezone.test.tsx` 55-70 | 16 | D | open |  |
-| 18 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/household-timezone.test.tsx` 103-118 | 16 | D | open |  |
+| 17 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/chores/household-timezone.test.tsx` 55-70 | 16 | D | removed | 979f696 |
+| 18 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/household-timezone.test.tsx` 103-118 | 16 | D | removed | 979f696 |
 | 19 | `apps/web/src/screens/bills/subscriptions.test.tsx` 41-58 | `apps/web/src/screens/lists/lists.test.tsx` 91-108 | 18 | C | removed | b6569aa |
 | 20 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 46-54 | `apps/web/src/screens/chores/chores.test.tsx` 66-74 | 9 | E | removed | b6569aa |
-| 21 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 39-54 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 33-48 | 16 | E | open |  |
-| 22 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 54-62 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 48-56 | 9 | E | open |  |
-| 23 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 87-104 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 83-99 | 18 | E | open |  |
+| 21 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 39-54 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 33-48 | 16 | E | removed | d5e5d36 |
+| 22 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 54-62 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 48-56 | 9 | E | kept: the mount functions differ in the screen, the list endpoint and the POST or PATCH handler, which each test reads |  |
+| 23 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 87-104 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 83-99 | 18 | E | kept: the hooks are a variant of `registerHouseholdClock` (a literal instant, `setOnline(true)` through `act`, `onlineManager` reset before unstub), and the first test then drives a different list |  |
 | 24 | `apps/web/src/screens/chores/chores.test.tsx` 153-175 | `apps/web/src/screens/chores/errands.test.tsx` 90-111 | 23 | C | kept: the hook pair is the fake clock plus the pointer stub with a leading `onlineManager` reset in `afterEach`, a variant of both `registerHouseholdClock` and `registerBrowserStubs`; `openMenu(user, element)` takes the trigger element, not its name |  |
 | 25 | `apps/web/src/screens/chores/chores.test.tsx` 388-397 | `apps/web/src/screens/chores/errands.test.tsx` 351-360 | 10 | C | kept: the gamification-words assertion block belongs to each screen's own copy test and mounts a different screen |  |
 | 26 | `apps/web/src/screens/chores/chores.test.tsx` 64-74 | `apps/web/src/screens/chores/errands.test.tsx` 39-54 | 11 | C | removed | b6569aa |
-| 27 | `apps/web/src/screens/deals/deal-card.test.tsx` 16-30 | `apps/web/src/screens/onboarding/onboarding.test.tsx` 31-45 | 15 | F | open |  |
-| 28 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/favorites.test.tsx` 19-35 | 17 | F | open |  |
-| 29 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/flyers.test.tsx` 23-39 | 17 | F | open |  |
+| 27 | `apps/web/src/screens/deals/deal-card.test.tsx` 16-30 | `apps/web/src/screens/onboarding/onboarding.test.tsx` 31-45 | 15 | F | removed | a876868 |
+| 28 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/favorites.test.tsx` 19-35 | 17 | F | kept: the viewer-zone `vi.hoisted` block and its `afterAll` must run before any import, so it cannot call a helper |  |
+| 29 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/flyers.test.tsx` 23-39 | 17 | F | kept: the viewer-zone `vi.hoisted` block and its `afterAll` must run before any import, so it cannot call a helper |  |
 | 30 | `apps/web/src/screens/deals/deal-search.test.tsx` 75-89 | `apps/web/src/screens/deals/flyers.test.tsx` 54-67 | 15 | F | removed | b6569aa |
-| 31 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 15-31 | 17 | F | open |  |
-| 32 | `apps/web/src/screens/deals/favorites.test.tsx` 26-41 | `apps/web/src/screens/deals/flyers.test.tsx` 30-45 | 16 | F | open |  |
-| 33 | `apps/web/src/screens/deals/favorites.test.tsx` 26-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 22-33 | 12 | F | open |  |
-| 34 | `apps/web/src/screens/meals/household-timezone.test.tsx` 103-119 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 26-42 | 17 | D | open |  |
+| 31 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 15-31 | 17 | F | kept: the viewer-zone `vi.hoisted` block and its `afterAll` must run before any import, so it cannot call a helper |  |
+| 32 | `apps/web/src/screens/deals/favorites.test.tsx` 26-41 | `apps/web/src/screens/deals/flyers.test.tsx` 30-45 | 16 | F | kept: the shared lines are the tail of the `vi.hoisted` block and its `afterAll`; the handler tables now come from `dealScreenHandlers` |  |
+| 33 | `apps/web/src/screens/deals/favorites.test.tsx` 26-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 22-33 | 12 | F | kept: the viewer-zone `vi.hoisted` block and its `afterAll` must run before any import, so it cannot call a helper |  |
+| 34 | `apps/web/src/screens/meals/household-timezone.test.tsx` 103-119 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 26-42 | 17 | D | kept: the inline empty deal search moved to `emptyDealSearch`; the 9 lines left are four handler entries, while the profile and household entries differ (abroad profile, injectable household) |  |
 | 35 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 67-80 | `apps/web/src/screens/meals/recipe-library.test.tsx` 55-68 | 14 | C | removed | b6569aa |
 <!-- web-rows-end -->
 
@@ -172,6 +172,26 @@ tests-before.web=728
 | ----- | ----- | ------ | ---------------- | ---------- | --------------- | ---- |
 | 05-04-t1 | after commit 96e17d6 | 85 | 1151 | 47 | 36 | `browser.ts` with `setOnline` and the stub pair; bill-detail and write-queue adopt it |
 | 05-04-t2 | after commit b6569aa | 70 | 932 | 32 | 21 | `registerBrowserStubs` in bills-index, planner, recipe-detail, recipe-library; `setOnline`, `stubCoarsePointer` and `openMenu` elsewhere |
+| 05-04 | after commit 8a7e8e4 | 66 | 858 | 28 | 17 | household clock, `WithQueue`, deals handler table, `stubFetch`, `emptyDealSearch`; final web scan |
+
+after-05-04-clones=66
+after-05-04-duplicated-lines=858
+web-cross-test-left=14
+
+The final scan is 33 below the starting 99 and 30 below the Phase 2 baseline of 96, within the Phase 5
+bar of at most 90 and the plan's at most 80. No clone pair in it names `browser.ts`, `harness.tsx`,
+`deal-fixtures.ts`, `stack-hooks.ts` or `job-logger.ts`. Of its 28 cross-file pairs, 17 have a test
+side; 14 of those are web pairs (rows below marked `kept`) and 3 are the service rows 8, 13 and 15.
+Commits in `../hearth-fixtures-wip`: 96e17d6 (online and pointer stubs), b6569aa (cluster C),
+979f696 (household clock), d5e5d36 (`WithQueue`), a876868 (deals handler table and `stubFetch`),
+8a7e8e4 (empty deal search).
+
+tests-after.web=728
+
+`pnpm --filter @hearth/web test` at 8a7e8e4 (log `05-04-web-after.log`): 57 files, 728 tests, equal to
+`tests-before.web`; also 728 after the second commit (`05-04-web-t2.log`). Web typecheck, ESLint
+(`--max-warnings=0`) and Prettier pass over `apps/web/src`. Per touched file the count of lines
+matching the citation vocabulary equals the base `4e39165`.
 
 ## Web cluster C variants
 
@@ -192,6 +212,25 @@ Kept in place, with the difference:
   helper; chores and errands share a second body (`user`, trigger element) that stays local.
 - `mountWithFetchStub` was not added: after the helper edits no `createFetchStub` plus `vi.stubGlobal`
   plus `renderScreen` sequence remains as a scan pair, so it would remove zero pairs.
+
+## Web clusters D to G
+
+- D, household clock: `registerHouseholdClock(instant)` replaces the identical hook pair in the bills,
+  chores and dashboard household-timezone tests. The meals household-timezone hooks differ (a pointer
+  stub and an `onlineManager` reset between the timer and unstub steps) and stay; its local
+  `stubMobileMatchMedia` became `stubCoarsePointer()`.
+- E, offline queue: `WithQueue` is exported once from `harness.tsx` and replaces six identical copies
+  (write-queue, chores, errands, both offline-queue files, lists), diffs saved. The two offline-queue
+  files also take `setOnline` from `browser.ts`; their clock hooks stay, as the table says.
+- F, deals: `dealScreenHandlers(extra)` (session, household, merchants) in `deal-fixtures.ts` backs
+  deal-search, flyers and favorites; lists and search stay in the files that use them, and favorites
+  does not gain a lists handler. `stubFetch` in `harness.tsx` replaces the identical local copies in
+  deal-card and onboarding and the bodies of the favorites and flyers `stub` wrappers. The four
+  `vi.hoisted` viewer-zone blocks stay (hoisted code runs before imports; see "Dates and time zones" in
+  `docs/testing.md`). `emptyDealSearch` replaces the same inline body in recipe-detail (twice) and
+  meals household-timezone.
+- G, session handler: App.test and settings.test share two handler entries over their own
+  `HOUSEHOLDS` and `MEMBERS` tables; a helper would be longer than the copies, so row 1 is `kept`.
 
 ## CI
 
