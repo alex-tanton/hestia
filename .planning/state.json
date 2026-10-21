@@ -11,17 +11,17 @@
     {
       "number": "2",
       "name": "Baseline, Net Stabilization, and Analysis",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "3",
       "name": "Evidence-Gated Removal",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "4",
       "name": "Bug Fixes With Regression Tests",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "5",
@@ -36,8 +36,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 2 of 6 · 17% · executing"
+    "label": "Advance to the next step (plan phase 5)",
+    "reason": "Phase 5 of 6 — needs a plan"
   },
-  "updated_at": "2026-10-12T21:51:07.854Z"
+  "updated_at": "2026-10-21T00:49:32.279Z"
 }

@@ -13,9 +13,9 @@ This milestone takes an LLM-built household PWA to a base the owner can trust be
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Git History Curation and Branch Policy** - Publish a curated, owner-approved history to `origin` and write down how work lands afterward (completed 2026-10-12)
-- [ ] **Phase 2: Baseline, Net Stabilization, and Analysis** - Make the test suite deterministic on any day and timezone, and produce a calibrated, triaged dead-code and duplication analysis
-- [ ] **Phase 3: Evidence-Gated Removal** - Remove proven-dead files, exports, dependencies, and stale references; hand uncertain candidates to the owner
-- [ ] **Phase 4: Bug Fixes With Regression Tests** - Fix the known bugs and robustness gaps, each guarded by a test that failed before the fix
+- [x] **Phase 2: Baseline, Net Stabilization, and Analysis** - Make the test suite deterministic on any day and timezone, and produce a calibrated, triaged dead-code and duplication analysis (completed 2026-10-19)
+- [x] **Phase 3: Evidence-Gated Removal** - Remove proven-dead files, exports, dependencies, and stale references; hand uncertain candidates to the owner (completed 2026-10-20)
+- [x] **Phase 4: Bug Fixes With Regression Tests** - Fix the known bugs and robustness gaps, each guarded by a test that failed before the fix (completed 2026-10-21)
 - [ ] **Phase 5: Redundancy Reduction and Text Sync** - Reduce duplicated CI, fixtures, and stale comments, and bring docs in line with the final code
 - [ ] **Phase 6: CI Enforcement and Lock-in** - Turn on blocking dead-code, duplication, drift, audit, and date/timezone gates without breaking deploys
 
@@ -64,33 +64,33 @@ Plans:
   4. Writing a bare `new Date()` or `Date.now()` in a test file or under `e2e/` fails lint.
   5. knip runs with explicit entry points (`sw.ts`, seed, e2e global setup, package exports), planted canaries behave as expected (known-dead is reported, known-live is not), findings are triaged into proven-dead, config-gap, test-only, and uncertain, and a jscpd duplication scan is recorded.
 
-**Plans:** 9 plans
+**Plans:** 9/9 plans complete
 
 Plans:
 **Wave 1**
-- [ ] 02-01-PLAN.md — Baseline of untouched main (d3da748) on Node 24, twice, with the seven time-dependent web files across zones; checks the cloud toolchain first, and takes the integration rows from CI when the session has no Docker
+- [x] 02-01-PLAN.md — Baseline of untouched main (d3da748) on Node 24, twice, with the seven time-dependent web files across zones; checks the cloud toolchain first, and takes the integration rows from CI when the session has no Docker
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 02-02-PLAN.md — Shared clock pin, TZ hook and sweep runner (tracer on favorites.test.tsx, literal oracle with a pinned viewer zone), then the seven web files green in all six cells
-- [ ] 02-06-PLAN.md — Owner package-legitimacy gate, knip 6.41.0 with explicit D-10 entries, canary calibration on a scratch branch
+- [x] 02-02-PLAN.md — Shared clock pin, TZ hook and sweep runner (tracer on favorites.test.tsx, literal oracle with a pinned viewer zone), then the seven web files green in all six cells
+- [x] 02-06-PLAN.md — Owner package-legitimacy gate, knip 6.41.0 with explicit D-10 entries, canary calibration on a scratch branch
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 02-03-PLAN.md — Service and package unit suites on the pin; every unit suite green in all six cells
+- [x] 02-03-PLAN.md — Service and package unit suites on the pin; every unit suite green in all six cells
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 02-04-PLAN.md — Zone-correct helpers, bills date fix behind a red-then-green two-zone guard (proven by title, locally or through a draft PR's CI when there is no Docker), integration audit and zone sweep
+- [x] 02-04-PLAN.md — Zone-correct helpers, bills date fix behind a red-then-green two-zone guard (proven by title, locally or through a draft PR's CI when there is no Docker), integration audit and zone sweep
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 02-05-PLAN.md — E2E household clock helper for specs 16 and 19, and the bare-clock lint ban across tests, e2e and test helpers
+- [x] 02-05-PLAN.md — E2E household clock helper for specs 16 and 19, and the bare-clock lint ban across tests, e2e and test helpers
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 02-09-PLAN.md — Playwright zone pin, weekday audit ledger over every E2E spec, root sweep scripts and the clock docs
+- [x] 02-09-PLAN.md — Playwright zone pin, weekday audit ledger over every E2E spec, root sweep scripts and the clock docs
 
 **Wave 7** *(blocked on Wave 6 completion)*
-- [ ] 02-07-PLAN.md — knip on the combined Phase 2 tree, full triage ledger and owner candidates, jscpd baseline (source-only per D-12 plus a test-inclusive scan at the same thresholds)
+- [x] 02-07-PLAN.md — knip on the combined Phase 2 tree, full triage ledger and owner candidates, jscpd baseline (source-only per D-12 plus a test-inclusive scan at the same thresholds)
 
 **Wave 8** *(blocked on Wave 7 completion)*
-- [ ] 02-08-PLAN.md — Restack knip onto the clock branch, pre-publication proof, owner gate, clock PR into main and knip PR stacked on it, both green
+- [x] 02-08-PLAN.md — Restack knip onto the clock branch, pre-publication proof, owner gate, clock PR into main and knip PR stacked on it, both green
 
 ### Phase 3: Evidence-Gated Removal
 
@@ -105,7 +105,35 @@ Plans:
   4. The owner receives a list of candidates tooling could not prove dead (dynamic imports, Docker/Supabase config, string-reachable code) with the evidence for each, and none of them were deleted.
   5. Typecheck, lint, unit, integration, and E2E suites and both Docker builds pass after the removals, with no diff under `supabase/migrations/` and no change in application behavior.
 
-**Plans**: TBD
+**Plans:** 9/9 plans complete
+
+Plans:
+**Wave 1**
+- [x] 03-01-PLAN.md — Tracer: commit the knip normalizer and remove the seed `tsx` on `build/unused-deps`; start the removal ledger; DEAD-01 null result; owner decides A1, A2, A8 and OQ1
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 03-02-PLAN.md — Owner gate, PR 1 into main with six green jobs, and a throwaway draft for the `db:types` and `db:seed` CI evidence
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 03-03-PLAN.md — PR 2 web slice: the six proven-dead items, the bills alias, and the meal-fixture cascade to a fixed point under the throwaway config
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [x] 03-04-PLAN.md — PR 2: unused entries of the jobs, matching and recurrence barrels
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [x] 03-05-PLAN.md — PR 2: the 18 shared `z.infer` aliases per the owner's A2 answer, then a branch-wide green run
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [x] 03-06-PLAN.md — PR 3 content: the stale `BUILD_PROMPT.md` ignore entries, path sweep, leftover audit and orphan-docs re-check
+
+**Wave 7** *(blocked on Wave 6 completion and on the owner's merge of PR 1)*
+- [x] 03-07-PLAN.md — PR 2 landing: fixed point proven against the ledger at the tip, owner gate, six green jobs
+
+**Wave 8** *(blocked on Wave 7 completion and on the owner's merge of PR 2)*
+- [x] 03-08-PLAN.md — PR 3 landing: sync, owner gate, six green jobs including both image builds
+
+**Wave 9** *(blocked on Wave 8 completion and on the owner's merge of PR 3)*
+- [x] 03-09-PLAN.md — Phase close on the final main: the five success criteria, `main` CI, guards, DEAD-05 status, refreshed and checked owner list
 
 ### Phase 4: Bug Fixes With Regression Tests
 
@@ -120,7 +148,27 @@ Plans:
   4. Service-role client usage outside `apps/service/src/privileged/` is audited, and a test proves the ESLint fence fails when it is violated.
   5. Running `deploy.sh` never places the database password on a process command line (a stubbed-argv test shows this), and Kong denies the unused GoTrue paths in addition to Caddy while the normal sign-in and token-refresh flows still pass.
 
-**Plans**: TBD
+**Plans:** 8/8 plans complete
+
+Plans:
+**Wave 1**
+- [x] 04-01-PLAN.md — PR 1 content: tracer FIX-01 (held deal-add id, red then green), FIX-04 (rotation editor without the suppression, keyboard tests), FIX-02 tests on the PR head and the per-list lock on `fix/list-adds-lock`
+- [x] 04-03-PLAN.md — PR 2 content: tracer FIX-05 (service-role audit, fence probes, four killed config mutations), FIX-03 (registry-driven PATCH default guard, killed schema mutation)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 04-02-PLAN.md — PR 1 landing: local proof, owner gate (incl. the CLAUDE.md lines), red `test-integration` run, lock fast-forward, six green jobs
+- [x] 04-05-PLAN.md — PR 3 content, part 1 (stacked on PR 2): tracer FIX-06 (scoped `PGPASSWORD`, stubbed-argv test red then green), Kong E2E probes, owner `yaml@2.9.1` legitimacy gate
+
+**Wave 3** *(blocked on Wave 2 completion and on the owner's merge of PR 1)*
+- [x] 04-04-PLAN.md — PR 2 landing: sync after PR 1's merge, local proof, owner gate, six green jobs
+- [x] 04-06-PLAN.md — PR 3 content, part 2 on `fix/kong-allowlist`: tracer Kong allowlist (format 3.0, static test red 13 of 32 then green), deploy and testing docs
+
+**Wave 4** *(blocked on Wave 3 completion and on the owner's merge of PR 2)*
+- [x] 04-07-PLAN.md — PR 3 landing: sync after PR 2's merge, local proof, owner gate, red `test-e2e` run on the old Kong, allowlist fast-forward, six green jobs
+
+**Wave 5** *(blocked on Wave 4 completion and on the owner's merge of PR 3)*
+- [x] 04-08-PLAN.md — Phase close on the final `main`: every fix green there, the FIX-LEDGER index, `main` CI, the owner's Kong host step
+
 **UI hint**: yes
 
 ### Phase 5: Redundancy Reduction and Text Sync
@@ -161,8 +209,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Git History Curation and Branch Policy | 5/5 | Complete    | 2026-10-12 |
-| 2. Baseline, Net Stabilization, and Analysis | 0/9 | Planned | - |
-| 3. Evidence-Gated Removal | 0/TBD | Not started | - |
-| 4. Bug Fixes With Regression Tests | 0/TBD | Not started | - |
+| 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
+| 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
+| 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
 | 5. Redundancy Reduction and Text Sync | 0/TBD | Not started | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |

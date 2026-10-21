@@ -1,0 +1,74 @@
+# Phase 4 fix index: red and green evidence for FIX-01 to FIX-07
+
+final-main=48c111f79ecde910636805976752c94b5f615802
+base=9819e7c1436a8ad984f459c9fcb3e62fa68e0806
+pr1-merged=1b0e69f2414cf3619b8941a8596842edee6d274d
+pr2-merged=7da14613cd4060086c3ce8daeb13ffcfb0afd20b
+pr3-merged=48c111f79ecde910636805976752c94b5f615802
+
+This is the one place to find each fix's fails-before and passes-after proof. The per-PR ledgers hold the full text of each row: `FIX-LEDGER-WEB.md` (PR 1, #15), `FIX-LEDGER-GUARDS.md` (PR 2, #16), `FIX-LEDGER-INFRA.md` (PR 3, #18). Raw logs are in the gitignored `.planning/cleanup/logs/` (`04-0N-*`, and `04-08-*` for the final-main run below).
+
+## Main CI for the three squash commits
+
+main-ci-pr1=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run:39448163354 sha:1b0e69f (https://github.com/alex-tanton/hearth/actions/runs/39448163354)
+main-ci-pr2=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success run:39453673854 sha:7da1461 (failed job https://github.com/alex-tanton/hearth/actions/runs/39453673854/job/118734797533)
+main-ci-pr3=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run:39465074029 attempt:2 sha:48c111f (https://github.com/alex-tanton/hearth/actions/runs/39465074029; attempt-2 jobs: test-e2e 118779326521, lint 118779328491, test-unit 118779328754, typecheck 118779371813, build 118779388800, test-integration 118779394959)
+
+PR 3's attempt 1 had `test-e2e` (job 118774234646) `failure` at `Run set -euo pipefail` because `public.ecr.aws/supabase/gotrue:v2.196.0` could not be pulled (`toomanyrequests: Data limit exceeded`, 6 attempts): a registry rate limit, no test ran, never red evidence. The owner re-ran the run at 17:29:33Z and attempt 2 is `success` on all six jobs. Log: `04-08-main-e2e-attempt1.log` (gitignored).
+
+PR 2's `test-e2e` red is a runner-setup failure, not a test failure. Job 118734797533 failed at the step `Run pnpm/action-setup@v6` after 3 seconds; every later step (`setup-node`, install, `supabase/setup-cli`, Playwright install, `pnpm test:e2e`) was `skipped`, so no E2E test ran. It was recorded, not re-run: PR 2 was superseded on `main` by PR 3's squash, and a successful re-run would have made Deploy pick up an older commit (Phase 3 precedent). The content of PR 2 is proven on `main` by the CI of 48c111f, which contains it, and by the local run below on a detached checkout of 48c111f.
+
+## Final main, local proof
+
+Detached checkout `../hearth-final` at `final-main`, clean, `pnpm install --frozen-lockfile`, Node v24.21.0, pnpm 10.34.5, `TZ` unset. Each log ends `exit=0`.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| web | `vitest run src/screens/deals/deal-card.test.tsx src/components/chores/RotationEditor.test.tsx` (`@hearth/web`) | 2 files, 24 passed (`04-08-web.log`) |
+| shared | `vitest run src/api/patch-schemas.test.ts` (`@hearth/shared`) | 24 passed (`04-08-shared.log`) |
+| harness | `node --test test/eslint-service-role-fence.test.mjs scripts/deploy.test.mjs` | pass 34, fail 0 (`04-08-harness.log`) |
+| kong | `vitest run src/kong-routes.test.ts` (`@hearth/service`) | 32 passed (`04-08-kong.log`) |
+| lint | `pnpm lint` | exit=0 (`04-08-lint.log`) |
+| typecheck | `pnpm typecheck` | exit=0 (`04-08-typecheck.log`) |
+| test | `pnpm test` | matching 156, shared 172, recurrence 77, service 757, web 726, harness and e2e unit pass (`04-08-test.log`) |
+
+Static checks on that tree: `RotationEditor.tsx` has 0 `eslint-disable`; `scripts/deploy.sh` runs `PGPASSWORD="$(env_value POSTGRES_PASSWORD)" supabase migration up` with `--db-url "postgresql://postgres@${db_ip}:5432/postgres?sslmode=disable"` (no password in the URL); `docker/kong.yml` is `_format_version: '3.0'` and has `auth-v1-denied`; `apps/service/src/services/add-to-list.ts` takes the `add-to-list:${listId}` advisory lock; `apps/web/src/lib/api/deals.ts` holds `useRef<Map<string, string>>` (the held-id map). `.claude/CLAUDE.md` carries the two updated lines (suppression count five; the example directive). The phase's merges added no file under `docs/` (only `docs/deploy.md` and `docs/testing.md` were edited).
+
+## Red and green per fix
+
+CI job URLs below were each checked through `gh api repos/alex-tanton/hearth/actions/jobs/{id}` for existence and the stated conclusion.
+
+| FIX | Requirement | Test | Red (before the fix) | Green | PR and squash SHA | Ledger row |
+| --- | --- | --- | --- | --- | --- | --- |
+| FIX-01 | Offline list-add replay: stable item id in `useAddDealToList` | `apps/web/src/screens/deals/deal-card.test.tsx`, `describe('adding a deal after a lost response')` (4 cases) | Local, unfixed hook: exit=1, 2 failed / 15 passed. `sends the same item id on the retry, so the deal lands once` (`expected 'af845729-…' to be '19360e28-…'` at `expect(ids[1]).toBe(ids[0])`) and `keeps the id of a failed add for its list while the deal goes to another list` | Same command: exit=0, 17 passed; also in the final-main run (`04-08-web.log`) | PR 1 (#15), squash 1b0e69f2414cf3619b8941a8596842edee6d274d; fix commit d4b01b2 | `FIX-LEDGER-WEB.md`, FIX-01 |
+| FIX-02 | Recipe add-to-list idempotency | `apps/service/src/meal-plan.integration.test.ts`, `describe('when the same call arrives again')` (3 cases) | CI: run 39440151507, job 118687530778 (`test-integration` at PR head 1571f07, tests without the lock) `failure`: `two calls in flight at once add each ingredient once` (`expected [ 'bread', 'bread', 'butter', …(3) ] to deeply equal [ 'bread', 'butter', 'cheese' ]`). https://github.com/alex-tanton/hearth/actions/runs/39440151507/job/118687530778 | CI: run 39441333162, job 118692254393 (`test-integration` at PR head edd41ec, with the `add-to-list:` lock) `success`; attempt 2 job 118699929206 `success` again. https://github.com/alex-tanton/hearth/actions/runs/39441333162/job/118692254393 | PR 1 (#15), squash 1b0e69f2414cf3619b8941a8596842edee6d274d; tests 1571f07, lock 2e357e5 | `FIX-LEDGER-WEB.md`, FIX-02 |
+| FIX-03 | Structural test: no PATCH schema injects defaults | `packages/shared/src/api/patch-schemas.test.ts` (24 cases) | Killed mutation (the property already held): `autopay: billFieldsSchema.shape.autopay.unwrap(),` became `autopay: billFieldsSchema.shape.autopay,` in `updateBillRequestSchema`; exit=1, 1 failed / 23 passed: `PATCH body schemas > /api/bills/:id injects no default for a field left out` (`expected [ 'autopay' ] to deeply equal []`). File restored and confirmed clean | Unmutated: exit=0, 24 passed; final-main run `04-08-shared.log` 24 passed; CI `test-unit` job 118725082175 `success` (PR 2 head f246c74). https://github.com/alex-tanton/hearth/actions/runs/39450888999/job/118725082175 | PR 2 (#16), squash 7da14613cd4060086c3ce8daeb13ffcfb0afd20b; test 72b0668 | `FIX-LEDGER-GUARDS.md`, FIX-03 |
+| FIX-04 | `RotationEditor`: proper semantics, suppression gone | `apps/web/src/components/chores/RotationEditor.test.tsx` (7 cases: 6 keyboard-only, 1 pointer) and the component's own lint | Local. Part 1, suppression lifted: ESLint `--max-warnings=0` exit=1, `132:11 jsx-a11y/no-noninteractive-element-interactions`. Part 2, test on the unfixed component: exit=1, 1 failed / 6 passed: `reorders by dragging a member's handle onto another row` (no button named "Drag Alex Rivera to reorder"). The six keyboard cases already passed unfixed | Test: exit=0, 7 passed; ESLint exit=0 and 0 `eslint-disable` in the component; final-main run `04-08-web.log` and `04-08-lint.log` | PR 1 (#15), squash 1b0e69f2414cf3619b8941a8596842edee6d274d; fix commit f1e16fd | `FIX-LEDGER-WEB.md`, FIX-04 |
+| FIX-05 | Service-role audit and a proof that the lint fence fails | `test/eslint-service-role-fence.test.mjs` (28 ESLint API probes), run by `pnpm test:harness`; audit in the GUARDS ledger (116 hits, `audit-violations=0`) | Four killed mutations of the fence block in `eslint.config.js`, each restored and confirmed clean: m1 severity `'error'` to `'warn'` (15 failed / 13 passed), m2 `routes/**` added to `ignores` (10 / 18), m3 selector regex changed (2 / 26), m4 `files` pointed away (17 / 11) | Unmutated: exit=0, pass 28, fail 0; `pnpm test:harness` 215 then 221 with the deploy test; final-main harness run pass 34 (`04-08-harness.log`, the fence file and the deploy file); CI `test-unit` job 118725082175 `success` | PR 2 (#16), squash 7da14613cd4060086c3ce8daeb13ffcfb0afd20b; test ba7d501 | `FIX-LEDGER-GUARDS.md`, FIX-05 |
+| FIX-06 | `deploy.sh` keeps the database password off the command line | `scripts/deploy.test.mjs` (6 cases against stubbed `docker`, `supabase`, `curl`) | Local, unfixed `deploy.sh`: `node --test scripts/deploy.test.mjs` exit=1, pass 2, fail 4 (`is on no command line`: `supabase was given the password`; the CLI never saw `PGPASSWORD`; the `--db-url` carried a password; the password did not arrive intact) | Same command: exit=0, pass 6. Final-main harness run pass 34 (`04-08-harness.log`); CI `test-unit` run 39460683347 `success` (PR 3 head 7c0efdc) | PR 3 (#18), squash 48c111f79ecde910636805976752c94b5f615802; fix commit e05a220 | `FIX-LEDGER-INFRA.md`, FIX-06 |
+| FIX-07 | Kong denies the unused GoTrue paths; sign-in and refresh still work | Static: `apps/service/src/kong-routes.test.ts` (32 cases). E2E: two tests in `e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts` (17 method and path pairs, each with and without the anon key; the PWA's own calls) | Static, local, unchanged `kong.yml`: exit=1, 13 failed / 19 passed (`expected '2.1' to be '3.0'`, route table, browser calls reach `auth-v1-denied`). E2E, CI: run 39457296052, `test-e2e` attempt 2, job 118753127163 `failure` on exactly the two spec 08 Kong tests, 34 combinations unrefused, no `toomanyrequests`. https://github.com/alex-tanton/hearth/actions/runs/39457296052/job/118753127163 | Static: exit=0, 32 passed; final-main run `04-08-kong.log` 32 passed. E2E, CI: run 39460683347, `test-e2e` attempt 2, job 118764870460 `success`, spec 08 included (attempt 1, job 118759039156, failed two spec 17 accessibility tests unrelated to Kong; spec 08 passed in it). https://github.com/alex-tanton/hearth/actions/runs/39460683347/job/118764870460 | PR 3 (#18), squash 48c111f79ecde910636805976752c94b5f615802; commits 1f3f36c (E2E), 5c800a0 (allowlist); red head 19f16fb, green head 7c0efdc | `FIX-LEDGER-INFRA.md`, FIX-07 (E2E) and FIX-07 (static) |
+
+## Success criteria
+
+1. Replaying a list-add after a lost response creates no duplicates, for a deal and for a recipe: FIX-01 (fails on the unfixed hook, passes fixed) and FIX-02 (the in-flight overlap test fails in CI without the lock, passes with it; sequential replay and re-adding a bought item are kept as guards because they were already correct).
+2. A structural test fails if a PATCH schema injects defaults: FIX-03 (killed mutation turns it red; 24 cases cover all 11 PATCH bodies plus a cross-check against the `update*RequestSchema` registry).
+3. `RotationEditor` works from the keyboard with proper semantics, the suppression is gone and a keyboard test covers it: FIX-04 (0 `eslint-disable` on `main`; six keyboard cases and one pointer case).
+4. Service-role usage outside `apps/service/src/privileged/` is audited and a test proves the fence fails when violated: FIX-05 (116 hits classified, 0 violations; four mutations of the fence each fail the probe).
+5. `deploy.sh` never puts the database password on a command line, and Kong denies the unused GoTrue paths while sign-in and token refresh still pass: FIX-06 (stubbed-argv test) and FIX-07 (static route-table test; E2E refusal of 17 pairs with and without a key, and the PWA's own calls answered). In production, the Kong half takes effect after the owner's host step below.
+
+## Open for the owner
+
+- Kong host step (FIX-07 is not live in production until it is done; `docs/deploy.md` carries the command): take a backup by hand, run `hearth-compose up -d --force-recreate kong` (Deploy never recreates `kong`, and a bind-mounted `docker/kong.yml` change alone does not recreate it), then sign in to the PWA, sign out and in again (a fresh password grant), keep a session open past its access-token lifetime or reload it to force a token refresh, and open a password-recovery link from `hearth-admin reset-password {email}`. From outside the host, `curl -s -X POST https://{machine}.{tailnet}.ts.net/auth/v1/recover` should answer 403 with the body `Access is forbidden.`.
+- Firefox drag (research A1): the rotation drag handle is a native `<button>`; Firefox may not start a drag from a button. Up and Down are the guaranteed path. Optional follow-up: a `span role="presentation" draggable` handle plus `dataTransfer.setData`.
+- Kept Kong routes: `admin/users` (A2, service-role key only; the E2E seed uses it) and `otp` (A5, for when the magic-link build flag is turned on). Each is one service and one table row to delete if the owner wants it denied.
+- Known gaps of the service-role fence, written in the test header and `docs/testing.md`, not closed here: a dynamic import of a variable or template literal, `require`, a raw `set local role service_role`, and code outside `apps/service/src`. The audit found none of them in use.
+- Main CI reds: PR 2's squash (7da1461) has `test-e2e` job 118734797533 `failure` at `pnpm/action-setup@v6` (runner setup, nothing ran); not re-run on purpose (see above). PR 3's squash (48c111f) is green on all six jobs on attempt 2; attempt 1's `test-e2e` was a registry rate limit (see above).
+- E2E flakiness seen across the phase, outside the files the phase touched: PR 1 attempt 1 (spec 17, `notification type: saving, then a failed save`), PR 3 red run attempt 1 (the push-reminder test), PR 3 green run attempt 1 (two spec 17 accessibility-state tests). Each passed on a re-run; none was counted as red evidence. Worth a look in a later phase.
+- `.claude/CLAUDE.md` was updated in PR 1 (`gate-pr1=approve`): the `eslint-disable` count is now five, and the example directive no longer names the removed suppression. Phase 5 RED-05 has nothing left to sync for these two lines.
+- Deploy for 48c111f is still queued on the self-hosted runner (`deploy-pr3=` below); an earlier Deploy run for the same sha (39466389042) was cancelled as superseded. Not touched.
+- Branches on `origin`: `fix/list-adds-rotation`, `test/guard-tests` and `fix/deploy-kong` are gone from `origin` (not deleted by the executor; most likely delete-on-merge or the owner). `fix/list-adds-lock` (edd41ec) and `fix/kong-allowlist` (7c0efdc) are still there, as are all five local branches. The executor deleted no branch, local or remote.
+
+## Deploy and Kong host step
+
+deploy-pr3=39468151212 pending (Deploy run for 48c111f, queued on the self-hosted runner `hearth`, no conclusion at 17:43Z; run 39466389042 for the same sha is completed cancelled)
+kong-recreate=pending-owner

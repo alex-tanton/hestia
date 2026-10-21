@@ -16,38 +16,38 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Baseline and analysis
 
-- [ ] **BASE-01**: A baseline of typecheck, lint, test and build results on untouched `main` is recorded
-- [ ] **BASE-02**: knip is configured with explicit entry points (`sw.ts`, seed, e2e global setup, package exports) and calibrated with canaries
-- [ ] **BASE-03**: Findings are triaged into proven-dead, config-gap, test-only and uncertain, with the uncertain list handed to the owner
-- [ ] **BASE-04**: A duplication scan is recorded
+- [x] **BASE-01**: A baseline of typecheck, lint, test and build results on untouched `main` is recorded
+- [x] **BASE-02**: knip is configured with explicit entry points (`sw.ts`, seed, e2e global setup, package exports) and calibrated with canaries
+- [x] **BASE-03**: Findings are triaged into proven-dead, config-gap, test-only and uncertain, with the uncertain list handed to the owner
+- [x] **BASE-04**: A duplication scan is recorded
 
 ### Test determinism
 
-- [ ] **TIME-01**: Unit and component tests pin "now" and timezone through a global hook, and the 7 failing time-dependent web test files are fixed
-- [ ] **TIME-02**: Service and package suites are swept for date and timezone dependence and fixed
-- [ ] **TIME-03**: E2E expectations are derived from seed data with no weekday assumptions
-- [ ] **TIME-04**: A lint rule bans bare `new Date()` and `Date.now()` in tests and `e2e/`
-- [ ] **TIME-05**: The UTC-versus-household-zone date helper flake in `bills.integration.test.ts` is fixed
+- [x] **TIME-01**: Unit and component tests pin "now" and timezone through a global hook, and the 7 failing time-dependent web test files are fixed
+- [x] **TIME-02**: Service and package suites are swept for date and timezone dependence and fixed
+- [x] **TIME-03**: E2E expectations are derived from seed data with no weekday assumptions (done and green in CI on one calendar day; the weekend confirmation run is deferred by the owner, see the Phase 2 UAT)
+- [x] **TIME-04**: A lint rule bans bare `new Date()` and `Date.now()` in tests and `e2e/`
+- [x] **TIME-05**: The UTC-versus-household-zone date helper flake in `bills.integration.test.ts` is fixed
 - [ ] **TIME-06**: CI runs unit and component tests across a date/timezone matrix on `main` and nightly
 
 ### Dead code and hygiene
 
-- [ ] **DEAD-01**: Proven-dead files are removed
-- [ ] **DEAD-02**: Proven-dead exports and types are removed
-- [ ] **DEAD-03**: Unused dependencies are removed with the lockfile in the same commit (the `fuse.js` benchmark cluster, unused `tsx` in seed)
-- [ ] **DEAD-04**: Stale references are removed (e.g. `BUILD_PROMPT.md` in ignore files)
-- [ ] **DEAD-05**: No tracked generated or leftover files remain, and `db/types.ts` has a drift check
-- [ ] **DEAD-06**: Candidates tooling cannot prove dead are reported to the owner, not deleted
+- [x] **DEAD-01**: Proven-dead files are removed
+- [x] **DEAD-02**: Proven-dead exports and types are removed
+- [x] **DEAD-03**: Unused dependencies are removed with the lockfile in the same commit (the `fuse.js` benchmark cluster, unused `tsx` in seed)
+- [x] **DEAD-04**: Stale references are removed (e.g. `BUILD_PROMPT.md` in ignore files)
+- [x] **DEAD-05**: No tracked generated or leftover files remain, and `db/types.ts` has a drift check (one-time check done in Phase 3; the permanent check is CI-03)
+- [x] **DEAD-06**: Candidates tooling cannot prove dead are reported to the owner, not deleted
 
 ### Bug fixes (each with a regression test)
 
-- [ ] **FIX-01**: Offline list-add replay is reproduced with a failing test, then fixed (stable ID in `useAddDealToList`)
-- [ ] **FIX-02**: Recipe add-to-list idempotency is checked and fixed if it leaks duplicates
-- [ ] **FIX-03**: A structural test guards every PATCH schema against default-injection
-- [ ] **FIX-04**: The `RotationEditor` accessibility suppression is replaced with proper keyboard semantics
-- [ ] **FIX-05**: Service-role client usage is audited, and a test proves the lint fence fails when violated
-- [ ] **FIX-06**: `deploy.sh` no longer passes the database password on the command line
-- [ ] **FIX-07**: Kong denies the unused GoTrue paths, not only Caddy, with positive-flow tests
+- [x] **FIX-01**: Offline list-add replay is reproduced with a failing test, then fixed (stable ID in `useAddDealToList`)
+- [x] **FIX-02**: Recipe add-to-list idempotency is checked and fixed if it leaks duplicates
+- [x] **FIX-03**: A structural test guards every PATCH schema against default-injection
+- [x] **FIX-04**: The `RotationEditor` accessibility suppression is replaced with proper keyboard semantics
+- [x] **FIX-05**: Service-role client usage is audited, and a test proves the lint fence fails when violated
+- [x] **FIX-06**: `deploy.sh` no longer passes the database password on the command line
+- [x] **FIX-07**: Kong denies the unused GoTrue paths, not only Caddy, with positive-flow tests
 
 ### Redundancy and docs
 
@@ -106,28 +106,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GIT-02 | Phase 1 | Complete |
 | GIT-03 | Phase 1 | Complete |
 | GIT-04 | Phase 1 | Complete |
-| BASE-01 | Phase 2 | Pending |
-| BASE-02 | Phase 2 | Pending |
-| BASE-03 | Phase 2 | Pending |
-| BASE-04 | Phase 2 | Pending |
-| TIME-01 | Phase 2 | Pending |
-| TIME-02 | Phase 2 | Pending |
-| TIME-03 | Phase 2 | Pending |
-| TIME-04 | Phase 2 | Pending |
-| TIME-05 | Phase 2 | Pending |
-| DEAD-01 | Phase 3 | Pending |
-| DEAD-02 | Phase 3 | Pending |
-| DEAD-03 | Phase 3 | Pending |
-| DEAD-04 | Phase 3 | Pending |
-| DEAD-05 | Phase 3 | Pending |
-| DEAD-06 | Phase 3 | Pending |
-| FIX-01 | Phase 4 | Pending |
-| FIX-02 | Phase 4 | Pending |
-| FIX-03 | Phase 4 | Pending |
-| FIX-04 | Phase 4 | Pending |
-| FIX-05 | Phase 4 | Pending |
-| FIX-06 | Phase 4 | Pending |
-| FIX-07 | Phase 4 | Pending |
+| BASE-01 | Phase 2 | Complete |
+| BASE-02 | Phase 2 | Complete |
+| BASE-03 | Phase 2 | Complete |
+| BASE-04 | Phase 2 | Complete |
+| TIME-01 | Phase 2 | Complete |
+| TIME-02 | Phase 2 | Complete |
+| TIME-03 | Phase 2 | Complete |
+| TIME-04 | Phase 2 | Complete |
+| TIME-05 | Phase 2 | Complete |
+| DEAD-01 | Phase 3 | Complete |
+| DEAD-02 | Phase 3 | Complete |
+| DEAD-03 | Phase 3 | Complete |
+| DEAD-04 | Phase 3 | Complete |
+| DEAD-05 | Phase 3 | Complete |
+| DEAD-06 | Phase 3 | Complete |
+| FIX-01 | Phase 4 | Complete |
+| FIX-02 | Phase 4 | Complete |
+| FIX-03 | Phase 4 | Complete |
+| FIX-04 | Phase 4 | Complete |
+| FIX-05 | Phase 4 | Complete |
+| FIX-06 | Phase 4 | Complete |
+| FIX-07 | Phase 4 | Complete |
 | RED-01 | Phase 5 | Pending |
 | RED-02 | Phase 5 | Pending |
 | RED-03 | Phase 5 | Pending |

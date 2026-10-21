@@ -21,13 +21,14 @@ The owner can start a manual review from a lean, trustworthy base: no dead code 
 - ✓ In-process cron jobs guarded by Postgres advisory locks — existing
 - ✓ Docker Compose single-host deployment with Caddy gateway, GoTrue, Realtime, Kong, backups, and a CI-gated deploy workflow — existing
 - ✓ Unit, component, service integration, and Playwright E2E test suites with a coverage threshold — existing
+- ✓ Date- and timezone-dependent unit, component, and E2E tests are deterministic: one clock pin and zone hook, a 36-cell weekday-and-zone sweep, a lint ban on bare clock reads, and a household-zone bills regression guard — Phase 2 (E2E on a weekend run is deferred by the owner)
+- ✓ Dead-code and duplication tooling is calibrated and its findings triaged (knip 6.41.0, jscpd 5.4.1; 89-row ledger, owner candidate list) — Phase 2 (identification only; removal is Phase 3)
 
 ### Active
 
 - [ ] Dead code, unused exports, unused dependencies, and stale references are identified by tooling or tests and removed; uncertain candidates are listed for the owner rather than deleted
 - [ ] Committed generated files and LLM-leftover artifacts are removed or git-ignored, and docs match the code
 - [ ] Redundancy and duplication in code, fixtures, scripts, and CI config are reduced
-- [ ] Date- and timezone-dependent unit, component, and E2E tests are made deterministic so the suite passes on any weekday and household timezone
 - [ ] CI is robust: dead-code and dependency checks are enforced, flakiness sources are removed, and the pipeline is reviewed for correctness
 - [ ] Known bug fixed: offline list write replay can create duplicate items after a lost response, with a regression test
 - [ ] Other known bugs and robustness gaps in the codebase concerns map are fixed, each with a regression test (accessibility suppression in `RotationEditor`, PATCH schema rule for shared contracts, service-role key scope enforcement, Kong/Caddy GoTrue path coverage, deploy-script password exposure)
@@ -68,6 +69,10 @@ The owner can start a manual review from a lean, trustworthy base: no dead code 
 | Remove only proven-dead code; list uncertain candidates | Dynamic imports and Docker/Supabase config defeat static analysis | — Pending |
 | Curate history first, then push; PRs for major functionality, direct-to-main for minor changes | Owner wants a clean public history and reviewable PRs | — Pending |
 | Defer off-host backups and scaling work | Infrastructure outside repo, not cleanup | — Pending |
+| Pin `Date` with a subclass-safe replacement, not `vi.setSystemTime` | `vi.setSystemTime` makes `@date-fns/tz` `TZDate` answer in the machine zone, wrong in every negative-offset zone | ✓ Good — Phase 2 |
+| Phase 5 compares duplication against the test-inclusive jscpd baseline (96 clones, 1.87%) | The source-only scan leaves out the test fixtures RED-03 targets | — Pending (applied in Phase 5) |
+| Defer the weekend E2E run that would confirm TIME-03 | No scheduled run exercises it; waiting for a weekend would take days | — Pending (owner-deferred, recorded in the Phase 2 UAT) |
+| Unused exports in `matching`, `recurrence` and `shared` are removable when nothing imports them, tests included | The packages are internal to the workspace, not a public API | — Pending (applied in Phase 3) |
 
 ## Evolution
 
@@ -87,4 +92,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-11 after initialization*
+*Last updated: 2026-10-19 after Phase 2*

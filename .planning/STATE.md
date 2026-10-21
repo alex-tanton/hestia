@@ -1,43 +1,43 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 2
-current_phase_name: Baseline, Net Stabilization, and Analysis
-status: executing
-stopped_at: Phase 2 planned (9 plans, cloud-portable)
-last_updated: "2026-10-12T21:51:07.832Z"
-last_activity: 2026-10-12
-last_activity_desc: Phase 2 plans made cloud-portable and committed to main
-state_head: d3da748223fb85432fc06defaa25ac00ac4ed258
+current_phase: 5
+current_phase_name: Redundancy Reduction and Text Sync
+status: planning
+stopped_at: Phase 4 complete, ready to plan Phase 5
+last_updated: "2026-10-21T00:49:32.266Z"
+last_activity: 2026-10-21
+last_activity_desc: Phase 4 complete, transitioned to Phase 5
+state_head: 6358a06ceb743c16968d3b6da2bfacc70e5ec7de
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 14
-  completed_plans: 5
-  percent: 17
+  completed_phases: 4
+  total_plans: 31
+  completed_plans: 31
+  percent: 67
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-11)
+See: .planning/PROJECT.md (updated 2026-10-19)
 
 **Core value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
-**Current focus:** Phase 2 — Baseline, Net Stabilization, and Analysis
+**Current focus:** Phase 4 — Bug Fixes With Regression Tests
 
 ## Current Position
 
-Phase: 2 (Baseline, Net Stabilization, and Analysis) — READY TO EXECUTE
+Phase: 5 — Redundancy Reduction and Text Sync
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-12 — Phase 2 plans made cloud-portable; planning docs tracked on `main`
+Status: Ready to plan
+Last activity: 2026-10-21 — Phase 4 complete, transitioned to Phase 5
 
-Progress: [██░░░░░░░░] 17%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 31
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -46,6 +46,9 @@ Progress: [██░░░░░░░░] 17%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 5 | - | - |
+| 02 | 9 | - | - |
+| 3 | 9 | - | - |
+| 4 | 8 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -61,6 +64,21 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01 P03 | 14min | 2 tasks | 2 files |
 | Phase 01 P04 | 15min | 3 tasks | 1 files |
 | Phase 01 P05 | ~35min | 3 tasks | 2 files |
+| Phase 03 P03 | 1h | 3 tasks | 6 files |
+| Phase 3 P04 | 30min | 2 tasks | 3 files |
+| Phase 03 P05 | 25min | 3 tasks | 12 files |
+| Phase 03 P06 | 30min | 2 tasks | 3 files |
+| Phase 03 P07 | resumed | 3 tasks | 1 files |
+| Phase 03 P08 | resumed session | 3 tasks | 1 files |
+| Phase 03 P09 | 2 sessions | 2 tasks | 5 files |
+| Phase 04 P01 | 12min | 3 tasks | 6 files |
+| Phase 04 P03 | 10min | 2 tasks | 5 files |
+| Phase 04 P05 | 10min | 3 tasks | 7 files |
+| Phase 04 P02 | 51min | 3 tasks | 2 files |
+| Phase 04 P06 | 8min | 2 tasks | 7 files |
+| Phase 04 P04-04 | 31min | 3 tasks | 1 files |
+| Phase 04 P07 | 1h 15m | 3 tasks | 1 files |
+| Phase 04 P08 | 1h | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -82,6 +100,18 @@ Recent decisions affecting current work:
 - [Phase 01]: Plan 01-05: candidate tip changed after Gate 2 to d3da748223fb85432fc06defaa25ac00ac4ed258 (83eae2c plus a ci.yml-only pre-pull commit); pushed fast-forward to origin/curated-main; PR #1 CI: lint, typecheck, test-integration, test-e2e (102/102), build pass; test-unit fails on the one known timezone web test (Phase 2 TIME-01 class, unproven)
 - [Phase 01]: Plan 01-05: Gate 3 recorded as push-main-accept-red for d3da748 (owner reply approve-gate-3, 2026-10-12, red job test-unit). First push rejected by ruleset "Main PR Enforcement" (GH013); owner changed the ruleset and re-confirmed ("A done, re-confirm gate 3"); second plain push succeeded: origin/main 7da55e3..d3da748, PR #1 marked MERGED by GitHub; local main moved without disturbing .planning/ and .claude/; GIT-01..04 complete
 - [Phase 2]: Development moved to Claude Code cloud sessions. `.planning/` and `.claude/CLAUDE.md` are tracked on `main` (`commit_docs: true`); the plans run on Linux against `.planning/environment/cloud-setup.sh`, with Docker optional (no Docker: integration and E2E evidence comes from PR CI). Work branches `test/deterministic-clock` and `chore/knip-config` are backup-pushed after each plan with no PR; PRs open only at 02-08's gate (or 02-04's early-CI draft). Raw logs under `.planning/cleanup/logs/` are gitignored and never committed.
+- [Phase 2]: Clock pin is a subclass-safe `Date`, not `vi.setSystemTime` (it breaks `@date-fns/tz` in negative-offset zones); PR #8 later made suite-level overrides survive and covered the pin with 167 harness tests run by `pnpm test`
+- [Phase 2]: Owner decisions after verification (D-13 to D-18 in 02-CONTEXT.md): Phase 5 uses the test-inclusive jscpd baseline; weekend E2E run deferred; vitest declared at the root; fuzzy benchmark deleted; packages are internal; the jobs barrel keeps its test
+- [Phase 03]: A2=remove honored: 18 unused z.infer aliases removed from packages/shared, schemas kept
+- [Phase 03]: Plan 03-07: gate-pr2=approve; PR 2 (#13) opened at head 5f5b090 with six green CI jobs (test-e2e passed on attempt 3 after two ECR toomanyrequests re-runs); awaiting the owner's squash merge
+- [Phase 03]: Plan 03-09: final-tree proof on 9819e7c (knip default 1, production 28, nonode 1); knip-summary kept reported; DEAD-05 complete per OQ1=accept and local db:types evidence (permanent check Phase 6 CI-03); main test-e2e red on 51c077e and aefe63a (registry flake, owner-accepted, not re-run), green on 9819e7c after one re-run
+- [Phase 04]: Plan 04-01: FIX-01 held-id map keyed by list and deal (d4b01b2); FIX-04 drag handle as a draggable button with a role=presentation drop row, no eslint-disable (f1e16fd); FIX-02 tests on fix/list-adds-rotation (1571f07), per-list advisory lock one commit ahead on fix/list-adds-lock (2e357e5). Red/green in FIX-LEDGER-WEB.md; FIX-02 red/green pending PR 1 CI (04-02)
+- [Phase 04]: Plan 04-03: test/guard-tests (72b0668) holds the FIX-05 28-probe fence test (audit 0 violations, 4 mutations killed with 15/10/2/17 failures) and the FIX-03 registry-driven PATCH guard (autopay mutation killed); tests, harness wiring and docs only, no PR yet (04-04)
+- [Phase 04]: 04-05: PGPASSWORD prefix assignment with a password-free URL (T-04-13 accepted, D-09); Kong probes ship before the Kong fix; yaml@2.9.1 approved by the owner, installed by 04-06
+- [Phase 04]: 04-02: PR 1 (#15) opened with owner gate approve; FIX-02 red/green recorded from CI; test-e2e passed on attempt 2 after one owner-approved re-run of an unrelated attempt-1 failure
+- [Phase 04]: 04-06: Kong GoTrue is an allowlist at format 3.0 (verify, token, logout, user, otp, admin/users, denied); guarded by a Vitest test in apps/service using yaml 2.9.1; kong config parse skipped (no Docker); a kong.yml change needs a manual force-recreate of kong on the host
+- [Phase 04]: 04-04: PR 2 (#16) opened only after gate-pr2=approve was committed; six CI jobs green on first run, nothing merged
+- [Phase 04]: 04-07: PR 3 (#18) open at 7c0efdc with six green jobs; FIX-07 red from run 39457296052 job 118753127163 (34 unrefused); E2E flakes outside spec 08 re-run; no probe dropped; awaiting the owner's squash merge and the Kong recreate
 
 ### Pending Todos
 
@@ -89,11 +119,24 @@ None yet.
 
 ### Blockers/Concerns
 
+- [Phase 3]: Main CI gap: `test-e2e` is red on the main runs for 51c077e (PR 1) and aefe63a (PR 2) from the registry pre-pull flake; the owner chose not to re-run them so Deploy does not pick up superseded commits (each PR's own CI was green on an identical tree). 9819e7c is green after one re-run; `17-accessibility-states.spec.ts:527` and `19-notifications.spec.ts:141` flaked once there (look at them in Phase 6)
+- [Phase 3]: DEAD-05 is marked complete on the owner-authorized local Docker run (`pnpm db:types` twice, both equal to the committed file; `pnpm db:seed` exit 0), not CI; the permanent drift check is Phase 6 CI-03
+- [Phase 3]: `knip:production` reports `scripts/knip-summary.mjs` as a files line (owner decision keep-reported); revisit with Phase 6 CI-01, together with the `**/test/**` hidden-entry blind spot of the committed knip config
 - [Phase 1]: The "Main PR Enforcement" ruleset (id 23693495) was changed by the owner to permit the main push (the API now returns 404 for it, so it appears deleted rather than disabled). Nothing is enforced on main now; if it is re-created, a required check plus the red test-unit (favorites.test.tsx timezone test, Phase 2 TIME-01 class) will block PRs. CONTRIBUTING.md says branch protection is not configured; reconcile in Phase 6. Owner may cancel a queued Deploy run and delete origin/curated-main.
-- [Phase 2]: Only the web suite (715 tests) was swept for date/timezone dependence; service and package suites are unswept. Clock probes ran on Node 26, CI pins Node 24, so re-run on Node 24.
-- [Phase 2]: E2E weekday strategy is open: seed-derived expectations versus a server clock seam (a behavior change).
+- [Phase 3]: Three of the six proven-dead rows in `.planning/cleanup/TRIAGE.md` (`currentWeekFixture`, `emptyWeekFixture`, `previousWeekFixture` in `apps/web/src/test/meal-fixtures.ts`) no longer appear in a fresh `pnpm knip` run: the root `test:harness` script (PR #8) makes knip's Node plugin treat `test/**` files as entries, so a fresh default run gives 54 findings (recorded: 59) and 79 production (recorded: 80). Re-establish the tool evidence for those three before deleting anything; decide whether `knip.json` should stop that side effect
+- [Phase 3]: `../hearth-aside/bin/knip-summary.mjs` (outside the repo) normalizes the knip reports and is cited by TRIAGE.md; it is lost with the cloud container unless committed
+- [Phase 2]: TIME-03's weekend E2E confirmation is deferred by the owner; CI `test-e2e` has run on one calendar day only
+- [Phase 2]: The second code review (02-REVIEW-FIXES.md, of PR #8's code) has 0 critical, 6 warnings and 6 infos, all open; the owner has not yet decided whether to fix them
+- [Phase 6]: `main` has no branch protection and the Deploy job waits on an unregistered self-hosted runner; Dependabot PR #9 (29 npm updates) failed CI on 2026-10-16 and security alert dependabot/1 is unexamined
 - [Phase 4]: The offline-duplicate root cause is unproven; reproduce `useAddDealToList` (client id minted inside `mutationFn`) before fixing.
 - [Phase 6]: `db:types` determinism is unverified (run twice before gating); `braces` advisory has no upstream patch; web coverage thresholds need an enforce-or-remove decision.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261020-v7v | Fix WR-02: hold the deal-add item id at QueryClient scope (branch fix/held-deal-id, pushed, no PR, awaiting the owner's merge) | 2026-10-20 | c69569a | [261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien](./quick/261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien/) |
+| 261020-wnk | CI: pull the Supabase E2E images from GHCR first with ECR fallback, plus GHCR and optional Docker Hub logins (branch ci/pull-supabase-from-ghcr, 2 local commits, NOT pushed: token lacks workflow scope; no PR) | 2026-10-20 | d25d8e6 | [261020-wnk-make-ci-image-pulls-robust-against-regis](./quick/261020-wnk-make-ci-image-pulls-robust-against-regis/) |
 
 ## Deferred Items
 
@@ -105,6 +148,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-12T21:51:07.832Z
-Stopped at: Phase 2 planned (9 plans, cloud-portable)
-Resume file: .planning/environment/CLOUD-ENVIRONMENT.md (set up the session, then `/gsd-execute-phase 2`)
+Last session: 2026-10-20T17:45:25.585Z
+Stopped at: Phase 4 complete, ready to plan Phase 5
+Resume file: None
