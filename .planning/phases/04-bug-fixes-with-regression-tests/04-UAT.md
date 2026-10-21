@@ -1,18 +1,14 @@
 ---
-status: testing
+status: complete
 phase: 04-bug-fixes-with-regression-tests
 source: [04-VERIFICATION.md]
 started: 2026-10-20T17:58:53Z
-updated: 2026-10-20T23:10:00Z
+updated: 2026-10-21T00:40:00Z
 ---
 
 ## Current Test
 
-number: 4
-name: Owner acknowledgement of WR-02: held deal-add id scope
-expected: |
-  Fix merged to main (PR 19), or the owner accepts the per-card scope.
-awaiting: PR 19 CI and the owner's squash merge
+[testing complete]
 
 ## Tests
 
@@ -37,15 +33,15 @@ note: "Owner decision 2026-10-20: not tested because the owner cannot test it. F
 ### 4. Owner acknowledgement of WR-02: held deal-add id scope
 The held id lives in a per-card hook instance.
 expected: The owner accepts that a lost-response retry after the card unmounts (filter change, paging, navigation) mints a new id and can still add the deal twice, or asks for the id to be held at QueryClient scope.
-result: [pending]
-note: "Fix pushed on branch fix/held-deal-id (c69569a70c8d31c601961f6713abeaf949d03b50), pull request 19 is open. Owner decision 2026-10-20: hold the id at QueryClient scope. Awaiting the owner's PR and squash merge; not yet on main. Held ids are also scoped to the signed-in user and never expire; see .planning/cleanup/FIX-LEDGER-HELD-ID.md."
+result: pass
+note: "Owner decision 2026-10-20: hold the id at QueryClient scope, scoped to the signed-in user. Fixed and merged to main by PR 19 (squash a0317ce); CI green on the merged head, including test-e2e. Held ids still never expire and a reload mints a new id (see FIX-LEDGER-HELD-ID.md)."
 
 ## Summary
 
 total: 4
-passed: 2
+passed: 3
 issues: 0
-pending: 1
+pending: 0
 skipped: 1
 blocked: 0
 
