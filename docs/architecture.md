@@ -307,11 +307,11 @@ many times it's resent. Retries are bounded (`retryQueuedWrite`, capped at 3 att
 retryable failures (offline, 5xx) from permanent ones (403/404/410, where the row or its list is
 already gone), surfacing a permanent failure once via a toast rather than retrying forever.
 
-Adding a deal to a list is not one of the queued writes. `useAddDealToList`
-(`apps/web/src/lib/api/deals.ts`) is an ordinary online mutation that posts a client-generated item
-id with the deal's id, and the service's `on conflict (id) do nothing` makes a repeat of the same
-id a no-op. Because a response can be lost after the request landed, the id is held across a retry:
-it is kept per list and deal, at `QueryClient` scope (so it survives the card unmounting) and per
+Adding a deal to a list is not a queued write, and its item id is held across a retry.
+`useAddDealToList` (`apps/web/src/lib/api/deals.ts`) is an ordinary online mutation that posts a
+client-generated item id with the deal's id, and the service's `on conflict (id) do nothing` makes
+a repeat of the same id a no-op. Because a response can be lost after the request landed, the id is
+kept per list and deal, at `QueryClient` scope (so it survives the card unmounting) and per
 signed-in user, and only a success starts the next add with a fresh id. The held ids live in memory
 only, so a reload between a failure and the retry mints a new id.
 
