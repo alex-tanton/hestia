@@ -2,13 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { COMMON_PASSWORD_MESSAGE } from '@hearth/shared';
-import {
-  createAuthStub,
-  createFetchStub,
-  problemBody,
-  renderScreen,
-  type StubHandler,
-} from '../../test/harness.tsx';
+import { createAuthStub, problemBody, renderScreen, stubFetch } from '../../test/harness.tsx';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { merchantsResponse } from '../../test/deal-fixtures.ts';
 import { AuthError, SIGN_IN_FAILED_MESSAGE } from '../../lib/auth/auth-client.ts';
@@ -29,14 +23,6 @@ vi.mock('../../lib/url-hash.ts', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/url-hash.ts')>()),
   initialUrlHash: () => '#token=a-token-from-the-url-fragment',
 }));
-
-function stubFetch(
-  handlers: Readonly<Record<string, StubHandler>>,
-): ReturnType<typeof createFetchStub> {
-  const stub = createFetchStub(handlers);
-  vi.stubGlobal('fetch', stub.fetch);
-  return stub;
-}
 
 afterEach(() => {
   vi.unstubAllGlobals();
