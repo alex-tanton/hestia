@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-10-21T18:57:40.786Z"
+stopped_at: Completed 05-05-PLAN.md
+last_updated: "2026-10-21T19:37:12.988Z"
 last_activity: 2026-10-21
 last_activity_desc: Phase 05 execution started
-state_head: 748ffb56fef0cfa9a176fc2e9ea858999ff9d098
+state_head: 793fa8886f27000fa45eedc7f1000413b3454afa
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 35
+  completed_plans: 36
   percent: 67
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 4 of 13 complete (05-01, 05-02, 05-03, 05-04); next 05-05 (PR B landing)
+Plan: 5 of 13 complete (05-01 to 05-05); next 05-06 (PR C start)
 Status: Ready to execute
 Last activity: 2026-10-21 — Phase 05 execution started
 
@@ -83,6 +83,7 @@ Progress: [███████░░░] 67%
 | Phase 05 P01 | ~45min | 3 tasks | 13 files |
 | Phase 05 P04 | 35min | 3 tasks | 24 files |
 | Phase 5 P03 | 1h | 2 tasks | 2 files |
+| Phase 05 P05 | 1h45m | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 05-02: service fixtures consolidated on test/shared-fixtures-wip (053f371): stack-hooks.ts and job-logger.ts, jscpd 99 -> 87 clones, service unit 757 = 757; readiness, deals and recipes keep their own hooks; 3 service pairs kept with reasons in FIXTURE-LEDGER.md; no PR opened
 - [Phase 05]: Plan 05-01: PR A content is on origin as ci/setup-action (43672635, tree fd704a4c); composite setup action keeps checkout in each job (D-12 deviation, ledger row for PR A body); seed typechecked once; GitHub refused the token push (no workflow scope) so the owner pushed via apply.sh (Windows Git Bash needs MSYS_NO_PATHCONV=1); working branch is claude/eloquent-mayer-szjtjf, not the plan's claude/vigilant-gates-a4ihid
 - [Phase 05]: Plan 05-04: web fixtures consolidated on test/shared-fixtures-wip (8a7e8e4): browser.ts, WithQueue, stubFetch, dealScreenHandlers, emptyDealSearch; jscpd 87 -> 66 clones, web 728 = 728; 14 pairs kept with reasons in FIXTURE-LEDGER.md (hoisted viewer-zone blocks, retry assertions, variant hooks); no PR opened
+- [Phase 05]: Plan 05-05: WB synced past PR A by one ordinary merge (no workflow-scope refusal); PR B (#27) opened from test/shared-fixtures with six green jobs, jscpd 96 -> 66 clones, integration tests 1190 = main; owner squash-merged as a660d58, main CI green
 
 ### Pending Todos
 
@@ -156,6 +158,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-21T18:57:40.592Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-10-21T19:37:12.842Z
+Stopped at: Completed 05-05-PLAN.md
 Resume file: None

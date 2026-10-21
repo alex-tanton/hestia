@@ -53,7 +53,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **RED-01**: A CI composite setup action replaces the preamble repeated in six jobs
 - [x] **RED-02**: The duplicate seed typecheck is removed
-- [ ] **RED-03**: Duplicated test fixtures flagged by the scan are consolidated
+- [x] **RED-03**: Duplicated test fixtures flagged by the scan are consolidated
 - [ ] **RED-04**: The 262 stale spec citations are removed, comment-only and verified
 - [ ] **RED-05**: `docs/` and the codebase map match the code
 
@@ -130,7 +130,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FIX-07 | Phase 4 | Complete |
 | RED-01 | Phase 5 | Complete |
 | RED-02 | Phase 5 | Complete |
-| RED-03 | Phase 5 | Pending |
+| RED-03 | Phase 5 | Complete |
 | RED-04 | Phase 5 | Pending |
 | RED-05 | Phase 5 | Pending |
 | CI-01 | Phase 6 | Pending |
