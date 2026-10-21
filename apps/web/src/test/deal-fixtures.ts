@@ -153,6 +153,18 @@ export function searchResponse(
   };
 }
 
+/** A deal search that found nothing and has never been refreshed, so `asOf` is null. */
+export const emptyDealSearch: DealSearchResponse = {
+  deals: [],
+  page: 1,
+  pageSize: 50,
+  total: 0,
+  hasMore: false,
+  asOf: null,
+  stale: false,
+  refreshing: false,
+};
+
 export function flyerItemsResponse(
   deals: Deal[] = [eggsDeal, pumpkinDeal],
   overrides: Partial<FlyerItemsResponse> = {},

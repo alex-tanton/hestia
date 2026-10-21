@@ -6,6 +6,7 @@ import type { MealPlanEntry } from '@hearth/shared';
 import { stubCoarsePointer } from '../../test/browser.ts';
 import { ALEX_ID, OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { queryKeys } from '../../lib/api/keys.ts';
+import { emptyDealSearch } from '../../test/deal-fixtures.ts';
 import { thisWeekFixture } from '../../test/list-fixtures.ts';
 import {
   bakedZitiFixture,
@@ -98,16 +99,7 @@ function mountRecipe(household: StubHandler = okHousehold): void {
     'GET /api/households/:id/pantry': () => ({ status: 200, body: [] }),
     'GET /api/households/:id/deals/search': () => ({
       status: 200,
-      body: {
-        deals: [],
-        page: 1,
-        pageSize: 50,
-        total: 0,
-        hasMore: false,
-        asOf: null,
-        stale: false,
-        refreshing: false,
-      },
+      body: emptyDealSearch,
     }),
   });
   vi.stubGlobal('fetch', stub.fetch);
