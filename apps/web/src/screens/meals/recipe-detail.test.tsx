@@ -1,8 +1,8 @@
-import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { RecipeDetail } from '@hearth/shared';
+import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
 import {
@@ -54,28 +54,7 @@ function mount(
   return stub;
 }
 
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
-
-beforeEach(() => {
-  setOnline(true);
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-});
-
-afterEach(() => {
-  onlineManager.setOnline(true);
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerBrowserStubs();
 
 describe('Recipe detail (Design › Screens › 12)', () => {
   it('loading: announces it with skeletons', () => {

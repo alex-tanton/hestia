@@ -1,7 +1,7 @@
-import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
 import {
   bakedZitiFixture,
@@ -41,29 +41,7 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
   return stub;
 }
 
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
-
-beforeEach(() => {
-  setOnline(true);
-  // The phone layout is the primary design target, where Select renders the platform picker.
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-});
-
-afterEach(() => {
-  onlineManager.setOnline(true);
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerBrowserStubs();
 
 describe('Recipe library (Design › Screens › 11)', () => {
   it('loading: announces it with skeletons', () => {

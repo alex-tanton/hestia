@@ -1,7 +1,8 @@
 import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setOnline } from '../../test/browser.ts';
 import {
   spectrumInternetFixture,
   spotifyFixture,
@@ -35,14 +36,6 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
   vi.stubGlobal('fetch', stub.fetch);
   renderScreen(<SubscriptionsScreen householdId={OAK_STREET_ID} />);
   return stub;
-}
-
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
 }
 
 beforeEach(() => {
