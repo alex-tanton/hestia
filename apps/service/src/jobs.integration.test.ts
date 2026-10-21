@@ -17,6 +17,7 @@ import { RecordingPushTransport } from './test/push-double.js';
 import { recomputeReadinessForHousehold } from './services/readiness.js';
 import { repriceExpiredItems } from './services/repricing.js';
 import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
+import { recordingJobLogger, type JobLogLine } from './test/job-logger.js';
 import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
 import { currentInstant } from './test/zone-dates.js';
 
@@ -30,7 +31,7 @@ import { currentInstant } from './test/zone-dates.js';
 
 let handle: DatabaseHandle;
 let source: FakeDealSource;
-let lines: { level: string; data: Record<string, unknown>; message: string }[];
+let lines: JobLogLine[];
 let logger: JobLogger;
 let jobDb: JobDatabase;
 let clock: Date;
@@ -44,19 +45,6 @@ const ALL_POSTAL_CODES = [POSTAL_CODE, DORMANT_POSTAL_CODE, QUIET_POSTAL_CODE];
 // covered by dispatch-notifications.integration.test.ts.
 function dispatchDeps(): SchedulerDeps['dispatch'] {
   return { outbox: createNotificationOutbox(jobDb), transport: new RecordingPushTransport() };
-}
-
-function makeLogger(): JobLogger {
-  const record = (level: string) => (data: Record<string, unknown>, message: string) => {
-    lines.push({ level, data, message });
-  };
-  const self: JobLogger = {
-    info: record('info'),
-    warn: record('warn'),
-    error: record('error'),
-    child: () => self,
-  };
-  return self;
 }
 
 beforeAll(async () => {
@@ -84,7 +72,7 @@ beforeEach(async () => {
   clock = currentInstant();
   source = new FakeDealSource();
   lines = [];
-  logger = makeLogger();
+  logger = recordingJobLogger(lines);
   for (const postalCode of ALL_POSTAL_CODES) {
     await adminPool.query('delete from public.deal where postal_code = $1', [postalCode]);
     await adminPool.query('delete from public.deal_query_cache where postal_code = $1', [

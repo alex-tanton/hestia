@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { emptyDb } from '../test/fake-app.js';
 import { FakeDealSource } from '../test/fixture-deal-source.js';
+import { recordingJobLogger, type JobLogLine } from '../test/job-logger.js';
 import { readinessNotBuiltYet } from './refresh-deals.js';
 import {
   createScheduler,
@@ -11,7 +12,6 @@ import {
   REFRESH_DEALS_SCHEDULE,
   type SchedulerDeps,
 } from './scheduler.js';
-import type { JobLogger } from './types.js';
 
 /**
  * Technical Architecture, "Scheduled jobs": the schedules, in UTC, and the advisory lock that
@@ -20,26 +20,13 @@ import type { JobLogger } from './types.js';
  * is covered by `jobs.integration.test.ts`.
  */
 
-let lines: { level: string; message: string; data: Record<string, unknown> }[] = [];
-
-function logger(): JobLogger {
-  const record = (level: string) => (data: Record<string, unknown>, message: string) => {
-    lines.push({ level, data, message });
-  };
-  const self: JobLogger = {
-    info: record('info'),
-    warn: record('warn'),
-    error: record('error'),
-    child: () => self,
-  };
-  return self;
-}
+let lines: JobLogLine[] = [];
 
 function deps(overrides: Partial<SchedulerDeps> = {}): SchedulerDeps {
   const db = emptyDb();
   return {
     database: { asServiceRole: (fn) => fn(db), pool: db },
-    logger: logger(),
+    logger: recordingJobLogger(lines),
     refresh: {
       source: new FakeDealSource(),
       publishSkipRates: () => undefined,
