@@ -5,9 +5,9 @@ import type { CalendarDate, Recurrence } from './types.js';
 
 /**
  * Adds `monthsToAdd` months to `anchor`, clamping the day-of-month to the target month's last day
- * when the anchor's day doesn't exist there (PRD, "Recurrence is anchored and derived on read":
- * "Monthly and yearly anchors past the 28th clamp to the last day of shorter months… Each
- * occurrence is computed from the anchor, never from the previous clamped date.").
+ * when the anchor's day doesn't exist there. Monthly and yearly anchors past the 28th clamp to the
+ * last day of shorter months… Each occurrence is computed from the anchor, never from the
+ * previous clamped date.
  *
  * Both monthly and yearly recurrence funnel through here — a year is just 12 months — which is
  * also why a yearly Feb 29 anchor correctly clamps to Feb 28 in a non-leap target year: it's the
@@ -90,7 +90,7 @@ export function occurrenceIndexAtOrAfter(recurrence: Recurrence, date: CalendarD
 
 /**
  * The next `count` occurrence dates starting at the anchor (index 0) — the plain-language "next
- * three due dates" preview the bill and chore creation sheets show (Design Screens 15, 17). It
+ * three due dates" preview the bill and chore creation sheets show. It
  * previews from the anchor rather than from "today" because at preview time the record may not
  * exist yet; a caller previewing against a specific cutoff can combine this with
  * `occurrenceIndexAtOrAfter` to skip ahead.

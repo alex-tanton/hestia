@@ -1,8 +1,8 @@
 /**
- * PRD, "Rotation": "For a chore with a `rotation_order` of n members, the member whose turn it is
- * is: `rotation_order[(rotation_offset + completion_count) mod n]`, where `completion_count` is
- * the number of `chore_completion` rows for the chore." `completion_count` is always the caller's
- * to compute (it comes from counting `chore_completion` rows); this package only does the mod
+ * For a chore with a `rotation_order` of n members, the member whose turn it is is:
+ * `rotation_order[(rotation_offset + completion_count) mod n]`, where `completion_count` is the
+ * number of `chore_completion` rows for the chore. `completion_count` is always the caller's to
+ * compute (it comes from counting `chore_completion` rows); this package only does the mod
  * arithmetic once it has that count.
  */
 
@@ -44,12 +44,12 @@ export interface RebasedRotation {
 }
 
 /**
- * PRD, "Rotation": "When a member leaves the household, they are removed from every rotation
- * order. Let `cur` be the index of the member whose turn it was before the removal and `i` the
- * removed index. `rotation_offset` is rebased so the turn stays with the same person: `cur' = cur
- * − 1` if `i < cur`, `cur' = cur` if `i > cur`, and `cur' = cur mod (n − 1)` if `i = cur` (the next
- * member takes the turn). The new offset is `(cur' − completion_count) mod (n − 1)`. When the last
- * member is removed from an order, the order becomes null."
+ * When a member leaves the household, they are removed from every rotation order. Let `cur` be the
+ * index of the member whose turn it was before the removal and `i` the removed index.
+ * `rotation_offset` is rebased so the turn stays with the same person: `cur' = cur − 1` if
+ * `i < cur`, `cur' = cur` if `i > cur`, and `cur' = cur mod (n − 1)` if `i = cur` (the next member
+ * takes the turn). The new offset is `(cur' − completion_count) mod (n − 1)`. When the last member
+ * is removed from an order, the order becomes null.
  *
  * `completionCount` and `departingIndex` (the departing member's position in `rotationOrder`
  * before removal) are both the caller's to determine from `chore_completion` rows and the
@@ -82,7 +82,7 @@ export function rebaseRotationOnDeparture(
 }
 
 /**
- * PRD, "Rotation": editing a chore's rotation order from the Chore sheet keeps the turn with
+ * Editing a chore's rotation order from the Chore sheet keeps the turn with
  * whoever holds it in `oldOrder` when they are still present in `newOrder` — `rotation_offset` is
  * recomputed from their new index — and resets to 0 when they are not, since there is then no
  * "same person" to preserve. This is the smallest conservative extension of departure's own "the
