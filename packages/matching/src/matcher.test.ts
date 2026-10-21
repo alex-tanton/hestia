@@ -3,9 +3,8 @@ import { matchIngredient, type MatchCandidate, type MatchOverride } from './matc
 import { normalize } from './normalize.js';
 
 /**
- * The matcher composes normalize.ts's normalization with fuzzy token containment and overrides
- * (Requirements, "Matching mechanics", "Match overrides"; Engineering Practices, "Matching and
- * normalization"). normalize.test.ts and fixtures.test.ts already prove normalization in
+ * The matcher composes normalize.ts's normalization with fuzzy token containment and overrides.
+ * normalize.test.ts and fixtures.test.ts already prove normalization in
  * isolation; these tests prove the matcher gets the right answer once normalization, fuzzy
  * matching, and overrides all run together — which is the thing a later readiness unit actually
  * depends on.
@@ -20,7 +19,7 @@ function candidate(
 }
 
 describe('Seed Data "Matching test cases" (12 rows)', () => {
-  // Verbatim from Seed Data, "Recipes, pantry, and lists" › "Matching test cases", including both
+  // Verbatim from the seed data's matching test cases, including both
   // named false-positive rows. Names here are raw text, normalized the same way production data
   // is, so this proves the matcher end to end rather than assuming pre-normalized input.
   const cases: [
@@ -138,8 +137,9 @@ describe('normalization composed with the fuzzy layer', () => {
 describe('overrides applied before fuzzy matching (Requirements, "Match overrides")', () => {
   it('force_match matches a pair the fuzzy layer would refuse', () => {
     // "snack cheese" shares no token with "cheese" once normalized, so fuzzy alone would refuse
-    // it — this is Seed Data's own override fixture (Oak Street, "cheese" force-no-match against
-    // Harris Teeter's "snack cheese"), used here in its mirror-image form to prove force_match.
+    // it — this is the seed data's own override fixture (Oak Street, "cheese" force-no-match
+    // against Harris Teeter's "snack cheese"), used here in its mirror-image form to prove
+    // force_match.
     const overrides: MatchOverride[] = [
       {
         ingredientNormalizedName: 'cheese',
