@@ -8,7 +8,8 @@ import type {
   MerchantsResponse,
   ShoppingList,
 } from '@hearth/shared';
-import { OAK_STREET_ID, ALEX_ID } from './fixtures.ts';
+import { OAK_STREET_ID, ALEX_ID, oakStreetFixture, profileFixture } from './fixtures.ts';
+import type { StubHandler } from './harness.tsx';
 
 /**
  * The 27514 deals from Seed Data › Deal fixtures, quoted by their normalized values, so a
@@ -234,3 +235,15 @@ function list(id: string, name: string, outstandingCount: number): ShoppingList 
 /** Seed Data › E2E-only fixtures: Oak Street's two lists. */
 export const thisWeekList = list(THIS_WEEK_LIST_ID, 'This Week', 15);
 export const weekendCookoutList = list(WEEKEND_LIST_ID, 'Weekend Cookout', 6);
+
+/** What every deals screen reads before its own endpoint: the session, the household, its merchants. */
+export function dealScreenHandlers(
+  extra: Readonly<Record<string, StubHandler>> = {},
+): Record<string, StubHandler> {
+  return {
+    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
+    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
+    'GET /api/households/:id/merchants': () => ({ status: 200, body: merchantsResponse() }),
+    ...extra,
+  };
+}

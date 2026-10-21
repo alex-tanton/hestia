@@ -8,7 +8,6 @@ import {
   renderScreen,
   type StubHandler,
 } from '../../test/harness.tsx';
-import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import {
   broccoliDeal,
   dealFixtures,
@@ -18,6 +17,7 @@ import {
   merchantsResponse,
   searchResponse,
   thisWeekList,
+  dealScreenHandlers,
 } from '../../test/deal-fixtures.ts';
 import { DealSearchScreen, SEARCH_OFFLINE_MESSAGE } from './DealSearchScreen.tsx';
 
@@ -47,17 +47,16 @@ function stubDeals(
   extra: Readonly<Record<string, StubHandler>> = {},
 ): Recorded {
   const searches: URLSearchParams[] = [];
-  const stub = createFetchStub({
-    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
-    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
-    'GET /api/households/:id/merchants': () => ({ status: 200, body: merchantsResponse() }),
-    'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
-    'GET /api/households/:id/deals/search': (request) => {
-      searches.push(request.query);
-      return search(request);
-    },
-    ...extra,
-  });
+  const stub = createFetchStub(
+    dealScreenHandlers({
+      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
+      'GET /api/households/:id/deals/search': (request) => {
+        searches.push(request.query);
+        return search(request);
+      },
+      ...extra,
+    }),
+  );
   vi.stubGlobal('fetch', stub.fetch);
   return { calls: stub.calls, searches };
 }

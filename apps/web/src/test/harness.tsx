@@ -155,6 +155,13 @@ export function createFetchStub(handlers: Readonly<Record<string, StubHandler>>)
   return { fetch: stub, calls };
 }
 
+/** Installs the stub as the global `fetch`; the test's `afterEach` unstubs it. */
+export function stubFetch(handlers: Readonly<Record<string, StubHandler>>): FetchStub {
+  const stub = createFetchStub(handlers);
+  vi.stubGlobal('fetch', stub.fetch);
+  return stub;
+}
+
 /** RFC 9457 body, as the service sends it. */
 export function problemBody(status: number, title: string, detail?: string): unknown {
   return { type: 'about:blank', title, status, ...(detail === undefined ? {} : { detail }) };
