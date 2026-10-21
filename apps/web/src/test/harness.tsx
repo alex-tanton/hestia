@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import type { Persister } from '@tanstack/react-query-persist-client';
 import { render, type RenderResult } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import {
   RouterProvider,
   createMemoryRouter,
@@ -13,6 +13,7 @@ import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
 import { AppProviders } from '../App.tsx';
 import { ToastProvider } from '../components/ui/Toast.tsx';
 import { SectionProvider } from '../lib/section-context.tsx';
+import { useWriteQueue } from '../lib/offline/use-write-queue.ts';
 import type { AuthClient, AuthState } from '../lib/auth/auth-client.ts';
 import type { ListRealtimeHandlers, RealtimePort } from '../lib/realtime/realtime-port.ts';
 import type { PushPort } from '../lib/push/push-port.ts';
@@ -157,6 +158,16 @@ export function createFetchStub(handlers: Readonly<Record<string, StubHandler>>)
 /** RFC 9457 body, as the service sends it. */
 export function problemBody(status: number, title: string, detail?: string): unknown {
   return { type: 'about:blank', title, status, ...(detail === undefined ? {} : { detail }) };
+}
+
+/*
+ * The queue lives in the shell, so a screen under test gets it the same way. Completion is a queued
+ * write, and the queue's defaults are registered by the shell that mounts it (AppShell →
+ * useWriteQueue), so a screen that completes a chore is mounted under it, as in the app.
+ */
+export function WithQueue({ children }: { children: ReactNode }): ReactElement {
+  useWriteQueue();
+  return <>{children}</>;
 }
 
 export function testQueryClient(): QueryClient {

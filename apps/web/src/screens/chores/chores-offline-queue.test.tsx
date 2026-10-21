@@ -1,11 +1,10 @@
 import { onlineManager, type QueryClient } from '@tanstack/react-query';
-import { act, configure, screen, waitFor, within } from '@testing-library/react';
+import { configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PENDING_CLASSES, PENDING_ROW_LABEL } from '../../components/lists/PendingMark.tsx';
-import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import { queryKeys } from '../../lib/api/keys.ts';
+import { setOnline } from '../../test/browser.ts';
 import {
   OAK_STREET_ID,
   oakStreetFixture,
@@ -23,6 +22,7 @@ import {
   problemBody,
   renderScreen,
   type StubHandler,
+  WithQueue,
 } from '../../test/harness.tsx';
 import { ChoresListScreen } from './ChoresListScreen.tsx';
 
@@ -37,19 +37,6 @@ configure({ asyncUtilTimeout: 5000 });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DONE_AT = '2026-09-27T16:00:00.000Z';
 const DONE_LABEL = `Mark ${takeOutTrashFixture.name} done`;
-
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
-}
-
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
 
 function mountList(extra: Readonly<Record<string, StubHandler>> = {}): {
   stub: ReturnType<typeof createFetchStub>;
