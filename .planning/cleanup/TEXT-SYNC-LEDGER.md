@@ -128,6 +128,7 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | shared | `packages/shared` | 68 | 50 | 18 | 94af15d | comment-only OK | gates OK |
 | seed-ts | `supabase/seed/*.ts` | 8 | 5 | 3 | 94756a9 | comment-only OK | gates OK |
 | e2e | `e2e/*.ts`, `e2e/tests`, `e2e/support`, `e2e/setup` | 115 | 72 | 42 | 7437ac5 | comment-only OK | gates OK |
+| service-http | `apps/service` routes, http, auth, db, gotrue, push, privileged, test helpers, top-level source, scripts, `vitest.coverage.config.ts` | 50 | 41 | 9 | 4b73f76 | comment-only OK | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -147,6 +148,19 @@ Not classified by the codemod: nothing was left unclassified. Three kinds of sit
 a human: a quoted rule after the reference (rewritten to plain words), a sentence whose subject is
 a retired document (restated as the rule, `the seed data` for the seed fixtures), and a lone
 citation that was the only content of a comment (deleted with the comment).
+
+Service unit count (05-07), `pnpm --filter @hearth/service test` at C's tip `7437ac5` before any
+service edit (`Test Files  56 passed`, `Tests  757 passed`); every service batch must report the same:
+
+tests-before-c.service-unit=757
+
+`service-http` notes: the 50 sites are the base-inventory rows of the 33 changed files (41 `pure`,
+7 `mixed`, 2 `prose`, no `title`). The 9 rewritten sites are `auth/jwt.ts`, `privileged/job-database.ts`,
+`privileged/scheduled-reminders.ts` (2), `routes/system.ts`, `routes/users.ts`, `test/service-stack.ts`
+(2) and `vitest.coverage.config.ts`; each keeps its rule (signature and expiry, the
+service-role fence, dispatch step 1, no nagging for overdue chores, password re-verification, no live
+outbound fetch in tests, the 80% target). Service unit suite after: 757 passed. The commit subject
+was shortened to 66 characters before the first push (phase rule 4).
 
 ## Titles
 
