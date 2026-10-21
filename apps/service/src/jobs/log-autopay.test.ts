@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { autopayOccurrences } from './log-autopay.js';
 
 /*
- * Pure logic (Engineering Practices, "Testing" — the no-backfill rule explicitly). The database
- * side (the insert, the unique-key idempotency, and a real integration-test bill) is covered by
- * log-autopay.integration.test.ts.
+ * Pure logic (the no-backfill rule explicitly). The database side (the insert, the unique-key
+ * idempotency, and a real integration-test bill) is covered by log-autopay.integration.test.ts.
  */
 
 describe('autopayOccurrences', () => {

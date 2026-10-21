@@ -24,7 +24,7 @@ import { currentInstant } from './test/zone-dates.js';
 /*
  * Deals, flyers, merchants, and favorite stores against `supabase start`: real Postgres as
  * hearth_service, every request through withUserDb, so RLS decides each assertion. The deal
- * source is always a double — tests never call Flipp (Handoff non-negotiable 17).
+ * source is always a double — tests never call Flipp.
  */
 
 let stack: Stack;

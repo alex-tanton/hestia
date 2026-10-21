@@ -9,7 +9,7 @@ import {
   serveAfterFailure,
 } from './cache.js';
 
-/** Technical Architecture, "Caching and storage": the TTL table and the stale-fallback rule. */
+/** The TTL table and the stale-fallback rule. */
 
 const NOW = new Date('2026-09-25T12:00:00.000Z');
 const ago = (ms: number): Date => new Date(NOW.getTime() - ms);

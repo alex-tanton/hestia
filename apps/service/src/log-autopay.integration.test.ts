@@ -8,11 +8,11 @@ import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test
 import { addDays, currentInstant, dateInZone } from './test/zone-dates.js';
 
 /*
- * `log-autopay` against `supabase start` (Technical Architecture, "Scheduled jobs"). It runs as
- * `service_role`, one of the sanctioned uses, so it can see every household's autopay bills at
- * once. Dates below use a weekly bill rather than a monthly one specifically so the arithmetic is
- * plain day offsets, with nothing left to the reader to also verify against month-end clamping —
- * that belongs to packages/recurrence's own suite, not this job's.
+ * `log-autopay` against `supabase start`. It runs as `service_role`, one of the sanctioned uses, so
+ * it can see every household's autopay bills at once. Dates below use a weekly bill rather than a
+ * monthly one specifically so the arithmetic is plain day offsets, with nothing left to the reader
+ * to also verify against month-end clamping — that belongs to packages/recurrence's own suite, not
+ * this job's.
  */
 
 let handle: DatabaseHandle;
@@ -177,11 +177,10 @@ describe('log-autopay', () => {
       expect(dates).not.toContain(dayOffset(28));
       expect(dates).not.toContain(dayOffset(42));
 
-      // The bill's current occurrence is its EARLIEST unresolved one (PRD, "Recurrence is
-      // anchored and derived on read"), not the latest un-backfilled one: since the job never
-      // touches anything before created_at, occurrences -42, -35, -28, and -21 are all still
-      // unresolved, and the earliest of those — the anchor itself — is what stays current and
-      // overdue until a person pays or skips it by hand.
+      // The bill's current occurrence is its EARLIEST unresolved one, not the latest un-backfilled
+      // one: since the job never touches anything before created_at, occurrences -42, -35, -28, and
+      // -21 are all still unresolved, and the earliest of those — the anchor itself — is what stays
+      // current and overdue until a person pays or skips it by hand.
       const resolvedDates = new Set(dates);
       const state = billOccurrence(
         { recurrence_unit: 'week', interval: 1, anchor_date: dayOffset(42), today: dayOffset(0) },

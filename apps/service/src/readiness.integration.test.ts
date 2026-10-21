@@ -15,12 +15,11 @@ import {
 import { expectStatus } from './test/stack-hooks.js';
 
 /*
- * Recipe readiness against `supabase start` (Requirements, "Deal-matched suggestions"; Seed Data,
- * "Recipes" — the 12+2 readiness table is this test's own oracle). Real Postgres as
- * hearth_service, every request through withUserDb, so RLS and the real `@hearth/matching`
- * decide every bucket. This file reproduces the Seed Data fixture (pantry, favorite-store deals,
- * the twelve Oak Street recipes and two Rivera Family recipes, the "cheese" override) through the
- * real API and asserts the table's own numbers exactly, one recipe at a time.
+ * Recipe readiness against `supabase start` (the 12+2 readiness table is this test's own oracle).
+ * Real Postgres as hearth_service, every request through withUserDb, so RLS and the real
+ * `@hearth/matching` decide every bucket. This file reproduces the seed data (pantry,
+ * favorite-store deals, the twelve Oak Street recipes and two Rivera Family recipes, the "cheese"
+ * override) through the real API and asserts the table's own numbers exactly, one recipe at a time.
  */
 
 let stack: Stack;
@@ -29,10 +28,10 @@ let app: FastifyInstance;
 /**
  * Every postal code this file hardcodes (rather than `uniqueName()`-generating), so a `deal` row
  * this file inserts can never survive into a later run against the same un-reset `supabase start`
- * volume (Engineering Practices, "Integration test database": "every integration file that writes
- * rows scoped to a postal code deletes exactly those rows in its own `beforeEach`"). A stray
- * leftover here previously made "a simulated deal-refresh recompute" see a deal before it inserted
- * one, scoring a fresh recipe 100% instead of the 0% the test asserts before its own insert.
+ * volume (every integration file that writes rows scoped to a postal code deletes exactly those
+ * rows in its own `beforeEach`). A stray leftover here previously made "a simulated deal-refresh
+ * recompute" see a deal before it inserted one, scoring a fresh recipe 100% instead of the 0% the
+ * test asserts before its own insert.
  */
 const HARDCODED_POSTAL_CODES = ['27524', '27525', '27526', '27527', '27529', '27530'];
 
@@ -136,7 +135,7 @@ function breakdownEntry(recipe: RecipeDetail, itemName: string) {
   return entry;
 }
 
-/** The Oak Street fixture (Seed Data, "Pantry", "Favorite-store groceries"), built once. */
+/** The Oak Street fixture, built once. */
 async function seedOakStreet(): Promise<Home> {
   const home = await household(app, 'Alex', OAK_POSTAL_CODE);
   await favoriteStore(home, 'ht-2431', 'Harris Teeter');
@@ -253,12 +252,12 @@ async function seedOakStreet(): Promise<Home> {
     normalizedName: 'snack cheese',
     unitPrice: '3.00',
   });
-  // Real 27514 capture (Seed Data, "Clean prices"), unrelated to any recipe on purpose — it exists
-  // to prove Shrimp Pad Thai's "peanuts" contain-matches it (shares the token "peanut"), the same
-  // direction of match the Matching test cases table endorses for "eggs" against "Egg Noodles".
-  // Seed Data corrected Pad Thai's expected score from 0% to 13% once this coincidental match was
-  // found against the real capture; leaving this deal out would silently understate this test's
-  // own fixture relative to what `seed.sql` actually seeds.
+  // Real 27514 capture, unrelated to any recipe on purpose — it exists to prove Shrimp Pad Thai's
+  // "peanuts" contain-matches it (shares the token "peanut"), the same direction of match the
+  // Matching test cases table endorses for "eggs" against "Egg Noodles". The seed data corrected
+  // Pad Thai's expected score from 0% to 13% once this coincidental match was found against the
+  // real capture; leaving this deal out would silently understate this test's own fixture relative
+  // to what `seed.sql` actually seeds.
   await insertDeal({
     ...ht,
     name: 'Harris Teeter Peanut Butter Chocolate Puffs Cereal',
@@ -416,8 +415,8 @@ describe('recipe readiness — the Seed Data table', () => {
       recipes[title] = await createRecipe(oak, title, ingredients);
     }
 
-    // The force-no-match override (Seed Data, "Recipes"): changes no score above, because
-    // "cheese" already matches Food Lion's "chunk or cheese".
+    // The force-no-match override: changes no score above, because "cheese" already matches Food
+    // Lion's "chunk or cheese".
     expectStatus(
       await as(app, oak.user, 'POST', `/api/households/${oak.household.id}/match-overrides`, {
         ingredientName: 'cheese',
@@ -491,8 +490,7 @@ describe('recipe readiness — the Seed Data table', () => {
 
   // "peanuts" contain-matches Harris Teeter's real "Peanut Butter Chocolate Puffs Cereal" deal
   // (both share the token "peanut") — a legitimate token-containment match, the same direction
-  // Matching test cases endorses for "eggs" against "Egg Noodles, 12 oz", not a defect (Seed Data,
-  // "Recipes").
+  // Matching test cases endorses for "eggs" against "Egg Noodles, 12 oz", not a defect.
   it('Shrimp Pad Thai — 1 of 8, 13% (1 on sale)', () => {
     expectReadiness('Shrimp Pad Thai', 1, 0, 7, 13);
     expect(breakdownEntry(recipes['Shrimp Pad Thai']!, 'peanuts').matchedName).toBe(

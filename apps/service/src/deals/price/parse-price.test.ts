@@ -16,9 +16,9 @@ import {
 } from './parsers.js';
 
 /**
- * Every case below is copy recorded from the 27514 captures unless it is marked as coming from
- * Requirements, "Deal price normalization", whose table is the oracle where the capture has no
- * example. Tests never call Flipp (non-negotiable 17).
+ * Every case below is copy recorded from the 27514 captures unless it is marked as coming from the
+ * price-normalization rules table, which is the oracle where the capture has no example. Tests
+ * never call Flipp.
  */
 function copy(fields: Partial<PriceCopy>): PriceCopy {
   return {
@@ -331,7 +331,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
   });
 
   it('an amount off a known original subtracts', () => {
-    // Family Dollar prints "Sale! $1 OFF" as the whole price copy; Seed Data's amount-off
+    // Family Dollar prints "Sale! $1 OFF" as the whole price copy; the seed data's amount-off
     // fixture supplies the original it is taken off ("reg $5.49" → $4.49, 18% off).
     expect(parsePrice(copy({ originalPrice: 549, prePriceText: 'Sale! $1 OFF' }))).toMatchObject({
       parsed: { unitPrice: 449, originalPrice: 549, discountPercent: 18 },

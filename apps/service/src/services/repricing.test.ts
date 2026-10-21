@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { decideReprice, type CurrentDeal, type RepricedItem } from './repricing.js';
 
 /*
- * The three repricing outcomes, which Seed Data's "Expired" deal fixtures exist to exercise:
- * a re-match against a current deal, a fall back to the regular price, and a cleared price.
+ * The three repricing outcomes, which the seed data's "Expired" deal fixtures exist to exercise: a
+ * re-match against a current deal, a fall back to the regular price, and a cleared price.
  */
 
 const expired = (overrides: Partial<RepricedItem> = {}): RepricedItem => ({

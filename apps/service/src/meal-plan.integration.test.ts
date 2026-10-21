@@ -14,10 +14,8 @@ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
- * The week planner, "Add missing to list", and suggestions against `supabase start` (Technical
- * Architecture, "API surface" — "Meal plan"; Requirements, "Add missing to list", "Deal-matched
- * suggestions"). Real Postgres as hearth_service, every request through withUserDb, so RLS
- * decides every isolation assertion.
+ * The week planner, "Add missing to list", and suggestions against `supabase start`. Real Postgres
+ * as hearth_service, every request through withUserDb, so RLS decides every isolation assertion.
  */
 
 registerStackHooks();
@@ -199,11 +197,11 @@ describe('week planner', () => {
       return week;
     }
 
-    // 2026-10-04 is a Sunday, 2026-10-03 a Saturday (Technical Architecture and Seed Data agree
-    // via the existing 'assertSunday' unit tests). Kiritimati is UTC+14 with no DST.
-    // 23:00 UTC on Saturday the 3rd is already 13:00 Sunday the 4th in Kiritimati: a naive
-    // UTC-date calculation would still be looking at Saturday and answer last week's Sunday,
-    // 2026-09-27, while the household's own timezone says today already is this week's Sunday.
+    // 2026-10-04 is a Sunday, 2026-10-03 a Saturday (the existing 'assertSunday' unit tests agree).
+    // Kiritimati is UTC+14 with no DST. 23:00 UTC on Saturday the 3rd is already 13:00 Sunday the
+    // 4th in Kiritimati: a naive UTC-date calculation would still be looking at Saturday and answer
+    // last week's Sunday, 2026-09-27, while the household's own timezone says today already is this
+    // week's Sunday.
     expect(await sundayAt('2026-10-03T23:00:00Z', 'Pacific/Kiritimati')).toBe('2026-10-04');
     const naiveUtc = await sundayAt('2026-10-03T23:00:00Z', 'UTC');
     expect(naiveUtc).toBe('2026-09-27');

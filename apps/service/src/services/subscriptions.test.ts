@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { monthlyCents, needsUsageConfirmation } from './subscriptions.js';
 
 /*
- * The money-normalization table (PRD, "Subscriptions view") and the 60-day-unconfirmed boundary,
- * pure logic (Engineering Practices, "Testing"). Every division rounds half-up to the cent.
+ * The money-normalization table and the 60-day-unconfirmed boundary, pure logic. Every division
+ * rounds half-up to the cent.
  */
 
 describe('monthlyCents', () => {

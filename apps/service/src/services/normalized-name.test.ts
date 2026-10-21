@@ -3,19 +3,19 @@ import { normalize } from '@hearth/matching';
 
 /*
  * The service does not normalize names itself: `@hearth/matching` owns the pipeline and its
- * maintained descriptor and brand lists (Engineering Practices, "Monorepo layout"), and the list
- * and pantry services call it on save. The pipeline's own cases live in that package's tests.
+ * maintained descriptor and brand lists, and the list and pantry services call it on save. The
+ * pipeline's own cases live in that package's tests.
  *
  * What is asserted here is the integration point, which the package cannot see: every
- * `normalized_name` the service stores for a Seed Data fixture is the value `supabase/seed/
- * seed.sql` writes for the same name. A change to the lists that silently moved one of these
- * would leave a seeded pantry row and an item the service adds under two different keys, and the
- * pantry's merge and repricing's re-match both turn on that key matching.
+ * `normalized_name` the service stores for a seed data fixture is the value `supabase/seed/
+ * seed.sql` writes for the same name. A change to the lists that silently moved one of these would
+ * leave a seeded pantry row and an item the service adds under two different keys, and the pantry's
+ * merge and repricing's re-match both turn on that key matching.
  */
 
 describe('the normalized names the service stores', () => {
   it.each([
-    // Seed Data, "Pantry": the twenty Oak Street staples, as seed.sql records them.
+    // The seed data's pantry: the twenty Oak Street staples, as seed.sql records them.
     ['Olive oil', 'olive oil'],
     ['Salt', 'salt'],
     ['Black pepper', 'black pepper'],
@@ -41,7 +41,7 @@ describe('the normalized names the service stores', () => {
   });
 
   it.each([
-    // Seed Data, "Shopping lists": the manually typed and recipe-sourced rows, whose key the
+    // The seed data's shopping lists: the manually typed and recipe-sourced rows, whose key the
     // service computes rather than copying from a deal.
     ['Apples', 'apple'],
     ['Trash bags', 'trash'],

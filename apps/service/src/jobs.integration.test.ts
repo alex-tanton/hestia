@@ -23,10 +23,10 @@ import { currentInstant } from './test/zone-dates.js';
 
 /*
  * The scheduled jobs against `supabase start`. Jobs run as `service_role`, which is one of the
- * sanctioned uses (Technical Architecture, "The RLS rule"), so they see every household — which
- * is exactly what makes their idempotency worth asserting against the real schema.
+ * sanctioned uses, so they see every household — which is exactly what makes their idempotency
+ * worth asserting against the real schema.
  *
- * The deal source is always a double: tests never call Flipp (non-negotiable 17).
+ * The deal source is always a double: tests never call Flipp.
  */
 
 let handle: DatabaseHandle;
@@ -183,8 +183,8 @@ async function notifications(
 /**
  * A one-ingredient recipe, seeded directly as `postgres` the same way `seedHousehold` does, so the
  * readiness-recompute-across-households test below does not need the route layer to exercise the
- * job's own recompute wiring (Technical Architecture, "Daily refresh": "recomputes `recipe_readiness`
- * for every household it covered").
+ * job's own recompute wiring (the daily refresh recomputes `recipe_readiness` for every household
+ * it covered).
  */
 async function seedOneIngredientRecipe(
   householdId: string,

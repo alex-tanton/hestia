@@ -12,7 +12,7 @@ describe('toCents', () => {
   });
 
   it('treats an absent, empty, or zero price as no price', () => {
-    // A zero is Flipp saying "no price", not "free" (non-negotiable 6).
+    // A zero is Flipp saying "no price", not "free".
     expect(toCents('')).toBeNull();
     expect(toCents('   ')).toBeNull();
     expect(toCents(null)).toBeNull();

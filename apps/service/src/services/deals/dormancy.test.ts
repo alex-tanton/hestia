@@ -10,8 +10,8 @@ import {
 } from './dormancy.js';
 
 /**
- * Technical Architecture, "Dormant postal codes", and Requirements, "Refresh", as a decision
- * table. Dormancy governs only the flyer and flyer-item refresh; keyword search is unaffected.
+ * Dormant postal codes, as a decision table. Dormancy governs only the flyer and flyer-item
+ * refresh; keyword search is unaffected.
  */
 
 const NOW = new Date('2026-09-25T12:00:00.000Z');

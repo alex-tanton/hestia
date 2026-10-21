@@ -5,10 +5,9 @@ import { adminPool, as, household, signUp, type HouseholdFixture } from './test/
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
- * Match overrides against `supabase start` (Technical Architecture, "API surface"; Requirements,
- * "Match overrides"): real Postgres as hearth_service, every request through withUserDb, so RLS
- * and the unique constraint are what decide each assertion. Requests here commit, so each test
- * makes its own household.
+ * Match overrides against `supabase start`: real Postgres as hearth_service, every request through
+ * withUserDb, so RLS and the unique constraint are what decide each assertion. Requests here
+ * commit, so each test makes its own household.
  */
 
 registerStackHooks();
