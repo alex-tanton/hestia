@@ -20,16 +20,15 @@ import {
 } from '../notifications/planners.js';
 
 /*
- * The scheduled producers (Technical Architecture, "Scheduled jobs" › "Dispatch", step 1): every
- * reminder whose send time has arrived for today is written into the outbox. Each candidate is
- * found here, decided by the planners, and written once by `writeRows`, which applies the
- * recipient's quiet hours in SQL and keeps only rows that are due, still wanted, and addressed to a
- * current member. The outbox's unique key makes a rerun a no-op.
+ * The scheduled producers (dispatch step 1): every reminder whose send time has arrived for today
+ * is written into the outbox. Each candidate is found here, decided by the planners, and written
+ * once by `writeRows`, which applies the recipient's quiet hours in SQL and keeps only rows that
+ * are due, still wanted, and addressed to a current member. The outbox's unique key makes a rerun a no-op.
  *
- * Every item is dated in the household's timezone and sent at the household's clock (Requirements,
- * "Notifications" › "Delivery"), personal bills included: a personal bill is dated by its owner's
- * active household (else the owner's earliest), since it belongs to no household. Only quiet hours use the recipient's own
- * timezone, and `writeRows` applies them in SQL.
+ * Every item is dated in the household's timezone and sent at the household's clock, personal bills
+ * included: a personal bill is dated by its owner's active household (else the owner's earliest),
+ * since it belongs to no household. Only quiet hours use the recipient's own timezone, and
+ * `writeRows` applies them in SQL.
  */
 
 interface ScheduledRow {
@@ -224,8 +223,8 @@ async function choreRows(
       chore.rotation_order,
       chore.rotation_offset,
     );
-    // Only the occurrence that is due today; an overdue one is not nagged about (Requirements,
-    // "Notifications" › "Types and defaults": "Nothing is sent for overdue chores").
+    // Only the occurrence that is due today; an overdue one is not nagged about. Nothing is sent
+    // for overdue chores.
     if (state.dueDate !== today) continue;
     const recipient = chore.assigned_to ?? state.currentTurn;
     if (recipient === null) continue;
@@ -361,9 +360,9 @@ async function mealRows(
 }
 
 /**
- * The Saturday nudge (Requirements, "Notifications" › "Triggers"): on a household's Saturday, when
- * the coming Sunday-to-Saturday week has no meals planned. The key is the coming Sunday. The nudge is
- * dated and sent in the household's timezone: Saturday 09:00 household time, for every recipient.
+ * The Saturday nudge: on a household's Saturday, when the coming Sunday-to-Saturday week has no
+ * meals planned. The key is the coming Sunday. The nudge is dated and sent in the household's
+ * timezone: Saturday 09:00 household time, for every recipient.
  */
 async function nudgeRows(
   db: Kysely<Database>,

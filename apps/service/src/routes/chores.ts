@@ -20,9 +20,8 @@ import {
 import { parse, type RouteContext } from '../http/context.js';
 
 /**
- * Chores, completions, and undo (Technical Architecture, "API surface" › "Chores"). `/chores/:id`
- * routes do not name a household in the path, the same convention `/lists/:id` and `/recipes/:id`
- * follow: the service functions find it from the row.
+ * Chores, completions, and undo. `/chores/:id` routes do not name a household in the path, the same
+ * convention `/lists/:id` and `/recipes/:id` follow: the service functions find it from the row.
  */
 export const choreRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/households/:id/chores', async (request) => {

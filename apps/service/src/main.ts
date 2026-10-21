@@ -37,7 +37,7 @@ const env = parseEnv(process.env);
 const database = createDatabase(env.DATABASE_URL);
 const gotrue = createGoTrueClient({ url: env.GOTRUE_URL, anonKey: env.ANON_KEY });
 // The privileged clients are built here and handed to routes only as the two narrow functions
-// the sanctioned uses need (Technical Architecture, "The RLS rule").
+// the sanctioned uses need.
 const gotrueAdmin = createGoTrueAdmin({
   url: env.GOTRUE_URL,
   serviceRoleKey: env.SERVICE_ROLE_KEY,
@@ -46,15 +46,15 @@ const skipRates = new SkipRateRegistry();
 const openApiDocument = loadOpenApiDocument();
 
 // One queue for every Flipp call, so the 500ms gap, the backoff, and the circuit breaker apply
-// across requests and jobs alike (Handoff non-negotiable 19). The queue and the scheduler both
-// need the app's logger, and the app needs the deals service, so both are wired once it exists.
+// across requests and jobs alike. The queue and the scheduler both need the app's logger, and the
+// app needs the deals service, so both are wired once it exists.
 const wiring: { log?: FastifyBaseLogger; scheduler?: Scheduler } = {};
 const queueLogger = {
   warn: (data: Record<string, unknown>, message: string) => wiring.log?.warn(data, message),
   info: (data: Record<string, unknown>, message: string) => wiring.log?.info(data, message),
 };
-// Only the E2E Compose overlay sets HEARTH_FLIPP_FIXTURE_DIR (non-negotiable 17): every other
-// caller, including a real deployment, gets the live transport unchanged.
+// Only the E2E Compose overlay sets HEARTH_FLIPP_FIXTURE_DIR: every other caller, including a real
+// deployment, gets the live transport unchanged.
 const flippGet: HttpGet =
   env.HEARTH_FLIPP_FIXTURE_DIR === undefined
     ? fetchGet
@@ -78,7 +78,7 @@ const deals = createDealsService({
 });
 
 // One limiter for every recipe fetch, so 1 request/second/host holds across requests, the same
-// way flippQueue holds Flipp's rate discipline (Technical Architecture, "Recipe fetching").
+// way flippQueue holds Flipp's rate discipline.
 const recipeFetchLimiter = new HostRateLimiter();
 const recipeUserAgent = buildUserAgent(env.HEARTH_ORIGIN);
 // Only the E2E Compose overlay sets HEARTH_RECIPE_FIXTURE_DIR (see env.ts): every other caller,

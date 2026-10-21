@@ -4,7 +4,7 @@ import { parse, type RouteContext } from '../http/context.js';
 import { fail } from '../problem.js';
 import { buildErrorRecord } from '../services/errors.js';
 
-/** Technical Architecture, "Rate limits". */
+/** Client error reports allowed per minute on the report route. */
 export const CLIENT_ERROR_RATE_LIMIT_PER_MINUTE = 10;
 
 function iso(value: Date | string | null): string | null {

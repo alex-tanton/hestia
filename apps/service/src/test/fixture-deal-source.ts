@@ -15,8 +15,8 @@ import {
 } from '../deals/flipp/request-queue.js';
 
 /**
- * Deal sources for tests. Tests never call Flipp (Handoff non-negotiable 17): either the real
- * wrapper over the recorded captures, or a double that answers from whatever the test set up.
+ * Deal sources for tests. Tests never call Flipp: either the real wrapper over the recorded
+ * captures, or a double that answers from whatever the test set up.
  */
 
 /** The real wrapper, reading the raw captures from disk at the instant they were captured. */

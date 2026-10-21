@@ -4,11 +4,11 @@ import { z } from 'zod';
 import type { RecordingPushTransport } from './recording-transport.js';
 
 /*
- * The E2E push seam (Engineering Practices › Testing, "E2E environment"). It is registered only when
- * HEARTH_PUSH_TRANSPORT is `test-double`, so no real deployment has these routes. It does two things
- * the suite cannot do through the product: run the dispatch job at a chosen instant, so a reminder
- * is due without waiting for the wall clock, and read back the pushes that run recorded. Both need
- * the service-role key, which only the suite's generated `.env` holds.
+ * The E2E push seam. It is registered only when HEARTH_PUSH_TRANSPORT is `test-double`, so no real
+ * deployment has these routes. It does two things the suite cannot do through the product: run the
+ * dispatch job at a chosen instant, so a reminder is due without waiting for the wall clock, and
+ * read back the pushes that run recorded. Both need the service-role key, which only the suite's
+ * generated `.env` holds.
  */
 
 export interface PushTestSeamOptions {
