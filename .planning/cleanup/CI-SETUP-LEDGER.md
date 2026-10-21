@@ -101,7 +101,54 @@ re-committed the patches.
 
 ## CI
 
-Not run yet: the six-job CI run on PR A's head is observed in 05-03.
+pr-a=26
+pr-a-url=https://github.com/alex-tanton/hearth/pull/26
+pr-a-title=ci: share one setup action across the CI jobs
+
+PR A opened through REST from `ci/setup-action` into `main` at `pr-a-head=` (tree `fd704a4c…`,
+equal to `tree=`). Its files outside `.planning/` are exactly the five planned files, and GitHub
+reports it `clean` and not merged. The PR body carries the `pr-a-body-d12=` sentence word for word.
+
+pr-a-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=39650921896
+
+The run is attempt 1 (no re-run, no registry flake). Job ids: lint 119398705635, typecheck
+119398705202, test-unit 119398705613, test-integration 119398705874, test-e2e 119398705669, build
+119398705665.
+
+### Job steps, before and after
+
+Before: `main`'s last green `CI` run before PR A, run 39645569683 on `c64d79e` (the PR's base).
+After: run 39650921896 on PR A's head. Both lists are the `steps[].name` of the jobs API.
+
+| Job              | Before (steps 2 onward)                                                                                                                                                                                       | After (steps 2 onward)                                                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| lint             | checkout; pnpm/action-setup@v6; actions/setup-node@v7; pnpm install --frozen-lockfile; pnpm lint; pnpm format:check; post: setup-node, pnpm/action-setup, checkout                                            | checkout; `./.github/actions/setup`; pnpm lint; pnpm format:check; post: setup, checkout      |
+| typecheck        | checkout; pnpm/action-setup@v6; actions/setup-node@v7; pnpm install --frozen-lockfile; pnpm typecheck; post: setup-node, pnpm/action-setup, checkout                                                          | checkout; `./.github/actions/setup`; pnpm typecheck; post: setup, checkout                    |
+| test-unit        | checkout; pnpm/action-setup@v6; actions/setup-node@v7; pnpm install --frozen-lockfile; pnpm test; post: setup-node, pnpm/action-setup, checkout                                                              | checkout; `./.github/actions/setup`; pnpm test; post: setup, checkout                         |
+| test-integration | checkout; pnpm/action-setup@v6; actions/setup-node@v7; pnpm install --frozen-lockfile; supabase/setup-cli@v3; Start Supabase; pnpm --filter @hearth/service test:coverage; post: supabase, setup-node, pnpm, checkout | checkout; `./.github/actions/setup`; supabase/setup-cli@v3; Start Supabase; test:coverage; post: supabase, setup, checkout |
+| test-e2e         | checkout; pnpm/action-setup@v6; actions/setup-node@v7; pnpm install --frozen-lockfile; supabase/setup-cli@v3; playwright install; ghcr and Docker Hub logins; ci-prepull-images; pnpm test:e2e; upload-artifact; post: logins, supabase, setup-node, pnpm, checkout | checkout; `./.github/actions/setup`; supabase/setup-cli@v3; playwright install; ghcr and Docker Hub logins; ci-prepull-images; pnpm test:e2e; upload-artifact; post: logins, supabase, setup, checkout |
+| build            | checkout; pnpm/action-setup@v6; actions/setup-node@v7; pnpm install --frozen-lockfile; pnpm build; post: setup-node, pnpm/action-setup, checkout                                                             | checkout; `./.github/actions/setup`; pnpm build; post: setup, checkout                        |
+
+In every job the before steps `Run pnpm/action-setup@v6`, `Run actions/setup-node@v7` and
+`Run pnpm install --frozen-lockfile` became one `Run ./.github/actions/setup` step, and the two
+post steps `Post Run actions/setup-node@v7` and `Post Run pnpm/action-setup@v6` became one
+`Post Run ./.github/actions/setup`. A programmatic collapse of the before lists (those steps replaced
+by the composite) equals the after lists for all six jobs. Nothing else differs.
+
+steps-compare=as-expected
+
+The setup step's section of the `typecheck` job log (`05-03-setup-step.log`) shows the three
+sub-steps ran inside `Run ./.github/actions/setup`: `Run pnpm/action-setup@v6` (self-installer),
+`Run actions/setup-node@v7` (Node v24.21.0, pnpm cache hit and restored) and
+`Run pnpm install --frozen-lockfile` (869 packages added, done).
+
+### Seed typecheck in CI
+
+The `typecheck` job log (`05-03-typecheck.log`) runs `pnpm typecheck` over seven workspaces and
+prints `supabase/seed typecheck$ tsc --noEmit` once, and the service's line is
+`apps/service typecheck$ tsc --noEmit` alone.
+
+ci-seed-typecheck=once
 
 ## Gates and decisions
 
