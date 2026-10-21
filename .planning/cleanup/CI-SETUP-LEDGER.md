@@ -82,7 +82,14 @@ owner-command=git fetch origin && bash <(git show origin/claude/eloquent-mayer-s
 
 The three patches and `apply.sh` are under `.planning/cleanup/patches/ci-setup-action/`.
 
+dry-run=tree-match
+
+`DRY_RUN=1 bash apply.sh` rebuilt the branch from the pushed patches onto `base=` and printed
+`tree matches (fd704a4c1fbb066fb7402eaee02a950aae456177)`.
+
 ## CI
+
+Not run yet: the six-job CI run on PR A's head is observed in 05-03.
 
 ## Gates and decisions
 
