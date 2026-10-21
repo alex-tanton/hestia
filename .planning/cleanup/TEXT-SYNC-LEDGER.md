@@ -130,6 +130,7 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | e2e | `e2e/*.ts`, `e2e/tests`, `e2e/support`, `e2e/setup` | 115 | 72 | 42 | 7437ac5 | comment-only OK | gates OK |
 | service-http | `apps/service` routes, http, auth, db, gotrue, push, privileged, test helpers, top-level source, scripts, `vitest.coverage.config.ts` | 50 | 41 | 9 | 4b73f76 | comment-only OK | gates OK |
 | service-domain | `apps/service/src` services, chores, deals, jobs, notifications, recipes (non-test) | 184 | 134 | 50 | d210844 | comment-only OK | gates OK |
+| service-tests | `apps/service/src/**/*.test.ts` (unit and integration) | 106 | 53 | 38 | b4a9cb9 | comment-only OK | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -169,6 +170,16 @@ half-up rounding in `readiness.ts`, the no-backfill rule in `log-autopay.ts`, th
 undo rules in `chores.ts`, the rate discipline in the Flipp wrapper, the integer-cents rule in
 `deals/money.ts`, the notification kinds in `notifications/copy.ts`). Service unit suite after: 757
 passed.
+
+`service-tests` notes: 54 files; the 106 sites are 53 `pure`, 16 `mixed`, 22 `prose` and 15 `title`
+rows of the base inventory. The 15 `left:title` rows (`describe`/`it` titles, including the second
+string of the concatenated titles in `jobs/log-autopay.test.ts` and `log-autopay.integration.test.ts`)
+wait for 05-10's title commit. Integration files were typechecked and linted here and run in PR C's CI.
+
+Whole service (05-07): `comment-only-check.mjs --base 708c714 --head HEAD -- apps/service` printed `OK 144 files`
+(33 + 57 + 54); the three batches cover all 340 `apps/service` rows of the base inventory (50 + 184 + 106).
+`citation-inventory.mjs inventory` over `apps/service` lists 15 rows, all class `title`. The service
+unit suite reported 757 passed after each batch, equal to `tests-before-c.service-unit`.
 
 ## Titles
 
