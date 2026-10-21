@@ -196,7 +196,7 @@ Start-up, in order:
 4. `config.json` has `workflow.use_worktrees: false`, so executors run one at a time on the primary checkout, with code branches in separate `git worktree` directories as above. Do not run two executors at once: they all commit to this branch.
 
 Corrections to the plan text:
-- Every plan names the working branch (WB) `claude/vigilant-gates-a4ihid`. That branch never existed. WB is `claude/eloquent-mayer-szjtjf` everywhere (plan files, ledgers and commands). Tell executors this in the dispatch prompt.
+- Plans 05-01 to 05-08 (already executed) name the working branch (WB) `claude/vigilant-gates-a4ihid`; that branch never existed and is left as history there. Plans 05-09 to 05-13 have been corrected to name `claude/eloquent-mayer-szjtjf`. WB is `claude/eloquent-mayer-szjtjf` everywhere (plan files, ledgers and commands); if an older summary or ledger line says otherwise, it means this branch.
 - `.planning/` files go in the PRs (D-04), so each of `refactor/drop-spec-citations` and `docs/sync-specs` needs `git merge --no-edit claude/eloquent-mayer-szjtjf` run in its worktree before every push.
 
 Environment rules that earlier executors followed:
