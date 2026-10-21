@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-10-21T17:40:58.029Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-10-21T18:07:52.820Z"
 last_activity: 2026-10-21
 last_activity_desc: Phase 05 execution started
-state_head: c64d79e41ae7daab9ca48e3841a08db1446c64e5
+state_head: 8e7dbc3345d55a78341602aeaeb0a7a9af91d725
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 31
+  completed_plans: 32
   percent: 67
 ---
 
@@ -28,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 1 of 13
-Status: Executing Phase 05
+Plan: 2 of 13
+Status: Ready to execute
 Last activity: 2026-10-21 — Phase 05 execution started
 
 Progress: [███████░░░] 67%
@@ -79,6 +79,7 @@ Progress: [███████░░░] 67%
 | Phase 04 P04-04 | 31min | 3 tasks | 1 files |
 | Phase 04 P07 | 1h 15m | 3 tasks | 1 files |
 | Phase 04 P08 | 1h | 2 tasks | 6 files |
+| Phase 05 P02 | 15min | 3 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,7 @@ Recent decisions affecting current work:
 - [Phase 04]: 04-06: Kong GoTrue is an allowlist at format 3.0 (verify, token, logout, user, otp, admin/users, denied); guarded by a Vitest test in apps/service using yaml 2.9.1; kong config parse skipped (no Docker); a kong.yml change needs a manual force-recreate of kong on the host
 - [Phase 04]: 04-04: PR 2 (#16) opened only after gate-pr2=approve was committed; six CI jobs green on first run, nothing merged
 - [Phase 04]: 04-07: PR 3 (#18) open at 7c0efdc with six green jobs; FIX-07 red from run 39457296052 job 118753127163 (34 unrefused); E2E flakes outside spec 08 re-run; no probe dropped; awaiting the owner's squash merge and the Kong recreate
+- [Phase 05]: Plan 05-02: service fixtures consolidated on test/shared-fixtures-wip (053f371): stack-hooks.ts and job-logger.ts, jscpd 99 -> 87 clones, service unit 757 = 757; readiness, deals and recipes keep their own hooks; 3 service pairs kept with reasons in FIXTURE-LEDGER.md; no PR opened
 
 ### Pending Todos
 
@@ -149,6 +151,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-21T03:58:06.091Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-redundancy-reduction-and-text-sync/05-CONTEXT.md
+Last session: 2026-10-21T18:07:52.697Z
+Stopped at: Completed 05-02-PLAN.md
+Resume file: None
