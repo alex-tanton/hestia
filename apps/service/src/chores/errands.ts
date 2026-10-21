@@ -5,10 +5,9 @@ import { fail } from '../problem.js';
 import { markHouseholdActive } from '../services/households.js';
 
 /*
- * Errands: one-off tasks with a name, an optional due date, and a status of open or done
- * (Requirements, "Chores and errands" › "Errands"; Technical Architecture, "API surface" ›
- * "Errands"). Every function takes a Kysely bound to the caller's withUserDb transaction, so RLS
- * decides what it can see.
+ * Errands: one-off tasks with a name, an optional due date, and a status of open or done.
+ * Every function takes a Kysely bound to the caller's withUserDb transaction, so RLS decides what
+ * it can see.
  */
 
 function iso(value: Date | string): string {
@@ -50,11 +49,11 @@ async function requireErrandRow(db: Kysely<Database>, id: string): Promise<Erran
 }
 
 /**
- * Open items first, done collapsed below (Design, "18. Errands"); within each group, the soonest
- * due date first — Postgres's default `nulls last` on `asc` is exactly "no due date sorts after
- * every dated one" with no extra clause needed. The query orders within each status group; `Array.
- * filter` is stable, so splitting open from done afterwards keeps that ordering in each half
- * without needing a database-side "is this open" sort key.
+ * Open items first, done collapsed below; within each group, the soonest due date first —
+ * Postgres's default `nulls last` on `asc` is exactly "no due date sorts after every dated one"
+ * with no extra clause needed. The query orders within each status group; `Array.filter` is
+ * stable, so splitting open from done afterwards keeps that ordering in each half without needing a
+ * database-side "is this open" sort key.
  */
 export async function listErrands(db: Kysely<Database>, householdId: string): Promise<Errand[]> {
   const rows = await db
@@ -74,9 +73,8 @@ export async function getErrand(db: Kysely<Database>, id: string): Promise<Erran
 }
 
 /**
- * `id` is client-generated (PRD, "Data model" › "Chores": `errand` has "id (client-generated
- * UUID)"); a replayed offline add is a no-op (Handoff non-negotiable 9), the same idempotent
- * insert `services/lists.ts`'s `addListItem` uses.
+ * `id` is client-generated (a UUID); a replayed offline add is a no-op, the same idempotent insert
+ * `services/lists.ts`'s `addListItem` uses.
  */
 export async function createErrand(
   db: Kysely<Database>,
@@ -105,12 +103,12 @@ export async function createErrand(
 }
 
 /**
- * Every field is an absolute value (Handoff non-negotiable 9). `status` drives the completion
- * stamp absolutely and exclusively: `done` sets `completedAt`/`completedBy` from the caller's JWT,
- * `open` clears both — never from client input, so attribution can never be spoofed (Technical
- * Architecture, "API surface" › "Errands": "`done` stamps `completed_at` and `completed_by`"; the
- * reverse direction mirrors the schema's own symmetric check constraint and the established
- * "set absolutely" pattern `updateListItemRequestSchema` uses for reopening a bought item).
+ * Every field is an absolute value. `status` drives the completion stamp absolutely and
+ * exclusively: `done` sets `completedAt`/`completedBy` from the caller's JWT, `open` clears both —
+ * never from client input, so attribution can never be spoofed (`done` stamps `completed_at` and
+ * `completed_by`; the reverse direction mirrors the schema's own symmetric check constraint and the
+ * established "set absolutely" pattern `updateListItemRequestSchema` uses for reopening a bought
+ * item).
  */
 export async function updateErrand(
   db: Kysely<Database>,
@@ -123,8 +121,8 @@ export async function updateErrand(
 
   /*
    * A `done` for an errand that is already done changes nothing: the first completion stands. This
-   * is what makes a replayed offline done a no-op (Engineering Practices, "The write queue"), since
-   * the PATCH carries no client id to recognise a replay by.
+   * is what makes a replayed offline done a no-op, since the PATCH carries no client id to
+   * recognise a replay by.
    */
   const alreadyDone = input.status === 'done' && existing.status === 'done';
   const statusFields =

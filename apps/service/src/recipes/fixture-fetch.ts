@@ -4,14 +4,12 @@ import { fileURLToPath } from 'node:url';
 /**
  * Serves committed recipe-page fixtures in place of a real fetch, for the E2E stack only
  * (mirrors `../deals/flipp/fixture-transport.ts`'s Flipp equivalent). `fetchRecipePage`'s
- * private/loopback/link-local refusal (Technical Architecture, "Recipe fetching") exists
- * precisely to stop a fetch from ever reaching an address on the machine or the Compose
- * network — and a same-network fixture server would be exactly that, so it would be refused by
- * design, not bypassable by choosing a "reachable" address. The E2E journey that imports a recipe
- * by URL (Handoff, Phase 3 "Done when") therefore never calls `fetchRecipePage` at all when
+ * private/loopback/link-local refusal exists precisely to stop a fetch from ever reaching an
+ * address on the machine or the Compose network — and a same-network fixture server would be
+ * exactly that, so it would be refused by design, not bypassable by choosing a "reachable" address.
+ * The E2E journey that imports a recipe by URL therefore never calls `fetchRecipePage` at all when
  * `HEARTH_RECIPE_FIXTURE_DIR` is set: the whole fetch step is swapped for this in-process file
- * read, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the Flipp transport (Engineering Practices,
- * "E2E environment").
+ * read, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
  */
 
 export const RECIPE_FIXTURE_DIR = fileURLToPath(

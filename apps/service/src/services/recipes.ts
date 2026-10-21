@@ -21,14 +21,13 @@ import { toNumber } from './money.js';
 import { recomputeReadinessForHousehold } from './readiness.js';
 
 /*
- * Recipes (Requirements, "Recipe library"; Technical Architecture, "The Node service" › API
- * surface). Every function takes a Kysely bound to the caller's withUserDb transaction, so RLS
+ * Recipes. Every function takes a Kysely bound to the caller's withUserDb transaction, so RLS
  * decides what it can see; a row RLS hides is reported as not found, never as forbidden, and no
  * function here ever needs to check household_id itself.
  *
- * Recipes are hard-deleted (Requirements, "Meal plan history and deleted recipes"): there is no
- * soft-delete column, and the schema's `meal_plan_entry` foreign key is `on delete set null`, so
- * deleting a recipe never needs to touch meal plan rows itself.
+ * Recipes are hard-deleted: there is no soft-delete column, and the schema's `meal_plan_entry`
+ * foreign key is `on delete set null`, so deleting a recipe never needs to touch meal plan rows
+ * itself.
  */
 
 type RecipeRow = Selectable<Database['recipe']>;
@@ -76,8 +75,8 @@ async function ingredientsOf(db: Kysely<Database>, recipeId: string): Promise<Re
 /**
  * The recipe's own `recipe_readiness` row, or null in the never-computed edge case (a defensive
  * lookup, not a join that would throw — the recompute triggers should make this unreachable in
- * practice). The jsonb `breakdown` is stored keyed by ingredient id (Technical Architecture,
- * "Database"); the API response is the array of its values.
+ * practice). The jsonb `breakdown` is stored keyed by ingredient id; the API response is the array
+ * of its values.
  */
 async function readinessOf(
   db: Kysely<Database>,
@@ -123,7 +122,7 @@ async function requireRecipe(db: Kysely<Database>, id: string): Promise<RecipeRo
   return row;
 }
 
-/** Ingredients paginate at the same size as deal results (Requirements, "Scale and pagination"). */
+/** Ingredients paginate at the same size as deal results. */
 export async function listRecipes(
   db: Kysely<Database>,
   householdId: string,
@@ -236,7 +235,6 @@ export async function updateRecipe(
 export async function deleteRecipe(db: Kysely<Database>, id: string): Promise<void> {
   await requireRecipe(db, id);
   // recipe_ingredient and recipe_readiness cascade; meal_plan_entry.recipe_id is set null by its
-  // own foreign key, keeping the entry and its recipe_title snapshot (Requirements, "Meal plan
-  // history and deleted recipes").
+  // own foreign key, keeping the entry and its recipe_title snapshot.
   await db.deleteFrom('recipe').where('id', '=', id).execute();
 }

@@ -1,9 +1,9 @@
 import { DEAL_PAGE_SIZE, type Deal, type DealSort } from '@hearth/shared';
 
 /**
- * Deal filtering, sorting, and pagination (Requirements, "Deal search and browse" and "Scale and
- * pagination": 50 per page). Pure, over deals already read from `deal`, because the set a request
- * filters is the cached one — filtering must never decide whether to fetch.
+ * Deal filtering, sorting, and pagination (50 per page). Pure, over deals already read from `deal`,
+ * because the set a request filters is the cached one — filtering must never decide whether to
+ * fetch.
  */
 
 export interface DealFilters {

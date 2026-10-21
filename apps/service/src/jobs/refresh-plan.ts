@@ -9,8 +9,7 @@ import { wasCoveredByLastRun } from '../services/deals/dormancy.js';
  * The rules, in order:
  *
  * 1. Flyer items are fetched only for flyers whose merchant is in the union of
- *    `household_favorite_store` merchant ids across the households at that postal code
- *    (Handoff non-negotiable 19).
+ *    `household_favorite_store` merchant ids across the households at that postal code.
  * 2. A flyer is fetched only once: never again while `deal` rows for its `flyer_id` exist and it
  *    is still valid. An expired flyer with rows is left alone; pruning removes its rows.
  * 3. A flyer counts as **new** when, before the run, no `deal` row had its `flyer_id`. That is
@@ -71,11 +70,10 @@ export interface FlyerRefreshInput {
 }
 
 /**
- * Which households get a `flyer_refresh` row (Requirements, "Notifications › Triggers and outbox
- * keys"; Technical Architecture, "Daily refresh"). Nothing is enqueued when the last daily run
- * did not cover this postal code — whether that is its first refresh ever or its first after
- * dormancy — because every flyer would read as new and the household would be told its whole
- * week is fresh news.
+ * Which households get a `flyer_refresh` row. Nothing is enqueued when the last daily run did not
+ * cover this postal code — whether that is its first refresh ever or its first after dormancy —
+ * because every flyer would read as new and the household would be told its whole week is fresh
+ * news.
  *
  * Dormancy is judged from `last_refreshed_at`, never from `last_active_at`: the request that
  * queues a dormant postal code's refresh has already stamped its own household active, so by the

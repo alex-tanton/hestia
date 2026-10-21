@@ -1,10 +1,10 @@
 /**
- * Per-host rate discipline for recipe fetches (Technical Architecture, "Recipe fetching": 1
- * request per second per host). Recipe URLs come from whatever site the user pastes, unlike
- * Flipp's single fixed host, so the Flipp wrapper's request queue (`deals/flipp/request-queue.ts`)
- * does not generalize cleanly here: it serializes every call through one queue and one circuit
- * breaker, which would make fetching two different recipe sites wait on each other for no reason.
- * A small map keyed on hostname is enough for the low, user-initiated volume this feature sees.
+ * Per-host rate discipline for recipe fetches (1 request per second per host). Recipe URLs come
+ * from whatever site the user pastes, unlike Flipp's single fixed host, so the Flipp wrapper's
+ * request queue (`deals/flipp/request-queue.ts`) does not generalize cleanly here: it serializes
+ * every call through one queue and one circuit breaker, which would make fetching two different
+ * recipe sites wait on each other for no reason. A small map keyed on hostname is enough for the
+ * low, user-initiated volume this feature sees.
  */
 
 const DEFAULT_MIN_GAP_MS = 1_000;

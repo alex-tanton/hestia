@@ -1,5 +1,5 @@
 /**
- * Dormant postal codes (Technical Architecture, "Dormant postal codes"; Requirements, "Refresh").
+ * Dormant postal codes.
  *
  * Dormancy governs only the flyer and flyer-item refresh. A keyword search that misses its cache
  * always fetches live, dormant or not.
@@ -16,7 +16,7 @@
  *   that was dormant when that run decided its set, which is the question the request is asking.
  */
 
-/** Requirements, "Refresh": activity within 14 days. */
+/** Activity within 14 days keeps a postal code active. */
 export const ACTIVE_WINDOW_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1_000;
 

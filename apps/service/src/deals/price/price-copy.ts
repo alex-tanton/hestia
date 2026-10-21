@@ -28,13 +28,13 @@ export interface Copy {
   /** pre, post, and sale story joined: everything Flipp printed about the price. */
   readonly text: string;
   /**
-   * `text` without any secondary offer stacked on top of the shelf price. CVS prints "$4.79
-   * WITH CARD" alongside "Also get savings with $5.00 on 2 Digital mfr coupon + Buy 2 get $6
-   * ExtraBucks Rewards®": the coupon and the rebate are extras, not the terms of the price, and
-   * reading them as terms would skip thirteen priced CVS items whose shelf price is perfectly
-   * clear (Requirements: "Parse the shelf price ... the rebate is ignored"). Every parser that
-   * decides whether a price *applies* reads this; the qualifier check still reads `text`,
-   * because "WITH CARD" often trails the secondary clause.
+   * `text` without any secondary offer stacked on top of the shelf price. CVS prints "$4.79 WITH
+   * CARD" alongside "Also get savings with $5.00 on 2 Digital mfr coupon + Buy 2 get $6 ExtraBucks
+   * Rewards®": the coupon and the rebate are extras, not the terms of the price, and reading them
+   * as terms would skip thirteen priced CVS items whose shelf price is perfectly clear (the shelf
+   * price is parsed; the rebate is ignored). Every parser that decides whether a price *applies*
+   * reads this; the qualifier check still reads `text`, because "WITH CARD" often trails the
+   * secondary clause.
    */
   readonly offer: string;
   readonly pre: string;
@@ -79,9 +79,9 @@ const LOYALTY =
 const COUPON = /\bcoupon\b/;
 
 /**
- * Requirements, "Deal price normalization": a digital-coupon qualifier makes the price
- * conditional with reason `coupon`; a loyalty-card qualifier ("w/ MVP Card", an "MVP" price
- * prefix, "with your VIC card", "WITH CARD", a membership price) with reason `loyalty_card`.
+ * A digital-coupon qualifier makes the price conditional with reason `coupon`; a loyalty-card
+ * qualifier ("w/ MVP Card", an "MVP" price prefix, "with your VIC card", "WITH CARD", a membership
+ * price) with reason `loyalty_card`.
  *
  * The card wins when both appear, because the card is what the shelf price requires:
  * "FINAL PRICE 2/$5.00" with "$1 OFF TWO DIGITAL COUPON" is a coupon price, while
@@ -96,8 +96,8 @@ export function detectQualifier(copy: Copy): ConditionalReason | null {
 
 /**
  * The copy as Flipp renders it, kept verbatim so the UI can show "2 for $5.00" beside the
- * computed $2.50 (Technical Architecture, "Price normalization"). Pre-price text ending in a
- * slash runs straight into the price, which is how "2/" becomes "2/$6.00".
+ * computed $2.50. Pre-price text ending in a slash runs straight into the price, which is how "2/"
+ * becomes "2/$6.00".
  */
 export function formatDisplayPrice(price: PriceCopy): string {
   const pre = price.prePriceText?.trim() ?? '';

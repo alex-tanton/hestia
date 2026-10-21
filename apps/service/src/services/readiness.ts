@@ -9,14 +9,13 @@ import {
 } from './matching-candidates.js';
 
 /**
- * Recipe readiness (Requirements, "Deal-matched suggestions"; Handoff non-negotiable 12: equal
- * weighting, half-up rounding, 0% for a recipe with no ingredients; Technical Architecture,
- * "Database" — `recipe_readiness`). Recomputed inline, in the same transaction, right after any
- * write that could change a bucket assignment (pantry, recipe ingredients, match overrides), and
- * from the daily deal refresh job for every affected household. It runs the same way whether the
- * caller's transaction is `authenticated` (a household member's write) or `service_role` (the
- * job): the RLS `household_write` policy already lets a member write their own household's
- * `recipe_readiness` row, and the job runs as service_role, so neither path needs a special case.
+ * Recipe readiness (equal weighting, half-up rounding, 0% for a recipe with no ingredients; stored
+ * in `recipe_readiness`). Recomputed inline, in the same transaction, right after any write that
+ * could change a bucket assignment (pantry, recipe ingredients, match overrides), and from the
+ * daily deal refresh job for every affected household. It runs the same way whether the caller's
+ * transaction is `authenticated` (a household member's write) or `service_role` (the job): the RLS
+ * `household_write` policy already lets a member write their own household's `recipe_readiness`
+ * row, and the job runs as service_role, so neither path needs a special case.
  */
 
 interface IngredientRow {
@@ -25,9 +24,8 @@ interface IngredientRow {
 }
 
 /**
- * Equal weighting, half-up rounding, 0% for a recipe with no ingredients (Handoff non-negotiable
- * 12; PRD "Deal-matched suggestions"). Pure and exported so the rounding rule is table-tested
- * without a database.
+ * Equal weighting, half-up rounding, 0% for a recipe with no ingredients. Pure and exported so the
+ * rounding rule is table-tested without a database.
  */
 export function computeReadinessPercent(
   onSaleCount: number,
@@ -98,9 +96,8 @@ async function recomputeOne(
   const toBuyCount = breakdown.filter((entry) => entry.bucket === 'to_buy').length;
   const readinessPercent = computeReadinessPercent(onSaleCount, inPantryCount, ingredients.length);
 
-  // Keyed by ingredient id (Technical Architecture, "Database": "breakdown (jsonb: per ingredient
-  // id, its bucket and the matched deal or pantry name)"); the API response converts it back to
-  // an array of entries.
+  // Keyed by ingredient id (`breakdown` is jsonb: per ingredient id, its bucket and the matched
+  // deal or pantry name); the API response converts it back to an array of entries.
   const breakdownByIngredientId = Object.fromEntries(
     breakdown.map((entry) => [entry.ingredientId, entry]),
   );

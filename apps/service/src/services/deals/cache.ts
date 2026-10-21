@@ -1,6 +1,5 @@
 /**
- * The cache TTLs from Technical Architecture, "Caching and storage", and the one rule that
- * decides what a request gets:
+ * The cache TTLs, and the one rule that decides what a request gets:
  *
  * | Query                    | TTL      | Where                                            |
  * | ------------------------ | -------- | ------------------------------------------------ |
@@ -11,7 +10,7 @@
  *
  * A fresh entry is served without touching the network. A miss triggers a live fetch. When that
  * fetch fails and any entry exists, however old, the entry is served with its age, which the UI
- * renders as an "as of" label — stale data beats empty data (Handoff non-negotiable 18).
+ * renders as an "as of" label — stale data beats empty data.
  */
 
 export const SEARCH_TTL_MS = 6 * 60 * 60 * 1_000;
@@ -31,9 +30,8 @@ export function isFresh(fetchedAt: Date, now: Date, ttlMs: number): boolean {
 }
 
 /**
- * What to serve once a live fetch has failed (Handoff non-negotiable 18, "stale data beats empty
- * data"): any entry, however old, with its age, or — when nothing has ever been cached — an
- * error, which the UI renders as the retry state (Design, "Deals-specific states").
+ * What to serve once a live fetch has failed: any entry, however old, with its age, or — when
+ * nothing has ever been cached — an error, which the UI renders as the retry state.
  */
 export function serveAfterFailure<T>(
   entry: CacheEntry<T> | undefined,

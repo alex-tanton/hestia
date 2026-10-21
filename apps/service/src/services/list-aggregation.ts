@@ -1,11 +1,11 @@
 /**
- * Ingredient aggregation (Requirements, "Ingredient aggregation"): when more than one recipe
- * contributes the same ingredient to a list, the contributions become one item.
+ * Ingredient aggregation: when more than one recipe contributes the same ingredient to a list, the
+ * contributions become one item.
  *
  * - the merge key is `normalized_name`, the key the readiness matcher uses
  * - matching units sum: 1 cup and 2 cups of milk become one item for 3 cups
  * - mismatched units merge into one item that keeps both quantities in `quantity_note`
- *   ("2 cups + 1 lb"), with **no unit conversion ever** (Handoff non-negotiable 20): converting
+ *   ("2 cups + 1 lb"), with **no unit conversion ever**: converting
  *   volume to weight needs per-ingredient density and would produce confident wrong answers
  * - every contributing recipe is recorded, so the item's origin stays visible
  *
