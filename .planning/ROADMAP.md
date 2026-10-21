@@ -190,7 +190,7 @@ Plans:
 
 Plans:
 **Wave 1**
-- [ ] 05-01-PLAN.md — PR A content: tracer composite setup action in all six jobs (expansion proof), seed typecheck once, Dependabot directory, two workflow comments; push with GH_TOKEN or owner patch hand-off
+- [x] 05-01-PLAN.md — PR A content: tracer composite setup action in all six jobs (expansion proof), seed typecheck once, Dependabot directory, two workflow comments; push with GH_TOKEN or owner patch hand-off
 - [x] 05-02-PLAN.md — PR B content, service: tracer shared integration stack hooks, every integration file on them, shared job logger; jscpd at most 90
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -248,5 +248,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
-| 5. Redundancy Reduction and Text Sync | 1/13 | In Progress | - |
+| 5. Redundancy Reduction and Text Sync | 2/13 | In Progress | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |

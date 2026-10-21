@@ -87,6 +87,18 @@ dry-run=tree-match
 `DRY_RUN=1 bash apply.sh` rebuilt the branch from the pushed patches onto `base=` and printed
 `tree matches (fd704a4c1fbb066fb7402eaee02a950aae456177)`.
 
+The owner pushed `ci/setup-action` by running `apply.sh` from their own clone. On Windows Git Bash
+the owner had to set `MSYS_NO_PATHCONV=1` for the command to work (Git Bash otherwise rewrites the
+`origin/...:path` and `HEAD:refs/heads/...` arguments as Windows paths).
+
+pr-a-head=43672635ca3fafe9c46c87c10c4fb0d96f6757e1
+pr-a-tree-match=yes
+
+`git ls-remote --heads origin ci/setup-action` returns the head above; its tree is
+`fd704a4c1fbb066fb7402eaee02a950aae456177`, equal to `tree=`, and its diff against `origin/main` is
+exactly the five planned files. The head SHA differs from the local `2344443` only because `git am`
+re-committed the patches.
+
 ## CI
 
 Not run yet: the six-job CI run on PR A's head is observed in 05-03.
