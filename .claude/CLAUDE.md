@@ -466,3 +466,23 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 > Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
 > This section is managed by `generate-claude-profile` -- do not edit manually.
 <!-- GSD:profile-end -->
+
+## Running E2E in the Claude cloud sandbox
+
+This section is hand-maintained and sits outside the `GSD:*` managed blocks, so GSD regeneration leaves it alone.
+
+`pnpm test:e2e` builds the `hearth-service` and `hearth-caddy` images with Docker. In the cloud sandbox, build containers reach the network through a TLS-intercepting proxy whose CA they do not trust, so corepack's pnpm download fails with `SELF_SIGNED_CERT_IN_CHAIN` (`pnpm fetch` exits 1 in both Dockerfiles). Apply this workaround before running, and revert it afterwards. It is local-only: never commit it, and never disable TLS verification.
+
+1. `cp /root/.ccr/ca-bundle.crt docker/ca.crt`
+2. In `docker/service.Dockerfile` (the `source` stage) and `docker/caddy.Dockerfile` (the `build` stage), add these two lines directly after the `FROM node:...` line. Do not add them to the final runtime stage.
+
+   ```dockerfile
+   COPY docker/ca.crt /ca.crt
+   ENV NODE_EXTRA_CA_CERTS=/ca.crt
+   ```
+
+3. Append `!docker/ca.crt` to `.dockerignore` (the `docker` directory is otherwise excluded from the build context).
+4. Run `pnpm test:e2e`. It takes about 9 minutes; the expected result is 104 passed.
+5. Revert: `git checkout docker/service.Dockerfile docker/caddy.Dockerfile .dockerignore && rm docker/ca.crt`, then confirm `git status` is clean.
+
+Retagging a local `node:24.21.0-bookworm-slim` image with the CA does not work: BuildKit resolves the `FROM` by registry digest and ignores local tags.
