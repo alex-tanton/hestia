@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Completed 05-07-PLAN.md
-last_updated: "2026-10-21T20:19:39.476Z"
+stopped_at: Completed 05-08-PLAN.md
+last_updated: "2026-10-21T20:34:56.686Z"
 last_activity: 2026-10-21
 last_activity_desc: Phase 05 execution started
-state_head: 4446af08054b3798cb0eca4e662652eac52c2fcb
+state_head: b8a4111b77c7cb1a6f5585fb713a321216fe607a
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 38
+  completed_plans: 39
   percent: 67
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 7 of 13 complete (05-01 to 05-07); next 05-08 (PR D content), then 05-09 (PR C: apps/web comments)
+Plan: 8 of 13 complete (05-01 to 05-08); next 05-09 (PR C: apps/web comments), then 05-10 (non-TS files and titles)
 Status: Ready to execute
-Last activity: 2026-10-21 — Plan 05-07 complete (apps/service cleared; PR C branch refactor/drop-spec-citations at da58b20)
+Last activity: 2026-10-21 — Plan 05-08 complete (docs checker and audit; PR D branch docs/sync-specs at 158fd52, not yet a pull request)
 
 Progress: [███████░░░] 67%
 
@@ -86,6 +86,7 @@ Progress: [███████░░░] 67%
 | Phase 05 P05 | 1h45m | 3 tasks | 5 files |
 | Phase 05 P06 | 30min | 3 tasks | 82 files |
 | Phase 05 P07 | about 35min | 3 tasks | 144 files |
+| Phase 05 P08 | about 20min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 05-01: PR A content is on origin as ci/setup-action (43672635, tree fd704a4c); composite setup action keeps checkout in each job (D-12 deviation, ledger row for PR A body); seed typechecked once; GitHub refused the token push (no workflow scope) so the owner pushed via apply.sh (Windows Git Bash needs MSYS_NO_PATHCONV=1); working branch is claude/eloquent-mayer-szjtjf, not the plan's claude/vigilant-gates-a4ihid
 - [Phase 05]: Plan 05-04: web fixtures consolidated on test/shared-fixtures-wip (8a7e8e4): browser.ts, WithQueue, stubFetch, dealScreenHandlers, emptyDealSearch; jscpd 87 -> 66 clones, web 728 = 728; 14 pairs kept with reasons in FIXTURE-LEDGER.md (hoisted viewer-zone blocks, retry assertions, variant hooks); no PR opened
 - [Phase 05]: Plan 05-05: WB synced past PR A by one ordinary merge (no workflow-scope refusal); PR B (#27) opened from test/shared-fixtures with six green jobs, jscpd 96 -> 66 clones, integration tests 1190 = main; owner squash-merged as a660d58, main CI green
+- [Phase 05]: Plan 05-08: docs/sync-specs (158fd52) holds the seven specs and README audited against the code; docs-claims-check.mjs 582 tokens, 0 misses with a 34-token reasoned allowlist; hearth-admin documented as a hand-written shell wrapper; Kong routes, held deal-add id, per-list add-to-list lock and coverage setup stated as they are; README retired-spec citations removed; 14-row behavioral sample in DOCS-AUDIT-LEDGER.md; PR D opens in 05-13
 
 ### Pending Todos
 
@@ -160,6 +162,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-21T20:19:39.354Z
-Stopped at: Completed 05-07-PLAN.md
+Last session: 2026-10-21T20:34:56.562Z
+Stopped at: Completed 05-08-PLAN.md
 Resume file: None
