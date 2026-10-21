@@ -1,7 +1,7 @@
-import { onlineManager } from '@tanstack/react-query';
 import { configure, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { MealPlanEntry } from '@hearth/shared';
+import { registerHouseholdClock } from '../test/browser.ts';
 import { billFixture } from '../test/bills-fixtures.ts';
 import {
   ALEX_ID,
@@ -103,17 +103,7 @@ function card(name: string): HTMLElement {
   return screen.getByRole('region', { name: new RegExp(`^${name}`) });
 }
 
-beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(PINNED_INSTANT);
-  onlineManager.setOnline(true);
-});
-
-afterEach(() => {
-  vi.useRealTimers();
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerHouseholdClock(PINNED_INSTANT);
 
 describe('dashboard dates, with the browser a day ahead of the household', () => {
   it('the Meals card names today and tomorrow in the household zone', async () => {

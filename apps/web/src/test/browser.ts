@@ -46,6 +46,25 @@ export function registerBrowserStubs(): void {
   });
 }
 
+/**
+ * Pins "today" to `instant`, for the tests that read the household's calendar against a device in
+ * another zone; timers keep running for the screens. Online before each test; real timers back,
+ * every stub undone after. The instant is always explicit, so no test reads the real clock.
+ */
+export function registerHouseholdClock(instant: Date): void {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(instant);
+    onlineManager.setOnline(true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+}
+
 /** Opens an overflow menu from the keyboard, as the lists tests do: a pointer click does not open a Radix menu under jsdom. */
 export async function openMenu(user: UserEvent, triggerName: string): Promise<void> {
   const trigger = await screen.findByRole('button', { name: triggerName });

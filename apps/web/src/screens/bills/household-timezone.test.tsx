@@ -1,7 +1,7 @@
-import { onlineManager } from '@tanstack/react-query';
 import { configure, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Bill } from '@hearth/shared';
+import { registerHouseholdClock } from '../../test/browser.ts';
 import { billFixture } from '../../test/bills-fixtures.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import {
@@ -59,17 +59,7 @@ function groupNamed(heading: string): HTMLElement {
   return section;
 }
 
-beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(PINNED_INSTANT);
-  onlineManager.setOnline(true);
-});
-
-afterEach(() => {
-  vi.useRealTimers();
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerHouseholdClock(PINNED_INSTANT);
 
 describe('bill groups, with the browser a day ahead of the household', () => {
   it('a household or personal bill due next Tuesday is Later, since the household’s week ends Saturday', async () => {
