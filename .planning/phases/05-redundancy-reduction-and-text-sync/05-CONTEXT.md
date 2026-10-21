@@ -43,6 +43,12 @@ Reduce duplicated CI config, duplicated test fixtures and stale spec-citation co
 - **D-17:** `docs/` (7 files, about 2,600 lines): claim-by-claim audit against the code, fixing mismatches in place, with a ledger under `.planning/cleanup/`. Include behavior changed in Phases 2 to 4 (Kong routes and the `hearth-compose up -d --force-recreate kong` step, deploy password handling, held ids for deal-add, test time pinning, and the knip and jscpd tooling).
 - **D-18:** Spot-check for Success Criterion 5: a script verifies that every backticked path, script name and `pnpm` command in `docs/` and the maps exists, and a recorded sample of behavioral statements (including `hearth-admin` described as hand-written) is verified by hand. Both results go in the ledger.
 
+### Owner decisions after research (2026-10-21)
+- **D-19:** Edit all 46 test titles (`describe`/`it` string literals) that carry spec citations, in a separate commit explicitly labelled NOT comment-only, proved with the title-normalised AST mode from `05-RESEARCH.md`. Goal: unification and consistency across the repo, so apply one consistent title style rather than only deleting the citation text. The comment-only commits stay comment-only. — **Reversibility:** reversible — git revert of one commit.
+- **D-20:** The three `e2e/fixtures/recipes/*.html` files that carry citations as visible `<p>` text are included in the work (not left and ledgered). Check that no E2E assertion depends on that text; the planner records the proof.
+- **D-21:** The citation vocabulary is the full retired-spec set from `05-RESEARCH.md` (about 1,118 lines in 458 files outside `.planning/`, `docs/` and `supabase/migrations/`), not the narrower pattern in D-08. The ledger records the real counts. Migrations (17 lines in 8 files) stay untouched.
+- **D-22:** The CI change (`.github/actions/setup`, `ci.yml`, and `/.github/actions/setup` added to `dependabot.yml` `directories`) is pushed by Claude using the `GH_TOKEN` the owner supplied for this session. If the push is rejected for lack of the `workflow` scope, Claude writes patch files under `.planning/` and gives the owner one command that applies and pushes them. The token is never written to a file, commit or log.
+
 ### Claude's Discretion
 - Exact PR split and order (suggested: CI action and seed typecheck; fixtures; citations; docs and maps), commit grouping, ledger file names and column layout.
 - Which shared helpers to extract for each fixture cluster and their names.
