@@ -1,4 +1,4 @@
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { normalize } from '@hearth/matching';
 import type { ParseRecipeResponse, Recipe, RecipeDetail } from '@hearth/shared';
@@ -11,6 +11,7 @@ import {
   type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
+import { expectStatus } from './test/stack-hooks.js';
 
 /*
  * Recipes against `supabase start`: real Postgres as hearth_service, every request through
@@ -31,10 +32,6 @@ afterAll(async () => {
 });
 
 const POSTAL_CODE = '27599';
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
 
 interface Home extends HouseholdFixture {
   app: FastifyInstance;
