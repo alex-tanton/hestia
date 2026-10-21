@@ -20,7 +20,7 @@ export const merchantNameSchema = z.string().trim().min(1).max(200);
 
 /**
  * One row of a list. The deal fields are a snapshot taken when the item was added, never a live
- * reference: Flipp's item ids change every week (Requirements, "Shopping lists").
+ * reference: Flipp's item ids change every week.
  */
 export const listItemSchema = z.object({
   id: idSchema,
@@ -40,7 +40,7 @@ export const listItemSchema = z.object({
   dealValidTo: calendarDateSchema.nullable(),
   priceUnit: priceUnitSchema,
   conditionalPrice: z.boolean(),
-  /** What the item counts at now: the sale price, or the repriced value (Requirements). */
+  /** What the item counts at now: the sale price, or the repriced value. */
   priceCents: centsSchema.nullable(),
   originalSalePriceCents: centsSchema.nullable(),
   repricedAt: timestampSchema.nullable(),
@@ -50,8 +50,8 @@ export const listItemSchema = z.object({
 export type ListItem = z.infer<typeof listItemSchema>;
 
 /**
- * A store group with its subtotal already computed, so the UI never does money arithmetic
- * (Requirements, "Subtotals"). `merchantId` null is the "Anywhere" group, which sorts last.
+ * A store group with its subtotal already computed, so the UI never does money arithmetic.
+ * `merchantId` null is the "Anywhere" group, which sorts last.
  */
 export const storeGroupSchema = z.object({
   merchantId: z.string().nullable(),
@@ -80,7 +80,7 @@ export type ShoppingList = z.infer<typeof shoppingListSchema>;
 
 export const shoppingListListSchema = z.array(shoppingListSchema);
 
-/** Bought items stay on the list, in their own group (Requirements, "Shopping list lifecycle"). */
+/** Bought items stay on the list, in their own group. */
 export const shoppingListDetailSchema = shoppingListSchema.extend({
   storeGroups: z.array(storeGroupSchema),
   bought: z.array(listItemSchema),
@@ -107,13 +107,12 @@ function storePair(body: {
 const STORE_PAIR_MESSAGE = 'Give a store id and name together, or neither.';
 
 /**
- * A manually typed item. It may carry a hand-entered price and unit, and a store or none
- * (Requirements, "Per-store splitting").
+ * A manually typed item. It may carry a hand-entered price and unit, and a store or none.
  */
 const manualListItemRequestSchema = z
   .object({
     source: z.literal('manual'),
-    /** Client-generated, so a replayed offline add is a no-op (Handoff non-negotiable 9). */
+    /** Client-generated, so a replayed offline add is a no-op. */
     id: idSchema.optional(),
     itemName: itemNameSchema,
     quantity: quantitySchema.nullish(),
@@ -146,8 +145,7 @@ export type CreateListItemRequest = z.infer<typeof createListItemRequestSchema>;
 
 /**
  * PATCH /api/lists/:id/items/:itemId. Every field is an absolute value, never a toggle or an
- * increment, so a queued write replays safely in any order (Handoff non-negotiable 9). Null
- * clears the field.
+ * increment, so a queued write replays safely in any order. Null clears the field.
  */
 export const updateListItemRequestSchema = z
   .object({

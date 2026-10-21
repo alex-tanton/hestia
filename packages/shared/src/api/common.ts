@@ -9,12 +9,12 @@ export const timestampSchema = z.iso.datetime({ offset: true });
 export const calendarDateSchema = z.iso.date();
 
 /**
- * Money on the wire is integer cents, never floating-point dollars (Engineering Practices,
- * "Code conventions"). The ceiling is what `numeric(10, 2)` holds at two decimal places.
+ * Money on the wire is integer cents, never floating-point dollars. The ceiling is what
+ * `numeric(10, 2)` holds at two decimal places.
  */
 export const centsSchema = z.int().min(0).max(99_999_999);
 
-/** A five-digit US ZIP code (Requirements, "Users and households"). */
+/** A five-digit US ZIP code. */
 export const postalCodeSchema = z.string().regex(/^[0-9]{5}$/, 'Enter a five-digit ZIP code.');
 
 /** An IANA timezone name; the database rejects names Postgres does not recognize. */
@@ -35,10 +35,9 @@ export const householdRoleSchema = z.enum(['admin', 'member']);
 export type HouseholdRole = z.infer<typeof householdRoleSchema>;
 
 /**
- * The recurrence unit `bill` and `chore` share (Requirements, "Data model": "Recurrence uses the
- * same three fields on `bill` and `chore`: `recurrence_unit`... `interval`... and `anchor_date`.").
- * Lives here, not in either `bills.ts` or `chores.ts`, so the two sibling units that each need it
- * don't export the same name twice.
+ * The recurrence unit `bill` and `chore` share (recurrence uses the same three fields on `bill` and
+ * `chore`: `recurrence_unit`, `interval`, and `anchor_date`). Lives here, not in either `bills.ts`
+ * or `chores.ts`, so the two sibling units that each need it don't export the same name twice.
  */
 export const recurrenceUnitSchema = z.enum(['day', 'week', 'month', 'year']);
 export type RecurrenceUnit = z.infer<typeof recurrenceUnitSchema>;

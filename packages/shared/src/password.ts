@@ -6,11 +6,11 @@ export const PASSWORD_MIN_LENGTH = 8;
 /** bcrypt, which GoTrue hashes with, ignores everything past 72 bytes. */
 export const PASSWORD_MAX_LENGTH = 72;
 
-/** Design › Screens › 1 writes this sentence; the PWA and the service both show exactly it. */
+/** The PWA and the service both show exactly this sentence. */
 export const COMMON_PASSWORD_MESSAGE = 'That password is too common. Choose another.';
 
 /**
- * The shape half of the password policy (Requirements, "Authentication"): length and bytes.
+ * The shape half of the password policy: length and bytes.
  *
  * The other half is the 10,000-entry common-password list, which is 99 KB of text. Every request
  * schema that mentions a password is reachable from this package's entry point, so keeping the
