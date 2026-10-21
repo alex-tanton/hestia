@@ -4,8 +4,8 @@ base=48c111f79ecde910636805976752c94b5f615802
 branch=ci/pull-supabase-from-ghcr
 worktree=../hearth-ci-pull
 commits=871ff4dffe9e17656514f80e4fb297670611d2d2 d25d8e66617b7bc12310c969e92d5593af6cee3d
-pushed=none (local tip d25d8e66617b7bc12310c969e92d5593af6cee3d; the push was rejected, see Push status)
-pr=none (the owner opens it and squash-merges; proposed title: ci: pull the Supabase test images from GHCR first)
+pushed=ebb9ff6e07b4d00314a21917baeb38239bc70c67 (the owner applied the exported patch with git am and pushed it from his machine, because the session token has no workflow scope; the commits there are a3f55d4 and ebb9ff6, rewritten from 871ff4d and d25d8e6 by git am)
+pr=22 (opened 2026-10-21; the owner squash-merges; docker hub secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN reported added by the owner, not verifiable from here)
 
 Raw logs are `.planning/cleanup/logs/261020-wnk-*.log` (gitignored).
 
