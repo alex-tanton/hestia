@@ -198,3 +198,17 @@ fixed here; it is reported for the owner.
 
 - The plan names the working branch `claude/vigilant-gates-a4ihid`. The session's checkout is on `claude/eloquent-mayer-szjtjf`, which is the only working branch that exists (no `claude/vigilant-gates-a4ihid` locally or on `origin`), and the orchestrator directed commits to it. This plan therefore treats `claude/eloquent-mayer-szjtjf` as WB; later plans must do the same or the owner must say otherwise.
 - Environment: Node v24.21.0 from `/opt/node-v24/bin`; the shell default is Node 22.22.0.
+
+## WB sync after PR A (05-05)
+
+pre-sync-wb=305f2b3c9045a337dd64b15025e36a4d90a0adde
+sync-main=ac8ef34bb913418e425eca1157fb9249b6017733
+post-a-sync=claude
+
+One ordinary `git merge origin/main` in the throwaway worktree `../hearth-sync` was clean (no
+conflicts, `.planning/` included). Outside `.planning/` the merge equals `main` (`git diff --quiet
+ac8ef34 HEAD -- . ':(exclude).planning'` held). It was pushed once to `refs/heads/claude/eloquent-mayer-szjtjf`
+(the working branch; log `05-05-sync-push.log`, `exit=0`), and the push carried PR A's `.github/` files
+without a `workflow`-scope refusal, so no D-22 hand-off was needed. The primary checkout fast-forwarded
+to `origin/claude/eloquent-mayer-szjtjf` at `1ab61703f46e17e00564cbe639b6ec1ec8977a0c`. The merge diff
+against `pre-sync-wb` outside `.planning/` is exactly PR A's five files.

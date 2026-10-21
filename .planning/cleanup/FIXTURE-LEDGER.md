@@ -235,3 +235,18 @@ Kept in place, with the difference:
 ## CI
 
 Not run yet: integration files run in PR B's CI (05-05).
+
+## PR B head (05-05)
+
+wb-after-a=1ab61703f46e17e00564cbe639b6ec1ec8977a0c
+pr-b-branch=test/shared-fixtures
+pr-b-patch-id=4e14160077f92434539b1111d2fab446a0b88000
+pr-b-head-initial=13fcc016555f06e603eec0551fb9732d4cc392df
+
+`test/shared-fixtures` was cut from the synced working branch tip (`wb-after-a=`, which contains
+PR A's squash commit `ac8ef34`) in `../hearth-fixtures`, and the nine fixture commits of
+`test/shared-fixtures-wip` (`base=..8a7e8e4`) were cherry-picked with no conflict. The
+`git patch-id --stable` of `git diff {base} origin/test/shared-fixtures-wip -- apps` equals that of
+`git diff {wb-after-a} HEAD -- apps` on the new branch (`pr-b-patch-id=`). Merging the working branch
+in was a no-op. The branch touches 41 files, all under `apps/service/src/` and `apps/web/src/`,
+besides the `.planning/` state that rides along (D-04). It is pushed at `pr-b-head-initial=`.
