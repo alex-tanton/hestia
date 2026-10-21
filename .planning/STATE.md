@@ -163,5 +163,26 @@ Items acknowledged and deferred at milestone close, most recent first:
 ## Session Continuity
 
 Last session: 2026-10-21T20:34:56.562Z
-Stopped at: Completed 05-08-PLAN.md
+Stopped at: Completed 05-08-PLAN.md (paused by the owner before 05-09)
 Resume file: None
+
+### Resume point for Phase 5 (paused after 05-08, 2026-10-21)
+
+Resume with `/gsd-execute-phase 5`. Plans 05-01 to 05-08 have SUMMARYs; 05-09 to 05-13 remain.
+
+Working branch (WB) for all `.planning/` state: `claude/eloquent-mayer-szjtjf` (the plans name `claude/vigilant-gates-a4ihid`, which never existed). Pushed, tip `5d7c32e`; always read the newest STATE from `origin` of this branch.
+
+Merged to `main`: PR A #26 (`ac8ef34`, RED-01/02) and PR B #27 (`a660d58`, RED-03); main CI green on both. The deploy runs for those merges were pending on the self-hosted runner.
+
+Unmerged work, all pushed (no PR opened for either):
+
+| Branch | Worktree | Tip | Holds | PR |
+|--------|----------|-----|-------|----|
+| `refactor/drop-spec-citations` | `/home/user/hearth-citations` | `da58b20` | PR C so far: recurrence, matching, shared, seed-ts, e2e, service batches; 15 service test titles left for 05-10 | opened and landed by 05-11 |
+| `docs/sync-specs` | `/home/user/hearth-docs-sync` | `158fd52` | PR D so far: docs claims checker output, `docs/*.md` and `README.md` fixes | opened by 05-13 |
+
+Before pushing either branch again, run `git merge --no-edit claude/eloquent-mayer-szjtjf` in its worktree (D-04). `test/shared-fixtures-wip` is a redundant backup (its content is merged via PR B). Worktrees are local to the container that ran this session; recreate with `git worktree add <path> <branch>` from `origin` if they are gone.
+
+Next, in order: 05-09 (PR C, `apps/web` comments, about 476 lines), 05-10 (non-TS files, root configs, 46 test titles; also decide the 3 root config lines in `commitlint.config.js` and `eslint.config.js`), 05-11 (open and land PR C: owner merge), 05-12 (finish PR D: sync, maps, `.claude/CLAUDE.md`), 05-13 (land PR D and close the phase: owner merge).
+
+Open items for the owner: squash-merges of PR C and PR D; journey 7 e2e test (`e2e/tests/18-chores-and-errands-offline.spec.ts:140`) flaked once on `main` and passed on one approved rerun; if a PR touches `.github/workflows` and GitHub refuses for the `workflow` scope, use the `apply.sh` hand-off with `export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` on Windows Git Bash and a save-to-file invocation.
