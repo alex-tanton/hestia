@@ -110,6 +110,68 @@ tests included) reports 757 passed, equal to `tests-before.service-unit`; per to
 citation-line count and the `it`/`describe` declaration count equal the base.
 `git diff --name-only 4e39165..053f371` in the worktree lists only files under `apps/service/src/`.
 
+## Web clone dispositions (05-04)
+
+One row per cross-file test clone pair of the `05-02` scan (the final service scan; the web files were
+untouched by 05-02, so it equals the web side of `05-02-before`) with both sides under `apps/web/`:
+35 pairs. Clusters: C is the browser online and pointer stubs, `openMenu` and per-file mounts, D is the
+household-timezone fake clock, E is the offline queue, F is the deals handler table and the `vi.hoisted`
+viewer-zone block, G is the session handler. A pair counts as `removed` when no clone of the same two
+files remains at an overlapping range; jscpd re-reports a shared block against the next file that
+still carries it, so a pair can vanish from one file pairing and appear against another until every
+copy is gone. `open` means not decided yet in this plan's current task.
+
+| # | File A (lines) | File B (lines) | Lines | Cluster | Disposition | Commit |
+| - | -------------- | -------------- | ----- | ------- | ----------- | ------ |
+<!-- web-rows-start -->
+| 1 | `apps/web/src/App.test.tsx` 48-57 | `apps/web/src/screens/settings/settings.test.tsx` 37-46 | 10 | G | open |  |
+| 2 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-76 | `apps/web/src/screens/bills/bill-detail.test.tsx` 35-44 | 10 | C | removed | 96e17d6 |
+| 3 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-79 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 43-54 | 13 | E | removed | 96e17d6 |
+| 4 | `apps/web/src/lib/offline/write-queue.test.tsx` 67-76 | `apps/web/src/screens/lists/lists.test.tsx` 86-96 | 10 | C | removed | 96e17d6 |
+| 5 | `apps/web/src/lib/offline/write-queue.test.tsx` 68-79 | `apps/web/src/screens/meals/planner.test.tsx` 99-109 | 12 | C | removed | 96e17d6 |
+| 6 | `apps/web/src/screens/bills/bill-detail.test.tsx` 34-71 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-75 | 38 | C | open |  |
+| 7 | `apps/web/src/screens/bills/bill-detail.test.tsx` 47-57 | `apps/web/src/screens/chores/chores.test.tsx` 160-170 | 11 | C | open |  |
+| 8 | `apps/web/src/screens/bills/bill-detail.test.tsx` 43-55 | `apps/web/src/screens/deals/deal-search.test.tsx` 71-84 | 13 | C | open |  |
+| 9 | `apps/web/src/screens/bills/bill-detail.test.tsx` 36-47 | `apps/web/src/screens/lists/lists.test.tsx` 87-99 | 12 | C | open |  |
+| 10 | `apps/web/src/screens/bills/bill-detail.test.tsx` 34-59 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 53-78 | 26 | C | open |  |
+| 11 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/bills/subscriptions.test.tsx` 99-108 | 9 | C | open |  |
+| 12 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-51 | `apps/web/src/screens/bills/subscriptions.test.tsx` 36-49 | 14 | C | open |  |
+| 13 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/lists/lists.test.tsx` 132-140 | 9 | C | open |  |
+| 14 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-48 | `apps/web/src/screens/meals/planner.test.tsx` 97-107 | 11 | C | open |  |
+| 15 | `apps/web/src/screens/bills/bills-index.test.tsx` 153-161 | `apps/web/src/screens/meals/recipe-library.test.tsx` 115-123 | 9 | C | open |  |
+| 16 | `apps/web/src/screens/bills/bills-index.test.tsx` 38-63 | `apps/web/src/screens/meals/recipe-library.test.tsx` 40-66 | 26 | C | open |  |
+| 17 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/chores/household-timezone.test.tsx` 55-70 | 16 | D | open |  |
+| 18 | `apps/web/src/screens/bills/household-timezone.test.tsx` 59-74 | `apps/web/src/screens/household-timezone.test.tsx` 103-118 | 16 | D | open |  |
+| 19 | `apps/web/src/screens/bills/subscriptions.test.tsx` 41-58 | `apps/web/src/screens/lists/lists.test.tsx` 91-108 | 18 | C | open |  |
+| 20 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 46-54 | `apps/web/src/screens/chores/chores.test.tsx` 66-74 | 9 | E | open |  |
+| 21 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 39-54 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 33-48 | 16 | E | open |  |
+| 22 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 54-62 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 48-56 | 9 | E | open |  |
+| 23 | `apps/web/src/screens/chores/chores-offline-queue.test.tsx` 87-104 | `apps/web/src/screens/chores/errands-offline-queue.test.tsx` 83-99 | 18 | E | open |  |
+| 24 | `apps/web/src/screens/chores/chores.test.tsx` 153-175 | `apps/web/src/screens/chores/errands.test.tsx` 90-111 | 23 | C | open |  |
+| 25 | `apps/web/src/screens/chores/chores.test.tsx` 388-397 | `apps/web/src/screens/chores/errands.test.tsx` 351-360 | 10 | C | open |  |
+| 26 | `apps/web/src/screens/chores/chores.test.tsx` 64-74 | `apps/web/src/screens/chores/errands.test.tsx` 39-54 | 11 | C | open |  |
+| 27 | `apps/web/src/screens/deals/deal-card.test.tsx` 16-30 | `apps/web/src/screens/onboarding/onboarding.test.tsx` 31-45 | 15 | F | open |  |
+| 28 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/favorites.test.tsx` 19-35 | 17 | F | open |  |
+| 29 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/deals/flyers.test.tsx` 23-39 | 17 | F | open |  |
+| 30 | `apps/web/src/screens/deals/deal-search.test.tsx` 75-89 | `apps/web/src/screens/deals/flyers.test.tsx` 54-67 | 15 | F | open |  |
+| 31 | `apps/web/src/screens/deals/deal-search.test.tsx` 21-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 15-31 | 17 | F | open |  |
+| 32 | `apps/web/src/screens/deals/favorites.test.tsx` 26-41 | `apps/web/src/screens/deals/flyers.test.tsx` 30-45 | 16 | F | open |  |
+| 33 | `apps/web/src/screens/deals/favorites.test.tsx` 26-37 | `apps/web/src/screens/meals/suggestions.test.tsx` 22-33 | 12 | F | open |  |
+| 34 | `apps/web/src/screens/meals/household-timezone.test.tsx` 103-119 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 26-42 | 17 | D | open |  |
+| 35 | `apps/web/src/screens/meals/recipe-detail.test.tsx` 67-80 | `apps/web/src/screens/meals/recipe-library.test.tsx` 55-68 | 14 | C | open |  |
+<!-- web-rows-end -->
+
+Web tests (`pnpm --filter @hearth/web test` in `../hearth-fixtures-wip` at `base=`, log
+`05-04-web-before.log`): 57 files, 728 tests.
+
+tests-before.web=728
+
+## Web scans
+
+| Label | Where | Clones | Duplicated lines | Cross-file | Cross-file test | Note |
+| ----- | ----- | ------ | ---------------- | ---------- | --------------- | ---- |
+| 05-04-t1 | after commit 96e17d6 | 85 | 1151 | 47 | 36 | `browser.ts` with `setOnline` and the stub pair; bill-detail and write-queue adopt it |
+
 ## CI
 
 Not run yet: integration files run in PR B's CI (05-05).
