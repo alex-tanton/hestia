@@ -114,6 +114,20 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | batch | paths | sites | removed | rewritten | commit | comment-only | gates |
 | ----- | ----- | ----- | ------- | --------- | ------ | ------------ | ----- |
 | recurrence | `packages/recurrence` | 15 | 2 | 13 | 4891a12 | comment-only OK | gates OK |
+| matching | `packages/matching` | 26 | 6 | 14 | 2b8808c | comment-only OK | gates OK |
+| shared | `packages/shared` | 68 | 50 | 18 | 94af15d | comment-only OK | gates OK |
+| seed-ts | `supabase/seed/*.ts` | 8 | 5 | 3 | 94756a9 | comment-only OK | gates OK |
+
+Batch notes: `sites` counts matching lines of the base inventory; `removed` counts lines whose
+parenthetical `apply-pure` deleted (class `pure`); `rewritten` counts the lines edited by hand;
+`matching` also leaves 6 test titles (`describe` strings in `fixtures.test.ts` and `matcher.test.ts`)
+with disposition `left:title` for 05-10. Gates per batch: ESLint `--max-warnings=0` and Prettier
+`--check` on the changed files, the workspace typecheck, and the workspace tests with an unchanged
+count (recurrence 77, matching 156, shared 172; `@hearth/seed` has no tests, so its gates are the
+typecheck and ESLint). Each commit was re-checked with `comment-only-check.mjs --base HEAD~1 --head
+HEAD`, and `git diff --exit-code {phase-base} -- supabase/migrations` is empty after every batch.
+After the three batches `citation-inventory.mjs inventory` over `packages` and `supabase/seed/*.ts`
+lists 6 rows, all class `title`.
 
 ## Titles
 

@@ -564,6 +564,13 @@ function removeGroup(unit, offsets, group) {
   if (left.trim() === '') {
     left = '';
     right = right.replace(/^\s+/, '');
+    // A group that opened its line leaves its trailing punctuation to the previous line.
+    const previous = unit.records[begin.index - 1];
+    const trailing = right.match(/^([.,;:]+)\s*([\s\S]*)$/);
+    if (previous && previous.body.trim() !== '' && trailing) {
+      previous.body += trailing[1];
+      right = trailing[2];
+    }
   } else {
     left = left.replace(/\s+$/, '');
   }
@@ -587,6 +594,59 @@ function removeGroup(unit, offsets, group) {
     );
   }
   unit.records.splice(begin.index, finish.index - begin.index + 1, ...replacement);
+}
+
+const SPECIAL_BODY = /^(?:[-*+•]\s|\d+[.)]\s|@\w|\||>|```|#\s)/;
+
+function isPlain(record) {
+  const body = record.body;
+  return (
+    body.trim() !== '' &&
+    !/^\s{2,}/.test(body) &&
+    !/\S {2,}\S/.test(body) &&
+    !SPECIAL_BODY.test(body.trim())
+  );
+}
+
+/** Refill each edited paragraph so a removal does not leave short, ragged lines behind. */
+function reflow(records) {
+  for (let i = 0; i < records.length; i += 1) {
+    if (!records[i].modified || !isPlain(records[i])) continue;
+    let j = i;
+    while (records[j].suf.trim() === '' && j + 1 < records.length && isPlain(records[j + 1])) {
+      j += 1;
+    }
+    if (j === i) continue;
+    const continuation = records[i + 1].pre;
+    const words = records
+      .slice(i, j + 1)
+      .map((record) => record.body.trim())
+      .join(' ')
+      .split(' ')
+      .filter((word) => word !== '');
+    const suffix = records[j].suf;
+    const lines = [];
+    let current = '';
+    for (const word of words) {
+      const pre = lines.length === 0 ? records[i].pre : continuation;
+      if (current !== '' && pre.length + current.length + 1 + word.length > PRINT_WIDTH) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = current === '' ? word : `${current} ${word}`;
+      }
+    }
+    lines.push(current);
+    const replacement = lines.map((body, index) => ({
+      line: records[i].line,
+      pre: index === 0 ? records[i].pre : continuation,
+      body,
+      suf: index === lines.length - 1 ? suffix : '',
+      modified: true,
+    }));
+    records.splice(i, j - i + 1, ...replacement);
+    i += replacement.length - 1;
+  }
 }
 
 function applyToUnit(starts, lines, unit) {
@@ -618,6 +678,7 @@ function applyToUnit(starts, lines, unit) {
   const offsets = unit.logical.offsets;
   const work = { ...unit, records: unit.records.map((record) => ({ ...record })) };
   for (const group of chosen.sort((a, b) => b.start - a.start)) removeGroup(work, offsets, group);
+  reflow(work.records);
   const kept = work.records.filter((record) => {
     const droppable =
       record.modified &&
