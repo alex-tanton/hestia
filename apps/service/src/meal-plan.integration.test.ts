@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type { LightMyRequestResponse } from 'fastify';
+import { describe, expect, it } from 'vitest';
 import type {
   ListItem,
   MealPlanEntry,
@@ -9,14 +9,8 @@ import type {
   ShoppingListDetail,
   SuggestionsResponse,
 } from '@hearth/shared';
-import {
-  adminPool,
-  as,
-  household,
-  startStack,
-  type HouseholdFixture,
-  type Stack,
-} from './test/service-stack.js';
+import { adminPool, as, household, type HouseholdFixture } from './test/service-stack.js';
+import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
@@ -26,24 +20,7 @@ import { currentInstant } from './test/zone-dates.js';
  * decides every isolation assertion.
  */
 
-let stack: Stack;
-let app: FastifyInstance;
-
-beforeAll(async () => {
-  stack = await startStack();
-});
-
-beforeEach(async () => {
-  app = await stack.newApp();
-});
-
-afterAll(async () => {
-  await stack.close();
-});
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
+registerStackHooks();
 
 type Home = HouseholdFixture;
 

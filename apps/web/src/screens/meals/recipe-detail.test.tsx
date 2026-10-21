@@ -1,10 +1,11 @@
-import { onlineManager } from '@tanstack/react-query';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { RecipeDetail } from '@hearth/shared';
+import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
+import { emptyDealSearch } from '../../test/deal-fixtures.ts';
 import {
   bakedZitiFixture,
   sheetPanChickenFixture,
@@ -29,16 +30,7 @@ function baseHandlers(
     'GET /api/households/:id/pantry': () => ({ status: 200, body: [] }),
     'GET /api/households/:id/deals/search': () => ({
       status: 200,
-      body: {
-        deals: [],
-        page: 1,
-        pageSize: 50,
-        total: 0,
-        hasMore: false,
-        asOf: null,
-        stale: false,
-        refreshing: false,
-      },
+      body: emptyDealSearch,
     }),
     ...extra,
   };
@@ -54,28 +46,7 @@ function mount(
   return stub;
 }
 
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
-
-beforeEach(() => {
-  setOnline(true);
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-});
-
-afterEach(() => {
-  onlineManager.setOnline(true);
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerBrowserStubs();
 
 describe('Recipe detail (Design › Screens › 12)', () => {
   it('loading: announces it with skeletons', () => {
@@ -255,25 +226,15 @@ describe('Recipe detail (Design › Screens › 12)', () => {
 
   it('match-to: the deal search starts from the ingredient name but can be retyped', async () => {
     const user = userEvent.setup();
-    const emptyDeals = {
-      deals: [],
-      page: 1,
-      pageSize: 50,
-      total: 0,
-      hasMore: false,
-      asOf: null,
-      stale: false,
-      refreshing: false,
-    };
     const stub = mount(
       baseHandlers({
         'GET /api/households/:id/deals/search': (request) => {
           const q = request.query.get('q');
-          if (q !== 'citrus') return { status: 200, body: emptyDeals };
+          if (q !== 'citrus') return { status: 200, body: emptyDealSearch };
           return {
             status: 200,
             body: {
-              ...emptyDeals,
+              ...emptyDealSearch,
               total: 1,
               deals: [
                 {

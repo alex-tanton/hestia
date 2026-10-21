@@ -5,10 +5,10 @@ import {
 } from '@tanstack/react-query-persist-client';
 import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PENDING_CLASSES, PENDING_ROW_LABEL } from '../../components/lists/PendingMark.tsx';
 import { ListDetailScreen } from '../../screens/lists/ListDetailScreen.tsx';
+import { setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import {
   createFetchStub,
@@ -16,6 +16,7 @@ import {
   renderScreen,
   testQueryClient,
   type StubHandler,
+  WithQueue,
 } from '../../test/harness.tsx';
 import {
   THIS_WEEK_ID,
@@ -33,7 +34,6 @@ import {
   createCachePersister,
   type AsyncStorage,
 } from './persist.ts';
-import { useWriteQueue } from './use-write-queue.ts';
 import {
   listWriteMutationKey,
   listWriteScope,
@@ -49,11 +49,6 @@ import {
  * one to reach for.
  */
 
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
-}
-
 interface Deferred {
   promise: Promise<void>;
   resolve: () => void;
@@ -65,14 +60,6 @@ function deferred(): Deferred {
     resolve = settle;
   });
   return { promise, resolve };
-}
-
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
 }
 
 /** `idb-keyval` stands in as a plain map; nothing here needs IndexedDB itself. */

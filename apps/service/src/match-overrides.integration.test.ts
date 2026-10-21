@@ -1,15 +1,8 @@
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type { LightMyRequestResponse } from 'fastify';
+import { describe, expect, it } from 'vitest';
 import type { MatchOverride } from '@hearth/shared';
-import {
-  adminPool,
-  as,
-  household,
-  signUp,
-  startStack,
-  type HouseholdFixture,
-  type Stack,
-} from './test/service-stack.js';
+import { adminPool, as, household, signUp, type HouseholdFixture } from './test/service-stack.js';
+import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
  * Match overrides against `supabase start` (Technical Architecture, "API surface"; Requirements,
@@ -18,24 +11,7 @@ import {
  * makes its own household.
  */
 
-let stack: Stack;
-let app: FastifyInstance;
-
-beforeAll(async () => {
-  stack = await startStack();
-});
-
-beforeEach(async () => {
-  app = await stack.newApp();
-});
-
-afterAll(async () => {
-  await stack.close();
-});
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
+registerStackHooks();
 
 type Home = HouseholdFixture;
 

@@ -1,10 +1,8 @@
 import { onlineManager } from '@tanstack/react-query';
 import { act, configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Chore, ChoreDetail } from '@hearth/shared';
-import { useWriteQueue } from '../../lib/offline/use-write-queue.ts';
 import {
   BANNED_GAMIFICATION_WORDS,
   CHORES_EMPTY_COPY,
@@ -14,6 +12,7 @@ import {
   allChoreCopyStrings,
 } from '../../components/chores/chore-copy.ts';
 import { formatCalendarDate } from '../../lib/format.ts';
+import { setOnline, stubCoarsePointer } from '../../test/browser.ts';
 import {
   OAK_STREET_ID,
   ALEX_ID,
@@ -43,6 +42,7 @@ import {
   problemBody,
   renderScreen,
   type StubHandler,
+  WithQueue,
 } from '../../test/harness.tsx';
 import { addDays } from '../../lib/household-date.ts';
 import { ChoreDetailScreen } from './ChoreDetailScreen.tsx';
@@ -63,14 +63,6 @@ const PROFILE: StubHandler = () => ({ status: 200, body: profileFixture });
 const MEMBERS: StubHandler = () => ({ status: 200, body: oakStreetMembers });
 const HOUSEHOLD: StubHandler = () => ({ status: 200, body: oakStreetFixture });
 
-function setOnline(isOnline: boolean): void {
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
-  act(() => {
-    onlineManager.setOnline(isOnline);
-    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
-  });
-}
-
 function mountList(
   handlers: Readonly<Record<string, StubHandler>>,
 ): ReturnType<typeof createFetchStub> {
@@ -87,15 +79,6 @@ function mountList(
     </WithQueue>,
   );
   return stub;
-}
-
-/*
- * Completion is a queued write, and the queue's defaults are registered by the shell that mounts it
- * (AppShell → useWriteQueue), so a screen that completes a chore is mounted under it, as in the app.
- */
-function WithQueue({ children }: { children: ReactNode }): ReactElement {
-  useWriteQueue();
-  return <>{children}</>;
 }
 
 function mountDetail(
@@ -158,11 +141,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-09-27T16:00:00.000Z'));
   setOnline(true);
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === '(pointer: coarse)',
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
+  stubCoarsePointer();
 });
 
 afterEach(() => {

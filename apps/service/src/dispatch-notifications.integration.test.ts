@@ -8,6 +8,7 @@ import type { JobDatabase, JobLogger } from './jobs/types.js';
 import { createNotificationOutbox } from './privileged/notification-outbox.js';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
 import { FakeDealSource } from './test/fixture-deal-source.js';
+import { recordingJobLogger, type JobLogLine } from './test/job-logger.js';
 import { RecordingPushTransport } from './test/push-double.js';
 import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
 
@@ -25,26 +26,13 @@ let handle: DatabaseHandle;
 let jobDb: JobDatabase;
 let outbox: DispatchOutbox;
 let transport: RecordingPushTransport;
-let lines: { level: string; data: Record<string, unknown>; message: string }[];
+let lines: JobLogLine[];
 let logger: JobLogger;
 const userIds: string[] = [];
 /** The household every queued row names, so a test can assert the push body carries it. */
 const HOUSEHOLD_ID = randomUUID();
 
 const KEYS = { p256dh: 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA', auth: 'tBHItJI5svbpez7KI4CCXg' };
-
-function makeLogger(): JobLogger {
-  const record = (level: string) => (data: Record<string, unknown>, message: string) => {
-    lines.push({ level, data, message });
-  };
-  const self: JobLogger = {
-    info: record('info'),
-    warn: record('warn'),
-    error: record('error'),
-    child: () => self,
-  };
-  return self;
-}
 
 beforeAll(async () => {
   await enableServiceLogin();
@@ -72,7 +60,7 @@ afterAll(async () => {
 beforeEach(() => {
   transport = new RecordingPushTransport();
   lines = [];
-  logger = makeLogger();
+  logger = recordingJobLogger(lines);
 });
 
 /** A user with one push subscription per endpoint, created directly as `postgres`. */

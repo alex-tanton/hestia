@@ -1,17 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Chore, ChoreDetail, Household } from '@hearth/shared';
 import {
   adminPool,
   as,
   signUp,
-  startStack,
   uniqueName,
   uniquePostalCode,
   type SignedUpUser,
-  type Stack,
 } from './test/service-stack.js';
+import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
@@ -20,24 +18,7 @@ import { currentInstant } from './test/zone-dates.js';
  * request goes through withUserDb as hearth_service, so RLS decides every isolation assertion.
  */
 
-let stack: Stack;
-let app: FastifyInstance;
-
-beforeAll(async () => {
-  stack = await startStack();
-});
-
-beforeEach(async () => {
-  app = await stack.newApp();
-});
-
-afterAll(async () => {
-  await stack.close();
-});
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
+registerStackHooks();
 
 /** Narrows a possibly-missing id so it is never interpolated into a URL as the string "undefined". */
 function defined(value: string | undefined): string {

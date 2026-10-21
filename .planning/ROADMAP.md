@@ -184,18 +184,18 @@ Plans:
   4. The 262 stale spec citations are removed as comment-only edits, verified by identical transformed output, with `supabase/migrations/` untouched.
   5. `docs/` and `.planning/codebase/` match the code: statements spot-checked against the repo hold (for example, `hearth-admin` is described as hand-written), and no review, decision-log, or ADR file was added under `docs/`.
 
-**Plans:** 13 plans
+**Plans:** 4/13 plans executed
 
 **Scope note:** seven plans exceed the 100k-token smart-zone estimate (05-04 110k, 05-06 140k, 05-07 130k, 05-08 140k, 05-09 150k, 05-10 130k, 05-12 110k; confidence low, no calibration samples yet). This is accepted and the plans are not re-sliced: the work is mechanical, gated per batch, and executed in worktrees.
 
 Plans:
 **Wave 1**
-- [ ] 05-01-PLAN.md — PR A content: tracer composite setup action in all six jobs (expansion proof), seed typecheck once, Dependabot directory, two workflow comments; push with GH_TOKEN or owner patch hand-off
-- [ ] 05-02-PLAN.md — PR B content, service: tracer shared integration stack hooks, every integration file on them, shared job logger; jscpd at most 90
+- [x] 05-01-PLAN.md — PR A content: tracer composite setup action in all six jobs (expansion proof), seed typecheck once, Dependabot directory, two workflow comments; push with GH_TOKEN or owner patch hand-off
+- [x] 05-02-PLAN.md — PR B content, service: tracer shared integration stack hooks, every integration file on them, shared job logger; jscpd at most 90
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 05-03-PLAN.md — PR A landing: open, six green jobs, before/after job steps from CI, owner squash merge
-- [ ] 05-04-PLAN.md — PR B content, web: tracer browser stubs, cluster C helpers, household clock, WithQueue, deals table; jscpd at most 80
+- [x] 05-03-PLAN.md — PR A landing: open, six green jobs, before/after job steps from CI, owner squash merge
+- [x] 05-04-PLAN.md — PR B content, web: tracer browser stubs, cluster C helpers, household clock, WithQueue, deals table; jscpd at most 80
 
 **Wave 3** *(blocked on Wave 2 completion and on the owner's merge of PR A)*
 - [ ] 05-05-PLAN.md — PR B landing: WB sync past PR A (one ordinary merge; on a workflow-scope refusal, the D-22 owner hand-off only), cherry-picked head, final scan below 96, six green jobs, owner merge
@@ -248,5 +248,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
-| 5. Redundancy Reduction and Text Sync | 0/13 | Planned | - |
+| 5. Redundancy Reduction and Text Sync | 4/13 | In Progress | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |

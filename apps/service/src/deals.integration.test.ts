@@ -1,4 +1,4 @@
-import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type {
   DealSearchResponse,
@@ -18,6 +18,7 @@ import {
   type HouseholdFixture,
   type Stack,
 } from './test/service-stack.js';
+import { expectStatus } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
@@ -75,10 +76,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await stack.close();
 });
-
-function expectStatus(response: LightMyRequestResponse, status: number): void {
-  expect(response.statusCode, response.body).toBe(status);
-}
 
 type Home = HouseholdFixture;
 

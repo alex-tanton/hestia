@@ -2,18 +2,19 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  createFetchStub,
   problemBody,
   renderScreen,
   type FetchStub,
   type StubHandler,
+  stubFetch,
 } from '../../test/harness.tsx';
-import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
+import { OAK_STREET_ID } from '../../test/fixtures.ts';
 import {
   FOOD_LION,
   merchantFixtures,
   merchantsResponse,
   PUBLIX,
+  dealScreenHandlers,
 } from '../../test/deal-fixtures.ts';
 import { HouseholdSettingsSection } from '../settings/HouseholdSettingsSection.tsx';
 import { FAVORITES_OFFLINE_MESSAGE, FavoriteStores } from './FavoriteStores.tsx';
@@ -35,14 +36,7 @@ afterAll(() => {
 });
 
 function stub(handlers: Readonly<Record<string, StubHandler>>): FetchStub {
-  const created = createFetchStub({
-    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),
-    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
-    'GET /api/households/:id/merchants': () => ({ status: 200, body: merchantsResponse() }),
-    ...handlers,
-  });
-  vi.stubGlobal('fetch', created.fetch);
-  return created;
+  return stubFetch(dealScreenHandlers(handlers));
 }
 
 beforeEach(() => {

@@ -1,18 +1,18 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 5
+current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
-status: planning
-stopped_at: Phase 5 context gathered
-last_updated: "2026-10-21T03:58:06.203Z"
+status: executing
+stopped_at: Completed 05-03-PLAN.md
+last_updated: "2026-10-21T18:57:40.786Z"
 last_activity: 2026-10-21
-last_activity_desc: Phase 4 complete, transitioned to Phase 5
-state_head: 09abcd1dac667b288c9a51d4b30687f658e26a40
+last_activity_desc: Phase 05 execution started
+state_head: 748ffb56fef0cfa9a176fc2e9ea858999ff9d098
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 31
-  completed_plans: 31
+  total_plans: 44
+  completed_plans: 35
   percent: 67
 ---
 
@@ -23,21 +23,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-19)
 
 **Core value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
-**Current focus:** Phase 4 — Bug Fixes With Regression Tests
+**Current focus:** Phase 05 — Redundancy Reduction and Text Sync
 
 ## Current Position
 
-Phase: 5 — Redundancy Reduction and Text Sync
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-21 — Phase 4 complete, transitioned to Phase 5
+Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
+Plan: 4 of 13 complete (05-01, 05-02, 05-03, 05-04); next 05-05 (PR B landing)
+Status: Ready to execute
+Last activity: 2026-10-21 — Phase 05 execution started
 
 Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
+- Total plans completed: 33
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -79,6 +79,10 @@ Progress: [███████░░░] 67%
 | Phase 04 P04-04 | 31min | 3 tasks | 1 files |
 | Phase 04 P07 | 1h 15m | 3 tasks | 1 files |
 | Phase 04 P08 | 1h | 2 tasks | 6 files |
+| Phase 05 P02 | 15min | 3 tasks | 17 files |
+| Phase 05 P01 | ~45min | 3 tasks | 13 files |
+| Phase 05 P04 | 35min | 3 tasks | 24 files |
+| Phase 5 P03 | 1h | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -112,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 04]: 04-06: Kong GoTrue is an allowlist at format 3.0 (verify, token, logout, user, otp, admin/users, denied); guarded by a Vitest test in apps/service using yaml 2.9.1; kong config parse skipped (no Docker); a kong.yml change needs a manual force-recreate of kong on the host
 - [Phase 04]: 04-04: PR 2 (#16) opened only after gate-pr2=approve was committed; six CI jobs green on first run, nothing merged
 - [Phase 04]: 04-07: PR 3 (#18) open at 7c0efdc with six green jobs; FIX-07 red from run 39457296052 job 118753127163 (34 unrefused); E2E flakes outside spec 08 re-run; no probe dropped; awaiting the owner's squash merge and the Kong recreate
+- [Phase 05]: Plan 05-02: service fixtures consolidated on test/shared-fixtures-wip (053f371): stack-hooks.ts and job-logger.ts, jscpd 99 -> 87 clones, service unit 757 = 757; readiness, deals and recipes keep their own hooks; 3 service pairs kept with reasons in FIXTURE-LEDGER.md; no PR opened
+- [Phase 05]: Plan 05-01: PR A content is on origin as ci/setup-action (43672635, tree fd704a4c); composite setup action keeps checkout in each job (D-12 deviation, ledger row for PR A body); seed typechecked once; GitHub refused the token push (no workflow scope) so the owner pushed via apply.sh (Windows Git Bash needs MSYS_NO_PATHCONV=1); working branch is claude/eloquent-mayer-szjtjf, not the plan's claude/vigilant-gates-a4ihid
+- [Phase 05]: Plan 05-04: web fixtures consolidated on test/shared-fixtures-wip (8a7e8e4): browser.ts, WithQueue, stubFetch, dealScreenHandlers, emptyDealSearch; jscpd 87 -> 66 clones, web 728 = 728; 14 pairs kept with reasons in FIXTURE-LEDGER.md (hoisted viewer-zone blocks, retry assertions, variant hooks); no PR opened
 
 ### Pending Todos
 
@@ -149,6 +156,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-21T03:58:06.091Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-redundancy-reduction-and-text-sync/05-CONTEXT.md
+Last session: 2026-10-21T18:57:40.592Z
+Stopped at: Completed 05-03-PLAN.md
+Resume file: None

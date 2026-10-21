@@ -1,0 +1,127 @@
+From 86666b222ea7d24015311dfb17df0aa32704325c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 21 Oct 2026 17:43:00 +0000
+Subject: [PATCH 1/3] ci: share one setup action across the six CI jobs
+
+- Add .github/actions/setup, a composite of pnpm/action-setup, actions/setup-node (.nvmrc, pnpm
+  cache) and the frozen-lockfile install (D-12).
+- Each of the six jobs keeps actions/checkout@v7 first and then calls the composite; the Supabase
+  CLI step stays inline. The workflow name and job ids are unchanged (D-13).
+- Expanding the composite back into each job deep-equals the previous workflow (D-15).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MqJ2Cux3rut83bCEjam9rE
+---
+ .github/actions/setup/action.yml | 15 ++++++++++++
+ .github/workflows/ci.yml         | 42 +++++---------------------------
+ 2 files changed, 21 insertions(+), 36 deletions(-)
+ create mode 100644 .github/actions/setup/action.yml
+
+diff --git a/.github/actions/setup/action.yml b/.github/actions/setup/action.yml
+new file mode 100644
+index 0000000..8797c7b
+--- /dev/null
++++ b/.github/actions/setup/action.yml
+@@ -0,0 +1,15 @@
++name: Set up Hearth
++description: Installs pnpm and Node from .nvmrc with the pnpm store cached, then installs dependencies from the lockfile.
++
++# Callers run actions/checkout first: a local action is read from the checked-out workspace, so it
++# cannot check out the repository itself.
++runs:
++  using: composite
++  steps:
++    - uses: pnpm/action-setup@v6
++    - uses: actions/setup-node@v7
++      with:
++        node-version-file: .nvmrc
++        cache: pnpm
++    - run: pnpm install --frozen-lockfile
++      shell: bash
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 1948ff5..b671dfd 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -18,12 +18,7 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v7
+-      - uses: pnpm/action-setup@v6
+-      - uses: actions/setup-node@v7
+-        with:
+-          node-version-file: .nvmrc
+-          cache: pnpm
+-      - run: pnpm install --frozen-lockfile
++      - uses: ./.github/actions/setup
+       - run: pnpm lint
+       - run: pnpm format:check
+ 
+@@ -31,36 +26,21 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v7
+-      - uses: pnpm/action-setup@v6
+-      - uses: actions/setup-node@v7
+-        with:
+-          node-version-file: .nvmrc
+-          cache: pnpm
+-      - run: pnpm install --frozen-lockfile
++      - uses: ./.github/actions/setup
+       - run: pnpm typecheck
+ 
+   test-unit:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v7
+-      - uses: pnpm/action-setup@v6
+-      - uses: actions/setup-node@v7
+-        with:
+-          node-version-file: .nvmrc
+-          cache: pnpm
+-      - run: pnpm install --frozen-lockfile
++      - uses: ./.github/actions/setup
+       - run: pnpm test
+ 
+   test-integration:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v7
+-      - uses: pnpm/action-setup@v6
+-      - uses: actions/setup-node@v7
+-        with:
+-          node-version-file: .nvmrc
+-          cache: pnpm
+-      - run: pnpm install --frozen-lockfile
++      - uses: ./.github/actions/setup
+       - uses: supabase/setup-cli@v3
+         with:
+           version: 2.117.0
+@@ -86,12 +66,7 @@ jobs:
+       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+     steps:
+       - uses: actions/checkout@v7
+-      - uses: pnpm/action-setup@v6
+-      - uses: actions/setup-node@v7
+-        with:
+-          node-version-file: .nvmrc
+-          cache: pnpm
+-      - run: pnpm install --frozen-lockfile
++      - uses: ./.github/actions/setup
+       # The suite's own stack is the Compose stack, so migrations are applied with the CLI the
+       # way a deploy applies them, and seeding needs psql (both preinstalled on the runner).
+       - uses: supabase/setup-cli@v3
+@@ -142,10 +117,5 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v7
+-      - uses: pnpm/action-setup@v6
+-      - uses: actions/setup-node@v7
+-        with:
+-          node-version-file: .nvmrc
+-          cache: pnpm
+-      - run: pnpm install --frozen-lockfile
++      - uses: ./.github/actions/setup
+       - run: pnpm build
+-- 
+2.43.0
+
