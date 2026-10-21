@@ -1,0 +1,3807 @@
+{
+  "duplicates": [
+    {
+      "firstFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 1,
+          "line": 57,
+          "position": 1528
+        },
+        "name": "service/src/api.integration.test.ts",
+        "start": 28,
+        "startLoc": {
+          "column": 12,
+          "line": 28,
+          "position": 776
+        }
+      },
+      "format": "typescript",
+      "fragment": "  uniqueName,\n  type SignedUpUser,\n  type Stack,\n} from './test/service-stack.js';\nimport { currentInstant } from './test/zone-dates.js';\n\n/*\n * The service end to end against `supabase start`: real GoTrue, real Postgres as hearth_service,\n * every request through withUserDb. Each test makes its own users and households.\n */\n\nlet stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  // A fresh app per test, so the in-memory per-IP rate limits never carry over.\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 30,
+      "secondFile": {
+        "end": 40,
+        "endLoc": {
+          "column": 1,
+          "line": 40,
+          "position": 1125
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 11,
+        "startLoc": {
+          "column": 18,
+          "line": 11,
+          "position": 347
+        }
+      },
+      "tokens": 112
+    },
+    {
+      "firstFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 1,
+          "line": 57,
+          "position": 1528
+        },
+        "name": "service/src/api.integration.test.ts",
+        "start": 29,
+        "startLoc": {
+          "column": 19,
+          "line": 29,
+          "position": 797
+        }
+      },
+      "format": "typescript",
+      "fragment": "  type SignedUpUser,\n  type Stack,\n} from './test/service-stack.js';\nimport { currentInstant } from './test/zone-dates.js';\n\n/*\n * The service end to end against `supabase start`: real GoTrue, real Postgres as hearth_service,\n * every request through withUserDb. Each test makes its own users and households.\n */\n\nlet stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  // A fresh app per test, so the in-memory per-IP rate limits never carry over.\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 29,
+      "secondFile": {
+        "end": 46,
+        "endLoc": {
+          "column": 1,
+          "line": 46,
+          "position": 1219
+        },
+        "name": "service/src/meal-plan.integration.test.ts",
+        "start": 17,
+        "startLoc": {
+          "column": 23,
+          "line": 17,
+          "position": 425
+        }
+      },
+      "tokens": 109
+    },
+    {
+      "firstFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 1,
+          "line": 57,
+          "position": 1528
+        },
+        "name": "service/src/api.integration.test.ts",
+        "start": 32,
+        "startLoc": {
+          "column": 24,
+          "line": 32,
+          "position": 871
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { currentInstant } from './test/zone-dates.js';\n\n/*\n * The service end to end against `supabase start`: real GoTrue, real Postgres as hearth_service,\n * every request through withUserDb. Each test makes its own users and households.\n */\n\nlet stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  // A fresh app per test, so the in-memory per-IP rate limits never carry over.\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 26,
+      "secondFile": {
+        "end": 54,
+        "endLoc": {
+          "column": 1,
+          "line": 54,
+          "position": 1733
+        },
+        "name": "service/src/bills.integration.test.ts",
+        "start": 22,
+        "startLoc": {
+          "column": 64,
+          "line": 22,
+          "position": 523
+        }
+      },
+      "tokens": 98
+    },
+    {
+      "firstFile": {
+        "end": 53,
+        "endLoc": {
+          "column": 3,
+          "line": 53,
+          "position": 1386
+        },
+        "name": "service/src/api.integration.test.ts",
+        "start": 32,
+        "startLoc": {
+          "column": 53,
+          "line": 32,
+          "position": 900
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { currentInstant } from './test/zone-dates.js';\n\n/*\n * The service end to end against `supabase start`: real GoTrue, real Postgres as hearth_service,\n * every request through withUserDb. Each test makes its own users and households.\n */\n\nlet stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  // A fresh app per test, so the in-memory per-IP rate limits never carry over.\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 22,
+      "secondFile": {
+        "end": 42,
+        "endLoc": {
+          "column": 3,
+          "line": 42,
+          "position": 980
+        },
+        "name": "service/src/lists.integration.test.ts",
+        "start": 21,
+        "startLoc": {
+          "column": 32,
+          "line": 21,
+          "position": 508
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 60,
+        "endLoc": {
+          "column": 20,
+          "line": 60,
+          "position": 1582
+        },
+        "name": "service/src/api.integration.test.ts",
+        "start": 32,
+        "startLoc": {
+          "column": 53,
+          "line": 32,
+          "position": 900
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { currentInstant } from './test/zone-dates.js';\n\n/*\n * The service end to end against `supabase start`: real GoTrue, real Postgres as hearth_service,\n * every request through withUserDb. Each test makes its own users and households.\n */\n\nlet stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  // A fresh app per test, so the in-memory per-IP rate limits never carry over.\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}\n\nasync function createHousehold(\n  user: SignedUpUser,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 29,
+      "secondFile": {
+        "end": 41,
+        "endLoc": {
+          "column": 49,
+          "line": 41,
+          "position": 1124
+        },
+        "name": "service/src/notifications.integration.test.ts",
+        "start": 20,
+        "startLoc": {
+          "column": 96,
+          "line": 20,
+          "position": 715
+        }
+      },
+      "tokens": 102
+    },
+    {
+      "firstFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 1,
+          "line": 57,
+          "position": 1528
+        },
+        "name": "service/src/api.integration.test.ts",
+        "start": 39,
+        "startLoc": {
+          "column": 16,
+          "line": 39,
+          "position": 1108
+        }
+      },
+      "format": "typescript",
+      "fragment": "let stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  // A fresh app per test, so the in-memory per-IP rate limits never carry over.\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 19,
+      "secondFile": {
+        "end": 38,
+        "endLoc": {
+          "column": 1,
+          "line": 38,
+          "position": 1026
+        },
+        "name": "service/src/match-overrides.integration.test.ts",
+        "start": 21,
+        "startLoc": {
+          "column": 16,
+          "line": 21,
+          "position": 687
+        }
+      },
+      "tokens": 90
+    },
+    {
+      "firstFile": {
+        "end": 578,
+        "endLoc": {
+          "column": 52,
+          "line": 578,
+          "position": 22930
+        },
+        "name": "service/src/bills.integration.test.ts",
+        "start": 567,
+        "startLoc": {
+          "column": 22,
+          "line": 567,
+          "position": 22611
+        }
+      },
+      "format": "typescript",
+      "fragment": "        timezone: zone,\n      });\n      expectStatus(response, 201);\n      return { user, household: response.json<Household>() };\n    }\n\n    async function listedBill(home: Home, id: string): Promise<Bill> {\n      const response = await as(\n        app,\n        home.user,\n        'GET',\n        `/api/households/${home.household.id}/bills`,",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 660,
+        "endLoc": {
+          "column": 97,
+          "line": 660,
+          "position": 26280
+        },
+        "name": "service/src/bills.integration.test.ts",
+        "start": 653,
+        "startLoc": {
+          "column": 30,
+          "line": 653,
+          "position": 26006
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 40,
+        "endLoc": {
+          "column": 1,
+          "line": 40,
+          "position": 1125
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 7,
+        "startLoc": {
+          "column": 2,
+          "line": 7,
+          "position": 287
+        }
+      },
+      "format": "typescript",
+      "fragment": "  as,\n  signUp,\n  startStack,\n  uniqueName,\n  uniquePostalCode,\n  type SignedUpUser,\n  type Stack,\n} from './test/service-stack.js';\nimport { currentInstant } from './test/zone-dates.js';\n\n/*\n * Chores, completions, rotation, and undo, against real Postgres (Technical Architecture, \"API\n * surface\" › \"Chores\"; PRD, \"Recurrence is anchored and derived on read\", \"Rotation\"). Every\n * request goes through withUserDb as hearth_service, so RLS decides every isolation assertion.\n */\n\nlet stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 34,
+      "secondFile": {
+        "end": 38,
+        "endLoc": {
+          "column": 1,
+          "line": 38,
+          "position": 945
+        },
+        "name": "service/src/errands.integration.test.ts",
+        "start": 6,
+        "startLoc": {
+          "column": 2,
+          "line": 6,
+          "position": 262
+        }
+      },
+      "tokens": 121
+    },
+    {
+      "firstFile": {
+        "end": 67,
+        "endLoc": {
+          "column": 29,
+          "line": 67,
+          "position": 2284
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 56,
+        "startLoc": {
+          "column": 42,
+          "line": 56,
+          "position": 1668
+        }
+      },
+      "format": "typescript",
+      "fragment": "async function createHome(extraMembers = 0): Promise<Home> {\n  // Plain names: signUp's own random suffix on the email is what makes it unique. uniqueName()\n  // appends digits, which signUp's email-sanitizing regex turns into a trailing dot — fine for a\n  // household name, but it collides with signUp's own \".<uuid>\" suffix into an invalid\n  // double-dot email (\"admin.a.b.c..abcd1234@example.com\").\n  const admin = await signUp(app, 'Admin');\n  const created = await as(app, admin, 'POST', '/api/households', {\n    name: uniqueName('Household'),\n    postalCode: uniquePostalCode(),\n    timezone: 'America/New_York',\n  });\n  expectStatus(created, 201);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 54,
+        "endLoc": {
+          "column": 29,
+          "line": 54,
+          "position": 1449
+        },
+        "name": "service/src/errands.integration.test.ts",
+        "start": 45,
+        "startLoc": {
+          "column": 26,
+          "line": 45,
+          "position": 1040
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 159,
+        "endLoc": {
+          "column": 7,
+          "line": 159,
+          "position": 5560
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 149,
+        "startLoc": {
+          "column": 81,
+          "line": 149,
+          "position": 5128
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('advances the turn from the scheduled member, not from whoever completed it', async () => {\n    const home = await createHome(2);\n    const [alex, sam, jordan] = home.members as [SignedUpUser, SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 274,
+        "endLoc": {
+          "column": 7,
+          "line": 274,
+          "position": 10153
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 264,
+        "startLoc": {
+          "column": 81,
+          "line": 264,
+          "position": 9721
+        }
+      },
+      "tokens": 97
+    },
+    {
+      "firstFile": {
+        "end": 159,
+        "endLoc": {
+          "column": 7,
+          "line": 159,
+          "position": 5560
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 149,
+        "startLoc": {
+          "column": 81,
+          "line": 149,
+          "position": 5128
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('advances the turn from the scheduled member, not from whoever completed it', async () => {\n    const home = await createHome(2);\n    const [alex, sam, jordan] = home.members as [SignedUpUser, SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 496,
+        "endLoc": {
+          "column": 7,
+          "line": 496,
+          "position": 19061
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 486,
+        "startLoc": {
+          "column": 64,
+          "line": 486,
+          "position": 18629
+        }
+      },
+      "tokens": 97
+    },
+    {
+      "firstFile": {
+        "end": 158,
+        "endLoc": {
+          "column": 69,
+          "line": 158,
+          "position": 5537
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 149,
+        "startLoc": {
+          "column": 81,
+          "line": 149,
+          "position": 5128
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('advances the turn from the scheduled member, not from whoever completed it', async () => {\n    const home = await createHome(2);\n    const [alex, sam, jordan] = home.members as [SignedUpUser, SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 518,
+        "endLoc": {
+          "column": 69,
+          "line": 518,
+          "position": 20094
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 509,
+        "startLoc": {
+          "column": 72,
+          "line": 509,
+          "position": 19685
+        }
+      },
+      "tokens": 87
+    },
+    {
+      "firstFile": {
+        "end": 159,
+        "endLoc": {
+          "column": 7,
+          "line": 159,
+          "position": 5560
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 149,
+        "startLoc": {
+          "column": 81,
+          "line": 149,
+          "position": 5128
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('advances the turn from the scheduled member, not from whoever completed it', async () => {\n    const home = await createHome(2);\n    const [alex, sam, jordan] = home.members as [SignedUpUser, SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 562,
+        "endLoc": {
+          "column": 7,
+          "line": 562,
+          "position": 21977
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 552,
+        "startLoc": {
+          "column": 87,
+          "line": 552,
+          "position": 21545
+        }
+      },
+      "tokens": 97
+    },
+    {
+      "firstFile": {
+        "end": 159,
+        "endLoc": {
+          "column": 7,
+          "line": 159,
+          "position": 5560
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 149,
+        "startLoc": {
+          "column": 81,
+          "line": 149,
+          "position": 5128
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('advances the turn from the scheduled member, not from whoever completed it', async () => {\n    const home = await createHome(2);\n    const [alex, sam, jordan] = home.members as [SignedUpUser, SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 583,
+        "endLoc": {
+          "column": 7,
+          "line": 583,
+          "position": 22875
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 573,
+        "startLoc": {
+          "column": 82,
+          "line": 573,
+          "position": 22443
+        }
+      },
+      "tokens": 97
+    },
+    {
+      "firstFile": {
+        "end": 159,
+        "endLoc": {
+          "column": 7,
+          "line": 159,
+          "position": 5560
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 149,
+        "startLoc": {
+          "column": 81,
+          "line": 149,
+          "position": 5128
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('advances the turn from the scheduled member, not from whoever completed it', async () => {\n    const home = await createHome(2);\n    const [alex, sam, jordan] = home.members as [SignedUpUser, SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 607,
+        "endLoc": {
+          "column": 7,
+          "line": 607,
+          "position": 23905
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 597,
+        "startLoc": {
+          "column": 108,
+          "line": 597,
+          "position": 23473
+        }
+      },
+      "tokens": 97
+    },
+    {
+      "firstFile": {
+        "end": 276,
+        "endLoc": {
+          "column": 9,
+          "line": 276,
+          "position": 10164
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 267,
+        "startLoc": {
+          "column": 17,
+          "line": 267,
+          "position": 9884
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });\n\n    const firstPass = await complete(jordan, chore.id); // Jordan does Alex's scheduled turn.",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 497,
+        "endLoc": {
+          "column": 9,
+          "line": 497,
+          "position": 19071
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 489,
+        "startLoc": {
+          "column": 17,
+          "line": 489,
+          "position": 18792
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 276,
+        "endLoc": {
+          "column": 9,
+          "line": 276,
+          "position": 10164
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 267,
+        "startLoc": {
+          "column": 17,
+          "line": 267,
+          "position": 9884
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });\n\n    const firstPass = await complete(jordan, chore.id); // Jordan does Alex's scheduled turn.",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 563,
+        "endLoc": {
+          "column": 9,
+          "line": 563,
+          "position": 21987
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 555,
+        "startLoc": {
+          "column": 17,
+          "line": 555,
+          "position": 21708
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 276,
+        "endLoc": {
+          "column": 9,
+          "line": 276,
+          "position": 10164
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 267,
+        "startLoc": {
+          "column": 17,
+          "line": 267,
+          "position": 9884
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });\n\n    const firstPass = await complete(jordan, chore.id); // Jordan does Alex's scheduled turn.",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 584,
+        "endLoc": {
+          "column": 9,
+          "line": 584,
+          "position": 22885
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 576,
+        "startLoc": {
+          "column": 17,
+          "line": 576,
+          "position": 22606
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 354,
+        "endLoc": {
+          "column": 7,
+          "line": 354,
+          "position": 13531
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 344,
+        "startLoc": {
+          "column": 67,
+          "line": 344,
+          "position": 13132
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('replaying the same client-generated completion id is a no-op', async () => {\n    const home = await createHome(1);\n    const [alex, sam] = home.members as [SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id] },\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 540,
+        "endLoc": {
+          "column": 7,
+          "line": 540,
+          "position": 21027
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 530,
+        "startLoc": {
+          "column": 121,
+          "line": 530,
+          "position": 20628
+        }
+      },
+      "tokens": 89
+    },
+    {
+      "firstFile": {
+        "end": 358,
+        "endLoc": {
+          "column": 9,
+          "line": 358,
+          "position": 13720
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 344,
+        "startLoc": {
+          "column": 67,
+          "line": 344,
+          "position": 13132
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('replaying the same client-generated completion id is a no-op', async () => {\n    const home = await createHome(1);\n    const [alex, sam] = home.members as [SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id] },\n    });\n\n    // A fresh random id each run: these tests commit real rows rather than rolling back, so a\n    // fixed literal here would collide with a previous run's leftover completion.\n    const completionId = randomUUID();",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 15,
+      "secondFile": {
+        "end": 740,
+        "endLoc": {
+          "column": 9,
+          "line": 740,
+          "position": 29698
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 727,
+        "startLoc": {
+          "column": 98,
+          "line": 727,
+          "position": 29108
+        }
+      },
+      "tokens": 90
+    },
+    {
+      "firstFile": {
+        "end": 358,
+        "endLoc": {
+          "column": 9,
+          "line": 358,
+          "position": 13720
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 346,
+        "startLoc": {
+          "column": 41,
+          "line": 346,
+          "position": 13227
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const [alex, sam] = home.members as [SignedUpUser, SignedUpUser];\n    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id] },\n    });\n\n    // A fresh random id each run: these tests commit real rows rather than rolling back, so a\n    // fixed literal here would collide with a previous run's leftover completion.\n    const completionId = randomUUID();",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 520,
+        "endLoc": {
+          "column": 9,
+          "line": 520,
+          "position": 20116
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 511,
+        "startLoc": {
+          "column": 63,
+          "line": 511,
+          "position": 19802
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 500,
+        "endLoc": {
+          "column": 9,
+          "line": 500,
+          "position": 19186
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 489,
+        "startLoc": {
+          "column": 19,
+          "line": 489,
+          "position": 18794
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });\n    const afterCompletion = await complete(alex, chore.id);\n    expect(afterCompletion.currentTurn).toBe(sam.id);\n\n    const reordered = await as(app, home.admin, 'PATCH', `/api/chores/${chore.id}`, {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 566,
+        "endLoc": {
+          "column": 9,
+          "line": 566,
+          "position": 22102
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 555,
+        "startLoc": {
+          "column": 19,
+          "line": 555,
+          "position": 21710
+        }
+      },
+      "tokens": 86
+    },
+    {
+      "firstFile": {
+        "end": 500,
+        "endLoc": {
+          "column": 9,
+          "line": 500,
+          "position": 19186
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 489,
+        "startLoc": {
+          "column": 19,
+          "line": 489,
+          "position": 18794
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const anchor = await weeklyAnchor(home);\n    const chore = await createChore(home, {\n      name: 'Take out trash',\n      recurrenceUnit: 'week',\n      interval: 1,\n      anchorDate: anchor,\n      assignment: { type: 'rotation', rotationOrder: [alex.id, sam.id, jordan.id] },\n    });\n    const afterCompletion = await complete(alex, chore.id);\n    expect(afterCompletion.currentTurn).toBe(sam.id);\n\n    const reordered = await as(app, home.admin, 'PATCH', `/api/chores/${chore.id}`, {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 587,
+        "endLoc": {
+          "column": 9,
+          "line": 587,
+          "position": 23000
+        },
+        "name": "service/src/chores.integration.test.ts",
+        "start": 576,
+        "startLoc": {
+          "column": 19,
+          "line": 576,
+          "position": 22608
+        }
+      },
+      "tokens": 86
+    },
+    {
+      "firstFile": {
+        "end": 399,
+        "endLoc": {
+          "column": 6,
+          "line": 399,
+          "position": 14611
+        },
+        "name": "service/src/deals.integration.test.ts",
+        "start": 386,
+        "startLoc": {
+          "column": 50,
+          "line": 386,
+          "position": 14205
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('never returns another postal code’s deals', async () => {\n    const here = await household('Alex Rivera', POSTAL_CODE);\n    const there = await household('Morgan Reed', OTHER_POSTAL_CODE);\n\n    source.data.search = { milk: [aDeal({ externalId: 'here-milk' })] };\n    expectStatus(\n      await as(\n        app,\n        here.user,\n        'GET',\n        `/api/households/${here.household.id}/deals/search?q=milk&scope=all`,\n      ),\n      200,\n    );",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 456,
+        "endLoc": {
+          "column": 6,
+          "line": 456,
+          "position": 16447
+        },
+        "name": "service/src/deals.integration.test.ts",
+        "start": 444,
+        "startLoc": {
+          "column": 90,
+          "line": 444,
+          "position": 16042
+        }
+      },
+      "tokens": 76
+    },
+    {
+      "firstFile": {
+        "end": 55,
+        "endLoc": {
+          "column": 4,
+          "line": 55,
+          "position": 2336
+        },
+        "name": "service/src/dispatch-notifications.integration.test.ts",
+        "start": 36,
+        "startLoc": {
+          "column": 0,
+          "line": 36,
+          "position": 1797
+        }
+      },
+      "format": "typescript",
+      "fragment": "function makeLogger(): JobLogger {\n  const record = (level: string) => (data: Record<string, unknown>, message: string) => {\n    lines.push({ level, data, message });\n  };\n  const self: JobLogger = {\n    info: record('info'),\n    warn: record('warn'),\n    error: record('error'),\n    child: () => self,\n  };\n  return self;\n}\n\nbeforeAll(async () => {\n  await enableServiceLogin();\n  handle = createDatabase(stackConfig().serviceDatabaseUrl);\n  jobDb = {\n    asServiceRole: (fn) => withServiceRoleDb(handle.db, fn),\n    pool: handle.db,\n  };",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 20,
+      "secondFile": {
+        "end": 68,
+        "endLoc": {
+          "column": 4,
+          "line": 68,
+          "position": 2771
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 49,
+        "startLoc": {
+          "column": 0,
+          "line": 49,
+          "position": 2232
+        }
+      },
+      "tokens": 136
+    },
+    {
+      "firstFile": {
+        "end": 47,
+        "endLoc": {
+          "column": 1,
+          "line": 47,
+          "position": 2121
+        },
+        "name": "service/src/dispatch-notifications.integration.test.ts",
+        "start": 36,
+        "startLoc": {
+          "column": 19,
+          "line": 36,
+          "position": 1816
+        }
+      },
+      "format": "typescript",
+      "fragment": "function makeLogger(): JobLogger {\n  const record = (level: string) => (data: Record<string, unknown>, message: string) => {\n    lines.push({ level, data, message });\n  };\n  const self: JobLogger = {\n    info: record('info'),\n    warn: record('warn'),\n    error: record('error'),\n    child: () => self,\n  };\n  return self;\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 36,
+        "endLoc": {
+          "column": 1,
+          "line": 36,
+          "position": 1244
+        },
+        "name": "service/src/jobs/scheduler.test.ts",
+        "start": 25,
+        "startLoc": {
+          "column": 15,
+          "line": 25,
+          "position": 939
+        }
+      },
+      "tokens": 85
+    },
+    {
+      "firstFile": {
+        "end": 46,
+        "endLoc": {
+          "column": 8,
+          "line": 46,
+          "position": 2113
+        },
+        "name": "service/src/dispatch-notifications.integration.test.ts",
+        "start": 37,
+        "startLoc": {
+          "column": 2,
+          "line": 37,
+          "position": 1834
+        }
+      },
+      "format": "typescript",
+      "fragment": "  const record = (level: string) => (data: Record<string, unknown>, message: string) => {\n    lines.push({ level, data, message });\n  };\n  const self: JobLogger = {\n    info: record('info'),\n    warn: record('warn'),\n    error: record('error'),\n    child: () => self,\n  };\n  return self;",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 119,
+        "endLoc": {
+          "column": 8,
+          "line": 119,
+          "position": 3692
+        },
+        "name": "service/src/jobs/dispatch-notifications.test.ts",
+        "start": 110,
+        "startLoc": {
+          "column": 2,
+          "line": 110,
+          "position": 3413
+        }
+      },
+      "tokens": 77
+    },
+    {
+      "firstFile": {
+        "end": 505,
+        "endLoc": {
+          "column": 5,
+          "line": 505,
+          "position": 19646
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 497,
+        "startLoc": {
+          "column": 5,
+          "line": 497,
+          "position": 19413
+        }
+      },
+      "format": "typescript",
+      "fragment": "    });\n    source.data.flyers = [foodLionFlyer];\n    source.data.flyerItems = { '8128502': [flyerDeal('8128502', 'fl-1')] };\n\n    await runRefreshDeals(deps());\n    expect(await notifications(home.userId)).toStrictEqual([]);\n  });\n\n  it('enqueues nothing on the first daily run after dormancy', async () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 525,
+        "endLoc": {
+          "column": 5,
+          "line": 525,
+          "position": 20475
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 517,
+        "startLoc": {
+          "column": 4,
+          "line": 517,
+          "position": 20242
+        }
+      },
+      "tokens": 61
+    },
+    {
+      "firstFile": {
+        "end": 543,
+        "endLoc": {
+          "column": 34,
+          "line": 543,
+          "position": 21162
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 525,
+        "startLoc": {
+          "column": 74,
+          "line": 525,
+          "position": 20544
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('enqueues one row per opted-in member once a previous refresh exists', async () => {\n    const home = await seedHousehold({\n      postalCode: POSTAL_CODE,\n      favorites: [\n        ['2100', 'Food Lion'],\n        ['2431', 'Harris Teeter'],\n      ],\n      flyerRefreshEnabled: true,\n    });\n    source.data.flyers = [foodLionFlyer];\n    source.data.flyerItems = {\n      '8128502': [flyerDeal('8128502', 'fl-1')],\n      '8132883': [flyerDeal('8132883', 'ht-1')],\n    };\n    await runRefreshDeals(deps());\n\n    // The second run finds Harris Teeter's flyer, which no deal row carried before it.\n    source.data.flyers = [foodLionFlyer, harrisTeeterFlyer];\n    await runRefreshDeals(deps());",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 19,
+      "secondFile": {
+        "end": 567,
+        "endLoc": {
+          "column": 34,
+          "line": 567,
+          "position": 21913
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 550,
+        "startLoc": {
+          "column": 59,
+          "line": 550,
+          "position": 21383
+        }
+      },
+      "tokens": 110
+    },
+    {
+      "firstFile": {
+        "end": 545,
+        "endLoc": {
+          "column": 9,
+          "line": 545,
+          "position": 21173
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 531,
+        "startLoc": {
+          "column": 6,
+          "line": 531,
+          "position": 20721
+        }
+      },
+      "format": "typescript",
+      "fragment": "      ],\n      flyerRefreshEnabled: true,\n    });\n    source.data.flyers = [foodLionFlyer];\n    source.data.flyerItems = {\n      '8128502': [flyerDeal('8128502', 'fl-1')],\n      '8132883': [flyerDeal('8132883', 'ht-1')],\n    };\n    await runRefreshDeals(deps());\n\n    // The second run finds Harris Teeter's flyer, which no deal row carried before it.\n    source.data.flyers = [foodLionFlyer, harrisTeeterFlyer];\n    await runRefreshDeals(deps());\n\n    const rows = await notifications(home.userId);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 15,
+      "secondFile": {
+        "end": 651,
+        "endLoc": {
+          "column": 9,
+          "line": 651,
+          "position": 24991
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 639,
+        "startLoc": {
+          "column": 35,
+          "line": 639,
+          "position": 24628
+        }
+      },
+      "tokens": 79
+    },
+    {
+      "firstFile": {
+        "end": 543,
+        "endLoc": {
+          "column": 34,
+          "line": 543,
+          "position": 21162
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 532,
+        "startLoc": {
+          "column": 31,
+          "line": 532,
+          "position": 20755
+        }
+      },
+      "format": "typescript",
+      "fragment": "      flyerRefreshEnabled: true,\n    });\n    source.data.flyers = [foodLionFlyer];\n    source.data.flyerItems = {\n      '8128502': [flyerDeal('8128502', 'fl-1')],\n      '8132883': [flyerDeal('8132883', 'ht-1')],\n    };\n    await runRefreshDeals(deps());\n\n    // The second run finds Harris Teeter's flyer, which no deal row carried before it.\n    source.data.flyers = [foodLionFlyer, harrisTeeterFlyer];\n    await runRefreshDeals(deps());",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 589,
+        "endLoc": {
+          "column": 34,
+          "line": 589,
+          "position": 22692
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 580,
+        "startLoc": {
+          "column": 7,
+          "line": 580,
+          "position": 22374
+        }
+      },
+      "tokens": 73
+    },
+    {
+      "firstFile": {
+        "end": 545,
+        "endLoc": {
+          "column": 9,
+          "line": 545,
+          "position": 21173
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 533,
+        "startLoc": {
+          "column": 5,
+          "line": 533,
+          "position": 20762
+        }
+      },
+      "format": "typescript",
+      "fragment": "    });\n    source.data.flyers = [foodLionFlyer];\n    source.data.flyerItems = {\n      '8128502': [flyerDeal('8128502', 'fl-1')],\n      '8132883': [flyerDeal('8132883', 'ht-1')],\n    };\n    await runRefreshDeals(deps());\n\n    // The second run finds Harris Teeter's flyer, which no deal row carried before it.\n    source.data.flyers = [foodLionFlyer, harrisTeeterFlyer];\n    await runRefreshDeals(deps());\n\n    const rows = await notifications(home.userId);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 619,
+        "endLoc": {
+          "column": 9,
+          "line": 619,
+          "position": 23745
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 609,
+        "startLoc": {
+          "column": 4,
+          "line": 609,
+          "position": 23423
+        }
+      },
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 619,
+        "endLoc": {
+          "column": 58,
+          "line": 619,
+          "position": 23794
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 611,
+        "startLoc": {
+          "column": 10,
+          "line": 611,
+          "position": 23478
+        }
+      },
+      "format": "typescript",
+      "fragment": "    source.data.flyerItems = {\n      '8128502': [flyerDeal('8128502', 'fl-1')],\n      '8132883': [flyerDeal('8132883', 'ht-1')],\n    };\n    await runRefreshDeals(deps());\n    source.data.flyers = [foodLionFlyer, harrisTeeterFlyer];\n    await runRefreshDeals(deps());\n\n    const { rows } = await adminPool.query<{ local: string; profile_local: string }>(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 651,
+        "endLoc": {
+          "column": 58,
+          "line": 651,
+          "position": 25040
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 643,
+        "startLoc": {
+          "column": 10,
+          "line": 643,
+          "position": 24724
+        }
+      },
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 724,
+        "endLoc": {
+          "column": 31,
+          "line": 724,
+          "position": 27897
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 712,
+        "startLoc": {
+          "column": 4,
+          "line": 712,
+          "position": 27538
+        }
+      },
+      "format": "typescript",
+      "fragment": "    const scheduler = createScheduler({\n      database: jobDb,\n      logger,\n      dispatch: dispatchDeps(),\n      refresh: {\n        source,\n        publishSkipRates: () => undefined,\n        repriceExpiredItems: (db) => repriceExpiredItems(db, { kind: 'all' }),\n        recomputeReadiness: readinessNotBuiltYet,\n      },\n    });\n\n    await expect(scheduler.run('prune-cache')).resolves.toBe(true);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 784,
+        "endLoc": {
+          "column": 31,
+          "line": 784,
+          "position": 30175
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 772,
+        "startLoc": {
+          "column": 4,
+          "line": 772,
+          "position": 29816
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 753,
+        "endLoc": {
+          "column": 30,
+          "line": 753,
+          "position": 28868
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 742,
+        "startLoc": {
+          "column": 4,
+          "line": 742,
+          "position": 28530
+        }
+      },
+      "format": "typescript",
+      "fragment": "    });\n    source.data.flyers = [foodLionFlyer];\n    source.data.flyerItems = { '8128502': [flyerDeal('8128502', 'fl-1')] };\n\n    const scheduler = createScheduler({\n      database: jobDb,\n      logger,\n      dispatch: dispatchDeps(),\n      refresh: {\n        source,\n        publishSkipRates: () => undefined,\n        repriceExpiredItems: () => Promise.resolve(0),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 779,
+        "endLoc": {
+          "column": 30,
+          "line": 779,
+          "position": 30027
+        },
+        "name": "service/src/jobs.integration.test.ts",
+        "start": 768,
+        "startLoc": {
+          "column": 86,
+          "line": 768,
+          "position": 29689
+        }
+      },
+      "tokens": 65
+    },
+    {
+      "firstFile": {
+        "end": 150,
+        "endLoc": {
+          "column": 6,
+          "line": 150,
+          "position": 5516
+        },
+        "name": "service/src/jobs/scheduler.test.ts",
+        "start": 140,
+        "startLoc": {
+          "column": 68,
+          "line": 140,
+          "position": 5152
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('records a job failure rather than letting it escape the timer', async () => {\n    const scheduler = createScheduler(\n      deps({\n        database: {\n          asServiceRole: () => Promise.reject(new Error('database gone')),\n          pool: {\n            connection: () => ({ execute: () => Promise.reject(new Error('database gone')) }),\n          } as unknown as SchedulerDeps['database']['pool'],\n        },\n      }),\n    );",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 176,
+        "endLoc": {
+          "column": 6,
+          "line": 176,
+          "position": 6448
+        },
+        "name": "service/src/jobs/scheduler.test.ts",
+        "start": 166,
+        "startLoc": {
+          "column": 53,
+          "line": 166,
+          "position": 6084
+        }
+      },
+      "tokens": 80
+    },
+    {
+      "firstFile": {
+        "end": 42,
+        "endLoc": {
+          "column": 3,
+          "line": 42,
+          "position": 980
+        },
+        "name": "service/src/lists.integration.test.ts",
+        "start": 19,
+        "startLoc": {
+          "column": 19,
+          "line": 19,
+          "position": 460
+        }
+      },
+      "format": "typescript",
+      "fragment": "  type SignedUpUser,\n  type Stack,\n} from './test/service-stack.js';\n\n/*\n * Lists, items, and the pantry against `supabase start`: real Postgres as hearth_service, every\n * request through withUserDb, so RLS is what decides each assertion. Requests here commit, so\n * each test makes its own users, household, and deals.\n */\n\nlet stack: Stack;\nlet app: FastifyInstance;\n\nbeforeAll(async () => {\n  stack = await startStack();\n});\n\nbeforeEach(async () => {\n  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 24,
+      "secondFile": {
+        "end": 34,
+        "endLoc": {
+          "column": 3,
+          "line": 34,
+          "position": 884
+        },
+        "name": "service/src/match-overrides.integration.test.ts",
+        "start": 10,
+        "startLoc": {
+          "column": 23,
+          "line": 10,
+          "position": 293
+        }
+      },
+      "tokens": 71
+    },
+    {
+      "firstFile": {
+        "end": 100,
+        "endLoc": {
+          "column": 64,
+          "line": 100,
+          "position": 2907
+        },
+        "name": "service/src/lists.integration.test.ts",
+        "start": 89,
+        "startLoc": {
+          "column": 86,
+          "line": 89,
+          "position": 2477
+        }
+      },
+      "format": "typescript",
+      "fragment": "  const response = await as(app, home.user, 'POST', `/api/lists/${listId}/items`, body);\n  expectStatus(response, 201);\n  return response.json<ShoppingListDetail>();\n}\n\nfunction allItems(list: ShoppingListDetail): ListItem[] {\n  return [...list.storeGroups.flatMap((group) => group.items), ...list.bought];\n}\n\nfunction itemNamed(list: ShoppingListDetail, name: string): ListItem {\n  const found = allItems(list).find((item) => item.itemName === name);\n  if (found === undefined) throw new Error(`no item named ${name}`);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 132,
+        "endLoc": {
+          "column": 27,
+          "line": 132,
+          "position": 3604
+        },
+        "name": "service/src/meal-plan.integration.test.ts",
+        "start": 119,
+        "startLoc": {
+          "column": 3,
+          "line": 119,
+          "position": 3163
+        }
+      },
+      "tokens": 104
+    },
+    {
+      "firstFile": {
+        "end": 42,
+        "endLoc": {
+          "column": 14,
+          "line": 42,
+          "position": 1073
+        },
+        "name": "service/src/match-overrides.integration.test.ts",
+        "start": 29,
+        "startLoc": {
+          "column": 6,
+          "line": 29,
+          "position": 806
+        }
+      },
+      "format": "typescript",
+      "fragment": "  app = await stack.newApp();\n});\n\nafterAll(async () => {\n  await stack.close();\n});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}\n\ntype Home = HouseholdFixture;\n\nasync function createOverride(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 50,
+        "endLoc": {
+          "column": 14,
+          "line": 50,
+          "position": 1266
+        },
+        "name": "service/src/meal-plan.integration.test.ts",
+        "start": 37,
+        "startLoc": {
+          "column": 6,
+          "line": 37,
+          "position": 999
+        }
+      },
+      "tokens": 66
+    },
+    {
+      "firstFile": {
+        "end": 60,
+        "endLoc": {
+          "column": 68,
+          "line": 60,
+          "position": 1594
+        },
+        "name": "service/src/meal-plan.integration.test.ts",
+        "start": 42,
+        "startLoc": {
+          "column": 2,
+          "line": 42,
+          "position": 1076
+        }
+      },
+      "format": "typescript",
+      "fragment": "});\n\nfunction expectStatus(response: LightMyRequestResponse, status: number): void {\n  expect(response.statusCode, response.body).toBe(status);\n}\n\ntype Home = HouseholdFixture;\n\nasync function favoriteStore(home: Home, merchantId: string, merchantName: string): Promise<void> {\n  expectStatus(\n    await as(app, home.user, 'POST', `/api/households/${home.household.id}/favorite-stores`, {\n      merchantId,\n      merchantName,\n    }),\n    201,\n  );\n}\n\nasync function addPantryItem(home: Home, itemName: string): Promise<void> {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 19,
+      "secondFile": {
+        "end": 72,
+        "endLoc": {
+          "column": 68,
+          "line": 72,
+          "position": 2702
+        },
+        "name": "service/src/readiness.integration.test.ts",
+        "start": 54,
+        "startLoc": {
+          "column": 34,
+          "line": 54,
+          "position": 2184
+        }
+      },
+      "tokens": 108
+    },
+    {
+      "firstFile": {
+        "end": 526,
+        "endLoc": {
+          "column": 9,
+          "line": 526,
+          "position": 18856
+        },
+        "name": "service/src/notification-producers.integration.test.ts",
+        "start": 518,
+        "startLoc": {
+          "column": 78,
+          "line": 518,
+          "position": 18453
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('reminds the assignee of a chore due today, and not once it is completed', async () => {\n    const home = await makeHome();\n    const trash = await adminPool.query<{ id: string }>(\n      `insert into public.chore (household_id, name, recurrence_unit, anchor_date, assigned_to, created_by)\n       values ($1, 'Take out trash', 'week', '2026-09-27', $2, $3) returning id`,\n      [home.id, home.sam.id, home.alex.id],\n    );\n    const trashId = trash.rows[0]?.id ?? '';\n    const bathroom = await adminPool.query<{ id: string }>(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 590,
+        "endLoc": {
+          "column": 9,
+          "line": 590,
+          "position": 21679
+        },
+        "name": "service/src/notification-producers.integration.test.ts",
+        "start": 582,
+        "startLoc": {
+          "column": 84,
+          "line": 582,
+          "position": 21276
+        }
+      },
+      "tokens": 66
+    },
+    {
+      "firstFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 4,
+          "line": 88,
+          "position": 3592
+        },
+        "name": "service/src/services/matching-candidates.ts",
+        "start": 72,
+        "startLoc": {
+          "column": 20,
+          "line": 72,
+          "position": 3114
+        }
+      },
+      "format": "typescript",
+      "fragment": "          .execute();\n\n  const dealsById = new Map(dealRows.map((row) => [row.id, row]));\n  const pantryById = new Map(pantryRows.map((row) => [row.id, row]));\n\n  const candidates: MatchCandidate[] = [\n    ...pantryRows.map((row): MatchCandidate => ({\n      id: row.id,\n      targetKind: 'pantry',\n      normalizedName: row.normalized_name,\n    })),\n    ...dealRows.map((row): MatchCandidate => ({\n      id: row.id,\n      targetKind: 'deal',\n      normalizedName: row.normalized_name,\n    })),\n  ];",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 101,
+        "endLoc": {
+          "column": 4,
+          "line": 101,
+          "position": 4082
+        },
+        "name": "compute-readiness.ts",
+        "start": 86,
+        "startLoc": {
+          "column": 14,
+          "line": 86,
+          "position": 3605
+        }
+      },
+      "tokens": 125
+    },
+    {
+      "firstFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 68,
+          "line": 57,
+          "position": 1713
+        },
+        "name": "web/src/App.test.tsx",
+        "start": 48,
+        "startLoc": {
+          "column": 63,
+          "line": 48,
+          "position": 1394
+        }
+      },
+      "format": "tsx",
+      "fragment": "    'GET /api/users/me': () => ({ status: 200, body: profile() }),\n    'GET /api/households/:id': ({ params }) => ({\n      status: 200,\n      body: HOUSEHOLDS[params['id'] ?? ''],\n    }),\n    'GET /api/households/:id/members': ({ params }) => ({\n      status: 200,\n      body: MEMBERS[params['id'] ?? ''],\n    }),\n    'GET /api/households/:id/invites': () => ({ status: 200, body: [] }),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 46,
+        "endLoc": {
+          "column": 68,
+          "line": 46,
+          "position": 1409
+        },
+        "name": "web/src/screens/settings/settings.test.tsx",
+        "start": 37,
+        "startLoc": {
+          "column": 61,
+          "line": 37,
+          "position": 1090
+        }
+      },
+      "tokens": 75
+    },
+    {
+      "firstFile": {
+        "end": 76,
+        "endLoc": {
+          "column": 1,
+          "line": 76,
+          "position": 2308
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 67,
+        "startLoc": {
+          "column": 29,
+          "line": 67,
+          "position": 2061
+        }
+      },
+      "format": "tsx",
+      "fragment": "  return { promise, resolve };\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 44,
+        "endLoc": {
+          "column": 1,
+          "line": 44,
+          "position": 1480
+        },
+        "name": "web/src/screens/bills/bill-detail.test.tsx",
+        "start": 35,
+        "startLoc": {
+          "column": 13,
+          "line": 35,
+          "position": 1233
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 79,
+        "endLoc": {
+          "column": 8,
+          "line": 79,
+          "position": 2401
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 67,
+        "startLoc": {
+          "column": 29,
+          "line": 67,
+          "position": 2061
+        }
+      },
+      "format": "tsx",
+      "fragment": "  return { promise, resolve };\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\n/** `idb-keyval` stands in as a plain map; nothing here needs IndexedDB itself. */\nfunction fakeStorage(): AsyncStorage & { entries: Map<string, string> } {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 54,
+        "endLoc": {
+          "column": 8,
+          "line": 54,
+          "position": 1853
+        },
+        "name": "web/src/screens/chores/chores-offline-queue.test.tsx",
+        "start": 43,
+        "startLoc": {
+          "column": 24,
+          "line": 43,
+          "position": 1596
+        }
+      },
+      "tokens": 61
+    },
+    {
+      "firstFile": {
+        "end": 76,
+        "endLoc": {
+          "column": 1,
+          "line": 76,
+          "position": 2308
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 67,
+        "startLoc": {
+          "column": 29,
+          "line": 67,
+          "position": 2061
+        }
+      },
+      "format": "tsx",
+      "fragment": "  return { promise, resolve };\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 96,
+        "endLoc": {
+          "column": 1,
+          "line": 96,
+          "position": 3495
+        },
+        "name": "web/src/screens/lists/lists.test.tsx",
+        "start": 86,
+        "startLoc": {
+          "column": 3,
+          "line": 86,
+          "position": 3149
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 79,
+        "endLoc": {
+          "column": 8,
+          "line": 79,
+          "position": 2401
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 68,
+        "startLoc": {
+          "column": 0,
+          "line": 68,
+          "position": 2063
+        }
+      },
+      "format": "tsx",
+      "fragment": "}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\n/** `idb-keyval` stands in as a plain map; nothing here needs IndexedDB itself. */\nfunction fakeStorage(): AsyncStorage & { entries: Map<string, string> } {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 109,
+        "endLoc": {
+          "column": 8,
+          "line": 109,
+          "position": 3782
+        },
+        "name": "web/src/screens/meals/planner.test.tsx",
+        "start": 99,
+        "startLoc": {
+          "column": 0,
+          "line": 99,
+          "position": 3527
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 404,
+        "endLoc": {
+          "column": 7,
+          "line": 404,
+          "position": 14144
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 396,
+        "startLoc": {
+          "column": 4,
+          "line": 396,
+          "position": 13774
+        }
+      },
+      "format": "tsx",
+      "fragment": "    const stub = createFetchStub(handlers());\n    vi.stubGlobal('fetch', stub.fetch);\n    const storage = fakeStorage();\n    const persister = createCachePersister(storage);\n    const api = createApiClient({\n      getAccessToken: () => Promise.resolve('token'),\n      refreshAccessToken: () => Promise.resolve('token'),\n      onUnauthorized: () => Promise.resolve(),\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 541,
+        "endLoc": {
+          "column": 7,
+          "line": 541,
+          "position": 19959
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 533,
+        "startLoc": {
+          "column": 4,
+          "line": 533,
+          "position": 19589
+        }
+      },
+      "tokens": 80
+    },
+    {
+      "firstFile": {
+        "end": 499,
+        "endLoc": {
+          "column": 7,
+          "line": 499,
+          "position": 18097
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 484,
+        "startLoc": {
+          "column": 69,
+          "line": 484,
+          "position": 17586
+        }
+      },
+      "format": "tsx",
+      "fragment": "    const mutation = queryClient.getMutationCache().build(queryClient, {\n      mutationKey: listWriteMutationKey(THIS_WEEK_ID, 'update-item'),\n      scope: listWriteScope(THIS_WEEK_ID),\n    });\n    const variables: UpdateListItemVariables = {\n      kind: 'update-item',\n      householdId: OAK_STREET_ID,\n      listId: THIS_WEEK_ID,\n      itemId: broccoli.id,\n      itemName: broccoli.itemName,\n      patch: { status: 'bought' },\n    };\n    void mutation.execute(variables).catch(() => undefined);\n    await waitFor(() => {\n      expect(mutation.state.isPaused).toBe(true);\n    });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 563,
+        "endLoc": {
+          "column": 9,
+          "line": 563,
+          "position": 20778
+        },
+        "name": "web/src/lib/offline/write-queue.test.tsx",
+        "start": 548,
+        "startLoc": {
+          "column": 61,
+          "line": 548,
+          "position": 20237
+        }
+      },
+      "tokens": 101
+    },
+    {
+      "firstFile": {
+        "end": 120,
+        "endLoc": {
+          "column": 11,
+          "line": 120,
+          "position": 3727
+        },
+        "name": "web/src/lib/realtime/supabase-realtime.test.ts",
+        "start": 111,
+        "startLoc": {
+          "column": 77,
+          "line": 111,
+          "position": 3398
+        }
+      },
+      "format": "typescript",
+      "fragment": "  it('reads the changed row id from the new row, falling back to the old one', async () => {\n    const { client, channelsByName } = createFakeClient();\n    const handlers = handlersStub();\n    const port = createRealtimePort(Promise.resolve(client));\n    port.subscribeToList('list-1', handlers);\n\n    await vi.waitFor(() => {\n      expect(channelsByName.has('list:list-1')).toBe(true);\n    });\n    const [itemBinding] = channelsByName.get('list:list-1')?.bindings ?? [];",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 140,
+        "endLoc": {
+          "column": 11,
+          "line": 140,
+          "position": 4611
+        },
+        "name": "web/src/lib/realtime/supabase-realtime.test.ts",
+        "start": 131,
+        "startLoc": {
+          "column": 59,
+          "line": 131,
+          "position": 4282
+        }
+      },
+      "tokens": 75
+    },
+    {
+      "firstFile": {
+        "end": 239,
+        "endLoc": {
+          "column": 7,
+          "line": 239,
+          "position": 8357
+        },
+        "name": "web/src/screens/bills/BillDetailScreen.tsx",
+        "start": 223,
+        "startLoc": {
+          "column": 30,
+          "line": 223,
+          "position": 7971
+        }
+      },
+      "format": "tsx",
+      "fragment": "                setIsArchiving(true);\n              },\n            },\n            {\n              label: 'Delete',\n              icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,\n              isDestructive: true,\n              disabledReason: offlineReason,\n              onSelect: () => {\n                setIsDeleting(true);\n              },\n            },\n          ]}\n        />\n      </header>\n\n      <Button",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 158,
+        "endLoc": {
+          "column": 7,
+          "line": 158,
+          "position": 5644
+        },
+        "name": "web/src/screens/meals/RecipeDetailScreen.tsx",
+        "start": 142,
+        "startLoc": {
+          "column": 28,
+          "line": 142,
+          "position": 5258
+        }
+      },
+      "tokens": 65
+    },
+    {
+      "firstFile": {
+        "end": 71,
+        "endLoc": {
+          "column": 9,
+          "line": 71,
+          "position": 2194
+        },
+        "name": "web/src/screens/bills/bill-detail.test.tsx",
+        "start": 34,
+        "startLoc": {
+          "column": 89,
+          "line": 34,
+          "position": 1213
+        }
+      },
+      "format": "tsx",
+      "fragment": "  renderScreen(<BillDetailScreen householdId={OAK_STREET_ID} billId={dukeEnergyFixture.id} />);\n  return stub;\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nbeforeEach(() => {\n  setOnline(true);\n  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {\n  onlineManager.setOnline(true);\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\n/** Opens an overflow menu from the keyboard, as the lists tests do: a pointer click does not open a Radix menu under jsdom. */\nasync function openMenu(\n  user: ReturnType<typeof userEvent.setup>,\n  triggerName: string,\n): Promise<void> {\n  const trigger = await screen.findByRole('button', { name: triggerName });\n  trigger.focus();\n  await user.keyboard('{Enter}');\n}\n\ndescribe('Bill detail (Design › Screens › 15)', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 38,
+      "secondFile": {
+        "end": 75,
+        "endLoc": {
+          "column": 9,
+          "line": 75,
+          "position": 2380
+        },
+        "name": "web/src/screens/bills/bills-index.test.tsx",
+        "start": 38,
+        "startLoc": {
+          "column": 59,
+          "line": 38,
+          "position": 1399
+        }
+      },
+      "tokens": 206
+    },
+    {
+      "firstFile": {
+        "end": 59,
+        "endLoc": {
+          "column": 3,
+          "line": 59,
+          "position": 1812
+        },
+        "name": "web/src/screens/bills/bill-detail.test.tsx",
+        "start": 34,
+        "startLoc": {
+          "column": 89,
+          "line": 34,
+          "position": 1213
+        }
+      },
+      "format": "tsx",
+      "fragment": "  renderScreen(<BillDetailScreen householdId={OAK_STREET_ID} billId={dukeEnergyFixture.id} />);\n  return stub;\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nbeforeEach(() => {\n  setOnline(true);\n  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {\n  onlineManager.setOnline(true);\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 26,
+      "secondFile": {
+        "end": 78,
+        "endLoc": {
+          "column": 3,
+          "line": 78,
+          "position": 2463
+        },
+        "name": "web/src/screens/meals/recipe-detail.test.tsx",
+        "start": 53,
+        "startLoc": {
+          "column": 81,
+          "line": 53,
+          "position": 1864
+        }
+      },
+      "tokens": 147
+    },
+    {
+      "firstFile": {
+        "end": 47,
+        "endLoc": {
+          "column": 18,
+          "line": 47,
+          "position": 1519
+        },
+        "name": "web/src/screens/bills/bill-detail.test.tsx",
+        "start": 36,
+        "startLoc": {
+          "column": 0,
+          "line": 36,
+          "position": 1235
+        }
+      },
+      "format": "tsx",
+      "fragment": "}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nbeforeEach(() => {\n  setOnline(true);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 99,
+        "endLoc": {
+          "column": 18,
+          "line": 99,
+          "position": 3534
+        },
+        "name": "web/src/screens/lists/lists.test.tsx",
+        "start": 87,
+        "startLoc": {
+          "column": 0,
+          "line": 87,
+          "position": 3151
+        }
+      },
+      "tokens": 70
+    },
+    {
+      "firstFile": {
+        "end": 55,
+        "endLoc": {
+          "column": 17,
+          "line": 55,
+          "position": 1726
+        },
+        "name": "web/src/screens/bills/bill-detail.test.tsx",
+        "start": 43,
+        "startLoc": {
+          "column": 3,
+          "line": 43,
+          "position": 1476
+        }
+      },
+      "format": "tsx",
+      "fragment": "  });\n}\n\nbeforeEach(() => {\n  setOnline(true);\n  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 84,
+        "endLoc": {
+          "column": 17,
+          "line": 84,
+          "position": 2982
+        },
+        "name": "web/src/screens/deals/deal-search.test.tsx",
+        "start": 71,
+        "startLoc": {
+          "column": 65,
+          "line": 71,
+          "position": 2638
+        }
+      },
+      "tokens": 61
+    },
+    {
+      "firstFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 5,
+          "line": 57,
+          "position": 1765
+        },
+        "name": "web/src/screens/bills/bill-detail.test.tsx",
+        "start": 47,
+        "startLoc": {
+          "column": 2,
+          "line": 47,
+          "position": 1503
+        }
+      },
+      "format": "tsx",
+      "fragment": "  setOnline(true);\n  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {\n  onlineManager.setOnline(true);\n  vi.unstubAllGlobals();",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 170,
+        "endLoc": {
+          "column": 5,
+          "line": 170,
+          "position": 5539
+        },
+        "name": "web/src/screens/chores/chores.test.tsx",
+        "start": 160,
+        "startLoc": {
+          "column": 2,
+          "line": 160,
+          "position": 5277
+        }
+      },
+      "tokens": 61
+    },
+    {
+      "firstFile": {
+        "end": 51,
+        "endLoc": {
+          "column": 18,
+          "line": 51,
+          "position": 1705
+        },
+        "name": "web/src/screens/bills/bills-index.test.tsx",
+        "start": 38,
+        "startLoc": {
+          "column": 33,
+          "line": 38,
+          "position": 1373
+        }
+      },
+      "format": "tsx",
+      "fragment": "  renderScreen(<BillsIndexScreen householdId={OAK_STREET_ID} />);\n  return stub;\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nbeforeEach(() => {\n  setOnline(true);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 49,
+        "endLoc": {
+          "column": 18,
+          "line": 49,
+          "position": 1516
+        },
+        "name": "web/src/screens/bills/subscriptions.test.tsx",
+        "start": 36,
+        "startLoc": {
+          "column": 36,
+          "line": 36,
+          "position": 1184
+        }
+      },
+      "tokens": 82
+    },
+    {
+      "firstFile": {
+        "end": 48,
+        "endLoc": {
+          "column": 1,
+          "line": 48,
+          "position": 1666
+        },
+        "name": "web/src/screens/bills/bills-index.test.tsx",
+        "start": 38,
+        "startLoc": {
+          "column": 33,
+          "line": 38,
+          "position": 1373
+        }
+      },
+      "format": "tsx",
+      "fragment": "  renderScreen(<BillsIndexScreen householdId={OAK_STREET_ID} />);\n  return stub;\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 107,
+        "endLoc": {
+          "column": 1,
+          "line": 107,
+          "position": 3772
+        },
+        "name": "web/src/screens/meals/planner.test.tsx",
+        "start": 97,
+        "startLoc": {
+          "column": 30,
+          "line": 97,
+          "position": 3479
+        }
+      },
+      "tokens": 71
+    },
+    {
+      "firstFile": {
+        "end": 63,
+        "endLoc": {
+          "column": 3,
+          "line": 63,
+          "position": 1998
+        },
+        "name": "web/src/screens/bills/bills-index.test.tsx",
+        "start": 38,
+        "startLoc": {
+          "column": 33,
+          "line": 38,
+          "position": 1373
+        }
+      },
+      "format": "tsx",
+      "fragment": "  renderScreen(<BillsIndexScreen householdId={OAK_STREET_ID} />);\n  return stub;\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nbeforeEach(() => {\n  setOnline(true);\n  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {\n  onlineManager.setOnline(true);\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 26,
+      "secondFile": {
+        "end": 66,
+        "endLoc": {
+          "column": 3,
+          "line": 66,
+          "position": 2117
+        },
+        "name": "web/src/screens/meals/recipe-library.test.tsx",
+        "start": 40,
+        "startLoc": {
+          "column": 36,
+          "line": 40,
+          "position": 1398
+        }
+      },
+      "tokens": 151
+    },
+    {
+      "firstFile": {
+        "end": 161,
+        "endLoc": {
+          "column": 60,
+          "line": 161,
+          "position": 6033
+        },
+        "name": "web/src/screens/bills/bills-index.test.tsx",
+        "start": 153,
+        "startLoc": {
+          "column": 39,
+          "line": 153,
+          "position": 5745
+        }
+      },
+      "format": "tsx",
+      "fragment": "        'GET /api/households/:id/bills': () => ({\n          status: 500,\n          body: problemBody(500, 'Internal Server Error'),\n        }),\n      }),\n    );\n    await user.click(await screen.findByRole('button', { name: 'Try again' }));\n    await waitFor(() => {\n      expect(stub.calls.filter((call) => call.path.includes('/bills')).length).toBeGreaterThan(1);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 108,
+        "endLoc": {
+          "column": 55,
+          "line": 108,
+          "position": 3679
+        },
+        "name": "web/src/screens/bills/subscriptions.test.tsx",
+        "start": 99,
+        "startLoc": {
+          "column": 47,
+          "line": 99,
+          "position": 3382
+        }
+      },
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 161,
+        "endLoc": {
+          "column": 60,
+          "line": 161,
+          "position": 6033
+        },
+        "name": "web/src/screens/bills/bills-index.test.tsx",
+        "start": 153,
+        "startLoc": {
+          "column": 39,
+          "line": 153,
+          "position": 5745
+        }
+      },
+      "format": "tsx",
+      "fragment": "        'GET /api/households/:id/bills': () => ({\n          status: 500,\n          body: problemBody(500, 'Internal Server Error'),\n        }),\n      }),\n    );\n    await user.click(await screen.findByRole('button', { name: 'Try again' }));\n    await waitFor(() => {\n      expect(stub.calls.filter((call) => call.path.includes('/bills')).length).toBeGreaterThan(1);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 140,
+        "endLoc": {
+          "column": 60,
+          "line": 140,
+          "position": 5128
+        },
+        "name": "web/src/screens/lists/lists.test.tsx",
+        "start": 132,
+        "startLoc": {
+          "column": 39,
+          "line": 132,
+          "position": 4840
+        }
+      },
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 161,
+        "endLoc": {
+          "column": 60,
+          "line": 161,
+          "position": 6033
+        },
+        "name": "web/src/screens/bills/bills-index.test.tsx",
+        "start": 153,
+        "startLoc": {
+          "column": 39,
+          "line": 153,
+          "position": 5745
+        }
+      },
+      "format": "tsx",
+      "fragment": "        'GET /api/households/:id/bills': () => ({\n          status: 500,\n          body: problemBody(500, 'Internal Server Error'),\n        }),\n      }),\n    );\n    await user.click(await screen.findByRole('button', { name: 'Try again' }));\n    await waitFor(() => {\n      expect(stub.calls.filter((call) => call.path.includes('/bills')).length).toBeGreaterThan(1);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 123,
+        "endLoc": {
+          "column": 60,
+          "line": 123,
+          "position": 4569
+        },
+        "name": "web/src/screens/meals/recipe-library.test.tsx",
+        "start": 115,
+        "startLoc": {
+          "column": 41,
+          "line": 115,
+          "position": 4281
+        }
+      },
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 74,
+        "endLoc": {
+          "column": 9,
+          "line": 74,
+          "position": 2560
+        },
+        "name": "web/src/screens/bills/household-timezone.test.tsx",
+        "start": 59,
+        "startLoc": {
+          "column": 16,
+          "line": 59,
+          "position": 2317
+        }
+      },
+      "format": "tsx",
+      "fragment": "  return section;\n}\n\nbeforeEach(() => {\n  vi.useFakeTimers({ toFake: ['Date'] });\n  vi.setSystemTime(PINNED_INSTANT);\n  onlineManager.setOnline(true);\n});\n\nafterEach(() => {\n  vi.useRealTimers();\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\ndescribe('bill groups, with the browser a day ahead of the household', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 70,
+        "endLoc": {
+          "column": 9,
+          "line": 70,
+          "position": 2247
+        },
+        "name": "web/src/screens/chores/household-timezone.test.tsx",
+        "start": 55,
+        "startLoc": {
+          "column": 12,
+          "line": 55,
+          "position": 2004
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 74,
+        "endLoc": {
+          "column": 9,
+          "line": 74,
+          "position": 2560
+        },
+        "name": "web/src/screens/bills/household-timezone.test.tsx",
+        "start": 59,
+        "startLoc": {
+          "column": 16,
+          "line": 59,
+          "position": 2317
+        }
+      },
+      "format": "tsx",
+      "fragment": "  return section;\n}\n\nbeforeEach(() => {\n  vi.useFakeTimers({ toFake: ['Date'] });\n  vi.setSystemTime(PINNED_INSTANT);\n  onlineManager.setOnline(true);\n});\n\nafterEach(() => {\n  vi.useRealTimers();\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\ndescribe('bill groups, with the browser a day ahead of the household', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 118,
+        "endLoc": {
+          "column": 9,
+          "line": 118,
+          "position": 3979
+        },
+        "name": "web/src/screens/household-timezone.test.tsx",
+        "start": 103,
+        "startLoc": {
+          "column": 69,
+          "line": 103,
+          "position": 3736
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 58,
+        "endLoc": {
+          "column": 9,
+          "line": 58,
+          "position": 1636
+        },
+        "name": "web/src/screens/bills/subscriptions.test.tsx",
+        "start": 41,
+        "startLoc": {
+          "column": 2,
+          "line": 41,
+          "position": 1283
+        }
+      },
+      "format": "tsx",
+      "fragment": "  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nbeforeEach(() => {\n  setOnline(true);\n});\n\nafterEach(() => {\n  onlineManager.setOnline(true);\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\ndescribe('Subscriptions (Design › Screens › 16)', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 18,
+      "secondFile": {
+        "end": 108,
+        "endLoc": {
+          "column": 9,
+          "line": 108,
+          "position": 3654
+        },
+        "name": "web/src/screens/lists/lists.test.tsx",
+        "start": 91,
+        "startLoc": {
+          "column": 2,
+          "line": 91,
+          "position": 3301
+        }
+      },
+      "tokens": 92
+    },
+    {
+      "firstFile": {
+        "end": 85,
+        "endLoc": {
+          "column": 31,
+          "line": 85,
+          "position": 3489
+        },
+        "name": "web/src/screens/chores/ChoreDetailScreen.tsx",
+        "start": 68,
+        "startLoc": {
+          "column": 20,
+          "line": 68,
+          "position": 3055
+        }
+      },
+      "format": "tsx",
+      "fragment": "          void chore.refetch();\n        }}\n        alternative={{ label: 'Back to chores', onAction: () => void navigate('/chores') }}\n      />\n    );\n  }\n  if (members.data === undefined) {\n    if (members.isError) {\n      return (\n        <ErrorState\n          message=\"Couldn't load the household members. Try again.\"\n          onRetry={() => {\n            void members.refetch();\n          }}\n        />\n      );\n    }\n    return <SkeletonRows label=\"Loading this chore\" />;",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 18,
+      "secondFile": {
+        "end": 124,
+        "endLoc": {
+          "column": 31,
+          "line": 124,
+          "position": 4862
+        },
+        "name": "web/src/screens/chores/ChoreFormScreen.tsx",
+        "start": 107,
+        "startLoc": {
+          "column": 23,
+          "line": 107,
+          "position": 4428
+        }
+      },
+      "tokens": 81
+    },
+    {
+      "firstFile": {
+        "end": 54,
+        "endLoc": {
+          "column": 8,
+          "line": 54,
+          "position": 1853
+        },
+        "name": "web/src/screens/chores/chores-offline-queue.test.tsx",
+        "start": 39,
+        "startLoc": {
+          "column": 58,
+          "line": 39,
+          "position": 1476
+        }
+      },
+      "format": "tsx",
+      "fragment": "const DONE_LABEL = `Mark ${takeOutTrashFixture.name} done`;\n\nfunction WithQueue({ children }: { children: ReactNode }): ReactElement {\n  useWriteQueue();\n  return <>{children}</>;\n}\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nfunction mountList(extra: Readonly<Record<string, StubHandler>> = {}): {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 48,
+        "endLoc": {
+          "column": 8,
+          "line": 48,
+          "position": 1725
+        },
+        "name": "web/src/screens/chores/errands-offline-queue.test.tsx",
+        "start": 33,
+        "startLoc": {
+          "column": 65,
+          "line": 33,
+          "position": 1348
+        }
+      },
+      "tokens": 91
+    },
+    {
+      "firstFile": {
+        "end": 54,
+        "endLoc": {
+          "column": 19,
+          "line": 54,
+          "position": 1864
+        },
+        "name": "web/src/screens/chores/chores-offline-queue.test.tsx",
+        "start": 46,
+        "startLoc": {
+          "column": 0,
+          "line": 46,
+          "position": 1601
+        }
+      },
+      "format": "tsx",
+      "fragment": "function setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nfunction mountList(extra: Readonly<Record<string, StubHandler>> = {}): {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 74,
+        "endLoc": {
+          "column": 19,
+          "line": 74,
+          "position": 2575
+        },
+        "name": "web/src/screens/chores/chores.test.tsx",
+        "start": 66,
+        "startLoc": {
+          "column": 0,
+          "line": 66,
+          "position": 2312
+        }
+      },
+      "tokens": 61
+    },
+    {
+      "firstFile": {
+        "end": 62,
+        "endLoc": {
+          "column": 36,
+          "line": 62,
+          "position": 2303
+        },
+        "name": "web/src/screens/chores/chores-offline-queue.test.tsx",
+        "start": 54,
+        "startLoc": {
+          "column": 18,
+          "line": 54,
+          "position": 1863
+        }
+      },
+      "format": "tsx",
+      "fragment": "function mountList(extra: Readonly<Record<string, StubHandler>> = {}): {\n  stub: ReturnType<typeof createFetchStub>;\n  queryClient: QueryClient;\n} {\n  const stub = createFetchStub({\n    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),\n    'GET /api/households/:id/members': () => ({ status: 200, body: oakStreetMembers }),\n    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),\n    'GET /api/households/:id/chores': () => ({ status: 200, body: choreListFixture }),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 56,
+        "endLoc": {
+          "column": 37,
+          "line": 56,
+          "position": 2179
+        },
+        "name": "web/src/screens/chores/errands-offline-queue.test.tsx",
+        "start": 48,
+        "startLoc": {
+          "column": 21,
+          "line": 48,
+          "position": 1738
+        }
+      },
+      "tokens": 89
+    },
+    {
+      "firstFile": {
+        "end": 104,
+        "endLoc": {
+          "column": 9,
+          "line": 104,
+          "position": 3643
+        },
+        "name": "web/src/screens/chores/chores-offline-queue.test.tsx",
+        "start": 87,
+        "startLoc": {
+          "column": 59,
+          "line": 87,
+          "position": 3282
+        }
+      },
+      "format": "tsx",
+      "fragment": "  return stub.calls.filter((call) => call.method === 'POST');\n}\n\nbeforeEach(() => {\n  // Pin \"today\" to Seed Data's Sunday, noon in New York; timers keep running for the screens.\n  vi.useFakeTimers({ toFake: ['Date'] });\n  vi.setSystemTime(new Date(DONE_AT));\n  setOnline(true);\n});\n\nafterEach(() => {\n  vi.useRealTimers();\n  onlineManager.setOnline(true);\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\ndescribe('a chore completed offline', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 18,
+      "secondFile": {
+        "end": 99,
+        "endLoc": {
+          "column": 9,
+          "line": 99,
+          "position": 3428
+        },
+        "name": "web/src/screens/chores/errands-offline-queue.test.tsx",
+        "start": 83,
+        "startLoc": {
+          "column": 60,
+          "line": 83,
+          "position": 3162
+        }
+      },
+      "tokens": 77
+    },
+    {
+      "firstFile": {
+        "end": 113,
+        "endLoc": {
+          "column": 9,
+          "line": 113,
+          "position": 3993
+        },
+        "name": "web/src/screens/chores/chores-offline-queue.test.tsx",
+        "start": 105,
+        "startLoc": {
+          "column": 63,
+          "line": 105,
+          "position": 3743
+        }
+      },
+      "format": "tsx",
+      "fragment": "  it('is queued: the row is marked pending and nothing is sent', async () => {\n    const user = userEvent.setup();\n    const { stub, queryClient } = mountList();\n    const row = await loadedRow(queryClient);\n\n    setOnline(false);\n    await user.click(screen.getByRole('button', { name: DONE_LABEL }));\n\n    await waitFor(() => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 151,
+        "endLoc": {
+          "column": 9,
+          "line": 151,
+          "position": 5401
+        },
+        "name": "web/src/screens/chores/chores-offline-queue.test.tsx",
+        "start": 144,
+        "startLoc": {
+          "column": 84,
+          "line": 144,
+          "position": 5152
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 74,
+        "endLoc": {
+          "column": 8,
+          "line": 74,
+          "position": 2564
+        },
+        "name": "web/src/screens/chores/chores.test.tsx",
+        "start": 64,
+        "startLoc": {
+          "column": 76,
+          "line": 64,
+          "position": 2307
+        }
+      },
+      "format": "tsx",
+      "fragment": "const HOUSEHOLD: StubHandler = () => ({ status: 200, body: oakStreetFixture });\n\nfunction setOnline(isOnline: boolean): void {\n  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);\n  act(() => {\n    onlineManager.setOnline(isOnline);\n    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));\n  });\n}\n\nfunction mountList(",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 11,
+      "secondFile": {
+        "end": 54,
+        "endLoc": {
+          "column": 8,
+          "line": 54,
+          "position": 1734
+        },
+        "name": "web/src/screens/chores/errands.test.tsx",
+        "start": 39,
+        "startLoc": {
+          "column": 35,
+          "line": 39,
+          "position": 1272
+        }
+      },
+      "tokens": 62
+    },
+    {
+      "firstFile": {
+        "end": 175,
+        "endLoc": {
+          "column": 9,
+          "line": 175,
+          "position": 5619
+        },
+        "name": "web/src/screens/chores/chores.test.tsx",
+        "start": 153,
+        "startLoc": {
+          "column": 36,
+          "line": 153,
+          "position": 5056
+        }
+      },
+      "format": "tsx",
+      "fragment": "    .map((link) => link.textContent);\n}\n\nbeforeEach(() => {\n  // Pin \"today\" to Seed Data's Sunday, noon in New York; timers keep running for the screens.\n  vi.useFakeTimers({ toFake: ['Date'] });\n  vi.setSystemTime(new Date('2026-09-27T16:00:00.000Z'));\n  setOnline(true);\n  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {\n  onlineManager.setOnline(true);\n  vi.useRealTimers();\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\ndescribe('Chores list (Design › Screens › 17)', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 23,
+      "secondFile": {
+        "end": 111,
+        "endLoc": {
+          "column": 9,
+          "line": 111,
+          "position": 3596
+        },
+        "name": "web/src/screens/chores/errands.test.tsx",
+        "start": 90,
+        "startLoc": {
+          "column": 13,
+          "line": 90,
+          "position": 3128
+        }
+      },
+      "tokens": 114
+    },
+    {
+      "firstFile": {
+        "end": 397,
+        "endLoc": {
+          "column": 3,
+          "line": 397,
+          "position": 14786
+        },
+        "name": "web/src/screens/chores/chores.test.tsx",
+        "start": 388,
+        "startLoc": {
+          "column": 67,
+          "line": 388,
+          "position": 14384
+        }
+      },
+      "format": "tsx",
+      "fragment": "    await screen.findByRole('heading', { level: 2, name: 'Overdue' });\n    const rendered = document.body.textContent.toLowerCase();\n    const exported = allChoreCopyStrings().join(' ').toLowerCase();\n    for (const word of BANNED_GAMIFICATION_WORDS) {\n      expect(rendered, `rendered copy contains \"${word}\"`).not.toContain(word);\n      expect(exported, `exported copy contains \"${word}\"`).not.toContain(word);\n    }\n    expect(rendered).not.toContain('!');\n  });\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 360,
+        "endLoc": {
+          "column": 3,
+          "line": 360,
+          "position": 14086
+        },
+        "name": "web/src/screens/chores/errands.test.tsx",
+        "start": 351,
+        "startLoc": {
+          "column": 71,
+          "line": 351,
+          "position": 13684
+        }
+      },
+      "tokens": 91
+    },
+    {
+      "firstFile": {
+        "end": 30,
+        "endLoc": {
+          "column": 9,
+          "line": 30,
+          "position": 916
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 16,
+        "startLoc": {
+          "column": 51,
+          "line": 16,
+          "position": 647
+        }
+      },
+      "format": "tsx",
+      "fragment": "import { isAllowedImageUrl } from './DealImage.tsx';\n\nfunction stubFetch(\n  handlers: Readonly<Record<string, StubHandler>>,\n): ReturnType<typeof createFetchStub> {\n  const stub = createFetchStub(handlers);\n  vi.stubGlobal('fetch', stub.fetch);\n  return stub;\n}\n\nafterEach(() => {\n  vi.unstubAllGlobals();\n});\n\ndescribe('a deal card', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 15,
+      "secondFile": {
+        "end": 45,
+        "endLoc": {
+          "column": 9,
+          "line": 45,
+          "position": 1887
+        },
+        "name": "web/src/screens/onboarding/onboarding.test.tsx",
+        "start": 31,
+        "startLoc": {
+          "column": 3,
+          "line": 31,
+          "position": 1618
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 247,
+        "endLoc": {
+          "column": 5,
+          "line": 247,
+          "position": 9985
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 238,
+        "startLoc": {
+          "column": 24,
+          "line": 238,
+          "position": 9734
+        }
+      },
+      "format": "tsx",
+      "fragment": "    await user.click(add);\n    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();\n\n    const ids = idsPostedTo(stub, thisWeekList.id);\n    expect(ids).toHaveLength(2);\n    expect(ids[1]).toBe(ids[0]);\n    expect(store.rows.size).toBe(1);\n  });\n\n  it('mints a new id once an add succeeds, so adding the same deal twice still works', async () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 362,
+        "endLoc": {
+          "column": 5,
+          "line": 362,
+          "position": 14758
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 353,
+        "startLoc": {
+          "column": 4,
+          "line": 353,
+          "position": 14507
+        }
+      },
+      "tokens": 74
+    },
+    {
+      "firstFile": {
+        "end": 280,
+        "endLoc": {
+          "column": 93,
+          "line": 280,
+          "position": 11250
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 272,
+        "startLoc": {
+          "column": 4,
+          "line": 272,
+          "position": 10864
+        }
+      },
+      "format": "tsx",
+      "fragment": "    stubFetch({\n      'GET /api/households/:id/lists': () => ({\n        status: 200,\n        body: [thisWeekList, weekendCookoutList],\n      }),\n      'POST /api/lists/:id/items': losingResponses(store, [1]),\n    });\n    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);\n    const add = await screen.findByRole('button', { name: 'Add Broccoli Crowns to a list' });",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 309,
+        "endLoc": {
+          "column": 93,
+          "line": 309,
+          "position": 12488
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 301,
+        "startLoc": {
+          "column": 17,
+          "line": 301,
+          "position": 12102
+        }
+      },
+      "tokens": 74
+    },
+    {
+      "firstFile": {
+        "end": 346,
+        "endLoc": {
+          "column": 20,
+          "line": 346,
+          "position": 14232
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 331,
+        "startLoc": {
+          "column": 85,
+          "line": 331,
+          "position": 13472
+        }
+      },
+      "format": "tsx",
+      "fragment": "  it('sends the same item id after the card unmounts, so the deal lands once', async () => {\n    const user = userEvent.setup();\n    const store = itemStore();\n    const stub = stubFetch({\n      'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),\n      'POST /api/lists/:id/items': losingResponses(store, [1]),\n    });\n    const first = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);\n    await user.click(\n      await screen.findByRole('button', { name: \"Add Egg-Land's Best Extra Large Eggs to a list\" }),\n    );\n    expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();\n\n    // A filter change, paging, or leaving and coming back unmounts the card. The page keeps its one\n    // QueryClient and its session, so the fresh card shares both with the first.\n    first.unmount();",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 376,
+        "endLoc": {
+          "column": 20,
+          "line": 376,
+          "position": 15506
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 362,
+        "startLoc": {
+          "column": 75,
+          "line": 362,
+          "position": 14828
+        }
+      },
+      "tokens": 122
+    },
+    {
+      "firstFile": {
+        "end": 358,
+        "endLoc": {
+          "column": 19,
+          "line": 358,
+          "position": 14695
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 346,
+        "startLoc": {
+          "column": 18,
+          "line": 346,
+          "position": 14230
+        }
+      },
+      "format": "tsx",
+      "fragment": "    first.unmount();\n    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />, {\n      queryClient: first.queryClient,\n      auth: first.auth,\n    });\n    await user.click(\n      await screen.findByRole('button', { name: \"Add Egg-Land's Best Extra Large Eggs to a list\" }),\n    );\n    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();\n\n    const ids = idsPostedTo(stub, thisWeekList.id);\n    expect(ids).toHaveLength(2);\n    expect(ids[1]).toBe(ids[0]);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 13,
+      "secondFile": {
+        "end": 390,
+        "endLoc": {
+          "column": 19,
+          "line": 390,
+          "position": 16100
+        },
+        "name": "web/src/screens/deals/deal-card.test.tsx",
+        "start": 378,
+        "startLoc": {
+          "column": 63,
+          "line": 378,
+          "position": 15635
+        }
+      },
+      "tokens": 101
+    },
+    {
+      "firstFile": {
+        "end": 37,
+        "endLoc": {
+          "column": 3,
+          "line": 37,
+          "position": 1434
+        },
+        "name": "web/src/screens/deals/deal-search.test.tsx",
+        "start": 21,
+        "startLoc": {
+          "column": 81,
+          "line": 21,
+          "position": 650
+        }
+      },
+      "format": "tsx",
+      "fragment": "import { DealSearchScreen, SEARCH_OFFLINE_MESSAGE } from './DealSearchScreen.tsx';\n\n// The \"Showing deals as of\" date renders an instant in the viewer's zone, and the dates below were\n// written for a New York viewer. `format.ts` builds its DATE_TIME formatter when the module loads,\n// so the zone has to change before the imports run, which `vi.hoisted` guarantees. The expected\n// text stays a literal on purpose: rebuilding it from the instant in the zone the component uses\n// would only test the component against itself.\nconst viewerZone = vi.hoisted(() => {\n  const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;\n  process.env['TZ'] = 'America/New_York';\n  return previous;\n});\n\nafterAll(() => {\n  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.\n  process.env['TZ'] = viewerZone;\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 35,
+        "endLoc": {
+          "column": 3,
+          "line": 35,
+          "position": 1463
+        },
+        "name": "web/src/screens/deals/favorites.test.tsx",
+        "start": 19,
+        "startLoc": {
+          "column": 80,
+          "line": 19,
+          "position": 691
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 37,
+        "endLoc": {
+          "column": 3,
+          "line": 37,
+          "position": 1434
+        },
+        "name": "web/src/screens/deals/deal-search.test.tsx",
+        "start": 21,
+        "startLoc": {
+          "column": 81,
+          "line": 21,
+          "position": 650
+        }
+      },
+      "format": "tsx",
+      "fragment": "import { DealSearchScreen, SEARCH_OFFLINE_MESSAGE } from './DealSearchScreen.tsx';\n\n// The \"Showing deals as of\" date renders an instant in the viewer's zone, and the dates below were\n// written for a New York viewer. `format.ts` builds its DATE_TIME formatter when the module loads,\n// so the zone has to change before the imports run, which `vi.hoisted` guarantees. The expected\n// text stays a literal on purpose: rebuilding it from the instant in the zone the component uses\n// would only test the component against itself.\nconst viewerZone = vi.hoisted(() => {\n  const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;\n  process.env['TZ'] = 'America/New_York';\n  return previous;\n});\n\nafterAll(() => {\n  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.\n  process.env['TZ'] = viewerZone;\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 39,
+        "endLoc": {
+          "column": 3,
+          "line": 39,
+          "position": 1511
+        },
+        "name": "web/src/screens/deals/flyers.test.tsx",
+        "start": 23,
+        "startLoc": {
+          "column": 57,
+          "line": 23,
+          "position": 727
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 37,
+        "endLoc": {
+          "column": 3,
+          "line": 37,
+          "position": 1434
+        },
+        "name": "web/src/screens/deals/deal-search.test.tsx",
+        "start": 21,
+        "startLoc": {
+          "column": 81,
+          "line": 21,
+          "position": 650
+        }
+      },
+      "format": "tsx",
+      "fragment": "import { DealSearchScreen, SEARCH_OFFLINE_MESSAGE } from './DealSearchScreen.tsx';\n\n// The \"Showing deals as of\" date renders an instant in the viewer's zone, and the dates below were\n// written for a New York viewer. `format.ts` builds its DATE_TIME formatter when the module loads,\n// so the zone has to change before the imports run, which `vi.hoisted` guarantees. The expected\n// text stays a literal on purpose: rebuilding it from the instant in the zone the component uses\n// would only test the component against itself.\nconst viewerZone = vi.hoisted(() => {\n  const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;\n  process.env['TZ'] = 'America/New_York';\n  return previous;\n});\n\nafterAll(() => {\n  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.\n  process.env['TZ'] = viewerZone;\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 31,
+        "endLoc": {
+          "column": 3,
+          "line": 31,
+          "position": 1396
+        },
+        "name": "web/src/screens/meals/suggestions.test.tsx",
+        "start": 15,
+        "startLoc": {
+          "column": 59,
+          "line": 15,
+          "position": 622
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 89,
+        "endLoc": {
+          "column": 9,
+          "line": 89,
+          "position": 3046
+        },
+        "name": "web/src/screens/deals/deal-search.test.tsx",
+        "start": 75,
+        "startLoc": {
+          "column": 11,
+          "line": 75,
+          "position": 2674
+        }
+      },
+      "format": "tsx",
+      "fragment": "  setOnline(true);\n  // The phone layout is the primary design target, where Select renders the platform picker.\n  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\ndescribe('deal search', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 15,
+      "secondFile": {
+        "end": 67,
+        "endLoc": {
+          "column": 9,
+          "line": 67,
+          "position": 2390
+        },
+        "name": "web/src/screens/deals/flyers.test.tsx",
+        "start": 54,
+        "startLoc": {
+          "column": 54,
+          "line": 54,
+          "position": 2112
+        }
+      },
+      "tokens": 68
+    },
+    {
+      "firstFile": {
+        "end": 41,
+        "endLoc": {
+          "column": 92,
+          "line": 41,
+          "position": 1821
+        },
+        "name": "web/src/screens/deals/favorites.test.tsx",
+        "start": 26,
+        "startLoc": {
+          "column": 30,
+          "line": 26,
+          "position": 1156
+        }
+      },
+      "format": "tsx",
+      "fragment": "const viewerZone = vi.hoisted(() => {\n  const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;\n  process.env['TZ'] = 'America/New_York';\n  return previous;\n});\n\nafterAll(() => {\n  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.\n  process.env['TZ'] = viewerZone;\n});\n\nfunction stub(handlers: Readonly<Record<string, StubHandler>>): FetchStub {\n  const created = createFetchStub({\n    'GET /api/users/me': () => ({ status: 200, body: profileFixture }),\n    'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),\n    'GET /api/households/:id/merchants': () => ({ status: 200, body: merchantsResponse() }),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 45,
+        "endLoc": {
+          "column": 92,
+          "line": 45,
+          "position": 1869
+        },
+        "name": "web/src/screens/deals/flyers.test.tsx",
+        "start": 30,
+        "startLoc": {
+          "column": 30,
+          "line": 30,
+          "position": 1204
+        }
+      },
+      "tokens": 136
+    },
+    {
+      "firstFile": {
+        "end": 37,
+        "endLoc": {
+          "column": 8,
+          "line": 37,
+          "position": 1473
+        },
+        "name": "web/src/screens/deals/favorites.test.tsx",
+        "start": 26,
+        "startLoc": {
+          "column": 30,
+          "line": 26,
+          "position": 1156
+        }
+      },
+      "format": "tsx",
+      "fragment": "const viewerZone = vi.hoisted(() => {\n  const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;\n  process.env['TZ'] = 'America/New_York';\n  return previous;\n});\n\nafterAll(() => {\n  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.\n  process.env['TZ'] = viewerZone;\n});\n\nfunction stub(handlers: Readonly<Record<string, StubHandler>>): FetchStub {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 33,
+        "endLoc": {
+          "column": 8,
+          "line": 33,
+          "position": 1406
+        },
+        "name": "web/src/screens/meals/suggestions.test.tsx",
+        "start": 22,
+        "startLoc": {
+          "column": 30,
+          "line": 22,
+          "position": 1089
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 198,
+        "endLoc": {
+          "column": 3,
+          "line": 198,
+          "position": 7173
+        },
+        "name": "web/src/screens/lists/ListDetailScreen.tsx",
+        "start": 183,
+        "startLoc": {
+          "column": 62,
+          "line": 183,
+          "position": 6784
+        }
+      },
+      "format": "tsx",
+      "fragment": "      icon: <Pencil aria-hidden size={20} strokeWidth={1.5} />,\n      onSelect: () => {\n        setEditing(item);\n      },\n    },\n    {\n      label: 'Delete',\n      icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,\n      isDestructive: true,\n      // Deleting an item is not one of the four queueable writes (Requirements › Offline).\n      disabledReason: offlineReason,\n      onSelect: () => {\n        setDeleting(item);\n      },\n    },\n  ];",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 16,
+      "secondFile": {
+        "end": 207,
+        "endLoc": {
+          "column": 15,
+          "line": 207,
+          "position": 7584
+        },
+        "name": "web/src/screens/lists/PantryScreen.tsx",
+        "start": 193,
+        "startLoc": {
+          "column": 47,
+          "line": 193,
+          "position": 7121
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 452,
+        "endLoc": {
+          "column": 1,
+          "line": 452,
+          "position": 15579
+        },
+        "name": "web/src/screens/lists/ListDetailScreen.tsx",
+        "start": 427,
+        "startLoc": {
+          "column": 8,
+          "line": 427,
+          "position": 14831
+        }
+      },
+      "format": "tsx",
+      "fragment": "        }\n        confirmLabel=\"Delete item\"\n        isConfirming={deleteItem.isPending}\n        onConfirm={() => {\n          if (deleting === undefined) return;\n          const { id, itemName } = deleting;\n          deleteItem.mutate(id, {\n            onSuccess: () => {\n              setDeleting(undefined);\n              toast({ variant: 'success', message: `Deleted ${itemName}.` });\n            },\n            onError: (error) => {\n              setDeleting(undefined);\n              toast({\n                variant: 'error',\n                message: userMessage(error, {\n                  fallback: `Couldn't delete ${itemName}. Try again.`,\n                }),\n              });\n            },\n          });\n        }}\n      />\n    </section>\n  );\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 26,
+      "secondFile": {
+        "end": 308,
+        "endLoc": {
+          "column": 1,
+          "line": 308,
+          "position": 10296
+        },
+        "name": "web/src/screens/lists/PantryScreen.tsx",
+        "start": 283,
+        "startLoc": {
+          "column": 8,
+          "line": 283,
+          "position": 9548
+        }
+      },
+      "tokens": 125
+    },
+    {
+      "firstFile": {
+        "end": 236,
+        "endLoc": {
+          "column": 82,
+          "line": 236,
+          "position": 9440
+        },
+        "name": "web/src/screens/lists/lists.test.tsx",
+        "start": 228,
+        "startLoc": {
+          "column": 83,
+          "line": 228,
+          "position": 9040
+        }
+      },
+      "format": "tsx",
+      "fragment": "          body: { ...thisWeekDetailFixture, name: (body as { name: string }).name },\n        }),\n      }),\n    );\n    await screen.findByRole('link', { name: /This Week/ });\n    await user.click(screen.getByRole('button', { name: 'New list' }));\n    const dialog = await screen.findByRole('dialog', { name: 'New list' });\n    await user.type(within(dialog).getByLabelText('List name'), 'Game Night');\n    await user.click(within(dialog).getByRole('button', { name: 'Create list' }));",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 9,
+      "secondFile": {
+        "end": 270,
+        "endLoc": {
+          "column": 82,
+          "line": 270,
+          "position": 11021
+        },
+        "name": "web/src/screens/lists/lists.test.tsx",
+        "start": 262,
+        "startLoc": {
+          "column": 56,
+          "line": 262,
+          "position": 10621
+        }
+      },
+      "tokens": 99
+    },
+    {
+      "firstFile": {
+        "end": 119,
+        "endLoc": {
+          "column": 7,
+          "line": 119,
+          "position": 4335
+        },
+        "name": "web/src/screens/meals/household-timezone.test.tsx",
+        "start": 103,
+        "startLoc": {
+          "column": 40,
+          "line": 103,
+          "position": 3819
+        }
+      },
+      "format": "tsx",
+      "fragment": "    'GET /api/households/:id': household,\n    'GET /api/recipes/:id': () => ({ status: 200, body: sheetPanChickenFixture }),\n    'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekFixture] }),\n    'GET /api/households/:id/pantry': () => ({ status: 200, body: [] }),\n    'GET /api/households/:id/deals/search': () => ({\n      status: 200,\n      body: {\n        deals: [],\n        page: 1,\n        pageSize: 50,\n        total: 0,\n        hasMore: false,\n        asOf: null,\n        stale: false,\n        refreshing: false,\n      },\n    }),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 42,
+        "endLoc": {
+          "column": 7,
+          "line": 42,
+          "position": 1560
+        },
+        "name": "web/src/screens/meals/recipe-detail.test.tsx",
+        "start": 26,
+        "startLoc": {
+          "column": 78,
+          "line": 26,
+          "position": 1044
+        }
+      },
+      "tokens": 107
+    },
+    {
+      "firstFile": {
+        "end": 223,
+        "endLoc": {
+          "column": 5,
+          "line": 223,
+          "position": 8607
+        },
+        "name": "web/src/screens/meals/planner.test.tsx",
+        "start": 214,
+        "startLoc": {
+          "column": 87,
+          "line": 214,
+          "position": 8345
+        }
+      },
+      "format": "tsx",
+      "fragment": "    await user.click(await screen.findByRole('menuitem', { name: 'Add missing to list' }));\n    await user.click(await screen.findByRole('button', { name: /This Week/ }));\n    await waitFor(() => {\n      expect(\n        stub.calls.some((call) => call.method === 'POST' && call.path.endsWith('/add-to-list')),\n      ).toBe(true);\n    });\n  });\n\n  it(\"adds the whole week's missing ingredients to a list\", async () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 243,
+        "endLoc": {
+          "column": 5,
+          "line": 243,
+          "position": 9331
+        },
+        "name": "web/src/screens/meals/planner.test.tsx",
+        "start": 234,
+        "startLoc": {
+          "column": 85,
+          "line": 234,
+          "position": 9069
+        }
+      },
+      "tokens": 74
+    },
+    {
+      "firstFile": {
+        "end": 80,
+        "endLoc": {
+          "column": 9,
+          "line": 80,
+          "position": 2474
+        },
+        "name": "web/src/screens/meals/recipe-detail.test.tsx",
+        "start": 67,
+        "startLoc": {
+          "column": 44,
+          "line": 67,
+          "position": 2215
+        }
+      },
+      "format": "tsx",
+      "fragment": "  vi.stubGlobal('matchMedia', (query: string) => ({\n    matches: query === '(pointer: coarse)',\n    addEventListener: () => undefined,\n    removeEventListener: () => undefined,\n  }));\n});\n\nafterEach(() => {\n  onlineManager.setOnline(true);\n  vi.unstubAllGlobals();\n  vi.restoreAllMocks();\n});\n\ndescribe('Recipe detail (Design › Screens › 12)', () => {",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 14,
+      "secondFile": {
+        "end": 68,
+        "endLoc": {
+          "column": 9,
+          "line": 68,
+          "position": 2128
+        },
+        "name": "web/src/screens/meals/recipe-library.test.tsx",
+        "start": 55,
+        "startLoc": {
+          "column": 44,
+          "line": 55,
+          "position": 1869
+        }
+      },
+      "tokens": 61
+    },
+    {
+      "firstFile": {
+        "end": 179,
+        "endLoc": {
+          "column": 49,
+          "line": 179,
+          "position": 6546
+        },
+        "name": "web/src/screens/meals/recipe-library.test.tsx",
+        "start": 156,
+        "startLoc": {
+          "column": 17,
+          "line": 156,
+          "position": 5870
+        }
+      },
+      "format": "tsx",
+      "fragment": "    const stub = mount(\n      baseHandlers({\n        'GET /api/households/:id/recipes': (request) => {\n          const page = Number(request.query.get('page') ?? '1');\n          if (page === 2) {\n            return {\n              status: 200,\n              body: { recipes: [bakedZitiFixture], page: 2, pageSize: 1, total: 2, hasMore: false },\n            };\n          }\n          return {\n            status: 200,\n            body: {\n              recipes: [sheetPanChickenFixture],\n              page: 1,\n              pageSize: 1,\n              total: 2,\n              hasMore: true,\n            },\n          };\n        },\n      }),\n    );\n    await screen.findByText(/Sheet Pan Chicken/);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 24,
+      "secondFile": {
+        "end": 216,
+        "endLoc": {
+          "column": 49,
+          "line": 216,
+          "position": 7693
+        },
+        "name": "web/src/screens/meals/recipe-library.test.tsx",
+        "start": 193,
+        "startLoc": {
+          "column": 4,
+          "line": 193,
+          "position": 7017
+        }
+      },
+      "tokens": 121
+    },
+    {
+      "firstFile": {
+        "end": 41,
+        "endLoc": {
+          "column": 11,
+          "line": 41,
+          "position": 1979
+        },
+        "name": "web/src/screens/onboarding/CreateHouseholdStep.tsx",
+        "start": 27,
+        "startLoc": {
+          "column": 36,
+          "line": 27,
+          "position": 1426
+        }
+      },
+      "format": "tsx",
+      "fragment": "  const timezone = browserTimezone();\n\n  const handleSubmit = async (event: SyntheticEvent): Promise<void> => {\n    event.preventDefault();\n    setFormError(undefined);\n    const next: Partial<Record<Field, string>> = {};\n    const parsedName = householdNameSchema.safeParse(name);\n    if (!parsedName.success) next.name = firstIssue(parsedName.error);\n    const parsedCode = postalCodeSchema.safeParse(postalCode.trim());\n    if (!parsedCode.success) next.postalCode = firstIssue(parsedCode.error);\n    setErrors(next);\n    if (Object.keys(next).length > 0) return;\n\n    try {\n      await createHousehold.mutateAsync({",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 15,
+      "secondFile": {
+        "end": 60,
+        "endLoc": {
+          "column": 11,
+          "line": 60,
+          "position": 2713
+        },
+        "name": "web/src/screens/settings/HouseholdSettingsSection.tsx",
+        "start": 46,
+        "startLoc": {
+          "column": 43,
+          "line": 46,
+          "position": 2160
+        }
+      },
+      "tokens": 127
+    },
+    {
+      "firstFile": {
+        "end": 105,
+        "endLoc": {
+          "column": 21,
+          "line": 105,
+          "position": 3999
+        },
+        "name": "web/src/screens/onboarding/SetPasswordScreen.tsx",
+        "start": 94,
+        "startLoc": {
+          "column": 10,
+          "line": 94,
+          "position": 3672
+        }
+      },
+      "format": "tsx",
+      "fragment": "          autoComplete=\"new-password\"\n          hint={PASSWORD_HINT}\n          value={password}\n          error={errors.password}\n          onChange={(event) => {\n            setPassword(event.target.value);\n          }}\n        />\n        <FormMessage message={formError} />\n        <Button\n          type=\"submit\"\n          isLoading={changePassword.isPending}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 116,
+        "endLoc": {
+          "column": 21,
+          "line": 116,
+          "position": 4165
+        },
+        "name": "web/src/screens/onboarding/SignUpScreen.tsx",
+        "start": 105,
+        "startLoc": {
+          "column": 10,
+          "line": 105,
+          "position": 3838
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 79,
+        "endLoc": {
+          "column": 23,
+          "line": 79,
+          "position": 2851
+        },
+        "name": "web/src/screens/onboarding/SignInScreen.tsx",
+        "start": 63,
+        "startLoc": {
+          "column": 6,
+          "line": 63,
+          "position": 2454
+        }
+      },
+      "format": "tsx",
+      "fragment": "      >\n        <TextField\n          label=\"Email\"\n          type=\"email\"\n          name=\"email\"\n          autoComplete=\"email\"\n          value={email}\n          error={errors.email}\n          onChange={(event) => {\n            setEmail(event.target.value);\n          }}\n        />\n        <TextField\n          label=\"Password\"\n          type=\"password\"\n          name=\"password\"\n          autoComplete=\"current-password\"",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 105,
+        "endLoc": {
+          "column": 23,
+          "line": 105,
+          "position": 3851
+        },
+        "name": "web/src/screens/onboarding/SignUpScreen.tsx",
+        "start": 89,
+        "startLoc": {
+          "column": 9,
+          "line": 89,
+          "position": 3454
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 91,
+        "endLoc": {
+          "column": 9,
+          "line": 91,
+          "position": 3227
+        },
+        "name": "web/src/screens/onboarding/SignInScreen.tsx",
+        "start": 80,
+        "startLoc": {
+          "column": 10,
+          "line": 80,
+          "position": 2880
+        }
+      },
+      "format": "tsx",
+      "fragment": "          value={password}\n          error={errors.password}\n          onChange={(event) => {\n            setPassword(event.target.value);\n          }}\n        />\n        <FormMessage message={formError} />\n        <Button\n          type=\"submit\"\n          isLoading={isSubmitting}\n          disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}\n        >",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 12,
+      "secondFile": {
+        "end": 118,
+        "endLoc": {
+          "column": 9,
+          "line": 118,
+          "position": 4254
+        },
+        "name": "web/src/screens/onboarding/SignUpScreen.tsx",
+        "start": 107,
+        "startLoc": {
+          "column": 10,
+          "line": 107,
+          "position": 3907
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 253,
+        "endLoc": {
+          "column": 30,
+          "line": 253,
+          "position": 10114
+        },
+        "name": "web/src/screens/onboarding/onboarding.test.tsx",
+        "start": 244,
+        "startLoc": {
+          "column": 80,
+          "line": 244,
+          "position": 9832
+        }
+      },
+      "format": "tsx",
+      "fragment": "        body: problemBody(410, 'Gone', 'This invite has expired or was revoked.'),\n      }),\n    });\n    renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);\n\n    await user.type(screen.getByLabelText('Invite code'), '9XKR4TZ2');\n    await user.click(screen.getByRole('button', { name: 'Join household' }));\n\n    expect(\n      await screen.findByText('This invite has expired. Ask for a new link or code.'),",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 271,
+        "endLoc": {
+          "column": 30,
+          "line": 271,
+          "position": 10762
+        },
+        "name": "web/src/screens/onboarding/onboarding.test.tsx",
+        "start": 262,
+        "startLoc": {
+          "column": 82,
+          "line": 262,
+          "position": 10480
+        }
+      },
+      "tokens": 65
+    },
+    {
+      "firstFile": {
+        "end": 44,
+        "endLoc": {
+          "column": 52,
+          "line": 44,
+          "position": 2177
+        },
+        "name": "web/src/screens/settings/account/ChangeEmailForm.tsx",
+        "start": 26,
+        "startLoc": {
+          "column": 44,
+          "line": 26,
+          "position": 1346
+        }
+      },
+      "format": "tsx",
+      "fragment": "  const [currentPassword, setCurrentPassword] = useState('');\n  const [formError, setFormError] = useState<string>();\n  const triggerRef = useRef<HTMLButtonElement>(null);\n  const wasOpen = useRef(isOpen);\n\n  // Opening swaps the trigger for the form, and closing swaps it back. Where a member's action\n  // replaces the control they used, focus moves into what replaced it rather than falling back to\n  // the document (Design › Accessibility › Focus management).\n  useEffect(() => {\n    if (wasOpen.current === isOpen) return;\n    wasOpen.current = isOpen;\n    if (isOpen) formRef.current?.querySelector('input')?.focus();\n    else triggerRef.current?.focus();\n  }, [isOpen, formRef]);\n\n  const handleSubmit = async (event: SyntheticEvent): Promise<void> => {\n    event.preventDefault();\n    setFormError(undefined);\n    const next: Partial<Record<Field, string>> = {};",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 19,
+      "secondFile": {
+        "end": 43,
+        "endLoc": {
+          "column": 52,
+          "line": 43,
+          "position": 2126
+        },
+        "name": "web/src/screens/settings/account/ChangePasswordForm.tsx",
+        "start": 25,
+        "startLoc": {
+          "column": 36,
+          "line": 25,
+          "position": 1295
+        }
+      },
+      "tokens": 140
+    },
+    {
+      "firstFile": {
+        "end": 21,
+        "endLoc": {
+          "column": 3,
+          "line": 21,
+          "position": 856
+        },
+        "name": "matching/vitest.config.ts",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { defineConfig } from 'vitest/config';\n\nexport default defineConfig({\n  test: {\n    include: ['src/**/*.test.ts'],\n    setupFiles: ['../../test/clock-setup.mjs'],\n    globalSetup: ['../../test/global-tz.mjs'],\n    coverage: {\n      provider: 'v8',\n      include: ['src/**/*.ts'],\n      // index.ts is a pure re-export barrel (no logic of its own), so it is excluded from\n      // coverage rather than carrying a meaningless \"import works\" test.\n      exclude: ['src/**/*.test.ts', 'src/index.ts'],\n      reporter: ['text', 'html', 'json-summary'],\n      // Handoff Phase 4 and Engineering Practices \"Coverage\": matching's logic is pure and\n      // thoroughly tested. Enforced by `pnpm test`, which runs with --coverage, so a drop fails\n      // the gate.\n      thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 },\n    },\n  },\n});",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 21,
+      "secondFile": {
+        "end": 21,
+        "endLoc": {
+          "column": 3,
+          "line": 21,
+          "position": 854
+        },
+        "name": "shared/vitest.config.ts",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "tokens": 91
+    }
+  ],
+  "statistics": {
+    "detectionDate": "2026-10-21T17:53:40.491Z",
+    "formats": {
+      "tsx": {
+        "clones": 55,
+        "duplicatedLines": 806,
+        "duplicatedTokens": 4648,
+        "lines": 25237,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 3.193723501208543,
+        "percentageTokens": 3.066246223266001,
+        "sources": 171,
+        "tokens": 151586
+      },
+      "typescript": {
+        "clones": 44,
+        "duplicatedLines": 666,
+        "duplicatedTokens": 3744,
+        "lines": 52331,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 1.2726682081366685,
+        "percentageTokens": 1.2022426449338188,
+        "sources": 350,
+        "tokens": 311418
+      }
+    },
+    "total": {
+      "clones": 99,
+      "duplicatedLines": 1472,
+      "duplicatedTokens": 8392,
+      "lines": 77568,
+      "newClones": 0,
+      "newDuplicatedLines": 0,
+      "percentage": 1.8976897689768977,
+      "percentageTokens": 1.8125113389949117,
+      "sources": 521,
+      "tokens": 463004
+    }
+  }
+}
