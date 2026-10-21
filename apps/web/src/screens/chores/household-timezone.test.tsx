@@ -1,7 +1,8 @@
 import { onlineManager } from '@tanstack/react-query';
 import { configure, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Errand } from '@hearth/shared';
+import { registerHouseholdClock } from '../../test/browser.ts';
 import {
   OAK_STREET_ID,
   oakStreetFixture,
@@ -55,17 +56,7 @@ function rowOfDoneButton(name: string): HTMLElement {
   return row;
 }
 
-beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(PINNED_INSTANT);
-  onlineManager.setOnline(true);
-});
-
-afterEach(() => {
-  vi.useRealTimers();
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+registerHouseholdClock(PINNED_INSTANT);
 
 describe('household dates, with the device a day ahead', () => {
   it('groups a chore due on the household’s today under Today, not Overdue', async () => {
