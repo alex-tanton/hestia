@@ -66,3 +66,8 @@ The four Docker Hub images are pulled directly. No `hearth-` or `prodrigestivill
 - (e) Resolved by the owner's adjustment: both login steps (ghcr.io and the optional Docker Hub one) have `continue-on-error: true`, each with a comment. The GHCR images are public, so anonymous pulls work, and the script falls back to the ECR pull. A failed or misconfigured login therefore cannot fail the job before the fallback runs. The structural check pins the flag on both steps.
 - (f) `docs/file-map.md` does not list the new script or test, following PR 3's precedent for `deploy.test.mjs`. It is left for the later cleanup phase (RED-05), as the owner accepted.
 - (g) The test file was reformatted by the pre-commit hook (prettier). The green run and the harness run were repeated on the committed file, and the green and harness figures above are from those repeats. The red run was taken just before that rewrite, on the same test logic.
+
+## PR 22 CI (first real run of the GHCR path)
+
+pr22-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=39519249223 head=ebb9ff6e07b4d00314a21917baeb38239bc70c67
+pr22-e2e=job 118958772130, 104 passed (8.1m). Both logins printed `Login Succeeded!` (ghcr.io and Docker Hub, so the Docker Hub secrets are present and valid). The pre-pull pulled gotrue, postgres and realtime from ghcr.io/supabase and tagged each with its public.ecr.aws name between 00:07:14Z and 00:07:56Z (about 40 s), with no toomanyrequests anywhere in the log. Log: `.planning/cleanup/logs/pr22-e2e-attempt1.log` (gitignored).
