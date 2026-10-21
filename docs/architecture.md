@@ -227,7 +227,12 @@ amounts cross the API as integer cents.
 
 A subset of writes — adding a list item, editing/checking a list item, completing a chore, setting
 an errand's status — accept a client-generated UUID on creation and are idempotent on it, which is
-what lets the offline write queue replay them safely.
+what lets the offline write queue replay them safely. Adding a deal to a list takes the same id but
+is an online mutation rather than a queued write (see Offline writes). Adding a recipe's, a
+planned meal's or a planned week's missing ingredients to a list reads what is already on the list
+before it writes, so `apps/service/src/services/add-to-list.ts` serializes those calls per list with
+a transaction-scoped advisory lock: two overlapping calls for one list cannot each add every
+ingredient.
 
 ## Background jobs
 
@@ -301,6 +306,14 @@ duplicate-key no-op at the database, and a replayed edit converges to the same s
 many times it's resent. Retries are bounded (`retryQueuedWrite`, capped at 3 attempts) and distinguish
 retryable failures (offline, 5xx) from permanent ones (403/404/410, where the row or its list is
 already gone), surfacing a permanent failure once via a toast rather than retrying forever.
+
+Adding a deal to a list is not one of the queued writes. `useAddDealToList`
+(`apps/web/src/lib/api/deals.ts`) is an ordinary online mutation that posts a client-generated item
+id with the deal's id, and the service's `on conflict (id) do nothing` makes a repeat of the same
+id a no-op. Because a response can be lost after the request landed, the id is held across a retry:
+it is kept per list and deal, at `QueryClient` scope (so it survives the card unmounting) and per
+signed-in user, and only a success starts the next add with a fresh id. The held ids live in memory
+only, so a reload between a failure and the retry mints a new id.
 
 ## Notifications pipeline
 
