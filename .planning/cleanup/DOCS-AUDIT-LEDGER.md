@@ -195,3 +195,54 @@ filemap-complete=yes
 Reverse check for `filemap-complete=yes`: every tracked file name of `scripts/` and `test/` appears
 in backticks in `docs/file-map.md` (the verify command's loop over `git ls-files scripts test`), and
 every route module under `apps/service/src/routes/` (tests excluded) appears in the `routes` row.
+
+## Phase close
+
+Checked at `../hearth-docs-sync` (`docs/sync-specs`) after `git merge --no-edit claude/eloquent-mayer-szjtjf`
+(merge `9dd125a`), `origin/main` at `9fdc9c9` (PR C), phase base `c64d79e`. Logs are `05-13-*` in the
+gitignored logs folder.
+
+final-citations=0
+
+`node citation-inventory.mjs inventory --repo ../hearth-docs-sync` (default scope: everything outside
+`.planning/`, `docs/`, `supabase/migrations/`) prints `rows=0`, and the TSV holds only its header.
+`git grep -nE -f cit-rx.txt -- .planning/codebase docs README.md .claude` prints nothing. Migrations
+still carry 17 citation lines in 8 files, equal to `count-migrations=17`.
+
+migrations-untouched=yes
+
+`git diff --exit-code c64d79e -- supabase/migrations` exits 0 at the D head.
+
+docs-files=7
+
+`git ls-files docs | wc -l` is 7 and `git diff --name-only --diff-filter=A c64d79e -- docs` is empty.
+
+final-claims-misses=0
+
+`docs-claims-check.mjs --allow docs-claims-allow.tsv` over `docs/*.md README.md .planning/codebase/*.md
+.claude/CLAUDE.md`: `checked=2353 misses=0`.
+
+final-clones=66
+final-duplicated-lines=858
+final-percentage=1.11
+
+The Phase 2 test-inclusive command (jscpd 5.4.1; this version rejects `--gitignore`, which the
+Phase 2 command carried, and ignores git-ignored paths on its own) at the D head, label `05-13`
+(`.planning/cleanup/jscpd/phase5-05-13/jscpd-report.json`): `jscpd-compare.mjs --max-clones 95` exits 0.
+Against the Phase 2 baseline of 96 clones, 1,438 duplicated lines and 1.87%: 66 clones, 858 lines,
+1.11%, identical to `final-b-clones=66` (the text-only PRs add no clone).
+
+Local gates at the D head, Node v24.21.0, `TZ` unset, each log ending `exit=0`: `pnpm install
+--frozen-lockfile`, `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build`, `commitlint
+--from origin/main --to HEAD`, and `pnpm test` (harness 231 pass, 0 fail; matching 156, shared 172,
+recurrence 77, service 757, web 728, e2e support 15, all equal to `tests-final-c.*`).
+
+D's diff against `origin/main` outside `.planning/` is `docs/*.md` (seven specs), `README.md`,
+`.claude/CLAUDE.md` and one comment line in `docker/docker-compose.yml` (the backup comment now cites
+the README heading "Restore production", `29b9c6a`, comment-only with a YAML deep-equal proof). The
+plan text lists only the first three; the compose fix is an owner request from 05-12.
+
+knip on the D head (`pnpm knip`, report-only) lists six unused files, all `.planning/cleanup/tools/*.mjs`
+proof tools: `citation-inventory`, `comment-only-check`, `docs-claims-check`, `expand-compare`,
+`jscpd-compare`, `nonts-comment-check`. `tailwindcss` as an unused devDependency of `apps/web` was
+reported before this phase and is not touched here.
