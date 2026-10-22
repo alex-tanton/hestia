@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Completed 05-09-PLAN.md
-last_updated: "2026-10-22T01:01:39.344Z"
+stopped_at: Completed 05-10-PLAN.md
+last_updated: "2026-10-22T01:18:18.342Z"
 last_activity: 2026-10-22
 last_activity_desc: Phase 05 execution started
-state_head: e035af3a0097604518fb04d41db16facf1fce945
+state_head: 752b150c1f35719eb18fc3c1bfacdc8e308be271
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 40
+  completed_plans: 41
   percent: 67
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 9 of 13 complete (05-01 to 05-09); next 05-10 (non-TS files, index.css, root configs and the 45 test-title lines)
+Plan: 10 of 13 complete (05-01 to 05-10); next 05-11 (open and land PR C: owner merge)
 Status: Ready to execute
 Last activity: 2026-10-22 — Plan 05-09 complete (apps/web comments cleared in three proven batches; PR C branch refactor/drop-spec-citations at 343efc6, not yet a pull request)
 
@@ -88,6 +88,7 @@ Progress: [███████░░░] 67%
 | Phase 05 P07 | about 35min | 3 tasks | 144 files |
 | Phase 05 P08 | about 20min | 3 tasks | 11 files |
 | Phase 05 P09 | 80min | 3 tasks | 211 files |
+| Phase 05 P10 | 50min | 3 tasks | 44 files |
 
 ## Accumulated Context
 
@@ -163,13 +164,13 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-22T01:01:39.196Z
-Stopped at: Completed 05-09-PLAN.md
+Last session: 2026-10-22T01:18:18.225Z
+Stopped at: Completed 05-10-PLAN.md
 Resume file: None
 
-### Resume point for Phase 5 (after 05-09, 2026-10-22)
+### Resume point for Phase 5 (after 05-10, 2026-10-22)
 
-Resume with `/gsd-execute-phase 5`. Plans 05-01 to 05-09 have SUMMARYs; 05-10 to 05-13 remain. Update on 05-09: `refactor/drop-spec-citations` is pushed at `343efc6` with `apps/web` done (web suite 728 before and after; 23 web title lines and the 2 `apps/web/src/index.css` rows are left for 05-10); the tips and table below are as of 05-08.
+Resume with `/gsd-execute-phase 5`. Plans 05-01 to 05-10 have SUMMARYs; 05-11 to 05-13 remain. Update on 05-10: PR C's content is complete (`pr-c-left=0`): `refactor/drop-spec-citations` is pushed at `b8decf1` (non-TS files and root configs `05cebd4`, recipe fixtures `4f4c124`, 45 test titles `96fb846`); test counts are unchanged in every workspace. Nine test titles with bare `Design`, `Branding` or `Requirements` wording were left as out of the plan's scope (listed in the 05-10 SUMMARY). The WB tip and the table below are as of 05-08, except that `refactor/drop-spec-citations` is now at `b8decf1`.
 
 Working branch (WB) for all `.planning/` state: `claude/eloquent-mayer-szjtjf` (the plans name `claude/vigilant-gates-a4ihid`, which never existed). Pushed, tip `5d7c32e`; always read the newest STATE from `origin` of this branch.
 
@@ -184,7 +185,7 @@ Unmerged work, all pushed (no PR opened for either):
 
 Before pushing either branch again, run `git merge --no-edit claude/eloquent-mayer-szjtjf` in its worktree (D-04). `test/shared-fixtures-wip` is a redundant backup (its content is merged via PR B). Worktrees are local to the container that ran this session; recreate with `git worktree add <path> <branch>` from `origin` if they are gone.
 
-Next, in order: 05-09 (PR C, `apps/web` comments, about 476 lines), 05-10 (non-TS files, root configs, 46 test titles; also decide the 3 root config lines in `commitlint.config.js` and `eslint.config.js`), 05-11 (open and land PR C: owner merge), 05-12 (finish PR D: sync, maps, `.claude/CLAUDE.md`), 05-13 (land PR D and close the phase: owner merge).
+Next, in order: 05-11 (open and land PR C: owner merge), 05-12 (finish PR D: sync, maps, `.claude/CLAUDE.md`), 05-13 (land PR D and close the phase: owner merge).
 
 Open items for the owner: squash-merges of PR C and PR D; journey 7 e2e test (`e2e/tests/18-chores-and-errands-offline.spec.ts:140`) flaked once on `main` and passed on one approved rerun; if a PR touches `.github/workflows` and GitHub refuses for the `workflow` scope, use the `apply.sh` hand-off with `export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` on Windows Git Bash and a save-to-file invocation.
 
@@ -192,8 +193,8 @@ Open items for the owner: squash-merges of PR C and PR D; journey 7 e2e test (`e
 
 Start-up, in order:
 1. You must be on `claude/eloquent-mayer-szjtjf` at tip `origin/claude/eloquent-mayer-szjtjf` (`git fetch origin && git status -sb`). `main` carries only the older `.planning/` state, so do not read STATE from it.
-2. Run `/gsd-execute-phase 5`. Expected: 8 of 13 plans have SUMMARYs, 05-09 is ready (wave 6), and `blocked_by` is empty. The first dispatch is 05-09.
-3. Recreate the PR C worktree before 05-09 (the old ones lived in a previous container): `git fetch origin && git worktree add /home/user/hearth-citations refactor/drop-spec-citations` (if the branch is not checked out locally, `git worktree add -b refactor/drop-spec-citations /home/user/hearth-citations origin/refactor/drop-spec-citations`). For PR D later: `git worktree add -b docs/sync-specs /home/user/hearth-docs-sync origin/docs/sync-specs`. Use the same paths the plans and ledgers name. Tip check after adding: `refactor/drop-spec-citations` = `da58b20`, `docs/sync-specs` = `158fd52`.
+2. Run `/gsd-execute-phase 5`. Expected: 10 of 13 plans have SUMMARYs, 05-11 is ready, and `blocked_by` is empty. The first dispatch is 05-11.
+3. Recreate the PR C worktree before 05-09 (the old ones lived in a previous container): `git fetch origin && git worktree add /home/user/hearth-citations refactor/drop-spec-citations` (if the branch is not checked out locally, `git worktree add -b refactor/drop-spec-citations /home/user/hearth-citations origin/refactor/drop-spec-citations`). For PR D later: `git worktree add -b docs/sync-specs /home/user/hearth-docs-sync origin/docs/sync-specs`. Use the same paths the plans and ledgers name. Tip check after adding: `refactor/drop-spec-citations` = `b8decf1`, `docs/sync-specs` = `158fd52`.
 4. `config.json` has `workflow.use_worktrees: false`, so executors run one at a time on the primary checkout, with code branches in separate `git worktree` directories as above. Do not run two executors at once: they all commit to this branch.
 
 Corrections to the plan text:
@@ -214,6 +215,6 @@ Comment-only proof tooling for PR C (`.planning/cleanup/tools/`):
 - In the controls output, controls 3, 4 and 6 are negative controls, so `FAIL FAIL` is the correct result for them. Controls 1, 2 and 5 must print `OK OK`.
 - Ledger: `.planning/cleanup/TEXT-SYNC-LEDGER.md`, with per-batch TSVs under `.planning/cleanup/text-sync/`. Citation recount at plan 05-06: 1,116 lines in 456 files (592 pure, 239 mixed, 240 prose, 45 titles); 340 service sites are done; 15 service test titles are deferred to 05-10.
 
-Open decisions already known for later plans: three root config lines (`commitlint.config.js` once, `eslint.config.js` twice) match the citation vocabulary and are outside every plan's scope so far, so decide in 05-10 whether to include them (D-09 names "the two root JS configs", so they likely belong there). The knip tool reports `.planning/cleanup/tools/expand-compare.mjs` and `jscpd-compare.mjs` as unused files; Phase 6's CI-01 must account for them.
+Decided in 05-10: the three root config lines (`commitlint.config.js` once, `eslint.config.js` twice) are in PR C, because D-09 names "the two root JS configs". The knip tool reports `.planning/cleanup/tools/expand-compare.mjs`, `jscpd-compare.mjs` and `nonts-comment-check.mjs` as unused files; Phase 6's CI-01 must account for them.
 
 PR C wording the owner may want to look at when it opens: `services/bills.ts` `updateBillPayment` ("(autopay-logged ones included)") and `services/subscriptions.ts` `monthlyCents` (lists the conversion factors), both rewritten because the cited spec text could not be recovered.
