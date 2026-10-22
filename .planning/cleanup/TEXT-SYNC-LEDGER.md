@@ -405,4 +405,39 @@ pr-c-ready=2ae102e79ae1982d049263d53492b0dc0d5747d5
 
 ## CI
 
-Not started.
+PR C (opened 2026-10-22, `refactor/drop-spec-citations` into `main`, not a draft, `mergeable_state` clean). The body is
+`.planning/cleanup/logs/05-11-pr-c.md` (gitignored); proposed squash title `refactor: remove retired spec citations from code`.
+
+pr-c=28
+pr-c-head=e1997a71efd6182157ff0713ca973ea78ba6e314
+
+The head is `pr-c-ready` (`2ae102e`) plus the merge of the working branch carrying the Task 1 record. The PR lists 495
+files: 454 outside `.planning/`, none under `supabase/migrations/`, `docs/`, `.github/`, `README.md` or `.claude/`.
+
+CI run 39705754497 (`pull_request`, one attempt, no rerun), all six jobs `success`:
+
+| job | job id | conclusion |
+| --- | ------ | ---------- |
+| lint | 119585285161 | success |
+| typecheck | 119585285186 | success |
+| test-unit | 119585285035 | success |
+| test-integration | 119585285328 | success |
+| test-e2e | 119585285258 | success |
+| build | 119585285347 | success |
+
+pr-c-ci=39705754497 lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success
+
+E2E: `104 passed (8.7m)`; spec 13 ran in both themes (`tests/13-recipe-import-and-readiness.spec.ts:130`, light and dark)
+and passed.
+
+pr-c-e2e-13=passed
+
+Integration (`test-integration` runs `test:coverage`; `Test Files  76 passed (76)`): this run `Tests  1190 passed (1190)`;
+`main`'s latest green run (39661257811 at `a660d58`) `Tests  1190 passed (1190)`.
+
+pr-c-integration-tests=1190
+main-integration-tests-c=1190
+
+Logs: `05-11-pr-integration.log`, `05-11-main-integration.log`, `05-11-pr-e2e.log`, `05-11-pr-files.txt`.
+
+Merge: not done; it is the owner's squash merge (05-11 Task 3).
