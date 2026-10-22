@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 import pkg from './package.json' with { type: 'json' };
 
-// Branding: the Dashboard slate is the section-neutral color.
+// The Dashboard slate is the section-neutral color.
 const THEME_COLOR = '#475569';
 
 /*

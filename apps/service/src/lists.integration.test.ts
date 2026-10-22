@@ -658,7 +658,7 @@ describe('offline writes replay safely', () => {
     await addItem(home, list.id, { source: 'manual', id, itemName: 'Milk' });
     const url = `/api/lists/${list.id}/items/${id}`;
 
-    // The quirk the Requirements document accepts: a late offline "in cart" moves a bought item
+    // An accepted quirk: a late offline "in cart" moves a bought item
     // back to "in cart", because the last write to arrive wins.
     expectStatus(await as(app, home.user, 'PATCH', url, { status: 'bought' }), 200);
     const late = await as(app, home.user, 'PATCH', url, { status: 'in_cart' });

@@ -10,8 +10,7 @@ export const INSTALL_MESSAGE =
   'Install Hearth to open it from your home screen and keep your lists a tap away.';
 
 /**
- * The install prompt, offered once onboarding completes rather than on first paint (Engineering
- * Practices › Install and notifications). iOS gets the sequence explained instead of a prompt it
+ * The install prompt, offered once onboarding completes rather than on first paint. iOS gets the sequence explained instead of a prompt it
  * does not have, and no notification permission is requested here — that is asked for later,
  * when a person turns a notification type on.
  */

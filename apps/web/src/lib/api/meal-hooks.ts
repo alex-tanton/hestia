@@ -213,8 +213,7 @@ export function useParseRecipe(
  * 1000ms so a busy screen does not hammer IndexedDB on every settle (`persist.ts`) — has not
  * necessarily saved it yet. A reload that lands inside that window would otherwise restore the
  * list as it was *before* this write and, since the restored snapshot is still within its own
- * staleTime, show that stale state indefinitely rather than refetching (journey 4, "lists exactly
- * what is missing": the picker's own list, visited empty right after creation, is exactly such a
+ * staleTime, show that stale state indefinitely rather than refetching (the picker's own list, visited empty right after creation, is exactly such a
  * case). `flushPersister` is the same unthrottled, second persister the write queue uses for the
  * identical reason — here it makes a just-completed,
  * already-successful write durable immediately rather than leaving the index down to the

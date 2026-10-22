@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { dealSearchQuerySchema } from './deals.js';
 
 /**
- * dealSearchQuerySchema is only ever fed to `z.toJSONSchema` by contract.test.ts (via
- * schemas.test.ts's endpoint-contract check), which never runs the `stores` transform or the
+ * dealSearchQuerySchema is only ever fed to `z.toJSONSchema` by schemas.test.ts's
+ * endpoint-contract check, which never runs the `stores` transform or the
  * min/max price refine below with real query data.
  */
 describe('dealSearchQuerySchema: stores transform', () => {

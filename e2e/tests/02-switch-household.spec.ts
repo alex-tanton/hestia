@@ -13,8 +13,8 @@ import { SEED } from '../support/env.ts';
  * Journey 9: switch household, and assert no data from the previous household remains visible.
  * Alex belongs to Oak Street and Rivera Family, which is the fixture this exists for. In Phase 1
  * the household-scoped surfaces are the switcher, Household settings, and the admin's invite list;
- * My Households is the caller's own membership list, one of the two responses Requirements lets
- * span households, so both names belong there.
+ * My Households is the caller's own membership list, one of the two responses allowed to span
+ * households, so both names belong there.
  */
 
 const NO_INVITES = 'No invites are outstanding. Create one to add someone to this household.';

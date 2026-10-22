@@ -95,7 +95,7 @@ describe('parser yield over the 27514 captures', () => {
   });
 
   it('leaves no priced item unparseable', () => {
-    // Every skip has to name a rule from the Requirements table; "unparseable" means the chain
+    // Every skip has to name a pricing rule; "unparseable" means the chain
     // met a price shape nobody has written a parser for yet.
     const stragglers = [...tallies.values()].flatMap((tally) => tally.unparseable);
     expect(stragglers).toEqual([]);

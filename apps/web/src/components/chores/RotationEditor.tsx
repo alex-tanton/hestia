@@ -36,8 +36,8 @@ function moveIndex<T>(list: readonly T[], from: number, to: number): T[] {
  * not a replacement.
  *
  * A button that moves a member, or removes one, is often the last focusable thing in its row once
- * the row reaches an edge, so focus follows the member to where it lands (Accessibility › Focus
- * management: focus moves into what replaced the control rather than falling back to the page).
+ * the row reaches an edge, so focus follows the member to where it lands (focus moves into what
+ * replaced the control rather than falling back to the page).
  */
 export function RotationEditor({
   members,

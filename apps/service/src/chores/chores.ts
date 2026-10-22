@@ -185,8 +185,8 @@ function assignmentColumns(assignment: CreateChoreRequest['assignment']): {
  * Resolves the assignment columns for `PATCH /chores/:id` when the payload's assignment is a
  * `rotation` whose `rotationOrder` differs from what's stored. Unlike `assignmentColumns` (used for
  * create, and for every other assignment type on update), this does not always restart at offset 0:
- * a reviewer flagged that doing so contradicts the Design System's framing of the rotation editor
- * as "reorderable by drag handles" — reordering, or appending a member, shouldn't silently reassign
+ * a reviewer flagged that doing so contradicts the rotation editor being "reorderable by drag
+ * handles" — reordering, or appending a member, shouldn't silently reassign
  * whose turn it is. The resolution applies the one stated precedent for rotation mutation — a
  * member's departure, which keeps "the turn stays with the same person" — to the edit case too, as
  * the smallest conservative extension.

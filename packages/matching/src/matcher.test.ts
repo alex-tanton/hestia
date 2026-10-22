@@ -196,8 +196,8 @@ describe('overrides applied before fuzzy matching', () => {
   });
 
   it('force_match does nothing when no candidate with that target name is present', () => {
-    // Requirements: "puts the ingredient in the target's bucket whenever a target with that
-    // normalized name exists" — an override never fabricates a match against an absent target.
+    // A force-match puts the ingredient in the target's bucket whenever a target with that
+    // normalized name exists — an override never fabricates a match against an absent target.
     const overrides: MatchOverride[] = [
       {
         ingredientNormalizedName: 'cheese',

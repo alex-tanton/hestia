@@ -11,8 +11,8 @@ describe('computeReadinessPercent', () => {
   });
 
   it('weighs on-sale and in-pantry ingredients equally', () => {
-    // 3 on sale, 3 in pantry, 1 to buy, of 7 — matches Sheet Pan Chicken and Vegetables (Seed
-    // Data, "Recipes"): 6 of 7, 86%.
+    // 3 on sale, 3 in pantry, 1 to buy, of 7 — matches Sheet Pan Chicken and Vegetables in
+    // the seed data: 6 of 7, 86%.
     expect(computeReadinessPercent(3, 3, 7)).toBe(86);
   });
 

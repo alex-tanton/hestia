@@ -51,8 +51,8 @@ const envSchema = z.object({
   // Where the backup container writes; System health reports the newest file's time.
   BACKUP_DIR: z.string().min(1).optional(),
   /*
-   * Unset in every real deployment, so production always calls the live Flipp endpoint (Technical
-   * Architecture, "Development"). The E2E Compose overlay is the one caller that sets both: it
+   * Unset in every real deployment, so production always calls the live Flipp endpoint. The E2E
+   * Compose overlay is the one caller that sets both: it
    * mounts the checked-in raw captures read-only and points the wrapper at them, which is what
    * keeps "tests never make live calls" true for the built image the E2E suite runs, not only for
    * Vitest's in-process doubles.

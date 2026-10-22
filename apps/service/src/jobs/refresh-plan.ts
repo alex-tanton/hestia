@@ -2,8 +2,7 @@ import type { Flyer } from '../deals/deal-source.js';
 import { wasCoveredByLastRun } from '../services/deals/dormancy.js';
 
 /**
- * What one postal code's refresh will fetch, decided before anything is fetched (Technical
- * Architecture, "Daily refresh"). Pure, so the rate-discipline rules are a table-driven unit test
+ * What one postal code's refresh will fetch, decided before anything is fetched. Pure, so the rate-discipline rules are a table-driven unit test
  * rather than something only a live run would reveal.
  *
  * The rules, in order:

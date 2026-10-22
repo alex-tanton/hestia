@@ -9,8 +9,7 @@ export const PASSWORD_HINT = 'At least 8 characters';
  *
  * The list is imported through its own entry point and this module is reached only from the three
  * screens that set a password — sign-up, set-password, and Settings' change-password — each of
- * which is behind a lazy route, so the 99 KB list never lands in the app shell (Engineering
- * Practices › Performance budget).
+ * which is behind a lazy route, so the 99 KB list never lands in the app shell.
  */
 export function validateNewPassword(value: string): string | undefined {
   const result = newPasswordSchema.safeParse(value);

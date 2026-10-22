@@ -41,8 +41,8 @@ export type CreateErrandRequest = z.infer<typeof createErrandRequestSchema>;
  * PATCH /api/errands/:id. Every field is an absolute value, the same convention
  * `updateListItemRequestSchema` follows. `status` is set absolutely: `done` stamps
  * `completedAt`/`completedBy` from the caller's JWT, and `open` clears them — the schema's own
- * check constraint supports both directions, and the design's flat list ("done collapsed below")
- * implies a done errand can be reopened, the same as a bought list item can move back to needed.
+ * check constraint supports both directions, and the flat list ("done collapsed below") implies
+ * a done errand can be reopened, the same as a bought list item can move back to needed.
  * The completion fields are never client-supplied: only `status` drives them, so attribution can
  * never be spoofed.
  */

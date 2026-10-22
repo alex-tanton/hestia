@@ -36,8 +36,7 @@ export function fail(status: number, detail?: string): ProblemError {
 }
 
 /**
- * SQLSTATEs from the membership functions and from constraints, mapped to responses (Technical
- * Architecture, "Membership lifecycle functions"). A null detail means the database's own
+ * SQLSTATEs from the membership functions and from constraints, mapped to responses. A null detail means the database's own
  * message is shown: 22023 is raised with messages written for the caller, or by Postgres echoing
  * only the caller's own input.
  */

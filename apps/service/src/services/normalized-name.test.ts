@@ -68,7 +68,7 @@ describe('the normalized names the service stores', () => {
   });
 
   it('keeps a name the pipeline would empty, rather than storing a key that matches everything', () => {
-    // The Requirements document's own example, which a stored `normalized_name` must never lose.
+    // The canonical example, which a stored `normalized_name` must never lose.
     expect(normalize('Coca-Cola 2L')).toBe('coca cola 2l');
   });
 

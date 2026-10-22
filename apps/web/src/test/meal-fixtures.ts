@@ -161,8 +161,8 @@ export const sheetPanChickenFixture: RecipeDetail = {
 };
 
 /**
- * Baked Ziti — 5 of 7, 71% (1 on sale, 4 pantry). Also the Recipe detail override fixture (Seed
- * Data): a force-no-match override on "cheese" against Harris Teeter's "snack cheese", which
+ * Baked Ziti — 5 of 7, 71% (1 on sale, 4 pantry). Also the Recipe detail override fixture (seed
+ * data): a force-no-match override on "cheese" against Harris Teeter's "snack cheese", which
  * changes no score because "cheese" already matches Food Lion's "chunk or cheese" instead.
  */
 export const cheeseOverrideFixture: MatchOverride = {

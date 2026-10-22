@@ -386,7 +386,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
     expect(
       parsePrice(copy({ saleStory: 'Spend $25 get $5 ExtraBucks Rewards®◆ WITH CARD' })),
     ).toEqual({ skipped: 'rebate' });
-    // Requirements names "FREE with $25 purchase" as the other rebate shape.
+    // "FREE with $25 purchase" is the other rebate shape.
     expect(parsePrice(copy({ saleStory: 'FREE with $25 purchase' }))).toEqual({
       skipped: 'rebate',
     });
@@ -417,7 +417,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
   });
 
   it('mix-and-match with a purchase limit is skipped', () => {
-    // Requirements' own example; the 27514 capture has no purchase limit in it.
+    // The canonical example; the 27514 capture has no purchase limit in it.
     expect(
       parsePrice(
         copy({
@@ -436,7 +436,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
   });
 
   it('never returns a zero or negative unit price', () => {
-    // Non-negotiable 6: a fabricated price is worse than a missing deal.
+    // A fabricated price is worse than a missing deal.
     expect(
       parsePrice(copy({ currentPrice: 1, prePriceText: 'Sale! $1 OFF', originalPrice: 100 })),
     ).toMatchObject({ parsed: { unitPrice: 1 } });

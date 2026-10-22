@@ -30,7 +30,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(card.getByText('Overdue')).toBeVisible();
       await shoot(page, `dashboard-${theme}-1280`);
 
-      // Screen 14: Overdue, This week, Later. Alex's own and household bills only.
+      // The bills list: Overdue, This week, Later. Alex's own and household bills only.
       await page.goto('/bills');
       const overdue = group(page, 'Overdue');
       await expect(overdue.getByRole('link', { name: /^Duke Energy/ })).toContainText('$142.30');
@@ -48,7 +48,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expectAccessible(page, `bills dashboard (${theme}, 390px)`);
       await page.setViewportSize(DESKTOP);
 
-      // Screen 15: automatic payments are labelled "Autopay" in the history; Spectrum has three.
+      // Bill detail: automatic payments are labelled "Autopay" in the history; Spectrum has three.
       await page.getByRole('link', { name: /^Spectrum Internet/ }).click();
       await expect(
         page.getByRole('heading', { name: 'Spectrum Internet', level: 1 }),
@@ -63,7 +63,7 @@ for (const theme of ['light', 'dark'] as const) {
       await shoot(page, `bill-detail-${theme}-390`);
       await page.setViewportSize(DESKTOP);
 
-      // Screen 16: the total is the API's figure; rows are ordered by monthly cost, descending.
+      // Subscriptions: the total is the API's figure; rows are ordered by monthly cost, descending.
       await page.goto('/bills/subscriptions');
       await expect(page.getByText('Total per month')).toBeVisible();
       await expect(page.getByText('$86.98', { exact: true })).toBeVisible();
@@ -94,7 +94,7 @@ test.describe('bills and subscriptions, writes', () => {
     await signIn(page, SEED.alex.email);
     await page.goto('/bills');
 
-    // Paying writes the log for the current occurrence, so the overdue group empties (Screen 14).
+    // Paying writes the log for the current occurrence, so the overdue group empties.
     await group(page, 'Overdue')
       .getByRole('button', { name: /^Mark paid, Duke Energy/ })
       .click();

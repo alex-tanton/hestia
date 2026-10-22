@@ -44,7 +44,7 @@ export function previewDueDates(draft: RecurrenceDraft, count = 3): string[] {
   return previewOccurrences(recurrence, count).map(formatCalendarDate);
 }
 
-/** The sentence Screen 15 shows beneath the recurrence fields, or `undefined` until it can. */
+/** The sentence shown beneath the recurrence fields, or `undefined` until it can. */
 export function recurrencePreviewSentence(draft: RecurrenceDraft): string | undefined {
   const dates = previewDueDates(draft);
   const [first] = dates;

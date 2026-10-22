@@ -6,8 +6,8 @@
  *
  * Two questions, answered in two places, because the two callers see different data:
  *
- * - **The daily job** picks its postal codes from `household.last_active_at` directly, as the
- *   specs define dormancy. It runs as `service_role`, so it can see every household.
+ * - **The daily job** picks its postal codes from `household.last_active_at` directly. It runs
+ *   as `service_role`, so it can see every household.
  * - **A request** cannot: RLS shows a caller only the households they belong to, so
  *   `max(last_active_at)` across a postal code is not readable, and the caller's own household
  *   has just been stamped active by `mark_household_active`. What a request can read is

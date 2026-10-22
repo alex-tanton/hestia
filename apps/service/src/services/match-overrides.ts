@@ -67,7 +67,7 @@ export async function createMatchOverride(
     .executeTakeFirst();
   if (row === undefined) throw fail(404, 'Household not found.');
   // An override can change a bucket assignment (force a match, or block one) for every recipe in
-  // the household, so readiness is recomputed inline (the design's recompute-trigger list).
+  // the household, so readiness is recomputed inline.
   await recomputeReadinessForHousehold(db, householdId);
   return toMatchOverride(row);
 }

@@ -186,7 +186,7 @@ export async function createRecipe(
     .returningAll()
     .executeTakeFirstOrThrow();
   await insertIngredients(db, row.id, input.ingredients);
-  // A new recipe needs its first recipe_readiness row (the design's recompute-trigger list).
+  // A new recipe needs its first recipe_readiness row.
   await recomputeReadinessForHousehold(db, householdId);
   return detailOf(db, row);
 }

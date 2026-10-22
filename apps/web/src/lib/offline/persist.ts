@@ -44,8 +44,8 @@ export function createCachePersister(
  * A second persister over the same storage and key, with no throttle. `createCachePersister`'s
  * default 1000ms throttle is right for the query cache -- it exists so a realtime-chatty screen
  * does not hammer IndexedDB on every settle -- but it is wrong for a write the moment it queues:
- * "the queue survives a page reload and a browser restart; it is not in memory" (Engineering
- * Practices › The write queue) has no exception for whatever is still inside that window, and a
+ * "the queue survives a page reload and a browser restart; it is not in memory" has no
+ * exception for whatever is still inside that window, and a
  * restart landing there would lose the write silently. `asyncThrottle` keys its cooldown to the
  * persister instance it wraps, so a second instance is what lets the write queue's own flush go
  * through uncoupled from the query cache's throttle, onto the same storage.

@@ -7,7 +7,7 @@ import { formatUnitPrice, speakUnitPrice } from '../../lib/money.ts';
  * spoken sentence and the visible fragments can never drift apart.
  */
 
-/** Requirements: a conditional price names which one it is, never just "conditional". */
+/** A conditional price names which one it is, never just "conditional". */
 export const CONDITIONAL_LABEL: Readonly<Record<ConditionalReason, string>> = {
   coupon: 'Coupon',
   loyalty_card: 'Card',

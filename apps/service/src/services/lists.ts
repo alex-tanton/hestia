@@ -332,7 +332,7 @@ export async function addListItem(
 
 /**
  * Sets an item's absolute values. Two members editing the same item is last-write-wins, with the
- * quirk the Requirements document accepts: a late offline "in cart" can move a bought item back.
+ * accepted quirk that a late offline "in cart" can move a bought item back.
  */
 export async function updateListItem(
   db: Kysely<Database>,

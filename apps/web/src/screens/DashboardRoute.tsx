@@ -105,7 +105,7 @@ export function billsCardState(
   };
 }
 
-/** "3 of 15 left" — the compact progress indicator Design gives the Shopping card. */
+/** "3 of 15 left" — the compact progress indicator on the Shopping card. */
 export function listProgress(list: ShoppingList): string {
   return `${String(list.outstandingCount)} of ${String(list.itemCount)} left`;
 }

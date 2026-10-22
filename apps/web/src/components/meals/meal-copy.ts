@@ -13,7 +13,7 @@ export const BUCKET_LABEL: Readonly<Record<ReadinessBucket, string>> = {
 };
 
 /**
- * Accessibility › "Specific patterns": readiness is announced as "4 of 5 ingredients ready", not
+ * Readiness is announced as "4 of 5 ingredients ready", not
  * just a number; the ring itself is `aria-hidden` and this sentence carries the meaning.
  */
 export function readinessSentence(readyCount: number, total: number): string {
