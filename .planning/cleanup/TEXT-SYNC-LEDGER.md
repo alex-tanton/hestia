@@ -135,6 +135,8 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | web-components | `apps/web/src/components` (source and tests) | 138 | 45 | 90 | 94fa9bd | comment-only OK | gates OK |
 | web-screens | `apps/web/src/screens`, `apps/web/src/lib/**/*.test.ts(x)`, top-level `apps/web/src/*.test.ts(x)` | 192 | 71 | 101 | 3ef8862 | comment-only OK | gates OK |
 | nonts | `.env.example`, `docker/` (Caddyfile, caddy.Dockerfile, docker-compose.yml, kong.yml), `e2e/docker-compose.e2e.yml`, `e2e/fixtures/e2e-seed.sql`, `scripts/deploy.sh`, `supabase/config.toml`, `supabase/seed/seed.sql`, `apps/web/src/index.css`, `commitlint.config.js`, `eslint.config.js` | 62 | 46 | 16 | 05cebd4 | comment-only OK | gates OK |
+| followup-comments | whole PR C tree outside the `cit-rx.txt` vocabulary (service, web, shared, matching, e2e, `apps/web/scripts`, `vitest.integration.config.ts`) | 43 | 11 | 32 | aaed732 | comment-only OK (37 files) | gates OK |
+| followup-titles | nine `describe`/`it` titles in 8 files | 9 | 0 | 9 | 33baf2d | `--titles` OK (8 files) | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -265,11 +267,9 @@ titles-counts-equal=yes
 
 - Gates: `pnpm typecheck`, `pnpm lint`, `pnpm format:check` pass; migrations identical to the phase base.
 
-Left alone on purpose (the plan limits the title edit to the inventory's `title` rows): nine titles still say `Design`,
-`Branding`, `Requirements` or `the ... document` without matching the vocabulary, so they are neither counted nor
-changed: `parse-price.test.ts:34`, `Toast.test.tsx:34`, `password.test.ts:12`, `sections.test.ts:15`,
-`onboarding.test.tsx:225` and `:243`, `settings.test.tsx:95`, `tokens.test.ts:99`, `similarity.test.ts:42`. They
-are reported for the owner or 05-11 to decide.
+Left alone by this commit (the plan limits the title edit to the inventory's `title` rows): nine titles still said `Design`,
+`Branding`, `Requirements` or `the ... document` without matching the vocabulary. The owner asked for them to be fixed
+after PR C opened; they are restated in commit `33baf2d` (see "Follow-up sweep").
 
 Post-condition: `citation-inventory.mjs inventory` over the PR C tree (`. ':!README.md' ':!.claude'`) has a header and
 no rows, and `git grep -E -f cit-rx.txt` outside `.planning`, `docs`, `supabase/migrations`, `README.md` and
@@ -397,12 +397,100 @@ Clone count (Phase 2 test-inclusive command, label `05-11`, `.planning/cleanup/j
 
 after-c-clones=66
 
-Open item for the owner (not edited, outside the plan's `title` class): nine test titles still name a retired
-document in bare words: `parse-price.test.ts:34`, `Toast.test.tsx:34`, `password.test.ts:12`, `sections.test.ts:15`,
-`onboarding.test.tsx:225` and `:243`, `settings.test.tsx:95`, `tokens.test.ts:99`, `similarity.test.ts:42`.
+The nine titles that named a retired document in bare words are fixed (see "Follow-up sweep"); there is no open title item.
 
 pr-c-ready=2ae102e79ae1982d049263d53492b0dc0d5747d5
 
+## Follow-up sweep
+
+Owner request after PR C (#28) opened at `e1997a7`: fix the nine bare-word titles, then sweep the whole PR C tree for
+references broader than `cit-rx.txt` (outside `.planning/`, `docs/`, `supabase/migrations/`, `README.md` and
+`.claude/CLAUDE.md`, which are PR D's). Two commits on `refactor/drop-spec-citations`, on top of `e1997a7`:
+
+- `aaed732` `refactor: drop remaining spec references from comments`: 37 files, 43 comment sites, comments only.
+- `33baf2d` `test: restate nine test titles that named a retired document`: 8 files, 9 titles; not comment-only.
+
+TSV: `.planning/cleanup/text-sync/batch-followup.tsv` (`path`, `line`, `class`, `disposition`; one row per changed hunk plus
+the reported and not-a-citation rows; `removed` means the hunk has fewer lines than before, `rewritten` otherwise).
+
+Titles (the nine, new text): `parsePrice: each price rule, row by row`; `gives each variant its display duration`;
+`gives the common-password sentence for a common password`; `gives each tab exactly its listed sub-tabs, root first`;
+`shows the expired-invite copy for an expired invite`; `shows the no-match copy for a code that matches nothing`;
+`shows every settings section`; `brand values`; `exposes the 0.85 fuzzy threshold`.
+
+Sweep. Searched (case-sensitive and not) across every tracked file outside the excluded paths and
+`e2e/fixtures/flipp/raw` (captured third-party data): `Design`, `Branding`, `Requirements`, `Use Cases`, `Handoff`, `the spec`,
+`PRD`, `§`, `Screen N`, `Journey N`, `Non-negotiable`, `›`, document names wrapped over two comment lines
+(`Technical` / `Architecture`, `Engineering` / `Practices`, `Seed` / `Data`), parentheticals of the form `(X, "Section")`,
+requirement IDs, and file names in comments that no longer resolve to a tracked file. The vocabulary regex missed
+three kinds: a bare retired-document name (`Design`, `Branding`, `Requirements`), a document name wrapped over two
+lines, and a screen number or numbered rule (`Screen 14`, `Non-negotiable 6`). One stale file pointer was found
+(`packages/shared/src/api/deals.test.ts` named `contract.test.ts`, which does not exist; the check it meant is in
+`schemas.test.ts`).
+
+Dispositions: 43 comment sites fixed (rule kept in plain words, pointer dropped, nothing points into `docs/`);
+9 titles fixed; the rest are `not-a-citation` or reported, listed below. Nothing in a user-visible string, copy or
+code token was edited.
+
+Reported, not edited:
+
+- `Journey N` labels in the E2E suite (34 lines: spec header comments, `test.describe` titles such as `journey 9 — switch
+  household`, the `u4-journey5` screenshot folder, `e2e-seed.sql`, `docker-compose.e2e.yml`). The numbers originally
+  came from a retired use-case list, but the suite also uses them as its own names (`journeys 18 to 20`, `journey 15`
+  refer to spec files), and they sit in test titles. Left for the owner.
+- `Phase N` mentions (29 lines) name the app's build phases (research A10); unchanged.
+- `README, "Deployment"` in `.env.example:9` and `README, "Restore"` in `docker/docker-compose.yml:275` point to the README,
+  which exists; PR D rewrites the README, so these should be checked then.
+- `bills.integration.test.ts:533` names a requirement id (`TIME-05`) from the planning records.
+- `meal-components.test.tsx:32` title ends `(Accessibility)`; read as the topic, not a citation.
+- `kong-routes.test.ts:6` has a stray space in `08-caddy-refuses-gotrue-endpoints .spec.ts`; not a citation.
+- Not citations: `CONTRIBUTING.md` and the `docs/testing.md` pointers (current documents); `Dashboard slate` (a colour name);
+  `contrast requirements`, `primary design target`, `by design` (ordinary words); `Seed data:` fixture labels (the
+  05-09 convention).
+
+Proofs (logs `05-11x-*.log`): `comment-only-check.mjs --base e1997a7 --head aaed732` `OK 37 files`; `--base aaed732 --head
+33baf2d --titles` `OK 8 files` and without `--titles` `FAILED 8 of 8 files`; whole range `--base 708c714 --head 33baf2d
+--titles` `OK 448 files (14 non-TS skipped)`. `git grep -E -f cit-rx.txt` outside the excluded paths prints 0 lines;
+`git diff --exit-code c64d79e -- supabase/migrations` is empty. Local gates at `33baf2d`: `pnpm lint`, `pnpm format:check`,
+`pnpm typecheck`, `pnpm test` (harness 231, matching 156, shared 172, recurrence 77, service 757, web 728, e2e support 15,
+all equal to `tests-final-c.*`), `pnpm --filter @hearth/web build` (`App shell 198.0 KB gzipped (budget 200 KB)`);
+integration list 382 lines and `playwright test --list` `Total: 104 tests in 19 files`, both unchanged.
+
 ## CI
 
-Not started.
+PR C (opened 2026-10-22, `refactor/drop-spec-citations` into `main`, not a draft, `mergeable_state` clean). The body is
+`.planning/cleanup/logs/05-11-pr-c.md` (gitignored); proposed squash title `refactor: remove retired spec citations from code`.
+
+pr-c=28
+pr-c-head=e1997a71efd6182157ff0713ca973ea78ba6e314
+
+The head is `pr-c-ready` (`2ae102e`) plus the merge of the working branch carrying the Task 1 record. The PR lists 495
+files: 454 outside `.planning/`, none under `supabase/migrations/`, `docs/`, `.github/`, `README.md` or `.claude/`.
+
+CI run 39705754497 (`pull_request`, one attempt, no rerun), all six jobs `success`:
+
+| job | job id | conclusion |
+| --- | ------ | ---------- |
+| lint | 119585285161 | success |
+| typecheck | 119585285186 | success |
+| test-unit | 119585285035 | success |
+| test-integration | 119585285328 | success |
+| test-e2e | 119585285258 | success |
+| build | 119585285347 | success |
+
+pr-c-ci=39705754497 lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success
+
+E2E: `104 passed (8.7m)`; spec 13 ran in both themes (`tests/13-recipe-import-and-readiness.spec.ts:130`, light and dark)
+and passed.
+
+pr-c-e2e-13=passed
+
+Integration (`test-integration` runs `test:coverage`; `Test Files  76 passed (76)`): this run `Tests  1190 passed (1190)`;
+`main`'s latest green run (39661257811 at `a660d58`) `Tests  1190 passed (1190)`.
+
+pr-c-integration-tests=1190
+main-integration-tests-c=1190
+
+Logs: `05-11-pr-integration.log`, `05-11-main-integration.log`, `05-11-pr-e2e.log`, `05-11-pr-files.txt`.
+
+Merge: not done; it is the owner's squash merge (05-11 Task 3).
