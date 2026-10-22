@@ -18,15 +18,15 @@ import { useToast } from '../ui/Toast.tsx';
 import { OFFLINE_ACTION_REASON, completionToastMessage, memberName } from './chore-copy.ts';
 
 /**
- * Completing a chore from its row or its detail (Design › "17. Chores": "Completing closes the
- * current occurrence … The completion toast … offers Undo for 5 seconds; undoing deletes the
- * completion"). Both entry points share this, so the toast wording and the Undo window are the
+ * Completing a chore from its row or its detail closes the current occurrence; the completion
+ * toast offers Undo for 5 seconds, and undoing deletes the completion. Both entry points share
+ * this, so the toast wording and the Undo window are the
  * same wherever a member completes a chore. `members` must be loaded: a turn's name is looked up
  * in it, and an unloaded roster would name every member "Former member".
  *
- * Completion is a queueable write (Requirements, "Offline behavior"). Online it is sent at once and
- * the toast names who is next. Offline it is queued, the toast appears at once, and Undo removes
- * the queued write. Once sent, Undo is an online-only delete.
+ * Completion is a queueable write. Online it is sent at once and the toast names who is next.
+ * Offline it is queued, the toast appears at once, and Undo removes the queued write. Once sent,
+ * Undo is an online-only delete.
  */
 export function useChoreCompletion(
   householdId: string,
@@ -84,13 +84,13 @@ export function useChoreCompletion(
   });
 
   const completeChore = (chore: Chore): void => {
-    // The id makes a replayed completion a no-op on the server (Handoff non-negotiable 9).
+    // The id makes a replayed completion a no-op on the server.
     const completionId = crypto.randomUUID();
     const doneAt = new Date().toISOString();
 
     if (!onlineManager.isOnline()) {
-      // Offline, the occurrence is worked out here, in the household's timezone (PRD, "Timezone").
-      // Without cached household data there is no timezone to work it out with, so it is refused.
+      // Offline, the occurrence is worked out here, in the household's timezone. Without cached
+      // household data there is no timezone to work it out with, so it is refused.
       const timezone = household.data?.timezone;
       if (timezone === undefined) {
         toast({ variant: 'error', message: OFFLINE_ACTION_REASON });

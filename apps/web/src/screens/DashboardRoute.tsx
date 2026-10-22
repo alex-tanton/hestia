@@ -21,8 +21,8 @@ function compareEntries(a: MealPlanEntry, b: MealPlanEntry): number {
 }
 
 /**
- * The Meals card's data (PRD › This Week: "today's planned meals, then tomorrow's"). Both dates
- * are read from the household's own clock (Handoff non-negotiable 8), never the browser's.
+ * The Meals card's data: today's planned meals, then tomorrow's. Both dates
+ * are read from the household's own clock, never the browser's.
  */
 export function mealsCardState(
   plan: ReturnType<typeof useMealPlanWeek>,
@@ -60,8 +60,8 @@ export function mealsCardState(
 }
 
 /**
- * The Bills card's data (PRD › This Week: "Bills due this week (household bills plus the user's
- * personal bills), flagged if overdue"). `weekEnd` is this week's Saturday, so a bill is on the
+ * The Bills card's data: bills due this week (household bills plus the user's personal bills),
+ * flagged if overdue. `weekEnd` is this week's Saturday, so a bill is on the
  * card exactly when `BillsIndexScreen`'s own Overdue or This week group would show it — the same
  * `currentOccurrenceDate <= weekEnd` test, since an overdue occurrence's date is always in the
  * past and therefore already on or before it.
@@ -105,13 +105,13 @@ export function billsCardState(
   };
 }
 
-/** "3 of 15 left" — the compact progress indicator Design gives the Shopping card. */
+/** "3 of 15 left" — the compact progress indicator on the Shopping card. */
 export function listProgress(list: ShoppingList): string {
   return `${String(list.outstandingCount)} of ${String(list.itemCount)} left`;
 }
 
 /**
- * The Shopping card's data (PRD › This Week: active shopping list status, items outstanding). The
+ * The Shopping card's data: active shopping list status, items outstanding. The
  * service sorts the lists by last activity, so the most recently worked list leads. A list with
  * nothing outstanding is not news, so the card counts only the lists that still have something to
  * buy and reads as empty when none do.
@@ -147,9 +147,9 @@ export function shoppingCardState(lists: ReturnType<typeof useShoppingLists>): D
 }
 
 /**
- * The Chores card's data (PRD › This Week: "chores due, and any overdue"). Overdue chores lead,
- * both groups ordered by name; `isOverdue` carries the danger styling the row needs (Design ›
- * Accessibility: color is never the only signal — the card also sorts them to the front).
+ * The Chores card's data: chores due, and any overdue. Overdue chores lead, both groups ordered
+ * by name; `isOverdue` carries the danger styling the row needs (color is never the only signal
+ * — the card also sorts them to the front).
  */
 export function choresCardState(
   chores: ReturnType<typeof useChores>,
@@ -193,8 +193,8 @@ export function DashboardRoute(): ReactElement {
   const profile = useProfile();
   const householdId = profile.data?.activeHouseholdId ?? undefined;
   const household = useHousehold(householdId);
-  // Every "today" on the dashboard is the household's (PRD, "Timezone"), so the browser's and the
-  // profile's zones never date a card. Until the household is known, the date-dependent cards wait.
+  // Every "today" on the dashboard is the household's, so the browser's and the profile's zones
+  // never date a card. Until the household is known, the date-dependent cards wait.
   const timezone = household.data?.timezone;
   const lists = useShoppingLists(householdId);
   const bills = useBills(householdId);

@@ -18,8 +18,8 @@ const gotrueUrl = z.url({ protocol: /^https?$/ }).transform((value) => value.rep
 const origin = z.url({ protocol: /^https?$/ }).transform((value) => new URL(value).origin);
 
 /**
- * The per-IP ceiling on `/api/*` (Technical Architecture, "Rate limits"). Production keeps this;
- * only the E2E overlay raises it, because every loopback request shares one client address.
+ * The per-IP ceiling on `/api/*`. Production keeps this; only the E2E overlay raises it, because
+ * every loopback request shares one client address.
  */
 export const DEFAULT_RATE_LIMIT_PER_MINUTE = 300;
 
@@ -46,34 +46,34 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   // Sent as `apikey` on calls to GoTrue, which Kong requires under `supabase start`.
   ANON_KEY: z.string().min(1),
-  // For the sanctioned service-role uses only (Technical Architecture, "The RLS rule").
+  // For the sanctioned service-role uses only.
   SERVICE_ROLE_KEY: z.string().min(1),
   // Where the backup container writes; System health reports the newest file's time.
   BACKUP_DIR: z.string().min(1).optional(),
   /*
-   * Unset in every real deployment, so production always calls the live Flipp endpoint (Technical
-   * Architecture, "Development"). The E2E Compose overlay is the one caller that sets both: it
+   * Unset in every real deployment, so production always calls the live Flipp endpoint. The E2E
+   * Compose overlay is the one caller that sets both: it
    * mounts the checked-in raw captures read-only and points the wrapper at them, which is what
-   * keeps "tests never make live calls" (Handoff non-negotiable 17) true for the built image the
-   * E2E suite runs, not only for Vitest's in-process doubles.
+   * keeps "tests never make live calls" true for the built image the E2E suite runs, not only for
+   * Vitest's in-process doubles.
    */
   HEARTH_FLIPP_FIXTURE_DIR: z.string().min(1).optional(),
   // The fixture captures' own instant (`FIXTURE_NOW`), so the wrapper's active-flyer window
   // matches what the captures actually cover regardless of the host's real clock.
   HEARTH_FLIPP_FIXTURE_NOW: z.coerce.date().optional(),
   /*
-   * Unset in every real deployment, so production always fetches a pasted recipe URL for real
-   * (Technical Architecture, "Recipe fetching"). The E2E Compose overlay is the one caller that
-   * sets it: `fetchRecipePage`'s private/loopback/link-local refusal would just as correctly
-   * refuse a fixture server reachable only on the Compose network, so the E2E recipe-import
-   * journey (Handoff, Phase 3 "Done when") swaps the fetch step itself for reading the checked-in
-   * pages this points at, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
+   * Unset in every real deployment, so production always fetches a pasted recipe URL for real.
+   * The E2E Compose overlay is the one caller that sets it: `fetchRecipePage`'s
+   * private/loopback/link-local refusal would just as correctly refuse a fixture server reachable
+   * only on the Compose network, so the E2E recipe-import journey swaps the fetch step itself for
+   * reading the checked-in pages this points at, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the
+   * Flipp transport.
    */
   HEARTH_RECIPE_FIXTURE_DIR: z.string().min(1).optional(),
   /*
-   * Web Push (Technical Architecture, "Scheduled jobs" › "Dispatch"). The dispatch job is scheduled
-   * in every service process, so the key pair is required at startup rather than failing on the
-   * first send. Both match the names docker-compose.yml passes through from the host's .env.
+   * Web Push. The dispatch job is scheduled in every service process, so the key pair is required
+   * at startup rather than failing on the first send. Both match the names docker-compose.yml
+   * passes through from the host's .env.
    */
   VAPID_PUBLIC_KEY: z.string().min(1),
   VAPID_PRIVATE_KEY: z.string().min(1),

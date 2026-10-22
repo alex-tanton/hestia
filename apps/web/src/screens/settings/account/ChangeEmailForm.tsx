@@ -13,8 +13,8 @@ import { useOnlineStatus } from '../../../lib/use-online-status.ts';
 type Field = 'newEmail' | 'currentPassword';
 
 /**
- * Changing the email re-verifies the current password (Requirements, "Authentication"). The
- * service does the verifying; asking for it here is what makes the request answerable.
+ * Changing the email re-verifies the current password. The service does the verifying; asking for
+ * it here is what makes the request answerable.
  */
 export function ChangeEmailForm({ email }: { email: string }): ReactElement {
   const isOnline = useOnlineStatus();
@@ -30,7 +30,7 @@ export function ChangeEmailForm({ email }: { email: string }): ReactElement {
 
   // Opening swaps the trigger for the form, and closing swaps it back. Where a member's action
   // replaces the control they used, focus moves into what replaced it rather than falling back to
-  // the document (Design › Accessibility › Focus management).
+  // the document.
   useEffect(() => {
     if (wasOpen.current === isOpen) return;
     wasOpen.current = isOpen;

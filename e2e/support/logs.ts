@@ -1,8 +1,8 @@
 import { composeChecked } from './compose.ts';
 
 /**
- * The service's own structured log, read back out of the running container (Engineering Practices
- * › "E2E environment"; Technical Architecture › "Logging"). Pino writes one JSON object per line;
+ * The service's own structured log, read back out of the running container. Pino writes one JSON
+ * object per line;
  * `--no-log-prefix` is what keeps Compose from gluing a `hearth-service-1  |` tag onto the front of
  * each one, which would otherwise stop it parsing as JSON.
  */
@@ -31,8 +31,8 @@ export function serviceLogLines(): ServiceLogLine[] {
 /**
  * Every Flipp request the request queue made, in order (`request-queue.ts`, "flipp request"):
  * mode and path with the gap since the request before it, so the rate discipline is readable
- * rather than assumed (Handoff, Phase 2 "Done when"). E2E never calls Flipp live (non-negotiable
- * 17), so every one of these came from the fixture transport, and this is that call count.
+ * rather than assumed. E2E never calls Flipp live, so every one of these came from the fixture
+ * transport, and this is that call count.
  */
 export function flippRequestLines(lines: readonly ServiceLogLine[]): ServiceLogLine[] {
   return lines.filter((line) => line.msg === 'flipp request');

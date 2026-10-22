@@ -1,5 +1,5 @@
 /**
- * Brand names stripped during normalization (Requirements, "Matching mechanics").
+ * Brand names stripped during normalization.
  *
  * A maintained list, extended as real deal names arrive. Store brands are here because a
  * captured flyer names them on half its items ("Harris Teeter Cage Free Large Brown Eggs"),

@@ -4,7 +4,7 @@ import type { Pillar } from '../../lib/sections.ts';
 
 export interface ComingSoonPanelProps {
   icon: LucideIcon;
-  /** One line naming what this will do; never more (Design › Staged releases). */
+  /** One line naming what this will do; never more. */
   message: string;
   heading?: string;
   /** 3 where the panel sits inside a section that already has a heading, as in Settings. */
@@ -12,7 +12,7 @@ export interface ComingSoonPanelProps {
 }
 
 /**
- * Design › Staged releases: the coming-soon state. It uses the section's color and icon, names
+ * The coming-soon state. It uses the section's color and icon, names
  * what the section will do in one line, and offers nothing to tap. It is the pattern for
  * anything the shell shows before its release — an unshipped pillar's tab, and the settings a
  * later phase owns.

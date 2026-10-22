@@ -11,15 +11,14 @@ import type { Database } from '../db.js';
 import type { JobDatabase, JobLogger } from './types.js';
 
 /**
- * `log-autopay` — every 2 minutes (Technical Architecture, "Scheduled jobs"). For each non-archived
- * autopay bill, logs an automatic payment for every occurrence that (a) has no log row yet, (b) is
- * dated on or before today, and (c) is dated on or after the bill's `created_at` date — never
- * backfilling an occurrence from before the bill existed (Engineering Practices, "Testing": the
- * no-backfill rule gets its own named integration test). "Today" and `created_at`'s calendar date
- * are both read in the household timezone (non-negotiable 8): the bill's household's, or for a
- * personal bill its owner's active household's, else the owner's earliest household's. A personal
- * bill whose owner belongs to no household has no household timezone, so it is not dated and is
- * skipped; the app never shows such a bill.
+ * `log-autopay` — every 2 minutes. For each non-archived autopay bill, logs an automatic payment
+ * for every occurrence that (a) has no log row yet, (b) is dated on or before today, and (c) is
+ * dated on or after the bill's `created_at` date — never backfilling an occurrence from before the
+ * bill existed (the no-backfill rule gets its own named integration test). "Today" and
+ * `created_at`'s calendar date are both read in the household timezone: the bill's household's, or
+ * for a personal bill its owner's active household's, else the owner's earliest household's. A
+ * personal bill whose owner belongs to no household has no household timezone, so it is not dated
+ * and is skipped; the app never shows such a bill.
  */
 
 export interface AutopayBillRow {
@@ -46,7 +45,7 @@ export function autopayOccurrences(
   >,
 ): CalendarDate[] {
   if (row.recurrence_unit === null) {
-    // A one-time bill: its only occurrence is the anchor date itself (PRD, "Data model › Bills").
+    // A one-time bill: its only occurrence is the anchor date itself.
     const due = row.anchor_date <= row.today && row.anchor_date >= row.created_date;
     return due ? [row.anchor_date] : [];
   }
@@ -110,9 +109,8 @@ async function logAutopay(db: Kysely<Database>): Promise<LogAutopayOutcome> {
           recorded_by: null,
         })),
       )
-      // Idempotency (Technical Architecture, "Idempotency"): a rerun that finds every occurrence
-      // already logged inserts nothing, whether another log-autopay run or a manual payment got
-      // there first.
+      // Idempotency: a rerun that finds every occurrence already logged inserts nothing, whether
+      // another log-autopay run or a manual payment got there first.
       .onConflict((conflict) => conflict.columns(['bill_id', 'occurrence_date']).doNothing())
       .executeTakeFirst();
     inserted += Number(result.numInsertedOrUpdatedRows ?? 0);

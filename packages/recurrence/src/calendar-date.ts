@@ -4,11 +4,10 @@ import type { CalendarDate } from './types.js';
 
 /**
  * All arithmetic in this package happens on `TZDate` instances pinned to UTC rather than the raw
- * `Date` constructor (Engineering Practices, "Key libraries": "Never use the raw `Date`
- * constructor for date math"). A calendar date has no timezone of its own — pinning every instance
- * to the same fixed offset is what makes `anchor + k units` reproducible regardless of the host
- * machine's local timezone or DST, which matters because jobs and tests must get the same answer
- * everywhere.
+ * `Date` constructor, which is never used for date math. A calendar date has no timezone of its
+ * own — pinning every instance to the same fixed offset is what makes `anchor + k units`
+ * reproducible regardless of the host machine's local timezone or DST, which matters because jobs
+ * and tests must get the same answer everywhere.
  */
 const UTC = 'UTC';
 

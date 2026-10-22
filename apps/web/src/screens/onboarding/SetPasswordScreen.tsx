@@ -16,10 +16,10 @@ export const RESET_LINK_EXPIRED_MESSAGE =
   'This reset link has expired. Ask your server owner for a new one.';
 
 /**
- * Design › Screens › 1, "Set new password": opened by the owner's reset link, which lands here
+ * Set new password: opened by the owner's reset link, which lands here
  * with a recovery session in the URL fragment. Only the new password is asked for — the service
- * waives the current-password re-entry for a recovery sign-in (Technical Architecture, "Auth
- * configuration") — and a used or expired link says so instead.
+ * waives the current-password re-entry for a recovery sign-in — and a used or expired link says so
+ * instead.
  */
 export function SetPasswordScreen(): ReactElement {
   const navigate = useNavigate();

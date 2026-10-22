@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { Locator, Page } from '@playwright/test';
 import { REPO_ROOT } from './env.ts';
 
-/** The two viewports the journeys check (Design › Screens; a screen is checked where it differs). */
+/** The two viewports the journeys check; a screen is checked where it differs. */
 export const DESKTOP = { width: 1280, height: 800 } as const;
 export const PHONE = { width: 390, height: 844 } as const;
 

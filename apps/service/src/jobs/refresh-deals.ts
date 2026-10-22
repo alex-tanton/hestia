@@ -13,7 +13,7 @@ import { planFlyerRefreshNotifications, planRefresh } from './refresh-plan.js';
 import type { JobDatabase, JobLogger } from './types.js';
 
 /**
- * `refresh-deals` — daily 08:00 UTC (Technical Architecture, "Scheduled jobs", "Daily refresh").
+ * `refresh-deals` — daily 08:00 UTC.
  *
  * The set of postal codes comes from households active within 14 days, one entry per postal code,
  * never one per household: ten households in one ZIP cost one flyer fetch. For each postal code it
@@ -21,9 +21,8 @@ import type { JobDatabase, JobLogger } from './types.js';
  * favorites, upserts them, reprices expired list items, recomputes readiness, stamps
  * `last_refreshed_at`, and enqueues `flyer_refresh` rows.
  *
- * A failed fetch for one postal code never aborts the others (Technical Architecture, "Failure
- * handling"), and a flyer cut short by the circuit breaker writes nothing, so the next run fetches
- * it whole rather than leaving it half-priced.
+ * A failed fetch for one postal code never aborts the others, and a flyer cut short by the circuit
+ * breaker writes nothing, so the next run fetches it whole rather than leaving it half-priced.
  */
 
 export interface RefreshDeps {
@@ -40,10 +39,9 @@ export interface RefreshDeps {
     }[],
   ) => void;
   /**
-   * Expired-deal repricing (Technical Architecture, "Repricing"; Handoff non-negotiable 22). The
-   * list pillar owns the implementation and it is deterministic from current data, so the job
-   * runs it once after every postal code rather than inside the loop: a postal code whose fetch
-   * failed must not stop another's items being corrected.
+   * Expired-deal repricing. The list pillar owns the implementation and it is deterministic from
+   * current data, so the job runs it once after every postal code rather than inside the loop: a
+   * postal code whose fetch failed must not stop another's items being corrected.
    */
   repriceExpiredItems: (db: Kysely<Database>) => Promise<number>;
   /**
@@ -108,12 +106,12 @@ async function householdsAt(
 /**
  * The `flyer_refresh` outbox rows for the households with a new favorite-merchant flyer. Only the
  * rows are written here; sending is Phase 5. The outbox's unique key (user, type, target,
- * occurrence key) is the dedupe, so a rerun is a no-op (Handoff non-negotiable 7).
+ * occurrence key) is the dedupe, so a rerun is a no-op.
  *
  * `occurrence_key` is the run day's date in the household's own timezone, which owns household
- * dates (non-negotiable 8), so a household is told at most once a day. `send_after` is the next
- * 09:00 in that same household timezone, which every recipient shares, moved to the end of their own
- * quiet-hours window if it lands inside one (quiet hours alone use the recipient's timezone).
+ * dates, so a household is told at most once a day. `send_after` is the next 09:00 in that same
+ * household timezone, which every recipient shares, moved to the end of their own quiet-hours
+ * window if it lands inside one (quiet hours alone use the recipient's timezone).
  *
  * `flyer_refresh` defaults to off, so a recipient needs an explicit enabled preference row.
  */

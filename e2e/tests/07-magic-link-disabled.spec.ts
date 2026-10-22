@@ -2,10 +2,10 @@ import { expect, test } from '@playwright/test';
 import { readStackEnv } from '../support/env.ts';
 
 /**
- * Handoff, Phase 1 "Done when": with the magic-link flag off, no magic-link UI is reachable.
+ * With the magic-link flag off, no magic-link UI is reachable.
  * The flag is a build-time decision — the caddy image build turns HEARTH_MAGIC_LINK_ENABLED into
- * VITE_MAGIC_LINK_ENABLED, so no flag reaches the browser at runtime (Technical Architecture,
- * "Auth configuration") — which is why this asserts against the built PWA the stack is serving.
+ * VITE_MAGIC_LINK_ENABLED, so no flag reaches the browser at runtime — which is why this asserts
+ * against the built PWA the stack is serving.
  *
  * The screens themselves exist in the source tree, so this is the test that proves building them
  * is not the same as shipping them: with the flag off their routes are never registered and the

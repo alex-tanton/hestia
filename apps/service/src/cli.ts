@@ -5,12 +5,12 @@ import { GoTrueError } from './gotrue/http.js';
 import { createGoTrueAdmin, type GoTrueAdmin } from './privileged/gotrue-admin.js';
 
 /**
- * hearth-admin, the owner CLI (Requirements, "Password reset"):
+ * hearth-admin, the owner CLI:
  *
  *   docker compose exec hearth-service hearth-admin reset-password <email>
  *
  * Prints a one-time recovery link that opens the PWA's set-new-password screen. One of the
- * sanctioned service-role uses (Technical Architecture, "The RLS rule").
+ * sanctioned service-role uses.
  */
 
 /** Where GoTrue's /verify sends a recovery link, with the session in the fragment. */

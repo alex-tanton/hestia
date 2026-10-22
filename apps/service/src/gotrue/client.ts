@@ -2,9 +2,8 @@ import { callGoTrue, GoTrueError, type Fetch, type GoTrueResponse } from './http
 import type { JsonWebKeySet } from '../auth/jwt.js';
 
 /**
- * GoTrue calls made for or as a user, with the anon key (Technical Architecture, "Auth
- * configuration"). Signup and the password change reach GoTrue only through here; Caddy refuses
- * both endpoints from outside.
+ * GoTrue calls made for or as a user, with the anon key. Signup and the password change reach
+ * GoTrue only through here; Caddy refuses both endpoints from outside.
  */
 export interface GoTrueClient {
   /** POST /signup. Returns GoTrue's session unchanged. */

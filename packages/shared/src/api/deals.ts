@@ -3,12 +3,11 @@ import { calendarDateSchema, centsSchema, idSchema, timestampSchema } from './co
 import { merchantIdSchema, merchantNameSchema, priceUnitSchema } from './lists.js';
 
 /**
- * Deals, flyers, merchants, and favorite stores (Technical Architecture, "API surface";
- * Requirements, "Deal search and browse").
+ * Deals, flyers, merchants, and favorite stores.
  *
- * Money crosses this boundary as integer cents, like everywhere above the database boundary
- * (Engineering Practices, "Code conventions"). `displayPrice` keeps Flipp's original copy, so the
- * UI can show "2 for $5" beside the computed $2.50.
+ * Money crosses this boundary as integer cents, like everywhere above the database boundary.
+ * `displayPrice` keeps Flipp's original copy, so the UI can show "2 for $5" beside the computed
+ * $2.50.
  */
 
 /** Set exactly when `conditionalPrice` is true, so the UI can name which one it is. */
@@ -40,9 +39,9 @@ export const dealSchema = z.object({
 export type Deal = z.infer<typeof dealSchema>;
 
 /**
- * What every deals response carries so the UI can render the deals-specific states (Design,
- * "Deals-specific states"): the "as of" label, the stale-cache banner, and the refreshing
- * skeleton a dormant postal code shows while its background refresh runs.
+ * What every deals response carries so the UI can render the deals-specific states: the "as of"
+ * label, the stale-cache banner, and the refreshing skeleton a dormant postal code shows while its
+ * background refresh runs.
  */
 export const freshnessSchema = z.object({
   /** When the data being returned was fetched; null when nothing has ever been fetched. */
@@ -61,7 +60,7 @@ export const pageSchema = z.object({
   hasMore: z.boolean(),
 });
 
-/** Requirements, "Scale and pagination": deal results paginate at 50 per page. */
+/** Deal results paginate at 50 per page. */
 export const DEAL_PAGE_SIZE = 50;
 
 // Query strings arrive as text, so these coerce; the response schemas above do not.

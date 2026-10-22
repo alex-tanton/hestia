@@ -24,7 +24,7 @@ import { currentInstant } from './test/zone-dates.js';
 /*
  * Deals, flyers, merchants, and favorite stores against `supabase start`: real Postgres as
  * hearth_service, every request through withUserDb, so RLS decides each assertion. The deal
- * source is always a double — tests never call Flipp (Handoff non-negotiable 17).
+ * source is always a double — tests never call Flipp.
  */
 
 let stack: Stack;
@@ -324,7 +324,7 @@ describe('GET /households/:id/deals/search', () => {
     expect(last.json<DealSearchResponse>().hasMore).toBe(false);
   });
 
-  it('serves the stale cache with its as-of date when a live fetch fails (non-negotiable 18)', async () => {
+  it('serves the stale cache with its as-of date when a live fetch fails', async () => {
     const home = await household();
     source.data.search = { broccoli: [broccoli()] };
     const url = `/api/households/${home.household.id}/deals/search?q=broccoli&scope=all`;

@@ -21,9 +21,9 @@ import {
 import { getSuggestions } from '../services/suggestions.js';
 
 /**
- * Recipes (Technical Architecture, "API surface"). Handlers stay thin: validate with a shared
- * schema, then one service function on the caller's `withUserDb` transaction. `/recipes/:id`
- * routes do not name a household in the path, so the service functions find it from the row.
+ * Recipes. Handlers stay thin: validate with a shared schema, then one service function on the
+ * caller's `withUserDb` transaction. `/recipes/:id` routes do not name a household in the path, so
+ * the service functions find it from the row.
  */
 export const recipeRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/households/:id/recipes', async (request) => {
@@ -44,7 +44,7 @@ export const recipeRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { c
   // The parse-and-preview endpoint never saves anything, so it needs no ingredient input and
   // touches recipe/recipe_ingredient not at all; it still runs under the household check so a
   // non-member cannot use it, and so household activity is stamped like every named-household
-  // request (Technical Architecture, "Conventions").
+  // request.
   app.post('/api/households/:id/recipes/parse', async (request) => {
     const user = await ctx.authenticate(request);
     const { id } = parse(householdIdParamsSchema, request.params);

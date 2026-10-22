@@ -14,10 +14,8 @@ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
- * The week planner, "Add missing to list", and suggestions against `supabase start` (Technical
- * Architecture, "API surface" — "Meal plan"; Requirements, "Add missing to list", "Deal-matched
- * suggestions"). Real Postgres as hearth_service, every request through withUserDb, so RLS
- * decides every isolation assertion.
+ * The week planner, "Add missing to list", and suggestions against `supabase start`. Real Postgres
+ * as hearth_service, every request through withUserDb, so RLS decides every isolation assertion.
  */
 
 registerStackHooks();
@@ -178,7 +176,7 @@ describe('week planner', () => {
     );
   });
 
-  it('computes the current week’s Sunday in the household’s own timezone, not a naive UTC date (non-negotiable 8)', async () => {
+  it('computes the current week’s Sunday in the household’s own timezone, not a naive UTC date', async () => {
     // `currentWeekSunday` (services/meal-plan.ts) hardcodes `pg_catalog.now()`, so there is no
     // seam to inject a fake wall clock through the API. This runs the identical SQL fragment
     // against a literal instant instead of `now()`, which is the only way to pin the clock at a
@@ -199,11 +197,11 @@ describe('week planner', () => {
       return week;
     }
 
-    // 2026-10-04 is a Sunday, 2026-10-03 a Saturday (Technical Architecture and Seed Data agree
-    // via the existing 'assertSunday' unit tests). Kiritimati is UTC+14 with no DST.
-    // 23:00 UTC on Saturday the 3rd is already 13:00 Sunday the 4th in Kiritimati: a naive
-    // UTC-date calculation would still be looking at Saturday and answer last week's Sunday,
-    // 2026-09-27, while the household's own timezone says today already is this week's Sunday.
+    // 2026-10-04 is a Sunday, 2026-10-03 a Saturday (the existing 'assertSunday' unit tests agree).
+    // Kiritimati is UTC+14 with no DST. 23:00 UTC on Saturday the 3rd is already 13:00 Sunday the
+    // 4th in Kiritimati: a naive UTC-date calculation would still be looking at Saturday and answer
+    // last week's Sunday, 2026-09-27, while the household's own timezone says today already is this
+    // week's Sunday.
     expect(await sundayAt('2026-10-03T23:00:00Z', 'Pacific/Kiritimati')).toBe('2026-10-04');
     const naiveUtc = await sundayAt('2026-10-03T23:00:00Z', 'UTC');
     expect(naiveUtc).toBe('2026-09-27');
@@ -250,7 +248,7 @@ describe('week planner', () => {
     expect(nextWeek.json<MealPlanWeekResponse>().entries).toHaveLength(1);
   });
 
-  it('a past week is excluded from the default view but still viewable as history (Use Cases, "Plan the week": "Past plan entries")', async () => {
+  it('a past week is excluded from the default view but still viewable as history', async () => {
     const home = await household(app);
     const recipe = await createRecipe(home, 'Leftover Stew', [{ itemName: 'Beef' }]);
     const sunday = await currentSunday(home);

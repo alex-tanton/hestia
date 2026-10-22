@@ -33,7 +33,7 @@ interface PantrySheetProps {
   onSubmit: (values: { itemName: string; quantityNote: string | null }) => Promise<void>;
 }
 
-/** Adding and editing are the same two fields, so they are the same sheet (Design › Screens › 9). */
+/** Adding and editing are the same two fields, so they are the same sheet. */
 function PantrySheet({ item, onOpenChange, onSubmit }: PantrySheetProps): ReactElement {
   const { errors, setErrors, formRef } = useFieldErrors<'itemName'>();
   const [itemName, setItemName] = useState(item?.itemName ?? '');
@@ -90,7 +90,7 @@ function PantrySheet({ item, onOpenChange, onSubmit }: PantrySheetProps): ReactE
           label="Quantity note"
           name="quantityNote"
           autoComplete="off"
-          // The pantry deliberately does no quantity arithmetic (Requirements, "Pantry").
+          // The pantry deliberately does no quantity arithmetic.
           hint="Optional, in your own words"
           value={quantityNote}
           onChange={(event) => {
@@ -106,7 +106,7 @@ function PantrySheet({ item, onOpenChange, onSubmit }: PantrySheetProps): ReactE
   );
 }
 
-/** Design › Screens › 9: a flat searchable list of names with an optional quantity note. */
+/** A flat searchable list of names with an optional quantity note. */
 export function PantryScreen({ householdId }: { householdId: string }): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
@@ -156,7 +156,7 @@ export function PantryScreen({ householdId }: { householdId: string }): ReactEle
       );
     }
     if (matches.length === 0) {
-      // Design › State patterns: a filtered-empty state is never the first-run one.
+      // A filtered-empty state is never the first-run one.
       return (
         <EmptyState
           icon={Package}

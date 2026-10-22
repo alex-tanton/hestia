@@ -13,7 +13,7 @@ import {
 
 const LONG = 'x'.repeat(200);
 
-describe('notification copy length (Branding, "Notification copy": at most 60 characters)', () => {
+describe('notification copy length: at most 60 characters', () => {
   it('keeps a line of exactly 60 characters, and returns the trimmed copy', () => {
     const name = 'n'.repeat(60 - ' is yours'.length);
     expect(choreRotationCopy({ name, previousName: 'Sam' })).toStrictEqual({

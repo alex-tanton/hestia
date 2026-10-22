@@ -16,7 +16,7 @@ import { OnboardingLayout } from './OnboardingLayout.tsx';
 type Field = 'displayName' | 'email' | 'password';
 
 /**
- * Design › Screens › 1: display name, email, and password. Signup goes to `POST /api/signup`,
+ * Display name, email, and password. Signup goes to `POST /api/signup`,
  * never to GoTrue, because that is where the common-password check runs — and the check runs
  * here too, with the same list and the same sentence, so a bad password is refused before the
  * request.

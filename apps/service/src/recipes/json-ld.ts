@@ -1,10 +1,8 @@
 import * as cheerio from 'cheerio';
 
 /**
- * Extracts schema.org `Recipe` markup from a page's JSON-LD (Requirements, "Recipe library";
- * Technical Architecture, "Recipe fetching"). `cheerio` only locates the `<script
- * type="application/ld+json">` blocks; the JSON-LD itself is parsed directly with `JSON.parse`,
- * per Engineering Practices' "Key libraries" table.
+ * Extracts schema.org `Recipe` markup from a page's JSON-LD. `cheerio` only locates the `<script
+ * type="application/ld+json">` blocks; the JSON-LD itself is parsed directly with `JSON.parse`.
  */
 
 export interface ExtractedRecipe {

@@ -5,9 +5,8 @@ import { useOnlineStatus } from '../../lib/use-online-status.ts';
 export const OFFLINE_MESSAGE = 'Offline. Changes will sync when you reconnect.';
 
 /**
- * The persistent Info strip below the top bar while offline (Design › Chrome), with the
- * Branding offline copy. The status region is always mounted so the change is announced
- * without stealing focus.
+ * The persistent Info strip below the top bar while offline, with the offline copy. The
+ * status region is always mounted so the change is announced without stealing focus.
  */
 export function OfflineBanner(): ReactElement {
   const isOnline = useOnlineStatus();

@@ -12,8 +12,7 @@ import {
 } from './dispatch-notifications.js';
 
 /*
- * The send step (Technical Architecture, "Scheduled jobs" › "Dispatch", "Failure handling").
- * The outbox is in memory and the transport is a double, so each rule is asserted
+ * The send step. The outbox is in memory and the transport is a double, so each rule is asserted
  * without a database or a push endpoint. The SQL behind the outbox is covered by
  * dispatch-notifications.integration.test.ts.
  */

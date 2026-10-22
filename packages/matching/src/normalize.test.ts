@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { normalize, normalizeTokens, stripPunctuation, tokenize } from './normalize.js';
 
 /**
- * Table-driven over Seed Data ("Deal fixtures" and "Matching test cases"), which is the oracle
+ * Table-driven over the seed data's deal fixtures and matching test cases, which are the oracle
  * for what each name must normalize to.
  */
 describe('normalize', () => {

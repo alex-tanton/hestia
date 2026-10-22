@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { HostRateLimiter } from './host-rate-limiter.js';
 
-/** Per-host spacing (Technical Architecture, "Recipe fetching": 1 request per second per host). */
+/** Per-host spacing (1 request per second per host). */
 describe('HostRateLimiter', () => {
   function fakeClock(start = 0): {
     now: () => number;

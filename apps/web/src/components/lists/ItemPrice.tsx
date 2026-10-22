@@ -12,10 +12,10 @@ export function isRepriced(item: ListItem): boolean {
 }
 
 /**
- * The item's price as Design writes it (`ShoppingListRow`): the current price with its unit, and
+ * The item's price as the list row writes it (`ShoppingListRow`): the current price with its unit, and
  * for a repriced item the old sale price struck through beside it, or "No price" when repricing
  * cleared it. A repriced row is marked as well as struck through, because a strikethrough alone
- * does not say why the number moved (Requirements, "Expired deal repricing").
+ * does not say why the number moved.
  */
 export function ItemPrice({ item }: { item: ListItem }): ReactElement {
   const repriced = isRepriced(item);

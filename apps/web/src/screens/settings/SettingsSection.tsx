@@ -6,7 +6,7 @@ export interface SettingsSectionProps {
   children: ReactNode;
 }
 
-/** One of Settings' grouped sections (Design › Screens › 4). */
+/** One of Settings' grouped sections. */
 export function SettingsSection({
   title,
   description,

@@ -14,7 +14,7 @@ import { DealResults } from './DealResults.tsx';
 import { DealsFrame, useActiveHousehold } from './deals-frame.tsx';
 import { FavoritesPrompt } from './FavoriteStores.tsx';
 
-/** Design › Offline rules: the dedicated state for a screen that cannot work from a cache. */
+/** The dedicated state for a screen that cannot work from a cache. */
 export const SEARCH_OFFLINE_MESSAGE = 'Deal search needs a connection. Your lists still work.';
 
 const ANY_STORE = 'any';
@@ -42,9 +42,9 @@ const INITIAL: DealSearchParams = {
 };
 
 /**
- * Design › Screens › 5, Deal search. Keyword search across the stores near the household's postal
- * code, scoped to favorites by default with browse-all one tap away (Requirements, "Deal search
- * and browse"). Results are `DealCard`s, 50 to a page.
+ * Deal search: keyword search across the stores near the household's postal
+ * code, scoped to favorites by default with browse-all one tap away. Results are `DealCard`s, 50 to
+ * a page.
  */
 export function DealSearchScreen(): ReactElement {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ export function DealSearchScreen(): ReactElement {
   /*
    * A deal's category is Flipp's own `_L2`, and the service has no catalogue of them to offer, so
    * the filter lists the categories present in the results the search returned, plus whichever
-   * one is applied (Design › Screens › 5 records this).
+   * one is applied.
    */
   const categoryOptions = useMemo(() => {
     const found = new Set((results.data?.deals ?? []).map((deal) => deal.category ?? ''));

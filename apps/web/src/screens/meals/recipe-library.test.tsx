@@ -43,7 +43,7 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
 
 registerBrowserStubs();
 
-describe('Recipe library (Design › Screens › 11)', () => {
+describe('Recipe library', () => {
   it('loading: announces it with skeletons', () => {
     mount(baseHandlers({ 'GET /api/households/:id/recipes': () => new Promise(() => undefined) }));
     expect(screen.getByRole('status')).toHaveTextContent('Loading recipes');
@@ -129,7 +129,7 @@ describe('Recipe library (Design › Screens › 11)', () => {
     expect(titles().at(-1)).toBe(padThaiFixture.title);
   });
 
-  it('paginates at 50 (Requirements › "Scale and pagination"), reaching a second page', async () => {
+  it('paginates at 50, reaching a second page', async () => {
     const user = userEvent.setup();
     const stub = mount(
       baseHandlers({

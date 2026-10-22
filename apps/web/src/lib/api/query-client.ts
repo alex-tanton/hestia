@@ -10,14 +10,14 @@ function shouldRetry(failureCount: number, error: unknown): boolean {
 export function createQueryClient(): QueryClient {
   /*
    * TanStack's `onlineManager` assumes an active connection until an `online`/`offline` window
-   * event tells it otherwise (Engineering Practices › The write queue is silent on this, but it
-   * governs when a paused mutation is allowed to fire). A fresh page load carries no such event —
+   * event tells it otherwise, and that belief governs when a paused mutation is allowed to fire. A
+   * fresh page load carries no such event —
    * `navigator.onLine` is already correct at load, but nothing has fired the event that would
    * teach the manager about it — so a reload while genuinely offline leaves it believing it is
    * online. `PersistQueryClientProvider`'s restore then calls `resumePausedMutations()`, which
    * trusts that belief and fires the queued write for real; it fails, exhausts its bounded
-   * retries, and is dropped as a permanent failure — an offline write silently lost, which
-   * Handoff non-negotiable 9 and the write-queue contract both rule out. Seeding the real value
+   * retries, and is dropped as a permanent failure — an offline write silently lost, which the
+   * write-queue contract rules out. Seeding the real value
    * once, before anything reads it, is what a reload while offline needs.
    */
   onlineManager.setOnline(navigator.onLine);

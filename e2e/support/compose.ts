@@ -4,7 +4,7 @@ import { COMPOSE_PROJECT, ENV_FILE, IMAGE_TAG, REPO_ROOT } from './env.ts';
 
 /**
  * The E2E stack is docker/docker-compose.yml with e2e/docker-compose.e2e.yml over it, under its
- * own project name (Engineering Practices › Testing, "E2E environment").
+ * own project name.
  */
 const COMPOSE_FILES = [
   join(REPO_ROOT, 'docker', 'docker-compose.yml'),

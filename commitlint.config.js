@@ -1,4 +1,4 @@
-// Types and scopes are the closed lists in Engineering Practices → Conventional Commits.
+// Types and scopes are closed lists, following Conventional Commits.
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {

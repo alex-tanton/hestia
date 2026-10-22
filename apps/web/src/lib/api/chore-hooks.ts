@@ -22,10 +22,10 @@ import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 
 /*
- * Chores and errands (Technical Architecture › "API surface" › Chores/Errands). Chore completion and
- * marking an errand done are queueable (`lib/offline/chore-errand-writes.ts`); every other mutation
- * here is an ordinary online call, disabled by the screen while offline, the same convention
- * `meal-hooks.ts` follows for recipes and the week planner.
+ * Chores and errands. Chore completion and marking an errand done are queueable
+ * (`lib/offline/chore-errand-writes.ts`); every other mutation here is an ordinary online call,
+ * disabled by the screen while offline, the same convention `meal-hooks.ts` follows for recipes and
+ * the week planner.
  */
 
 export function useChores(householdId: string | undefined): UseQueryResult<Chore[]> {

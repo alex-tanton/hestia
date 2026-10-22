@@ -8,11 +8,10 @@ import {
 } from './common.js';
 
 /**
- * Bills and subscriptions (Requirements, "Bills and subscriptions"; Technical Architecture, "API
- * surface" — "Bills"). Recurrence is anchored (`packages/recurrence`); a bill's current occurrence
- * and overdue flag are derived on every read, never stored (Requirements, "Recurrence is anchored
- * and derived on read"). `recurrenceUnitSchema`/`RecurrenceUnit` live in `common.js`, shared with
- * `chores.ts` (both export from `common.js` via `index.ts`, so neither re-exports them again here).
+ * Bills and subscriptions. Recurrence is anchored (`packages/recurrence`); a bill's current
+ * occurrence and overdue flag are derived on every read, never stored.
+ * `recurrenceUnitSchema`/`RecurrenceUnit` live in `common.js`, shared with `chores.ts` (both export
+ * from `common.js` via `index.ts`, so neither re-exports them again here).
  */
 
 export const billVisibilitySchema = z.enum(['household', 'personal']);
@@ -43,7 +42,7 @@ export const billSchema = z.object({
   lastUsedConfirmedAt: timestampSchema.nullable(),
   archivedAt: timestampSchema.nullable(),
   createdAt: timestampSchema,
-  /** The earliest occurrence with no payment or skip row (Requirements, "Bills"). */
+  /** The earliest occurrence with no payment or skip row. */
   currentOccurrenceDate: calendarDateSchema,
   /** True once the current occurrence's date is before "today" in the bill's own timezone. */
   isOverdue: z.boolean(),
@@ -75,7 +74,7 @@ const billFieldsSchema = z.object({
   name: z.string().trim().min(1, 'Enter a name.').max(200),
   amountCents: centsSchema,
   category: z.string().trim().max(100).nullable().default(null),
-  // Null means a one-time bill with a single occurrence on anchorDate (PRD, "Data model › Bills").
+  // Null means a one-time bill with a single occurrence on anchorDate.
   recurrenceUnit: recurrenceUnitSchema.nullable().default(null),
   interval: z.int().positive().default(1),
   anchorDate: calendarDateSchema,
@@ -122,9 +121,9 @@ export const updateBillRequestSchema = z
 export type UpdateBillRequest = z.infer<typeof updateBillRequestSchema>;
 
 /**
- * POST /bills/:id/move (Requirements, "Bills": only a bill's owner can change its visibility, which
- * moves it between the household and the owner alone). Moving to a household names it; the caller
- * must belong to it, and a household bill never moves to another household.
+ * POST /bills/:id/move (only a bill's owner can change its visibility, which moves it between the
+ * household and the owner alone). Moving to a household names it; the caller must belong to it, and
+ * a household bill never moves to another household.
  */
 export const moveBillRequestSchema = z.discriminatedUnion('visibility', [
   z.object({ visibility: z.literal('personal') }),
@@ -150,7 +149,7 @@ export const updateBillPaymentRequestSchema = z
   });
 export type UpdateBillPaymentRequest = z.infer<typeof updateBillPaymentRequestSchema>;
 
-/** One row of the subscriptions view (Requirements, "Subscriptions view"). */
+/** One row of the subscriptions view. */
 export const subscriptionSchema = z.object({
   id: idSchema,
   name: z.string(),

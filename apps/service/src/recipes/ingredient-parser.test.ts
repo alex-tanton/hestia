@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { parseIngredientLine, parseIngredientLines } from './ingredient-parser.js';
 
 /**
- * The ingredient-line parser (Requirements, "Recipe library"; Seed Data, "Recipe sources": the
- * awkward-lines fixture). `parse-ingredient` 3.0.0 does the actual splitting; these are the real
- * forms Seed Data and everyday recipe pages produce, plus the parser's own edge cases.
+ * The ingredient-line parser (including the awkward-lines fixture). `parse-ingredient` 3.0.0 does
+ * the actual splitting; these are the real forms the seed data and everyday recipe pages produce,
+ * plus the parser's own edge cases.
  */
 describe('parseIngredientLine', () => {
   it.each([
-    // The three named awkward lines (Seed Data, "Recipe sources").
+    // The three named awkward lines.
     {
       rawText: '1 (14.5 oz) can diced tomatoes, drained',
       quantity: 1,

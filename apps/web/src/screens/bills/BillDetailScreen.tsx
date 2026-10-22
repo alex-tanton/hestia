@@ -42,9 +42,9 @@ export interface BillDetailScreenProps {
 }
 
 /**
- * Design › Screens › 15: the bill's own fields (editable) plus its full payment history. The
- * overflow menu holds only archive and delete — pay and skip stay on the dashboard row (Screen
- * 14), since recording a payment here would duplicate that action rather than add one.
+ * The bill's own fields (editable) plus its full payment history. The overflow menu holds only
+ * archive and delete — pay and skip stay on the bills list row, since recording a payment here
+ * would duplicate that action rather than add one.
  */
 export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps): ReactElement {
   const isOnline = useOnlineStatus();

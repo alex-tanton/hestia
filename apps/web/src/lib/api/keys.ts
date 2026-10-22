@@ -1,5 +1,5 @@
 /**
- * Structured, household-scoped query keys (Engineering Practices › Frontend patterns). Every
+ * Structured, household-scoped query keys. Every
  * household-scoped key starts with `HOUSEHOLD_SCOPE`, so switching household removes all of
  * them in one call and no previous household's data can survive the swap.
  */
@@ -19,7 +19,7 @@ export const queryKeys = {
   list: (householdId: string, listId: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'list', listId] as const,
   pantry: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'pantry'] as const,
-  /** The recipe library, one page at a time (Requirements › "Scale and pagination"). */
+  /** The recipe library, one page at a time. */
   recipes: (householdId: string, page: number) =>
     [...HOUSEHOLD_SCOPE, householdId, 'recipes', page] as const,
   recipe: (householdId: string, recipeId: string) =>
@@ -32,7 +32,7 @@ export const queryKeys = {
   chore: (householdId: string, choreId: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'chore', choreId] as const,
   errands: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'errands'] as const,
-  /** The household's bills plus the caller's own personal ones (Requirements › "Bills"). */
+  /** The household's bills plus the caller's own personal ones. */
   bills: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'bills'] as const,
   /** `/bills/:id` names no household, so the cache entry carries it instead (like `recipe`). */
   bill: (householdId: string, billId: string) =>

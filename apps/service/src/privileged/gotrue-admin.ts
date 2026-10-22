@@ -1,8 +1,7 @@
 import { callGoTrue, type Fetch } from '../gotrue/http.js';
 
 /**
- * GoTrue's admin API, with the service-role key. Sanctioned for exactly two callers (Technical
- * Architecture, "The RLS rule"): the email change, after the service has re-verified the user's
+ * GoTrue's admin API, with the service-role key. Sanctioned for exactly two callers: the email change, after the service has re-verified the user's
  * password, and the owner CLI's reset link. ESLint keeps every other module from importing this
  * one; route code receives only the narrow functions it needs.
  */

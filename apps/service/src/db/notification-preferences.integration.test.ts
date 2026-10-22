@@ -4,8 +4,7 @@ import { createHousehold } from '../test/world.js';
 
 /*
  * Row-level security on notification_preference and push_subscription, as the authenticated
- * role. Each test is one rolled-back transaction (Engineering Practices, "Integration test
- * database").
+ * role. Each test is one rolled-back transaction.
  */
 
 afterAll(async () => {

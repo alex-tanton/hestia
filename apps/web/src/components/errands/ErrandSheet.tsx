@@ -23,7 +23,7 @@ export interface ErrandSheetProps {
 }
 
 /**
- * Design › "18. Errands": quick-add via a bottom sheet (name, optional due date, optional
+ * Quick-add via a bottom sheet (name, optional due date, optional
  * assignee); tapping an errand opens the same sheet, prefilled, for editing.
  */
 export function ErrandSheet({

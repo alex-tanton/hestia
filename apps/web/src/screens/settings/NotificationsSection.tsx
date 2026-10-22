@@ -19,7 +19,7 @@ const DEFAULT_QUIET_HOURS = { start: '22:00', end: '07:00' };
 type Field = 'start' | 'end';
 
 /**
- * Design › Screens › 4, "Notifications": the per-type toggles, the single household-bill reminder,
+ * Notifications: the per-type toggles, the single household-bill reminder,
  * and the quiet-hours window. The profile settings save straight to the profile; the types save as
  * each is switched (see NotificationTypes).
  */
@@ -33,8 +33,8 @@ export function NotificationsSection({ profile }: { profile: ProfileResponse }):
   const [start, setStart] = useState(profile.quietHours?.start ?? DEFAULT_QUIET_HOURS.start);
   const [end, setEnd] = useState(profile.quietHours?.end ?? DEFAULT_QUIET_HOURS.end);
   const [formError, setFormError] = useState<string>();
-  // Every write in this card says the same thing offline (Design › Offline rules), so the card's
-  // own string is used rather than the app-wide one other screens rely on.
+  // Every write in this card says the same thing offline, so the card's own string is used rather
+  // than the app-wide one other screens rely on.
   const offlineReason = isOnline ? undefined : WRITE_NEEDS_CONNECTION;
 
   const handleSubmit = async (event: SyntheticEvent): Promise<void> => {
@@ -76,7 +76,7 @@ export function NotificationsSection({ profile }: { profile: ProfileResponse }):
     <SettingsSection title="Notifications">
       <Card className="flex flex-col gap-6">
         {/* This one saves as it is toggled, so offline it is a write control like any other:
-            disabled, with the reason beside it and in its description (Design › Offline rules). */}
+            disabled, with the reason beside it and in its description. */}
         <div className="flex flex-col gap-1">
           <Checkbox
             label="Remind me about all household bills"

@@ -4,9 +4,9 @@ import { extractRecipeJsonLd } from './json-ld.js';
 
 /**
  * Ties the fetch, the JSON-LD extraction, and the ingredient-line split together into the
- * parse-and-preview result the route returns (Technical Architecture, "Recipe fetching"). Nothing
- * here saves anything — the caller (a `recipes/parse` route) hands the result back for the user
- * to review and edit, and a separate save call persists what they confirm.
+ * parse-and-preview result the route returns. Nothing here saves anything — the caller (a
+ * `recipes/parse` route) hands the result back for the user to review and edit, and a separate save
+ * call persists what they confirm.
  */
 export async function parseRecipeUrl(
   url: string,

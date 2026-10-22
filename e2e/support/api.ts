@@ -2,8 +2,8 @@ import { expect, type APIRequestContext } from '@playwright/test';
 import { SEED_PASSWORD, readStackEnv } from './env.ts';
 
 /**
- * A password grant through Caddy and Kong, the way the PWA signs in (Technical Architecture,
- * "Request paths"). Tests use the token to ask the API a question the UI cannot yet ask.
+ * A password grant through Caddy and Kong, the way the PWA signs in. Tests use the token to ask the
+ * API a question the UI cannot yet ask.
  */
 export async function accessToken(
   request: APIRequestContext,
@@ -34,7 +34,7 @@ export async function householdStatus(
 /**
  * `POST /api/lists/:id/items` as that caller, status only. Sent twice with the same body and the
  * same client-generated `id`, this is how a journey replays an offline write directly rather than
- * racing the browser's own queue, to prove the replay is a no-op (Handoff non-negotiable 9).
+ * racing the browser's own queue, to prove the replay is a no-op.
  */
 export async function addListItemStatus(
   request: APIRequestContext,
@@ -49,7 +49,7 @@ export async function addListItemStatus(
   return response.status();
 }
 
-/** The bill fields a journey checks through the API rather than the screen (Requirements, "Bills"). */
+/** The bill fields a journey checks through the API rather than the screen. */
 export interface BillState {
   householdId: string | null;
   currentOccurrenceDate: string;

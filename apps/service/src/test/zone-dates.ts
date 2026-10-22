@@ -1,8 +1,8 @@
 /*
- * Calendar-date helpers for service tests. Every calendar date belongs to a household's zone
- * (Handoff non-negotiable 8): counting days on the UTC calendar, or on the machine's, mis-dates a
- * bill, chore or errand for the hours around the household's midnight. Tests that need "today" or
- * "n days from today" take it from here, in the zone of the household they created.
+ * Calendar-date helpers for service tests. Every calendar date belongs to a household's zone:
+ * counting days on the UTC calendar, or on the machine's, mis-dates a bill, chore or errand for the
+ * hours around the household's midnight. Tests that need "today" or "n days from today" take it
+ * from here, in the zone of the household they created.
  */
 
 const DAY_MS = 86_400_000;

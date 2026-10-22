@@ -1,4 +1,4 @@
-# Hearth production stack (Technical Architecture, "Compose layout").
+# Hearth production stack.
 #
 # The Supabase services are the subset of Supabase's official self-hosting compose that Hearth
 # uses. db, auth, and realtime are pinned to the same images the pinned Supabase CLI runs for

@@ -11,17 +11,17 @@ export interface ErrorRecord {
 }
 
 /**
- * The `app_error` fingerprint (Technical Architecture, "Error recording"): SHA-256, lowercase hex,
- * of the source, the error name, and the route or job name, joined by newlines.
+ * The `app_error` fingerprint: SHA-256, lowercase hex, of the source, the error name, and the route
+ * or job name, joined by newlines.
  */
 export function errorFingerprint(source: ErrorSource, name: string, route: string): string {
   return createHash('sha256').update(`${source}\n${name}\n${route}`, 'utf8').digest('hex');
 }
 
 /**
- * Builds the record from raw fields, scrubbing every one first (Handoff non-negotiable 3). The
- * fingerprint is computed from the scrubbed name and route, so two reports of the same failure
- * group together even when their raw paths differed only in something scrubbed away.
+ * Builds the record from raw fields, scrubbing every one first. The fingerprint is computed from
+ * the scrubbed name and route, so two reports of the same failure group together even when their
+ * raw paths differed only in something scrubbed away.
  */
 export function buildErrorRecord(
   source: ErrorSource,

@@ -14,7 +14,7 @@ export interface OverflowMenuItem {
   /**
    * Why the action is unavailable ("Needs a connection."). It disables the item and sits beneath
    * the label: a row's actions live in this menu, so the one line explaining an offline-disabled
-   * control belongs here too (Design › Offline rules).
+   * control belongs here too.
    */
   disabledReason?: string | undefined;
 }
@@ -26,8 +26,7 @@ export interface OverflowMenuProps {
 }
 
 /**
- * The "More" menu: the single-pointer alternative to every swipe action (WCAG 2.5.1,
- * Design › Navigation rules).
+ * The "More" menu: the single-pointer alternative to every swipe action (WCAG 2.5.1).
  */
 export function OverflowMenu({ label, items }: OverflowMenuProps): ReactElement {
   const section = useSection();

@@ -2,12 +2,12 @@ import { isIosBrowser, isStandalone } from '../use-install-prompt.ts';
 
 /*
  * The browser's half of Web Push, behind an interface so the permission flow is testable without
- * a push service (Engineering Practices › Testing: no test contacts a push endpoint).
+ * a push service (no test contacts a push endpoint).
  */
 
 /**
  * Whether this device can take push at all. `ios-not-installed` is its own state: on iOS, push
- * works only once the app is on the home screen (Engineering Practices › Install and notifications).
+ * works only once the app is on the home screen.
  */
 export type PushSupport = 'supported' | 'unsupported' | 'ios-not-installed';
 
@@ -29,7 +29,7 @@ export interface PushPort {
   unsubscribe: () => Promise<void>;
 }
 
-/** Set at build time by the caddy image (Technical Architecture, "Auth configuration"). */
+/** Set at build time by the caddy image. */
 export const VAPID_PUBLIC_KEY: string = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '';
 
 function hasPushApis(): boolean {

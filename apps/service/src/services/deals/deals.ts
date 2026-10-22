@@ -42,15 +42,14 @@ import {
 } from './storage.js';
 
 /**
- * The deals read path (Technical Architecture, "Caching and storage", "Dormant postal codes";
- * Requirements, "Deal search and browse").
+ * The deals read path.
  *
  * Three rules govern every function here:
  *
  * 1. **A cache serves what it can.** No fetch is ever triggered by a user action a cache could
- *    answer (Handoff non-negotiable 19).
+ *    answer.
  * 2. **Stale beats empty.** When a live fetch fails and anything is cached, the cached data comes
- *    back with its "as of" age rather than an error (non-negotiable 18).
+ *    back with its "as of" age rather than an error.
  * 3. **Dormancy governs flyers and flyer items only.** A keyword search that misses its cache
  *    always fetches live, dormant or not.
  */
@@ -65,7 +64,7 @@ export interface HouseholdContext {
  * this in its own transaction, committed before it resolves — never the request's own, still-open
  * transaction — so that a later, unrelated failure in the same request cannot roll the claim back
  * out from under a refresh that has already been queued, and so a concurrent claimant reliably
- * sees it (Technical Architecture, "Dormant postal codes"; non-negotiable 19, rate discipline).
+ * sees it (rate discipline for dormant postal codes).
  */
 export type ClaimOnDemandRefresh = (postalCode: string, now: Date) => Promise<boolean>;
 
@@ -244,10 +243,10 @@ export class DealsService {
 
   /**
    * One flyer's deals, served from `deal` — which is the flyer-item cache, by `flyer_id`, until
-   * the flyer's `valid_to` (Technical Architecture, "Caching and storage"). A flyer's items are
-   * fetched by the refresh, for favorited merchants only, and never inline: one flyer costs its
-   * roster request plus an item-detail request per priced product, a few hundred requests over
-   * minutes, which is not something a screen may trigger.
+   * the flyer's `valid_to`. A flyer's items are fetched by the refresh, for favorited merchants
+   * only, and never inline: one flyer costs its roster request plus an item-detail request per
+   * priced product, a few hundred requests over minutes, which is not something a screen may
+   * trigger.
    */
   async listFlyerItems(
     db: Kysely<Database>,
@@ -340,7 +339,7 @@ export class DealsService {
     }
     const favorites = new Set(await favoriteMerchantIds(db, household.householdId));
     // A household with no favorites yet sees everything rather than nothing; the screen prompts
-    // for favorites and browse-all is available immediately (Design, "Deals-specific states").
+    // for favorites and browse-all is available immediately.
     if (favorites.size === 0) {
       return explicit === undefined ? [...deals] : deals.filter((d) => explicit.has(d.merchantId));
     }

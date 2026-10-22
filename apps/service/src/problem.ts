@@ -36,8 +36,7 @@ export function fail(status: number, detail?: string): ProblemError {
 }
 
 /**
- * SQLSTATEs from the membership functions and from constraints, mapped to responses (Technical
- * Architecture, "Membership lifecycle functions"). A null detail means the database's own
+ * SQLSTATEs from the membership functions and from constraints, mapped to responses. A null detail means the database's own
  * message is shown: 22023 is raised with messages written for the caller, or by Postgres echoing
  * only the caller's own input.
  */
@@ -90,9 +89,8 @@ export function problemFromGoTrueError(error: GoTrueError): ProblemError {
 }
 
 /**
- * A recipe URL that could not be fetched at all (Technical Architecture, "Recipe fetching"). This
- * is distinct from a page that fetched fine but had no usable JSON-LD: that is a 200 with
- * `needsManualEntry: true`, never an error.
+ * A recipe URL that could not be fetched at all. This is distinct from a page that fetched fine but
+ * had no usable JSON-LD: that is a 200 with `needsManualEntry: true`, never an error.
  */
 const RECIPE_FETCH_STATUS: Readonly<Record<RecipeFetchErrorCode, number>> = {
   invalid_url: 400,

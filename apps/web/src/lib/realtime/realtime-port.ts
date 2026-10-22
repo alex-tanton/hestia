@@ -8,9 +8,8 @@ export interface ListRealtimeHandlers {
   /**
    * A change to the list row itself. A delete on a filtered subscription carries only the primary
    * key, so `list_id=eq.<id>` cannot match it and Realtime never delivers it; the `updated_at`
-   * trigger firing on the list row is what a member sees instead (Technical Architecture,
-   * "Realtime subscriptions"). It is also what keeps a subtotal right after a change the client
-   * cannot reconstruct.
+   * trigger firing on the list row is what a member sees instead. It is also what keeps a subtotal
+   * right after a change the client cannot reconstruct.
    */
   onListChange: () => void;
 }

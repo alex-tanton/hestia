@@ -33,9 +33,9 @@ export interface ReassignmentListProps {
 }
 
 /**
- * The departure preview's reassignment pickers (Requirements, "Membership lifecycle"). Every
- * list, chore, errand, and bill the member owns must land on someone who stays; the confirm
- * stays disabled until they all have, and the server refuses the call otherwise either way.
+ * The departure preview's reassignment pickers. Every list, chore, errand, and bill the member owns
+ * must land on someone who stays; the confirm stays disabled until they all have, and the server
+ * refuses the call otherwise either way.
  */
 export function ReassignmentList({
   preview,

@@ -34,10 +34,10 @@ import {
 } from '../services/pantry.js';
 
 /**
- * Shopping lists and the pantry (Technical Architecture, "API surface"). Handlers stay thin:
- * validate with a shared schema, call a service function with the caller's transaction, send the
- * mapped response. The list and pantry paths do not name a household, so the service functions
- * stamp household activity once they know which household the row belongs to.
+ * Shopping lists and the pantry. Handlers stay thin: validate with a shared schema, call a service
+ * function with the caller's transaction, send the mapped response. The list and pantry paths do
+ * not name a household, so the service functions stamp household activity once they know which
+ * household the row belongs to.
  */
 export const listRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/households/:id/lists', async (request) => {

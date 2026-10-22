@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { isPrivateAddress } from './private-address.js';
 
 /**
- * Private/loopback/link-local refusal (Technical Architecture, "Recipe fetching"). Checked
- * against the resolved IP itself, which is what `resolveAllowedAddresses` in `fetch-recipe.ts`
- * feeds it — this file only proves the range table is right.
+ * Private/loopback/link-local refusal. Checked against the resolved IP itself, which is what
+ * `resolveAllowedAddresses` in `fetch-recipe.ts` feeds it — this file only proves the range table
+ * is right.
  */
 describe('isPrivateAddress', () => {
   it.each([

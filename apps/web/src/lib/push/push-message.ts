@@ -2,9 +2,8 @@
  * The wire contract between the push service, the service worker, and the page. It is kept free
  * of DOM and worker globals so the worker, the page, and their tests can all import it.
  *
- * The service sends `{ title, body, url, householdId? }` (Technical Architecture, "Scheduled
- * jobs" › "Dispatch"). `url` is a path inside the app, and `householdId` is the household a tap
- * switches to first (PRD, "Notifications" › "Rules" › "Deep links").
+ * The service sends `{ title, body, url, householdId? }`. `url` is a path inside the app, and
+ * `householdId` is the household a tap switches to first.
  */
 
 /** The message the worker posts to an open window when a notification is tapped. */

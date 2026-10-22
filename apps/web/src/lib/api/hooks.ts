@@ -33,9 +33,8 @@ import { useApi } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE, queryKeys } from './keys.ts';
 
 /*
- * Server state lives here and is never copied into component state (Engineering Practices ›
- * Frontend patterns). `GET /api/users/me` is the single source of the profile, the memberships,
- * the active household, and `isServerOwner`.
+ * Server state lives here and is never copied into component state. `GET /api/users/me` is the
+ * single source of the profile, the memberships, the active household, and `isServerOwner`.
  */
 
 export function useProfile(): UseQueryResult<ProfileResponse> {
@@ -47,10 +46,11 @@ export function useProfile(): UseQueryResult<ProfileResponse> {
      * household-scoped screen gates on (`AuthenticatedLayout`), and the query cache now survives
      * a full reload (`PersistQueryClientProvider`): with the client default `staleTime` a reload
      * within that window would keep showing a household the caller was just removed from, missing
-     * "a removed member loses access immediately" (Handoff, Phase 1 "Done when") by however much
-     * of the window was left. The persisted `data` still paints instantly — `staleTime` only
-     * decides whether a mount also revalidates — so this costs nothing offline or on a quick
-     * reopen; it only removes the window where a reload could still be trusting stale membership.
+     * the rule that a removed member loses access immediately by however much of the window was
+     * left. The
+     * persisted `data` still paints instantly — `staleTime` only decides whether a mount also
+     * revalidates — so this costs nothing offline or on a quick reopen; it only removes the window
+     * where a reload could still be trusting stale membership.
      */
     staleTime: 0,
     queryFn: ({ signal }) =>
@@ -171,9 +171,9 @@ export function useUpdateProfile(): UseMutationResult<
 }
 
 /**
- * Switching household is a full context swap (Requirements, "Multi-household membership"): every
- * household-scoped query is removed, not merely invalidated, so nothing from the previous
- * household can be read from the cache while the new one loads.
+ * Switching household is a full context swap: every household-scoped query is removed, not merely
+ * invalidated, so nothing from the previous household can be read from the cache while the new one
+ * loads.
  */
 export function useSwitchHousehold(): UseMutationResult<ProfileResponse, Error, string> {
   const api = useApi();

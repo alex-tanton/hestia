@@ -4,10 +4,10 @@ import type { DroppedCopy } from '../notifications/copy.js';
 import type { JobLogger } from './types.js';
 
 /**
- * `dispatch-notifications` — every 2 minutes, the send step (Technical Architecture, "Scheduled
- * jobs" › "Dispatch"). It sends every due outbox row to each of its recipient's push subscriptions,
- * claims each row by stamping `sent_at` before the first send, releases the claim when no device
- * accepts, and retires rows that can no longer be delivered.
+ * `dispatch-notifications` — every 2 minutes, the send step. It sends every due outbox row to each
+ * of its recipient's push subscriptions, claims each row by stamping `sent_at` before the first
+ * send, releases the claim when no device accepts, and retires rows that can no longer be
+ * delivered.
  *
  * The job holds no privilege of its own. Its cross-user reads and writes arrive as `DispatchOutbox`,
  * built in `privileged/` (the service-role capability), and the push transport arrives as
@@ -60,9 +60,8 @@ export type ClaimOutcome = 'claimed' | 'taken' | 'stale';
 
 export interface DispatchOutbox {
   /**
-   * Writes the scheduled reminders whose send time has arrived (Technical Architecture, "Scheduled
-   * jobs" › "Dispatch"). Returns how many rows were inserted, and the candidates not written because
-   * their copy was over the limit.
+   * Writes the scheduled reminders whose send time has arrived. Returns how many rows were
+   * inserted, and the candidates not written because their copy was over the limit.
    */
   enqueueScheduled: (now: Date) => Promise<{ inserted: number; dropped: DroppedCopy[] }>;
   /** Deletes unsent rows whose retry window (`send_after` + 24 hours) has passed, and returns them. */
@@ -132,8 +131,8 @@ export function deepLinkFor(payload: unknown): string {
 }
 
 /**
- * The household a tap switches the app to before it opens the deep link (PRD, "Notifications" ›
- * "Rules" › "Deep links"). It is an id, never household content, so it may ride in the push body.
+ * The household a tap switches the app to before it opens the deep link. It is an id, never
+ * household content, so it may ride in the push body.
  */
 export function householdIdFor(payload: unknown): { householdId?: string } {
   const parsed = householdSchema.safeParse(payload);

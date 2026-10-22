@@ -23,9 +23,9 @@ import {
 import { OnboardingLayout } from './OnboardingLayout.tsx';
 
 /**
- * Design › Screens › 1: the check-your-email screen's 6-digit code field, with a resend action
+ * The check-your-email screen's 6-digit code field, with a resend action
  * that opens after 30 seconds. This is the path an installed iOS app has to take, since a home
- * screen app cannot receive the link's session (Requirements › Authentication).
+ * screen app cannot receive the link's session.
  *
  * One input rather than six boxes: it is a single labelled field, so a paste of "123 456" lands
  * whole, the error attaches to the thing that is wrong, and nothing has to manage focus between

@@ -25,7 +25,7 @@ export interface PlaceOnPlannerSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Design › Screens › 12: recipe detail's secondary action, "place on the week planner". */
+/** Recipe detail's secondary action, "place on the week planner". */
 export function PlaceOnPlannerSheet({
   householdId,
   timezone,

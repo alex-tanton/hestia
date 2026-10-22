@@ -4,7 +4,7 @@ import { cn } from '../../lib/cn.ts';
 
 export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label: ReactNode;
-  /** In-list rows make the whole row the tap target (Branding › Tap targets). */
+  /** In-list rows make the whole row the tap target. */
   variant?: 'default' | 'in-list';
   /** Extra row content beside the label, such as price or quantity. */
   detail?: ReactNode;
@@ -12,8 +12,8 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
 
 /**
  * A real checkbox input with its row as the label, so assistive tech announces it as a
- * checkbox rather than a clickable div (Design › Accessibility). Radix's Checkbox is a button,
- * which is why this one is native.
+ * checkbox rather than a clickable div. Radix's Checkbox is a button, which is why this one is
+ * native.
  */
 export function Checkbox({
   label,

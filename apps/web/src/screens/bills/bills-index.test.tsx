@@ -60,7 +60,7 @@ describe('groupBills (Overdue / This week / Later)', () => {
   });
 });
 
-describe('Bills dashboard (Design › Screens › 14)', () => {
+describe('Bills dashboard', () => {
   it('loading: announces it with skeletons', () => {
     mount(baseHandlers({ 'GET /api/households/:id/bills': () => new Promise(() => undefined) }));
     expect(screen.getByRole('status')).toHaveTextContent('Loading your bills');

@@ -41,8 +41,8 @@ export function SignedOutOnly(): ReactElement {
 
 /**
  * The app shell, once the profile is known. `GET /api/users/me` is the only source of the
- * memberships, the active household, and `isServerOwner` (Engineering Practices › Frontend
- * patterns), so every screen below reads it from the cache rather than being handed a copy.
+ * memberships, the active household, and `isServerOwner`, so every screen below reads it from
+ * the cache rather than being handed a copy.
  */
 export function AuthenticatedLayout(): ReactElement {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ export function AuthenticatedLayout(): ReactElement {
     onSelect: (householdId) => {
       switchTo(householdId, {
         onSuccess: () => {
-          // Design › Navigation rules: a switch returns every tab to its root.
+          // A switch returns every tab to its root.
           void navigate('/', { replace: true });
         },
       });

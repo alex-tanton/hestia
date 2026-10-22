@@ -4,10 +4,9 @@ import type { Database } from '../db.js';
 import { toCents } from './money.js';
 
 /*
- * The subscriptions view (Requirements, "Subscriptions view"): bills flagged `is_subscription`,
- * normalized to a monthly figure so wildly different billing cycles compare directly. Every
- * division rounds half-up to the cent (Engineering Practices, "Code conventions"), using integer
- * arithmetic throughout — never a floating-point dollar amount.
+ * The subscriptions view: bills flagged `is_subscription`, normalized to a monthly figure so wildly
+ * different billing cycles compare directly. Every division rounds half-up to the cent, using
+ * integer arithmetic throughout — never a floating-point dollar amount.
  */
 
 /** `Math.round(numerator / denominator)`, done in integers so there is no float to round wrong. */
@@ -16,9 +15,10 @@ function divideRoundHalfUp(numerator: number, denominator: number): number {
 }
 
 /**
- * The monthly-equivalent cost of one occurrence, from the PRD's conversion table. A one-time bill
- * (`recurrenceUnit` null) has no recurring cost; `is_subscription` and a null unit are not expected
- * to coexist, but a caller that somehow has both gets zero rather than a crash.
+ * The monthly-equivalent cost of one occurrence, from fixed conversion factors (weeks x 52/12,
+ * years / 12, days x 365/12, rounded half-up). A one-time bill (`recurrenceUnit` null) has no
+ * recurring cost; `is_subscription` and a null unit are not expected to coexist, but a caller that
+ * somehow has both gets zero rather than a crash.
  */
 export function monthlyCents(
   amountCents: number,
@@ -37,8 +37,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Whether the "Still using this?" prompt is due: 60+ *calendar* days since `confirmedDate`, both
- * already resolved in the bill's own timezone (Requirements, "Subscriptions view"). Parsed as
- * UTC-midnight plain dates so the subtraction is an exact day count, never a DST-sensitive one.
+ * already resolved in the bill's own timezone. Parsed as UTC-midnight plain dates so the
+ * subtraction is an exact day count, never a DST-sensitive one.
  */
 export function needsUsageConfirmation(today: string, confirmedDate: string): boolean {
   const days = Math.round(
@@ -60,11 +60,10 @@ interface SubscriptionRow {
 }
 
 /**
- * The active household's subscriptions plus the caller's own personal ones (Requirements,
- * "Subscriptions view"), sorted by monthly cost descending. "Today" and the 60-day clock are each
- * read in the household timezone (non-negotiable 8): the bill's own household's, or for a personal
- * bill its owner's active household's, else the owner's earliest. `coalesce` picks the right one
- * without branching; the profile's timezone is never a date zone.
+ * The active household's subscriptions plus the caller's own personal ones, sorted by monthly cost
+ * descending. "Today" and the 60-day clock are each read in the household timezone: the bill's own
+ * household's, or for a personal bill its owner's active household's, else the owner's earliest.
+ * `coalesce` picks the right one without branching; the profile's timezone is never a date zone.
  */
 export async function getSubscriptions(
   db: Kysely<Database>,

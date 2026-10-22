@@ -27,7 +27,7 @@ export type PriceResult =
  * An original ten times the unit price or more is not a discount, it is a different unit:
  * Restaurant Depot's chicken steak is "$2.39 LB" against an original of $23.90, a case price.
  * Treating it as 90% off would put a fictional saving on the screen, so the original is
- * dropped and the discount goes null (Requirements, "Deal price normalization").
+ * dropped and the discount goes null.
  */
 export function withoutImplausibleOriginal(core: PriceCore): PriceCore {
   if (core.originalPrice !== null && core.originalPrice >= core.unitPrice * 10) {
@@ -37,9 +37,8 @@ export function withoutImplausibleOriginal(core: PriceCore): PriceCore {
 }
 
 /**
- * Runs the ordered chain over one item's price copy (Technical Architecture, "Price
- * normalization"). Every parser passes on copy it does not recognise; a deal no parser handles
- * is skipped, never stored with a null or zero price (non-negotiable 6).
+ * Runs the ordered chain over one item's price copy. Every parser passes on copy it does not
+ * recognise; a deal no parser handles is skipped, never stored with a null or zero price.
  */
 export function parsePrice(price: PriceCopy): PriceResult {
   const copy = buildCopy(price);

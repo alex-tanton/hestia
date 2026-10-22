@@ -2,19 +2,17 @@ import { z } from 'zod';
 import { calendarDateSchema, idSchema, timestampSchema } from './common.js';
 
 /**
- * The week planner (Requirements, "Meal planning"; Technical Architecture, "API surface" —
- * "Meal plan"). A week is identified by its Sunday's calendar date, always in the household's own
- * timezone (Requirements, "Timezone"): `GET` without a `week` query defaults to the current week,
- * and any `week` given must actually be a Sunday or the request is rejected with 400.
+ * The week planner. A week is identified by its Sunday's calendar date, always in the household's
+ * own timezone: `GET` without a `week` query defaults to the current week, and any `week` given
+ * must actually be a Sunday or the request is rejected with 400.
  */
 
 export const mealTypeSchema = z.enum(['breakfast', 'lunch', 'dinner']);
 export type MealType = z.infer<typeof mealTypeSchema>;
 
 /**
- * `readinessPercent` is null when `recipeId` is null (Requirements, "Meal plan history and
- * deleted recipes" — the recipe was deleted, so there is nothing left to score) or, defensively,
- * when the recipe's readiness has never been computed.
+ * `readinessPercent` is null when `recipeId` is null (the recipe was deleted, so there is nothing
+ * left to score) or, defensively, when the recipe's readiness has never been computed.
  */
 export const mealPlanEntrySchema = z.object({
   id: idSchema,
@@ -47,8 +45,8 @@ export const createMealPlanEntryRequestSchema = z.object({
 export type CreateMealPlanEntryRequest = z.infer<typeof createMealPlanEntryRequestSchema>;
 
 /**
- * "Add missing to list" (Requirements, "Add missing to list"). The same request body targets a
- * single recipe, a single planned meal, or a whole planned week; only the route differs.
+ * "Add missing to list". The same request body targets a single recipe, a single planned meal, or a
+ * whole planned week; only the route differs.
  */
 export const addToListRequestSchema = z.object({ listId: idSchema });
 

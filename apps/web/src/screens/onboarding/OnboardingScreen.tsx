@@ -33,9 +33,9 @@ const HEADINGS: Record<OnboardingStep, { title: string; description?: string }> 
 };
 
 /**
- * Onboarding after sign-in (Design › Screens › 1): create a household and set it up, or join one
- * by link or code, which skips setup. The install prompt closes either path, because it is about
- * the app rather than the household.
+ * Onboarding after sign-in: create a household and set it up, or join one by link or code, which
+ * skips setup. The install prompt closes either path, because it is about the app rather than the
+ * household.
  */
 export function OnboardingScreen({
   initialStep = 'choose',

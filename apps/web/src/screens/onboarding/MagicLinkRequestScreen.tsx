@@ -17,10 +17,10 @@ import {
 import { OnboardingLayout } from './OnboardingLayout.tsx';
 
 /**
- * Design › Screens › 1: the "Email me a sign-in link" option asks for an address, and sending
+ * The "Email me a sign-in link" option asks for an address, and sending
  * leads to the check-your-email state. The code is the path that always works — an iOS
  * home-screen app cannot receive a session through the link — so entering it is the primary
- * action from here (Requirements › Authentication).
+ * action from here.
  */
 export function MagicLinkRequestScreen(): ReactElement {
   const auth = useAuthClient();
@@ -34,7 +34,7 @@ export function MagicLinkRequestScreen(): ReactElement {
   const confirmationRef = useRef<HTMLDivElement>(null);
 
   // Sending swaps the form out for the confirmation, which would leave focus on the document
-  // and a keyboard user with no place in the screen (Design › Accessibility › Focus management).
+  // and a keyboard user with no place in the screen.
   useEffect(() => {
     if (sentTo !== undefined) confirmationRef.current?.focus();
   }, [sentTo]);
@@ -79,8 +79,8 @@ export function MagicLinkRequestScreen(): ReactElement {
     >
       {/*
        * The live region outlives the swap, so it is in the tree before it has anything to say:
-       * a status region that arrives already populated is announced unreliably
-       * (Design › Accessibility › Specific patterns). While empty it hides the way `sr-only`
+       * a status region that arrives already populated is announced unreliably. While empty it
+       * hides the way `sr-only`
        * does rather than with `display: none`, which would take it out of the accessibility
        * tree and leave the announcement nothing to land in.
        */}

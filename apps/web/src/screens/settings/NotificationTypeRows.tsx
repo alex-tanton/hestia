@@ -76,7 +76,7 @@ function copyFor(
   };
 }
 
-/** The toggles, one per type, with the weekly nudge repeated for each household (PRD, "Types"). */
+/** The toggles, one per type, with the weekly nudge repeated for each household. */
 export function PreferenceList({
   preferences,
   profile,
@@ -114,7 +114,7 @@ export function PreferenceList({
   );
 }
 
-/** A note about this device, in words, beside the toggles (Design › Screens › 4). */
+/** A note about this device, in words, beside the toggles. */
 export function DeviceNoteLine({ note }: { note: DeviceNote }): ReactElement {
   return (
     <p className="flex items-start gap-2 text-body-sm text-secondary">

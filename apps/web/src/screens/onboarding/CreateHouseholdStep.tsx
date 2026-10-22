@@ -14,8 +14,8 @@ import { useOnlineStatus } from '../../lib/use-online-status.ts';
 type Field = 'name' | 'postalCode';
 
 /**
- * Design › Screens › 1: name and postal code. The timezone is taken from the browser without
- * asking (Requirements, "Household timezone"), so it is stated rather than offered.
+ * Name and postal code. The timezone is taken from the browser without
+ * asking, so it is stated rather than offered.
  */
 export function CreateHouseholdStep({ onCreated }: { onCreated: () => void }): ReactElement {
   const isOnline = useOnlineStatus();

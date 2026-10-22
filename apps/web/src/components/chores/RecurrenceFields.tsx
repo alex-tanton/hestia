@@ -26,10 +26,10 @@ export interface RecurrenceFieldsProps {
 }
 
 /**
- * Design › "17. Chores" › Chore sheet: "recurrence editor: unit … interval, and anchor date … A
- * plain-language preview of the next three occurrence dates updates as the fields change." Reuses
- * `@hearth/recurrence`'s own `previewOccurrences`, the same function the Design doc names for both
- * the bill and chore sheets (`packages/recurrence/src/occurrence.ts`), so the preview can never
+ * The chore sheet's recurrence editor: unit, interval, and anchor date, with a plain-language
+ * preview of the next three occurrence dates that updates as the fields change. Reuses
+ * `@hearth/recurrence`'s own `previewOccurrences`, the same function behind both the bill and
+ * chore sheets (`packages/recurrence/src/occurrence.ts`), so the preview can never
  * drift from the anchored-recurrence rules the server applies.
  */
 export function RecurrenceFields({

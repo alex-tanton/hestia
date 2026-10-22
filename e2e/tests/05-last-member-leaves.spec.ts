@@ -5,11 +5,9 @@ import { queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Handoff, Phase 1 "Done when": the last member leaving deletes the household only after the
- * typed-name confirmation, and their personal bills survive. Casey is Empty House's only member
- * (Seed Data, "Households") and owns the personal Car Insurance bill, which belongs to Casey
- * rather than to any household and so outlives the deletion (Requirements, "Membership
- * lifecycle").
+ * The last member leaving deletes the household only after the typed-name confirmation, and their
+ * personal bills survive. Casey is Empty House's only member and owns the personal Car Insurance
+ * bill, which belongs to Casey rather than to any household and so outlives the deletion.
  *
  * There is no bills UI in Phase 1, so the survival is asserted against the database.
  */
@@ -59,7 +57,7 @@ test('the household goes only after the typed name, and the personal bill stays'
   await confirm.click();
 
   // Casey's active household moves to the longest-held remaining membership, or to onboarding's
-  // create-or-join step if there is none (Requirements, "Multi-household membership").
+  // create-or-join step if there is none.
   await expectSignedIn(page);
   await expect(page.getByText(SEED.emptyHouse.name)).toHaveCount(0);
 

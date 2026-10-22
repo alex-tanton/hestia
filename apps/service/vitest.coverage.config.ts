@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitest/config';
 
-// Coverage over both layers at once (Engineering Practices, "Coverage": 80%+ on the service).
-// Many service functions are exercised through the integration tests, so a unit-only number
-// would understate what is covered. Needs the `supabase start` stack, like test:integration.
+// Coverage over both layers at once (80%+ on the service). Many service functions are exercised
+// through the integration tests, so a unit-only number would understate what is covered. Needs
+// the `supabase start` stack, like test:integration.
 export default defineConfig({
   test: {
     include: ['src/**/*.test.ts'],

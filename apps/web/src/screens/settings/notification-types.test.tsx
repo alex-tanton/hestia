@@ -29,9 +29,9 @@ import {
 } from './notification-copy.ts';
 
 /*
- * Settings › Notifications, per type (Design › Screens › 4). Each state runs in both themes. The
- * colors are checked by axe in the E2E suite, which renders the real stylesheet; here the theme is
- * set so the same states are exercised under each.
+ * Settings › Notifications, per type. Each state runs in both themes. The colors are checked by axe
+ * in the E2E suite, which renders the real stylesheet; here the theme is set so the same states are
+ * exercised under each.
  */
 
 type Theme = 'light' | 'dark';

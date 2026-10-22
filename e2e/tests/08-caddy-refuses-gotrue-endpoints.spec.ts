@@ -4,16 +4,16 @@ import { rawRequest } from '../support/raw-http.ts';
 import { SEED, readStackEnv } from '../support/env.ts';
 
 /**
- * Engineering Practices › Testing: the E2E suite, which runs through Caddy, includes a smoke test
- * that external `POST /auth/v1/signup` and `PUT /auth/v1/user` are refused, including
- * percent-encoded and doubled-slash variants of the paths.
+ * The E2E suite, which runs through Caddy, includes a smoke test that external
+ * `POST /auth/v1/signup` and `PUT /auth/v1/user` are refused, including percent-encoded and
+ * doubled-slash variants of the paths.
  *
  * Only hearth-service may call those two endpoints, which it does on the Compose network, so the
  * common-password check at signup and the password re-entry for a password or email change cannot
- * be skipped by calling GoTrue directly (Technical Architecture, "Routing"). Caddy's matcher is
- * method-restricted and runs after path normalization — percent-decoding, merged duplicate
- * slashes, resolved dot segments, case-insensitive — so every spelling below is the same path.
- * Kong, the second layer behind Caddy, is probed further down too.
+ * be skipped by calling GoTrue directly. Caddy's matcher is method-restricted and runs after path
+ * normalization — percent-decoding, merged duplicate slashes, resolved dot segments,
+ * case-insensitive — so every spelling below is the same path. Kong, the second layer behind Caddy,
+ * is probed further down too.
  */
 
 const SIGNUP_SPELLINGS = [

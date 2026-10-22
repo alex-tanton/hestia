@@ -5,10 +5,10 @@ import {
 } from '@hearth/shared';
 
 /*
- * Notification copy (Branding, "Notification copy"). Every producer builds its title and body here
- * and validates them against the shared schema before a row is written. A line over the limit is
- * never shortened: the builder answers null, and the producer does not enqueue the row. The
- * producer reports only the type and id of what it dropped, never the household content.
+ * Notification copy. Every producer builds its title and body here and validates them against the
+ * shared schema before a row is written. A line over the limit is never shortened: the builder
+ * answers null, and the producer does not enqueue the row. The producer reports only the type and
+ * id of what it dropped, never the household content.
  */
 
 /** A notification a producer did not write, named by type and target id only. */
@@ -53,14 +53,14 @@ export interface BillReminderCopyInput {
   weekday: string;
 }
 
-/** "Internet due Friday" / "$74.99 · autopay" (Branding, `bill_due`). */
+/** "Internet due Friday" / "$74.99 · autopay" (`bill_due`). */
 export function billReminderCopy(input: BillReminderCopyInput): NotificationCopy | null {
   const when = input.kind === 'due' ? 'due today' : `due ${input.weekday}`;
   const amount = formatAmount(input.amount);
   return copy(`${input.name} ${when}`, input.autopay ? `${amount} · autopay` : amount);
 }
 
-/** A recurring chore's due day (Branding, `chore_due`): the name leads, the body says whose turn. */
+/** A recurring chore's due day (`chore_due`): the name leads, the body says whose turn. */
 export function choreDueCopy(name: string): NotificationCopy | null {
   return copy(name, 'Your turn this week');
 }
@@ -70,7 +70,7 @@ export function errandDueCopy(name: string): NotificationCopy | null {
   return copy(name, 'Due today');
 }
 
-/** The new holder of a rotating chore (Branding, `chore_rotation`). */
+/** The new holder of a rotating chore (`chore_rotation`). */
 export function choreRotationCopy(input: {
   name: string;
   previousName: string;
@@ -85,7 +85,7 @@ export function joinNames(names: readonly string[]): string {
   return `${head} and ${names[names.length - 1] ?? ''}`;
 }
 
-/** A batch of list additions: a count, never the items themselves (Branding, `list_activity`). */
+/** A batch of list additions: a count, never the items themselves (`list_activity`). */
 export function listActivityCopy(input: {
   count: number;
   listName: string;
@@ -98,7 +98,7 @@ export function listActivityCopy(input: {
   );
 }
 
-/** The first meal planned for today, and how many more follow it (Branding, `meal_reminder`). */
+/** The first meal planned for today, and how many more follow it (`meal_reminder`). */
 export function mealReminderCopy(input: {
   recipeTitle: string;
   mealType: string;
@@ -111,7 +111,7 @@ export function mealReminderCopy(input: {
   return copy(`Today: ${input.recipeTitle} for ${input.mealType}`, body);
 }
 
-/** The Saturday nudge for a week with no meals planned (Branding, `weekly_meal_nudge`). */
+/** The Saturday nudge for a week with no meals planned (`weekly_meal_nudge`). */
 export function weeklyNudgeCopy(recipeCount: number): NotificationCopy | null {
   const body =
     recipeCount === 1

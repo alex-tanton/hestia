@@ -19,11 +19,11 @@ import {
 import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
 
 /**
- * Brings the Compose stack up for the E2E suite and takes it down again (Engineering Practices ›
- * Testing, "E2E environment"). The suite runs through Caddy, so it runs against the real stack:
- * docker/docker-compose.yml with e2e/docker-compose.e2e.yml over it.
+ * Brings the Compose stack up for the E2E suite and takes it down again. The suite runs through
+ * Caddy, so it runs against the real stack: docker/docker-compose.yml with
+ * e2e/docker-compose.e2e.yml over it.
  *
- * Every run starts from an empty database, so the journeys see exactly the Seed Data fixtures.
+ * Every run starts from an empty database, so the journeys see exactly the seed data fixtures.
  * Each run has its own project, network, image tag, state directory, and host ports (see
  * e2e/support/env.ts), so a run never touches another run's stack, not even one started a moment
  * earlier. Teardown removes exactly those things and nothing selected by pattern.
@@ -50,7 +50,7 @@ function writeEnvFile(): void {
     // Plain HTTP on the loopback: there is no Funnel in front of the E2E stack, and every link
     // the stack prints — an invite, the owner's reset link — has to be one the browser can open.
     HEARTH_ORIGIN: BASE_URL,
-    // Seed Data, "Users": Alex is the development owner, so Alex sees System health.
+    // Alex is the development owner, so Alex sees System health.
     HEARTH_OWNER_EMAIL: 'alex@example.com',
     BACKUP_DIR,
   });

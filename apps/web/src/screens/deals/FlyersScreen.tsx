@@ -28,7 +28,7 @@ export function flyerPath(flyer: Pick<Flyer, 'flyerId'>): string {
 }
 
 /**
- * Design › Screens › 6, Browse flyers: every active flyer near the household's postal code, with
+ * Browse flyers: every active flyer near the household's postal code, with
  * merchant, validity dates, and item count. Tapping one opens its items.
  */
 export function FlyersScreen(): ReactElement {

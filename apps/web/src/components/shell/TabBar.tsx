@@ -3,10 +3,10 @@ import { NavLink } from 'react-router';
 import { TABS } from '../../lib/sections.ts';
 
 /**
- * The five tabs (PRD › Navigation shell): a fixed bottom bar below 1025px and a labelled left
- * sidebar above it (Design › Breakpoints). NavLink sets aria-current="page" on the active tab.
- * The active tab takes the section color *and* a heavier label plus an indicator bar, so the
- * state is never shown by color alone.
+ * The five tabs: a fixed bottom bar below 1025px and a labelled left
+ * sidebar above it. NavLink sets aria-current="page" on the active tab. The active tab takes the
+ * section color *and* a heavier label plus an indicator bar, so the state is never shown by color
+ * alone.
  */
 export function TabBar(): ReactElement {
   return (

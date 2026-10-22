@@ -10,7 +10,7 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-/** Requirements › Scale and pagination: deal results and flyer item lists paginate at 50. */
+/** Deal results and flyer item lists paginate at 50. */
 export function Pagination({
   page,
   pageSize,

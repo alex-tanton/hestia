@@ -14,10 +14,9 @@ import {
 } from './scheduler.js';
 
 /**
- * Technical Architecture, "Scheduled jobs": the schedules, in UTC, and the advisory lock that
- * makes a second run a no-op. The database here is a stub whose `pg_try_advisory_lock` answers
- * nothing, which is exactly the "lock held" case; the lock being granted needs a real Postgres and
- * is covered by `jobs.integration.test.ts`.
+ * The job schedules, in UTC, and the advisory lock that makes a second run a no-op. The database
+ * here is a stub whose `pg_try_advisory_lock` answers nothing, which is exactly the "lock held"
+ * case; the lock being granted needs a real Postgres and is covered by `jobs.integration.test.ts`.
  */
 
 let lines: JobLogLine[] = [];

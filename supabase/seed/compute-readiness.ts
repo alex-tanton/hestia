@@ -2,10 +2,10 @@ import type { Pool, PoolClient } from 'pg';
 import { matchIngredient, type MatchCandidate, type MatchOverride } from '@hearth/matching';
 
 /**
- * Recipe readiness for the seed data (Seed Data, "Recipes": the 12+2 readiness table is the test
- * oracle; Handoff, Phase 3 acceptance: "readiness scoring matches every expected bucket and
- * percentage in Seed Data"). `seed.sql` deliberately does not hand-write `recipe_readiness` rows
- * (matching is derived data); this runs the real computation after `seed.sql` applies.
+ * Recipe readiness for the seed data (the 12+2 readiness table is the test oracle, and readiness
+ * scoring must match every expected bucket and percentage in it). `seed.sql` deliberately does not
+ * hand-write `recipe_readiness` rows (matching is derived data); this runs the real computation
+ * after `seed.sql` applies.
  *
  * This duplicates the small amount of query/bucket-assignment orchestration that
  * `apps/service/src/services/readiness.ts` and `matching-candidates.ts` own, rather than importing
@@ -164,8 +164,8 @@ export async function recomputeReadinessForHousehold(
       }
     }
 
-    // Equal weighting, half-up rounding, 0% for a recipe with no ingredients (Handoff
-    // non-negotiable 12), the same formula `readiness.ts` uses.
+    // Equal weighting, half-up rounding, 0% for a recipe with no ingredients, the same formula
+    // `readiness.ts` uses.
     const readinessPercent =
       ingredientRows.length === 0
         ? 0

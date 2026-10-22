@@ -135,8 +135,8 @@ export async function startStack(): Promise<Stack> {
           newestBackupTime: () => Promise.resolve(null),
           merchantSkipRates: () => [],
           deals: testDeals().service,
-          // Every recipe-parse test overrides this with a fixture-reading fake (Handoff
-          // non-negotiable 17: tests never make a live outbound fetch either).
+          // Every recipe-parse test overrides this with a fixture-reading fake: tests never make
+          // a live outbound fetch either.
           parseRecipeUrl: () => Promise.reject(new Error('unexpected parseRecipeUrl')),
           ...options.deps,
         },

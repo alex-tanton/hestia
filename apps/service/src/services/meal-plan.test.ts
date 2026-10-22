@@ -3,8 +3,8 @@ import { ProblemError } from '../problem.js';
 import { addDays, assertSunday } from './meal-plan.js';
 
 /*
- * The week planner's pure logic (Technical Architecture, "API surface" — "Meal plan"): the
- * Sunday-only validation and the week's date-range math, both testable without a database.
+ * The week planner's pure logic: the Sunday-only validation and the week's date-range math, both
+ * testable without a database.
  */
 describe('assertSunday', () => {
   it('accepts a Sunday', () => {

@@ -10,7 +10,7 @@ interface SectionProviderProps {
 }
 
 /**
- * Supplies the section to components (Engineering Practices › Frontend patterns). The wrapper's
+ * Supplies the section to components. The wrapper's
  * data-section attribute retargets every section-* color utility inside it, so components style
  * themselves with `text-section` and never name a hue.
  */

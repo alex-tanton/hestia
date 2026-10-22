@@ -42,7 +42,7 @@ const TRIGGER_CLASSES =
   'flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border bg-base px-3 text-left text-body text-primary transition-colors duration-150 ease-out hover:border-primary disabled:cursor-not-allowed disabled:bg-raised disabled:opacity-60';
 
 /**
- * Design › Primitives: Radix Select, native on mobile where possible. Touch devices get the
+ * Radix Select, native on mobile where possible. Touch devices get the
  * platform picker, which is faster one-handed than a custom listbox.
  */
 export function Select({

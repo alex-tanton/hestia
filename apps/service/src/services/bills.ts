@@ -16,18 +16,16 @@ import { markHouseholdActive } from './households.js';
 import { fromCents, toCents } from './money.js';
 
 /*
- * Bills, the payment log, skip, archive, and "Still using this?" (Requirements, "Bills and
- * subscriptions"; Technical Architecture, "API surface" — "Bills"). Every function takes a Kysely
+ * Bills, the payment log, skip, archive, and "Still using this?". Every function takes a Kysely
  * bound to the caller's withUserDb transaction, so RLS decides what it can see; a row RLS hides is
  * reported as not found, never as forbidden, and no function here re-implements the household or
  * personal visibility check the database already enforces.
  *
- * "Today" and a bill's dates are read in the same query as the bill (Requirements, "Timezone",
- * non-negotiable 8): every date is read in the household timezone. A household bill's is its own
- * household's; a personal bill's is its owner's active household's, since a personal bill belongs
- * to no household: its owner's active household's, or the owner's earliest household's if none is
- * active. `coalesce` picks the right one without branching. The profile's timezone is never a date
- * zone.
+ * "Today" and a bill's dates are read in the same query as the bill: every date is read in the
+ * household timezone. A household bill's is its own household's; a personal bill's is its owner's
+ * active household's, since a personal bill belongs to no household: its owner's active
+ * household's, or the owner's earliest household's if none is active. `coalesce` picks the right
+ * one without branching. The profile's timezone is never a date zone.
  */
 
 interface BillRow {
@@ -97,7 +95,7 @@ export function billOccurrence(
 ): { date: CalendarDate; overdue: boolean } {
   if (row.today === null) return { date: row.anchor_date, overdue: false };
   if (row.recurrence_unit === null) {
-    // A one-time bill (PRD, "Data model › Bills"): its only occurrence is the anchor date itself.
+    // A one-time bill: its only occurrence is the anchor date itself.
     const resolved = resolvedDates.has(row.anchor_date);
     return { date: row.anchor_date, overdue: !resolved && row.anchor_date < row.today };
   }
@@ -182,7 +180,7 @@ async function requireBillRow(db: Kysely<Database>, id: string): Promise<BillRow
 }
 
 /** The household's bills (visibility 'household') plus the caller's own personal bills, not
- * archived, soonest current-occurrence first (Requirements, "Bills"). */
+ * archived, soonest current-occurrence first. */
 export async function listBills(
   db: Kysely<Database>,
   householdId: string,
@@ -320,11 +318,11 @@ export async function deleteBill(db: Kysely<Database>, id: string): Promise<void
 }
 
 /**
- * Records a payment for the bill's current occurrence (Requirements, "Bills": "Recording a
- * payment or a skip writes the log row for the current occurrence"). The occurrence is always the
- * one the server computes, never one the client names, so a payment can never land on the wrong
- * date. A race with another payment, or with `log-autopay`, surfaces as 409 (the unique
- * (bill_id, occurrence_date) key, mapped globally from 23505).
+ * Records a payment for the bill's current occurrence (a payment or a skip writes the log row for
+ * the current occurrence). The occurrence is always the one the server computes, never one the
+ * client names, so a payment can never land on the wrong date. A race with another payment, or with
+ * `log-autopay`, surfaces as 409 (the unique (bill_id, occurrence_date) key, mapped globally from
+ * 23505).
  */
 export async function payBill(
   db: Kysely<Database>,
@@ -364,7 +362,7 @@ function requireHouseholdToday(row: BillRow): CalendarDate {
   return row.today;
 }
 
-/** Skips the bill's current occurrence: it will not be paid (PRD, "Bills": "a waived month"). */
+/** Skips the bill's current occurrence: it will not be paid (a waived month). */
 export async function skipBill(
   db: Kysely<Database>,
   id: string,
@@ -390,7 +388,7 @@ export async function skipBill(
   return toPayment(paymentRow);
 }
 
-/** Archiving hides a bill from every view and stops its reminders; history is kept (PRD, "Bills"). */
+/** Archiving hides a bill from every view and stops its reminders; history is kept. */
 export async function archiveBill(db: Kysely<Database>, id: string): Promise<Bill> {
   await requireBillRow(db, id);
   await db
@@ -403,10 +401,10 @@ export async function archiveBill(db: Kysely<Database>, id: string): Promise<Bil
 }
 
 /**
- * The scope a bill moves to, or the refusal that stops it (PRD, "Bills": only the owner can change
- * visibility, which moves a bill between its household and the owner alone; a household bill never
- * moves to another household). Pure, so every refusal is a unit test. The database refuses the same
- * moves through `keep_bill_scope` and RLS; this check gives each one a clear 4xx first.
+ * The scope a bill moves to, or the refusal that stops it (only the owner can change visibility,
+ * which moves a bill between its household and the owner alone; a household bill never moves to
+ * another household). Pure, so every refusal is a unit test. The database refuses the same moves
+ * through `keep_bill_scope` and RLS; this check gives each one a clear 4xx first.
  */
 export function planBillMove(
   bill: { ownerUserId: string; householdId: string | null; archived: boolean },
@@ -470,7 +468,7 @@ export async function moveBill(
   return toBill(db, await requireBillRow(db, id));
 }
 
-/** "Still using this?" → Still using: resets the 60-day usage clock (PRD, "Subscriptions view"). */
+/** "Still using this?" → Still using: resets the 60-day usage clock. */
 export async function confirmBillUsage(db: Kysely<Database>, id: string): Promise<Bill> {
   await requireBillRow(db, id);
   await db
@@ -493,7 +491,7 @@ async function requirePaymentRow(db: Kysely<Database>, billId: string, paymentId
   return { row, bill };
 }
 
-/** Any member who can see the bill may correct one of its payments (PRD, "Bills": autopay note). */
+/** Any member who can see the bill may correct one of its payments (autopay-logged ones included). */
 export async function updateBillPayment(
   db: Kysely<Database>,
   billId: string,

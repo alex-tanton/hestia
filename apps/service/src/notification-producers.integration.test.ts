@@ -22,10 +22,10 @@ import {
 } from './test/service-stack.js';
 
 /*
- * The notification producers against `supabase start` (Requirements, "Notifications"; Technical
- * Architecture, "Scheduled jobs" › "Dispatch"). Users are real GoTrue sign-ups and every list, chore,
- * and departure goes through the HTTP routes. Scheduled reminders are enqueued at a fixed clock so
- * each send time is exact: 2026-10-04 is a Sunday, so 2026-10-03 is the Saturday for the nudge.
+ * The notification producers against `supabase start`. Users are real GoTrue sign-ups and every
+ * list, chore, and departure goes through the HTTP routes. Scheduled reminders are enqueued at a
+ * fixed clock so each send time is exact: 2026-10-04 is a Sunday, so 2026-10-03 is the Saturday for
+ * the nudge.
  *
  * The push transport is always the recording double, so no push endpoint is contacted from here.
  */
@@ -494,10 +494,9 @@ describe('bill_due', () => {
   });
 
   it('drops a reminder whose title would be over the 60-character copy limit, and enqueues nothing for it', async () => {
-    // notificationCopySchema (packages/shared) caps title and body at 60 characters; billRows'
-    // own payloadOf(...) returns null rather than truncating, and the producer must not enqueue a
-    // row at all for it (Branding, "Notification copy": "the builder answers null, and the
-    // producer does not enqueue the row").
+    // notificationCopySchema (packages/shared) caps title and body at 60 characters; billRows' own
+    // payloadOf(...) returns null rather than truncating, and the producer must not enqueue a row
+    // at all for it (the builder answers null, and the producer does not enqueue the row).
     const home = await makeHome();
     const longName = 'A'.repeat(70);
     const tooLong = await insertBill({

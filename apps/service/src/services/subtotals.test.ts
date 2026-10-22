@@ -30,7 +30,7 @@ describe('money stays in integer cents', () => {
     [249, '2', 498],
     [199, '3', 597],
     [333, '2', 666],
-    // Half-up at the cent, the rounding rule for every price division (Requirements).
+    // Half-up at the cent, the rounding rule for every price division.
     [249, '1.5', 374],
     [251, '1.5', 377],
     [333, '0.5', 167],
@@ -85,7 +85,7 @@ describe('the Subtotals rule', () => {
   });
 
   /*
-   * The expected store headers of Seed Data's "This Week" list, which is the oracle for this
+   * The expected store headers of the seed data's "This Week" list, which is the oracle for this
    * rule. Bought items are not part of a store group, so they never reach here.
    */
   it.each([
@@ -122,7 +122,7 @@ describe('the Subtotals rule', () => {
       ],
       { subtotalCents: 0, unpricedCount: 3 },
     ],
-  ])('matches Seed Data’s %s header', (_store, items, expected) => {
+  ])('matches the seed data’s %s header', (_store, items, expected) => {
     expect(subtotal(items)).toEqual(expected);
   });
 });

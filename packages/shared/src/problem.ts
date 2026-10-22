@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** RFC 9457 problem details: the only error body the API returns (Technical Architecture). */
+/** RFC 9457 problem details: the only error body the API returns. */
 export const problemDetailsSchema = z.object({
   type: z.string(),
   title: z.string(),

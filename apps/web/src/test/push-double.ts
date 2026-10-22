@@ -1,7 +1,7 @@
 import type { DeviceSubscription, PushPort, PushSupport } from '../lib/push/push-port.ts';
 
 /*
- * A push port a test drives by hand (Engineering Practices › Testing: no test contacts a push
+ * A push port a test drives by hand (no test contacts a push
  * service). It records what the browser was asked, in order, into `log`, which a test can share
  * with its fetch stub to assert the order of prompt and request.
  */

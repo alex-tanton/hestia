@@ -1,7 +1,6 @@
 /**
- * Rate discipline for every Flipp call (non-negotiable 19; Technical Architecture, "Rate
- * discipline"). One queue, one request at a time, a minimum gap between them, exponential
- * backoff on any non-200, and a circuit breaker that stays open for half an hour.
+ * Rate discipline for every Flipp call. One queue, one request at a time, a minimum gap between
+ * them, exponential backoff on any non-200, and a circuit breaker that stays open for half an hour.
  *
  * Flipp publishes no rate limit and no SLA, which is exactly why the client has to impose one:
  * personal-scale traffic is the only pattern this may ever produce.
@@ -19,15 +18,14 @@ export interface HttpResponse {
   json(): Promise<unknown>;
 }
 
-/** One GET. Injected so tests never reach the network (non-negotiable 17). */
+/** One GET. Injected so tests never reach the network. */
 export type HttpGet = (url: string, headers: Record<string, string>) => Promise<HttpResponse>;
 
 export interface QueueLogger {
   warn(data: Record<string, unknown>, message: string): void;
   /**
-   * Optional, because most callers only want the warnings. The refresh job passes a logger that
-   * has it, so the rate discipline is observable in the logs rather than taken on trust (Handoff,
-   * Phase 2: "Rate discipline is observable in logs").
+   * Optional, because most callers only want the warnings. The refresh job passes a logger that has
+   * it, so the rate discipline is observable in the logs rather than taken on trust.
    */
   info?(data: Record<string, unknown>, message: string): void;
 }
@@ -89,7 +87,7 @@ export function buildUserAgent(origin: string): string {
 
 /**
  * A search URL carries the user's query string, which is their data. Logs identify the mode and
- * the path, never the terms (Technical Architecture, "Logging"; non-negotiable 3).
+ * the path, never the terms.
  */
 function redact(url: string): string {
   const parsed = new URL(url);

@@ -4,10 +4,10 @@ import { listActivityCopy, type DroppedCopyReport } from '../notifications/copy.
 import { planListBatch } from '../notifications/planners.js';
 
 /*
- * List activity (Requirements, "Notifications" › "Rules" › "Batching over spam"). Each addition to a
- * list is folded into one `list_activity` row per recipient per list: the first addition opens the
- * batch, keyed by its own time, and each later addition before that row is sent updates its count
- * and send time. Once a batch is sent, the next addition opens a new one, so it is never resent.
+ * List activity. Each addition to a list is folded into one `list_activity` row per recipient per
+ * list: the first addition opens the batch, keyed by its own time, and each later addition before
+ * that row is sent updates its count and send time. Once a batch is sent, the next addition opens a
+ * new one, so it is never resent.
  *
  * The row is written by the adding member's request. Row-level security lets a member read and
  * write the unsent batch rows of co-members, and the two helpers below answer the questions that

@@ -2,11 +2,10 @@ import type { Chore, Member, RecurrenceUnit } from '@hearth/shared';
 import { addDays, weekStart } from '../../lib/household-date.ts';
 
 /*
- * Copy and pure formatting for the Chores pillar (Design › "17. Chores", "18. Errands"; Branding ›
- * "Never nag"; Handoff non-negotiable 13: "No gamification in chores. No streaks, points, badges,
- * or motivational copy."). Every string a member reads states a fact, never a feeling — "Last done
- * 5 weeks ago", never "You're behind!" — and overdue is carried by the danger color plus the word
- * "Overdue", never by color alone (Design › Accessibility › Color independence).
+ * Copy and pure formatting for the Chores pillar (never nag; no gamification in chores: no
+ * streaks, points, badges, or motivational copy). Every string a member reads states a fact,
+ * never a feeling — "Last done 5 weeks ago", never "You're behind!" — and overdue is carried by
+ * the danger color plus the word "Overdue", never by color alone.
  */
 
 export const OFFLINE_ACTION_REASON = 'Needs a connection.';
@@ -38,9 +37,8 @@ export const CHORE_GROUP_ORDER: readonly ChoreGroupKey[] = [
 
 /**
  * Overdue/Today/This week/Later, computed from each chore's own `dueDate` and `isOverdue` against
- * "today" in the household timezone (PRD › "Timezone"; Handoff non-negotiable 8). "This week" runs
- * through Saturday of the current week (PRD › "Locale": weeks start Sunday), the same boundary the
- * week planner uses.
+ * "today" in the household timezone. "This week" runs through Saturday of the current week
+ * (weeks start Sunday), the same boundary the week planner uses.
  */
 export function groupChores(
   chores: readonly Chore[],
@@ -72,7 +70,7 @@ const UNIT_LABEL: Readonly<Record<RecurrenceUnit, { one: string; many: string }>
   year: { one: 'year', many: 'years' },
 };
 
-/** "Every week", "Every 3 days" — the recurrence summary (Design › "17. Chores": "shows recurrence"). */
+/** "Every week", "Every 3 days" — the recurrence summary. */
 export function describeRecurrence(unit: RecurrenceUnit, interval: number): string {
   const label = UNIT_LABEL[unit];
   return interval === 1 ? `Every ${label.one}` : `Every ${String(interval)} ${label.many}`;
@@ -86,7 +84,7 @@ export function formatDueIn(dueDate: string, today: string): string {
   return `in ${String(days)} days`;
 }
 
-/** "Overdue 3 days" — neutral, factual, never alarmist (Branding › "Never nag"). */
+/** "Overdue 3 days" — neutral, factual, never alarmist. */
 export function formatOverdue(dueDate: string, today: string): string {
   const days = daysBetween(dueDate, today);
   return days <= 0 ? 'Overdue' : `Overdue ${String(days)} ${days === 1 ? 'day' : 'days'}`;
@@ -101,9 +99,8 @@ function daysBetween(from: string, to: string): number {
 }
 
 /**
- * "Last done 5 weeks ago" — the relative-time copy for a chore's last completion (Design ›
- * "17. Chores": "last-completed relative time"; Seed Data: "last done 5 weeks ago" with "no
- * nagging copy"). Weeks once 7+ days have passed, otherwise days; "today" and "yesterday" cover
+ * "Last done 5 weeks ago" — the relative-time copy for a chore's last completion, with no
+ * nagging copy. Weeks once 7+ days have passed, otherwise days; "today" and "yesterday" cover
  * the near cases plainly. `completedDate` is the calendar date the completion was made, in the
  * household timezone (see `calendarDateOfInstant`), not the occurrence it closed: a completion
  * made early for next week's occurrence was still done today.
@@ -130,8 +127,8 @@ export function formatRelativeAgo(completedDate: string, today: string): string 
 
 /**
  * A member's display name from the current roster, or "Former member" when they have left the
- * household (PRD › "Membership lifecycle": "Historical records … keep the departed user's id and
- * render as 'Former member' rather than being rewritten."). The list the API returns only ever
+ * household (historical records keep the departed user's id and render as 'Former member'
+ * rather than being rewritten). The list the API returns only ever
  * holds current members, so an id missing from it is exactly a departed one.
  */
 export function memberName(members: readonly Member[], userId: string | null): string {
@@ -140,7 +137,7 @@ export function memberName(members: readonly Member[], userId: string | null): s
 }
 
 /**
- * The completion toast (Design › "17. Chores": `"Take out trash done. Sam is next."`). A chore
+ * The completion toast (`"Take out trash done. Sam is next."`). A chore
  * with no rotation has no "is next" clause — there is no turn to name.
  */
 export function completionToastMessage(
@@ -164,8 +161,8 @@ export function deleteErrandConfirmation(errand: { name: string }): string {
 }
 
 /**
- * Words this pillar's own copy must never use (Handoff non-negotiable 13; Branding › "Never
- * nag"). Used by the copy-audit test to scan every chore/errand string this module exports.
+ * Words this pillar's own copy must never use. Used by the copy-audit test to scan every
+ * chore/errand string this module exports.
  */
 export const BANNED_GAMIFICATION_WORDS: readonly string[] = [
   'streak',

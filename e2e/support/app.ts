@@ -6,7 +6,7 @@ export function switcher(page: Page): Locator {
   return page.getByRole('button', { name: /switch household$/ });
 }
 
-/** The dashboard is where every signed-in journey lands (Design › Screens › 2). */
+/** The dashboard is where every signed-in journey lands. */
 export async function expectDashboard(page: Page, householdName: string): Promise<void> {
   await expect(page.getByRole('heading', { name: 'This Week', level: 1 })).toBeVisible();
   await expect(switcher(page)).toHaveText(new RegExp(householdName));
@@ -42,7 +42,7 @@ export async function openSettings(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'My Households' })).toBeVisible();
 }
 
-/** Opens the switcher sheet and moves to another household (Design › Screens › 3). */
+/** Opens the switcher sheet and moves to another household. */
 export async function switchHousehold(page: Page, householdName: string): Promise<void> {
   await switcher(page).click();
   const sheet = page.getByRole('dialog', { name: 'Households' });
@@ -56,7 +56,7 @@ export async function reassign(page: Page, itemName: string, memberName: string)
   await page.getByRole('option', { name: memberName }).click();
 }
 
-/** Opens a list from the Lists index by name (Design › Screens › 7 and 8). */
+/** Opens a list from the Lists index by name. */
 export async function openList(page: Page, listName: string): Promise<void> {
   await page.goto('/lists');
   await page.getByRole('link', { name: new RegExp(`^${listName}`) }).click();
@@ -65,9 +65,9 @@ export async function openList(page: Page, listName: string): Promise<void> {
 
 /**
  * Waits for the service worker to finish installing and activating, so a caller about to go
- * offline knows the precache (Engineering Practices › "Service worker") is actually there to serve
- * a reload. First activation needs no user prompt — only an update to an already-controlling
- * worker does — so this resolves on the very first visit.
+ * offline knows the precache is actually there to serve a reload. First activation needs no user
+ * prompt — only an update to an already-controlling worker does — so this resolves on the very
+ * first visit.
  */
 export async function waitForServiceWorker(page: Page): Promise<void> {
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));

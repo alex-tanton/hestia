@@ -12,10 +12,9 @@ import {
 } from './test/service-stack.js';
 
 /*
- * Realtime propagation for lists (Requirements, "Real-time sharing"). The PWA subscribes to
- * Supabase Realtime directly rather than through the service, so the only thing that protects a
- * stream is RLS: this asserts that a household member receives another member's change and that
- * a non-member receives nothing at all.
+ * Realtime propagation for lists. The PWA subscribes to Supabase Realtime directly rather than
+ * through the service, so the only thing that protects a stream is RLS: this asserts that a
+ * household member receives another member's change and that a non-member receives nothing at all.
  *
  * The socket is driven with the Phoenix frames Realtime speaks, through Node's own WebSocket, so
  * the test needs no client library.

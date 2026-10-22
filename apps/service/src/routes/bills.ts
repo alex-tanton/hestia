@@ -28,9 +28,9 @@ import {
 import { getSubscriptions } from '../services/subscriptions.js';
 
 /**
- * Bills, the payment log, skip, archive, and subscriptions (Technical Architecture, "API surface"
- * — "Bills"). `/bills/:id` routes do not name a household in the path, so the service functions
- * find it from the row, the same convention `/recipes/:id` and `/meal-plan/:id` follow.
+ * Bills, the payment log, skip, archive, and subscriptions. `/bills/:id` routes do not name a
+ * household in the path, so the service functions find it from the row, the same convention
+ * `/recipes/:id` and `/meal-plan/:id` follow.
  */
 export const billRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/households/:id/bills', async (request) => {

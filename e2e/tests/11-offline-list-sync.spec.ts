@@ -6,16 +6,16 @@ import { queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Journey 7, list portion (Engineering Practices › E2E journeys; the chores/errands portion is
- * Phase 5 and explicitly out of scope here): go offline, check a list item off and back on, and
- * add one; return online; assert the queue survives a reload and replays in order, and that
- * replaying an already-synced write changes nothing (Handoff, Phase 2 "Done when").
+ * Journey 7, list portion (the chores/errands portion is Phase 5 and explicitly out of scope
+ * here): go offline, check a list item off and back on, and add one; return online; assert the
+ * queue survives a reload and replays in order, and that replaying an already-synced write changes
+ * nothing.
  *
- * "Trash bags" starts Needed at Harris Teeter with no price (Seed Data, "Shopping lists").
- * Checking it off and back on while offline, in that order, is the order-sensitive half of this
- * journey: a list's queued writes share one mutation scope and replay in the order they were made
- * (Engineering Practices › "The write queue"), so only an in-order replay leaves it Needed again.
- * Out-of-order delivery — or two writes racing the network independently — would leave it Bought.
+ * "Trash bags" starts Needed at Harris Teeter with no price. Checking it off and back on while
+ * offline, in that order, is the order-sensitive half of this journey: a list's queued writes share
+ * one mutation scope and replay in the order they were made, so only an in-order replay leaves it
+ * Needed again. Out-of-order delivery — or two writes racing the network independently — would
+ * leave it Bought.
  */
 
 const TARGETS = { light: 'Paper Napkins', dark: 'Aluminum Foil' } as const;
@@ -57,8 +57,7 @@ for (const theme of ['light', 'dark'] as const) {
       await signIn(page, SEED.alex.email);
       await expectDashboard(page, SEED.oakStreet.name);
       await openList(page, 'This Week');
-      // Precached before the loss of network, so the coming reload has an app shell to serve
-      // (Engineering Practices › "Service worker").
+      // Precached before the loss of network, so the coming reload has an app shell to serve.
       await waitForServiceWorker(page);
 
       await page.context().setOffline(true);
@@ -92,8 +91,8 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(harrisTeeter.getByRole('checkbox', { name: 'Trash bags' })).not.toBeChecked();
       await expectAccessible(page, `This Week, offline with queued writes (${theme})`);
 
-      // Survives a reload (Engineering Practices › "The write queue"): still offline, both the
-      // optimistic state and the queue itself come back from IndexedDB, not from memory.
+      // Survives a reload: still offline, both the optimistic state and the queue itself come back
+      // from IndexedDB, not from memory.
       await page.reload();
       await expect(page.getByRole('heading', { name: 'This Week', level: 1 })).toBeVisible();
       await expect(page.getByRole('checkbox', { name: newItem })).toHaveAccessibleName(
@@ -120,9 +119,8 @@ for (const theme of ['light', 'dark'] as const) {
       expect(itemStatus(listId, 'Trash bags')).toBe('needed');
       expect(itemCount(listId, newItem)).toBe(1);
 
-      // The duplicate replay (Handoff non-negotiable 9): the same id, sent again directly, is
-      // exactly what a queued write replaying after its own success already looked like, and it
-      // changes nothing.
+      // The duplicate replay: the same id, sent again directly, is exactly what a queued write
+      // replaying after its own success already looked like, and it changes nothing.
       const token = await accessToken(request, SEED.alex.email);
       const addedId = itemId(listId, newItem);
       const replayStatus = await addListItemStatus(request, token, listId, {

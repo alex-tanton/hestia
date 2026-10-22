@@ -10,8 +10,8 @@ import {
 } from './request-queue.js';
 
 /**
- * Rate discipline (non-negotiable 19). Fake timers and a fake transport throughout: these tests
- * never touch the network (non-negotiable 17).
+ * Rate discipline. Fake timers and a fake transport throughout: these tests never touch the
+ * network.
  */
 
 interface Call {

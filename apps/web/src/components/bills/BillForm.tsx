@@ -26,7 +26,7 @@ export interface BillFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Editing an existing bill, or adding a new one — visibility is asked only when adding, since
-   * a bill's owner cannot move it between household and personal afterward (Design › Screens › 15). */
+   * a bill's owner cannot move it between household and personal afterward. */
   bill?: Bill | undefined;
   onSubmit: (draft: BillDraft, visibility: BillVisibility) => void;
   isSaving?: boolean;
@@ -59,9 +59,9 @@ function toUnit(value: string): RecurrenceUnit | null {
 }
 
 /**
- * Design › Screens › 15, the bill sheet: name, amount, category, recurrence (with the
- * next-three-dates preview), autopay, reminder lead time, and whether it counts toward
- * Subscriptions. Visibility is asked only when adding a bill — the database's own
+ * The bill sheet: name, amount, category, recurrence (with the next-three-dates preview),
+ * autopay, reminder lead time, and whether it counts toward Subscriptions. Visibility is asked
+ * only when adding a bill — the database's own
  * `bill_personal_iff_no_household` constraint, and the fact that PATCH /bills/:id does not accept
  * it, mean there is no "move a bill" action to build a control for.
  */
