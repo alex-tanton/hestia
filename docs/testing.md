@@ -233,6 +233,14 @@ natural keys like a postal code), and raises the test/hook timeouts to 20s/30s f
    `beforeEach` or wiped wholesale in `afterAll` (see `jobs.integration.test.ts`), so a stale row
    from one test run never leaks into a later one.
 
+Many route-level files do not write the `beforeAll`/`beforeEach`/`afterAll` trio themselves: they
+call `registerStackHooks()` from `apps/service/src/test/stack-hooks.ts` once at the top level, which
+starts one stack per file, builds a fresh app per test and closes the stack at the end, and import
+the live `stack` and `app` bindings it fills. A file that builds its apps differently keeps its own
+hooks. `expectStatus(response, status)` from the same module asserts a response's status code and
+prints the body when it fails, and `recordingJobLogger(lines)` from `test/job-logger.ts` is a job
+logger that collects what a job writes so a test can read it back.
+
 `apps/service/src/test/fixture-deal-source.ts` and `apps/service/src/test/push-double.ts` are test
 doubles used by both patterns to stand in for the live Flipp fetch and for Web Push.
 
@@ -263,6 +271,13 @@ runs before every test file: it mocks the PWA update-prompt hook (`virtual:pwa-r
 a build-time virtual module unavailable under Vitest), stubs layout APIs jsdom lacks
 (`ResizeObserver`, `scrollIntoView`, pointer capture) that Radix components call, and calls
 Testing Library's `cleanup()` after each test.
+
+**Shared helpers:** `apps/web/src/test/browser.ts` holds the browser state component tests set.
+`setOnline(isOnline)` switches both `navigator.onLine` and TanStack Query's online manager;
+`stubCoarsePointer()` makes `(pointer: coarse)` match, as on a phone; `registerBrowserStubs()`
+applies both around each test and undoes them afterwards; `registerHouseholdClock(instant)` pins
+`Date` to an explicit instant for tests that read the household's calendar from a device in another
+zone. Call the `register…` helpers at the top level of the test file.
 
 **Asserting async UI state:** never a fixed delay (`setTimeout`/`sleep`). Use `waitFor` from
 `@testing-library/react` to poll for a condition — a resolved query, a re-rendered element — the

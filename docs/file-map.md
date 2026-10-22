@@ -18,7 +18,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, with harness tests for the scripts that have one. |
 | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
-| `.github/` | Continuous integration and deployment automation (GitHub Actions), plus dependency updates. |
+| `.github/` | Continuous integration and deployment automation (GitHub Actions), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
 | `README.md` | The entry point: prerequisites, local development, deployment, and backup/restore steps. |
 | `CONTRIBUTING.md` | How changes land: which go straight to `main`, which need a pull request, and the commit rules. |
@@ -43,7 +43,7 @@ Vite, styled with Tailwind, and uses Workbox to work offline and install like a 
 | `pillars` | Thin routing glue that connects a top-level navigation area ("pillar" of the app, like Bills or Chores) to its screens. |
 | `components` | Reusable visual building blocks, organized by feature area (bills, chores, dashboard, errands, lists, meals) plus cross-cutting ones: `ui` (generic buttons, cards, dialogs, form fields), `shell` (the app frame — top bar, tab bar, household switcher), and `states` (loading, empty, and error placeholders used throughout). |
 | `lib` | Supporting logic that isn't a visual component: talking to the API (`api`), authentication (`auth`), offline queueing and sync (`offline`), push notifications (`push`), realtime updates (`realtime`), formatting, validation, and small reusable hooks. |
-| `test` | Shared test helpers and setup for the web app's own test suite. |
+| `test` | Shared test helpers and setup for the web app's own test suite, including `browser.ts` (online state, coarse pointer and household-clock stubs). |
 | `public` | Static assets served as-is, including app icons used for installation. |
 | `scripts` | Build-time helper scripts for the web app. |
 | `index.css`, `tokens.test.ts` | Global styling and a check that design tokens stay consistent. |
@@ -70,7 +70,7 @@ used for operational tasks like resetting a user's password.
 | `chores` | Chore- and errand-specific scheduling logic. |
 | `notifications` | Composing and planning the notifications sent to users. |
 | `push` | Sending web push notifications to installed PWAs. |
-| `test` | Shared fixtures and harnesses used by the service's own automated tests. |
+| `test` | Shared fixtures and harnesses used by the service's own automated tests, including `stack-hooks.ts` (the per-file stack lifecycle for integration tests) and `job-logger.ts` (a job logger that records its lines). |
 | `bin` | The `hearth-admin` command-line entry point: a hand-written POSIX shell wrapper that runs the bundled `dist/cli.js` (built from `src/cli.ts`). The service image links it onto the `PATH`. |
 | `scripts` | Operational helper scripts for the service (for example, regenerating database types). |
 
@@ -186,7 +186,7 @@ shopping list.
 | `.nvmrc` | Pins the exact Node.js version the project expects. | Keeps every contributor and CI on the same JavaScript runtime version, avoiding "works on my machine" issues. |
 | `.dockerignore` | Lists files and folders excluded when building a Docker image. | Keeps build context small and makes sure secrets, test artifacts, and unrelated folders never end up inside a built image. |
 | `.gitattributes` | Tells Git how to handle certain files — here, normalizing line endings to LF for text files and marking binary files (images, archives) so Git doesn't try to treat them as text. | Prevents line-ending mismatches between contributors on different operating systems. |
-| CI, `.github/workflows/` | GitHub Actions automation: `ci.yml` runs checks (lint, typecheck, tests) on every pull request and push; `deploy.yml` deploys a passing `main` commit to production. `dependabot.yml` opens automated pull requests to keep dependencies up to date. | Catches problems before merge and automates getting a verified change into production. |
+| CI, `.github/workflows/` | GitHub Actions automation: `ci.yml` runs checks (lint, typecheck, tests) on every pull request and push, and each of its six jobs calls the composite action in `.github/actions/setup/` (pnpm, Node from `.nvmrc`, and a lockfile install) after checkout; `deploy.yml` deploys a passing `main` commit to production. `dependabot.yml` opens automated pull requests to keep dependencies up to date. | Catches problems before merge and automates getting a verified change into production. |
 
 ## 11. test/
 
