@@ -59,7 +59,7 @@ used for operational tasks like resetting a user's password.
 | --- | --- |
 | `routes` | The HTTP endpoints grouped by feature (auth, bills, chores, deals, errands, health, households, lists, match overrides, meal plans, recipes, system, users). |
 | `services` | The business logic behind each feature — the rules and calculations that routes and jobs call into. |
-| `jobs` | Scheduled background work: dispatching notifications, logging autopay, refreshing deals and meal plans, pruning stale data, and the scheduler that runs them. |
+| `jobs` | Scheduled background work: dispatching notifications, logging autopay, refreshing deals, pruning stale data, and the scheduler that runs them. |
 | `privileged` | The small, deliberately isolated set of operations allowed to use elevated database or auth-provider access (for example, the owner CLI and system-level notification delivery). Everything else in the service is restricted to the narrow, non-privileged access a regular request gets. |
 | `auth` | Verifying access tokens issued by the auth provider. |
 | `gotrue` | The client used to talk to GoTrue, the self-hosted authentication service (signup, sign-in, password resets). |
