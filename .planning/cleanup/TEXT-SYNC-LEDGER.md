@@ -228,7 +228,26 @@ Not started (05-10).
 
 ## HTML fixtures
 
-Not started (05-10).
+Commit `4f4c124` on `refactor/drop-spec-citations` (`test(e2e): drop retired spec citations from recipe
+fixture pages`), the three files `e2e/fixtures/recipes/full-json-ld-light.html`, `full-json-ld-dark.html`
+and `no-json-ld.html`, one `<p>` paragraph each (4 base rows: two in the light page). Each paragraph keeps its
+purpose and loses the retired document references; the dark page now says the broccoli is a match against
+the "Broccoli Crowns" deal "in the seed data".
+
+Proofs:
+
+- `nonts-comment-check.mjs --html` on the working tree and on the commit prints `OK 3 files` (ld+json
+  blocks byte-identical, text outside the paragraphs equal).
+- `$L/05-10-extract.mts` ran `extractRecipeJsonLd` on the base and new version of each page: light and
+  dark `equal`, `no-json-ld.html` `equal` (both `undefined`).
+- `git grep -F` for each removed phrase (`Done when`, `E2E environment`, `Favorite-store groceries`,
+  `A recipe imports from a URL`) over `e2e` and `apps` outside the fixtures prints nothing. Spec 13 asserts
+  titles, readiness and prices from the JSON-LD, never the paragraph text. The recipe-import journey runs in
+  PR C's CI.
+
+html-consumers=none
+html-jsonld-identical=yes
+html-extract-equal=yes
 
 ## Non-TS proofs
 
