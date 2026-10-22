@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Baseline, Net Stabilization, and Analysis** - Make the test suite deterministic on any day and timezone, and produce a calibrated, triaged dead-code and duplication analysis (completed 2026-10-19)
 - [x] **Phase 3: Evidence-Gated Removal** - Remove proven-dead files, exports, dependencies, and stale references; hand uncertain candidates to the owner (completed 2026-10-20)
 - [x] **Phase 4: Bug Fixes With Regression Tests** - Fix the known bugs and robustness gaps, each guarded by a test that failed before the fix (completed 2026-10-21)
-- [ ] **Phase 5: Redundancy Reduction and Text Sync** - Reduce duplicated CI, fixtures, and stale comments, and bring docs in line with the final code
+- [x] **Phase 5: Redundancy Reduction and Text Sync** - Reduce duplicated CI, fixtures, and stale comments, and bring docs in line with the final code (completed 2026-10-22)
 - [ ] **Phase 6: CI Enforcement and Lock-in** - Turn on blocking dead-code, duplication, drift, audit, and date/timezone gates without breaking deploys
 
 ## Phase Details
@@ -184,7 +184,7 @@ Plans:
   4. The stale spec citations (1,116 lines in 456 files at PR C's base, recounted with the full retired-spec vocabulary; 262 was a Phase 2 count) are removed as comment-only edits, verified by identical transformed output, with `supabase/migrations/` untouched; test titles and three fixture pages were changed in separately proven commits.
   5. `docs/` and `.planning/codebase/` match the code: statements spot-checked against the repo hold (for example, `hearth-admin` is described as hand-written), and no review, decision-log, or ADR file was added under `docs/`.
 
-**Plans:** 13/13 plans executed
+**Plans:** 13/13 plans complete
 
 **Scope note:** seven plans exceed the 100k-token smart-zone estimate (05-04 110k, 05-06 140k, 05-07 130k, 05-08 140k, 05-09 150k, 05-10 130k, 05-12 110k; confidence low, no calibration samples yet). This is accepted and the plans are not re-sliced: the work is mechanical, gated per batch, and executed in worktrees.
 
@@ -248,5 +248,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
-| 5. Redundancy Reduction and Text Sync | 13/13 | In Progress | - |
+| 5. Redundancy Reduction and Text Sync | 13/13 | Complete    | 2026-10-22 |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |

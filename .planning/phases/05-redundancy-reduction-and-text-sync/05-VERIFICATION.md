@@ -44,7 +44,7 @@ covered_files:
   - docs/deploy.md
   - docs/file-map.md
   - docs/testing.md
-covered_digest: "v3:sha256:7c0119751adda58c4127f1b0b29df516943882fd50222653cfb44135f8d6340d"
+covered_digest: "v3:sha256:e66c61ac30740305490f02c614b8b86471dba811c712719dd0619c8e1017fc0b"
 behavior_unverified: 0
 overrides_applied: 0
 ---
