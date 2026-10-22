@@ -36,18 +36,18 @@ created: "2026-10-22"
 
 ## Per-Task Verification Map
 
-Seeded from RESEARCH.md "Validation Architecture"; the planner fills Task IDs.
+Seeded from RESEARCH.md "Validation Architecture"; Task IDs filled by the planner (plan-task).
 
-| Requirement | Behavior | Test Type | Automated Command | File Exists |
-|-------------|----------|-----------|-------------------|-------------|
-| CI-01 | default knip is 0; a new production finding fails; a stale baseline row fails | unit + live | `node --test scripts/check-knip-baseline.test.mjs`; `pnpm knip` | ❌ W0 |
-| CI-02 | jscpd gate fails above threshold, passes below; live tree under 2% | unit + live | `node --test scripts/jscpd-gate.test.mjs`; `pnpm exec jscpd` | ❌ W0 |
-| CI-03 | tracked-ignored, non-executable script, CRLF each fail; migrations append-only; db:types drift | unit (temp git repos) + CI evidence | `node --test scripts/check-repo-hygiene.test.mjs`; `node --test scripts/check-migrations-append-only.test.mjs` | ❌ W0 |
-| CI-04 | `pnpm audit --prod` fails closed on error or missing advisories | unit | `node --test scripts/audit-prod.test.mjs` | ❌ W0 |
-| CI-05 | every job has `timeout-minutes`; workflow name and ids unchanged | contract test or ledger evidence | `node --test scripts/workflows.test.mjs` | ❌ W0 (optional) |
-| CI-06 | web coverage thresholds pass and agree with `docs/testing.md` | live + docs check | `pnpm --filter @hearth/web test:coverage` | ✅ |
-| CI-07 | Deploy run for the merge SHA is `workflow_run`, job `deploy` queued or in progress | API evidence | GitHub REST API runs and jobs for `deploy.yml` | n/a |
-| TIME-06 | today-cell resolution is a pure function of the instant; sweep green | unit + live | `node --test scripts/test-sweep.test.mjs`; `pnpm test:sweep` | extend existing |
+| Requirement | Task IDs | Behavior | Test Type | Automated Command | File Exists |
+|-------------|----------|----------|-----------|-------------------|-------------|
+| CI-01 | 06-01-1, 06-06-1, 06-08-1, 06-08-2 | default knip is 0; a new production finding fails; a stale baseline row fails; CI shows a dead file, export and dependency failing | unit + live + canary PR | `node --test scripts/check-knip-baseline.test.mjs`; `pnpm knip`; `node scripts/check-knip-baseline.mjs` | ❌ W0 (06-01) |
+| CI-02 | 06-02-3, 06-06-1, 06-08-2 | jscpd gate fails above threshold, passes below; live tree under 2% | unit + live + canary PR | `node --test scripts/jscpd-config.test.mjs`; `pnpm jscpd` | ❌ W0 (06-02) |
+| CI-03 | 06-01-2, 06-01-3, 06-06-2, 06-08-1, 06-08-2 | tracked-ignored, non-executable script, CRLF each fail; migrations append-only; db:types drift | unit (temp git repos) + CI evidence | `node --test scripts/check-repo-hygiene.test.mjs`; `node --test scripts/check-migrations-append-only.test.mjs` | ❌ W0 (06-01) |
+| CI-04 | 06-02-1, 06-06-1 | `pnpm audit --prod` fails closed on error or missing advisories; allowance honored then expired | unit + live | `node --test scripts/audit-prod.test.mjs`; `node scripts/audit-prod.mjs` | ❌ W0 (06-02) |
+| CI-05 | 06-03-2, 06-06-2, 06-06-3, 06-07-1 | every job has `timeout-minutes`; workflow name and ids unchanged; deploy gate decisions; review ledger | ledger evidence (`workflow-facts.mjs`, DA-3) + unit | `node --test scripts/deploy-gate.test.mjs`; `node .planning/cleanup/tools/workflow-facts.mjs {file}` | ❌ W0 (06-03, 06-06) |
+| CI-06 | 06-06-2, 06-07-1, 06-08-1 | web coverage thresholds pass and agree with `docs/testing.md` | live + docs check + runner | `pnpm --filter @hearth/web test:coverage` | ✅ |
+| CI-07 | 06-10-3 | Deploy run for the merge SHA is `workflow_run`, job `deploy` queued or in progress | API evidence | GitHub REST API runs and jobs for `deploy.yml` | n/a |
+| TIME-06 | 06-03-1, 06-06-3, 06-09-1, 06-10-3 | today-cell resolution is a pure function of the instant; sweep green locally, on `main`, by dispatch and nightly | unit + live + API | `node --test scripts/test-sweep.test.mjs`; `pnpm test:sweep --with-today` | extend existing |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
