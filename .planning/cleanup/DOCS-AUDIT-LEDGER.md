@@ -113,7 +113,15 @@ maps-misses-before=182 (of 1270 tokens checked)
 | 56 | docs/file-map.md:46 | web `test` row | `apps/web/src/test/browser.ts` exports `setOnline`, `stubCoarsePointer`, `registerBrowserStubs`, `registerHouseholdClock`, `openMenu` | fixed: names `browser.ts` and what it stubs | 5cfa35d |
 | 57 | docs/testing.md (Integration tests, after the isolation patterns) | how route-level files start the stack | `apps/service/src/test/stack-hooks.ts`: `beforeAll` starts the stack, `beforeEach` builds an app, `afterAll` closes it; `expectStatus` asserts the status with the body as message; `job-logger.ts` collects job log lines; 8 test files call `registerStackHooks()`, others keep their own hooks | fixed: new paragraph, worded as "many" files | 5cfa35d |
 | 58 | docs/testing.md (Frontend/component tests, after Tools) | shared web test helpers | `apps/web/src/test/browser.ts`: `setOnline` spies `navigator.onLine` and sets TanStack's `onlineManager`; `stubCoarsePointer` stubs `matchMedia`; `registerHouseholdClock(instant)` fakes only `Date` | fixed: new "Shared helpers" paragraph | 5cfa35d |
-| 59 | README.md:5, :121 and `.env.example:9`, `docker/docker-compose.yml:275` pointers | README citations of sections and docs | README headings `Deployment` (line 145), `Restore test (quarterly)` (243) and `Restore production` (282); `docs/testing.md` has the isolation text; `git grep -nE -f cit-rx.txt -- README.md docs CONTRIBUTING.md` prints nothing | holds for `README, "Deployment"` and `docs/testing.md`; `docker/docker-compose.yml:275` says `README, "Restore"` but no heading is exactly that (two start with `Restore`), reported for the owner, not edited (code file) | - |
+| 59 | README.md:5, :121 and `.env.example:9`, `docker/docker-compose.yml:275` pointers | README citations of sections and docs | README headings `Deployment` (line 145), `Restore test (quarterly)` (243) and `Restore production` (282); `docs/testing.md` has the isolation text; `git grep -nE -f cit-rx.txt -- README.md docs CONTRIBUTING.md` prints nothing | holds for `README, "Deployment"` and `docs/testing.md`; `docker/docker-compose.yml:275` said `README, "Restore"` but no heading is exactly that (two start with `Restore`); fixed in 05-12 under the owner's request, see row 61 | 29b9c6a |
+| 60 | docs/file-map.md:62 | the `jobs` row says the folder refreshes "deals and meal plans" | `apps/service/src/jobs/scheduler.ts` `JobName` is `'refresh-deals' \| 'log-autopay' \| 'dispatch-notifications' \| 'prune-cache'` (four scheduled jobs); `refresh-plan.ts` exports the pure planners `planRefresh` and `planFlyerRefreshNotifications`, imported by `refresh-deals.ts:12`, and decides which flyers a deal refresh fetches; nothing under `jobs/` refreshes meal plans; `docs/architecture.md:243-248` lists the four jobs | fixed: "refreshing deals" | eda7416 |
+| 61 | docker/docker-compose.yml:275 | comment cites `(README, "Restore")` | README headings `Restore test (quarterly)` (243) and `Restore production` (282); the second explains restoring into a fresh Supabase Postgres container, the case `--clean --if-exists` serves; `nonts-comment-check.mjs --base HEAD` printed `OK docker/docker-compose.yml (parsed YAML deep-equal)` | fixed: `(README, \"Restore production\")`, comment-only | 29b9c6a |
+| 62 | docs/*.md, README.md | version claims for images and tools (the Caddy tag drifted in the old `.claude/CLAUDE.md`) | `grep -rnoE 'caddy:?[ -]?2\.[0-9.]+' docs README.md` is empty; images in `docker/docker-compose.yml` (postgres 17.6.1.167, gotrue v2.196.0, realtime v2.130.0, kong 3.9.3, backup 17-debian-d257e5d) and `docker/caddy.Dockerfile:33` (caddy 2.11.7-alpine) against every doc, map and CLAUDE.md; a script compared every `pkg x.y.z` in the maps, CLAUDE.md, docs and README with the `package.json` files (no mismatch); `node:24.21.0`, `pnpm 10.34.5`, Supabase CLI `2.117.0`, esbuild `0.28.2`, Workbox `7.4.1` match | holds in docs and maps; the stale `caddy:2.11.4-alpine` in the old CLAUDE.md was replaced by regeneration (maps-2) | - |
+| maps-1 | .planning/codebase/CONVENTIONS.md:62 | the five `eslint-disable-next-line` comments "each carry a `-- reason`" | `git grep -n eslint-disable` over apps, packages, e2e and supabase/seed: five; four have `-- reason`, `apps/service/src/cli.test.ts:65` has its reason on the comment line above | fixed in the map before regeneration: "Four carry a `-- reason`; the `cli.test.ts` one states its reason in the comment line above it" | b506589 |
+| maps-2 | .claude/CLAUDE.md:117 (old) | Caddy image `caddy:2.11.4-alpine`; scheduled jobs "(dispatch notifications, refresh deals, refresh plan, prune cache, log autopay)" | `docker/caddy.Dockerfile:33` is `caddy:2.11.7-alpine`; four scheduled jobs (row 60) | fixed by regeneration: the stack block says `caddy:2.11.7-alpine`; the maps state `refresh-plan.ts` is a planner used by `refresh-deals.ts`, not scheduled | b506589 |
+| maps-3 | .planning/codebase/*.md (research row 7) | stale statements: RotationEditor suppression, Kong `auth-v1-all`, "eslint-disable appears only twice", console use in the deleted benchmark, tests never depend on the wall clock | `grep -rniE 'rotation\|catch-all\|auth-v1-all\|benchmark\|wall clock\|console\.' .planning/codebase`: none of the five old statements remains; CONCERNS.md:131 describes the pin and the real-clock integration and E2E runs; `git grep -n 'console\.'` over `apps/**/src`, `packages/**/src` and `e2e` is empty | holds in the regenerated maps | - |
+| maps-4 | .planning/codebase/ARCHITECTURE.md:256, CONCERNS.md:113, ARCHITECTURE.md:258 | deals route is the only route importing `withUserDb`; `functions.sql` has 13 function definitions and 14 `search_path` lines; `lists/deals` and `lists/flyers` precede `lists/*` | `git grep withUserDb -- apps/service/src/routes` (`deals.ts:14` import, `recipes.ts:25` comment only); `grep -ciE 'create (or replace )?function'` is 13 and `grep -ci search_path` is 14 in `20260919070200_functions.sql`; `apps/web/src/routes.tsx:83-89` | holds | - |
+| maps-5 | .planning/codebase/*.md, .claude/CLAUDE.md | checker misses (72 map tokens, 8 more in CLAUDE.md) | the raw output has 138 misses over the maps (72 distinct tokens): 34 distinct `ambiguous` bare names shared by several tracked files, and 38 other tokens that are `missing`: that are file suffixes, gitignored build output (`dist/`, `coverage/`, `playwright-report/`), image and Action references, route paths and a media type; no token is a path that should exist and does not; CLAUDE.md adds `origin/main`, the skill directories its generated skills block says may be added, `SKILL.md` and the `!docker/ca.crt` dockerignore line | allowed: 80 rows in all, a reason each, in `docs-claims-allow.tsv` | 2a02f8a |
 
 ## Final check (05-12 Task 1)
 
@@ -147,7 +155,36 @@ WB); `docs/sync-specs` then merged WB.
 
 ## Maps and project instructions
 
-Filled in by 05-12.
+maps-commit=e486d7f692c29a79476a815cf858b6d63c3b496b
+maps-mapped-at=283f15dbb2b5ed8ded0ba14e04d5015e5d0d367c
+maps-misses=0
+hearth-admin-claims=hand-written
+e2e-section-restored=no
+
+`/gsd-map-codebase` (run by the operator session) wrote all seven maps in `e486d7f` with one
+`last_mapped_commit`, `283f15d`, a WB commit that contains `pr-c-merged` (`9fdc9c9`). The only edits
+made to the regenerated maps are the D-11 Comments line and the `eslint-disable` count note (maps-1,
+commit `b506589`). Checker run over `.planning/codebase/*.md .claude/CLAUDE.md` with the allowlist as
+committed: `checked=1762`, `misses=0` (raw map misses were 138, all allowlisted with reasons, maps-5).
+`git grep -nE -f cit-rx.txt -- .planning/codebase .claude` prints nothing; the two hearth-admin
+wording searches print nothing over the maps, CLAUDE.md and `docs` in `../hearth-docs-sync`.
+
+`.claude/CLAUDE.md` was regenerated with `generate-claude-md` (`b506589`; 253 lines added, 289 removed,
+diff in the gitignored `logs/05-12-claude-md.diff`). What changed: (1) the hand-maintained `Running
+E2E in the Claude cloud sandbox` section was compared byte for byte before and after and is identical
+(no restore needed); the `## Project` block still carries the six constraints, its Git line now reads
+as in `PROJECT.md` ("Phase 1, `origin/main` from d3da748"); (2) the stack block follows the new
+`STACK.md`: Caddy `caddy:2.11.7-alpine` instead of `2.11.4`, `scripts/ci-prepull-images.sh` listed,
+`## Container Images` replacing `## Container and Infrastructure Images`, and the old `## Database`
+and `## CI/CD Toolchain` headings gone; (3) the conventions block carries the D-11 text ("Explain why,
+not what. Do not cite sections of retired spec documents; state the rule itself.") with the
+spec-citation instruction removed, and gains `## Patterns for New Code`; (4) the architecture block
+follows the new `ARCHITECTURE.md`: `refresh-plan.ts` is described as a planner used by
+`refresh-deals.ts` and not scheduled, `hearth-admin` as a hand-written POSIX shell wrapper over
+`dist/cli.js`, `## Component Responsibilities` and `## Anti-Patterns` replaced by `## Layering
+Deviations (observed)`, and `### Error Path` and `### Deals and Recipe Import Paths` added; (5) the
+workflow, skills and profile blocks are unchanged. The mapper dropped the Anti-Patterns and Component
+Responsibilities headings; that is the generated content, left as produced.
 
 ## CI
 
