@@ -9,32 +9,35 @@ last_mapped_at: 2026-10-22
 ## Naming Patterns
 
 **Files:**
-- Service and package modules are kebab-case `.ts`: `apps/service/src/services/bills.ts`, `apps/service/src/deals/flipp/request-queue.ts`, `packages/recurrence/src/bills.ts`.
-- React components are PascalCase `.tsx` named after the component: `apps/web/src/components/ui/Button.tsx`, `apps/web/src/screens/bills/BillDetailScreen.tsx`.
+- Service and package modules are kebab-case `.ts`: `apps/service/src/services/bills.ts`, `apps/service/src/chores/occurrence.ts`, `apps/service/src/deals/flipp/request-queue.ts`, `packages/recurrence/src/bills.ts`.
+- React components are PascalCase `.tsx` named after the component: `apps/web/src/components/ui/Button.tsx`, `apps/web/src/components/bills/BillRow.tsx`, `apps/web/src/screens/bills/BillDetailScreen.tsx`.
 - Other web modules are kebab-case `.ts`: `apps/web/src/lib/format.ts`, `apps/web/src/lib/offline/write-queue.ts`.
-- Web hooks are `use-*.ts(x)` (`apps/web/src/lib/use-online-status.ts`). The API hook modules are `*-hooks.ts` (`apps/web/src/lib/api/bills-hooks.ts`).
-- Copy catalogs sit next to their feature as `*-copy.ts` (`apps/web/src/components/bills/bills-copy.ts`).
-- Screens are `*Screen.tsx` under `apps/web/src/screens/<feature>/`. Route wrappers are `*Route.tsx` (`apps/web/src/screens/settings/SettingsRoute.tsx`).
+- Web hooks are `use-*.ts(x)` (`apps/web/src/lib/use-online-status.ts`, `apps/web/src/components/chores/use-chore-completion.ts`). The API hook modules are `*-hooks.ts` (`apps/web/src/lib/api/bills-hooks.ts`, `apps/web/src/lib/api/list-hooks.ts`).
+- Copy catalogs sit next to their feature as `*-copy.ts` (`apps/web/src/components/bills/bills-copy.ts`, `apps/web/src/components/chores/chore-copy.ts`, `apps/web/src/screens/deals/deal-copy.ts`).
+- Screens are `*Screen.tsx` under `apps/web/src/screens/<feature>/`. Route wrappers are `*Route.tsx` (`apps/web/src/screens/settings/SettingsRoute.tsx`, `apps/web/src/pillars/bills/BillsRoute.tsx`).
 - Route plugins: one file per resource in `apps/service/src/routes/` (`bills.ts`, `chores.ts`, `meal-plan.ts`).
 - Migrations: `supabase/migrations/YYYYMMDDHHMMSS_<name>.sql`.
 - Tests: `<name>.test.ts(x)` co-located with the module, or `<name>.integration.test.ts` for database and route tests against `supabase start`. Test helpers live in `apps/service/src/test/` and `apps/web/src/test/`.
+- Test time: unit and component tests run with `Date` pinned to `2026-10-14T12:00:00.000Z` (`HEARTH_TEST_NOW` overrides it), and ESLint `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test files and test helpers. Do not set `TZ` by hand: set it only through the sweep or an `env` object passed to a spawned process, and never force `TZ=UTC` for a whole suite; see "Dates and time zones" in `docs/testing.md`.
 
 **Functions:**
 - camelCase. Service and domain functions are verbs: `listBills`, `createHouseholdBill`, `payBill`, `archiveBill` in `apps/service/src/services/bills.ts`.
-- Pure planners return a plan object: `planBillMove` in `packages/recurrence/src/bills.ts`.
+- Pure planners return a plan object: `planBillMove` in `apps/service/src/services/bills.ts`.
+- Pure bill helpers: `currentBillOccurrence` in `packages/recurrence/src/bills.ts`; `billOccurrence` and `planBillMove` in `apps/service/src/services/bills.ts`.
+- Query-key factories live in `apps/web/src/lib/api/keys.ts` (`queryKeys.bills(householdId)`).
 - React components are PascalCase function declarations with an explicit return type: `export function Button({...}: ButtonProps): ReactElement` in `apps/web/src/components/ui/Button.tsx`.
 
 **Variables and constants:**
 - camelCase locals.
-- Module-level constants are SCREAMING_SNAKE_CASE: `PROBLEM_CONTENT_TYPE` (`packages/shared/src/problem.ts`), `DATABASE_PROBLEMS` (a non-exported table in `apps/service/src/problem.ts`), `VARIANT_CLASSES` (`apps/web/src/components/ui/Button.tsx`).
+- Module-level constants are SCREAMING_SNAKE_CASE: `PROBLEM_CONTENT_TYPE` (`packages/shared/src/problem.ts`), `SCRUBBED_MESSAGE_MAX_LENGTH` (`packages/shared/src/scrub.ts`), `DATABASE_PROBLEMS` (a non-exported table in `apps/service/src/problem.ts`), `BUTTON_BASE` and `VARIANT_CLASSES` (`apps/web/src/components/ui/Button.tsx`), `DASHBOARD_EMPTY_COPY` (`apps/web/src/components/dashboard/DashboardCards.tsx`), `FIRST_RUN_HEADING` (`apps/web/src/components/dashboard/DashboardFirstRun.tsx`).
 - Lookup tables are typed `Readonly<Record<...>>`.
 
 **Types:**
 - Zod schemas are camelCase with a `Schema` suffix; the type is the inferred PascalCase name: `billSchema` and `type Bill = z.infer<typeof billSchema>` in `packages/shared/src/api/bills.ts`.
 - Request and path-param schemas follow the same pair: `createBillRequestSchema`, `billIdParamsSchema`.
-- Props interfaces are `<Component>Props` (`ButtonProps`), exported when tests or siblings need them.
-- Use string-union types over enums: `export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';` in `apps/web/src/components/ui/Button.tsx`. Zod enums are `z.enum([...])`, then inferred.
-- Database columns and raw rows are snake_case (`recurrence_unit`, `anchor_date`). API and shared-layer fields are camelCase (`recurrenceUnit`, `anchorDate`). The mapping happens in one layer.
+- Props interfaces are `<Component>Props` (`ButtonProps`), exported when tests or siblings need them (`DashboardScreenProps`).
+- Use string-union types over enums: `export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';` in `apps/web/src/components/ui/Button.tsx`. Zod enums are `z.enum([...])`, then inferred (`billVisibilitySchema`).
+- Database columns and raw rows are snake_case (`recurrence_unit`, `anchor_date`). API and shared-layer fields are camelCase (`recurrenceUnit`, `anchorDate`). The mapping happens in one layer (see `docs/architecture.md`). Service code that works with raw rows uses snake_case field names (`apps/service/src/services/bills.test.ts`).
 - `apps/service/src/db/types.ts` is generated by kysely-codegen (`pnpm db:types`). It is excluded from ESLint and must not be hand-edited.
 
 ## Code Style
@@ -49,9 +52,8 @@ last_mapped_at: 2026-10-22
 - Web files (`apps/web/**/*.{ts,tsx}`) add `eslint-plugin-jsx-a11y` (strict) and `eslint-plugin-react-hooks` (recommended).
 - Rules set explicitly: `@typescript-eslint/explicit-module-boundary-types` (error) and `@typescript-eslint/no-non-null-assertion` (error, off in test files).
 - `pnpm lint` runs `eslint --max-warnings=0 .`. Warnings fail the run. It runs in CI and in the pre-commit hook.
-- Custom fences in `eslint.config.js`:
-  - Service-role isolation: under `apps/service/src/**/*.ts`, value imports of `privileged/` are errors (type-only imports are allowed). `main.ts`, `cli.ts`, `privileged/**`, and test code are exempt. A dynamic `import()` of `privileged` is also an error.
-  - Clock discipline: `no-restricted-syntax` bans real-clock reads in test files, `e2e/`, `apps/service/src/test/**`, `apps/web/src/test/**`, `apps/web/src/test-setup.ts`, and `test/**/*.mjs` (see TESTING.md).
+- Service-role fence (`eslint.config.js`): under `apps/service/src/**/*.ts`, value imports of `privileged/` are errors (type-only imports are allowed). `main.ts`, `cli.ts`, `privileged/**`, and test code are exempt. A dynamic `import()` of `privileged` is also an error.
+- Clock fence (`eslint.config.js`): `no-restricted-syntax` bans real-clock reads in test files, `e2e/`, `apps/service/src/test/**`, `apps/web/src/test/**`, `apps/web/src/test-setup.ts`, and `test/**/*.mjs` (see TESTING.md).
 
 **TypeScript:**
 - `tsconfig.base.json` is strict: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noPropertyAccessFromIndexSignature`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
@@ -73,23 +75,23 @@ last_mapped_at: 2026-10-22
 ## Import Organization
 
 **Order (as observed in `apps/web/src/test/harness.tsx` and `apps/service/src/routes/bills.ts`):**
-1. Third-party packages (`@tanstack/...`, `@testing-library/...`, `react`, `react-router`, `fastify`, `vitest`).
-2. Workspace packages (`@hearth/shared`).
-3. Relative imports, parent directories before siblings.
+- Third-party packages first (`@tanstack/...`, `@testing-library/...`, `react`, `react-router`, `fastify`, `vitest`), then workspace packages (`@hearth/shared`), then relative imports, parent directories before siblings.
+- This order is a convention, not enforced by ESLint. No import-order rule is configured.
 
-This order is a convention, not enforced by ESLint. No import-order rule is configured.
+**Path aliases:**
+- None. Cross-package imports use the `@hearth/*` workspace names (`pnpm-workspace.yaml`). Within an app, imports are relative.
 
-**Path aliases:** None. Cross-package imports use the `@hearth/*` workspace names (`pnpm-workspace.yaml`). Within an app, imports are relative.
-
-**Barrels:** Each package exports from `packages/*/src/index.ts`, a pure re-export barrel with no logic. `packages/shared/src/index.ts` re-exports the `api/*` modules. Inside an app, prefer the defining file over a barrel.
+**Barrels:**
+- Each package exports from `packages/*/src/index.ts`. `packages/shared/src/index.ts` is a pure re-export barrel that re-exports the `api/*` modules; consumers import from `@hearth/shared`.
+- `apps/service/src/jobs/index.ts` is also a barrel. Inside an app, prefer the defining file over a barrel.
 
 ## Error Handling
 
 **Service (HTTP):**
-- Errors are RFC 9457 problem details, never bare strings. `problem(status, detail?)` builds the body and `fail(status, detail?)` throws a `ProblemError`. Both are in `apps/service/src/problem.ts`.
+- Errors are RFC 9457 problem details (`type`, `title`, `status`, `detail`), never bare strings. `problem(status, detail?)` builds the body and `fail(status, detail?)` throws a `ProblemError`. Both are in `apps/service/src/problem.ts`.
 - The global error handler in `apps/service/src/app.ts` sends a `ProblemError` unchanged. For 5xx responses it logs the error with `scrubErrorName` and `scrubErrorText` (from `@hearth/shared`) applied to the name and message, not the raw values.
 - Validate at the route boundary with `parse(schema, value)` from `apps/service/src/http/context.ts`. It throws a 400 `fail` with detail `"<path>: <message>"`.
-- Database errors map by SQLSTATE in the `DATABASE_PROBLEMS` table in `apps/service/src/problem.ts` (for example `42501` to 403, `23505` to 409). Add new membership or constraint messages there, not in route code. `problemFromDatabaseError` performs the lookup.
+- Database errors map by SQLSTATE in the `DATABASE_PROBLEMS` table in `apps/service/src/problem.ts` (for example `42501` to 403, `23505` to 409, `HR001` to 410). Add new membership or constraint messages there, not in route code. `problemFromDatabaseError` performs the lookup.
 - Route handlers stay thin: authenticate, `parse`, call a service function inside `ctx.inHousehold(...)` or `ctx.asUser(...)`, then return or `reply.code(201).send(...)`. Route files call `parse(` about 119 times across `apps/service/src/routes/`.
 - Business-rule violations throw `ProblemError` or `fail` with a caller-facing message. Example: `apps/service/src/services/bills.test.ts` asserts `ProblemError` for an invalid visibility move.
 - Server errors are recorded with `buildErrorRecord` and `recordAppError` (`apps/service/src/services/errors.ts`). Names, messages, and routes are scrubbed first (`scrubErrorReport` in `packages/shared/src/scrub.ts`).
@@ -101,7 +103,8 @@ This order is a convention, not enforced by ESLint. No import-order rule is conf
 - Render-time crashes are caught by `apps/web/src/components/states/ErrorBoundary.tsx` and the router's error element.
 - Offline-queueable writes (list items, chore and errand writes) go through `apps/web/src/lib/offline/write-queue.ts`. Other writes are ordinary online mutations that disable their controls while offline.
 
-**Jobs:** Scheduled work lives in `apps/service/src/jobs/*.ts`, driven by `apps/service/src/jobs/scheduler.ts`. Overlap is guarded by the Postgres advisory-lock helper in `apps/service/src/jobs/advisory-lock.ts`.
+**Jobs:**
+- Scheduled jobs live in `apps/service/src/jobs/*.ts` and are driven by `apps/service/src/jobs/scheduler.ts`; `apps/service/src/jobs/advisory-lock.ts` provides the Postgres advisory-lock helper the scheduler uses to guard against overlap.
 
 ## Logging
 
@@ -113,7 +116,7 @@ This order is a convention, not enforced by ESLint. No import-order rule is conf
 
 - Explain why, not what. Do not cite sections of retired spec documents; state the rule itself. Comments state the invariant or the non-obvious constraint behind the code.
 - Module-level block comments (`/* ... */` or `/** ... */`) open files that carry a rule set or a contract, such as `apps/web/src/test/harness.tsx` and `apps/service/src/services/bills.test.ts`.
-- Document invariants with the reason, for example the opacity floors in `apps/web/src/components/ui/Button.tsx` (the 95% and 97% values exist because of measured WCAG AA contrast).
+- Document invariants with the reason, for example the opacity floors in `apps/web/src/components/ui/Button.tsx` (the 95% and 97% values exist because of measured WCAG AA contrast), or why the service role is fenced in `eslint.config.js`.
 - JSDoc (`/** */`) goes on exported functions and types whose contract is not obvious from the signature, for example `errorFingerprint` in `apps/service/src/services/errors.ts` and `ProblemError` in `apps/service/src/problem.ts`. It is not required on every export.
 - A single-line `//` comment that exists to suppress a lint rule must carry a reason after `--`: `// eslint-disable-next-line no-restricted-syntax -- reason`.
 
@@ -126,11 +129,12 @@ This order is a convention, not enforced by ESLint. No import-order rule is conf
 
 ## Module Design
 
-- Named exports only. Outside declaration files, `export default` appears only where a runner requires it: `e2e/playwright.config.ts`, `e2e/global-setup.ts`, and `e2e/global-teardown.ts`. The one declaration file that uses it is `apps/service/src/push/web-push.d.ts`.
+- Named exports only (web components too: `export function Button`). Outside declaration files, `export default` appears only where a runner requires it: `e2e/playwright.config.ts`, `e2e/global-setup.ts`, and `e2e/global-teardown.ts`. The one declaration file that uses it is `apps/service/src/push/web-push.d.ts`.
 - Route plugins are `FastifyPluginAsync<{ ctx: RouteContext }>` values named `billRoutes`, `choreRoutes`, and so on, wired in `apps/service/src/app.ts`.
+- `packages/*/src/index.ts` files are re-export barrels. Do not add logic to them. `packages/matching/vitest.config.ts` and `packages/shared/vitest.config.ts` exclude the barrel from coverage for that reason.
 - Server state is in TanStack Query hooks under `apps/web/src/lib/api/` (`useBills`, `useBill`), keyed by `queryKeys` from `apps/web/src/lib/api/keys.ts`.
-- Ambient state is in React context providers (`apps/web/src/lib/api/api-context.tsx`, `apps/web/src/lib/section-context.tsx`). Dependencies such as the auth client and realtime port are injected through interfaces (`AuthClient`, `RealtimePort`, `PushPort`).
-- Styling is Tailwind CSS 4 utilities composed with `cn()` from `apps/web/src/lib/cn.ts`. Variant maps are `Record<Variant, string>` constants. Touch targets use `min-h-11 min-w-11` in shared primitives.
+- Ambient state is in React context providers (`apps/web/src/lib/api/api-context.tsx`, `apps/web/src/lib/section-context.tsx`, `apps/web/src/components/ui/Toast.tsx`). Dependencies such as the auth client and realtime port are injected through interfaces (`AuthClient`, `RealtimePort`, `PushPort`).
+- Styling is Tailwind CSS 4 utilities composed with `cn()` from `apps/web/src/lib/cn.ts`; design tokens are in `apps/web/src/index.css` and checked by `apps/web/src/tokens.test.ts`. Variant maps are `Record<Variant, string>` constants. Touch targets use `min-h-11 min-w-11` in shared primitives.
 
 ## Patterns for New Code
 

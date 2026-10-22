@@ -43,6 +43,16 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Dependency override: `esbuild` forced to `0.28.2` in root `package.json` `pnpm.overrides`
 - Peer-dependency exception: `allowedVersions` in `pnpm-workspace.yaml` permits `eslint-plugin-jsx-a11y` to peer on ESLint 10
 
+| Package | Path | Role |
+|---------|------|------|
+| `@hearth/service` | `apps/service` | Fastify HTTP API, job scheduler, owner CLI |
+| `@hearth/web` | `apps/web` | React PWA (Vite) |
+| `@hearth/shared` | `packages/shared` | Shared Zod request and response schemas, problem and error types, scrubbing, password rules |
+| `@hearth/matching` | `packages/matching` | Ingredient and item fuzzy matching |
+| `@hearth/recurrence` | `packages/recurrence` | Bill and chore recurrence logic |
+| `@hearth/e2e` | `e2e` | Playwright end-to-end suite |
+| `@hearth/seed` | `supabase/seed` | Seed-user, seed-SQL, and pantry-readiness tooling |
+
 ## Frameworks
 
 - Fastify 5.12.5 - HTTP server; app factory `apps/service/src/app.ts`, entry point `apps/service/src/main.ts`
@@ -69,33 +79,38 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - `@hearth/seed` (`supabase/seed`) - `@hearth/matching` and `pg` 8.23.0
 - tsup 8.5.1 - bundles the service to `apps/service/dist/` (`apps/service/tsup.config.ts`); `apps/service/src/write-openapi.ts` runs after it in `build`
 - tsx 4.23.13 - runs TypeScript directly for `dev`, the seed tooling, and fixture scripts
-- Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web/vite.config.ts` test block)
+- Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web/vite.config.ts` test block). Every unit config (and the service coverage config) loads `test/clock-setup.mjs` as a setup file, which pins `Date`, and `test/global-tz.mjs` as `globalSetup`, which validates `TZ`; the integration config loads only `global-tz.mjs`. `pnpm test:sweep` and `pnpm test:sweep:integration` (`scripts/test-sweep.mjs`) run the suites across a fixed date and time-zone matrix; see `docs/testing.md`
 - `@vitest/coverage-v8` 5.0.1 - coverage in `apps/service`, `apps/web`, and `packages/*`
 - jsdom 30.1.0 - DOM environment for `apps/web`
 - @testing-library/react 16.3.3, @testing-library/dom 10.4.2, @testing-library/jest-dom 7.0.1, @testing-library/user-event 14.6.7 - component tests
-- `@playwright/test` 1.63.0 and `@axe-core/playwright` 4.13.0 - E2E and accessibility (`e2e/playwright.config.ts`)
+- `@playwright/test` 1.63.0 and `@axe-core/playwright` 4.13.0 - E2E and accessibility (`e2e/playwright.config.ts`, which pins the browser to `America/New_York` and `en-US`)
+- Supabase CLI 2.117.0 (`supabase/setup-cli@v3` in CI) - local Postgres, GoTrue, and Realtime stack for the integration tests; the E2E job uses it to apply migrations
 - Test harness uses `node --test` for the root harness tests (`package.json` `test:harness`)
 - ESLint 10.11.0 with `typescript-eslint` 8.70.0, `@eslint/js` 10.0.1, `eslint-plugin-react-hooks` 7.1.1, `eslint-plugin-jsx-a11y` 6.10.2, `eslint-config-prettier` 10.1.8, `globals` 17.12.0 - config in `eslint.config.js`
 - Prettier 3.9.8 - `.prettierrc.json`, ignores in `.prettierignore`
-- Husky 9.1.7 and lint-staged 17.5.1 - hooks in `.husky/` and `.lintstagedrc.json`
+- Husky 9.1.7 and lint-staged 17.5.1 - hooks in `.husky/pre-commit` and `.husky/commit-msg`; `.lintstagedrc.json`
 - `@commitlint/cli` and `@commitlint/config-conventional` 21.2.2 - `commitlint.config.js`
-- knip 6.41.0 - report-only unused-code scan; config `knip.json`; run with `pnpm knip` (CI does not run it)
+- knip 6.41.0 - report-only unused-code scan; config `knip.json`; run with `pnpm knip` or `pnpm knip:production` (CI does not run it)
 - kysely-codegen 0.20.0 - `pnpm db:types` regenerates `apps/service/src/db/types.ts` against a running local database
 - `yaml` 2.9.1 - devDependency of `apps/service`
 
 ## Key Dependencies
 
 - `fastify` 5.12.5 - the entire HTTP API surface; routes in `apps/service/src/routes/`
-- `kysely` 0.29.6 and `pg` 8.23.0 - all application database access, always inside a user- or service-scoped transaction (`apps/service/src/db/user-db.ts`)
+- `kysely` 0.29.6 and `pg` 8.23.0 - all application database access, always inside a user- or service-scoped transaction (`apps/service/src/db/user-db.ts`); row-level security is enforced in Postgres (`supabase/migrations/20260919070100_rls.sql`), not only in code
 - `zod` 4.6.5 - validation shared by service, web, and `packages/shared`
 - `web-push` 3.6.7 - Web Push; the VAPID key pair is required at startup (`apps/service/src/env.ts`)
-- `node-cron` 4.6.0 - scheduled jobs (`apps/service/src/jobs/index.ts`)
+- `node-cron` 4.6.0 - scheduled jobs: `refresh-deals`, `log-autopay`, `dispatch-notifications`, and `prune-cache`, registered in `apps/service/src/jobs/scheduler.ts` (`refresh-plan.ts` is a planner that `refresh-deals.ts` calls, not a job)
+- `@fastify/rate-limit` 11.2.0 - API rate limiting
 - `@supabase/supabase-js` 2.116.0 - browser sign-in, token refresh, and Realtime channels (`apps/web/src/lib/realtime/supabase-realtime.ts`)
 - `@tanstack/react-query` 5.103.1 - server state and offline persistence
 - `cheerio` 1.2.0 and `parse-ingredient` 3.0.0 - recipe import
+- `idb-keyval` 6.2.2 - offline persistence
+- `vite-plugin-pwa` 1.3.0 - installable PWA and update prompt (`apps/web/src/components/shell/UpdatePrompt.tsx`)
 
 ## Configuration
 
+- Read from process environment and validated by Zod; the service fails at startup on an invalid or missing variable
 - Required: `DATABASE_URL`, `HEARTH_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
 - Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HEARTH_TRUSTED_PROXIES`, `HEARTH_OWNER_EMAIL`, `HEARTH_RATE_LIMIT_PER_MINUTE` (`300`), `HEARTH_PUSH_TRANSPORT` (`web-push`)
 - Optional: `BACKUP_DIR`, `VAPID_SUBJECT`
@@ -106,8 +121,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Dev and preview proxies read `HEARTH_DEV_API` (default `http://127.0.0.1:3000`) and `HEARTH_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
 - The production env file lives outside the checkout at `/srv/hearth/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
 - `scripts/generate-secrets.sh` writes that file once and refuses to overwrite it.
-- `pnpm-workspace.yaml`, root `package.json`, `tsconfig.base.json` with per-package `tsconfig.json`
-- `apps/service/tsup.config.ts`, `apps/web/vite.config.ts`, `apps/service/vitest*.config.ts`, `e2e/playwright.config.ts`
+- `pnpm-workspace.yaml` (workspace graph), root `package.json`, `tsconfig.base.json` (shared TypeScript options) with per-package `tsconfig.json` in `apps/service`, `apps/web`, `packages/*`, and `e2e`
+- `apps/service/tsup.config.ts` (service bundle), `apps/web/vite.config.ts` (Vite, React, Tailwind, and PWA plugins), `apps/service/vitest*.config.ts`, `e2e/playwright.config.ts`
 - `eslint.config.js`, `.prettierrc.json`, `commitlint.config.js`, `.lintstagedrc.json`, `knip.json`
 - `supabase/config.toml` - local Supabase CLI stack (Postgres major version 17, Realtime enabled, GoTrue auth with `site_url` `http://127.0.0.1:5173`, API gateway disabled)
 - `.github/dependabot.yml` - weekly updates for npm, GitHub Actions, and Docker images
@@ -120,21 +135,37 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Docker with the Compose plugin for the full stack and the E2E overlay `e2e/docker-compose.e2e.yml`
 - Playwright Chromium: `pnpm --filter @hearth/e2e exec playwright install --with-deps chromium`
 - Single Linux host running the Compose stack in `docker/docker-compose.yml`
-- Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel
+- Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel (`sudo tailscale funnel --bg http://127.0.0.1:8080`), origin `https://<machine>.<tailnet>.ts.net`
 - A second disk mounted at `BACKUP_DIR`
-- Self-hosted GitHub Actions runner with labels `self-hosted, hearth` (`.github/workflows/deploy.yml`)
+- Self-hosted GitHub Actions runner with labels `self-hosted, hearth`, running as a user in the `docker` group (`.github/workflows/deploy.yml`)
 
 ## Container Images
 
-| Service | Image | Source |
-|---------|-------|--------|
-| `db` | `public.ecr.aws/supabase/postgres:17.6.1.167` | `docker/docker-compose.yml` |
-| `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` |
-| `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` |
-| `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` |
-| `hearth-service` | `hearth-service:${HEARTH_TAG}` | built from `docker/service.Dockerfile` |
-| `caddy` | `hearth-caddy:${HEARTH_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` |
-| `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` |
+| Service | Image | Source | Notes |
+|---------|-------|--------|-------|
+| `db` | `public.ecr.aws/supabase/postgres:17.6.1.167` | `docker/docker-compose.yml` | Postgres 17 (Supabase build) |
+| `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` | Supabase GoTrue auth server |
+| `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` | Supabase Realtime (WebSocket change feed) |
+| `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` | API gateway for GoTrue and Realtime |
+| `hearth-service` | `hearth-service:${HEARTH_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
+| `caddy` | `hearth-caddy:${HEARTH_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
+| `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` | Daily dump at `0 2 * * *`; keeps 14 days, 8 weeks, 6 months |
+
+## Database
+
+- PostgreSQL 17 (`supabase/config.toml` `major_version = 17`)
+- Migrations: `supabase/migrations/` (8 files; `20260919060000_hearth_service_role.sql` through `20261004090100_depart_clears_notification_preferences.sql`)
+- Typed schema: `apps/service/src/db/types.ts` (generated by `kysely-codegen`, committed)
+- Login role used by the service: `hearth_service` (NOINHERIT; the password is supplied through `HEARTH_SERVICE_DB_PASSWORD`, applied by `docker/db/hearth-service-login.sql`)
+
+## CI/CD Toolchain
+
+- `.github/workflows/ci.yml` - jobs `lint` (lint and format check), `typecheck`, `test-unit`, `test-integration` (Supabase CLI start, then `test:coverage`), `test-e2e` (Playwright, pull requests and `main`), and `build`; all on GitHub-hosted runners
+- `.github/actions/setup/action.yml` - composite action every job runs after checkout: `pnpm/action-setup@v6`, `actions/setup-node@v7` (Node from `.nvmrc`, pnpm store cached), `pnpm install --frozen-lockfile`
+- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hearth`; executes `scripts/deploy.sh` unless only `docs/` changed
+- Actions: `actions/checkout@v7`, `pnpm/action-setup@v6`, `actions/setup-node@v7`, `supabase/setup-cli@v3`, `docker/login-action@v4`, `actions/upload-artifact@v7`
+- `scripts/ci-prepull-images.sh` - pre-pulls the Compose and Dockerfile images for the E2E job
+
 <!-- GSD:stack-end -->
 
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
@@ -143,26 +174,29 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 ## Naming Patterns
 
-- Service and package modules are kebab-case `.ts`: `apps/service/src/services/bills.ts`, `apps/service/src/deals/flipp/request-queue.ts`, `packages/recurrence/src/bills.ts`.
-- React components are PascalCase `.tsx` named after the component: `apps/web/src/components/ui/Button.tsx`, `apps/web/src/screens/bills/BillDetailScreen.tsx`.
+- Service and package modules are kebab-case `.ts`: `apps/service/src/services/bills.ts`, `apps/service/src/chores/occurrence.ts`, `apps/service/src/deals/flipp/request-queue.ts`, `packages/recurrence/src/bills.ts`.
+- React components are PascalCase `.tsx` named after the component: `apps/web/src/components/ui/Button.tsx`, `apps/web/src/components/bills/BillRow.tsx`, `apps/web/src/screens/bills/BillDetailScreen.tsx`.
 - Other web modules are kebab-case `.ts`: `apps/web/src/lib/format.ts`, `apps/web/src/lib/offline/write-queue.ts`.
-- Web hooks are `use-*.ts(x)` (`apps/web/src/lib/use-online-status.ts`). The API hook modules are `*-hooks.ts` (`apps/web/src/lib/api/bills-hooks.ts`).
-- Copy catalogs sit next to their feature as `*-copy.ts` (`apps/web/src/components/bills/bills-copy.ts`).
-- Screens are `*Screen.tsx` under `apps/web/src/screens/<feature>/`. Route wrappers are `*Route.tsx` (`apps/web/src/screens/settings/SettingsRoute.tsx`).
+- Web hooks are `use-*.ts(x)` (`apps/web/src/lib/use-online-status.ts`, `apps/web/src/components/chores/use-chore-completion.ts`). The API hook modules are `*-hooks.ts` (`apps/web/src/lib/api/bills-hooks.ts`, `apps/web/src/lib/api/list-hooks.ts`).
+- Copy catalogs sit next to their feature as `*-copy.ts` (`apps/web/src/components/bills/bills-copy.ts`, `apps/web/src/components/chores/chore-copy.ts`, `apps/web/src/screens/deals/deal-copy.ts`).
+- Screens are `*Screen.tsx` under `apps/web/src/screens/<feature>/`. Route wrappers are `*Route.tsx` (`apps/web/src/screens/settings/SettingsRoute.tsx`, `apps/web/src/pillars/bills/BillsRoute.tsx`).
 - Route plugins: one file per resource in `apps/service/src/routes/` (`bills.ts`, `chores.ts`, `meal-plan.ts`).
 - Migrations: `supabase/migrations/YYYYMMDDHHMMSS_<name>.sql`.
 - Tests: `<name>.test.ts(x)` co-located with the module, or `<name>.integration.test.ts` for database and route tests against `supabase start`. Test helpers live in `apps/service/src/test/` and `apps/web/src/test/`.
+- Test time: unit and component tests run with `Date` pinned to `2026-10-14T12:00:00.000Z` (`HEARTH_TEST_NOW` overrides it), and ESLint `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test files and test helpers. Do not set `TZ` by hand: set it only through the sweep or an `env` object passed to a spawned process, and never force `TZ=UTC` for a whole suite; see "Dates and time zones" in `docs/testing.md`.
 - camelCase. Service and domain functions are verbs: `listBills`, `createHouseholdBill`, `payBill`, `archiveBill` in `apps/service/src/services/bills.ts`.
-- Pure planners return a plan object: `planBillMove` in `packages/recurrence/src/bills.ts`.
+- Pure planners return a plan object: `planBillMove` in `apps/service/src/services/bills.ts`.
+- Pure bill helpers: `currentBillOccurrence` in `packages/recurrence/src/bills.ts`; `billOccurrence` and `planBillMove` in `apps/service/src/services/bills.ts`.
+- Query-key factories live in `apps/web/src/lib/api/keys.ts` (`queryKeys.bills(householdId)`).
 - React components are PascalCase function declarations with an explicit return type: `export function Button({...}: ButtonProps): ReactElement` in `apps/web/src/components/ui/Button.tsx`.
 - camelCase locals.
-- Module-level constants are SCREAMING_SNAKE_CASE: `PROBLEM_CONTENT_TYPE` (`packages/shared/src/problem.ts`), `DATABASE_PROBLEMS` (a non-exported table in `apps/service/src/problem.ts`), `VARIANT_CLASSES` (`apps/web/src/components/ui/Button.tsx`).
+- Module-level constants are SCREAMING_SNAKE_CASE: `PROBLEM_CONTENT_TYPE` (`packages/shared/src/problem.ts`), `SCRUBBED_MESSAGE_MAX_LENGTH` (`packages/shared/src/scrub.ts`), `DATABASE_PROBLEMS` (a non-exported table in `apps/service/src/problem.ts`), `BUTTON_BASE` and `VARIANT_CLASSES` (`apps/web/src/components/ui/Button.tsx`), `DASHBOARD_EMPTY_COPY` (`apps/web/src/components/dashboard/DashboardCards.tsx`), `FIRST_RUN_HEADING` (`apps/web/src/components/dashboard/DashboardFirstRun.tsx`).
 - Lookup tables are typed `Readonly<Record<...>>`.
 - Zod schemas are camelCase with a `Schema` suffix; the type is the inferred PascalCase name: `billSchema` and `type Bill = z.infer<typeof billSchema>` in `packages/shared/src/api/bills.ts`.
 - Request and path-param schemas follow the same pair: `createBillRequestSchema`, `billIdParamsSchema`.
-- Props interfaces are `<Component>Props` (`ButtonProps`), exported when tests or siblings need them.
-- Use string-union types over enums: `export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';` in `apps/web/src/components/ui/Button.tsx`. Zod enums are `z.enum([...])`, then inferred.
-- Database columns and raw rows are snake_case (`recurrence_unit`, `anchor_date`). API and shared-layer fields are camelCase (`recurrenceUnit`, `anchorDate`). The mapping happens in one layer.
+- Props interfaces are `<Component>Props` (`ButtonProps`), exported when tests or siblings need them (`DashboardScreenProps`).
+- Use string-union types over enums: `export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';` in `apps/web/src/components/ui/Button.tsx`. Zod enums are `z.enum([...])`, then inferred (`billVisibilitySchema`).
+- Database columns and raw rows are snake_case (`recurrence_unit`, `anchor_date`). API and shared-layer fields are camelCase (`recurrenceUnit`, `anchorDate`). The mapping happens in one layer (see `docs/architecture.md`). Service code that works with raw rows uses snake_case field names (`apps/service/src/services/bills.test.ts`).
 - `apps/service/src/db/types.ts` is generated by kysely-codegen (`pnpm db:types`). It is excluded from ESLint and must not be hand-edited.
 
 ## Code Style
@@ -174,7 +208,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Web files (`apps/web/**/*.{ts,tsx}`) add `eslint-plugin-jsx-a11y` (strict) and `eslint-plugin-react-hooks` (recommended).
 - Rules set explicitly: `@typescript-eslint/explicit-module-boundary-types` (error) and `@typescript-eslint/no-non-null-assertion` (error, off in test files).
 - `pnpm lint` runs `eslint --max-warnings=0 .`. Warnings fail the run. It runs in CI and in the pre-commit hook.
-- Custom fences in `eslint.config.js`:
+- Service-role fence (`eslint.config.js`): under `apps/service/src/**/*.ts`, value imports of `privileged/` are errors (type-only imports are allowed). `main.ts`, `cli.ts`, `privileged/**`, and test code are exempt. A dynamic `import()` of `privileged` is also an error.
+- Clock fence (`eslint.config.js`): `no-restricted-syntax` bans real-clock reads in test files, `e2e/`, `apps/service/src/test/**`, `apps/web/src/test/**`, `apps/web/src/test-setup.ts`, and `test/**/*.mjs` (see TESTING.md).
 - `tsconfig.base.json` is strict: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noPropertyAccessFromIndexSignature`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
 - Run with `pnpm typecheck` (`pnpm -r --parallel typecheck`).
 - Optional props use `?` with `exactOptionalPropertyTypes` in mind: `disabledReason?: string | undefined` in `apps/web/src/components/ui/Button.tsx`.
@@ -189,12 +224,18 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 ## Import Organization
 
+- Third-party packages first (`@tanstack/...`, `@testing-library/...`, `react`, `react-router`, `fastify`, `vitest`), then workspace packages (`@hearth/shared`), then relative imports, parent directories before siblings.
+- This order is a convention, not enforced by ESLint. No import-order rule is configured.
+- None. Cross-package imports use the `@hearth/*` workspace names (`pnpm-workspace.yaml`). Within an app, imports are relative.
+- Each package exports from `packages/*/src/index.ts`. `packages/shared/src/index.ts` is a pure re-export barrel that re-exports the `api/*` modules; consumers import from `@hearth/shared`.
+- `apps/service/src/jobs/index.ts` is also a barrel. Inside an app, prefer the defining file over a barrel.
+
 ## Error Handling
 
-- Errors are RFC 9457 problem details, never bare strings. `problem(status, detail?)` builds the body and `fail(status, detail?)` throws a `ProblemError`. Both are in `apps/service/src/problem.ts`.
+- Errors are RFC 9457 problem details (`type`, `title`, `status`, `detail`), never bare strings. `problem(status, detail?)` builds the body and `fail(status, detail?)` throws a `ProblemError`. Both are in `apps/service/src/problem.ts`.
 - The global error handler in `apps/service/src/app.ts` sends a `ProblemError` unchanged. For 5xx responses it logs the error with `scrubErrorName` and `scrubErrorText` (from `@hearth/shared`) applied to the name and message, not the raw values.
 - Validate at the route boundary with `parse(schema, value)` from `apps/service/src/http/context.ts`. It throws a 400 `fail` with detail `"<path>: <message>"`.
-- Database errors map by SQLSTATE in the `DATABASE_PROBLEMS` table in `apps/service/src/problem.ts` (for example `42501` to 403, `23505` to 409). Add new membership or constraint messages there, not in route code. `problemFromDatabaseError` performs the lookup.
+- Database errors map by SQLSTATE in the `DATABASE_PROBLEMS` table in `apps/service/src/problem.ts` (for example `42501` to 403, `23505` to 409, `HR001` to 410). Add new membership or constraint messages there, not in route code. `problemFromDatabaseError` performs the lookup.
 - Route handlers stay thin: authenticate, `parse`, call a service function inside `ctx.inHousehold(...)` or `ctx.asUser(...)`, then return or `reply.code(201).send(...)`. Route files call `parse(` about 119 times across `apps/service/src/routes/`.
 - Business-rule violations throw `ProblemError` or `fail` with a caller-facing message. Example: `apps/service/src/services/bills.test.ts` asserts `ProblemError` for an invalid visibility move.
 - Server errors are recorded with `buildErrorRecord` and `recordAppError` (`apps/service/src/services/errors.ts`). Names, messages, and routes are scrubbed first (`scrubErrorReport` in `packages/shared/src/scrub.ts`).
@@ -203,6 +244,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Field-level validation uses `apps/web/src/lib/use-field-errors.ts` and `apps/web/src/lib/validation.ts`.
 - Render-time crashes are caught by `apps/web/src/components/states/ErrorBoundary.tsx` and the router's error element.
 - Offline-queueable writes (list items, chore and errand writes) go through `apps/web/src/lib/offline/write-queue.ts`. Other writes are ordinary online mutations that disable their controls while offline.
+- Scheduled jobs live in `apps/service/src/jobs/*.ts` and are driven by `apps/service/src/jobs/scheduler.ts`; `apps/service/src/jobs/advisory-lock.ts` provides the Postgres advisory-lock helper the scheduler uses to guard against overlap.
 
 ## Logging
 
@@ -214,7 +256,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 - Explain why, not what. Do not cite sections of retired spec documents; state the rule itself. Comments state the invariant or the non-obvious constraint behind the code.
 - Module-level block comments (`/* ... */` or `/** ... */`) open files that carry a rule set or a contract, such as `apps/web/src/test/harness.tsx` and `apps/service/src/services/bills.test.ts`.
-- Document invariants with the reason, for example the opacity floors in `apps/web/src/components/ui/Button.tsx` (the 95% and 97% values exist because of measured WCAG AA contrast).
+- Document invariants with the reason, for example the opacity floors in `apps/web/src/components/ui/Button.tsx` (the 95% and 97% values exist because of measured WCAG AA contrast), or why the service role is fenced in `eslint.config.js`.
 - JSDoc (`/** */`) goes on exported functions and types whose contract is not obvious from the signature, for example `errorFingerprint` in `apps/service/src/services/errors.ts` and `ProblemError` in `apps/service/src/problem.ts`. It is not required on every export.
 - A single-line `//` comment that exists to suppress a lint rule must carry a reason after `--`: `// eslint-disable-next-line no-restricted-syntax -- reason`.
 
@@ -227,11 +269,12 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 ## Module Design
 
-- Named exports only. Outside declaration files, `export default` appears only where a runner requires it: `e2e/playwright.config.ts`, `e2e/global-setup.ts`, and `e2e/global-teardown.ts`. The one declaration file that uses it is `apps/service/src/push/web-push.d.ts`.
+- Named exports only (web components too: `export function Button`). Outside declaration files, `export default` appears only where a runner requires it: `e2e/playwright.config.ts`, `e2e/global-setup.ts`, and `e2e/global-teardown.ts`. The one declaration file that uses it is `apps/service/src/push/web-push.d.ts`.
 - Route plugins are `FastifyPluginAsync<{ ctx: RouteContext }>` values named `billRoutes`, `choreRoutes`, and so on, wired in `apps/service/src/app.ts`.
+- `packages/*/src/index.ts` files are re-export barrels. Do not add logic to them. `packages/matching/vitest.config.ts` and `packages/shared/vitest.config.ts` exclude the barrel from coverage for that reason.
 - Server state is in TanStack Query hooks under `apps/web/src/lib/api/` (`useBills`, `useBill`), keyed by `queryKeys` from `apps/web/src/lib/api/keys.ts`.
-- Ambient state is in React context providers (`apps/web/src/lib/api/api-context.tsx`, `apps/web/src/lib/section-context.tsx`). Dependencies such as the auth client and realtime port are injected through interfaces (`AuthClient`, `RealtimePort`, `PushPort`).
-- Styling is Tailwind CSS 4 utilities composed with `cn()` from `apps/web/src/lib/cn.ts`. Variant maps are `Record<Variant, string>` constants. Touch targets use `min-h-11 min-w-11` in shared primitives.
+- Ambient state is in React context providers (`apps/web/src/lib/api/api-context.tsx`, `apps/web/src/lib/section-context.tsx`, `apps/web/src/components/ui/Toast.tsx`). Dependencies such as the auth client and realtime port are injected through interfaces (`AuthClient`, `RealtimePort`, `PushPort`).
+- Styling is Tailwind CSS 4 utilities composed with `cn()` from `apps/web/src/lib/cn.ts`; design tokens are in `apps/web/src/index.css` and checked by `apps/web/src/tokens.test.ts`. Variant maps are `Record<Variant, string>` constants. Touch targets use `min-h-11 min-w-11` in shared primitives.
 
 ## Patterns for New Code
 
@@ -252,14 +295,48 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 ```
 
+## Component Responsibilities
+
+| Component | Responsibility | File |
+|-----------|----------------|------|
+| Service bootstrap | Reads env, builds the Flipp, recipe, and push clients, builds the Fastify app, starts the scheduler, handles SIGTERM and SIGINT | `apps/service/src/main.ts` |
+| App assembly | Error handler, global rate limit, registers every route plugin (every route lives under `/api`) | `apps/service/src/app.ts` |
+| Env validation | Zod parse of process env; fails startup on a missing or invalid value; `parseCliEnv` for the owner CLI | `apps/service/src/env.ts` |
+| Route context | Bearer-token authentication, `asUser` / `inHousehold` helpers that wrap `withUserDb` | `apps/service/src/http/context.ts` |
+| RLS transaction wrapper | Opens a transaction, `set local role authenticated`, installs JWT claims; `withAnonDb` for error recording | `apps/service/src/db/user-db.ts` |
+| Database pool | Kysely over `pg`, connects as `hearth_service` | `apps/service/src/db.ts`, `apps/service/src/db/types.ts` (generated) |
+| Routes | Thin HTTP layer per feature: parse input with shared schemas, call a service, shape the reply | `apps/service/src/routes/*.ts` |
+| Services | Business rules per feature (recurrence, repricing, readiness, membership, invites, notifications); chores and errands sit in a sibling folder | `apps/service/src/services/*.ts`, `apps/service/src/services/deals/`, `apps/service/src/chores/*.ts`, `apps/service/src/notifications/*.ts` |
+| Jobs | Cron-driven work: deal refresh, autopay logging, notification dispatch, cache pruning (four scheduled jobs; `refresh-plan.ts` is a planner that `refresh-deals.ts` calls, not a job) | `apps/service/src/jobs/*.ts` |
+| Scheduler | Registers the node-cron tasks; wraps each run in an advisory lock | `apps/service/src/jobs/scheduler.ts`, `apps/service/src/jobs/advisory-lock.ts` |
+| Privileged access | The only `service_role` code: notification outbox, GoTrue admin, job DB, system health, scheduled reminders | `apps/service/src/privileged/*.ts` |
+| Auth verification | Verifies the bearer token's signature and expiry (HS256 with `JWT_SECRET`; ES256 only for a key GoTrue publishes at its JWKS endpoint, as `supabase start` does); GoTrue HTTP client | `apps/service/src/auth/jwt.ts`, `apps/service/src/gotrue/client.ts` |
+| Deals source | Flipp HTTP client behind one rate-limited request queue, with a fixture transport for E2E | `apps/service/src/deals/flipp/*.ts`, `apps/service/src/deals/deal-source.ts` |
+| Recipe import | Fetches a pasted URL server-side, extracts JSON-LD, parses ingredients, rate-limits per host | `apps/service/src/recipes/*.ts` |
+| Push | Web Push transport (VAPID), recording transport for E2E, E2E seam route | `apps/service/src/push/*.ts` |
+| CLI | `hearth-admin reset-password`, the only owner command; the shell wrapper runs `node dist/cli.js` | `apps/service/src/cli.ts`, `apps/service/bin/hearth-admin` |
+| Web bootstrap | Creates the Supabase client, auth client, query client, persisters, realtime port | `apps/web/src/main.tsx` |
+| Web routing | Route table with lazy-loaded screens and session guards | `apps/web/src/routes.tsx`, `apps/web/src/screens/AuthenticatedLayout.tsx` |
+| API client | `fetch` wrapper that attaches the bearer token, refreshes once, parses problem responses | `apps/web/src/lib/api/client.ts` |
+| Query hooks | TanStack Query hooks per domain, validated with shared Zod schemas | `apps/web/src/lib/api/hooks.ts`, `apps/web/src/lib/api/*-hooks.ts` |
+| Offline writes | Queueable mutations as paused TanStack mutations, persisted to IndexedDB | `apps/web/src/lib/offline/write-queue.ts`, `apps/web/src/lib/offline/persist.ts` |
+| Realtime | One Supabase channel per open shopping list, for item changes and the list row | `apps/web/src/lib/realtime/supabase-realtime.ts` |
+| Service worker | Installability, offline caching, push display | `apps/web/src/sw.ts`, `apps/web/src/lib/push/service-worker-handlers.ts` |
+| Shared contract | Request and response Zod schemas, OpenAPI source, problem details, scrubbing | `packages/shared/src/api/*.ts`, `packages/shared/src/problem.ts`, `packages/shared/src/scrub.ts` |
+| Recurrence math | Pure bill and chore occurrence and rotation logic | `packages/recurrence/src/*.ts` |
+| Matching | Pure ingredient normalization, similarity, matcher | `packages/matching/src/*.ts` |
+| Schema | Migrations (schema, RLS, functions, realtime, notifications) | `supabase/migrations/*.sql` |
+
 ## Pattern Overview
 
 - Every data-bearing request is authenticated in the service, then runs inside one Postgres transaction that sets `role authenticated` and the caller's JWT claims (`apps/service/src/db/user-db.ts`). Row-level security decides what is visible; application code does not re-implement it.
 - Route plugins are thin: authenticate, `parse` input with a shared Zod schema, call a service function on the scoped transaction, shape the reply (`apps/service/src/routes/bills.ts`).
 - Service-role access is fenced. Only `apps/service/src/main.ts` and `apps/service/src/cli.ts` import modules from `apps/service/src/privileged/`; the fence is an ESLint rule (`eslint.config.js`, `no-restricted-imports` and an `ImportExpression` selector for dynamic imports). Jobs and routes receive narrow injected functions instead.
-- Background work runs in-process via `node-cron` in a single service process, guarded by Postgres advisory locks (`apps/service/src/jobs/advisory-lock.ts`).
+- The service is the only HTTP path to application data. PostgREST is not used. Supabase Auth and Realtime are reached directly through Caddy and Kong (`docker/Caddyfile`, `docker/kong.yml`).
+- Background work runs in-process via `node-cron` in a single service process, guarded by Postgres advisory locks (`apps/service/src/jobs/advisory-lock.ts`). The design therefore assumes one running service instance.
 - The web app is a route-split SPA: pillar tabs, Settings, and onboarding are lazy chunks (`apps/web/src/routes.tsx`).
 - Shared contract: request and response Zod schemas live once in `packages/shared/src/api/*.ts` and are imported by both the service and the web client.
+- Pure packages (`packages/recurrence`, `packages/matching`, `packages/shared`) hold logic shared across the API boundary and carry no framework or I/O dependency.
 
 ## Layers
 
@@ -287,6 +364,11 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Contains: functions such as `listBills(db, householdId, userId)`, `createHouseholdBill`, `payBill`, `repriceExpiredItems`, `recomputeReadinessForHousehold`, `createMatchOverride`, `markHouseholdActive`. Each takes a Kysely handle already bound to the caller's transaction.
 - Depends on: `@hearth/recurrence`, `@hearth/matching`, `@hearth/shared`, the generated DB types.
 - Used by: route plugins and scheduled jobs (through the scheduler's injected functions).
+- Purpose: Run every request as the caller.
+- Location: `apps/service/src/db.ts`, `apps/service/src/db/user-db.ts`, `apps/service/src/db/types.ts`
+- Contains: `withUserDb` (authenticated role plus claims), `withAnonDb` (error recording only), the Kysely pool, and the Kysely types generated from the schema.
+- Depends on: Postgres as `hearth_service`, a NOINHERIT login role that holds no table rights until a transaction switches role.
+- Used by: `apps/service/src/http/context.ts` (`withUserDb`), `apps/service/src/routes/deals.ts` (`claimForUser`, the one route that opens its own transaction), and `apps/service/src/main.ts` (`withAnonDb`, for the error recorder).
 - Purpose: The few cross-household operations.
 - Location: `apps/service/src/privileged/`
 - Contains: `service-role-db.ts` (`withServiceRoleDb`, `readSystemHealth`), `notification-outbox.ts` (outbox claim and send), `scheduled-reminders.ts`, `gotrue-admin.ts` (email change, recovery links), `job-database.ts` (builds the `JobDatabase` handed to jobs).
@@ -298,7 +380,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Depends on: `JobDatabase` injected from `apps/service/src/privileged/job-database.ts`, services.
 - Used by: `apps/service/src/main.ts` (`createScheduler`, `scheduler.start()`), plus `queueBackgroundRefresh` injected into the deals service.
 - Purpose: Isolate third-party protocols.
-- Location: `apps/service/src/gotrue/` (GoTrue HTTP client), `apps/service/src/auth/jwt.ts` (JWT verification against JWKS), `apps/service/src/deals/flipp/` (Flipp HTTP through one rate-limited queue, fixture transport for E2E), `apps/service/src/deals/price/` (price parsing), `apps/service/src/recipes/` (recipe fetch, JSON-LD, host rate limiter, private-address guard), `apps/service/src/push/` (Web Push transport, recording transport, E2E test seam).
+- Location: `apps/service/src/gotrue/` (GoTrue HTTP client), `apps/service/src/auth/jwt.ts` (token verification: HS256 with `JWT_SECRET`; ES256 only for keys GoTrue publishes at its JWKS endpoint), `apps/service/src/deals/flipp/` (Flipp HTTP through one rate-limited queue, fixture transport for E2E), `apps/service/src/deals/price/` (price parsing), `apps/service/src/recipes/` (recipe fetch, JSON-LD, host rate limiter, private-address guard), `apps/service/src/push/` (Web Push transport, recording transport, E2E test seam).
 - Used by: `apps/service/src/main.ts`, which injects them into `buildApp` and the scheduler.
 - Purpose: One contract and one set of rules for both sides of the API.
 - Location: `packages/shared/src/` (Zod request/response schemas in `api/`, problem details, scrubbing, password rules; subpath export `@hearth/shared/common-passwords`), `packages/recurrence/src/` (bill and chore occurrence and rotation), `packages/matching/src/` (ingredient normalization, similarity, matcher).
@@ -325,7 +407,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Recipes: `apps/service/src/routes/recipes.ts` calls `parseRecipeUrl` (`apps/service/src/recipes/parse-recipe-url.ts`), which fetches through `fetch-recipe.ts` and `host-rate-limiter.ts`, and extracts JSON-LD with `json-ld.ts`.
 - Server state: Postgres, read through the service, cached in TanStack Query and persisted to IndexedDB (`apps/web/src/lib/api/query-client.ts`, `apps/web/src/lib/offline/persist.ts`).
 - Session: Supabase auth client (`apps/web/src/lib/auth/auth-client.ts`), exposed through `useAuthState`; `RequireSession` and `SignedOutOnly` in `apps/web/src/screens/AuthenticatedLayout.tsx` act as route guards.
-- Active household: stored on the profile and stamped by `markHouseholdActive` (`apps/service/src/services/households.ts`) on each household-scoped request.
+- Active household: stored on `profile.active_household_id` and stamped by `markHouseholdActive` (`apps/service/src/services/households.ts`) on each household-scoped request.
 - In-memory service state: skip-rate registry (`apps/service/src/services/skip-rates.ts`), Flipp request queue, recipe host rate limiter.
 
 ## Key Abstractions
@@ -342,12 +424,12 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Purpose: Give jobs and routes only the privilege they need.
 - Examples: `apps/service/src/jobs/types.ts` (`JobDatabase`, `DispatchOutbox`), `apps/service/src/privileged/job-database.ts`
 - Pattern: Dependency injection from `main.ts` into `createScheduler({ database, dispatch, refresh })` and `buildApp(deps, options)`.
-- Purpose: Declares each top-level area and whether it is released.
+- Purpose: Declares each top-level area (Lists, Meals, Bills, Chores; Deals, Flyers, and Pantry are sub-tabs of Lists) and whether it is released. All four are in `RELEASED_PILLARS` today.
 - Examples: `apps/web/src/lib/sections.ts` (`PILLARS`, `RELEASED_PILLARS`), `apps/web/src/pillars/*/*Route.tsx`
 - Pattern: Unreleased pillars render `ComingSoon` through `PillarScreen` (`apps/web/src/screens/PillarScreen.tsx`).
 - Purpose: Uniform error contract across service and client.
 - Examples: `apps/service/src/problem.ts`, `packages/shared/src/problem.ts`, `apps/web/src/lib/api/problem.ts`
-- Pattern: `fail(status, detail)` throws a `ProblemError`; the error handler sends `application/problem+json`. Client `ApiError` has status 0 for network failures.
+- Pattern: `fail(status, detail)` throws a `ProblemError`; the error handler sends `application/problem+json`. The detail of an unexpected 5xx error never reaches the client: it is scrubbed, recorded through `recordAppError`, and the reply is a generic problem. Client `ApiError` has status 0 for network failures.
 
 ## Entry Points
 
@@ -362,12 +444,13 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Responsibilities: Install error reporting, create the Supabase client, auth client, query client, and write-queue defaults, then render `<App>` with the realtime port and persisters.
 - Location: `apps/web/src/routes.tsx`
 - Triggers: Every navigation.
-- Responsibilities: Map paths to lazily loaded screens. Public routes are `/sign-in`, `/sign-up`, `/forgot-password`, `/set-password`. `/onboarding` and `/join` require a session. Pillar routes and Settings sit under `AuthenticatedLayout`. Magic-link routes exist only when `VITE_MAGIC_LINK_ENABLED` is `'true'` at build time.
+- Responsibilities: Map paths to lazily loaded screens. `/` is the dashboard (`DashboardRoute`). Public routes are `/sign-in`, `/sign-up`, `/forgot-password`, `/set-password`. `/onboarding` and `/join` require a session. Pillar routes and Settings sit under `AuthenticatedLayout`. Magic-link routes exist only when `VITE_MAGIC_LINK_ENABLED` is `'true'` at build time.
 - Location: `apps/web/src/sw.ts` (built with `injectManifest` by `vite-plugin-pwa`, `apps/web/vite.config.ts`)
 - Triggers: Browser service worker lifecycle.
-- Responsibilities: Precache, navigation fallback, offline caching strategies, push display.
+- Responsibilities: Precache, navigation fallback, offline caching strategies, push event display (`apps/web/src/lib/push/service-worker-handlers.ts`).
 - Location: `supabase/migrations/*.sql` (applied in filename order; eight files from `20260919060000_hearth_service_role.sql` to `20261004090100_depart_clears_notification_preferences.sql`).
-- Triggers: `supabase db reset`, `supabase start`, and the database container's init scripts (`docker/docker-compose.yml`).
+- Triggers: `supabase db reset`, `supabase start`, the database container's init scripts (`docker/docker-compose.yml`), and `scripts/deploy.sh`, which runs `supabase migration up` against the Compose database.
+- Responsibilities: Schema, RLS policies, helper and lifecycle functions, realtime publication, notification send times and producers.
 - `apps/service/src/write-openapi.ts` runs at the end of the service `build` script and emits the OpenAPI document.
 - `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh`.
 
@@ -377,8 +460,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - **Process count:** One service process is assumed. Cron jobs and in-memory state (Flipp queue, recipe rate limiter, skip rates) are per process. Advisory locks prevent overlap of the same job, and only through the database.
 - **Global state:** Module-level singletons are created in `apps/service/src/main.ts` (`wiring`, `skipRates`, `flippQueue`, `recipeFetchLimiter`, `recordingTransport`). The web client creates its singletons in `apps/web/src/main.tsx`.
 - **Build-time configuration:** `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, and `VITE_MAGIC_LINK_ENABLED` are fixed at build time; a change requires a rebuild.
-- **Test-only seams:** Fixture transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`), the push double (`HEARTH_PUSH_TRANSPORT=test-double`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
-- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions. `HEARTH_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
+- **Test-only seams:** Fixture transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`), the push double (`HEARTH_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
+- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`README.md`, "Pinned names"). `HEARTH_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
 - **Public unauthenticated routes:** `/api/health`, `/api/signup`, `/api/client-error` (rate limited per IP, `apps/service/src/routes/system.ts`), `/api/openapi.json`. All others call `ctx.authenticate`.
 
 ## Layering Deviations (observed)
@@ -389,11 +472,43 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - **Type-only privileged import:** `apps/service/src/http/context.ts` imports `SystemHealthRow` from `apps/service/src/privileged/service-role-db.ts`. The lint fence allows type imports.
 - **Shadowed sub-route:** `apps/web/src/routes.tsx` maps `lists/deals` and `lists/flyers` before the `lists/*` pillar wrapper, so the `deals` branch inside `apps/web/src/pillars/lists/ListsRoute.tsx` (which renders `SubSectionComingSoon`) is not reached through the router.
 
+## Anti-Patterns
+
+### Querying the database outside `withUserDb`
+
+- **What happens:** A route or service receives the raw `db` handle and runs queries on it directly.
+- **Why it's wrong:** Nothing sets the caller's role and claims, so RLS has no caller to judge. `hearth_service` is NOINHERIT and holds no table rights until a transaction switches role (`supabase/migrations/20260919060000_hearth_service_role.sql`), so such a query fails; the shortcut of switching to `service_role` by hand runs outside the policies, because `service_role` bypasses RLS.
+- **Do this instead:** Go through `ctx.inHousehold(user, householdId, fn)` or `ctx.asUser(user, fn)` (`apps/service/src/http/context.ts`). `withAnonDb` is for error recording only.
+
+### Importing `privileged/` from a route, service, or job
+
+- **What happens:** A feature module imports `apps/service/src/privileged/*` to reach `service_role`.
+- **Why it's wrong:** It widens the blast radius of the service-role key beyond the few audited uses.
+- **Do this instead:** Accept a narrow function or interface injected through `RouteContext` or the scheduler dependencies (`changeEmail`, `systemHealth`, `JobDatabase`). `eslint.config.js` enforces this for value imports and for dynamic `import()`; type-only imports are allowed.
+
+### Enforcing household isolation only in application code
+
+- **What happens:** A query relies on a `household_id` filter written in TypeScript as the only isolation rule, with no policy behind it.
+- **Why it's wrong:** A missed filter leaks another household's data. RLS is the boundary; application filters are not.
+- **Do this instead:** Write the access rule as a policy in `supabase/migrations/20260919070100_rls.sql` and reach data through `withUserDb`.
+
+### Duplicating schemas on client and server
+
+- **What happens:** A request or response shape is redefined in `apps/web` or `apps/service`.
+- **Why it's wrong:** Validation drifts between the two sides of the API.
+- **Do this instead:** Define the Zod schema once in `packages/shared/src/api/*.ts` and import it on both sides.
+
+### Hand-edited generated database types
+
+- **What happens:** `apps/service/src/db/types.ts` is edited by hand.
+- **Why it's wrong:** The next `kysely-codegen` run overwrites the change, and the types diverge from the schema.
+- **Do this instead:** Change the migration, apply it to a local database, then run `pnpm db:types`.
+
 ## Error Handling
 
-- Route code throws `fail(status, detail)` or a service-level error (`apps/service/src/services/errors.ts`).
-- Postgres errors map by SQLSTATE through `DATABASE_PROBLEMS` in `apps/service/src/problem.ts`.
-- Server errors are recorded through `recordAppError`, which writes as `anon` through `public.record_app_error`.
+- Route code throws `fail(status, detail)` or a service-level error (`apps/service/src/services/errors.ts`). The error handler maps it (`apps/service/src/app.ts`).
+- Postgres errors map by SQLSTATE through `DATABASE_PROBLEMS` in `apps/service/src/problem.ts`, via `problemFromDatabaseError`. GoTrue errors map through `problemFromGoTrueError` and recipe fetch errors through `problemFromRecipeFetchError`, both in the same file.
+- Server errors are recorded through `recordAppError`, which writes as `anon` through `public.record_app_error` (`apps/service/src/db/user-db.ts`, `withAnonDb`).
 - The client throws `ApiError`; the query layer decides on retry (`apps/web/src/lib/api/client.ts`, `apps/web/src/lib/offline/write-queue.ts`).
 - Render-time crashes are caught by `apps/web/src/components/states/ErrorBoundary.tsx` and the router's `errorElement` (`RouteError` in `apps/web/src/routes.tsx`).
 
