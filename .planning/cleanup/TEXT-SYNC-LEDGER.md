@@ -132,6 +132,7 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | service-domain | `apps/service/src` services, chores, deals, jobs, notifications, recipes (non-test) | 184 | 134 | 50 | d210844 | comment-only OK | gates OK |
 | service-tests | `apps/service/src/**/*.test.ts` (unit and integration) | 106 | 53 | 38 | b4a9cb9 | comment-only OK | gates OK |
 | web-lib | `apps/web` lib, pillars, test helpers, top-level source, `scripts/check-build.mjs`, `vite.config.ts` (non-test) | 144 | 67 | 77 | 79255b5 | comment-only OK | gates OK |
+| web-components | `apps/web/src/components` (source and tests) | 138 | 45 | 90 | 94fa9bd | comment-only OK | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -194,6 +195,15 @@ component state, meal-plan dates evaluated in the household timezone, money as i
 sources read `the seed data` or `Seed data:`. Gates: ESLint `--max-warnings=0` and Prettier on the 57 files,
 web typecheck, web suite 728 passed, `pnpm --filter @hearth/web build` (the app-shell line printed
 `App shell 198.0 KB gzipped (budget 200 KB)`). `check-build.mjs` was parsed as JS by the checker.
+
+`web-components` notes: 65 files changed (66 files carry base-inventory rows); the 138 sites are 45 `pure`,
+90 `mixed` or `prose` and 3 `title` rows (the three `describe`/`it` titles in `meals/meal-components.test.tsx`
+wait for 05-10). No JSX comment container became empty, so none was deleted; the JSX comments in
+`ChoreListRow.tsx`, `RotationEditor.tsx` and `RecipeCard.tsx` kept their why. `apply-pure` left two
+fragments that were fixed by hand (`bills-copy.ts` grammar, `RecipeCard.tsx` JSX comment indentation). Three
+comments that named the retired docs without matching the vocabulary (`Design`/`Branding` alone in
+`Skeleton.tsx`, `StateBlocks.tsx`, `ItemPrice.tsx`, `ListPickerSheet.tsx`, `OfflineBanner.tsx`) were reworded
+in the same pass. Web suite 728 passed, equal to `tests-before-c.web`.
 
 ## Titles
 
