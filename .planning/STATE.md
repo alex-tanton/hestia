@@ -3,7 +3,7 @@ gsd_state_version: "1.0"
 current_phase: 6
 current_phase_name: CI Enforcement and Lock-in
 status: planning
-stopped_at: Phase 5 complete, ready to plan Phase 6
+stopped_at: Phase 6 context gathered
 last_updated: "2026-10-22T10:54:00.962Z"
 last_activity: 2026-10-22
 last_activity_desc: Phase 5 complete, transitioned to Phase 6
@@ -172,8 +172,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 ## Session Continuity
 
 Last session: 2026-10-22T04:40:00.000Z
-Stopped at: Phase 5 complete, ready to plan Phase 6
-Resume file: None
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-ci-enforcement-and-lock-in/06-CONTEXT.md
 
 ### Resume point for Phase 5 (after 05-13, 2026-10-22)
 
