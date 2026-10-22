@@ -324,7 +324,7 @@ describe('GET /households/:id/deals/search', () => {
     expect(last.json<DealSearchResponse>().hasMore).toBe(false);
   });
 
-  it('serves the stale cache with its as-of date when a live fetch fails (non-negotiable 18)', async () => {
+  it('serves the stale cache with its as-of date when a live fetch fails', async () => {
     const home = await household();
     source.data.search = { broccoli: [broccoli()] };
     const url = `/api/households/${home.household.id}/deals/search?q=broccoli&scope=all`;

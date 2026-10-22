@@ -151,7 +151,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Chores list (Design › Screens › 17)', () => {
+describe('Chores list', () => {
   it('loading: shows skeleton rows labelled for screen readers', () => {
     mountList({ 'GET /api/households/:id/chores': () => new Promise(() => undefined) });
     expect(screen.getByRole('status')).toHaveTextContent('Loading chores');
@@ -375,7 +375,7 @@ describe('Chores list (Design › Screens › 17)', () => {
   });
 });
 
-describe('Chore detail (Design › Screens › 17)', () => {
+describe('Chore detail', () => {
   it('shows the recurrence, the next three dates, and the rotation with the current turn and the next', async () => {
     mountDetail({
       'GET /api/chores/:id': () => ({ status: 200, body: takeOutTrashDetailFixture }),
@@ -458,7 +458,7 @@ describe('Chore detail (Design › Screens › 17)', () => {
   });
 });
 
-describe('Chore sheet (Design › Screens › 17)', () => {
+describe('Chore sheet', () => {
   it('name is required and the interval must be a whole number of 1 or more', async () => {
     mountForm({});
     const user = userEvent.setup();

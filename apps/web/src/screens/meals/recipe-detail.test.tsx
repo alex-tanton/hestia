@@ -48,7 +48,7 @@ function mount(
 
 registerBrowserStubs();
 
-describe('Recipe detail (Design › Screens › 12)', () => {
+describe('Recipe detail', () => {
   it('loading: announces it with skeletons', () => {
     mount(baseHandlers({ 'GET /api/recipes/:id': () => new Promise(() => undefined) }));
     expect(screen.getByRole('status')).toHaveTextContent('Loading this recipe');
@@ -399,7 +399,7 @@ describe('Recipe detail (Design › Screens › 12)', () => {
   });
 });
 
-describe('Recipe detail: readiness bucket display (Design › Composite components)', () => {
+describe('Recipe detail: readiness bucket display', () => {
   it('shows each ingredient with its bucket label and what it matched', async () => {
     mount(
       baseHandlers({ 'GET /api/recipes/:id': () => ({ status: 200, body: bakedZitiFixture }) }),

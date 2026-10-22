@@ -43,7 +43,7 @@ describe('activity window', () => {
 });
 
 describe('selectActivePostalCodes', () => {
-  it('returns one entry per postal code, never one per household (non-negotiable 19)', () => {
+  it('returns one entry per postal code, never one per household', () => {
     const households = [
       { postalCode: '27514', lastActiveAt: daysAgo(0) },
       { postalCode: '27514', lastActiveAt: daysAgo(1) },

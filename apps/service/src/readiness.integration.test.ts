@@ -280,7 +280,7 @@ async function seedOakStreet(): Promise<Home> {
   return home;
 }
 
-describe('recipe readiness — the Seed Data table', () => {
+describe('recipe readiness against the seed data', () => {
   let oak: Home;
   let recipes: Record<string, RecipeDetail>;
 

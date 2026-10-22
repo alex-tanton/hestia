@@ -122,7 +122,7 @@ describe('the Subtotals rule', () => {
       ],
       { subtotalCents: 0, unpricedCount: 3 },
     ],
-  ])('matches Seed Data’s %s header', (_store, items, expected) => {
+  ])('matches the seed data’s %s header', (_store, items, expected) => {
     expect(subtotal(items)).toEqual(expected);
   });
 });

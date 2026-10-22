@@ -176,7 +176,7 @@ describe('week planner', () => {
     );
   });
 
-  it('computes the current week’s Sunday in the household’s own timezone, not a naive UTC date (non-negotiable 8)', async () => {
+  it('computes the current week’s Sunday in the household’s own timezone, not a naive UTC date', async () => {
     // `currentWeekSunday` (services/meal-plan.ts) hardcodes `pg_catalog.now()`, so there is no
     // seam to inject a fake wall clock through the API. This runs the identical SQL fragment
     // against a literal instant instead of `now()`, which is the only way to pin the clock at a
@@ -248,7 +248,7 @@ describe('week planner', () => {
     expect(nextWeek.json<MealPlanWeekResponse>().entries).toHaveLength(1);
   });
 
-  it('a past week is excluded from the default view but still viewable as history (Use Cases, "Plan the week": "Past plan entries")', async () => {
+  it('a past week is excluded from the default view but still viewable as history', async () => {
     const home = await household(app);
     const recipe = await createRecipe(home, 'Leftover Stew', [{ itemName: 'Beef' }]);
     const sunday = await currentSunday(home);

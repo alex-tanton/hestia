@@ -127,7 +127,7 @@ for (const theme of ['light', 'dark'] as const) {
   test.describe(`journey 4 — import a recipe, view readiness, add missing to a list (${theme})`, () => {
     test.use({ colorScheme: theme });
 
-    test('imports by URL, matches Seed Data readiness, and lists exactly what is missing', async ({
+    test('imports by URL, matches the seed data readiness, and lists exactly what is missing', async ({
       page,
     }) => {
       const scenario = SCENARIOS[theme];

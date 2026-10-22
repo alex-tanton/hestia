@@ -62,7 +62,7 @@ describe('needsUsageConfirmation', () => {
     expect(needsUsageConfirmation('2026-03-02', '2026-01-01')).toBe(true); // 60 days
   });
 
-  it('is true well past 60 days (Seed Data: Sam’s Adobe subscription, confirmed 70 days ago)', () => {
+  it('is true well past 60 days (Sam’s Adobe subscription in the seed data, confirmed 70 days ago)', () => {
     expect(needsUsageConfirmation('2026-09-30', '2026-07-22')).toBe(true); // 70 days
   });
 

@@ -18,7 +18,7 @@ function candidate(
   return { id, targetKind, normalizedName };
 }
 
-describe('Seed Data "Matching test cases" (12 rows)', () => {
+describe('the seed data matching test cases (12 rows)', () => {
   // Verbatim from the seed data's matching test cases, including both
   // named false-positive rows. Names here are raw text, normalized the same way production data
   // is, so this proves the matcher end to end rather than assuming pre-normalized input.
@@ -79,7 +79,7 @@ describe('Seed Data "Matching test cases" (12 rows)', () => {
   });
 });
 
-describe('named false-positive cases (Engineering Practices, "Testing")', () => {
+describe('named false-positive cases', () => {
   it('chicken breast must not match chicken broth', () => {
     const result = matchIngredient(normalize('chicken breast'), [
       candidate(normalize('Chicken Broth, 32 oz')),
@@ -134,7 +134,7 @@ describe('normalization composed with the fuzzy layer', () => {
   });
 });
 
-describe('overrides applied before fuzzy matching (Requirements, "Match overrides")', () => {
+describe('overrides applied before fuzzy matching', () => {
   it('force_match matches a pair the fuzzy layer would refuse', () => {
     // "snack cheese" shares no token with "cheese" once normalized, so fuzzy alone would refuse
     // it — this is the seed data's own override fixture (Oak Street, "cheese" force-no-match
@@ -211,7 +211,7 @@ describe('overrides applied before fuzzy matching (Requirements, "Match override
   });
 });
 
-describe('pantry beats sale (Requirements, "Deal-matched suggestions")', () => {
+describe('pantry beats sale', () => {
   it('returns the pantry candidate when both a pantry item and a deal match', () => {
     const result = matchIngredient('pasta', [
       candidate('pasta', 'deal', 'deal-1'),

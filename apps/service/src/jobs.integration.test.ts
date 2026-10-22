@@ -426,7 +426,7 @@ describe('refresh-deals', () => {
   });
 });
 
-describe('readiness recompute across households (Technical Architecture, "Daily refresh")', () => {
+describe('readiness recompute across households', () => {
   // `jobDb.asServiceRole` gives the recompute step a `service_role` connection, the same as
   // `main.ts` wires it; `readinessNotBuiltYet` (the no-op every other test in this file uses)
   // would hide a regression that recomputes only the first household at a postal code, so this
@@ -535,7 +535,7 @@ describe('flyer_refresh outbox rows', () => {
     expect(rows[0]?.occurrence_key).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('dedupes a rerun on the outbox key (non-negotiable 7)', async () => {
+  it('dedupes a rerun on the outbox key', async () => {
     const home = await seedHousehold({
       postalCode: POSTAL_CODE,
       favorites: [

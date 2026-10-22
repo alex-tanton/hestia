@@ -33,7 +33,7 @@ describe('meal-copy', () => {
     expect(readinessSentence(4, 5)).toBe('4 of 5 ingredients ready');
   });
 
-  it('names every bucket in the breakdown line, even at zero (PRD › Transparency)', () => {
+  it('names every bucket in the breakdown line, even at zero', () => {
     expect(breakdownLine(2, 2, 1)).toBe('4 of 5 ready — 2 on sale, 2 in pantry, 1 to buy');
     expect(breakdownLine(0, 0, 6)).toBe('0 of 6 ready — 0 on sale, 0 in pantry, 6 to buy');
   });
@@ -114,7 +114,7 @@ describe('IngredientEditor', () => {
   });
 });
 
-describe('MealSlotEntry and PlannerDay (Design › Screens › 10)', () => {
+describe('MealSlotEntry and PlannerDay', () => {
   const placed: MealPlanEntry = {
     id: 'e1',
     householdId: 'h1',
@@ -225,7 +225,7 @@ describe('MealSlotEntry and PlannerDay (Design › Screens › 10)', () => {
   });
 });
 
-describe('sorting (Design › Screens 11, 13)', () => {
+describe('sorting', () => {
   it('ranks suggestions by readiness descending, ties by title', () => {
     const sorted = sortSuggestions([
       {

@@ -94,7 +94,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
     });
   });
 
-  it('per-ounce price (Requirements: "/oz likewise gives oz")', () => {
+  it('per-ounce price: /oz gives oz', () => {
     expect(parsePrice(copy({ currentPrice: 49, postPriceText: '/oz' }))).toMatchObject({
       parsed: { unitPrice: 49, priceUnit: 'oz' },
     });

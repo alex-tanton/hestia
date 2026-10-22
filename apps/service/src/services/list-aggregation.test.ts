@@ -31,7 +31,7 @@ describe('ingredient aggregation', () => {
     ]);
   });
 
-  it('sums matching units, as Seed Data’s red onion does', () => {
+  it('sums matching units, as the seed data’s red onion does', () => {
     expect(
       aggregateIngredients([from(TACOS, 'red onion', 1, null), from(SALAD, 'red onion', 1, null)]),
     ).toEqual([

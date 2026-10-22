@@ -76,7 +76,7 @@ describe('normalize over the raw Flipp captures', () => {
  * in them are quoted against those lists. A term quietly missing from a list would make those
  * oracles wrong without failing anything else, so the claim is asserted here.
  */
-describe('the lists Seed Data says these are', () => {
+describe('the lists the seed data says these are', () => {
   const documentedDescriptors = [
     'boneless',
     'skinless',
@@ -125,7 +125,7 @@ describe('the lists Seed Data says these are', () => {
  * the half normalization is responsible for — that exact token containment already lands on the
  * documented answer, so a later fuzzy step is not papering over a normalization bug.
  */
-describe('Seed Data matching test cases', () => {
+describe('the seed data matching test cases', () => {
   const contains = (ingredient: string, candidate: string): boolean => {
     const candidateTokens = new Set(normalizeTokens(candidate));
     return normalizeTokens(ingredient).every((token) => candidateTokens.has(token));

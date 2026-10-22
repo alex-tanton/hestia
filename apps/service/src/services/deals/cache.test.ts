@@ -39,7 +39,7 @@ describe('the TTL table', () => {
   });
 });
 
-describe('stale beats empty (non-negotiable 18)', () => {
+describe('stale beats empty', () => {
   it('serves any entry after a failed fetch, however old', () => {
     const entry = { value: ['deal'], fetchedAt: ago(40 * 24 * HOUR) };
     expect(serveAfterFailure(entry)).toBe(entry);
