@@ -59,7 +59,7 @@ last_mapped_at: 2026-10-22
 - Optional props use `?` with `exactOptionalPropertyTypes` in mind: `disabledReason?: string | undefined` in `apps/web/src/components/ui/Button.tsx`.
 
 **Escape hatches (verified counts):**
-- Lint suppression directives in source, tests, and E2E: five real `eslint-disable-next-line` comments. `apps/service/src/cli.test.ts:65` (`prefer-promise-reject-errors`); `apps/service/src/test/zone-dates.ts:15`, `apps/service/src/deals/flipp/request-queue.test.ts` (two, lines 27 and 174), and `e2e/support/clock.ts:12` (all `no-restricted-syntax`, clock reads). Each carries a `-- reason`.
+- Lint suppression directives in source, tests, and E2E: five real `eslint-disable-next-line` comments. `apps/service/src/cli.test.ts:65` (`prefer-promise-reject-errors`); `apps/service/src/test/zone-dates.ts:15`, `apps/service/src/deals/flipp/request-queue.test.ts` (two, lines 27 and 174), and `e2e/support/clock.ts:12` (all `no-restricted-syntax`, clock reads). Four carry a `-- reason`; the `cli.test.ts` one states its reason in the comment line above it.
 - `as any` does not appear in `apps/*/src` or `packages/*/src`. `strictTypeChecked` forbids explicit `any`.
 - Double casts (`as unknown as`) appear in production code only in `apps/service/src/services/deals/storage.ts` (two uses of `as unknown as DealRow[]`). Test code uses more of them, mostly to hand a stub to a typed port (`apps/web/src/lib/realtime/supabase-realtime.test.ts`). Prefer a narrowed type or a Zod `parse()` over `as`.
 - Do not add new `as` casts to production code without a reason in the review.
@@ -111,8 +111,7 @@ This order is a convention, not enforced by ESLint. No import-order rule is conf
 
 ## Comments
 
-- Explain why, not what. Comments state the invariant or the non-obvious constraint behind the code.
-- Comments do not cite sections of retired spec documents. Source contains no such citations (verified by search). State the rule itself.
+- Explain why, not what. Do not cite sections of retired spec documents; state the rule itself. Comments state the invariant or the non-obvious constraint behind the code.
 - Module-level block comments (`/* ... */` or `/** ... */`) open files that carry a rule set or a contract, such as `apps/web/src/test/harness.tsx` and `apps/service/src/services/bills.test.ts`.
 - Document invariants with the reason, for example the opacity floors in `apps/web/src/components/ui/Button.tsx` (the 95% and 97% values exist because of measured WCAG AA contrast).
 - JSDoc (`/** */`) goes on exported functions and types whose contract is not obvious from the signature, for example `errorFingerprint` in `apps/service/src/services/errors.ts` and `ProblemError` in `apps/service/src/problem.ts`. It is not required on every export.
