@@ -11,7 +11,7 @@ export const FIRST_RUN_COPY =
   'This Week shows what is due, planned, and left to buy. Nothing is here yet, so start with a shopping list.';
 
 /**
- * Design › Screens › 2: when every *shipped* pillar is empty, one first-run panel replaces those
+ * When every *shipped* pillar is empty, one first-run panel replaces those
  * pillars' empty cards. Placeholders for unshipped pillars are unaffected and keep their place,
  * so the layout never reflows as pillars arrive. Lists is the first pillar to ship, and a list is
  * what the other three eventually feed, so it is the action the panel offers.

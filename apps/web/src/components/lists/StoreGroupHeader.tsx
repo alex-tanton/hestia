@@ -3,23 +3,22 @@ import type { StoreGroup } from '@hearth/shared';
 import { formatCents, pluralize } from '../../lib/format.ts';
 import { PENDING_SUBTOTAL_LABEL, PendingMark } from './PendingMark.tsx';
 
-/** Items with no store group together, last (Design › Screens › 8). */
+/** Items with no store group together, last. */
 export const ANYWHERE_LABEL = 'Anywhere';
 
 export interface StoreGroupHeaderProps {
   group: StoreGroup;
   /**
    * The list has writes waiting to sync, so this subtotal is the last one the server sent. The
-   * client never recomputes money (Technical Architecture, "API surface"), so the figure is
-   * marked pending rather than guessed at.
+   * client never recomputes money, so the figure is marked pending rather than guessed at.
    */
   isPending?: boolean;
   headingId: string;
 }
 
 /**
- * Design › Composite components › `StoreGroupHeader`: merchant, item count, running subtotal, and
- * "+N unpriced" when items are excluded from it (Requirements, "Subtotals").
+ * `StoreGroupHeader`: merchant, item count, running subtotal, and
+ * "+N unpriced" when items are excluded from it.
  */
 export function StoreGroupHeader({
   group,

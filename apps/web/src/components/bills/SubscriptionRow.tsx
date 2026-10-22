@@ -15,9 +15,9 @@ export interface SubscriptionRowProps {
 }
 
 /**
- * Design › Screens › 16: one subscription, its monthly cost, and its annualized figure (both from
- * the API's own normalized response — the client never computes these, Handoff non-negotiable
- * "money is integer cents"). A row past 60 days unconfirmed gets the inline "Still using this?"
+ * One subscription, its monthly cost, and its annualized figure (both from the API's own
+ * normalized response — the client never computes these, because money is integer cents). A row
+ * past 60 days unconfirmed gets the inline "Still using this?"
  * prompt; the API decides when, via `needsUsageConfirmation` — this component only renders it.
  */
 export function SubscriptionRow({

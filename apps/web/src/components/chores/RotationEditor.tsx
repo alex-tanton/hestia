@@ -30,10 +30,10 @@ function moveIndex<T>(list: readonly T[], from: number, to: number): T[] {
 }
 
 /**
- * Design › "17. Chores" › Chore sheet: "A rotation is an ordered list of members, reorderable by
- * drag handles with up and down buttons as the non-gesture alternative." The up/down buttons are
- * the real accessibility requirement (Accessibility › Keyboard: "Full operation without a
- * pointer"); the drag handle is a pointer convenience on top of them, not a replacement.
+ * A rotation is an ordered list of members, reorderable by drag handles with up and down buttons
+ * as the non-gesture alternative. The up/down buttons are the real accessibility requirement
+ * (full operation without a pointer); the drag handle is a pointer convenience on top of them,
+ * not a replacement.
  *
  * A button that moves a member, or removes one, is often the last focusable thing in its row once
  * the row reaches an edge, so focus follows the member to where it lands (Accessibility › Focus
@@ -129,8 +129,8 @@ export function RotationEditor({
           <li key={userId} data-member={userId} className="rounded-md border border-border bg-base">
             {/* The row is the drop target and carries no role of its own, so the <li> keeps its
                 list semantics. The handle is the drag source, a real button kept out of the Tab
-                order (tabIndex -1): Up and Down below are the non-gesture alternative that
-                Design › 17 requires, and a focusable control that did nothing would only be noise. */}
+                order (tabIndex -1): Up and Down below are the required non-gesture alternative,
+                and a focusable control that did nothing would only be noise. */}
             <div
               role="presentation"
               onDragOver={(event) => {

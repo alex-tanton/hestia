@@ -18,7 +18,7 @@ export interface PlannerDayProps {
   onRemove: (entry: MealPlanEntry) => void;
 }
 
-/** Design › Screens › 10: one day's three slots, each listing its placed recipes then an add affordance. */
+/** One day's three slots, each listing its placed recipes then an add affordance. */
 export function PlannerDay({
   date,
   label,

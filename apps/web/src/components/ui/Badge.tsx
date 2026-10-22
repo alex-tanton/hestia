@@ -19,7 +19,7 @@ const VARIANT_CLASSES: Record<BadgeVariant, string> = {
 };
 
 /**
- * Badge pairs are from Branding › Badges (all 4.5:1 at caption size). Danger carries an icon so
+ * Badge pairs are all 4.5:1 at caption size. Danger carries an icon so
  * the state is never read from red alone; Personal carries the Lucide `user` icon and its word.
  */
 export function Badge({ variant = 'neutral', children, className }: BadgeProps): ReactElement {

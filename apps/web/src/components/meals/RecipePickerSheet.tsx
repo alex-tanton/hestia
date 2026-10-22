@@ -15,11 +15,11 @@ export interface RecipePickerSheetProps {
 }
 
 /**
- * Design › Screens › 10: "Placing a recipe opens a picker defaulting to deal-matched suggestions,
- * with the full library searchable behind it." With nothing typed, the ranked suggestions lead;
- * typing a search switches to a title search of the whole library (Recipes has no `q` query
- * param, so this is a client-side filter of the already-fetched page, the same limitation the
- * library screen itself accepts — Design › Screens › 11).
+ * Placing a recipe opens a picker defaulting to deal-matched suggestions, with the full library
+ * searchable behind it. With nothing typed, the ranked suggestions lead; typing a search switches
+ * to a title search of the whole library (Recipes has no `q` query param, so this is a
+ * client-side filter of the already-fetched page, the same limitation the library screen itself
+ * accepts).
  */
 export function RecipePickerSheet({
   householdId,

@@ -13,7 +13,7 @@ export interface TopBarProps {
   chrome?: ScreenChrome | undefined;
 }
 
-/** Design › Layout shell › Chrome: household switcher, screen title, settings. */
+/** Chrome: household switcher, screen title, settings. */
 export function TopBar({ title, switcher, chrome }: TopBarProps): ReactElement {
   return (
     <div className="flex min-h-14 items-center gap-2 px-2">

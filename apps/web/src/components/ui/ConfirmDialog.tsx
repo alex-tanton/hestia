@@ -8,7 +8,7 @@ export interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  /** Names the consequence (Branding › Copy patterns › Destructive confirm). */
+  /** Names the consequence. */
   description: string;
   confirmLabel: string;
   onConfirm: () => void;
@@ -20,8 +20,8 @@ export interface ConfirmDialogProps {
 }
 
 /**
- * Dialogs are for destructive confirmation only (Design › Navigation rules), so this is an
- * alert dialog: it traps focus, starts on Cancel, and cannot be dismissed by an outside click.
+ * Dialogs are for destructive confirmation only, so this is an alert dialog: it traps focus, starts
+ * on Cancel, and cannot be dismissed by an outside click.
  */
 export function ConfirmDialog({
   open,

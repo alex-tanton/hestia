@@ -36,7 +36,7 @@ export function titleForPath(pathname: string): string {
 }
 
 /**
- * Design › Navigation rules: a tab switch lands on the tab's root but keeps that tab's scroll
+ * A tab switch lands on the tab's root but keeps that tab's scroll
  * position; switching household forgets every tab's position.
  */
 function useTabScrollMemory(section: SectionId, householdId: string | undefined): void {
@@ -67,7 +67,7 @@ function useTabScrollMemory(section: SectionId, householdId: string | undefined)
 /**
  * A queued write's toast can arrive long after the screen that made it has gone — after a
  * reconnect, or after a reload — so the queue is wired in at the shell, inside the toast
- * provider (Design › Offline rules).
+ * provider.
  */
 function WriteQueue(): null {
   useWriteQueue();

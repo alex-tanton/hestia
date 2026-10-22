@@ -23,9 +23,9 @@ function memberCountLabel(count: number): string {
 }
 
 /**
- * Top-bar trigger showing the active household, opening a sheet of every membership
- * (Design › Screens › 3). A single membership still opens the sheet, since it is also the
- * route to joining or creating another household.
+ * Top-bar trigger showing the active household, opening a sheet of every membership.
+ * A single membership still opens the sheet, since it is also the route to joining or creating
+ * another household.
  */
 export function HouseholdSwitcher({
   households,

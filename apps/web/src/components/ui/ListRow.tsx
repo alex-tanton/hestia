@@ -14,7 +14,7 @@ export interface ListRowProps {
   className?: string;
 }
 
-/** A generic row: 12px vertical padding and at least a 44px target (Branding › Spacing). */
+/** A generic row: 12px vertical padding and at least a 44px target. */
 export function ListRow({
   title,
   description,

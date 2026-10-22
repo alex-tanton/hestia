@@ -14,11 +14,11 @@ export interface TabsProps {
   onValueChange: (value: string) => void;
 }
 
-/** In-screen tabs, such as the week planner's day selection (Design › Primitives). */
+/** In-screen tabs, such as the week planner's day selection. */
 export function Tabs({ label, items, value, onValueChange }: TabsProps): ReactElement {
   const listRef = useRef<HTMLDivElement>(null);
 
-  // A row wider than the viewport (Design › Screens › 10's seven day tabs) scrolls, so the value
+  // A row wider than the viewport (the planner's seven day tabs) scrolls, so the value
   // set on mount or changed programmatically — such as the planner's default of today — needs to
   // be scrolled into view itself; Radix does not do this for a value change alone.
   useEffect(() => {

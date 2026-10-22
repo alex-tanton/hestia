@@ -21,10 +21,9 @@ export interface PaymentEditSheetProps {
 type Field = 'paidDate' | 'amount';
 
 /**
- * Design › Screens › 15: payment history entries can be edited, including automatic ones
- * (Requirements › "Bills": "Any member who can see the bill can edit or remove an automatic
- * payment"). Only the date and amount move — which occurrence a payment belongs to is never
- * editable here.
+ * Payment history entries can be edited, including automatic ones (any member who can see the
+ * bill can edit or remove an automatic payment). Only the date and amount move — which
+ * occurrence a payment belongs to is never editable here.
  */
 export function PaymentEditSheet({
   payment,

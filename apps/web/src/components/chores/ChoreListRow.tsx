@@ -28,10 +28,9 @@ export interface ChoreListRowProps {
 }
 
 /**
- * Design › Components: `ChoreRow` carries name, recurrence, next due, current assignee,
- * last-completed relative time, and a complete action. Design › "17. Chores": "Rotation chores
- * show whose turn it is and who is next." Overdue carries the danger color plus the word
- * "Overdue" (Accessibility › Color independence), with neutral copy (Branding › "Never nag").
+ * `ChoreRow` carries name, recurrence, next due, current assignee, last-completed relative
+ * time, and a complete action. Rotation chores show whose turn it is and who is next. Overdue
+ * carries the danger color plus the word "Overdue" (never color alone), with neutral copy.
  *
  * The row's name is a link to the detail, and the complete action is a sibling button, so the
  * two stay separate tab stops rather than a button nested inside a link.
@@ -76,7 +75,7 @@ export function ChoreListRow({
         className="flex min-h-11 min-w-0 flex-1 flex-col gap-1 px-4 py-3 transition-colors duration-150 ease-out hover:bg-raised active:bg-section-tint"
       >
         {/* The name wraps rather than truncating, and the overdue badge drops to its own line
-            before it would hide any of the name (Design › Accessibility: nothing clipped). */}
+            before it would hide any of the name: nothing is clipped. */}
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="min-w-0 text-body font-semibold break-words text-primary">
             {chore.name}
