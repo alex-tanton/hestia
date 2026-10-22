@@ -32,6 +32,18 @@ last_mapped_at: 2026-10-22
 - Dependency override: `esbuild` forced to `0.28.2` in root `package.json` `pnpm.overrides`
 - Peer-dependency exception: `allowedVersions` in `pnpm-workspace.yaml` permits `eslint-plugin-jsx-a11y` to peer on ESLint 10
 
+**Workspace packages:**
+
+| Package | Path | Role |
+|---------|------|------|
+| `@hearth/service` | `apps/service` | Fastify HTTP API, job scheduler, owner CLI |
+| `@hearth/web` | `apps/web` | React PWA (Vite) |
+| `@hearth/shared` | `packages/shared` | Shared Zod request and response schemas, problem and error types, scrubbing, password rules |
+| `@hearth/matching` | `packages/matching` | Ingredient and item fuzzy matching |
+| `@hearth/recurrence` | `packages/recurrence` | Bill and chore recurrence logic |
+| `@hearth/e2e` | `e2e` | Playwright end-to-end suite |
+| `@hearth/seed` | `supabase/seed` | Seed-user, seed-SQL, and pantry-readiness tooling |
+
 ## Frameworks
 
 **Service (`apps/service`):**
@@ -67,36 +79,41 @@ last_mapped_at: 2026-10-22
 - tsx 4.23.13 - runs TypeScript directly for `dev`, the seed tooling, and fixture scripts
 
 **Testing:**
-- Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web/vite.config.ts` test block)
+- Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web/vite.config.ts` test block). Every unit config (and the service coverage config) loads `test/clock-setup.mjs` as a setup file, which pins `Date`, and `test/global-tz.mjs` as `globalSetup`, which validates `TZ`; the integration config loads only `global-tz.mjs`. `pnpm test:sweep` and `pnpm test:sweep:integration` (`scripts/test-sweep.mjs`) run the suites across a fixed date and time-zone matrix; see `docs/testing.md`
 - `@vitest/coverage-v8` 5.0.1 - coverage in `apps/service`, `apps/web`, and `packages/*`
 - jsdom 30.1.0 - DOM environment for `apps/web`
 - @testing-library/react 16.3.3, @testing-library/dom 10.4.2, @testing-library/jest-dom 7.0.1, @testing-library/user-event 14.6.7 - component tests
-- `@playwright/test` 1.63.0 and `@axe-core/playwright` 4.13.0 - E2E and accessibility (`e2e/playwright.config.ts`)
+- `@playwright/test` 1.63.0 and `@axe-core/playwright` 4.13.0 - E2E and accessibility (`e2e/playwright.config.ts`, which pins the browser to `America/New_York` and `en-US`)
+- Supabase CLI 2.117.0 (`supabase/setup-cli@v3` in CI) - local Postgres, GoTrue, and Realtime stack for the integration tests; the E2E job uses it to apply migrations
 - Test harness uses `node --test` for the root harness tests (`package.json` `test:harness`)
 
 **Quality and tooling:**
 - ESLint 10.11.0 with `typescript-eslint` 8.70.0, `@eslint/js` 10.0.1, `eslint-plugin-react-hooks` 7.1.1, `eslint-plugin-jsx-a11y` 6.10.2, `eslint-config-prettier` 10.1.8, `globals` 17.12.0 - config in `eslint.config.js`
 - Prettier 3.9.8 - `.prettierrc.json`, ignores in `.prettierignore`
-- Husky 9.1.7 and lint-staged 17.5.1 - hooks in `.husky/` and `.lintstagedrc.json`
+- Husky 9.1.7 and lint-staged 17.5.1 - hooks in `.husky/pre-commit` and `.husky/commit-msg`; `.lintstagedrc.json`
 - `@commitlint/cli` and `@commitlint/config-conventional` 21.2.2 - `commitlint.config.js`
-- knip 6.41.0 - report-only unused-code scan; config `knip.json`; run with `pnpm knip` (CI does not run it)
+- knip 6.41.0 - report-only unused-code scan; config `knip.json`; run with `pnpm knip` or `pnpm knip:production` (CI does not run it)
 - kysely-codegen 0.20.0 - `pnpm db:types` regenerates `apps/service/src/db/types.ts` against a running local database
 - `yaml` 2.9.1 - devDependency of `apps/service`
 
 ## Key Dependencies
 
 - `fastify` 5.12.5 - the entire HTTP API surface; routes in `apps/service/src/routes/`
-- `kysely` 0.29.6 and `pg` 8.23.0 - all application database access, always inside a user- or service-scoped transaction (`apps/service/src/db/user-db.ts`)
+- `kysely` 0.29.6 and `pg` 8.23.0 - all application database access, always inside a user- or service-scoped transaction (`apps/service/src/db/user-db.ts`); row-level security is enforced in Postgres (`supabase/migrations/20260919070100_rls.sql`), not only in code
 - `zod` 4.6.5 - validation shared by service, web, and `packages/shared`
 - `web-push` 3.6.7 - Web Push; the VAPID key pair is required at startup (`apps/service/src/env.ts`)
-- `node-cron` 4.6.0 - scheduled jobs (`apps/service/src/jobs/index.ts`)
+- `node-cron` 4.6.0 - scheduled jobs: `refresh-deals`, `log-autopay`, `dispatch-notifications`, and `prune-cache`, registered in `apps/service/src/jobs/scheduler.ts` (`refresh-plan.ts` is a planner that `refresh-deals.ts` calls, not a job)
+- `@fastify/rate-limit` 11.2.0 - API rate limiting
 - `@supabase/supabase-js` 2.116.0 - browser sign-in, token refresh, and Realtime channels (`apps/web/src/lib/realtime/supabase-realtime.ts`)
 - `@tanstack/react-query` 5.103.1 - server state and offline persistence
 - `cheerio` 1.2.0 and `parse-ingredient` 3.0.0 - recipe import
+- `idb-keyval` 6.2.2 - offline persistence
+- `vite-plugin-pwa` 1.3.0 - installable PWA and update prompt (`apps/web/src/components/shell/UpdatePrompt.tsx`)
 
 ## Configuration
 
 **Service runtime (validated at startup by `apps/service/src/env.ts`):**
+- Read from process environment and validated by Zod; the service fails at startup on an invalid or missing variable
 - Required: `DATABASE_URL`, `HEARTH_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
 - Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HEARTH_TRUSTED_PROXIES`, `HEARTH_OWNER_EMAIL`, `HEARTH_RATE_LIMIT_PER_MINUTE` (`300`), `HEARTH_PUSH_TRANSPORT` (`web-push`)
 - Optional: `BACKUP_DIR`, `VAPID_SUBJECT`
@@ -113,8 +130,8 @@ last_mapped_at: 2026-10-22
 - `scripts/generate-secrets.sh` writes that file once and refuses to overwrite it.
 
 **Build and tooling configuration files:**
-- `pnpm-workspace.yaml`, root `package.json`, `tsconfig.base.json` with per-package `tsconfig.json`
-- `apps/service/tsup.config.ts`, `apps/web/vite.config.ts`, `apps/service/vitest*.config.ts`, `e2e/playwright.config.ts`
+- `pnpm-workspace.yaml` (workspace graph), root `package.json`, `tsconfig.base.json` (shared TypeScript options) with per-package `tsconfig.json` in `apps/service`, `apps/web`, `packages/*`, and `e2e`
+- `apps/service/tsup.config.ts` (service bundle), `apps/web/vite.config.ts` (Vite, React, Tailwind, and PWA plugins), `apps/service/vitest*.config.ts`, `e2e/playwright.config.ts`
 - `eslint.config.js`, `.prettierrc.json`, `commitlint.config.js`, `.lintstagedrc.json`, `knip.json`
 - `supabase/config.toml` - local Supabase CLI stack (Postgres major version 17, Realtime enabled, GoTrue auth with `site_url` `http://127.0.0.1:5173`, API gateway disabled)
 - `.github/dependabot.yml` - weekly updates for npm, GitHub Actions, and Docker images
@@ -130,21 +147,36 @@ last_mapped_at: 2026-10-22
 
 **Production:**
 - Single Linux host running the Compose stack in `docker/docker-compose.yml`
-- Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel
+- Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel (`sudo tailscale funnel --bg http://127.0.0.1:8080`), origin `https://<machine>.<tailnet>.ts.net`
 - A second disk mounted at `BACKUP_DIR`
-- Self-hosted GitHub Actions runner with labels `self-hosted, hearth` (`.github/workflows/deploy.yml`)
+- Self-hosted GitHub Actions runner with labels `self-hosted, hearth`, running as a user in the `docker` group (`.github/workflows/deploy.yml`)
 
 ## Container Images
 
-| Service | Image | Source |
-|---------|-------|--------|
-| `db` | `public.ecr.aws/supabase/postgres:17.6.1.167` | `docker/docker-compose.yml` |
-| `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` |
-| `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` |
-| `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` |
-| `hearth-service` | `hearth-service:${HEARTH_TAG}` | built from `docker/service.Dockerfile` |
-| `caddy` | `hearth-caddy:${HEARTH_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` |
-| `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` |
+| Service | Image | Source | Notes |
+|---------|-------|--------|-------|
+| `db` | `public.ecr.aws/supabase/postgres:17.6.1.167` | `docker/docker-compose.yml` | Postgres 17 (Supabase build) |
+| `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` | Supabase GoTrue auth server |
+| `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` | Supabase Realtime (WebSocket change feed) |
+| `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` | API gateway for GoTrue and Realtime |
+| `hearth-service` | `hearth-service:${HEARTH_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
+| `caddy` | `hearth-caddy:${HEARTH_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
+| `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` | Daily dump at `0 2 * * *`; keeps 14 days, 8 weeks, 6 months |
+
+## Database
+
+- PostgreSQL 17 (`supabase/config.toml` `major_version = 17`)
+- Migrations: `supabase/migrations/` (8 files; `20260919060000_hearth_service_role.sql` through `20261004090100_depart_clears_notification_preferences.sql`)
+- Typed schema: `apps/service/src/db/types.ts` (generated by `kysely-codegen`, committed)
+- Login role used by the service: `hearth_service` (NOINHERIT; the password is supplied through `HEARTH_SERVICE_DB_PASSWORD`, applied by `docker/db/hearth-service-login.sql`)
+
+## CI/CD Toolchain
+
+- `.github/workflows/ci.yml` - jobs `lint` (lint and format check), `typecheck`, `test-unit`, `test-integration` (Supabase CLI start, then `test:coverage`), `test-e2e` (Playwright, pull requests and `main`), and `build`; all on GitHub-hosted runners
+- `.github/actions/setup/action.yml` - composite action every job runs after checkout: `pnpm/action-setup@v6`, `actions/setup-node@v7` (Node from `.nvmrc`, pnpm store cached), `pnpm install --frozen-lockfile`
+- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hearth`; executes `scripts/deploy.sh` unless only `docs/` changed
+- Actions: `actions/checkout@v7`, `pnpm/action-setup@v6`, `actions/setup-node@v7`, `supabase/setup-cli@v3`, `docker/login-action@v4`, `actions/upload-artifact@v7`
+- `scripts/ci-prepull-images.sh` - pre-pulls the Compose and Dockerfile images for the E2E job
 
 ---
 
