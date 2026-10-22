@@ -251,3 +251,23 @@ pr-d-ready=166ae77413fdb324d315bf37e0572096a2b7a885
 
 `docs/sync-specs` is pushed at that merge of WB `6535a7a` (the index commit). WB takes later commits that
 only record PR D's number, head and CI; they are not merged into D again, so PR D's head stays `pr-d-ready=`.
+
+## PR D
+
+pr-d=29
+pr-d-url=https://github.com/alex-tanton/hearth/pull/29
+pr-d-title=docs: bring specs and codebase maps in line with the code
+pr-d-head=166ae77413fdb324d315bf37e0572096a2b7a885
+
+PR D was opened through REST from `docs/sync-specs` into `main` at `pr-d-head=` (equal to `pr-d-ready=`),
+not draft, GitHub reports it `clean` and not merged. Its files outside `.planning/` are the seven
+`docs/*.md`, `README.md`, `.claude/CLAUDE.md` and the one-line comment in `docker/docker-compose.yml`
+(the plan's file list omitted the compose comment, an owner request from 05-12). The body is
+`logs/05-13-pr-d.md` (gitignored); it states the owner decision about the regenerated
+`.claude/CLAUDE.md` (dropped Anti-Patterns section, Component Responsibilities table, and the stack
+block's `## Database` and `## CI/CD Toolchain` headings, with an offer to restore them before merge).
+
+pr-d-ci=39712387383 lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success
+
+First attempt, no rerun. `test-integration` reports `Tests  1190 passed (1190)` in 76 files, equal to
+`main-integration-tests=1190` (`logs/05-13-pr-integration.log`).
