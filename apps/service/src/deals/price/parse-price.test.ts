@@ -31,7 +31,7 @@ function copy(fields: Partial<PriceCopy>): PriceCopy {
   };
 }
 
-describe('parsePrice: the Requirements table, row by row', () => {
+describe('parsePrice: each price rule, row by row', () => {
   it('direct price with an original', () => {
     // ALDI "Peanut Delight No-Stir Creamy Peanut Butter": PRICE DROPS, $1.45, was $1.95.
     expect(

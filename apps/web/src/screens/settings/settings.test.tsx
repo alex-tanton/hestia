@@ -92,7 +92,7 @@ describe('Settings', () => {
     expect(stub.calls).toHaveLength(0);
   });
 
-  it('shows every section Design lists', async () => {
+  it('shows every settings section', async () => {
     renderSettings(settingsHandlers());
 
     for (const heading of [

@@ -222,7 +222,7 @@ describe('joining a household', () => {
     });
   });
 
-  it('shows Design’s copy for an expired invite', async () => {
+  it('shows the expired-invite copy for an expired invite', async () => {
     const user = userEvent.setup();
     stubFetch({
       'POST /api/households/join': () => ({
@@ -240,7 +240,7 @@ describe('joining a household', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows Design’s copy for a code that matches nothing', async () => {
+  it('shows the no-match copy for a code that matches nothing', async () => {
     const user = userEvent.setup();
     stubFetch({
       'POST /api/households/join': () => ({

@@ -9,7 +9,7 @@ describe('validateNewPassword', () => {
     expect(validateNewPassword('violet-teapot-harbor-17')).toBeUndefined();
   });
 
-  it('gives Design’s sentence for a common password', () => {
+  it('gives the common-password sentence for a common password', () => {
     expect(validateNewPassword('Password1')).toBe(COMMON_PASSWORD_MESSAGE);
   });
 
