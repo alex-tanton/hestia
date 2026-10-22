@@ -133,6 +133,7 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | service-tests | `apps/service/src/**/*.test.ts` (unit and integration) | 106 | 53 | 38 | b4a9cb9 | comment-only OK | gates OK |
 | web-lib | `apps/web` lib, pillars, test helpers, top-level source, `scripts/check-build.mjs`, `vite.config.ts` (non-test) | 144 | 67 | 77 | 79255b5 | comment-only OK | gates OK |
 | web-components | `apps/web/src/components` (source and tests) | 138 | 45 | 90 | 94fa9bd | comment-only OK | gates OK |
+| web-screens | `apps/web/src/screens`, `apps/web/src/lib/**/*.test.ts(x)`, top-level `apps/web/src/*.test.ts(x)` | 192 | 71 | 101 | 3ef8862 | comment-only OK | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -200,10 +201,25 @@ web typecheck, web suite 728 passed, `pnpm --filter @hearth/web build` (the app-
 90 `mixed` or `prose` and 3 `title` rows (the three `describe`/`it` titles in `meals/meal-components.test.tsx`
 wait for 05-10). No JSX comment container became empty, so none was deleted; the JSX comments in
 `ChoreListRow.tsx`, `RotationEditor.tsx` and `RecipeCard.tsx` kept their why. `apply-pure` left two
-fragments that were fixed by hand (`bills-copy.ts` grammar, `RecipeCard.tsx` JSX comment indentation). Three
+fragments that were fixed by hand (`bills-copy.ts` grammar, `RecipeCard.tsx` JSX comment indentation). Five
 comments that named the retired docs without matching the vocabulary (`Design`/`Branding` alone in
 `Skeleton.tsx`, `StateBlocks.tsx`, `ItemPrice.tsx`, `ListPickerSheet.tsx`, `OfflineBanner.tsx`) were reworded
 in the same pass. Web suite 728 passed, equal to `tests-before-c.web`.
+
+`web-screens` notes: 92 files changed (97 files carry base-inventory rows); the 192 sites are 71 `pure`, 101
+`mixed` or `prose` and 20 `title` rows (19 under `screens`, 1 in `lib/password.test.ts`), which wait for 05-10.
+Four comments that named the retired docs without matching the vocabulary (`Design` alone in
+`auth-client.ts`, `format.ts`, `api/problem.ts`, and a line-width refill in `chores.test.tsx`) were reworded in the
+same commit. Gates: ESLint `--max-warnings=0` on all of `apps/web`, Prettier on the changed files, web typecheck,
+web build (`App shell 198.0 KB gzipped (budget 200 KB)`), web suite 728 passed.
+
+Whole web app (05-09): `comment-only-check.mjs --base 708c714 --head HEAD -- apps/web` printed `OK 211 files`.
+The three web batches cover 144 + 138 + 192 = 474 sites, equal to the base inventory's `apps/web` TypeScript
+rows (the 2 `apps/web/src/index.css` rows are 05-10's). `citation-inventory.mjs inventory` over `apps/web` lists 25
+rows: 23 titles (3 in `components`, 20 in `screens` and `lib`) and the 2 `index.css` rows. The web suite
+reported 728 passed after each batch, equal to `tests-before-c.web`.
+
+tests-after-c.web=728
 
 ## Titles
 
