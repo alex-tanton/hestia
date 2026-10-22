@@ -246,3 +246,8 @@ knip on the D head (`pnpm knip`, report-only) lists six unused files, all `.plan
 proof tools: `citation-inventory`, `comment-only-check`, `docs-claims-check`, `expand-compare`,
 `jscpd-compare`, `nonts-comment-check`. `tailwindcss` as an unused devDependency of `apps/web` was
 reported before this phase and is not touched here.
+
+pr-d-ready=166ae77413fdb324d315bf37e0572096a2b7a885
+
+`docs/sync-specs` is pushed at that merge of WB `6535a7a` (the index commit). WB takes later commits that
+only record PR D's number, head and CI; they are not merged into D again, so PR D's head stays `pr-d-ready=`.
