@@ -131,6 +131,7 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | service-http | `apps/service` routes, http, auth, db, gotrue, push, privileged, test helpers, top-level source, scripts, `vitest.coverage.config.ts` | 50 | 41 | 9 | 4b73f76 | comment-only OK | gates OK |
 | service-domain | `apps/service/src` services, chores, deals, jobs, notifications, recipes (non-test) | 184 | 134 | 50 | d210844 | comment-only OK | gates OK |
 | service-tests | `apps/service/src/**/*.test.ts` (unit and integration) | 106 | 53 | 38 | b4a9cb9 | comment-only OK | gates OK |
+| web-lib | `apps/web` lib, pillars, test helpers, top-level source, `scripts/check-build.mjs`, `vite.config.ts` (non-test) | 144 | 67 | 77 | 79255b5 | comment-only OK | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -180,6 +181,19 @@ Whole service (05-07): `comment-only-check.mjs --base 708c714 --head HEAD -- app
 (33 + 57 + 54); the three batches cover all 340 `apps/service` rows of the base inventory (50 + 184 + 106).
 `citation-inventory.mjs inventory` over `apps/service` lists 15 rows, all class `title`. The service
 unit suite reported 757 passed after each batch, equal to `tests-before-c.service-unit`.
+
+Web unit count (05-09), `pnpm --filter @hearth/web test` at C's tip before any web edit (`Test Files  57 passed`,
+`Tests  728 passed`); every web batch must report the same:
+
+tests-before-c.web=728
+
+`web-lib` notes: 57 files; the 144 sites are 67 `pure`, 77 `mixed` or `prose` rows of the base inventory (no
+`title`; `apps/web/src/index.css` is 05-10's). Rewritten sites keep their rule as plain words (the write
+queue is durable and bounded, only list-item and chore/errand writes queue, server state never copied into
+component state, meal-plan dates evaluated in the household timezone, money as integer cents). Seed-fixture
+sources read `the seed data` or `Seed data:`. Gates: ESLint `--max-warnings=0` and Prettier on the 57 files,
+web typecheck, web suite 728 passed, `pnpm --filter @hearth/web build` (the app-shell line printed
+`App shell 198.0 KB gzipped (budget 200 KB)`). `check-build.mjs` was parsed as JS by the checker.
 
 ## Titles
 
