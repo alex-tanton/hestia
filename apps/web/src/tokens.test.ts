@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 const css = readFileSync(join(process.cwd(), 'src/index.css'), 'utf8');
 
 /**
- * Verifies the token file against Branding › Contrast requirements in both themes, so a token
+ * Verifies the token file against the contrast requirements in both themes, so a token
  * edit that breaks WCAG AA fails here rather than in an axe run.
  */
 const darkStart = css.indexOf('@media (prefers-color-scheme: dark)');
@@ -96,7 +96,7 @@ describe.each([
   });
 });
 
-describe('Branding values', () => {
+describe('brand values', () => {
   it('uses the listed section and semantic values', () => {
     expect(resolve(light, '--lists')).toBe('#15803d');
     expect(resolve(light, '--lists-accent')).toBe('#16a34a');

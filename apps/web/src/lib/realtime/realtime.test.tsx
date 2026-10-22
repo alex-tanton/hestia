@@ -19,9 +19,8 @@ import {
 import { REALTIME_HIGHLIGHT_MS } from './use-list-realtime.ts';
 
 /*
- * Realtime (Technical Architecture, "Realtime subscriptions"). A message is only ever a signal to
- * refetch: TanStack Query stays the single source of truth, so nothing here writes a payload
- * straight into the screen.
+ * Realtime. A message is only ever a signal to refetch: TanStack Query stays the single source of
+ * truth, so nothing here writes a payload straight into the screen.
  */
 
 const MILK = listItem({

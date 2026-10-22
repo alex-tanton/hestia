@@ -13,17 +13,17 @@ chores for one household (or a few), running on a single home server. The specif
 
 ## Layout
 
-| Path                  | Contents                                          |
-| --------------------- | ------------------------------------------------- |
-| `apps/web`            | React PWA (Vite, Tailwind, Workbox)               |
-| `apps/service`        | Fastify API, jobs, and the `hearth-admin` CLI     |
-| `packages/shared`     | Zod schemas, domain types, shared constants       |
-| `packages/recurrence` | Anchored recurrence logic (pure, dependency-free) |
-| `packages/matching`   | Ingredient normalization and matching (pure)      |
-| `e2e`                 | Playwright journeys and Flipp fixtures            |
-| `supabase`            | Supabase CLI config, SQL migrations, and seed     |
-| `docker`              | Compose file, Caddyfile, Kong config, Dockerfiles |
-| `scripts`             | `deploy.sh` and `generate-secrets.sh`             |
+| Path                  | Contents                                            |
+| --------------------- | --------------------------------------------------- |
+| `apps/web`            | React PWA (Vite, Tailwind, Workbox)                 |
+| `apps/service`        | Fastify API, jobs, and the `hearth-admin` CLI       |
+| `packages/shared`     | Zod schemas, domain types, shared constants         |
+| `packages/recurrence` | Anchored recurrence logic (pure, dependency-free)   |
+| `packages/matching`   | Ingredient normalization and matching (pure)        |
+| `e2e`                 | Playwright journeys and Flipp fixtures              |
+| `supabase`            | Supabase CLI config, SQL migrations, and seed       |
+| `docker`              | Compose file, Caddyfile, Kong config, Dockerfiles   |
+| `scripts`             | Deploy, secrets, CI pre-pull and test sweep scripts |
 
 ## Development
 
@@ -33,17 +33,17 @@ pnpm --filter @hearth/web dev        # PWA dev server
 pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
 ```
 
-| Command                 | Runs                                             |
-| ----------------------- | ------------------------------------------------ |
-| `pnpm lint`             | ESLint                                           |
-| `pnpm format`           | Prettier (write); `pnpm format:check` to verify  |
-| `pnpm typecheck`        | `tsc --noEmit` in every workspace                |
-| `pnpm test`             | Vitest unit and component tests                  |
-| `pnpm test:integration` | Vitest against `supabase start`                  |
-| `pnpm test:sweep`       | Unit tests across pinned dates and time zones    |
-| `pnpm test:e2e`         | Playwright against the Compose stack (below)     |
-| `pnpm build`            | Production builds of web and service             |
-| `pnpm knip`             | Report of unused files, exports and dependencies |
+| Command                 | Runs                                                |
+| ----------------------- | --------------------------------------------------- |
+| `pnpm lint`             | ESLint                                              |
+| `pnpm format`           | Prettier (write); `pnpm format:check` to verify     |
+| `pnpm typecheck`        | `tsc --noEmit` in every workspace                   |
+| `pnpm test`             | Harness tests, then Vitest unit and component tests |
+| `pnpm test:integration` | Vitest against `supabase start`                     |
+| `pnpm test:sweep`       | Unit tests across pinned dates and time zones       |
+| `pnpm test:e2e`         | Playwright against the Compose stack (below)        |
+| `pnpm build`            | Production builds of web and service                |
+| `pnpm knip`             | Report of unused files, exports and dependencies    |
 
 `pnpm --filter @hearth/service test:coverage` reports the service's coverage over its unit and
 integration tests together, so it needs `supabase start` running too.
@@ -66,7 +66,7 @@ therefore start at once, from two clones, and neither touches the other's stack,
 `supabase start`, nor an `.env` already on the machine. `HEARTH_E2E_REUSE_STACK=1` skips bring-up
 and leaves the stack running, which is for iterating on one test: pass the run id it printed as
 `HEARTH_E2E_RUN_ID=<id>` to find that stack again. A run whose result is being trusted starts from
-an empty database. Engineering Practices, "E2E environment", has the detail.
+an empty database.
 
 ### Running the service locally
 
@@ -101,8 +101,9 @@ pnpm --filter @hearth/service dev
 | `LOG_LEVEL`, `HOST`, `PORT` | Pino level and the listen address                                      |
 
 The generated API document is at `GET /api/openapi.json`. The owner CLI is a bin in the service
-image (`docker compose exec hearth-service hearth-admin reset-password <email>`); locally it runs
-from the built bundle with `GOTRUE_URL`, `SERVICE_ROLE_KEY`, and `HEARTH_ORIGIN` set:
+image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hearth-service
+hearth-admin reset-password <email>`); locally it runs from the built bundle with `GOTRUE_URL`,
+`SERVICE_ROLE_KEY`, and `HEARTH_ORIGIN` set:
 
 ```sh
 pnpm --filter @hearth/service build
@@ -118,7 +119,7 @@ The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABL
 | ----------------------- | ------------------------------------------------------------------------- |
 | `supabase db reset`     | Recreates the local database and applies every migration                  |
 | `pnpm db:types`         | Regenerates `apps/service/src/db/types.ts` from the migrated local schema |
-| `pnpm db:seed`          | Creates the Seed Data users through GoTrue, then applies the seed SQL     |
+| `pnpm db:seed`          | Creates the seed users through GoTrue, then applies the seed SQL          |
 | `pnpm test:integration` | RLS, database and route tests; isolation is in `docs/testing.md`          |
 
 Run `pnpm db:types` after every new migration and commit the result. `pnpm db:seed` needs `psql`
@@ -143,9 +144,8 @@ HEARTH_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
 
 ## Deployment
 
-Production is one Linux box running `docker/docker-compose.yml` (Technical Architecture,
-"Deployment"), published to the internet by Tailscale Funnel. Only Caddy publishes a port, and
-only on `127.0.0.1:8080`.
+Production is one Linux box running `docker/docker-compose.yml`, published to the internet by
+Tailscale Funnel. Only Caddy publishes a port, and only on `127.0.0.1:8080`.
 
 ### Pinned names
 

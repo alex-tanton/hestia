@@ -11,7 +11,7 @@ import { firstIssue } from '../../lib/validation.ts';
 
 export interface ListNameSheetProps {
   householdId: string;
-  /** Renaming an existing list, or creating one (Design › Screens › 7). */
+  /** Renaming an existing list, or creating one. */
   list?: ShoppingList | undefined;
   open: boolean;
   onOpenChange: (open: boolean) => void;

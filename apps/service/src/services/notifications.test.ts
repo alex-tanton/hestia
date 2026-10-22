@@ -5,7 +5,7 @@ import { effectivePreferences, notificationDefaults } from './notifications.js';
 const HOUSEHOLD_A = '3f2b8c1e-9a4d-4e6f-8b1a-2c3d4e5f6a7b';
 const HOUSEHOLD_B = '7a1d2e3f-4b5c-4d6e-8f7a-9b0c1d2e3f4a';
 
-// Requirements, "Notifications" › "Types and defaults", the Default column.
+// The default on/off setting of each notification type.
 describe('notification defaults', () => {
   it.each<[NotificationType, boolean]>([
     ['bill_due', true],

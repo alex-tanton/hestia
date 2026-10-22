@@ -30,7 +30,7 @@ import {
 } from './chore-errand-writes.ts';
 
 /*
- * Unit tests for the queued chore and errand writes (Engineering Practices › The write queue). They
+ * Unit tests for the queued chore and errand writes. They
  * drive TanStack Query's own mutation cache, the same as the queue does in the app, with a fake API
  * client that records what would have been sent.
  */

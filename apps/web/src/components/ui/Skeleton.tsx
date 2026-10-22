@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { cn } from '../../lib/cn.ts';
 import { useDelayedVisible } from '../../lib/use-delayed-visible.ts';
 
-/** One placeholder block. Static, not shimmering: Branding rules out decorative animation. */
+/** One placeholder block. Static, not shimmering: no decorative animation. */
 export function Skeleton({ className }: { className?: string }): ReactElement {
   return <span aria-hidden className={cn('block rounded-sm bg-border', className)} />;
 }
@@ -10,7 +10,7 @@ export function Skeleton({ className }: { className?: string }): ReactElement {
 export interface SkeletonRowsProps {
   /** What is loading, for screen readers ("Loading bills"). */
   label: string;
-  /** Mirror the real layout: three list rows, not a grey box (Design › Loading rules). */
+  /** Mirror the real layout: three list rows, not a grey box. */
   rows?: number;
   delayMs?: number;
 }

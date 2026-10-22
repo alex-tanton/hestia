@@ -17,7 +17,7 @@ import { asOfLabel } from './DealFreshness.tsx';
 export const FAVORITES_OFFLINE_MESSAGE =
   'Choosing stores needs a connection. Your lists still work.';
 
-/** Design › Deals-specific states: "No stores found near \[ZIP\]" plus a way to change it. */
+/** "No stores found near \[ZIP\]" plus a way to change it. */
 export function noStoresMessage(postalCode: string | undefined): string {
   return postalCode === undefined
     ? 'No stores found near this household.'
@@ -35,11 +35,11 @@ export interface FavoriteStoresProps {
 
 /**
  * The household's favorite stores, chosen from the merchants with an active flyer near its postal
- * code. Any member may edit them (Design › Screens › 4), and they scope the default deal search,
- * the flyer list, and the daily refresh (Requirements › Data model, "Deals").
+ * code. Any member may edit them, and they scope the default deal search, the flyer list, and the
+ * daily refresh.
  *
  * Changing a favorite is not a queueable write, so the controls are disabled offline with the
- * reason beside them rather than hidden (Design › Offline rules).
+ * reason beside them rather than hidden.
  */
 export function FavoriteStores({
   householdId,
@@ -140,7 +140,7 @@ export interface FavoriteStoresPanelProps extends FavoriteStoresProps {
 }
 
 /**
- * Design › Deals-specific states, "Household has no favorite stores": prompt to pick favorites,
+ * A household with no favorite stores: prompt to pick favorites,
  * with browse-all already working — which it is, because the service shows a household with no
  * favorites every merchant rather than nothing.
  */

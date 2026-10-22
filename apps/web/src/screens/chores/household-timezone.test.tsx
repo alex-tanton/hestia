@@ -27,9 +27,9 @@ import { ErrandsListScreen } from './ErrandsListScreen.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * Household dates (PRD, "Timezone"): a chore's or errand's day is the household's, however the
- * device's zone reads the clock. The device here is Kiritimati (UTC+14), a day ahead of New York:
- * at 02:30 UTC on Sept 28 it is Sept 27 in New York and Sept 28 in Kiritimati.
+ * Household dates: a chore's or errand's day is the household's, however the device's zone reads
+ * the clock. The device here is Kiritimati (UTC+14), a day ahead of New York: at 02:30 UTC on Sept
+ * 28 it is Sept 27 in New York and Sept 28 in Kiritimati.
  */
 
 const BROWSER_ZONE = 'Pacific/Kiritimati';

@@ -11,10 +11,9 @@ export interface ChoreOccurrenceState {
 }
 
 /**
- * PRD, "Recurrence is anchored and derived on read" (Chores): "A chore's current occurrence is the
- * latest occurrence on or before today, or the first occurrence if none has arrived yet. When the
- * next occurrence's date arrives, an uncompleted earlier occurrence stops being due; missed
- * occurrences do not stack up and are never backfilled."
+ * A chore's current occurrence is the latest occurrence on or before today, or the first
+ * occurrence if none has arrived yet. When the next occurrence's date arrives, an uncompleted
+ * earlier occurrence stops being due; missed occurrences do not stack up and are never backfilled.
  *
  * `completedDates` is every occurrence date the caller already has a `chore_completion` row for.
  */
@@ -37,10 +36,9 @@ export function currentChoreOccurrence(
 }
 
 /**
- * Which occurrence a new completion closes (PRD, same section): "A completion closes the current
- * occurrence if that occurrence is open. If the current occurrence is already completed, or has
- * not arrived yet, the completion is early and closes the earliest later occurrence that has no
- * completion."
+ * Which occurrence a new completion closes. A completion closes the current occurrence if that
+ * occurrence is open. If the current occurrence is already completed, or has not arrived yet, the
+ * completion is early and closes the earliest later occurrence that has no completion.
  *
  * "Open" means arrived (due) and not yet completed — the overdue-or-due-today case. Otherwise the
  * completion is early, and the search for "earliest later occurrence with no completion" starts:

@@ -82,7 +82,7 @@ function HealthBody({ health }: { health: DeepHealthResponse }): ReactElement {
 }
 
 /**
- * Design › Screens › 4, "About": the server owner's System health. Everything on it is plain
+ * The server owner's System health. Everything on it is plain
  * text with an as-of time, and the only interactive control is the refresh.
  */
 export function SystemHealthScreen(): ReactElement {

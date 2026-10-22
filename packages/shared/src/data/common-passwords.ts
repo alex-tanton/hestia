@@ -1,5 +1,5 @@
-// The common-password list (Requirements, "Authentication"): the 10,000 most frequent passwords
-// of at least 8 characters, lowercased and deduplicated, in frequency order.
+// The common-password list: the 10,000 most frequent passwords of at least 8 characters, lowercased
+// and deduplicated, in frequency order.
 //
 // Source: SecLists (MIT licence), Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt,
 // https://github.com/danielmiessler/SecLists, the UK NCSC's top 100,000 passwords from Have I Been

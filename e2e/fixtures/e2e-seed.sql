@@ -1,9 +1,8 @@
--- Seed Data rows the Phase 1 departure journeys need, applied after `pnpm db:seed`
--- (Seed Data, "E2E departure fixtures").
+-- Extra seed rows the Phase 1 departure journeys need, applied after `pnpm db:seed`.
 --
 --   psql "$DB_URL" -v ON_ERROR_STOP=1 -f e2e/fixtures/e2e-seed.sql
 --
--- Every row below is one of the fixtures Seed Data already specifies. They live here rather than
+-- Every row below is one of the seed data's fixtures. They live here rather than
 -- in supabase/seed/seed.sql because that file adds each pillar's data in the phase that builds
 -- the pillar, and chores, errands, and bills belong to Phase 4. When that phase seeds them, this
 -- file loses the rows it takes over, as it already has for Phase 2's shopping lists.
@@ -44,7 +43,7 @@ begin
   -- bills (Duke Energy, Sam's; Water and Sewer, Jordan's). Inserting them again here would
   -- duplicate them, so only the personal bill that is not in that file remains.
 
-  -- Seed Data, "Bills". Casey's Car Insurance is personal, so it has no household and survives
+  -- Casey's Car Insurance is personal, so it has no household and survives
   -- Empty House's deletion.
   insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit,
     anchor_date, autopay, visibility, is_subscription, created_at)
@@ -53,12 +52,12 @@ begin
       'personal', false, now() - interval '3 months');
 
   -- -------------------------------------------------------------------------------------------
-  -- Journey 2's search cache (Handoff, Phase 2 "Done when": E2E journey 2). `supabase/seed/seed.sql`
+  -- Journey 2's search cache. `supabase/seed/seed.sql`
   -- seeds the deals themselves — Food Lion's Rainbow Bell Peppers and Baby Cut Carrots, both real
-  -- 27514 favorite-store groceries (Seed Data, "Favorite-store groceries") — but its own
+  -- 27514 favorite-store groceries — but its own
   -- `deal_query_cache` rows are "saffron" and "chicken", neither a favorited-merchant deal a
   -- journey can add to a list. A row per theme, already warm, is what lets the journey's search be
-  -- a cache hit rather than a live Flipp call the suite must never make (non-negotiable 17): each
+  -- a cache hit rather than a live Flipp call the suite must never make: each
   -- `normalized_query` is exactly what `@hearth/matching` normalizes the raw item name to, which is
   -- also what the journey types into the search box.
   -- -------------------------------------------------------------------------------------------

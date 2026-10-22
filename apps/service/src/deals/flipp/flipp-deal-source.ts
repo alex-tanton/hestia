@@ -12,9 +12,9 @@ import type { SkipReason } from '../price/parsers.js';
 import { CircuitOpenError, FlippRequestQueue, type QueueLogger } from './request-queue.js';
 
 /**
- * The Flipp wrapper: one module, one file, everything that knows Flipp's response shape
- * (Technical Architecture, "Flipp wrapper"). Base URL `https://backflipp.wishabi.com`; every
- * call is an unauthenticated GET returning JSON — no key, cookie, token, or Referer.
+ * The Flipp wrapper: one module, one file, everything that knows Flipp's response shape.
+ * Base URL `https://backflipp.wishabi.com`; every call is an unauthenticated GET returning JSON —
+ * no key, cookie, token, or Referer.
  *
  * | Mode        | Path                     | Parameters                                  | Fields read |
  * | ----------- | ------------------------ | ------------------------------------------- | ----------- |
@@ -116,11 +116,10 @@ export class FlippDealSource implements DealSource, DealSourceStats {
   private merchantCache: { merchants: Map<string, string>; fetchedAt: number } | null = null;
   private readonly counts = new Map<string, MerchantSkipCount>();
   /**
-   * In-flight coalescing: a cold cache key already being fetched hands every other caller the
-   * same promise rather than enqueueing another request. Cleared on settle, success or failure,
-   * so the next caller after a failure gets a fresh attempt rather than a cached rejection
-   * (Technical Architecture, "Flipp wrapper"; non-negotiable 19, rate discipline — a cache never
-   * lets a burst of callers each pay for their own fetch).
+   * In-flight coalescing: a cold cache key already being fetched hands every other caller the same
+   * promise rather than enqueueing another request. Cleared on settle, success or failure, so the
+   * next caller after a failure gets a fresh attempt rather than a cached rejection (rate
+   * discipline: a cache never lets a burst of callers each pay for their own fetch).
    */
   private readonly flyersInFlight = new Map<string, Promise<Map<string, Flyer>>>();
   private merchantsInFlight: Promise<Map<string, string>> | null = null;

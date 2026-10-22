@@ -187,6 +187,8 @@
 - **Main flow:**
   1. The user taps "add to list" on a deal.
   2. The service snapshots the deal's merchant, sale price, price unit, validity, and conditional flag onto a new `shopping_list_item` with `source = from_deal`.
+- **Alternate/exception flows:**
+  - **The response is lost after the add landed:** the app shows an error, and the next tap on the same deal for the same list carries the item id of the failed attempt, so the service keeps the one row that landed and the repeat changes nothing. Only a success starts the next add with a fresh id. The id is held in memory per list, deal and signed-in user, so it survives the card unmounting but not a reload. Adding a deal is an online action and is not queued while offline.
 - **Postconditions:** a new list item exists carrying the deal snapshot; it is independent of the live deal from that point on.
 
 ### Use case: Edit a shopping list item while offline
@@ -297,6 +299,7 @@
 - **Alternate/exception flows:**
   - **Ingredient aggregation:** the merge key is `normalized_name`. Matching units sum (1 cup + 2 cups milk → one 3-cup item). Mismatched units merge into one item keeping both quantities in `quantity_note` (2 cups + 1 lb onions → one "onions" item reading "2 cups + 1 lb"); no unit conversion is ever attempted. A missing unit is treated as a unit of its own, so "2 onions" and "1 lb onions" merge the mismatched way. The item records every contributing recipe in `contributing_recipe_ids`. Aggregation happens once, at add time; editing a recipe afterward does not change an existing list.
   - **Planned meal whose recipe has been deleted:** the action answers `404` rather than silently adding nothing — consistent with the week planner never offering the action on a deleted-recipe entry.
+  - **Two calls for one list overlap** (a retry that arrives while the first request is still running, or two members adding together): the service handles them one after the other per list, so the second reads the first one's rows and does not add the same ingredient again.
 - **Postconditions:** the target list contains exactly the ingredients that were neither on hand nor already listed, correctly priced and aggregated.
 
 ### Use case: Plan the week

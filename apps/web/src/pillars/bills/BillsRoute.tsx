@@ -15,10 +15,10 @@ function BillDetailRoute({ householdId }: { householdId: string }): ReactElement
 }
 
 /**
- * The Bills tab (Design › Screens › 14, 15, 16). The sub-tab roots — Bills, Subscriptions — sit
- * inside `PillarScreen`, which draws the segmented control; a bill's own detail renders without
- * it, since the top bar has already swapped the switcher for a back control (the same split
- * `ListsRoute` and `MealsRoute` use for their own detail screens).
+ * The Bills tab. The sub-tab roots — Bills, Subscriptions — sit inside `PillarScreen`, which draws
+ * the segmented control; a bill's own detail renders without it, since the top bar has already
+ * swapped the switcher for a back control (the same split `ListsRoute` and `MealsRoute` use for
+ * their own detail screens).
  */
 export function Component(): ReactElement {
   const profile = useProfile();

@@ -3,8 +3,8 @@ import { idSchema, timestampSchema } from './common.js';
 import { itemNameSchema, quantityNoteSchema } from './lists.js';
 
 /**
- * The pantry is a lightweight inventory: it does not track quantities precisely (Requirements,
- * "Pantry"). One row per normalized name, so adding something already there updates it.
+ * The pantry is a lightweight inventory: it does not track quantities precisely. One row per
+ * normalized name, so adding something already there updates it.
  */
 export const pantryItemSchema = z.object({
   id: idSchema,

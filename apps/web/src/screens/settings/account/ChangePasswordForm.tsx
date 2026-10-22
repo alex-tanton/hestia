@@ -13,7 +13,7 @@ type Field = 'currentPassword' | 'newPassword';
 
 /**
  * Changing the password re-enters the current one and applies the common-password list, both
- * here and again in the service (Requirements, "Authentication").
+ * here and again in the service.
  */
 export function ChangePasswordForm(): ReactElement {
   const isOnline = useOnlineStatus();
@@ -29,7 +29,7 @@ export function ChangePasswordForm(): ReactElement {
 
   // Opening swaps the trigger for the form, and closing swaps it back. Where a member's action
   // replaces the control they used, focus moves into what replaced it rather than falling back to
-  // the document (Design › Accessibility › Focus management).
+  // the document.
   useEffect(() => {
     if (wasOpen.current === isOpen) return;
     wasOpen.current = isOpen;

@@ -8,7 +8,7 @@ export interface PillarCardProps {
   releasedPillars?: ReadonlySet<PillarId>;
 }
 
-/** Design › Screens › 2: an empty card keeps its place with one line of copy. */
+/** An empty card keeps its place with one line of copy. */
 export const DASHBOARD_EMPTY_COPY: Readonly<Record<PillarId, string>> = {
   bills: 'Nothing due this week',
   lists: 'Nothing left to buy',

@@ -16,9 +16,9 @@ import {
 } from './parsers.js';
 
 /**
- * Every case below is copy recorded from the 27514 captures unless it is marked as coming from
- * Requirements, "Deal price normalization", whose table is the oracle where the capture has no
- * example. Tests never call Flipp (non-negotiable 17).
+ * Every case below is copy recorded from the 27514 captures unless it is marked as coming from the
+ * price-normalization rules table, which is the oracle where the capture has no example. Tests
+ * never call Flipp.
  */
 function copy(fields: Partial<PriceCopy>): PriceCopy {
   return {
@@ -31,7 +31,7 @@ function copy(fields: Partial<PriceCopy>): PriceCopy {
   };
 }
 
-describe('parsePrice: the Requirements table, row by row', () => {
+describe('parsePrice: each price rule, row by row', () => {
   it('direct price with an original', () => {
     // ALDI "Peanut Delight No-Stir Creamy Peanut Butter": PRICE DROPS, $1.45, was $1.95.
     expect(
@@ -94,7 +94,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
     });
   });
 
-  it('per-ounce price (Requirements: "/oz likewise gives oz")', () => {
+  it('per-ounce price: /oz gives oz', () => {
     expect(parsePrice(copy({ currentPrice: 49, postPriceText: '/oz' }))).toMatchObject({
       parsed: { unitPrice: 49, priceUnit: 'oz' },
     });
@@ -331,7 +331,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
   });
 
   it('an amount off a known original subtracts', () => {
-    // Family Dollar prints "Sale! $1 OFF" as the whole price copy; Seed Data's amount-off
+    // Family Dollar prints "Sale! $1 OFF" as the whole price copy; the seed data's amount-off
     // fixture supplies the original it is taken off ("reg $5.49" → $4.49, 18% off).
     expect(parsePrice(copy({ originalPrice: 549, prePriceText: 'Sale! $1 OFF' }))).toMatchObject({
       parsed: { unitPrice: 449, originalPrice: 549, discountPercent: 18 },
@@ -386,7 +386,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
     expect(
       parsePrice(copy({ saleStory: 'Spend $25 get $5 ExtraBucks Rewards®◆ WITH CARD' })),
     ).toEqual({ skipped: 'rebate' });
-    // Requirements names "FREE with $25 purchase" as the other rebate shape.
+    // "FREE with $25 purchase" is the other rebate shape.
     expect(parsePrice(copy({ saleStory: 'FREE with $25 purchase' }))).toEqual({
       skipped: 'rebate',
     });
@@ -417,7 +417,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
   });
 
   it('mix-and-match with a purchase limit is skipped', () => {
-    // Requirements' own example; the 27514 capture has no purchase limit in it.
+    // The canonical example; the 27514 capture has no purchase limit in it.
     expect(
       parsePrice(
         copy({
@@ -436,7 +436,7 @@ describe('parsePrice: the Requirements table, row by row', () => {
   });
 
   it('never returns a zero or negative unit price', () => {
-    // Non-negotiable 6: a fabricated price is worse than a missing deal.
+    // A fabricated price is worse than a missing deal.
     expect(
       parsePrice(copy({ currentPrice: 1, prePriceText: 'Sale! $1 OFF', originalPrice: 100 })),
     ).toMatchObject({ parsed: { unitPrice: 1 } });

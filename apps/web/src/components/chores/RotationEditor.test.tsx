@@ -6,9 +6,9 @@ import { ALEX_ID, JORDAN_ID, SAM_ID, oakStreetMembers } from '../../test/fixture
 import { RotationEditor } from './RotationEditor.tsx';
 
 /*
- * Design › Accessibility › Keyboard: "Full operation without a pointer". Every case in the first
- * describe drives the editor with userEvent's keyboard only, with no clicks; the pointer path
- * (drag) has its own case at the end.
+ * Full operation without a pointer is required. Every case in the first describe drives the
+ * editor with userEvent's keyboard only, with no clicks; the pointer path (drag) has its own
+ * case at the end.
  */
 
 function Harness({

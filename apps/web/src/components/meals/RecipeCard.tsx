@@ -9,9 +9,8 @@ export interface ReadinessRingProps {
 }
 
 /**
- * Design › `RecipeCard`: "readiness percentage ring". Purely decorative — `aria-hidden`, per
- * Accessibility › "Specific patterns" ("the ring visual is `aria-hidden` and the text carries the
- * meaning") — the percentage is also drawn as text inside it, so sighted users get the number
+ * The readiness percentage ring. Purely decorative — `aria-hidden`, because the text carries
+ * the meaning — the percentage is also drawn as text inside it, so sighted users get the number
  * without relying on the arc's length alone, and the surrounding card carries the announced
  * sentence separately.
  */
@@ -73,7 +72,7 @@ export interface RecipeCardProps {
   servings?: number | null;
 }
 
-/** Design › Composite components › `RecipeCard` (Library, Suggestions). */
+/** A recipe card, used in the library and in suggestions. */
 export function RecipeCard({
   recipeId,
   title,
@@ -94,8 +93,8 @@ export function RecipeCard({
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="sr-only">{readinessSentence(ready, total)}</span>
         {/* The library and suggestions screens have no section heading above the card list, so
-            this is the page's next heading after its h1 — axe's heading-order check (Design ›
-            Accessibility, "Verification") wants no level skipped. */}
+            this is the page's next heading after its h1 — axe's heading-order check wants no
+            level skipped. */}
         <h2 className="truncate text-h3 text-primary">{title}</h2>
         <span className="text-body-sm text-secondary">
           {breakdownLine(onSaleCount, inPantryCount, toBuyCount)}

@@ -20,7 +20,7 @@ export interface AppProvidersProps {
   /**
    * A second persister over the same storage and key, with no throttle -- what the write queue
    * flushes through so a queued write is durable the instant it queues, not whenever `persister`'s
-   * own throttled save next fires (Engineering Practices › The write queue).
+   * own throttled save next fires.
    */
   flushPersister?: Persister | undefined;
   children: ReactNode;
@@ -29,7 +29,7 @@ export interface AppProvidersProps {
 /**
  * Server state with, in the browser, its IndexedDB persistence. Restoring brings back both the
  * last-synced queries and the paused writes, so `resumePausedMutations` is what finishes a
- * reload: the queue picks up where it left off (Engineering Practices › The write queue).
+ * reload: the queue picks up where it left off.
  */
 function QueryProvider({
   queryClient,

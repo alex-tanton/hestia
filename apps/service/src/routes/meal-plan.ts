@@ -19,10 +19,9 @@ import {
 } from '../services/meal-plan.js';
 
 /**
- * The week planner and "Add missing to list" from a planned meal or week (Technical Architecture,
- * "API surface" — "Meal plan"). `/meal-plan/:id` routes do not name a household in the path, so
- * the service functions find it from the row, the same convention `/recipes/:id` and `/pantry/:id`
- * follow.
+ * The week planner and "Add missing to list" from a planned meal or week. `/meal-plan/:id` routes
+ * do not name a household in the path, so the service functions find it from the row, the same
+ * convention `/recipes/:id` and `/pantry/:id` follow.
  */
 export const mealPlanRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/households/:id/meal-plan', async (request) => {

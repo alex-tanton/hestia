@@ -19,10 +19,9 @@ export interface CompletionHistoryProps {
 }
 
 /**
- * Design › "17. Chores" › Chore detail: "completion history (who + when; departed members show
- * 'Former member')" and "the most-recent completion has a delete action with confirmation." Newest
- * first, since that is the one entry that can still be undone (PRD › "Recurrence is anchored and
- * derived on read": only the most recent completion can be deleted).
+ * Completion history (who and when; departed members show "Former member"), where the
+ * most-recent completion has a delete action with confirmation. Newest first, since that is the
+ * one entry that can still be undone (only the most recent completion can be deleted).
  */
 export function CompletionHistory({
   completions,

@@ -15,16 +15,15 @@ import { SEED } from '../support/env.ts';
 import { parsePushBody, recordedDeliveries, runDispatchAt } from '../support/push.ts';
 
 /**
- * Notifications on the real stack, with the push double in place of the push service (Handoff,
- * Phase 5; PRD, "Notifications"; Engineering Practices › Testing, "E2E environment").
+ * Notifications on the real stack, with the push double in place of the push service.
  *
- * Alex turns on one type that is off by default, meal reminders (PRD, "Types and defaults"). The
- * browser's push half is faked in the page, and the service records each push instead of sending it
- * (HEARTH_PUSH_TRANSPORT=test-double), so no push service is contacted from the browser or the stack.
- * The reminder is then due because the suite runs the dispatch job at a chosen instant, on the day
- * whose 08:00 send time is still inside the job's retry window (`reminderDay`). That day's dinner is
- * the seeded one, or one the journey plans through the meal-plan API. The job's own schedule is every
- * two minutes, and the suite does not wait for it.
+ * Alex turns on one type that is off by default, meal reminders. The browser's push half is faked
+ * in the page, and the service records each push instead of sending it
+ * (HEARTH_PUSH_TRANSPORT=test-double), so no push service is contacted from the browser or the
+ * stack. The reminder is then due because the suite runs the dispatch job at a chosen instant, on
+ * the day whose 08:00 send time is still inside the job's retry window (`reminderDay`). That day's
+ * dinner is the seeded one, or one the journey plans through the meal-plan API. The job's own
+ * schedule is every two minutes, and the suite does not wait for it.
  *
  * The light run does the work and ends with Oak Street active again, which is where journey 20 expects
  * Alex. The dark run only checks the settings screen with that reminder on.
@@ -101,8 +100,8 @@ function reminderDay(now: Date): { date: string; clock: Date } {
 
 /**
  * The dish the day's reminder names: its first planned meal, in the order the producer uses, or
- * '' when the day has none planned yet (Saturday in Seed Data, until `ensureDinnerOn` plans one).
- * Unlike `queryValue`, zero rows is an expected outcome here, not a bug to throw on.
+ * '' when the day has none planned yet (Saturday in the seed data, until `ensureDinnerOn` plans
+ * one). Unlike `queryValue`, zero rows is an expected outcome here, not a bug to throw on.
  */
 function firstMealOn(oakId: string, date: string): string {
   const rows = query(
@@ -115,8 +114,8 @@ function firstMealOn(oakId: string, date: string): string {
 }
 
 /**
- * Seed Data plans dinner on Sunday to Friday and none on Saturday, so a reminder day with no entry
- * gets one through the app's own meal-plan API, as Alex, before the dispatch run.
+ * The seed data plans dinner on Sunday to Friday and none on Saturday, so a reminder day with no
+ * entry gets one through the app's own meal-plan API, as Alex, before the dispatch run.
  */
 async function ensureDinnerOn(
   request: APIRequestContext,
@@ -156,8 +155,8 @@ test.describe('notifications — meal reminder with the push double (light)', ()
     await expect(mealReminders).not.toBeChecked();
     await mealReminders.click();
     await expect(mealReminders).toBeChecked();
-    // The device registers after the preference is saved (Design › Screens › 4), so the subscription
-    // is awaited before anything is dispatched: a web-first poll, not a fixed wait.
+    // The device registers after the preference is saved, so the subscription is awaited before
+    // anything is dispatched: a web-first poll, not a fixed wait.
     await expect.poll(() => subscriptionRows(endpoint)).toBe('1');
 
     // The same preference through the API: the type is on, and it is user-level (no household).
@@ -178,7 +177,7 @@ test.describe('notifications — meal reminder with the push double (light)', ()
     expect(await runDispatchAt(request, clock)).toBe(true);
 
     // Exactly one push for this device carries Oak Street's meal reminder for that day: the household
-    // id is in the body, and both copy lines are within the 60-character limit (PRD, "Notifications").
+    // id is in the body, and both copy lines are within the 60-character limit.
     const pushes = (await recordedDeliveries(request))
       .filter((delivery) => delivery.endpoint === endpoint)
       .map((delivery) => parsePushBody(delivery.message))

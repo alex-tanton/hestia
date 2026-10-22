@@ -92,9 +92,8 @@ export async function requireAdmin(
 }
 
 /**
- * The household activity stamp (Technical Architecture, "Conventions"). The function updates
- * `last_active_at` at most once per UTC day. A caller who is not a member gets 404, so a request
- * cannot probe whether a household exists.
+ * The household activity stamp. The function updates `last_active_at` at most once per UTC day. A
+ * caller who is not a member gets 404, so a request cannot probe whether a household exists.
  */
 export async function markHouseholdActive(
   db: Kysely<Database>,

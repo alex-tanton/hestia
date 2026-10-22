@@ -8,9 +8,9 @@ import type { JobLogger } from './types.js';
 
 /*
  * stop() must not resolve while a job run is still in flight, so main.ts can close the pool only
- * after every run has finished writing through it (Technical Architecture, "Scheduled jobs"). The
- * advisory lock is granted by a stand-in here, so the run starts and then waits on the outbox; the
- * real lock is covered by jobs.integration.test.ts.
+ * after every run has finished writing through it. The advisory lock is granted by a stand-in here,
+ * so the run starts and then waits on the outbox; the real lock is covered by
+ * jobs.integration.test.ts.
  */
 
 vi.mock('./advisory-lock.js', () => ({

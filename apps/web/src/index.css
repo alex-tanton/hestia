@@ -1,10 +1,10 @@
 @import 'tailwindcss';
 
 /*
- * Hearth design tokens (Branding). Raw hex lives only in this file; components use the role
+ * Hearth design tokens. Raw hex lives only in this file; components use the role
  * utilities below (bg-base, text-section, ...), so a section color is never hardcoded.
  * Tailwind's default palette, type scale, radii, and shadows are removed on purpose: the only
- * values reachable from a utility are the Branding ones.
+ * values reachable from a utility are the ones defined here.
  */
 @theme {
   --color-*: initial;
@@ -16,7 +16,7 @@
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
 
-  /* Design: the sidebar layout starts above 1024px, so 1024 itself keeps the bottom tab bar. */
+  /* The sidebar layout starts above 1024px, so 1024 itself keeps the bottom tab bar. */
   --breakpoint-lg: 64.0625rem;
 
   --text-display: 1.875rem;
@@ -113,9 +113,9 @@
 }
 
 /*
- * Section ramps (Branding: a full 50-900 ramp per section, from its 600 value). Each listed 600
+ * Section ramps (a full 50-900 ramp per section, from its 600 value). Each listed 600
  * value is the 600 stop of a Tailwind v3 palette, so those palettes are the ramps, kept in hex
- * because the Branding contrast table is measured on these exact values.
+ * because the contrast table is measured on these exact values.
  */
 :root {
   --green-50: #f0fdf4;
@@ -375,13 +375,13 @@
     @apply bg-base font-sans text-body text-primary antialiased;
   }
 
-  /* Design: focus-visible is a 2px outline in the section color, never the browser default. */
+  /* Focus-visible is a 2px outline in the section color, never the browser default. */
   :focus-visible {
     outline: 2px solid var(--section-accent);
     outline-offset: 2px;
   }
 
-  /* Branding: all motion drops to instant under reduced motion. */
+  /* All motion drops to instant under reduced motion. */
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,

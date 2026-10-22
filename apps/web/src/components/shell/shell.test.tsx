@@ -12,7 +12,7 @@ import { OFFLINE_MESSAGE, OfflineBanner } from './OfflineBanner.tsx';
 import { titleForPath } from './AppShell.tsx';
 import { UpdateAvailable } from './UpdatePrompt.tsx';
 
-// Seed Data › Households: Alex belongs to Oak Street (active) and Rivera Family.
+// Seed data: Alex belongs to Oak Street (active) and Rivera Family.
 const HOUSEHOLDS: HouseholdSummary[] = [
   { id: 'oak', name: 'Oak Street', memberCount: 3 },
   { id: 'rivera', name: 'Rivera Family', memberCount: 2 },

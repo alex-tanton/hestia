@@ -2,8 +2,7 @@
 
 /**
  * Build-time configuration. Vite exposes only `VITE_`-prefixed variables, and both of these are
- * decided when the caddy image is built (Technical Architecture, "Auth configuration"), so no
- * flag or key is fetched at runtime.
+ * decided when the caddy image is built, so no flag or key is fetched at runtime.
  */
 interface ImportMetaEnv {
   /** "true" builds the magic-link and code-entry screens in; anything else omits them. */

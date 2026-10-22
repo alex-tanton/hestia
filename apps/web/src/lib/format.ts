@@ -2,7 +2,7 @@ import type { PriceUnit } from '@hearth/shared';
 
 /**
  * US formatting through `Intl` rather than hand-built strings, so a future locale is a change of
- * constants (Requirements, "Locale").
+ * constants.
  */
 
 const LOCALE = 'en-US';
@@ -37,8 +37,8 @@ const CALENDAR_DATE = new Intl.DateTimeFormat(LOCALE, {
 
 /**
  * A `YYYY-MM-DD` calendar date as MM/DD/YYYY, read in the timezone that owns it rather than the
- * browser's (Handoff non-negotiable 8). A deal's validity dates are calendar dates in the store's
- * local offset, so parsing one as an instant and printing it in another zone would move it a day.
+ * browser's. A deal's validity dates are calendar dates in the store's local offset, so parsing one
+ * as an instant and printing it in another zone would move it a day.
  */
 export function formatCalendarDate(date: string): string {
   const [year = '1970', month = '01', day = '01'] = date.split('-');
@@ -57,14 +57,13 @@ export function formatTimezone(timezone: string): string {
 
 /**
  * Integer cents as dollars. Money arrives from the API already computed and is only ever
- * formatted here; nothing in the client does arithmetic on it (Engineering Practices, "Money is
- * integer cents"; Technical Architecture, "API surface").
+ * formatted here; nothing in the client does arithmetic on it.
  */
 export function formatCents(cents: number): string {
   return MONEY.format(cents / 100);
 }
 
-/** A price with its unit, as Design writes it: "$2.49/lb", "$3.99". */
+/** A price with its unit, as the app writes it: "$2.49/lb", "$3.99". */
 export function formatPrice(cents: number, unit: PriceUnit): string {
   return unit === 'each' ? formatCents(cents) : `${formatCents(cents)}/${unit}`;
 }

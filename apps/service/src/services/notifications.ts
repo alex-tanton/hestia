@@ -12,10 +12,9 @@ import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 
 /**
- * What a type is when no `notification_preference` row says otherwise (Requirements,
- * "Notifications" › "Types and defaults"). A missing row means this default, so the table is
- * the only source of it. Bill reminders and the rest of the on-by-default types reach their
- * recipients unless the user turned them off; the rest wait to be asked for.
+ * What a type is when no `notification_preference` row says otherwise. A missing row means this
+ * default, so the table is the only source of it. Bill reminders and the rest of the on-by-default
+ * types reach their recipients unless the user turned them off; the rest wait to be asked for.
  */
 export const notificationDefaults: Readonly<Record<NotificationType, boolean>> = {
   bill_due: true,

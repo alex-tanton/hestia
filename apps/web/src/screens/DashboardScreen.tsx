@@ -18,7 +18,7 @@ export interface DashboardScreenProps {
   releasedPillars?: ReadonlySet<PillarId>;
 }
 
-/** Design › Screens › 2: a fixed order the layout never reflows out of. */
+/** A fixed order the layout never reflows out of. */
 const ORDER: readonly PillarId[] = ['bills', 'lists', 'meals', 'chores'];
 
 const CARDS: Readonly<Record<PillarId, (props: PillarCardProps) => ReactElement>> = {
@@ -29,10 +29,9 @@ const CARDS: Readonly<Record<PillarId, (props: PillarCardProps) => ReactElement>
 };
 
 /**
- * This Week (Design › Screens › 2): four cards in a fixed order — Bills, Shopping, Meals,
- * Chores — each rendering on its own as its data arrives. When every *shipped* pillar is empty, a
- * single first-run panel replaces those pillars' cards; the unshipped pillars' placeholders are
- * unaffected and stay in place.
+ * This Week: four cards in a fixed order — Bills, Shopping, Meals, Chores — each rendering on its
+ * own as its data arrives. When every *shipped* pillar is empty, a single first-run panel replaces
+ * those pillars' cards; the unshipped pillars' placeholders are unaffected and stay in place.
  */
 export function DashboardScreen({
   bills,

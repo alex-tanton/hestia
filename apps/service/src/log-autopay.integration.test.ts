@@ -8,11 +8,11 @@ import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test
 import { addDays, currentInstant, dateInZone } from './test/zone-dates.js';
 
 /*
- * `log-autopay` against `supabase start` (Technical Architecture, "Scheduled jobs"). It runs as
- * `service_role`, one of the sanctioned uses, so it can see every household's autopay bills at
- * once. Dates below use a weekly bill rather than a monthly one specifically so the arithmetic is
- * plain day offsets, with nothing left to the reader to also verify against month-end clamping —
- * that belongs to packages/recurrence's own suite, not this job's.
+ * `log-autopay` against `supabase start`. It runs as `service_role`, one of the sanctioned uses, so
+ * it can see every household's autopay bills at once. Dates below use a weekly bill rather than a
+ * monthly one specifically so the arithmetic is plain day offsets, with nothing left to the reader
+ * to also verify against month-end clamping — that belongs to packages/recurrence's own suite, not
+ * this job's.
  */
 
 let handle: DatabaseHandle;
@@ -152,44 +152,39 @@ describe('log-autopay', () => {
     }
   });
 
-  it(
-    'never backfills an occurrence dated before created_at, and that occurrence stays overdue ' +
-      '(Engineering Practices, "Testing")',
-    async () => {
-      const { householdId, userId } = await createHousehold();
-      // Anchor 42 days ago, weekly: occurrences at -42, -35, -28, -21, -14, -7, 0. Created 20 days
-      // ago: -21 is one day too early (stays unlogged); -14 is the first one on or after created_at.
-      const billId = await insertAutopayBill({
-        householdId,
-        ownerId: userId,
-        unit: 'week',
-        anchorDaysAgo: 42,
-        createdDaysAgo: 20,
-      });
+  it('never backfills an occurrence dated before created_at, and that occurrence stays overdue', async () => {
+    const { householdId, userId } = await createHousehold();
+    // Anchor 42 days ago, weekly: occurrences at -42, -35, -28, -21, -14, -7, 0. Created 20 days
+    // ago: -21 is one day too early (stays unlogged); -14 is the first one on or after created_at.
+    const billId = await insertAutopayBill({
+      householdId,
+      ownerId: userId,
+      unit: 'week',
+      anchorDaysAgo: 42,
+      createdDaysAgo: 20,
+    });
 
-      await runLogAutopay({ database: jobDb, logger: makeLogger() });
-      const dates = await paymentDates(billId);
+    await runLogAutopay({ database: jobDb, logger: makeLogger() });
+    const dates = await paymentDates(billId);
 
-      const today = householdToday();
-      const dayOffset = (n: number): string => addDays(today, -n);
-      expect(dates).toStrictEqual([dayOffset(14), dayOffset(7), dayOffset(0)]);
-      expect(dates).not.toContain(dayOffset(21));
-      expect(dates).not.toContain(dayOffset(28));
-      expect(dates).not.toContain(dayOffset(42));
+    const today = householdToday();
+    const dayOffset = (n: number): string => addDays(today, -n);
+    expect(dates).toStrictEqual([dayOffset(14), dayOffset(7), dayOffset(0)]);
+    expect(dates).not.toContain(dayOffset(21));
+    expect(dates).not.toContain(dayOffset(28));
+    expect(dates).not.toContain(dayOffset(42));
 
-      // The bill's current occurrence is its EARLIEST unresolved one (PRD, "Recurrence is
-      // anchored and derived on read"), not the latest un-backfilled one: since the job never
-      // touches anything before created_at, occurrences -42, -35, -28, and -21 are all still
-      // unresolved, and the earliest of those — the anchor itself — is what stays current and
-      // overdue until a person pays or skips it by hand.
-      const resolvedDates = new Set(dates);
-      const state = billOccurrence(
-        { recurrence_unit: 'week', interval: 1, anchor_date: dayOffset(42), today: dayOffset(0) },
-        resolvedDates,
-      );
-      expect(state).toEqual({ date: dayOffset(42), overdue: true });
-    },
-  );
+    // The bill's current occurrence is its EARLIEST unresolved one, not the latest un-backfilled
+    // one: since the job never touches anything before created_at, occurrences -42, -35, -28, and
+    // -21 are all still unresolved, and the earliest of those — the anchor itself — is what stays
+    // current and overdue until a person pays or skips it by hand.
+    const resolvedDates = new Set(dates);
+    const state = billOccurrence(
+      { recurrence_unit: 'week', interval: 1, anchor_date: dayOffset(42), today: dayOffset(0) },
+      resolvedDates,
+    );
+    expect(state).toEqual({ date: dayOffset(42), overdue: true });
+  });
 
   it('is idempotent: a rerun inserts nothing new (the unique (bill_id, occurrence_date) key)', async () => {
     const { householdId, userId } = await createHousehold();

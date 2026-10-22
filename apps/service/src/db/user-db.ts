@@ -2,7 +2,7 @@ import { sql, type Kysely } from 'kysely';
 import type { Database } from '../db.js';
 
 /**
- * The only way a request handler reaches the database (Technical Architecture, "The RLS rule").
+ * The only way a request handler reaches the database.
  *
  * The pool connects as hearth_service, which is NOINHERIT and holds no rights of its own. Each
  * call opens a transaction that switches to `authenticated` and installs the verified claims,
@@ -26,7 +26,7 @@ export async function withUserDb<T>(
 
 /**
  * The same, as `anon`, for the one thing anon may do: record an error through
- * `public.record_app_error` (Technical Architecture, "Error recording").
+ * `public.record_app_error`.
  */
 export async function withAnonDb<T>(
   db: Kysely<Database>,

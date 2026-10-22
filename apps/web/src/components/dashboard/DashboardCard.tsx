@@ -29,7 +29,7 @@ export interface DashboardCardProps {
   state: DashboardCardState;
 }
 
-/** Design › Composite components: up to three items plus a remainder count. */
+/** Up to three items plus a remainder count. */
 export const DASHBOARD_ITEM_LIMIT = 3;
 
 function CardBody({ title, state }: { title: string; state: DashboardCardState }): ReactElement {
@@ -87,8 +87,8 @@ function CardBody({ title, state }: { title: string; state: DashboardCardState }
 
 /**
  * One This Week card. It carries its own section context, so its header takes its pillar's
- * color, and its own error boundary, so a failure stays inside the card (Design › Error rules).
- * A placeholder is muted and not a link: an unshipped pillar offers nothing to tap.
+ * color, and its own error boundary, so a failure stays inside the card. A placeholder is muted and
+ * not a link: an unshipped pillar offers nothing to tap.
  */
 export function DashboardCard({ pillar, title, state }: DashboardCardProps): ReactElement {
   const { icon: Icon, path } = PILLARS[pillar];

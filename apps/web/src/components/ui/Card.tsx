@@ -2,7 +2,7 @@ import type { HTMLAttributes, ReactElement } from 'react';
 import { cn } from '../../lib/cn.ts';
 
 export interface CardProps extends HTMLAttributes<HTMLElement> {
-  /** Raised cards (with shadow-sm) are for the dashboard only (Branding › Shape). */
+  /** Raised cards (with shadow-sm) are for the dashboard only. */
   variant?: 'flat' | 'raised';
   as?: 'div' | 'section' | 'article' | 'li';
 }

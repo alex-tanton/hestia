@@ -4,9 +4,9 @@ import type { HttpGet, HttpResponse } from './request-queue.js';
 
 /**
  * Serves the recorded Flipp responses in `e2e/fixtures/flipp/raw/` in place of the network, so
- * the wrapper can be exercised end to end without ever calling Flipp (non-negotiable 17). The
- * fixture generator uses the same transport, which is what makes the committed normalized
- * fixtures reproducible from the raw captures.
+ * the wrapper can be exercised end to end without ever calling Flipp. The fixture generator uses
+ * the same transport, which is what makes the committed normalized fixtures reproducible from the
+ * raw captures.
  */
 
 export const RAW_FIXTURE_DIR = fileURLToPath(

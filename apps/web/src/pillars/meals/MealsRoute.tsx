@@ -16,10 +16,10 @@ function RecipeDetailRoute({ householdId }: { householdId: string }): ReactEleme
 }
 
 /**
- * The Meals tab (Design › Screens › 10, 11, 12, 13). The sub-tab roots — Planner, Recipes,
- * Suggestions — sit inside `PillarScreen`, which draws the segmented control; a recipe's detail
- * renders without it, since the top bar has already swapped the switcher for a back control (the
- * same split `ListsRoute` uses for a list's own detail).
+ * The Meals tab. The sub-tab roots — Planner, Recipes, Suggestions — sit inside `PillarScreen`,
+ * which draws the segmented control; a recipe's detail renders without it, since the top bar has
+ * already swapped the switcher for a back control (the same split `ListsRoute` uses for a list's
+ * own detail).
  */
 export function Component(): ReactElement {
   const profile = useProfile();

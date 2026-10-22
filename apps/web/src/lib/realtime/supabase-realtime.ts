@@ -3,7 +3,7 @@ import type { ListRealtimeHandlers, RealtimePort } from './realtime-port.ts';
 
 /**
  * The real port. An open shopping list subscribes to one channel, `list:<listId>`, with the two
- * `postgres_changes` bindings Technical Architecture specifies. Channels are named after the
+ * `postgres_changes` bindings (the list's items and the list row). Channels are named after the
  * resource rather than the household, so switching household tears down exactly the
  * subscriptions that belonged to the previous one.
  *

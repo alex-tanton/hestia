@@ -45,7 +45,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Deal-matched suggestions (Design › Screens › 13)', () => {
+describe('Deal-matched suggestions', () => {
   it('loading: announces it with skeletons', () => {
     mount({ 'GET /api/households/:id/suggestions': () => new Promise(() => undefined) });
     expect(screen.getByRole('status')).toHaveTextContent('Loading suggestions');

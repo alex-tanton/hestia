@@ -10,8 +10,8 @@ import {
 } from './dormancy.js';
 
 /**
- * Technical Architecture, "Dormant postal codes", and Requirements, "Refresh", as a decision
- * table. Dormancy governs only the flyer and flyer-item refresh; keyword search is unaffected.
+ * Dormant postal codes, as a decision table. Dormancy governs only the flyer and flyer-item
+ * refresh; keyword search is unaffected.
  */
 
 const NOW = new Date('2026-09-25T12:00:00.000Z');
@@ -43,7 +43,7 @@ describe('activity window', () => {
 });
 
 describe('selectActivePostalCodes', () => {
-  it('returns one entry per postal code, never one per household (non-negotiable 19)', () => {
+  it('returns one entry per postal code, never one per household', () => {
     const households = [
       { postalCode: '27514', lastActiveAt: daysAgo(0) },
       { postalCode: '27514', lastActiveAt: daysAgo(1) },

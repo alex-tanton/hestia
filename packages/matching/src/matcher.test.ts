@@ -3,9 +3,8 @@ import { matchIngredient, type MatchCandidate, type MatchOverride } from './matc
 import { normalize } from './normalize.js';
 
 /**
- * The matcher composes normalize.ts's normalization with fuzzy token containment and overrides
- * (Requirements, "Matching mechanics", "Match overrides"; Engineering Practices, "Matching and
- * normalization"). normalize.test.ts and fixtures.test.ts already prove normalization in
+ * The matcher composes normalize.ts's normalization with fuzzy token containment and overrides.
+ * normalize.test.ts and fixtures.test.ts already prove normalization in
  * isolation; these tests prove the matcher gets the right answer once normalization, fuzzy
  * matching, and overrides all run together — which is the thing a later readiness unit actually
  * depends on.
@@ -19,8 +18,8 @@ function candidate(
   return { id, targetKind, normalizedName };
 }
 
-describe('Seed Data "Matching test cases" (12 rows)', () => {
-  // Verbatim from Seed Data, "Recipes, pantry, and lists" › "Matching test cases", including both
+describe('the seed data matching test cases (12 rows)', () => {
+  // Verbatim from the seed data's matching test cases, including both
   // named false-positive rows. Names here are raw text, normalized the same way production data
   // is, so this proves the matcher end to end rather than assuming pre-normalized input.
   const cases: [
@@ -80,7 +79,7 @@ describe('Seed Data "Matching test cases" (12 rows)', () => {
   });
 });
 
-describe('named false-positive cases (Engineering Practices, "Testing")', () => {
+describe('named false-positive cases', () => {
   it('chicken breast must not match chicken broth', () => {
     const result = matchIngredient(normalize('chicken breast'), [
       candidate(normalize('Chicken Broth, 32 oz')),
@@ -135,11 +134,12 @@ describe('normalization composed with the fuzzy layer', () => {
   });
 });
 
-describe('overrides applied before fuzzy matching (Requirements, "Match overrides")', () => {
+describe('overrides applied before fuzzy matching', () => {
   it('force_match matches a pair the fuzzy layer would refuse', () => {
     // "snack cheese" shares no token with "cheese" once normalized, so fuzzy alone would refuse
-    // it — this is Seed Data's own override fixture (Oak Street, "cheese" force-no-match against
-    // Harris Teeter's "snack cheese"), used here in its mirror-image form to prove force_match.
+    // it — this is the seed data's own override fixture (Oak Street, "cheese" force-no-match
+    // against Harris Teeter's "snack cheese"), used here in its mirror-image form to prove
+    // force_match.
     const overrides: MatchOverride[] = [
       {
         ingredientNormalizedName: 'cheese',
@@ -196,8 +196,8 @@ describe('overrides applied before fuzzy matching (Requirements, "Match override
   });
 
   it('force_match does nothing when no candidate with that target name is present', () => {
-    // Requirements: "puts the ingredient in the target's bucket whenever a target with that
-    // normalized name exists" — an override never fabricates a match against an absent target.
+    // A force-match puts the ingredient in the target's bucket whenever a target with that
+    // normalized name exists — an override never fabricates a match against an absent target.
     const overrides: MatchOverride[] = [
       {
         ingredientNormalizedName: 'cheese',
@@ -211,7 +211,7 @@ describe('overrides applied before fuzzy matching (Requirements, "Match override
   });
 });
 
-describe('pantry beats sale (Requirements, "Deal-matched suggestions")', () => {
+describe('pantry beats sale', () => {
   it('returns the pantry candidate when both a pantry item and a deal match', () => {
     const result = matchIngredient('pasta', [
       candidate('pasta', 'deal', 'deal-1'),

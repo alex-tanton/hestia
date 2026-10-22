@@ -32,7 +32,7 @@ export interface PushDevice {
   enable: () => Promise<EnableOutcome>;
 }
 
-/** This device's push state and the one action that changes it (Design › Screens › 4). */
+/** This device's push state and the one action that changes it. */
 export function usePushDevice(): PushDevice {
   const port = useContext(PushPortContext);
   const api = useApi();

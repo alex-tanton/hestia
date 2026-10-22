@@ -92,7 +92,7 @@ describe('Settings', () => {
     expect(stub.calls).toHaveLength(0);
   });
 
-  it('shows every section Design lists', async () => {
+  it('shows every settings section', async () => {
     renderSettings(settingsHandlers());
 
     for (const heading of [
@@ -212,7 +212,7 @@ describe('Settings', () => {
       renderSettings(settingsHandlers());
       const reminder = await screen.findByLabelText('Remind me about all household bills');
       expect(reminder).toBeDisabled();
-      // Design › Offline rules: the reason sits beside the control and in its description.
+      // The reason sits beside the control and in its description.
       expect(reminder).toHaveAccessibleDescription('Needs a connection.');
     } finally {
       onLine.mockRestore();
@@ -221,7 +221,7 @@ describe('Settings', () => {
 });
 
 /*
- * Design › Accessibility › Focus management: where a member's action replaces the control they
+ * Focus management: where a member's action replaces the control they
  * used — a button giving way to the form it opens — focus moves into what replaced it rather than
  * falling back to the document, and returns to the trigger when the form closes.
  */

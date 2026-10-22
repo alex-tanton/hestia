@@ -11,9 +11,8 @@ interface PendingTarget {
 }
 
 /*
- * A tapped notification opens the screen it is about, in its household (PRD, "Notifications" ›
- * "Rules" › "Deep links"). The household switch comes first, so the screen is never shown with the
- * wrong household's data. Two arrivals, one behaviour:
+ * A tapped notification opens the screen it is about, in its household. The household switch comes
+ * first, so the screen is never shown with the wrong household's data. Two arrivals, one behaviour:
  *   - an open window gets the target by message from the service worker;
  *   - a window the tap had to open gets it as a `?household=` parameter, read once and removed.
  */

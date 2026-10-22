@@ -12,8 +12,7 @@ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
- * Errands, against real Postgres (Technical Architecture, "API surface" › "Errands"; PRD, "Chores
- * and errands" › "Errands").
+ * Errands, against real Postgres.
  */
 
 registerStackHooks();
@@ -126,7 +125,7 @@ describe('errands: status transitions', () => {
     expect(doneBody.completedBy).toBe(member.id);
     expect(doneBody.completedAt).not.toBeNull();
 
-    // Reopening clears both fields (PRD, "Chores and errands" › "Errands").
+    // Reopening clears both fields.
     const reopened = await as(app, home.admin, 'PATCH', `/api/errands/${errand.id}`, {
       status: 'open',
     });

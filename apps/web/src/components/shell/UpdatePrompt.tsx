@@ -10,7 +10,7 @@ export interface UpdateAvailableProps {
 }
 
 /**
- * The subtle "Update available" strip (Engineering Practices › Service worker). The waiting
+ * The subtle "Update available" strip. The waiting
  * worker only takes over when the user asks, never mid-shopping-trip.
  */
 export function UpdateAvailable({

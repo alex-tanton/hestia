@@ -21,8 +21,8 @@ export interface HouseholdCardProps {
 }
 
 /**
- * One household in My Households (Design › Screens › 4): its role, its members, a leave action,
- * and — for the admin — remove-member and transfer-admin on each member.
+ * One household in My Households: its role, its members, a leave action, and — for the admin —
+ * remove-member and transfer-admin on each member.
  */
 export function HouseholdCard({
   membership,

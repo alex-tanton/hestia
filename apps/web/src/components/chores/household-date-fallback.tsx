@@ -6,9 +6,9 @@ import { SkeletonRows } from '../ui/Skeleton.tsx';
 
 /**
  * What a screen shows until the household's own timezone is known. Its dates (today, overdue, a
- * week's start, a new chore's anchor) are household dates (PRD, "Timezone"), so a screen never
- * dates anything with the device's or the profile's zone instead. Offline with nothing cached, the
- * screen says so; a failed fetch offers retry; otherwise it is loading.
+ * week's start, a new chore's anchor) are household dates, so a screen never dates anything with
+ * the device's or the profile's zone instead. Offline with nothing cached, the screen says so; a
+ * failed fetch offers retry; otherwise it is loading.
  */
 export function householdFallback(
   household: UseQueryResult<Household>,

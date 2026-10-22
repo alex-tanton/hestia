@@ -23,9 +23,9 @@ function ListDetailRoute({
 }
 
 /**
- * The Lists tab (Design › Screens › 7, 8, 9). The sub-tab roots sit inside `PillarScreen`, which
- * draws the segmented control; the pushed screens — a list's detail and the archived view —
- * render without it, because the top bar has already swapped the switcher for a back control.
+ * The Lists tab. The sub-tab roots sit inside `PillarScreen`, which draws the segmented control;
+ * the pushed screens — a list's detail and the archived view — render without it, because the top
+ * bar has already swapped the switcher for a back control.
  */
 export function Component(): ReactElement {
   const profile = useProfile();

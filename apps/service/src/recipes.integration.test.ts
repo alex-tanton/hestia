@@ -15,10 +15,9 @@ import { expectStatus } from './test/stack-hooks.js';
 
 /*
  * Recipes against `supabase start`: real Postgres as hearth_service, every request through
- * withUserDb, so RLS is what decides each assertion (Requirements, "Recipe library"; Technical
- * Architecture, "API surface"). Requests here commit, so each test makes its own users and
- * households. `parseRecipeUrl` is stubbed per app instance — never the network (Handoff
- * non-negotiable 17) — since the fetch mechanics themselves are unit-tested in `recipes/`.
+ * withUserDb, so RLS is what decides each assertion. Requests here commit, so each test makes its
+ * own users and households. `parseRecipeUrl` is stubbed per app instance — never the network —
+ * since the fetch mechanics themselves are unit-tested in `recipes/`.
  */
 
 let stack: Stack;
@@ -325,8 +324,8 @@ describe('deleting a recipe and the meal plan', () => {
     const home = await household(app);
     const recipe = await createRecipe(home, { ...MANUAL_RECIPE_BODY, title: 'Baked Ziti' });
 
-    // The week planner API is a later unit; a raw row here proves the FK behaves as the PRD
-    // describes ("Meal plan history and deleted recipes") without depending on that route.
+    // The week planner API is a later unit; a raw row here proves the FK keeps a planned meal's
+    // title when its recipe is deleted, without depending on that route.
     const inserted = await adminPool.query<{ id: string }>(
       `insert into public.meal_plan_entry
          (household_id, recipe_id, recipe_title, planned_date, meal_type, added_by)

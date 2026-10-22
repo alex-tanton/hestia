@@ -1,4 +1,4 @@
-# Hearth production stack (Technical Architecture, "Compose layout").
+# Hearth production stack.
 #
 # The Supabase services are the subset of Supabase's official self-hosting compose that Hearth
 # uses. db, auth, and realtime are pinned to the same images the pinned Supabase CLI runs for
@@ -272,7 +272,7 @@ services:
       POSTGRES_USER: supabase_admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # Gzip-compressed plain SQL. --clean --if-exists lets the dump replace the objects a fresh
-      # Supabase Postgres container already has (README, "Restore").
+      # Supabase Postgres container already has (README, "Restore production").
       POSTGRES_EXTRA_OPTS: -Z1 --clean --if-exists
       SCHEDULE: 0 2 * * *
       TZ: UTC

@@ -24,9 +24,9 @@ export interface Tab {
 
 export interface Pillar extends Tab {
   id: PillarId;
-  /** Design › Staged releases: the one line the coming-soon state shows. */
+  /** The one line the coming-soon state shows. */
   comingSoon: string;
-  /** Design › Layout shell › Sub-tabs; the first entry is the tab's root. */
+  /** The first entry is the tab's root. */
   subTabs: readonly SubTab[];
 }
 
@@ -87,7 +87,7 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
   },
 };
 
-/** Bottom tab bar order (PRD › Navigation shell). */
+/** Bottom tab bar order. */
 export const TABS: readonly Tab[] = [
   DASHBOARD_TAB,
   PILLARS.lists,

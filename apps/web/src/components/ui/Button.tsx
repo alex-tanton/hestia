@@ -19,7 +19,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /**
    * Why the control is unavailable ("Needs a connection."). Shown beside the button and set as
    * its accessible description. The button stays focusable (aria-disabled) so the reason is
-   * reachable by keyboard and screen reader — Design › Offline rules.
+   * reachable by keyboard and screen reader.
    */
   disabledReason?: string | undefined;
   ref?: Ref<HTMLButtonElement>;
@@ -27,11 +27,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 // Opacity below 95% lightens the white-on-fill text below 4.5:1 in the light theme for every
 // section color (axe caught it on Deals green): the fill blends toward bg-base, which is white
-// in light mode, so 90% opacity was measurably failing WCAG AA (Design › Accessibility). Active
-// (pressed) blends the same way and needs its own floor above hover's: at 90% it recomputes to
-// 4.18:1 (green), 4.22:1 (amber), 4.34:1 (blue), and 4.32:1 (danger) on white — still failing —
-// so active goes to 97%, which holds AA with margin (>= 4.69:1 across every section plus danger)
-// while staying visually distinct from hover's 95%.
+// in light mode, so 90% opacity was measurably failing WCAG AA. Active (pressed) blends the same
+// way and needs its own floor above hover's: at 90% it recomputes to 4.18:1 (green), 4.22:1
+// (amber), 4.34:1 (blue), and 4.32:1 (danger) on white — still failing — so active goes to 97%,
+// which holds AA with margin (>= 4.69:1 across every section plus danger) while staying visually
+// distinct from hover's 95%.
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: 'bg-section text-on-section hover:bg-section/95 active:bg-section/97',
   secondary: 'border border-input bg-base text-primary hover:bg-raised active:bg-section-tint',

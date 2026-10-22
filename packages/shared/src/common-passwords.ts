@@ -9,8 +9,7 @@ import { COMMON_PASSWORD_MESSAGE, passwordShapeSchema } from './password.js';
  * service's signup and change-password routes, and the PWA's sign-up, set-password, and
  * change-password screens. Everything else — including every request schema that merely mentions
  * a password — stays on `@hearth/shared`, which never reaches this module, so the app shell never
- * carries the list (Engineering Practices › Performance budget). Both sides check it
- * synchronously; only the module boundary moved.
+ * carries the list. Both sides check it synchronously; only the module boundary moved.
  */
 
 let commonPasswords: ReadonlySet<string> | undefined;
@@ -30,7 +29,7 @@ export function isCommonPassword(password: string): boolean {
   return commonPasswordSet().has(password.toLowerCase());
 }
 
-/** The whole password policy (Requirements, "Authentication"), for signup and password change. */
+/** The whole password policy, for signup and password change. */
 export const newPasswordSchema: z.ZodType<string> = passwordShapeSchema.refine(
   (value) => !isCommonPassword(value),
   { message: COMMON_PASSWORD_MESSAGE },

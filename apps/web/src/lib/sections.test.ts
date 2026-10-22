@@ -12,7 +12,7 @@ describe('navigation config', () => {
     ]);
   });
 
-  it('gives each tab exactly the sub-tabs the Design document lists, root first', () => {
+  it('gives each tab exactly its listed sub-tabs, root first', () => {
     expect(PILLARS.lists.subTabs.map((tab) => tab.label)).toEqual([
       'Lists',
       'Deals',

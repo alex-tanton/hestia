@@ -23,7 +23,7 @@ function RouteError(): ReactElement {
 }
 
 /**
- * Route-level code splitting (Engineering Practices › Performance budget): each pillar's tab,
+ * Route-level code splitting: each pillar's tab,
  * Settings, and the onboarding screens load on first visit. The dashboard is the landing screen,
  * so it ships in the shell. Sign-up, set-password, and Settings' change-password form are the
  * only screens that pull in the common-password list, and all three are behind a lazy route,
@@ -31,10 +31,10 @@ function RouteError(): ReactElement {
  */
 export function createRoutes(): RouteObject[] {
   /*
-   * Magic link is built but disabled (Requirements › Authentication). The flag is a build-time
-   * constant, so with it off the bundler folds this away: neither screen's chunk is emitted and
-   * neither path exists. A direct URL to one then falls through to the splat route below, which
-   * sends a signed-out visitor to ordinary sign-in.
+   * Magic link is built but disabled. The flag is a build-time constant, so with it off the bundler
+   * folds this away: neither screen's chunk is emitted and neither path exists. A direct URL to one
+   * then falls through to the splat route below, which sends a signed-out visitor to ordinary
+   * sign-in.
    */
   const magicLinkRoutes: RouteObject[] =
     import.meta.env.VITE_MAGIC_LINK_ENABLED === 'true'

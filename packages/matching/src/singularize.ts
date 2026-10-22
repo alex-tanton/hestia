@@ -1,6 +1,6 @@
 /**
- * Singularizes one token so "Yellow Onions" and "onion" normalize alike (Requirements,
- * "Matching mechanics": "singularize each remaining token").
+ * Singularizes one token so "Yellow Onions" and "onion" normalize alike (singularize each
+ * remaining token).
  *
  * Deliberately a handful of suffix rules rather than an inflection library: this package is
  * dependency-free, and the vocabulary is grocery nouns, not English at large. The guards matter

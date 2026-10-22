@@ -139,8 +139,8 @@ enough fields or a long enough flow that it earns its own back-stack entry.
 Detection is `useOnlineStatus` (`apps/web/src/lib/use-online-status.ts`); presentation is the
 persistent `OfflineBanner` plus per-control messaging:
 
-- A **queueable write** (list item add/check/uncheck/edit from v1, chore-complete and errand-done
-  from v1.3) applies optimistically and queues via TanStack Query's mutation cache
+- A **queueable write** (list item add/check/uncheck/edit, chore-complete and errand-done)
+  applies optimistically and queues via TanStack Query's mutation cache
   (`apps/web/src/lib/offline/write-queue.ts`, `chore-errand-writes.ts`). The affected row gets a
   `PendingMark` (`apps/web/src/components/lists/PendingMark.tsx`): a clock icon plus a screen-reader
   label ("Waiting to sync"), and a section-accent-colored left edge — never a reduced opacity,

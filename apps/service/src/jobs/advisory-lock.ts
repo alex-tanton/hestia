@@ -2,9 +2,9 @@ import { sql, type Kysely } from 'kysely';
 import type { Database } from '../db.js';
 
 /**
- * Job idempotency, first line (Technical Architecture, "Idempotency"): each job takes
- * `pg_try_advisory_lock(hashtext('<job name>'))` on a dedicated connection and skips the run if the
- * lock is held. A restart mid-run, or two processes, must not double-log or double-send.
+ * Job idempotency, first line: each job takes `pg_try_advisory_lock(hashtext('<job name>'))` on a
+ * dedicated connection and skips the run if the lock is held. A restart mid-run, or two processes,
+ * must not double-log or double-send.
  *
  * The lock is session-scoped, so it has to live on one connection for the whole run rather than
  * inside a transaction that commits half way through. `db.connection()` reserves exactly one.

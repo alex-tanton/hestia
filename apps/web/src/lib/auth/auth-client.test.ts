@@ -27,9 +27,9 @@ function fakeSupabase(overrides: Partial<FakeAuth> = {}): { auth: FakeAuth; clie
 }
 
 /*
- * Magic link is built and disabled (Requirements › Authentication), so these two calls have no
- * screen exercising them in a default build. Their shape is what the appendix on enabling magic
- * link promises GoTrue, which makes it worth pinning down here.
+ * Magic link is built and disabled, so these two calls have no screen exercising them in a default
+ * build. Their shape is what the appendix on enabling magic link promises GoTrue, which makes it
+ * worth pinning down here.
  */
 describe('the magic-link calls', () => {
   it('asks GoTrue for a link whose landing page is the app root', async () => {

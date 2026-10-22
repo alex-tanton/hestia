@@ -2,8 +2,8 @@ import type { PriceUnit } from '@hearth/shared';
 import { multiplyCents } from './money.js';
 
 /**
- * The Subtotals rule (Requirements, "Subtotals"), computed here so the UI never does money
- * arithmetic. A store group's subtotal covers its needed and in-cart items only.
+ * The Subtotals rule, computed here so the UI never does money arithmetic. A store group's subtotal
+ * covers its needed and in-cart items only.
  *
  * - `each` counts price × quantity, a missing quantity counting as 1
  * - `lb` counts price × quantity in pounds, and is excluded with no quantity

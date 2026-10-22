@@ -39,7 +39,7 @@ describe('tokensFuzzyMatch', () => {
     expect(tokensFuzzyMatch('breast', 'broth')).toBe(false);
   });
 
-  it('exposes the same 0.85 the Requirements document names', () => {
+  it('exposes the 0.85 fuzzy threshold', () => {
     expect(FUZZY_THRESHOLD).toBe(0.85);
   });
 });

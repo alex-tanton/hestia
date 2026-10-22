@@ -6,7 +6,7 @@ import { formatDateTime } from '../../lib/format.ts';
 
 export const REFRESHING_MESSAGE = "Fetching this week's deals…";
 
-/** Branding › Copy patterns, "Error, recoverable": what failed + what to do. */
+/** A recoverable error: what failed + what to do. */
 export function staleMessage(asOf: string | null): string {
   if (asOf === null) return "Couldn't reach the store data. Showing what was already here.";
   return `Couldn't reach the store data. Showing deals as of ${formatDateTime(asOf)}.`;
@@ -24,9 +24,9 @@ export interface DealFreshnessProps extends Freshness {
 }
 
 /**
- * Design › Deals-specific states. Stale results keep their "as of" date rather than being
- * replaced by an error, because stale data beats empty data (Handoff non-negotiable 18), and a
- * postal code whose background refresh is still running says so while its cache stays on screen.
+ * Stale results keep their "as of" date rather than being
+ * replaced by an error, because stale data beats empty data, and a postal code whose background
+ * refresh is still running says so while its cache stays on screen.
  *
  * Each line pairs an icon with its text, so none of these states is read from color alone.
  */

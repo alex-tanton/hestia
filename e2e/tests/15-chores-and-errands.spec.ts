@@ -7,14 +7,13 @@ import { addDays, currentInstant, dateInZone } from '../support/clock.ts';
 import { REPO_ROOT, SEED } from '../support/env.ts';
 
 /**
- * Chores and errands on the real stack (Design › Screens › 17 and 18; PRD › "Chores and errands",
- * "Rotation"; Handoff, Phase 4 done-when: a rotating chore advances on completion, Undo reverts it,
+ * Chores and errands on the real stack (a rotating chore advances on completion, Undo reverts it,
  * and the rotation edit keeps the turn with the same member).
  *
- * Oak Street's chores and errands come from `supabase/seed/seed.sql` (Seed Data, "Chores" and
- * "Errands"). The light run mutates them, in file order, and the dark run reads what the light
- * run left, so the two themes never fight over a row. Screenshots of each screen at phone and
- * desktop width go to `shots/u4-5/`, and axe runs on each screen in both themes.
+ * Oak Street's chores and errands come from `supabase/seed/seed.sql`. The light run mutates them,
+ * in file order, and the dark run reads what the light run left, so the two themes never fight over
+ * a row. Screenshots of each screen at phone and desktop width go to `shots/u4-5/`, and axe runs on
+ * each screen in both themes.
  */
 
 const SHOTS = join(REPO_ROOT, 'shots', 'u4-5');
@@ -98,9 +97,9 @@ for (const theme of ['light', 'dark'] as const) {
       await shoot(page, 'chore-detail', theme);
       await expectAccessible(page, `chore detail (${theme})`);
 
-      // Vacuum's one completion was Casey's. The seed has her gone from Oak Street (Seed Data,
-      // "Chores"), but journey 3 joins her back, so her record is named again (PRD, departure
-      // rules: a name follows the current roster). "Former member" is for someone who has left.
+      // Vacuum's one completion was Casey's. The seed has her gone from Oak Street, but journey 3
+      // joins her back, so her record is named again (a name follows the current roster).
+      // "Former member" is for someone who has left.
       await page.goto('/chores');
       await page.getByRole('link', { name: /^Vacuum common areas/ }).click();
       await expect(
@@ -113,7 +112,7 @@ for (const theme of ['light', 'dark'] as const) {
 
       if (theme === 'light') {
         // Rotation edit on the real service: a pure reorder keeps Alex's turn, and appending Jordan
-        // does too (PRD, "Rotation": a manual edit keeps the turn with the same member).
+        // does too (a manual edit keeps the turn with the same member).
         await page.goto('/chores');
         await page.getByRole('link', { name: /^Deep clean fridge/ }).click();
         await page.getByRole('button', { name: 'More actions for Deep clean fridge' }).focus();

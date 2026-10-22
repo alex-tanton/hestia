@@ -75,7 +75,7 @@ describe('hearth-admin', () => {
  * entrypoint -- `import.meta.url === pathToFileURL(process.argv[1]).href` -- which no in-process
  * unit test calling `runCli` directly can ever trigger. This spawns the real script as its own
  * process, the same way `bin/hearth-admin` does in production, against a throwaway local HTTP
- * server standing in for GoTrue (never a live network call, per Handoff non-negotiable 17).
+ * server standing in for GoTrue (never a live network call).
  */
 describe('hearth-admin, invoked directly as a script', () => {
   let server: Server | undefined;

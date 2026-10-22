@@ -24,7 +24,7 @@ interface FieldIds {
   isInvalid: boolean;
 }
 
-/** 16px text keeps iOS Safari from zooming on focus (Branding › Typography). */
+/** 16px text keeps iOS Safari from zooming on focus. */
 const CONTROL_CLASSES =
   'w-full rounded-sm border bg-base px-3 text-body text-primary placeholder:text-muted transition-colors duration-150 ease-out disabled:cursor-not-allowed disabled:bg-raised disabled:opacity-60';
 
@@ -54,7 +54,7 @@ function FieldFrame({
         </p>
       )}
       {error && (
-        // Design › Primitives: an error pairs the red border with a message, never color alone.
+        // An error pairs the red border with a message, never color alone.
         <p id={errorId} role="alert" className="flex items-start gap-1.5 text-body-sm text-danger">
           <CircleAlert aria-hidden size={20} strokeWidth={1.5} className="mt-px shrink-0" />
           {error}

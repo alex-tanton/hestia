@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** Design › Loading rules: skeletons appear only after 200ms so fast responses do not flash. */
+/** Skeletons appear only after 200ms so fast responses do not flash. */
 export const SKELETON_DELAY_MS = 200;
 
 export function useDelayedVisible(delayMs: number = SKELETON_DELAY_MS): boolean {

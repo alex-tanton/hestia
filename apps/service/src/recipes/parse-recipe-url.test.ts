@@ -12,9 +12,9 @@ function fakeFetch(body: string): (url: string) => Promise<{ body: string }> {
 }
 
 /**
- * The parse-and-preview result the `recipes/parse` route sends back (Requirements, "Recipe
- * library"): a successful fetch with usable JSON-LD comes back split into an editable preview;
- * one with none comes back as a clear "needs manual entry" result, never a thrown error.
+ * The parse-and-preview result the `recipes/parse` route sends back: a successful fetch with usable
+ * JSON-LD comes back split into an editable preview; one with none comes back as a clear "needs
+ * manual entry" result, never a thrown error.
  */
 describe('parseRecipeUrl', () => {
   it('returns a full preview, with ingredient lines already split, for usable JSON-LD', async () => {

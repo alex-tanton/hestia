@@ -15,10 +15,10 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `supabase/` | Configuration, database migrations, and seed data for the self-hosted Supabase stack. |
 | `docker/` | Everything needed to build and run the production stack with Docker Compose. |
 | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
-| `scripts/` | Small operational scripts for deployment and secret generation, plus the test date and time-zone sweep and the knip report normalizer. |
+| `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, with harness tests for the scripts that have one. |
 | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
-| `.github/` | Continuous integration and deployment automation (GitHub Actions), plus dependency updates. |
+| `.github/` | Continuous integration and deployment automation (GitHub Actions), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
 | `README.md` | The entry point: prerequisites, local development, deployment, and backup/restore steps. |
 | `CONTRIBUTING.md` | How changes land: which go straight to `main`, which need a pull request, and the commit rules. |
@@ -43,7 +43,7 @@ Vite, styled with Tailwind, and uses Workbox to work offline and install like a 
 | `pillars` | Thin routing glue that connects a top-level navigation area ("pillar" of the app, like Bills or Chores) to its screens. |
 | `components` | Reusable visual building blocks, organized by feature area (bills, chores, dashboard, errands, lists, meals) plus cross-cutting ones: `ui` (generic buttons, cards, dialogs, form fields), `shell` (the app frame — top bar, tab bar, household switcher), and `states` (loading, empty, and error placeholders used throughout). |
 | `lib` | Supporting logic that isn't a visual component: talking to the API (`api`), authentication (`auth`), offline queueing and sync (`offline`), push notifications (`push`), realtime updates (`realtime`), formatting, validation, and small reusable hooks. |
-| `test` | Shared test helpers and setup for the web app's own test suite. |
+| `test` | Shared test helpers and setup for the web app's own test suite, including `browser.ts` (online state, coarse pointer and household-clock stubs). |
 | `public` | Static assets served as-is, including app icons used for installation. |
 | `scripts` | Build-time helper scripts for the web app. |
 | `index.css`, `tokens.test.ts` | Global styling and a check that design tokens stay consistent. |
@@ -57,9 +57,9 @@ used for operational tasks like resetting a user's password.
 
 | Subfolder | Purpose |
 | --- | --- |
-| `routes` | The HTTP endpoints grouped by feature (auth, bills, chores, deals, errands, households, lists, meal plans, recipes, system, users). |
+| `routes` | The HTTP endpoints grouped by feature (auth, bills, chores, deals, errands, health, households, lists, match overrides, meal plans, recipes, system, users). |
 | `services` | The business logic behind each feature — the rules and calculations that routes and jobs call into. |
-| `jobs` | Scheduled background work: dispatching notifications, logging autopay, refreshing deals and meal plans, pruning stale data, and the scheduler that runs them. |
+| `jobs` | Scheduled background work: dispatching notifications, logging autopay, refreshing deals, pruning stale data, and the scheduler that runs them. |
 | `privileged` | The small, deliberately isolated set of operations allowed to use elevated database or auth-provider access (for example, the owner CLI and system-level notification delivery). Everything else in the service is restricted to the narrow, non-privileged access a regular request gets. |
 | `auth` | Verifying access tokens issued by the auth provider. |
 | `gotrue` | The client used to talk to GoTrue, the self-hosted authentication service (signup, sign-in, password resets). |
@@ -70,8 +70,8 @@ used for operational tasks like resetting a user's password.
 | `chores` | Chore- and errand-specific scheduling logic. |
 | `notifications` | Composing and planning the notifications sent to users. |
 | `push` | Sending web push notifications to installed PWAs. |
-| `test` | Shared fixtures and harnesses used by the service's own automated tests. |
-| `bin` | The built `hearth-admin` command-line executable. |
+| `test` | Shared fixtures and harnesses used by the service's own automated tests, including `stack-hooks.ts` (the per-file stack lifecycle for integration tests) and `job-logger.ts` (a job logger that records its lines). |
+| `bin` | The `hearth-admin` command-line entry point: a hand-written POSIX shell wrapper that runs the bundled `dist/cli.js` (built from `src/cli.ts`). The service image links it onto the `PATH`. |
 | `scripts` | Operational helper scripts for the service (for example, regenerating database types). |
 
 ## 4. packages/
@@ -150,6 +150,9 @@ shopping list.
 | Script | Purpose |
 | --- | --- |
 | `deploy.sh` | Builds and deploys the production stack: backs up the database, applies pending migrations, swaps in new containers, and rolls back automatically if the new version fails a health check. |
+| `deploy.test.mjs` | Harness test for `deploy.sh`: runs the real script against stub `docker`, `supabase` and `curl` binaries and checks that the database password reaches the Supabase CLI through its environment and appears in no argument. Run by `pnpm test:harness`. |
+| `ci-prepull-images.sh` | Pre-pulls the images the end-to-end stack needs, with retries and a `ghcr.io` mirror tried first for the three Supabase images, so a rate-limited registry does not fail `docker compose up` in CI. |
+| `ci-prepull-images.test.mjs` | Harness test for the pre-pull script, run against stub `docker` and `sleep` binaries so no image is pulled. Run by `pnpm test:harness`. |
 | `test-sweep.mjs` | Runs the unit or service integration test suite once per cell of a fixed matrix of pinned dates and time zones, each cell in its own process (`pnpm test:sweep`, `pnpm test:sweep:integration`). |
 | `test-sweep.test.mjs` | Harness test for the sweep: argument checks, an `--only` that selects nothing, a listing that cannot run, and one real single-cell run. Run by `pnpm test:harness`. |
 | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
@@ -176,14 +179,14 @@ shopping list.
 | ESLint, `eslint.config.js` | A linter: it scans code for likely bugs, risky patterns, and style inconsistencies beyond what the type checker catches. | Enforces project-specific rules too, such as which parts of the service are allowed to use privileged database access. |
 | Prettier, `.prettierrc.json`, `.prettierignore` | An automatic code formatter — it rewrites code into one consistent style so contributors don't argue over formatting. | Keeps every file formatted the same way regardless of who wrote it. |
 | commitlint, `commitlint.config.js` | Checks that every commit message follows the Conventional Commits format (a `type(scope): subject` style) with an approved list of types and scopes. | Keeps commit history readable and consistent, and scopes it to the project's actual areas (web, service, shared, etc.). |
-| knip, `knip.json` | A tool that reads every workspace and reports files, exports and dependencies that nothing uses. It only reports; it never edits or deletes anything. | Finds unused code across workspaces, which the linter and type checker cannot see. Phase 3 removes only what knip plus a text search and tests prove dead. |
+| knip, `knip.json` | A tool that reads every workspace and reports files, exports and dependencies that nothing uses. It only reports; it never edits or deletes anything. | Finds unused code across workspaces, which the linter and type checker cannot see. Code it reports is removed only when a text search and the tests also show it is unused. |
 | Husky, `.husky/` | Installs Git hooks — small scripts that run automatically at points like "before a commit is created." | Runs linting, formatting, and type-checking before a commit, and checks the commit message, so problems are caught before they're even committed. |
 | lint-staged, `.lintstagedrc.json` | Runs linters and formatters only on the files actually being committed, not the whole repo. | Keeps the pre-commit check fast. |
 | Vitest | The test runner used for unit, component, and integration tests throughout the repo (in `apps/web`, `apps/service`, and the packages) — distinct from Playwright, which drives full end-to-end journeys in `e2e/`. | Fast, consistent testing across every workspace. |
 | `.nvmrc` | Pins the exact Node.js version the project expects. | Keeps every contributor and CI on the same JavaScript runtime version, avoiding "works on my machine" issues. |
 | `.dockerignore` | Lists files and folders excluded when building a Docker image. | Keeps build context small and makes sure secrets, test artifacts, and unrelated folders never end up inside a built image. |
 | `.gitattributes` | Tells Git how to handle certain files — here, normalizing line endings to LF for text files and marking binary files (images, archives) so Git doesn't try to treat them as text. | Prevents line-ending mismatches between contributors on different operating systems. |
-| CI, `.github/workflows/` | GitHub Actions automation: `ci.yml` runs checks (lint, typecheck, tests) on every pull request and push; `deploy.yml` deploys a passing `main` commit to production. `dependabot.yml` opens automated pull requests to keep dependencies up to date. | Catches problems before merge and automates getting a verified change into production. |
+| CI, `.github/workflows/` | GitHub Actions automation: `ci.yml` runs checks (lint, typecheck, tests) on every pull request and push, and each of its six jobs calls the composite action in `.github/actions/setup/` (pnpm, Node from `.nvmrc`, and a lockfile install) after checkout; `deploy.yml` deploys a passing `main` commit to production. `dependabot.yml` opens automated pull requests to keep dependencies up to date. | Catches problems before merge and automates getting a verified change into production. |
 
 ## 11. test/
 
@@ -200,4 +203,5 @@ is in `docs/testing.md`, under "Dates and time zones".
 | `clock-setup.test.mjs` | Harness test for the clock pin, run from inside real Vitest workers. |
 | `global-tz.test.mjs` | Harness test for the zone hook, one child process per case. |
 | `eslint-clock-ban.test.mjs` | Harness test for the ESLint rule that bans real-clock reads in test files. |
+| `eslint-service-role-fence.test.mjs` | Harness test for the ESLint fence that keeps modules outside `main.ts`, `cli.ts`, tests and `apps/service/src/privileged/` from importing that folder: bad and good snippets are linted with the repo's real config. |
 | `support/vitest-project.mjs` | Helper for the harness tests: writes a throwaway Vitest project in a temporary directory and runs it with the clock setup file. |

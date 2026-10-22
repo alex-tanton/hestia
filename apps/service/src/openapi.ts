@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { endpoints, problemDetailsSchema, type Endpoint } from '@hearth/shared';
 
 /**
- * The OpenAPI 3.1 document, generated from the shared Zod schemas (Technical Architecture,
- * "Conventions"). `pnpm build` writes it to dist/openapi.json; the running service serves that
- * file, and falls back to generating it when run from source.
+ * The OpenAPI 3.1 document, generated from the shared Zod schemas. `pnpm build` writes it to
+ * dist/openapi.json; the running service serves that file, and falls back to generating it when run
+ * from source.
  */
 
 type JsonSchema = Record<string, unknown>;

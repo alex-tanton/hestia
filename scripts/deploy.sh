@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploys the checked-out commit to this box (Engineering Practices, "CI — GitHub Actions").
+# Deploys the checked-out commit to this box.
 # Run by .github/workflows/deploy.yml on the self-hosted runner, or by hand from a checkout:
 #
 #   scripts/deploy.sh
@@ -81,7 +81,7 @@ HEARTH_TAG="$new_tag" compose build hearth-service caddy || fail "build failed; 
 compose up --detach --wait --no-recreate --no-build db auth realtime kong backup ||
   fail "the Supabase services are not healthy; nothing restarted"
 
-# 3. Backup, immediately before migrations (Technical Architecture, "Backups").
+# 3. Backup, immediately before migrations.
 log "backing up the database"
 compose exec -T backup /backup.sh || fail "backup failed; nothing migrated or restarted"
 

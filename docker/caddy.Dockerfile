@@ -13,9 +13,8 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
     pnpm fetch --frozen-lockfile --store-dir /pnpm/store
 
 COPY . .
-# The PWA build omits the magic-link screens unless this is true (Technical Architecture,
-# "Auth configuration"). Vite exposes only VITE_-prefixed variables to the app, as
-# import.meta.env.VITE_MAGIC_LINK_ENABLED.
+# The PWA build omits the magic-link screens unless this is true. Vite exposes only VITE_-prefixed
+# variables to the app, as import.meta.env.VITE_MAGIC_LINK_ENABLED.
 ARG HEARTH_MAGIC_LINK_ENABLED=false
 ENV VITE_MAGIC_LINK_ENABLED=$HEARTH_MAGIC_LINK_ENABLED
 # Kong requires an apikey on every /auth/v1 call, so supabase-js in the PWA is built with the

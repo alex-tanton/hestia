@@ -75,12 +75,15 @@ Two services exist purely to route and protect traffic, configured by files in `
   gateway in front of GoTrue and Realtime only — there are deliberately no `rest`, `storage`,
   `functions`, or `analytics` routes. It key-authenticates callers as `anon` or `service_role` and
   only allows those two groups through. GoTrue is an allowlist: Kong routes only the calls the PWA
-  makes for sign-in, token refresh, sign-out and the session check (`token`, `logout`, `user`),
-  the magic-link `otp`, the email-link `verify` (no key, because the link opens in a browser), and
-  `admin/users` for the service-role key only (the E2E seed). Everything else under `/auth/v1`
-  (signup, recover, settings, the rest of `admin`, and any other method on an allowed path) is
-  refused by Kong with a 403 `Access is forbidden.`, whatever key is sent. Caddy's two refusals
-  stay the first layer in front of it.
+  makes for sign-in, token refresh, sign-out and the session check (the routes `auth-v1-token`,
+  `auth-v1-logout` and `auth-v1-user`), the magic-link `auth-v1-otp`, the email-link
+  `auth-v1-verify` (no key, because the link opens in a browser), and `auth-v1-admin-users` for the
+  service-role key only (the E2E seed). Everything else under `/auth/v1` (signup, recover,
+  settings, the rest of `admin`, and any other method on an allowed path) ends at the
+  `auth-v1-denied` route, which refuses it with a 403 `Access is forbidden.`, whatever key is
+  sent. Caddy's two refusals stay the first layer in front of it. Realtime has the WebSocket route
+  `realtime-v1-ws` and the REST route `realtime-v1-rest` for the same two key groups; its
+  `/api/tenants` and `/api/openapi` paths are refused with the same 403.
 
 ## Environment variables
 

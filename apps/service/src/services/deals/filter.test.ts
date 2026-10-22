@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Deal } from '@hearth/shared';
 import { filterDeals, paginate, selectDeals, sortDeals } from './filter.js';
 
-/** Requirements, "Deal search and browse" and "Scale and pagination" (50 per page). */
+/** Deal search and browse, paginated at 50 per page. */
 
 let counter = 0;
 

@@ -48,7 +48,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Subscriptions (Design › Screens › 16)', () => {
+describe('Subscriptions', () => {
   it('loading: announces it with skeletons', () => {
     mount(
       baseHandlers({ 'GET /api/households/:id/subscriptions': () => new Promise(() => undefined) }),

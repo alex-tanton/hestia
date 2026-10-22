@@ -100,7 +100,7 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
 
 registerBrowserStubs();
 
-describe('Week planner (Design › Screens › 10)', () => {
+describe('Week planner', () => {
   it('loading: announces it with skeletons', () => {
     mount(
       baseHandlers({ 'GET /api/households/:id/meal-plan': () => new Promise(() => undefined) }),

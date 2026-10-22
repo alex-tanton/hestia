@@ -13,12 +13,12 @@ export interface DealCardProps {
 }
 
 /**
- * Design › Composite components › `DealCard`. Every figure here was computed by the service and
+ * Every figure here was computed by the service and
  * arrives as integer cents; the card only formats it.
  *
  * The priced cluster is `aria-hidden` and a single sentence carries it instead, because a screen
  * reader hearing "$2.50", "$2.99", "16%" as separate fragments learns less than one hearing the
- * sentence (Design › Accessibility, "Deal cards announce price and discount as a sentence").
+ * sentence.
  */
 export function DealCard({ householdId, deal }: DealCardProps): ReactElement {
   const nameId = useId();

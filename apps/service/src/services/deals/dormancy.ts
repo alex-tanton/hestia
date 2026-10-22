@@ -1,13 +1,13 @@
 /**
- * Dormant postal codes (Technical Architecture, "Dormant postal codes"; Requirements, "Refresh").
+ * Dormant postal codes.
  *
  * Dormancy governs only the flyer and flyer-item refresh. A keyword search that misses its cache
  * always fetches live, dormant or not.
  *
  * Two questions, answered in two places, because the two callers see different data:
  *
- * - **The daily job** picks its postal codes from `household.last_active_at` directly, as the
- *   specs define dormancy. It runs as `service_role`, so it can see every household.
+ * - **The daily job** picks its postal codes from `household.last_active_at` directly. It runs
+ *   as `service_role`, so it can see every household.
  * - **A request** cannot: RLS shows a caller only the households they belong to, so
  *   `max(last_active_at)` across a postal code is not readable, and the caller's own household
  *   has just been stamped active by `mark_household_active`. What a request can read is
@@ -16,7 +16,7 @@
  *   that was dormant when that run decided its set, which is the question the request is asking.
  */
 
-/** Requirements, "Refresh": activity within 14 days. */
+/** Activity within 14 days keeps a postal code active. */
 export const ACTIVE_WINDOW_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1_000;
 

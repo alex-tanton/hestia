@@ -6,9 +6,8 @@ import type { DB } from './db/types.js';
 /** Generated from the migrated schema by `pnpm db:types`. */
 export type Database = DB;
 
-// A `date` column is a calendar date in the timezone that owns it (Requirements, "Timezone").
-// pg would turn it into a JS Date at local midnight, which shifts it; keep the YYYY-MM-DD string
-// the generated types promise.
+// A `date` column is a calendar date in the timezone that owns it. pg would turn it into a JS Date
+// at local midnight, which shifts it; keep the YYYY-MM-DD string the generated types promise.
 pg.types.setTypeParser(pg.types.builtins.DATE, (value) => value);
 
 export interface DatabaseHandle {

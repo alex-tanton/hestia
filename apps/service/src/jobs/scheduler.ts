@@ -12,8 +12,8 @@ import { runPruneCache } from './prune-cache.js';
 import type { JobDatabase, JobLogger } from './types.js';
 
 /**
- * The in-process job runner (Technical Architecture, "Scheduled jobs"). `node-cron`, schedules in
- * UTC; anything user-facing resolves against a household or user timezone inside the job.
+ * The in-process job runner. `node-cron`, schedules in UTC; anything user-facing resolves against a
+ * household or user timezone inside the job.
  *
  * | Job                     | Schedule        |
  * | ----------------------- | --------------- |

@@ -4,8 +4,7 @@ import { SEARCH_TTL_MS } from '../services/deals/cache.js';
 import type { JobDatabase, JobLogger } from './types.js';
 
 /**
- * `prune-cache` — daily 04:00 UTC (Technical Architecture, "Scheduled jobs"; Requirements,
- * "Retention"). It deletes exactly four things and nothing else:
+ * `prune-cache` — daily 04:00 UTC. It deletes exactly four things and nothing else:
  *
  * - `deal` rows past their `valid_to`; `deal` is a cache, not a historical record
  * - `deal_query_cache` rows past the six-hour search TTL

@@ -31,7 +31,7 @@ const SORT_OPTIONS: { value: LibrarySort; label: string }[] = [
   { value: 'readiness', label: 'Readiness' },
 ];
 
-/** Design › Screens › 11: searchable list, readiness on each card, sort by recent/title/readiness. */
+/** Searchable list, readiness on each card, sort by recent/title/readiness. */
 export function RecipeLibraryScreen({ householdId }: { householdId: string }): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
@@ -129,8 +129,8 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
           value={search}
           onChange={(event) => {
             setSearch(event.target.value);
-            // Search filters only the loaded page (Requirements › "Scale and pagination": the
-            // recipes endpoint has no search of its own to filter server-side), so a new search
+            // Search filters only the loaded page (the recipes endpoint has no search of its own to
+            // filter server-side), so a new search
             // always starts back at page 1 rather than silently searching wherever the reader
             // happened to have paged to.
             setPage(1);
@@ -165,7 +165,7 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
 
       {body()}
 
-      {/* Requirements › "Scale and pagination": recipe libraries paginate at 50, the same as
+      {/* Recipe libraries paginate at 50, the same as
           deals and flyer items — so a household past the first page can still reach every recipe,
           not just search within whichever 50 happened to load first. Null below the page-1 seed
           data's single page, same as deal search. */}

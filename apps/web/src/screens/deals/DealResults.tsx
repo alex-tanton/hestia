@@ -20,7 +20,7 @@ export interface DealPage extends Freshness {
   hasMore: boolean;
 }
 
-/** Design › Loading rules: a skeleton mirrors the real layout, here the deal card's own shape. */
+/** A skeleton mirrors the real layout, here the deal card's own shape. */
 export function DealSkeletons({
   label,
   count = 3,
@@ -56,18 +56,18 @@ export interface DealResultsProps {
   query: UseQueryResult<DealPage>;
   /** What is loading, for assistive tech ("Loading deals"). */
   loadingLabel: string;
-  /** Design › State patterns: filtered-empty copy differs from first-run copy. */
+  /** Filtered-empty copy differs from first-run copy. */
   emptyMessage: string;
   emptyAction?: { label: string; onAction: () => void } | undefined;
   errorMessage: string;
-  /** Design › Deals-specific states: a failed fetch with no cache offers a route forward. */
+  /** A failed fetch with no cache offers a route forward. */
   manualAlternative: { label: string; onAction: () => void };
   onPageChange: (page: number) => void;
 }
 
 /**
  * The results region shared by deal search and a flyer's items: the same `DealCard` list, the
- * same pagination, and the same deals-specific freshness states (Design › Screens › 5 and 6).
+ * same pagination, and the same deals-specific freshness states.
  */
 export function DealResults({
   householdId,

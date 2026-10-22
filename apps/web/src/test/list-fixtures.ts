@@ -2,9 +2,9 @@ import type { ListItem, PantryItem, ShoppingList, ShoppingListDetail } from '@he
 import { ALEX_ID, OAK_STREET_ID, SAM_ID } from './fixtures.ts';
 
 /*
- * The Seed Data "This Week" list, used as the oracle it is meant to be (Seed Data, "Shopping
- * lists"): 15 items, 7 from deals, 4 from recipes, 4 manual; 3 bought, 1 in cart, 11 needed, and
- * the three repricing outcomes. The store headers below are the ones Seed Data expects.
+ * The seed data's "This Week" list, used as the oracle it is meant to be: 15 items, 7 from deals, 4
+ * from recipes, 4 manual; 3 bought, 1 in cart, 11 needed, and the three repricing outcomes. The
+ * store headers below are the ones the seed data expects.
  */
 
 export const THIS_WEEK_ID = 'f1111111-1111-4111-8111-111111111111';
@@ -207,7 +207,7 @@ export const thisWeekFixture: ShoppingList = {
   outstandingCount: 12,
 };
 
-/** The store headers Seed Data expects, computed by the service and never by the client. */
+/** The store headers the seed data expects, computed by the service and never by the client. */
 export const thisWeekDetailFixture: ShoppingListDetail = {
   ...thisWeekFixture,
   storeGroups: [
@@ -240,7 +240,7 @@ export const thisWeekDetailFixture: ShoppingListDetail = {
   bought: [shreddedCheese, lemon, dishSoap],
 };
 
-/** Seed Data: active, four items, all bought — the all-bought summary and add-to-pantry state. */
+/** Seed data: active, four items, all bought — the all-bought summary and add-to-pantry state. */
 export const weekendCookoutFixture: ShoppingList = {
   id: WEEKEND_COOKOUT_ID,
   householdId: OAK_STREET_ID,
@@ -267,7 +267,7 @@ export const weekendCookoutDetailFixture: ShoppingListDetail = {
   ),
 };
 
-/** Seed Data: archived, eight items all bought — the archived, read-only view. */
+/** Seed data: archived, eight items all bought — the archived, read-only view. */
 export const partySuppliesFixture: ShoppingList = {
   id: PARTY_SUPPLIES_ID,
   householdId: OAK_STREET_ID,

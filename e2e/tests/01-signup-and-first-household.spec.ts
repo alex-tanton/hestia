@@ -4,13 +4,12 @@ import { expectAccessible } from '../support/axe.ts';
 import { SEED, SEED_PASSWORD } from '../support/env.ts';
 
 /**
- * Journey 1 (Engineering Practices › E2E journeys): sign up with email and password, create a
- * household, set the postal code and favorites, reach the dashboard. Favorites are the merchants
- * with an active flyer near the postal code the previous step set, picking none is allowed
- * (Design › Screens › 1).
+ * Journey 1: sign up with email and password, create a household, set the postal code and
+ * favorites, reach the dashboard. Favorites are the merchants with an active flyer near the postal
+ * code the previous step set, picking none is allowed.
  */
 
-/** Seed Data, "E2E-only accounts": one per theme, because each run creates a real account. */
+/** E2E-only accounts: one per theme, because each run creates a real account. */
 const ACCOUNTS = {
   light: {
     displayName: 'Riley Park',
@@ -26,7 +25,7 @@ const ACCOUNTS = {
 
 async function finishInstallStep(page: Page): Promise<void> {
   // Chromium offers `beforeinstallprompt` when it feels like it, so the step ends on whichever
-  // of its two "go to the app" controls this run rendered (Design › Screens › 1).
+  // of its two "go to the app" controls this run rendered.
   await page.getByRole('button', { name: /^(Go to Hearth|Not now)$/ }).click();
 }
 
@@ -56,8 +55,8 @@ for (const theme of ['light', 'dark'] as const) {
       await expectAccessible(page, `onboarding, name the household (${theme})`);
       await page.getByRole('button', { name: 'Create household' }).click();
 
-      // A brand-new household has no favorites yet; picking none is allowed (Design › Screens
-      // › 1), so the step lists the merchants near the postal code, all unchecked, and moves on.
+      // A brand-new household has no favorites yet; picking none is allowed, so the step lists the
+      // merchants near the postal code, all unchecked, and moves on.
       await expect(page.getByRole('heading', { name: 'Favorite stores' })).toBeVisible();
       const stores = page.getByRole('checkbox');
       await expect(stores.first()).toBeVisible();

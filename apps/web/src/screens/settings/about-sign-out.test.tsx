@@ -6,8 +6,8 @@ import { TEST_DEVICE_SUBSCRIPTION, createPushDouble } from '../../test/push-doub
 import { AboutSection } from './AboutSection.tsx';
 
 /*
- * Sign-out removes this device's push subscription (Design › Screens › 4, "About"). Online the
- * server row goes first, while the session can still delete it; offline only the local one goes.
+ * Sign-out removes this device's push subscription. Online the server row goes first, while the
+ * session can still delete it; offline only the local one goes.
  */
 
 afterEach(() => {

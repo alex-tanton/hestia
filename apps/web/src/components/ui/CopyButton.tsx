@@ -7,7 +7,7 @@ export interface CopyButtonProps {
   /** Names what is copied, e.g. "Copy invite link". */
   label: string;
   value: string;
-  /** The confirmation, past tense and brief (Branding › Copy patterns). */
+  /** The confirmation, past tense and brief. */
   confirmation: string;
 }
 

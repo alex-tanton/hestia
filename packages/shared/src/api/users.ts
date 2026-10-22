@@ -17,7 +17,7 @@ export const membershipSchema = z.object({
   name: z.string(),
   role: householdRoleSchema,
   joinedAt: timestampSchema,
-  /** The switcher lists every household with its member count (Design › Screens › 3). */
+  /** The switcher lists every household with its member count. */
   memberCount: z.number().int().min(1),
 });
 export type Membership = z.infer<typeof membershipSchema>;

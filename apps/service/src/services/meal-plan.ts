@@ -9,8 +9,7 @@ import { fail } from '../problem.js';
 import { markHouseholdActive } from './households.js';
 
 /*
- * The week planner (Requirements, "Meal planning"; Technical Architecture, "API surface" —
- * "Meal plan"). Every function takes a Kysely bound to the caller's withUserDb transaction, so
+ * The week planner. Every function takes a Kysely bound to the caller's withUserDb transaction, so
  * RLS decides what it can see; a row RLS hides is reported as not found, never as forbidden.
  */
 
@@ -37,7 +36,7 @@ function toEntry(row: EntryRow): MealPlanEntry {
     recipeId: row.recipe_id,
     recipeTitle: row.recipe_title,
     // Null when the recipe was deleted (no recipe_id to look readiness up by) or, defensively,
-    // when it has never been computed (Requirements, "Meal plan history and deleted recipes").
+    // when it has never been computed.
     readinessPercent: row.recipe_id === null ? null : row.readiness_percent,
     plannedDate: row.planned_date,
     mealType: row.meal_type,
@@ -76,7 +75,7 @@ export function assertSunday(week: string): void {
   if (day !== 0) throw fail(400, 'week must be a Sunday date (YYYY-MM-DD).');
 }
 
-/** The current week's Sunday, in the household's own timezone (Requirements, "Timezone"). */
+/** The current week's Sunday, in the household's own timezone. */
 async function currentWeekSunday(db: Kysely<Database>, householdId: string): Promise<string> {
   const { rows } = await sql<{ week: string }>`
     select (
@@ -138,8 +137,8 @@ export async function createMealPlanEntry(
     .values({
       household_id: householdId,
       recipe_id: recipe.id,
-      // Snapshotted at placement time (Requirements, "Meal plan"): the entry keeps this title
-      // even if the recipe is later renamed or deleted.
+      // Snapshotted at placement time: the entry keeps this title even if the recipe is later
+      // renamed or deleted.
       recipe_title: recipe.title,
       planned_date: input.plannedDate,
       meal_type: input.mealType,
@@ -166,9 +165,8 @@ export async function deleteMealPlanEntry(db: Kysely<Database>, id: string): Pro
 
 /**
  * The recipe id behind one planned meal, for "Add missing to list". 404s under the same message
- * whether the entry itself is not visible or its recipe has since been deleted (Requirements,
- * "Meal plan history and deleted recipes"; the design planner UI never offers this action for a
- * deleted-recipe entry, so the API is equally conservative).
+ * whether the entry itself is not visible or its recipe has since been deleted (the planner UI
+ * never offers this action for a deleted-recipe entry, so the API is equally conservative).
  */
 export async function requireMealPlanEntryRecipeId(
   db: Kysely<Database>,
@@ -186,9 +184,8 @@ export async function requireMealPlanEntryRecipeId(
 }
 
 /**
- * Every recipe id planned in one household's week, `recipe_id is not null` only, in no
- * deduplicated order (Requirements, "Add missing to list": a recipe planned twice contributes its
- * ingredients twice).
+ * Every recipe id planned in one household's week, `recipe_id is not null` only, in no deduplicated
+ * order (a recipe planned twice contributes its ingredients twice).
  */
 export async function recipeIdsForWeek(
   db: Kysely<Database>,

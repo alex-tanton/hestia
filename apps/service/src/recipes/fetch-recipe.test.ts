@@ -12,11 +12,11 @@ import {
 } from './fetch-recipe.js';
 
 /**
- * Fetch limits (Technical Architecture, "Recipe fetching"). `requestWithLimits` is tested against
- * a real local server — including loopback, which is otherwise refused — to prove the timeout and
- * body cap actually cut a slow or oversized response off, not just that the option is passed
- * through. Address resolution and scheme checks are tested separately with a fake DNS lookup, so
- * no test here ever makes a real DNS query or a real outbound request (Handoff non-negotiable 17).
+ * Fetch limits. `requestWithLimits` is tested against a real local server — including loopback,
+ * which is otherwise refused — to prove the timeout and body cap actually cut a slow or oversized
+ * response off, not just that the option is passed through. Address resolution and scheme checks
+ * are tested separately with a fake DNS lookup, so no test here ever makes a real DNS query or a
+ * real outbound request.
  */
 
 describe('parseFetchableUrl', () => {

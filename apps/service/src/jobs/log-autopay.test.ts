@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { autopayOccurrences } from './log-autopay.js';
 
 /*
- * Pure logic (Engineering Practices, "Testing" — the no-backfill rule explicitly). The database
- * side (the insert, the unique-key idempotency, and a real integration-test bill) is covered by
- * log-autopay.integration.test.ts.
+ * Pure logic (the no-backfill rule explicitly). The database side (the insert, the unique-key
+ * idempotency, and a real integration-test bill) is covered by log-autopay.integration.test.ts.
  */
 
 describe('autopayOccurrences', () => {
@@ -29,23 +28,19 @@ describe('autopayOccurrences', () => {
     expect(dates).toEqual([]);
   });
 
-  it(
-    'never backfills an occurrence dated before created_at, even though it is on or before today ' +
-      '(Engineering Practices, "Testing": the named no-backfill case)',
-    () => {
-      // Anchor is 3 months before today, but the bill was only created last month: the first two
-      // monthly occurrences predate created_at and must never be auto-logged.
-      const dates = autopayOccurrences({
-        ...monthly,
-        anchor_date: '2026-01-01',
-        created_date: '2026-03-01',
-        today: '2026-03-15',
-      });
-      expect(dates).toEqual(['2026-03-01']);
-      expect(dates).not.toContain('2026-01-01');
-      expect(dates).not.toContain('2026-02-01');
-    },
-  );
+  it('never backfills an occurrence dated before created_at, even though it is on or before today (the named no-backfill case)', () => {
+    // Anchor is 3 months before today, but the bill was only created last month: the first two
+    // monthly occurrences predate created_at and must never be auto-logged.
+    const dates = autopayOccurrences({
+      ...monthly,
+      anchor_date: '2026-01-01',
+      created_date: '2026-03-01',
+      today: '2026-03-15',
+    });
+    expect(dates).toEqual(['2026-03-01']);
+    expect(dates).not.toContain('2026-01-01');
+    expect(dates).not.toContain('2026-02-01');
+  });
 
   it('logs nothing when every occurrence through today predates created_at', () => {
     const dates = autopayOccurrences({

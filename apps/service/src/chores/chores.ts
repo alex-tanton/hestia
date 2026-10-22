@@ -27,13 +27,12 @@ import {
 } from './occurrence.js';
 
 /*
- * Chores, completions, and rotation (Requirements, "Chores and errands"; Technical Architecture,
- * "API surface" › "Chores"). Every function takes a Kysely bound to the caller's withUserDb
+ * Chores, completions, and rotation. Every function takes a Kysely bound to the caller's withUserDb
  * transaction, so RLS decides what it can see; a row RLS hides is reported as not found, never as
- * forbidden (Handoff non-negotiable 10).
+ * forbidden.
  *
- * Nothing here implements gamification (Handoff non-negotiable 13): no streak counts, no point
- * totals, no "nice work" copy — not even in a log line.
+ * Nothing here implements gamification: no streak counts, no point totals, no "nice work" copy —
+ * not even in a log line.
  */
 
 function iso(value: Date | string): string {
@@ -87,8 +86,7 @@ function toChore(row: ChoreRow, completions: readonly CompletionRow[], today: Ca
     row.rotation_offset,
   );
   // Sorted ascending by occurrence_date below, and that date is strictly increasing with each
-  // successive completion (PRD, "Recurrence is anchored and derived on read"), so the last
-  // element is always the most recently recorded completion.
+  // successive completion, so the last element is always the most recently recorded completion.
   const last = completions.at(-1);
   return {
     id: row.id,
@@ -185,20 +183,20 @@ function assignmentColumns(assignment: CreateChoreRequest['assignment']): {
 
 /**
  * Resolves the assignment columns for `PATCH /chores/:id` when the payload's assignment is a
- * `rotation` whose `rotationOrder` differs from what's stored. Unlike `assignmentColumns` (used
- * for create, and for every other assignment type on update), this does not always restart at
- * offset 0: a reviewer flagged that doing so contradicts the Design System's framing of the
- * rotation editor as "reorderable by drag handles" — reordering, or appending a member, shouldn't
- * silently reassign whose turn it is. The resolution applies the PRD's one stated precedent for
- * rotation mutation — a member's departure, which keeps "the turn stays with the same person" —
- * to the edit case too, as the smallest conservative extension (PRD, "Rotation").
+ * `rotation` whose `rotationOrder` differs from what's stored. Unlike `assignmentColumns` (used for
+ * create, and for every other assignment type on update), this does not always restart at offset 0:
+ * a reviewer flagged that doing so contradicts the rotation editor being "reorderable by drag
+ * handles" — reordering, or appending a member, shouldn't silently reassign
+ * whose turn it is. The resolution applies the one stated precedent for rotation mutation — a
+ * member's departure, which keeps "the turn stays with the same person" — to the edit case too, as
+ * the smallest conservative extension.
  *
  * Re-entering rotation mode from "single" or "none" (`existing.rotation_order` is null) has no
  * prior turn to preserve, so it starts fresh at offset 0, exactly like creating a new rotation.
- * This is a deliberate, separate decision (the PRD doesn't address a mode round-trip): whatever
- * offset a chore had the last time it was in rotation mode is not given any special meaning just
- * because the order being set now happens to match it again — restarting cleanly is simpler and
- * less surprising than resurrecting stale state across an unrelated detour through another mode.
+ * This is a deliberate, separate decision (nothing addresses a mode round-trip): whatever offset a
+ * chore had the last time it was in rotation mode is not given any special meaning just because the
+ * order being set now happens to match it again — restarting cleanly is simpler and less surprising
+ * than resurrecting stale state across an unrelated detour through another mode.
  */
 async function resolveRotationUpdate(
   db: Kysely<Database>,
@@ -296,18 +294,18 @@ export async function deleteChore(db: Kysely<Database>, choreId: string): Promis
 }
 
 /**
- * Writes the `chore_rotation` outbox row for whoever now holds the turn (Requirements,
- * "Notifications" › "Types and defaults": a completion passes a rotating chore's turn to another
- * member). `target_id` is the chore id and `occurrence_key` the occurrence date that was completed,
- * which is exactly what `deleteChoreCompletion` deletes again on undo.
+ * Writes the `chore_rotation` outbox row for whoever now holds the turn (a completion passes a
+ * rotating chore's turn to another member). `target_id` is the chore id and `occurrence_key` the
+ * occurrence date that was completed, which is exactly what `deleteChoreCompletion` deletes again
+ * on undo.
  *
  * The row is written by the completing member's request, so it is the request that applies the new
- * holder's quiet hours: `public.member_quiet_send_at` moves `send_after` to the end of their window
- * (Technical Architecture, "Scheduled jobs" › "Dispatch"). The new holder's preference is checked
- * here for the same reason, since a request cannot read another member's settings directly.
+ * holder's quiet hours: `public.member_quiet_send_at` moves `send_after` to the end of their window.
+ * The new holder's preference is checked here for the same reason, since a request cannot read
+ * another member's settings directly.
  *
  * The copy names the chore and the member whose turn just closed, which is the holder the rotation
- * had before this completion, not necessarily whoever did the work (Branding, "Notification copy").
+ * had before this completion, not necessarily whoever did the work.
  */
 async function enqueueChoreRotation(
   db: Kysely<Database>,
@@ -352,35 +350,34 @@ async function enqueueChoreRotation(
 }
 
 /**
- * Completes a chore's current occurrence, or the next open one when done early (PRD, "Recurrence
- * is anchored and derived on read" › "Chores"). `completed_by` is always `userId`, the caller from
- * the JWT — a rotation advances from whoever was *scheduled*, never from whoever actually did it
- * (PRD, "Rotation": "If Sam does Alex's turn, the next turn is still the member after Alex"), which
- * is why the rotation math below only ever consumes the completion *count*, not `userId`.
+ * Completes a chore's current occurrence, or the next open one when done early. `completed_by` is
+ * always `userId`, the caller from the JWT — a rotation advances from whoever was *scheduled*,
+ * never from whoever actually did it (if Sam does Alex's turn, the next turn is still the member
+ * after Alex), which is why the rotation math below only ever consumes the completion *count*, not
+ * `userId`.
  *
  * `occurrence_date`: see the PATCH-sized comment on `completeChoreRequestSchema` in
  * `@hearth/shared` for the decision this unit makes. In short: the server always computes its own
  * answer, `occurrenceToComplete`, from the current rotation/recurrence state; a caller that
- * supplies one must name that exact same date and gets a validation error otherwise, never a
- * silent substitution. There is no other value a correct completion can close — the PRD's rule is
- * exhaustive ("closes the current occurrence if open; otherwise the earliest later occurrence that
- * has no completion") — so "validated, not trusted" means checked for equality, not merely checked
- * for shape. An earlier draft of this function used a supplied date as-is once it looked like *a*
+ * supplies one must name that exact same date and gets a validation error otherwise, never a silent
+ * substitution. There is no other value a correct completion can close — the rule is exhaustive (it
+ * closes the current occurrence if open; otherwise the earliest later occurrence that has no
+ * completion) — so "validated, not trusted" means checked for equality, not merely checked for
+ * shape. An earlier draft of this function used a supplied date as-is once it looked like *a*
  * valid, uncompleted occurrence of the recurrence; that let a caller either jump the rotation ahead
- * by completing a far-future occurrence without ever closing the one actually due (passing the
- * turn without doing the current chore), or backfill a long-missed occurrence the PRD says must
- * "never" be backfilled. Requiring equality to the server's own answer closes both holes while
- * still leaving Phase 5's offline queue able to replay a completion computed at the time of a
- * (possibly offline) action: the common case — reconnecting before the occurrence has rolled over —
- * computes the same date the server would anyway, and the rare case where it has rolled over is
- * exactly a missed occurrence, which this PRD rule says should not be completable regardless of who
- * is asking.
+ * by completing a far-future occurrence without ever closing the one actually due (passing the turn
+ * without doing the current chore), or backfill a long-missed occurrence that must never be
+ * backfilled. Requiring equality to the server's own answer closes both holes while still leaving
+ * Phase 5's offline queue able to replay a completion computed at the time of a (possibly offline)
+ * action: the common case — reconnecting before the occurrence has rolled over — computes the same
+ * date the server would anyway, and the rare case where it has rolled over is exactly a missed
+ * occurrence, which should not be completable regardless of who is asking.
  *
- * The insert is idempotent two ways at once (Handoff non-negotiable 9): a replayed `id` is a
- * no-op (handled before any rotation side effect runs, so a resend never double-advances the
- * turn), and a genuine double-booking of the same occurrence by two different ids still raises
- * `23505` on `chore_completion`'s own (`chore_id`, `occurrence_date`) unique constraint, which the
- * service's global error handler already maps to 409.
+ * The insert is idempotent two ways at once: a replayed `id` is a no-op (handled before any
+ * rotation side effect runs, so a resend never double-advances the turn), and a genuine
+ * double-booking of the same occurrence by two different ids still raises `23505` on
+ * `chore_completion`'s own (`chore_id`, `occurrence_date`) unique constraint, which the service's
+ * global error handler already maps to 409.
  */
 export async function completeChore(
   db: Kysely<Database>,
@@ -460,13 +457,12 @@ export async function completeChore(
 }
 
 /**
- * Undoes the most recent completion by deleting it (PRD, "Recurrence is anchored and derived on
- * read": "Deleting the most recent completion reopens its occurrence and moves the rotation back
- * one turn, since both are derived from the remaining completions"). "Most recent" means the
- * greatest `occurrence_date`: that column is unique per chore and strictly increasing with each
- * successive completion (see `toChore` above), so there is no separate `completed_at` tie-break to
- * consider. Also deletes that occurrence's unsent `chore_rotation` row, if any — a push already
- * sent stays sent (PRD, same section; Technical Architecture, "API surface" › "Chores").
+ * Undoes the most recent completion by deleting it, which reopens its occurrence and moves the
+ * rotation back one turn, since both are derived from the remaining completions. "Most recent"
+ * means the greatest `occurrence_date`: that column is unique per chore and strictly increasing
+ * with each successive completion (see `toChore` above), so there is no separate `completed_at`
+ * tie-break to consider. Also deletes that occurrence's unsent `chore_rotation` row, if any — a
+ * push already sent stays sent.
  */
 export async function deleteChoreCompletion(
   db: Kysely<Database>,

@@ -14,8 +14,8 @@ function suggestion(title: string, readinessPercent: number): Suggestion {
 }
 
 /*
- * Ranking (Seed Data, "Recipes": "Rivera Family... Both score 0%... ranked by title"). Pure and
- * exported so the tiebreak rule is table-tested without a database.
+ * Ranking (the Rivera Family recipes both score 0% and are ranked by title). Pure and exported so
+ * the tiebreak rule is table-tested without a database.
  */
 describe('rankByReadiness', () => {
   it('orders readiness descending', () => {

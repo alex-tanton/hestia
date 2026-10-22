@@ -9,7 +9,7 @@ import {
   serveAfterFailure,
 } from './cache.js';
 
-/** Technical Architecture, "Caching and storage": the TTL table and the stale-fallback rule. */
+/** The TTL table and the stale-fallback rule. */
 
 const NOW = new Date('2026-09-25T12:00:00.000Z');
 const ago = (ms: number): Date => new Date(NOW.getTime() - ms);
@@ -39,7 +39,7 @@ describe('the TTL table', () => {
   });
 });
 
-describe('stale beats empty (non-negotiable 18)', () => {
+describe('stale beats empty', () => {
   it('serves any entry after a failed fetch, however old', () => {
     const entry = { value: ['deal'], fetchedAt: ago(40 * 24 * HOUR) };
     expect(serveAfterFailure(entry)).toBe(entry);
