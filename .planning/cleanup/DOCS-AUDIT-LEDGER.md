@@ -55,7 +55,7 @@ maps-misses-before=182 (of 1270 tokens checked)
 | 5 | docs/file-map.md:18 | the layout row for `scripts/` | same listing | fixed: mentions the CI image pre-pull and the harness tests | 6880c28 |
 | research-1 | docs/file-map.md:74 (and the maps and CLAUDE.md copies) | `hearth-admin` is a built executable | see row 1 | fixed in docs/file-map.md; the map and CLAUDE.md copies move in 05-12 | 6880c28 |
 | research-4 | docs/file-map.md scripts, test and routes tables | omitted files | see rows 2 to 4 | fixed | 6880c28 |
-| research-5 | docs/file-map.md:21 and the CI row at :186 | `.github/` without the composite action | PR A's `.github/actions/setup` is on `main` | deferred to 05-12 (plan order: the CI rows are edited with the maps) | - |
+| research-5 | docs/file-map.md:21 and the CI row at :189 | `.github/` without the composite action | `.github/actions/setup/action.yml` (pnpm/action-setup@v6, actions/setup-node@v7 with `.nvmrc` and the pnpm cache, `pnpm install --frozen-lockfile`); `grep -c 'uses: ./.github/actions/setup' .github/workflows/ci.yml` is 6 | fixed: both rows name the composite action in `.github/actions/setup/` that the six CI jobs call after checkout | 5cfa35d |
 | 6 | docs/file-map.md:140-143 | `tests/`, `fixtures/`, `support/`, `setup/` | checker reports `ambiguous` (several tracked directories share each name); the e2e table is scoped by its section heading and `ls e2e` shows all four | allowed: subfolders of `e2e/`, scoped by the heading | - |
 | 7 | docs/file-map.md:156 and others | `.env` | `git ls-files .env` is empty; only `.env.example` is tracked (`.gitignore` has `.env*` and `!.env.example`) | allowed: the real configuration file, never committed | - |
 | 8 | docs/file-map.md:191 | `.mjs` | bare extension in prose, every file in `test/` has it | allowed | - |
@@ -108,6 +108,23 @@ maps-misses-before=182 (of 1270 tokens checked)
 | 51 | README.md:126-131 | the owner CLI "is a bin in the service image" and runs from the built bundle | `apps/service/bin/hearth-admin` is a `#!/bin/sh` wrapper over `dist/cli.js` (row 1) | fixed: says it is a shell wrapper around the built `dist/cli.js` | 158fd52 |
 | 52 | README.md (commands) | `pnpm db:seed`, `pnpm db:types`, `pnpm test:sweep`, `pnpm knip`, `pnpm --filter @hearth/service test:coverage`, the E2E variables, `HEARTH_SEED_*`, the deploy and restore steps | claims checker over README (0 misses with the allowlist); `apps/service/package.json` scripts; `supabase/seed/seed-users.ts:11-13`; `e2e/setup/stack.ts:165` (`ready at`); steps match `docs/deploy.md` (rows 19 to 24) | holds | - |
 | 53 | docs/branding.md:130, docs/design.md:119 and :231 | checker misses `components/icons`, `Dialog.tsx`, `lg:pl-56` | each is a negation or a Tailwind class | allowed: reasons in `docs-claims-allow.tsv` | - |
+| 54 | docs/file-map.md:21 | `.github/` row | `.github/actions/setup/action.yml` exists on `main` (PR A) | fixed: names the composite setup action | 5cfa35d |
+| 55 | docs/file-map.md:73 | service `test` row | `ls apps/service/src/test`: `stack-hooks.ts` (`registerStackHooks`, `expectStatus`), `job-logger.ts` (`recordingJobLogger`) | fixed: names both helpers | 5cfa35d |
+| 56 | docs/file-map.md:46 | web `test` row | `apps/web/src/test/browser.ts` exports `setOnline`, `stubCoarsePointer`, `registerBrowserStubs`, `registerHouseholdClock`, `openMenu` | fixed: names `browser.ts` and what it stubs | 5cfa35d |
+| 57 | docs/testing.md (Integration tests, after the isolation patterns) | how route-level files start the stack | `apps/service/src/test/stack-hooks.ts`: `beforeAll` starts the stack, `beforeEach` builds an app, `afterAll` closes it; `expectStatus` asserts the status with the body as message; `job-logger.ts` collects job log lines; 8 test files call `registerStackHooks()`, others keep their own hooks | fixed: new paragraph, worded as "many" files | 5cfa35d |
+| 58 | docs/testing.md (Frontend/component tests, after Tools) | shared web test helpers | `apps/web/src/test/browser.ts`: `setOnline` spies `navigator.onLine` and sets TanStack's `onlineManager`; `stubCoarsePointer` stubs `matchMedia`; `registerHouseholdClock(instant)` fakes only `Date` | fixed: new "Shared helpers" paragraph | 5cfa35d |
+| 59 | README.md:5, :121 and `.env.example:9`, `docker/docker-compose.yml:275` pointers | README citations of sections and docs | README headings `Deployment` (line 145), `Restore test (quarterly)` (243) and `Restore production` (282); `docs/testing.md` has the isolation text; `git grep -nE -f cit-rx.txt -- README.md docs CONTRIBUTING.md` prints nothing | holds for `README, "Deployment"` and `docs/testing.md`; `docker/docker-compose.yml:275` says `README, "Restore"` but no heading is exactly that (two start with `Restore`), reported for the owner, not edited (code file) | - |
+
+## Final check (05-12 Task 1)
+
+pr-d-base=3a561ade0b55a7b2078ed5d13d73586e0bb5e5fa
+docs-tip=5cfa35dbf79e2d1df4452a719b72768ff9f60096
+checked-final=591
+misses-final=0
+
+Final run over `docs/*.md README.md` at the docs tip, allowlist as committed (no allowlist change in 05-12 Task 1). WB was
+synced with `origin/main` past PR C (`pr-c-merged=9fdc9c9`) by one merge (conflicts only under `.planning/**`, taken from
+WB); `docs/sync-specs` then merged WB.
 
 ## Behavioral sample
 

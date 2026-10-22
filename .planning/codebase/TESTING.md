@@ -1,87 +1,93 @@
 ---
-last_mapped_commit: 431e646ab110c804b7229cecc9e151d343790b3a
-last_mapped_at: 2026-10-21
+last_mapped_commit: 283f15dbb2b5ed8ded0ba14e04d5015e5d0d367c
+last_mapped_at: 2026-10-22
 ---
 # Testing Patterns
 
-**Analysis Date:** 2026-10-21
+**Analysis Date:** 2026-10-22
 
 ## Test Framework
 
 **Runner:**
-- Vitest 5.0.1 in every workspace that has unit tests: `apps/service`, `apps/web`, `packages/recurrence`, `packages/matching`, `packages/shared`.
-- Configs: `apps/service/vitest.config.ts` (unit), `apps/service/vitest.integration.config.ts` (integration), `apps/service/vitest.coverage.config.ts` (coverage), `apps/web/vite.config.ts` (the `test` block, jsdom), and each package's `vitest.config.ts`.
-- Node's built-in runner (`node --test`) is used for nine harness and E2E-support files, with no extra dependencies. See the list below.
-- Assertion library: Vitest's built-in `expect`. Component tests add `@testing-library/react` 16.3.3, `@testing-library/dom` 10.4.2, `@testing-library/jest-dom` 7.0.1 and `@testing-library/user-event` 14.6.7.
-- DOM environment for web tests: jsdom 30.1.0 (`apps/web/vite.config.ts`, `environment: 'jsdom'`).
-- End-to-end: `@playwright/test` 1.63.0 with `@axe-core/playwright` 4.13.0 (`e2e/playwright.config.ts`).
+- Vitest 5.0.1 (pinned in `package.json`, `apps/service/package.json`, `apps/web/package.json`) for unit, component, and integration tests.
+- Node's built-in test runner (`node --test`) for the harness tests (see Test Types).
+- Playwright (`@playwright/test`) for end-to-end tests: `e2e/playwright.config.ts`.
+- Config files:
+  - `apps/service/vitest.config.ts`: unit tests (`src/**/*.test.ts`, excludes `*.integration.test.ts`).
+  - `apps/service/vitest.integration.config.ts`: integration tests (`src/**/*.integration.test.ts`).
+  - `apps/service/vitest.coverage.config.ts`: unit and integration together, with coverage thresholds.
+  - `apps/web/vite.config.ts` (a `test:` block): jsdom environment, `src/**/*.test.{ts,tsx}`.
+  - `packages/matching/vitest.config.ts`, `packages/recurrence/vitest.config.ts`, `packages/shared/vitest.config.ts`.
 
-**Run commands:**
+**Assertion and component libraries:**
+- Assertions: Vitest `expect`. `toEqual` and `toBe` dominate (about 1,400 uses in test files).
+- DOM matchers: `@testing-library/jest-dom/vitest`, loaded in `apps/web/src/test-setup.ts`.
+- Component queries and events: `@testing-library/react` 16.3.3 and `@testing-library/user-event` (used in 27 web test files, with `userEvent.setup()`).
+- Accessibility: `@axe-core/playwright` in E2E (`e2e/support/axe.ts`).
+
+**Run commands (from root `package.json` and the per-package scripts):**
 
 ```bash
-pnpm test                                # Harness tests, then every workspace's unit + component tests
-pnpm test:harness                        # Only the node --test harness files (package.json)
-pnpm --filter @hearth/service test       # Service unit tests (excludes *.integration.test.ts)
-pnpm --filter @hearth/web test           # Web unit and component tests
-pnpm --filter @hearth/recurrence test    # One package
-pnpm --filter @hearth/service test:coverage   # Service coverage, enforced in CI
-pnpm --filter @hearth/web test:coverage       # Web coverage, enforced thresholds
-pnpm test:integration                    # Every workspace's test:integration (needs supabase start)
-pnpm test:sweep                          # Unit suite across the fixed date and TZ matrix
-pnpm test:sweep:integration              # Service integration suite across zones
-pnpm test:e2e                            # Playwright against the Docker Compose stack (~9 min)
+pnpm test                               # harness tests, then every workspace's unit and component tests
+pnpm test:harness                       # only the harness tests (node --test)
+pnpm -r test                            # every workspace's unit tests, without the harness
+pnpm --filter @hearth/service test      # service unit tests (no database)
+pnpm --filter @hearth/web test          # web component and unit tests (jsdom)
+pnpm test:integration                   # integration tests in every workspace that defines one (needs supabase start)
+pnpm --filter @hearth/service test:coverage   # unit and integration together, enforces thresholds (CI test-integration job)
+pnpm --filter @hearth/web test:coverage       # web coverage, enforces thresholds
+pnpm test:sweep                         # unit suite across the date and time-zone matrix
+pnpm test:sweep:integration             # integration suite across the zone matrix
+pnpm test:e2e                           # Playwright against the Docker Compose stack
 ```
 
-Watch mode: run `vitest` directly inside a workspace (`pnpm --filter @hearth/web exec vitest`). No script alias is defined.
-
-**Node built-in test files** (`node --test`):
-- `e2e/support/run-identity.test.ts`, `e2e/support/clock.test.ts`
-- `test/clock-setup.test.mjs`, `test/global-tz.test.mjs`, `test/eslint-clock-ban.test.mjs`, `test/eslint-service-role-fence.test.mjs`
-- `scripts/test-sweep.test.mjs`, `scripts/deploy.test.mjs`, `scripts/ci-prepull-images.test.mjs`
+**Coverage thresholds (verified in config):**
+- Web (`apps/web/vite.config.ts`): statements 82, branches 78, functions 74, lines 84.
+- Service (`apps/service/vitest.coverage.config.ts`): thresholds are set in that file; read it for current numbers. Coverage covers `src/**/*.ts` minus tests, `src/main.ts`, `src/db/types.ts`, `src/test/**`, and a few build-time or type-only files.
 
 ## Test File Organization
 
 **Location:**
-- Co-located with the module under test, in the same `src/` directory. Examples: `packages/recurrence/src/bills.test.ts` next to `bills.ts`, `apps/service/src/services/bills.test.ts` next to `services/bills.ts`, `apps/web/src/components/ui/Toast.test.tsx` next to `Toast.tsx`.
-- Integration tests sit beside the code they exercise in `apps/service/src/`, with the suffix `.integration.test.ts`. Examples: `apps/service/src/bills.integration.test.ts`, `apps/service/src/db/rls-isolation.integration.test.ts`, `apps/service/src/db/membership.integration.test.ts`. Twenty such files exist in `apps/service`.
-- Shared test helpers live in `test/` directories inside each app:
-  - `apps/service/src/test/`: `fake-app.ts`, `integration-db.ts`, `service-stack.ts`, `world.ts`, `fixture-deal-source.ts`, `push-double.ts`, `zone-dates.ts`
-  - `apps/web/src/test/`: `harness.tsx`, `fixtures.ts`, `bills-fixtures.ts`, `chore-fixtures.ts`, `deal-fixtures.ts`, `list-fixtures.ts`, `meal-fixtures.ts`, `push-double.ts`
-  - `apps/web/src/test-setup.ts` is the jsdom setup file.
-- Top-level harness: `test/clock-setup.mjs`, `test/global-tz.mjs` (setup and global setup loaded by every unit config).
+- Co-located with the module under test, in the same `src/` directory. Verified examples: `packages/recurrence/src/occurrence.test.ts` next to `occurrence.ts`, `packages/matching/src/matcher.test.ts`, `apps/service/src/deals/money.test.ts`, `apps/web/src/lib/money.test.ts`, `apps/service/src/services/bills.test.ts`.
+- Integration tests are co-located too, as `<name>.integration.test.ts` (20 files). Examples: `apps/service/src/realtime.integration.test.ts`, `apps/service/src/bills.integration.test.ts`, `apps/service/src/recipes.integration.test.ts`.
+- Shared test helpers sit in `test/` folders, not beside production code:
+  - `apps/service/src/test/`: `fake-app.ts`, `integration-db.ts`, `service-stack.ts`, `stack-hooks.ts`, `world.ts`, `zone-dates.ts` (plus `zone-dates.test.ts`), `push-double.ts`, `fixture-deal-source.ts`, `job-logger.ts`.
+  - `apps/web/src/test/`: `harness.tsx`, `fixtures.ts`, `bills-fixtures.ts`, `chore-fixtures.ts`, `deal-fixtures.ts`, `list-fixtures.ts`, `meal-fixtures.ts`, `browser.ts`, `push-double.ts`.
+  - `apps/web/src/test-setup.ts`: the web setup file, listed as a Vitest `setupFiles` entry.
+  - `e2e/support/`: `api.ts`, `app.ts`, `axe.ts`, `bills.ts`, `clock.ts`, `compose.ts`, `db.ts`, `env.ts`, `logs.ts`, `push.ts`, `raw-http.ts`, `run-identity.ts`.
+  - `test/` at the repo root: `clock-setup.mjs`, `global-tz.mjs`, `test-now.mjs`, and the harness tests.
+- E2E specs are in `e2e/tests/`, numbered `NN-<journey>.spec.ts` (19 specs, from `01-signup-and-first-household.spec.ts` to `20-remove-member.spec.ts`; there is no `04` spec).
 
 **Naming:**
-- `<module>.test.ts(x)` for unit and component tests.
-- `<module>.integration.test.ts` for real-Postgres tests.
-- Harness tests are `<name>.test.mjs` under `test/` and `scripts/`.
+- Unit and component tests: `<name>.test.ts` or `<name>.test.tsx`.
+- Integration tests: `<name>.integration.test.ts`.
+- E2E: `NN-<journey>.spec.ts`.
+- Harness tests: `<name>.test.mjs` under `test/` and `scripts/`.
 
 **Structure:**
 
 ```
-apps/service/src/
-├── services/bills.ts
-├── services/bills.test.ts              # pure logic, unit
-├── bills.integration.test.ts           # real Postgres via supabase start
-├── app.test.ts                         # buildApp + inject(), no DB
-└── test/fake-app.ts                    # shared unit-test app factory
-apps/web/src/
-├── components/ui/Toast.tsx
-├── components/ui/Toast.test.tsx        # component test, jsdom
-└── test/harness.tsx                    # renderScreen, createFetchStub, problemBody
+packages/<pkg>/src/<module>.ts
+packages/<pkg>/src/<module>.test.ts                       # unit, pure logic
+apps/service/src/<area>/<module>.ts
+apps/service/src/<area>/<module>.test.ts                  # unit, in-memory app or pure logic
+apps/service/src/<area>/<feature>.integration.test.ts     # against supabase start
+apps/web/src/<area>/<component>.tsx
+apps/web/src/<area>/<component>.test.tsx                  # jsdom, Testing Library
 ```
 
 ## Test Structure
 
-**Suite organization:**
+**Suite organization:** `describe` blocks named after the function under test, with `it` clauses that read as behavior. Abridged from `apps/service/src/services/bills.test.ts`:
 
-```ts
+```typescript
 import { describe, expect, it } from 'vitest';
 import { ProblemError } from '../problem.js';
 import { billOccurrence, billScope, planBillMove } from './bills.js';
 
 /*
- * Pure logic only (Engineering Practices, "Testing" ...); everything that touches Postgres
- * is covered by bills.integration.test.ts instead.
+ * Pure logic only; everything that touches Postgres (RLS, the payment log, the job) is covered by
+ * bills.integration.test.ts and log-autopay.integration.test.ts instead.
  */
 
 describe('billOccurrence', () => {
@@ -91,204 +97,251 @@ describe('billOccurrence', () => {
     const state = billOccurrence({ ...monthly, today: '2026-01-01' }, new Set());
     expect(state).toEqual({ date: '2026-01-01', overdue: false });
   });
+
+  describe('a one-time bill (null recurrence_unit)', () => {
+    // a nested describe groups a distinct input shape
+  });
 });
 ```
 
-Source: `apps/service/src/services/bills.test.ts`.
-
-**Patterns:**
-- Group assertions under `describe` blocks named after the function under test (`describe('billOccurrence', ...)`).
-- Name `it` blocks as behavior sentences ("is overdue once its date is before today and still unresolved").
-- Use `it.each` for tables of inputs against the same rule. 39 test files use `it.each` or `test.each`. The recurrence, price-parsing and matching suites are the most exhaustive.
-- A module-level comment names the spec sections the suite covers (`apps/service/src/services/bills.test.ts`).
+**Table-driven cases:** `it.each` appears on about 83 lines across the unit suites. Use it when one rule is checked against many inputs. `packages/recurrence/src/occurrence.test.ts` and `apps/service/src/deals/money.test.ts` are reference examples. Matching cases are tables too (`packages/matching/src/normalize.test.ts` pairs a real product string with the ingredient it should match).
 
 **Setup and teardown:**
-- Unit tests usually need none; the clock is pinned globally.
-- Apps that build a Fastify instance track it and close it in `afterEach`:
+- Pure unit tests need none.
+- Component tests: `cleanup()` runs in `afterEach` from `apps/web/src/test-setup.ts`. Do not add a second cleanup.
+- Integration tests: `registerStackHooks` from `apps/service/src/test/stack-hooks.ts` wires the shared `beforeAll`/`afterAll` for the stack.
+- Fake timers and spies are installed in the test body or `beforeEach`, and restored in `afterEach`.
 
-```ts
-const apps: FastifyInstance[] = [];
+**Focused and skipped tests:** No `.skip`, `.only`, `it.todo`, or `test.todo` appear in any test file (verified by search). Do not commit one.
 
-async function makeApp(pingDatabase: () => Promise<void>): Promise<FastifyInstance> {
-  const app = await makeTestApp({ pingDatabase });
-  apps.push(app);
-  return app;
-}
-
-afterEach(async () => {
-  await Promise.all(apps.splice(0).map((app) => app.close()));
-});
-```
-
-Source: `apps/service/src/app.test.ts`.
-
-- Web tests set and restore global state in `beforeEach` / `afterEach`, for example `configure({ asyncUtilTimeout: 5000 })` at module scope and `onlineManager` toggles (`apps/web/src/screens/chores/household-timezone.test.tsx`).
-- Time-zone-dependent web tests pin the zone in a `vi.hoisted` block and restore it in `afterAll`, as `apps/web/src/screens/deals/favorites.test.tsx` does with `America/New_York`.
-
-**Assertion style:**
-- `expect(x).toEqual({...})` for objects, `toBe` for primitives and status codes.
-- `expect(response.statusCode).toBe(200)` then `expect(response.json()).toEqual(...)` for HTTP tests.
-- Throw assertions use `ProblemError` for domain errors (`apps/service/src/services/bills.test.ts`).
-- Testing Library queries in component tests: `screen`, `within`, role-based queries, and `user-event` for interaction.
-
-## Dates and Time
-
-This repo treats the clock and the time zone as controlled inputs. Read `docs/testing.md` ("Dates and time zones") before writing time-dependent tests.
-
-- **Unit and component tests**: `Date` is pinned by `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, default `2026-10-14T12:00:00.000Z`. The pin is re-applied before each test and restored after it. `vi.useRealTimers()` does not unpin `Date`.
-- **Overrides**: `vi.setSystemTime` or `vi.useFakeTimers` in a test body or `beforeEach` (ends with that test); at module scope or in `beforeAll` (lasts for the suite, removed in `afterAll` with `vi.useRealTimers()`).
-- **Elapsed time**: use `performance.now()` or fake timers. `performance.now()` is allowed by the lint rules.
-- **Zone**: never set `TZ` by hand. `test/global-tz.mjs` validates `TZ` as an IANA zone and fails the run on bad values. Unset `TZ` does nothing. `e2e/playwright.config.ts` pins `America/New_York` and `en-US`.
-- **Forbidden in tests and test helpers**: bare `new Date()`, `Date.now()`, `Intl.DateTimeFormat(...).format()` without an instant. The ESLint `no-restricted-syntax` selectors enforce this. Pass an explicit instant, or call `currentInstant()` from `apps/service/src/test/zone-dates.ts`.
-- **Integration tests** run on the real clock because Postgres `now()` cannot be pinned. They take dates from `apps/service/src/test/zone-dates.ts`: `currentInstant`, `dateInZone`, `householdDate`, `addDays`, `daysBetween`.
-- **Sweep**: `scripts/test-sweep.mjs` runs the unit suite once per cell of a fixed `HEARTH_TEST_NOW` × `TZ` matrix, each cell in its own process. `pnpm test:sweep:integration` runs the service integration suite per zone. An `--only` filter that selects no file exits 2 before running.
+**Snapshots:** None. `toMatchSnapshot` and `toMatchInlineSnapshot` do not appear in test files (verified). Assertions are explicit.
 
 ## Mocking
 
-**Framework:** Vitest's `vi` (`vi.mock`, `vi.fn`, `vi.hoisted`, `vi.setSystemTime`, `vi.useFakeTimers`).
+**Framework:** Vitest's `vi` (`vi.fn`, `vi.mock`, `vi.mocked`, `vi.hoisted`, `vi.useFakeTimers`, `vi.setSystemTime`).
 
-**Usage is sparing.** Only four test files call `vi.mock(`. The codebase prefers injected dependencies and hand-written doubles:
+**Where `vi.mock` is used:** Module-level mocks appear in 5 files, all in `apps/web`. The main case is `apps/web/src/sw.test.ts`, which mocks each `workbox-*` package it imports:
 
-```ts
-// apps/service/src/jobs/scheduler-stop.test.ts
-vi.mock('./advisory-lock.js', () => ({
-  // ...
+```typescript
+vi.mock('workbox-precaching', () => ({ /* stub the exports the service worker imports */ }));
+```
+
+The web setup file mocks the PWA virtual module for every component test (`apps/web/src/test-setup.ts`):
+
+```typescript
+vi.mock('virtual:pwa-register/react', () => ({
+  useRegisterSW: () => ({
+    needRefresh: [false, () => undefined],
+    offlineReady: [false, () => undefined],
+    updateServiceWorker: () => Promise.resolve(),
+  }),
 }));
 ```
 
-Source: `apps/service/src/jobs/scheduler-stop.test.ts`.
+**Preferred seam: typed stubs through interfaces, not module mocks.** The codebase injects dependencies through interfaces, so tests substitute typed stubs:
+- `createAuthStub`, `createFetchStub`, `stubFetch`, `createRealtimeStub` in `apps/web/src/test/harness.tsx`. The auth stub implements `AuthClient`; the fetch stub maps URL keys to `StubHandler` functions.
+- `createPushDouble` in `apps/web/src/test/push-double.ts` for the web `PushPort`.
+- `RecordingPushTransport` (re-exported by `apps/service/src/test/push-double.ts` from `apps/service/src/push/recording-transport.ts`) for service push delivery.
+- `fixtureDealSource` in `apps/service/src/test/fixture-deal-source.ts` for the deal source.
+- `emptyDb()` in `apps/service/src/test/fake-app.ts`: a Kysely instance on `DummyDriver` that answers every query with no rows. No test reaches a real database through it.
 
-**Preferred: typed doubles and injected ports.**
-- Service: `apps/service/src/test/fake-app.ts` builds the real Fastify app with fake dependencies. The database is a Kysely `DummyDriver`, with no Postgres and no GoTrue. Requests run through Fastify's `inject()`. Helpers include `signToken`, `userClaims`, `bearer`, `makeTestApp`, `TEST_JWT_SECRET`, `TEST_ORIGIN`.
-- Service: `apps/service/src/test/push-double.ts`, `apps/service/src/test/fixture-deal-source.ts` replace Web Push and Flipp.
-- Web: `apps/web/src/test/harness.tsx` provides a typed `AuthStub` (implements `AuthClient`), `createFetchStub` (replaces `fetch`), `problemBody`, and `renderScreen` (builds the real route table in a memory router with providers). Its header comment: "There is no network in a component test, and no supabase-js either."
-- Web: `apps/web/src/test/push-double.ts` replaces `PushPort`.
+**Web stub example (from `apps/web/src/test/harness.tsx`, abridged):**
 
-**Fetch stub pattern (web):** handlers are keyed by request, return `{ status, body }`, and are composed per test (`stubWith({...})` in `apps/web/src/screens/chores/household-timezone.test.tsx`).
+```typescript
+export function createAuthStub(
+  initial: AuthState = { status: 'signed-in', userId: ALEX_ID },
+): AuthStub {
+  let state = initial;
+  const listeners = new Set<(next: AuthState) => void>();
+  // ... getState, subscribe, and vi.fn() spies for signIn, signUp, getAccessToken
+}
+```
 
 **What to mock:**
-- Network (`fetch`), the Supabase auth client, realtime, and push, via the existing ports and doubles.
-- External protocols at their boundary: Flipp and recipe fetches use fixtures or doubles.
-- Time, via the pin (never via ad hoc mocks of `Date`).
+- Network: any `fetch` to the service, Supabase, Flipp, or a recipe host. Use `stubFetch` (web) or the in-memory app with `inject()` (service).
+- Browser APIs that jsdom lacks. `apps/web/src/test-setup.ts` stubs `ResizeObserver`, `window.scrollTo`, `Element.prototype.scrollIntoView`, and the pointer-capture methods.
+- Build-time virtual modules (`virtual:pwa-register/react`).
+- Push delivery and the realtime channel.
 
 **What NOT to mock:**
-- Pure domain logic (recurrence, matching, money, validation). Test it directly.
-- The Fastify app and its routing inside unit tests: use `makeTestApp` and `inject()`.
-- Database behavior. RLS, SQL, transactions and triggers are tested against real Postgres in `*.integration.test.ts` files. A fake database cannot prove a policy.
+- Pure logic in `packages/recurrence`, `packages/matching`, `packages/shared`, and the service's pure functions (`billOccurrence`, `planBillMove`). Test them directly.
+- Postgres behavior in the service. RLS, triggers, and SQL belong in integration tests against `supabase start` (`apps/service/src/test/integration-db.ts`). A mocked database here would hide the isolation boundary the product relies on.
+- The clock. Use the pinned clock (see Dates and Time Zones) instead of mocking `Date`.
 
 ## Fixtures and Factories
 
-**Web fixtures:** typed constants and builders under `apps/web/src/test/`.
-- `apps/web/src/test/fixtures.ts`: `ALEX_ID`, `OAK_STREET_ID`, `oakStreetFixture`, `oakStreetMembers`, `profileFixture`.
-- Per-domain: `bills-fixtures.ts`, `chore-fixtures.ts` (`takeOutTrashFixture`, `choreListFixture`, `returnPackageFixture`), `deal-fixtures.ts`, `list-fixtures.ts`, `meal-fixtures.ts`.
-- Test-local overrides spread the fixture: `const abroadProfile = { ...profileFixture, timezone: BROWSER_ZONE };` (`apps/web/src/screens/chores/household-timezone.test.tsx`).
+**Web fixtures:** typed constant objects shaped like the shared API types, built from the seed-data identities.
+- `apps/web/src/test/fixtures.ts` exports `ALEX_ID`, `SAM_ID`, `JORDAN_ID`, `OAK_STREET_ID`, `RIVERA_FAMILY_ID`, and typed objects such as `profileFixture: ProfileResponse`. The IDs are fixed UUIDs, so tests read like the real app.
+- Feature fixtures sit beside it: `bills-fixtures.ts`, `chore-fixtures.ts`, `deal-fixtures.ts`, `list-fixtures.ts`, `meal-fixtures.ts`.
+- Problem bodies: `problemBody(status, title, detail?)` in `apps/web/src/test/harness.tsx`.
 
-**Service fixtures:** `apps/service/src/test/world.ts` and `apps/service/src/test/service-stack.ts` build worlds of households and users for integration tests against `supabase start`. `apps/service/src/test/integration-db.ts` is the connection helper.
+**Service fixtures (integration):**
+- `apps/service/src/test/world.ts` builds two households with a row in every household-scoped table. It is the fixture the isolation suite attacks. Households are created through `create_household`, the same path the service uses; other rows are inserted directly.
+- `apps/service/src/test/service-stack.ts` exports helpers used by integration tests: `adminPool`, `as`, `household`, `signUp`, `uniqueName`, `uniquePostalCode`, and the `HouseholdFixture` and `SignedUpUser` types.
+- `apps/service/src/test/stack-hooks.ts` exports `app`, `expectStatus`, and `registerStackHooks`.
 
-**Seed data:** `supabase/seed/` (`@hearth/seed`) holds seed users and SQL, run by `pnpm db:seed` (requires `psql`).
+**Dates in fixtures:** Build calendar dates in the household's zone, not the machine's. Use `householdDate(zone, offsetDays)`, `dateInZone`, `addDays`, and `daysBetween` from `apps/service/src/test/zone-dates.ts`.
 
-**Location:**
-- Web: `apps/web/src/test/`.
-- Service: `apps/service/src/test/`.
-- Recurrence and matching: no fixture folder; tables are inline in the test file.
+**Location:** Fixtures live in the `test/` folder of each app. Production modules do not import them.
+
+## Dates and Time Zones
+
+Unit and component tests run with `Date` pinned, so results do not depend on the day they run or the machine's zone.
+
+- **Pinned instant:** `test/clock-setup.mjs` pins `Date` to `HEARTH_TEST_NOW`, or to `2026-10-14T12:00:00.000Z` (a Wednesday) when unset. The value must be an ISO-8601 instant with `Z` or an offset. The file is a `setupFiles` entry in every unit config, and it skips `*.integration.test.*` files.
+- **Overrides:** Set a different instant with `vi.setSystemTime` or `vi.useFakeTimers` in a test body or `beforeEach`. The override ends with that test. At module scope or in `beforeAll`, the override lasts for the whole scope until `afterAll` calls `vi.useRealTimers()`. After `vi.useRealTimers()` the pin is back.
+- **Real timers keep running.** The pin freezes `Date.now()` and `new Date()`, but `performance.now()` is the real clock. Use `performance.now()` to measure elapsed time, or fake timers in the test body.
+- **Time zone validation:** `test/global-tz.mjs` is a Vitest `globalSetup` in every unit and integration config. When `TZ` is set, it checks that the zone is real and that Node honors it, and fails the run before any test starts. It also validates `HEARTH_TEST_NOW`. When `TZ` is unset it changes nothing.
+- **Never set `TZ` in the shell or in a config.** Set it only through the sweep (`scripts/test-sweep.mjs`) or an `env` object passed to a spawned process.
+- **Integration tests** run on the real clock, because Postgres `now()` cannot be pinned. They read time through `currentInstant()` from `apps/service/src/test/zone-dates.ts`, the one real-clock read in that file.
+- **Text rendered in the viewer's zone:** a component test that asserts a formatted stamp pins that file's zone in a `vi.hoisted` block, restores it in `afterAll`, and keeps a literal expected string. Reference: `apps/web/src/screens/deals/favorites.test.tsx`, which uses `America/New_York`.
+
+**Sweep matrix (verified with `node scripts/test-sweep.mjs --list`):**
+
+| Unit cell | Pinned instant (UTC) | `TZ` |
+| --- | --- | --- |
+| `default` | default pin | unset |
+| `wed-tokyo` | 2026-10-14T12:00:00Z | `Asia/Tokyo` |
+| `sat-utc-fri-la` | 2026-10-17T02:30:00Z | `America/Los_Angeles` |
+| `sun-utc-mon-kiritimati` | 2026-10-18T22:30:00Z | `Pacific/Kiritimati` |
+| `newyear-pago-pago` | 2027-01-01T00:30:00Z | `Pacific/Pago_Pago` |
+| `dst-start-new-york` | 2026-03-08T07:30:00Z | `America/New_York` |
+
+| Integration cell | `TZ` |
+| --- | --- |
+| `default` | unset |
+| `la` | `America/Los_Angeles` |
+| `kiritimati` | `Pacific/Kiritimati` |
+| `pago-pago` | `Pacific/Pago_Pago` |
+| `tokyo` | `Asia/Tokyo` |
+
+**The clock lint rule.** ESLint `no-restricted-syntax` (in `eslint.config.js`) fails on real-clock reads in test files (`*.test.*`, `*.spec.*`), `e2e/**`, `apps/service/src/test/**`, `apps/web/src/test/**`, `apps/web/src/test-setup.ts`, and `test/**/*.mjs`. Banned forms include `new Date()`, `new Date(undefined)`, `Date()`, `Date.now` in any spelling, and an `Intl.DateTimeFormat` formatter called without an instant. `performance.now()` is allowed.
+- Web and package tests pass an explicit instant to the `Date` constructor. The lint message names `currentInstant()`, but no such helper exists in `apps/web` or `packages/*`.
+- Service tests use `currentInstant()` from `apps/service/src/test/zone-dates.ts`. E2E uses `currentInstant()` from `e2e/support/clock.ts`.
+- The real-clock reads that carry a next-line suppression with a reason are `apps/service/src/test/zone-dates.ts:15`, `e2e/support/clock.ts:12`, and two in `apps/service/src/deals/flipp/request-queue.test.ts` (lines 27 and 174, reading a fake-timer clock).
+
+## Integration Tests
+
+**Location:** `apps/service/src/**/*.integration.test.ts` (20 files). Example: `apps/service/src/bills.integration.test.ts`.
+
+**Database:**
+- Runs against `supabase start` with the migrations in `supabase/migrations/`. The connection string comes from `TEST_DATABASE_URL` in `apps/service/src/test/integration-db.ts`.
+- Each test runs inside a transaction that is rolled back. `withTestDb(fn)` opens it, and `rollback to savepoint` undoes statement-level work (`apps/service/src/test/integration-db.ts`).
+- Files run one at a time (`fileParallelism: false` in `apps/service/vitest.integration.config.ts` and `vitest.coverage.config.ts`), because fixtures share natural keys such as a postal code's refresh row.
+- Tests call the service through `app.inject()` (via `apps/service/src/test/stack-hooks.ts`), so RLS decides every isolation assertion.
+
+**Timeouts:** `testTimeout: 20_000` and `hookTimeout: 30_000` in `apps/service/vitest.integration.config.ts`.
+
+## E2E Tests
+
+**Framework:** Playwright, `e2e/playwright.config.ts`.
+- `testDir: './tests'`, `workers: 1`.
+- Browser context: `timezoneId: 'America/New_York'`, `locale: 'en-US'`.
+- `globalSetup` and `globalTeardown` (`e2e/global-setup.ts`, `e2e/global-teardown.ts`) build and start the Docker Compose stack (`e2e/docker-compose.e2e.yml`) from an empty database, then drop it.
+- Expected dates are computed at run time in the household's zone (`e2e/support/clock.ts`), never assuming a weekday.
+
+**Run:** `pnpm test:e2e` locally and in CI. CI runs E2E on pull requests and on `main` only. On failure, CI uploads `e2e/playwright-report/` as an artifact.
+
+## Component Tests
+
+**Setup pattern (`apps/web/src/test/harness.tsx`):**
+- `renderScreen(...)` renders a screen inside a memory router (`createMemoryRouter`). `renderApp(...)` renders the whole app.
+- `testQueryClient()` builds a `QueryClient` with `retry: false` for queries and mutations.
+- `WithQueue` supplies the offline write queue.
+
+**Interaction pattern:** `userEvent.setup()` then `await user.click(...)`, querying by role or label:
+
+```typescript
+const user = userEvent.setup();
+await user.click(screen.getByRole('button', { name: /add/i }));
+expect(await screen.findByRole('status')).toHaveTextContent(/saved/i);
+```
+
+The query and role names in that snippet are illustrative. Match the real labels in the component under test.
+
+**Accessibility:** E2E checks axe (`e2e/support/axe.ts`, journey `17-accessibility-states.spec.ts`). `eslint-plugin-jsx-a11y` (strict) runs on web source.
+
+## Common Patterns
+
+**Async waiting:** `findBy*` and `waitFor` from Testing Library. A `waitFor` loop works under the pin, because real timers keep running.
+
+**Error testing (service unit):**
+
+```typescript
+expect(() => planBillMove(/* invalid move */)).toThrow(ProblemError);
+```
+
+Assert the `ProblemError` type, and where useful its status, rather than the message text.
+
+**Error testing (route, integration):** `expectStatus(response, 403)` from `apps/service/src/test/stack-hooks.ts` checks the problem status.
+
+**Table cases:**
+
+```typescript
+it.each([
+  ['chicken breast', 'chicken broth', false],
+])('matches %s against %s as %s', (a, b, expected) => { /* ... */ });
+```
+
+This shape is illustrative. The real matching table is in `packages/matching/src/normalize.test.ts`.
+
+## Test Types
+
+**Unit tests (Vitest):** pure logic in `packages/*/src`, `apps/service/src` modules that do not touch the database, and `apps/web/src/lib`. The service unit suite also builds the real Fastify app in memory with `fake-app.ts` (for example `apps/service/src/app.test.ts` and `apps/service/src/cli.test.ts`). Nothing touches a socket or a real database.
+
+**Component tests (Vitest + jsdom):** `apps/web/src/**/*.test.tsx`, 39 files. They render real components and screens through the harness.
+
+**Integration tests (Vitest + Postgres):** 20 `*.integration.test.ts` files against `supabase start`. They cover SQL, RLS, transactions, and the route layer.
+
+**E2E tests (Playwright):** 19 journey specs in `e2e/tests/` against the full Compose stack, run in a real Chromium browser.
+
+**Harness tests (`node --test`):** seven files, run by `pnpm test:harness` (listed in the root `package.json`) before any workspace suite:
+- `test/clock-setup.test.mjs`: the clock pin, checked from inside real Vitest workers.
+- `test/global-tz.test.mjs`: the zone hook, one child process per case.
+- `scripts/test-sweep.test.mjs`: sweep argument handling and one real single-cell run.
+- `test/eslint-clock-ban.test.mjs`: the clock lint rule, against snippets with the repo's ESLint config.
+- `test/eslint-service-role-fence.test.mjs`: the `privileged/` import fence, against probe snippets.
+- `scripts/deploy.test.mjs`: the deploy script, against stub `docker`, `supabase`, and `curl` binaries.
+- `scripts/ci-prepull-images.test.mjs`: the CI image pre-pull script, against stub binaries.
+
+**Other:** `apps/service/src/kong-routes.test.ts` is a Vitest unit test that reads `docker/kong.yml` and pins the GoTrue allowlist routes.
+
+## CI
+
+Jobs are in `.github/workflows/ci.yml`. Every job runs the composite action `.github/actions/setup`, which installs pnpm (`pnpm/action-setup@v6`), then Node from `.nvmrc` with the pnpm cache (`actions/setup-node@v7`), then runs `pnpm install --frozen-lockfile`.
+
+| Job | Runs | Notes |
+| --- | --- | --- |
+| `lint` | `pnpm lint`, `pnpm format:check` | `--max-warnings=0` |
+| `typecheck` | `pnpm typecheck` | |
+| `test-unit` | `pnpm test` | Harness tests, then every workspace's unit and component tests |
+| `test-integration` | `supabase start`, then `pnpm --filter @hearth/service test:coverage` | Supabase CLI 2.117.0 via `supabase/setup-cli@v3`; coverage gate |
+| `test-e2e` | `pnpm test:e2e` | Pull requests and `main` only; pre-pulls images with `scripts/ci-prepull-images.sh` |
+| `build` | `pnpm build` | |
 
 ## Coverage
 
-**Requirements (enforced):**
-- Service: `apps/service/vitest.coverage.config.ts` enforces thresholds (statements 95, with branch, function and line floors in the same block). Measured at 96.65% statements, 85.78% branches, 98.07% functions, 98.56% lines when set, per the file's comment.
-- Web: `apps/web/vite.config.ts` enforces `statements: 82, branches: 78, functions: 74, lines: 84`, enforced by `pnpm --filter @hearth/web test:coverage`.
-- Coverage provider: `@vitest/coverage-v8` 5.0.1 (`provider: 'v8'`).
-- Exclusions: `src/main.ts`, `src/db/types.ts` (generated), `src/test/**`, and `*.test.*` files.
-
-**CI runs:**
-- `pnpm --filter @hearth/service test:coverage` in the integration job (after `supabase start`), per `.github/workflows/ci.yml`.
-- The web unit job runs `pnpm test`, which does not enforce web coverage thresholds; run `pnpm --filter @hearth/web test:coverage` locally to check them.
+**Requirements:**
+- Web: enforced thresholds (statements 82, branches 78, functions 74, lines 84), checked by `pnpm --filter @hearth/web test:coverage`.
+- Service: enforced by `apps/service/vitest.coverage.config.ts`, measured over unit and integration tests together, because many service functions are exercised only through integration tests. CI's `test-integration` job runs it.
 
 **View coverage:**
 
 ```bash
-pnpm --filter @hearth/service test:coverage   # text table plus coverage/index.html
+pnpm --filter @hearth/service test:coverage   # text report plus HTML and JSON summary
 pnpm --filter @hearth/web test:coverage
 ```
 
-Reports: `text`, `html`, `json-summary`.
+## Adding a Test: Checklist
 
-## Test Types
-
-**Unit tests (`*.test.ts`):**
-- Pure functions in `packages/recurrence`, `packages/matching`, `packages/shared`, and the service's `money.ts`, `occurrence.ts` and similar.
-- Route and app tests using `makeTestApp` and `inject()`. No socket, no database (`apps/service/src/app.test.ts`, `apps/service/src/cli.test.ts`).
-- Schema and token tests (`apps/web/src/tokens.test.ts`, `apps/web/src/sw.test.ts`).
-
-**Component tests (`*.test.tsx`, jsdom):**
-- Render real screens through `renderScreen` from `apps/web/src/test/harness.tsx`, with a stubbed fetch and auth. Examples: `apps/web/src/components/ui/primitives.test.tsx`, `apps/web/src/components/shell/shell.test.tsx`, `apps/web/src/screens/chores/household-timezone.test.tsx`.
-- Accessibility is covered by role queries and by `axe` in E2E.
-
-**Integration tests (`*.integration.test.ts`):**
-- Real Postgres from `supabase start`, run on the real clock.
-- RLS isolation and policies: `apps/service/src/db/rls-isolation.integration.test.ts`, `apps/service/src/db/policies.integration.test.ts`.
-- Membership lifecycle: `apps/service/src/db/membership.integration.test.ts`.
-- Route layer end to end against the database: `apps/service/src/api.integration.test.ts`.
-- Jobs and notifications: `apps/service/src/jobs.integration.test.ts`, `apps/service/src/dispatch-notifications.integration.test.ts`, `apps/service/src/log-autopay.integration.test.ts`.
-- Config: `apps/service/vitest.integration.config.ts` loads only `test/global-tz.mjs` (no clock pin).
-
-**E2E tests (Playwright):**
-- Directory: `e2e/`. Config: `e2e/playwright.config.ts`. Compose overlay: `e2e/docker-compose.e2e.yml`.
-- Runs a real Chromium against the full Docker stack with fixture Flipp and recipe transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`) and the push test double (`HEARTH_PUSH_TRANSPORT=test-double`).
-- Browser pinned to `America/New_York` and `en-US`.
-- Support helpers in `e2e/support/` (`clock.ts`, `run-identity.ts`).
-- Suite size per the local workaround notes: 104 tests expected to pass.
-
-**Harness tests (`node --test`):**
-- Validate the test infrastructure itself: clock pin, `TZ` hook, sweep script, the ESLint clock and service-role rules, the deploy script, and CI image pre-pull.
-
-## Common Patterns
-
-**Async testing:**
-
-```ts
-it('resolves to the saved bill', async () => {
-  const bill = await createHouseholdBill(db, householdId, userId, body);
-  expect(bill.name).toBe(body.name);
-});
-```
-
-Component tests await Testing Library queries (`await screen.findByRole(...)`) and use `configure({ asyncUtilTimeout: 5000 })` where screens load lazily.
-
-**Error testing:**
-
-```ts
-expect(() => planBillMove(current, move)).toThrow(ProblemError);
-```
-
-HTTP error tests assert both the status and the problem body:
-
-```ts
-const response = await app.inject({ method: 'GET', url: '/api/health' });
-expect(response.statusCode).toBe(503);
-expect(response.json()).toMatchObject({ status: 503 });
-```
-
-**Table-driven tests:**
-
-```ts
-it.each([
-  ['chicken breast', 'chicken broth', false],
-  // ...
-])('matches %s against %s as %s', (a, b, expected) => { /* ... */ });
-```
-
-Favor `it.each` when many inputs share one rule. Name cases that encode known false positives or real Flipp string formats.
-
-**Regression tests:** every bug fix ships with one. Put it in the file that owns the behavior, and name the `it` after the failure mode.
-
-## Test Data Rules
-
-- Use fixed dates in the pinned clock's range. Relative dates come from `addDays` or `currentInstant` (integration), never from `new Date()`.
-- Use the household's zone for calendar dates in integration tests (`dateInZone`, `householdDate`); do not compute days on the UTC or machine calendar.
-- Keep fixture IDs as named constants (`ALEX_ID`, `OAK_STREET_ID`).
-- No live network: tests substitute fixtures or doubles for Flipp, recipe fetches, GoTrue and Web Push.
+1. Put `<name>.test.ts(x)` next to the module. Use `<name>.integration.test.ts` only if the test needs Postgres.
+2. Import `describe`, `expect`, `it`, and `vi` from `vitest`.
+3. Use `it.each` for many inputs against one rule.
+4. Pass an explicit instant to `Date`, or use `currentInstant()` (service) or `householdDate()`. Do not write `new Date()` or `Date.now()`; the lint rule rejects them.
+5. Stub at the interface (`createAuthStub`, `stubFetch`, `createPushDouble`) rather than with `vi.mock`.
+6. Put shared fixtures in the app's `test/` folder, not in production code.
+7. Do not commit `.only`, `.skip`, or `it.todo`.
 
 ---
 
-*Testing analysis: 2026-10-21*
+*Testing analysis: 2026-10-22*
