@@ -5,7 +5,7 @@ import { PillarScreen } from '../PillarScreen.tsx';
 
 /**
  * These screens *are* the Lists pillar shipping, so they frame themselves with its sub-tabs
- * whatever else has shipped (Design › Staged releases).
+ * whatever else has shipped.
  */
 const WITH_LISTS: ReadonlySet<PillarId> = new Set<PillarId>([...RELEASED_PILLARS, 'lists']);
 
@@ -24,8 +24,8 @@ export interface ActiveHousehold {
 }
 
 /**
- * The active household, read from the profile like every other screen (Engineering Practices ›
- * Frontend patterns): `GET /api/users/me` is the only source of which household is active.
+ * The active household, read from the profile like every other screen: `GET /api/users/me` is
+ * the only source of which household is active.
  */
 export function useActiveHousehold(): ActiveHousehold {
   const householdId = useProfile().data?.activeHouseholdId ?? undefined;

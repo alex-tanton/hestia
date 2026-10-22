@@ -27,8 +27,8 @@ export function validityLabel(deal: Pick<Deal, 'validFrom' | 'validTo'>): string
 }
 
 /**
- * Design › Accessibility: "Deal cards announce price and discount as a sentence, not as
- * disconnected fragments." Flipp's own copy ("2/$5.00") is kept alongside the computed unit
+ * Deal cards announce price and discount as a sentence, not as disconnected fragments. Flipp's
+ * own copy ("2/$5.00") is kept alongside the computed unit
  * price, because the shelf tag reads the first way and the comparison reads the second.
  */
 export function dealSentence(deal: Deal): string {

@@ -44,7 +44,7 @@ import {
 } from './write-queue.ts';
 
 /*
- * The queue's contract (Engineering Practices › The write queue). It is TanStack Query's paused
+ * The queue's contract. It is TanStack Query's paused
  * mutations throughout — these tests never reach for a queue of their own, because there is not
  * one to reach for.
  */
@@ -580,14 +580,14 @@ describe('surviving a reload', () => {
     /*
      * `persister` (the query cache's own, passed to `PersistQueryClientProvider`) throttles its
      * saves (persist.ts, 1000ms) -- fine for the query cache, but not for a write the queue has
-     * promised survives a restart the instant it queues ("the queue survives a page reload and a
-     * browser restart; it is not in memory" -- Engineering Practices › The write queue). A restart
-     * landing inside that window would otherwise lose the write silently (Handoff non-negotiable
-     * 9). Its throttle here is set far longer than this test waits and is spent on the initial
-     * list fetch below, so if the write's flush went through this same channel -- the bug this
-     * test guards against -- it would be stuck behind that cooldown and never reach storage in
-     * time. `flushPersister` is `useFlushPersister()`'s own, unthrottled channel onto the same
-     * storage and key, uncoupled from that cooldown.
+     * promised survives a restart the instant it queues (the queue survives a page reload and a
+     * browser restart; it is not in memory). A restart
+     * landing inside that window would otherwise lose the write silently. Its throttle here is set
+     * far longer than this test waits and is spent on the initial list fetch below, so if the
+     * write's flush went through this same channel -- the bug this test guards against -- it would
+     * be stuck behind that cooldown and never reach storage in time. `flushPersister` is
+     * `useFlushPersister()`'s own, unthrottled channel onto the same storage and key, uncoupled
+     * from that cooldown.
      */
     const user = userEvent.setup();
     const storage = fakeStorage();

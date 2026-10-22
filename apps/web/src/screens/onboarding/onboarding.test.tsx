@@ -284,7 +284,7 @@ describe('joining a household', () => {
     renderScreen(<JoinHouseholdStep autoToken="a-dead-token" onJoined={() => undefined} />);
 
     // The status message gave way to the form, so focus follows rather than falling back to the
-    // document (Design › Accessibility › Focus management).
+    // document.
     expect(await screen.findByLabelText('Invite code')).toHaveFocus();
   });
 

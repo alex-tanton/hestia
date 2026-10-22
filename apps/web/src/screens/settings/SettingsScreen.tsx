@@ -10,7 +10,7 @@ import { HouseholdsSection } from './HouseholdsSection.tsx';
 import { InvitesSection } from './InvitesSection.tsx';
 import { NotificationsSection } from './NotificationsSection.tsx';
 
-/** Design › Screens › 4: Account, My Households, Invites, Household settings, Notifications, About. */
+/** Account, My Households, Invites, Household settings, Notifications, About. */
 export function SettingsScreen(): ReactElement {
   const profile = useProfile();
 

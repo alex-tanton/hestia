@@ -2,23 +2,21 @@ import { AuthError, RATE_LIMITED_MESSAGE } from '../../lib/auth/auth-client.ts';
 import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
 
 /**
- * The magic-link screens' copy and input rules (Design › Screens › 1, "Magic link
- * (flag-hidden)"; Branding › Copy patterns).
+ * The magic-link screens' copy and input rules (flag-hidden).
  *
  * Only the two magic-link screens import this module, and both sit behind routes that exist
- * only when `VITE_MAGIC_LINK_ENABLED` is `true` (Technical Architecture, "Auth configuration"),
- * so with the flag off none of these sentences are built into the app at all. `pnpm build`
- * checks that for itself.
+ * only when `VITE_MAGIC_LINK_ENABLED` is `true`, so with the flag off none of these sentences are
+ * built into the app at all. `pnpm build` checks that for itself.
  */
 
 /** Where the two screens live; the sign-in entry point and the flow between them use these. */
 export const MAGIC_LINK_PATH = '/sign-in/link';
 export const MAGIC_CODE_PATH = '/sign-in/code';
 
-/** GoTrue's `GOTRUE_MAILER_OTP_LENGTH` is 6 (Technical Architecture, "Auth configuration"). */
+/** GoTrue's `GOTRUE_MAILER_OTP_LENGTH` is 6. */
 export const CODE_LENGTH = 6;
 
-/** Design › Screens › 1: "a resend action enabled after 30s". */
+/** The resend action is enabled after 30 seconds. */
 export const RESEND_AFTER_SECONDS = 30;
 
 export const SEND_FAILED_MESSAGE = "Couldn't send a sign-in link. Try again.";

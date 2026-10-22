@@ -29,7 +29,7 @@ export interface AuthClient extends AuthPort {
 export const SIGN_IN_FAILED_MESSAGE = 'Email or password is incorrect.';
 export const RATE_LIMITED_MESSAGE = 'Too many attempts. Try again in a minute.';
 
-/** A sign-in refusal, already reduced to the sentence Design specifies for it. */
+/** A sign-in refusal, already reduced to the sentence shown for it. */
 export class AuthError extends Error {
   /**
    * The status GoTrue refused with, where the caller needs to tell refusals apart. `0` is a

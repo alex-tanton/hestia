@@ -29,11 +29,10 @@ export interface RecipeFormProps {
 }
 
 /**
- * Design › Screens › 11 and 12: the add flow (paste a link, parse, editable preview, or manual
- * entry) and the edit flow ("the same editable form as the add flow") are one component. Each mode
- * change is a view swap, so focus moves into whatever replaced the prior view rather than falling
- * back to the document (Design › Accessibility › Focus management; the same idiom as
- * `ChangePasswordForm`).
+ * The add flow (paste a link, parse, editable preview, or manual entry) and the edit flow (the
+ * same editable form as the add flow) are one component. Each mode change is a view swap, so
+ * focus moves into whatever replaced the prior view rather than falling back to the document
+ * (the same idiom as `ChangePasswordForm`).
  */
 export function RecipeForm({
   householdId,
@@ -94,12 +93,11 @@ export function RecipeForm({
       setIngredients(result.ingredients.map(fromParsedIngredient));
       setMode('edit');
     } catch {
-      // Design › Screens › 11: parse failure falls back cleanly to the manual form, prefilled
-      // with whatever could be salvaged — here, just the URL the member typed. Every fetch
-      // failure the parser reports (Technical Architecture › "Recipe fetching":
-      // invalid_url/private_address → 400, timeout → 504, too_large/http_error/network_error →
+      // Parse failure falls back cleanly to the manual form, prefilled with whatever could be
+      // salvaged — here, just the URL the member typed. Every fetch failure the parser reports
+      // (invalid_url/private_address → 400, timeout → 504, too_large/http_error/network_error →
       // 502) falls back the same way, so the reason is not distinguished further; the
-      // `needsManualEntry` banner below states it in Design's own words.
+      // `needsManualEntry` banner below states it in plain words.
       setNeedsManualEntry(true);
       setIsIncomplete(false);
       setSourceUrl(url.trim());

@@ -9,7 +9,7 @@ import { useNotificationTarget } from './notification-target.ts';
 
 /*
  * A tap switches the active household first and then routes to the screen the notification is
- * about (PRD, "Notifications" › "Rules" › "Deep links").
+ * about.
  */
 
 function TargetProbe(): null {

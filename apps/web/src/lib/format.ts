@@ -63,7 +63,7 @@ export function formatCents(cents: number): string {
   return MONEY.format(cents / 100);
 }
 
-/** A price with its unit, as Design writes it: "$2.49/lb", "$3.99". */
+/** A price with its unit, as the app writes it: "$2.49/lb", "$3.99". */
 export function formatPrice(cents: number, unit: PriceUnit): string {
   return unit === 'each' ? formatCents(cents) : `${formatCents(cents)}/${unit}`;
 }

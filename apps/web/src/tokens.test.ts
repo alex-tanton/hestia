@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 const css = readFileSync(join(process.cwd(), 'src/index.css'), 'utf8');
 
 /**
- * Verifies the token file against Branding › Contrast requirements in both themes, so a token
+ * Verifies the token file against the contrast requirements in both themes, so a token
  * edit that breaks WCAG AA fails here rather than in an axe run.
  */
 const darkStart = css.indexOf('@media (prefers-color-scheme: dark)');

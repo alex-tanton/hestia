@@ -19,9 +19,9 @@ export interface AddToListProps {
 }
 
 /**
- * Design › `DealCard`: the add-to-list action. One list adds straight away; several open the list
- * picker the week planner's "Add missing to list" uses, since that is the specified pattern for
- * the same choice (Design › Screens › 10).
+ * The deal card's add-to-list action. One list adds straight away; several open the list
+ * picker the week planner's "Add missing to list" uses, since that is the established pattern for
+ * the same choice.
  *
  * Only the deal's id is ever sent — the service takes the price snapshot from the `deal` row.
  */

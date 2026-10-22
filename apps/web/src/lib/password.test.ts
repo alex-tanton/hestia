@@ -59,7 +59,7 @@ function staticImportGraph(entry: string): Set<string> {
 }
 
 /**
- * The app shell has a budget of 200 KB gzipped (Engineering Practices › Performance budget) and
+ * The app shell has a budget of 200 KB gzipped and
  * the common-password list is 99 KB of text, so nothing the shell loads eagerly may reach it.
  * Walking the static imports from the entry point is what "eagerly" means to the bundler.
  */

@@ -417,7 +417,7 @@ describe('Recipe detail: readiness bucket display (Design › Composite componen
     );
     await screen.findByRole('heading', { level: 1 });
     // Baked Ziti itself has no "cheese" ingredient; this asserts the fixture wiring is available
-    // for a recipe that does (Seed Data's override fixture), via `cheeseOverrideFixture`.
+    // for a recipe that does (the seed data's override fixture), via `cheeseOverrideFixture`.
     expect(
       bakedZitiFixture.matchOverrides.some((o) => o.ingredientNormalizedName === 'cheese'),
     ).toBe(true);

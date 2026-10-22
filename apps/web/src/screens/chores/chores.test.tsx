@@ -54,9 +54,9 @@ import { ChoresListScreen } from './ChoresListScreen.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * Chores (Design › Screens › 17). Dates come from Seed Data's "today" (a Sunday), so the fake
- * clock is pinned to noon in New York that day: every "overdue", "today", and "this week" in the
- * assertions is read against the same calendar the fixtures were written for.
+ * Chores. Dates come from the seed data's "today" (a Sunday), so the fake clock is pinned to
+ * noon in New York that day: every "overdue", "today", and "this week" in the assertions is read
+ * against the same calendar the fixtures were written for.
  */
 
 const PROFILE: StubHandler = () => ({ status: 200, body: profileFixture });
@@ -137,7 +137,7 @@ function groupOf(heading: string): string[] {
 }
 
 beforeEach(() => {
-  // Pin "today" to Seed Data's Sunday, noon in New York; timers keep running for the screens.
+  // Pin "today" to the seed data's Sunday, noon in New York; timers keep running for the screens.
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-09-27T16:00:00.000Z'));
   setOnline(true);

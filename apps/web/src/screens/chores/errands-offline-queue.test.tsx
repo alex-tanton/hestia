@@ -22,8 +22,8 @@ import { createFetchStub, renderScreen, type StubHandler, WithQueue } from '../.
 import { ErrandsListScreen } from './ErrandsListScreen.tsx';
 
 /*
- * Marking an errand done as a queued write (Requirements, "Offline behavior"). Reopening stays
- * online-only, and the errand's done time is the moment it was marked.
+ * Marking an errand done as a queued write. Reopening stays online-only, and the errand's done time
+ * is the moment it was marked.
  */
 
 configure({ asyncUtilTimeout: 5000 });

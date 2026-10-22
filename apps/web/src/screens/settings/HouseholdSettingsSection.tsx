@@ -18,7 +18,7 @@ import { useOnlineStatus } from '../../lib/use-online-status.ts';
 import { FavoriteStores } from '../deals/FavoriteStores.tsx';
 import { ReadOnlyValue, SettingsSection } from './SettingsSection.tsx';
 
-/** US zones only, which is what v1 assumes (Requirements, "Locale"). */
+/** US zones only, which is what v1 assumes. */
 const US_TIMEZONES = [
   'America/New_York',
   'America/Chicago',
@@ -125,9 +125,9 @@ export interface HouseholdSettingsSectionProps {
 }
 
 /**
- * Design › Screens › 4, "Household settings" for the active household. Name, postal code, and
- * timezone are the admin's to change and read-only for everyone else (Requirements,
- * "Permissions"); the favorite stores below are editable by any member.
+ * Household settings for the active household. Name, postal code, and
+ * timezone are the admin's to change and read-only for everyone else; the favorite stores below are
+ * editable by any member.
  */
 export function HouseholdSettingsSection({
   householdId,
@@ -160,7 +160,7 @@ export function HouseholdSettingsSection({
               </p>
             </>
           ))}
-        {/* Favorite stores are editable by any member, not only the admin (Design › Screens › 4). */}
+        {/* Favorite stores are editable by any member, not only the admin. */}
         <SectionProvider section="lists" className="flex flex-col gap-3">
           <h3 className="text-h3 text-primary">Favorite stores</h3>
           <FavoriteStores

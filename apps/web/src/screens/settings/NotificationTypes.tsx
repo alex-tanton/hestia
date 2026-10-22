@@ -58,11 +58,10 @@ function deviceNoteFor(
 }
 
 /**
- * Settings › Notifications, per type (Design › Screens › 4; PRD, "Notifications"). Push is asked for
- * only once a type is turned on, never on load. A denied browser is explained and never prompted
- * again; a dismissed prompt is asked again on the next type-on. Toggles save as they are switched
- * and cannot be queued, so offline they are disabled with the reason beside them (Design › Offline
- * rules).
+ * Settings › Notifications, per type. Push is asked for only once a type is turned on, never on
+ * load. A denied browser is explained and never prompted again; a dismissed prompt is asked again
+ * on the next type-on. Toggles save as they are switched and cannot be queued, so offline they are
+ * disabled with the reason beside them.
  */
 export function NotificationTypes({ profile }: { profile: ProfileResponse }): ReactElement {
   const headingId = useId();
@@ -109,7 +108,7 @@ export function NotificationTypes({ profile }: { profile: ProfileResponse }): Re
       setStatus(SAVE_ERROR_MESSAGE);
       return;
     }
-    // The prompt comes only now, after the preference is saved (Engineering Practices › Install).
+    // The prompt comes only now, after the preference is saved.
     if (enabled) {
       try {
         await enable();
@@ -168,7 +167,7 @@ export function NotificationTypes({ profile }: { profile: ProfileResponse }): Re
       {body}
       {/*
         The save result is announced politely. It is mounted empty and stays in the tree, because a
-        region that arrives already populated is announced unreliably (Design › Accessibility).
+        region that arrives already populated is announced unreliably.
       */}
       <p role="status" className="text-body-sm text-secondary">
         {status}

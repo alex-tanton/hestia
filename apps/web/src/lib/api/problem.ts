@@ -56,7 +56,7 @@ export const OFFLINE_MESSAGE = 'Offline. This needs a connection.';
 export const UNEXPECTED_MESSAGE = 'Something went wrong. Try again.';
 
 export interface UserMessageOptions {
-  /** Copy for specific statuses, e.g. Design's invite states on the join screen. */
+  /** Copy for specific statuses, e.g. the invite states on the join screen. */
   byStatus?: Readonly<Record<number, string>>;
   /** Used when nothing more specific applies. */
   fallback?: string;

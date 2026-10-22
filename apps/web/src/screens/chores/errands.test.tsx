@@ -39,8 +39,8 @@ import { ErrandsListScreen } from './ErrandsListScreen.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * Errands (Design › Screens › 18). The clock is pinned to Seed Data's "today" (a Sunday, noon in
- * New York), so the due dates and completion stamps in the fixtures read as they are written.
+ * Errands. The clock is pinned to the seed data's "today" (a Sunday, noon in New York), so the due
+ * dates and completion stamps in the fixtures read as they are written.
  */
 
 function mount(

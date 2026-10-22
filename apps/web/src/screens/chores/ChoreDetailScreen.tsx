@@ -29,7 +29,7 @@ export interface ChoreDetailScreenProps {
 }
 
 /**
- * Design › "17. Chores" › Chore detail: recurrence summary, the next three dates, rotation order,
+ * Chore detail: recurrence summary, the next three dates, rotation order,
  * and completion history. Completing shows the toast ("Take out trash done. Sam is next.") with
  * Undo for 5 seconds; Undo deletes the fresh completion, which reverts the rotation and next-due
  * display once the query refetches.
