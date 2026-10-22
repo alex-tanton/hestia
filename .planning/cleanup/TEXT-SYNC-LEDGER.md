@@ -494,3 +494,51 @@ main-integration-tests-c=1190
 Logs: `05-11-pr-integration.log`, `05-11-main-integration.log`, `05-11-pr-e2e.log`, `05-11-pr-files.txt`.
 
 Merge: not done; it is the owner's squash merge (05-11 Task 3).
+
+### CI after the follow-up sweep
+
+The follow-up commits (`aaed732`, `33baf2d`) and the merge of the working branch were pushed to PR C (plain push, no force).
+The PR body (`.planning/cleanup/logs/05-11-pr-c.md`) was updated to describe them. The earlier head `e1997a7` (run
+39705754497, all green) is superseded.
+
+pr-c-head=0ce37f6484fec01a3b431eff266b315eadae594d
+
+CI run 39707916284 (`pull_request`, one attempt, no rerun), all six jobs `success`:
+
+| job | job id | conclusion |
+| --- | ------ | ---------- |
+| lint | 119592204713 | success |
+| typecheck | 119592204651 | success |
+| test-unit | 119592204296 | success |
+| test-integration | 119592204535 | success |
+| test-e2e | 119592204568 | success |
+| build | 119592204623 | success |
+
+pr-c-ci=39707916284 lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success
+
+PR #28 is still open (`mergeable_state` clean); the merge stays the owner's.
+
+### Merge and CI on main
+
+The owner squash-merged PR C (#28) on GitHub (`merged_by` alex-tanton, `merged_at` 2026-10-22T02:01:12Z, title
+`refactor: remove retired spec citations from code`). The head before the merge was `0ce37f6` (six green jobs, run
+39707916284). Verified through `gh api repos/alex-tanton/hearth/pulls/28`: `merged` true, `state` closed,
+`merge_commit_sha` below.
+
+pr-c-merged=9fdc9c910410d5e0bcdd5ff6472bb7f3cff75423
+
+`CI` on `main` for that SHA: run 39709025122 (`push`, one attempt, no rerun), polled about once a minute, all six jobs `success`:
+
+| job | job id | conclusion |
+| --- | ------ | ---------- |
+| lint | 119595657579 | success |
+| typecheck | 119595657311 | success |
+| test-unit | 119595657576 | success |
+| test-integration | 119595657559 | success |
+| test-e2e | 119595657541 | success |
+| build | 119595657627 | success |
+
+main-ci-after-c=39709025122 lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success
+
+The merge queued `Deploy` (run 39710099843, `workflow_run`, status `pending` when polled: it waits for the self-hosted
+runner, as for the PR A and PR B merges). `docker/kong.yml` parses identically (`kong-yaml-equal=yes`), so no Kong recreate is needed.

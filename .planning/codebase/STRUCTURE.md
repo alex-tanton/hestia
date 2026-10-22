@@ -1,288 +1,293 @@
 ---
-last_mapped_commit: 431e646ab110c804b7229cecc9e151d343790b3a
-last_mapped_at: 2026-10-21
+last_mapped_commit: 283f15dbb2b5ed8ded0ba14e04d5015e5d0d367c
+last_mapped_at: 2026-10-22
 ---
+<!-- refreshed: 2026-10-22 -->
+
 # Codebase Structure
 
-**Analysis Date:** 2026-10-21
+**Analysis Date:** 2026-10-22
 
 ## Directory Layout
 
 ```
 hearth/
 ├── apps/
-│   ├── service/            # @hearth/service — Fastify API, jobs, hearth-admin CLI
-│   │   ├── bin/            # hearth-admin executable wrapper
-│   │   ├── scripts/        # service helper scripts (e.g. type generation)
-│   │   └── src/            # see "apps/service/src" below
-│   └── web/                # @hearth/web — React PWA (Vite)
-│       ├── public/         # static assets, icons
-│       ├── scripts/        # check-build.mjs, generate-icons.mjs
-│       └── src/            # see "apps/web/src" below
+│   ├── service/              # @hearth/service: Fastify API, jobs, owner CLI
+│   │   ├── bin/              # hearth-admin (hand-written POSIX sh wrapper)
+│   │   ├── scripts/          # normalize-fixtures.ts (fixture maintenance)
+│   │   └── src/              # all service source (see below)
+│   └── web/                  # @hearth/web: React PWA (Vite)
+│       ├── public/icons/     # PWA icons (written by scripts/generate-icons.mjs)
+│       ├── scripts/          # check-build.mjs, generate-icons.mjs
+│       └── src/              # all web source (see below)
 ├── packages/
-│   ├── shared/             # @hearth/shared — Zod API schemas, problem, scrub, passwords
-│   ├── recurrence/         # @hearth/recurrence — bill/chore occurrence and rotation
-│   └── matching/           # @hearth/matching — ingredient/item fuzzy matching
-├── e2e/                    # @hearth/e2e — Playwright suite and Compose overlay
+│   ├── shared/               # @hearth/shared: API schemas, problem details, scrub, passwords
+│   ├── recurrence/           # @hearth/recurrence: bill and chore occurrence and rotation
+│   └── matching/             # @hearth/matching: ingredient normalization and matcher
+├── e2e/                      # @hearth/e2e: Playwright suite, compose overlay, fixtures
 ├── supabase/
-│   ├── migrations/         # ordered SQL: schema, RLS, functions, realtime, notifications
-│   ├── seed/               # @hearth/seed — seed users and SQL tooling
-│   └── config.toml         # local Supabase stack configuration
-├── docker/                 # Compose, Dockerfiles, Caddyfile, Kong config, db init
-├── docs/                   # specifications (source of truth)
-├── scripts/                # deploy, secret generation, test sweep, knip summary
-├── test/                   # shared clock/time-zone harness and its tests
-├── .github/workflows/      # ci.yml, deploy.yml
-├── .husky/                 # git hooks (pre-commit, commit-msg)
-├── .planning/              # GSD planning artifacts (codebase maps live here)
-├── package.json            # root scripts, engines, pnpm overrides
-├── pnpm-workspace.yaml     # workspace graph
-├── tsconfig.base.json      # shared strict TypeScript options
-└── eslint.config.js        # lint rules, including service-role fence and clock ban
+│   ├── migrations/           # 8 SQL migrations, applied in filename order
+│   ├── seed/                 # @hearth/seed: seed users and seed SQL
+│   └── config.toml           # Supabase CLI local stack config
+├── docker/                   # Compose stack, Dockerfiles, Caddy, Kong, DB init SQL
+│   └── db/                   # roles, JWT, realtime, hearth-service login SQL
+├── scripts/                  # deploy.sh, generate-secrets.sh, CI helpers, test sweep
+├── test/                     # shared Vitest/clock/TZ setup and config-guard tests
+│   └── support/
+├── docs/                     # specification documents (source of truth for behavior)
+├── .github/                  # CI, deploy workflow, setup composite action, dependabot
+├── .husky/                   # git hooks (pre-commit, commit-msg)
+├── .planning/                # GSD planning workspace (not shipped)
+├── package.json              # root scripts and pnpm overrides
+├── pnpm-workspace.yaml       # workspace graph
+├── tsconfig.base.json        # shared strict TypeScript options
+├── eslint.config.js          # flat ESLint config, including the privileged fence
+├── knip.json                 # unused file/export/dependency scan config
+└── README.md, CONTRIBUTING.md
 ```
 
 ## Directory Purposes
 
 **`apps/service/src/`:**
-- Purpose: Backend HTTP API, background jobs, and the admin CLI.
-- Contains: `app.ts` (app factory), `main.ts` (process entry), `env.ts`, `db.ts`, `problem.ts`, `cli.ts`, `openapi.ts`, `write-openapi.ts`, plus the subdirectories below.
-- Key files: `apps/service/src/app.ts`, `apps/service/src/main.ts`, `apps/service/src/http/context.ts`, `apps/service/src/db/user-db.ts`.
+- Purpose: The Fastify service, its jobs, and its owner CLI.
+- Contains: Entry points, app assembly, route plugins, domain services, privileged DB access, jobs, protocol adapters, test helpers.
+- Key files: `main.ts`, `app.ts`, `cli.ts`, `env.ts`, `problem.ts`, `db.ts`, `db/types.ts` (generated), `openapi.ts`, `write-openapi.ts`.
 
 **`apps/service/src/routes/`:**
-- Purpose: One Fastify plugin per feature; the HTTP surface.
-- Contains: `auth.ts`, `bills.ts`, `chores.ts`, `deals.ts`, `errands.ts`, `health.ts`, `households.ts`, `lists.ts`, `match-overrides.ts`, `meal-plan.ts`, `recipes.ts`, `system.ts`, `users.ts`, and `routes.test.ts`.
+- Purpose: HTTP plugins, one per resource. Thin.
+- Contains: `auth.ts`, `users.ts`, `households.ts`, `lists.ts`, `match-overrides.ts`, `recipes.ts`, `meal-plan.ts`, `bills.ts`, `chores.ts`, `errands.ts`, `deals.ts`, `system.ts`, `health.ts`, plus `routes.test.ts`.
 
 **`apps/service/src/services/`:**
-- Purpose: Flat business-rule modules, one per domain concept.
-- Contains: `bills.ts`, `lists.ts`, `list-aggregation.ts`, `meal-plan.ts`, `readiness.ts`, `repricing.ts`, `households.ts`, `invites.ts`, `membership.ts`, `notifications.ts`, `errors.ts`, `backups.ts`, `skip-rates.ts`, `subtotals.ts`, `suggestions.ts`, `pantry.ts`, and co-located `*.test.ts`.
-- Subdirectory: `services/deals/` (deal storage and the deals service, e.g. `deals.ts`, `storage.ts`).
+- Purpose: Domain business rules, one module per feature, each taking a Kysely handle bound to the caller's transaction.
+- Contains: `bills.ts`, `lists.ts`, `pantry.ts`, `meal-plan.ts`, `recipes.ts`, `suggestions.ts`, `readiness.ts`, `repricing.ts`, `households.ts`, `membership.ts`, `invites.ts`, `notifications.ts`, `users.ts`, `errors.ts`, `backups.ts`, `skip-rates.ts`, and `deals/` (deal orchestration, cache, storage, filtering, dormancy, favorite stores).
 
 **`apps/service/src/chores/`:**
-- Purpose: Chore and errand scheduling logic (occurrence, errand rules).
-- Contains: `chores.ts`, `errands.ts`, `occurrence.ts`, `chores.test.ts`.
-
-**`apps/service/src/jobs/`:**
-- Purpose: Cron-driven work and its scheduler.
-- Contains: `scheduler.ts`, `advisory-lock.ts`, `types.ts`, `index.ts` (barrel), and one module per job (`refresh-deals.ts`, `log-autopay.ts`, `dispatch-notifications.ts`, `prune-cache.ts`, `refresh-plan.ts`) with tests.
-
-**`apps/service/src/privileged/`:**
-- Purpose: The only `service_role` code. Fenced by ESLint.
-- Contains: `service-role-db.ts`, `notification-outbox.ts`, `scheduled-reminders.ts`, `gotrue-admin.ts`, `job-database.ts`.
+- Purpose: Chore and errand domain logic that routes import directly.
+- Contains: `chores.ts`, `errands.ts`, `occurrence.ts`.
 
 **`apps/service/src/db/`:**
-- Purpose: Database access wrappers and generated types.
-- Contains: `user-db.ts` (`withUserDb`, `withAnonDb`), `types.ts` (generated by `pnpm db:types`), and `*.integration.test.ts` for RLS, membership, policies, and notification preferences.
+- Purpose: Database access primitives and generated types.
+- Contains: `user-db.ts` (`withUserDb`, `withAnonDb`), `types.ts` (generated by `pnpm db:types`; do not hand-edit), and integration tests for RLS, membership, policies, and notification preferences.
 
-**`apps/service/src/http/`:**
-- Purpose: Request plumbing shared by routes.
-- Contains: `context.ts` only (`RouteContext`, `createRouteContext`, `parse`).
+**`apps/service/src/privileged/`:**
+- Purpose: The only `service_role` code. Imported only by `main.ts` and `cli.ts`.
+- Contains: `service-role-db.ts`, `notification-outbox.ts`, `scheduled-reminders.ts`, `gotrue-admin.ts`, `job-database.ts`.
 
-**`apps/service/src/auth/`, `gotrue/`:**
-- Purpose: Token verification (`jwt.ts`) and the GoTrue HTTP client (`client.ts`, `http.ts`).
+**`apps/service/src/jobs/`:**
+- Purpose: Scheduler and background jobs.
+- Contains: `scheduler.ts`, `advisory-lock.ts`, `refresh-deals.ts`, `refresh-plan.ts` (planner, not scheduled), `log-autopay.ts`, `dispatch-notifications.ts`, `prune-cache.ts`, `types.ts`, `index.ts` (barrel).
 
 **`apps/service/src/deals/`:**
-- Purpose: Deal sourcing and price logic, separate from the `services/deals/` service layer.
-- Contains: `deal-source.ts`, `money.ts`, `flipp/` (Flipp client, request queue, fixture transport), `price/`.
+- Purpose: Flipp deal source and price parsing, outside the service layer.
+- Contains: `flipp/` (`flipp-deal-source.ts`, `request-queue.ts`, `fixture-transport.ts`, `normalized-fixtures.ts`), `price/` (`parse-price.ts`, `parsers.ts`, `price-copy.ts`), `money.ts`, `deal-source.ts`.
 
 **`apps/service/src/recipes/`:**
-- Purpose: Recipe URL fetch, JSON-LD extraction, ingredient parsing, SSRF guard, host rate limiting.
-- Contains: `fetch-recipe.ts`, `parse-recipe-url.ts`, `json-ld.ts`, `ingredient-parser.ts`, `private-address.ts`, `host-rate-limiter.ts`, `fixture-fetch.ts`, `fixtures/`.
+- Purpose: Recipe URL fetch and parse.
+- Contains: `fetch-recipe.ts`, `parse-recipe-url.ts`, `json-ld.ts`, `ingredient-parser.ts`, `private-address.ts`, `host-rate-limiter.ts`, `fixture-fetch.ts`, and `fixtures/` (HTML fixtures used by tests and E2E).
 
-**`apps/service/src/notifications/`:**
-- Purpose: Notification copy and planners.
-- Contains: `copy.ts`, `planners.ts`, and tests.
-
-**`apps/service/src/push/`:**
-- Purpose: Web Push transport and E2E doubles.
-- Contains: `web-push-transport.ts`, `recording-transport.ts`, `test-seam.ts`, `web-push.d.ts` (the only `export default` in the source tree; a declaration file).
+**`apps/service/src/auth/`, `gotrue/`, `push/`, `notifications/`, `http/`:**
+- `auth/jwt.ts`: token verification (JWKS, `isServerOwner`).
+- `gotrue/`: GoTrue HTTP client (`client.ts`, `http.ts`).
+- `push/`: `web-push-transport.ts`, `recording-transport.ts`, `test-seam.ts`, and `web-push.d.ts` (the only `export default` in source; config files also use it).
+- `notifications/`: `copy.ts` (message copy), `planners.ts` (pure planning).
+- `http/context.ts`: `RouteContext`, `createRouteContext`, `parse`.
 
 **`apps/service/src/test/`:**
-- Purpose: Shared service test harnesses (not production code).
-- Contains: `fake-app.ts` (in-memory app with `logger: false`), `integration-db.ts`, `service-stack.ts`, `world.ts`, `push-double.ts`, `fixture-deal-source.ts`, `zone-dates.ts`.
-
-**`apps/service/src/` integration tests:**
-- Files named `*.integration.test.ts` sit directly under `src/` (e.g. `bills.integration.test.ts`, `api.integration.test.ts`, `realtime.integration.test.ts`). They run against the local Supabase stack via `vitest.integration.config.ts`.
+- Purpose: Test helpers for the service (not shipped behavior): `fake-app.ts`, `integration-db.ts`, `service-stack.ts`, `stack-hooks.ts`, `world.ts`, `push-double.ts`, `fixture-deal-source.ts`, `job-logger.ts`, `zone-dates.ts`.
 
 **`apps/web/src/`:**
-- Purpose: The PWA.
-- Contains: `main.tsx`, `App.tsx`, `routes.tsx`, `sw.ts`, `index.css`, `sections`-level pillar wiring, and the directories below.
+- Purpose: The React PWA.
+- Contains: `main.tsx` (bootstrap), `App.tsx` (providers), `routes.tsx` (route table), `sw.ts` (service worker), `index.css` (Tailwind v4 and design tokens), `tokens.test.ts`.
 
 **`apps/web/src/screens/`:**
-- Purpose: Route-level pages (`*Screen.tsx`, `*Route.tsx`), grouped by feature.
-- Contains: `AuthenticatedLayout.tsx`, `DashboardRoute.tsx`, `DashboardScreen.tsx`, `PillarScreen.tsx`, and subfolders `bills/`, `chores/`, `deals/`, `lists/`, `meals/`, `onboarding/`, `settings/` (with `settings/account/`).
+- Purpose: Route-level screens grouped by feature.
+- Contains: `AuthenticatedLayout.tsx` (route guards and shell), `DashboardRoute.tsx`, `DashboardScreen.tsx`, `PillarScreen.tsx`, and folders `bills/`, `chores/`, `deals/`, `lists/`, `meals/`, `onboarding/`, `settings/` (with `settings/account/`).
 
 **`apps/web/src/pillars/`:**
-- Purpose: Thin glue from a top-level tab to its screens.
-- Contains: `BillsRoute.tsx`, `ChoresRoute.tsx`, `ListsRoute.tsx`, `MealsRoute.tsx`.
+- Purpose: Pillar wrappers that own sub-routing for a tab (`ListsRoute.tsx`, `MealsRoute.tsx`, `BillsRoute.tsx`, `ChoresRoute.tsx`).
 
 **`apps/web/src/components/`:**
-- Purpose: Reusable view building blocks.
-- Contains: feature folders (`bills/`, `chores/`, `dashboard/`, `errands/`, `lists/`, `meals/`) and cross-cutting folders: `ui/` (Button, Sheet, Field, Toast, etc.), `shell/` (AppShell, TabBar, TopBar, HouseholdSwitcher, UpdatePrompt), `states/` (ErrorBoundary, StateBlocks, ComingSoon, StaleNotice).
+- Purpose: Reusable UI.
+- Contains: `ui/` (primitives such as `Button.tsx`, `Sheet.tsx`, `Toast.tsx`, `Field.tsx`, `FormMessage.tsx`), `shell/` (`AppShell.tsx`, `TabBar.tsx`, `TopBar.tsx`, `UpdatePrompt.tsx`), `states/` (`ErrorBoundary.tsx`, `StateBlocks.tsx`, `ComingSoon.tsx`), and feature folders `bills/`, `chores/`, `dashboard/`, `errands/`, `lists/`, `meals/`.
 
 **`apps/web/src/lib/`:**
-- Purpose: Non-visual logic.
-- Contains: `api/` (client, query keys, `*-hooks.ts`, `query-client.ts`, `api-context.tsx`), `auth/` (`auth-client.ts`), `offline/` (`write-queue.ts`, `persist.ts`, `list-cache.ts`, `chore-errand-writes.ts`, `use-write-queue.ts`), `realtime/` (`supabase-realtime.ts`), `push/` (service-worker handlers and subscription), `bills/`, plus top-level utilities (`format.ts`, `money.ts`, `validation.ts`, `password.ts`, `sections.ts`, `section-context.tsx`, `cn.ts`, `use-*.ts`).
+- Purpose: Non-visual logic and clients.
+- Contains: `api/` (client, keys, hooks, problem parsing, query client), `auth/` (Supabase auth client), `offline/` (write queue, persistence, list cache), `realtime/` (Supabase realtime port), `push/` (device subscription and service worker handlers), `bills/` (recurrence preview), plus `sections.ts`, `section-context.tsx`, `format.ts`, `money.ts`, `validation.ts`, `password.ts`, and `use-*.ts` hooks.
 
 **`apps/web/src/test/`:**
-- Purpose: Web test harness (e.g. `harness.tsx`), shared by `*.test.tsx` files.
-- Also: `apps/web/src/test-setup.ts` (Vitest/jsdom setup at the `src` root).
+- Purpose: Web test harness and fixtures: `harness.tsx`, `browser.ts`, `push-double.ts`, `*-fixtures.ts`.
 
 **`packages/shared/src/`:**
-- Purpose: Cross-boundary contract.
-- Contains: `api/` (one module per resource: `bills.ts`, `lists.ts`, etc.), `data/` (static data such as `common-passwords`), `problem.ts`, `scrub.ts`, `password.ts`, `common-passwords.ts`; `index.ts` is a re-export barrel.
+- Purpose: Shared API contract and pure helpers.
+- Contains: `api/*.ts` (request and response schemas per resource, plus `contract.ts`), `problem.ts`, `scrub.ts`, `password.ts`, `common-passwords.ts`, and `data/common-passwords.ts` (large word list). `index.ts` is a re-export barrel only.
 
-**`packages/recurrence/src/`:**
-- Purpose: Pure recurrence math.
-- Contains: `bills.ts`, `chores.ts`, `occurrence.ts`, `rotation.ts`, `calendar-date.ts`, `types.ts`, `index.ts` barrel.
-- Note: `packages/recurrence/coverage/` exists locally as a generated report and is git-ignored, not tracked.
+**`packages/recurrence/src/`:** `bills.ts`, `chores.ts`, `occurrence.ts`, `rotation.ts`, `calendar-date.ts`, `types.ts`, `index.ts` (barrel).
 
-**`packages/matching/src/`:**
-- Purpose: Pure matching.
-- Contains: `normalize.ts`, `similarity.ts`, `matcher.ts`, `singularize.ts`, `data/` (lookup data), `fixtures.test.ts`, `index.ts` barrel.
-
-**`supabase/migrations/`:**
-- Purpose: Database schema history, applied in filename order.
-- Contains: `20260919060000_hearth_service_role.sql`, `20260919070000_schema.sql`, `20260919070100_rls.sql`, `20260919070200_functions.sql`, `20260919070300_realtime.sql`, `20260925080000_notification_send_times.sql`, `20261004090000_notification_producers.sql`, `20261004090100_depart_clears_notification_preferences.sql`.
-
-**`supabase/seed/`:**
-- Purpose: `@hearth/seed` workspace: seed users and SQL for `pnpm db:seed`.
+**`packages/matching/src/`:** `matcher.ts`, `normalize.ts`, `similarity.ts`, `singularize.ts`, and `data/` (`brands.ts`, `descriptors.ts`, `units.ts`), `index.ts` (barrel).
 
 **`e2e/`:**
-- Purpose: Playwright end-to-end suite.
-- Contains: `tests/` (specs), `support/` (helpers, e.g. `support/clock.ts`), `setup/`, `fixtures/` (Flipp raw/normalized and recipe fixtures), `global-setup.ts`, `global-teardown.ts`, `playwright.config.ts`, `docker-compose.e2e.yml`.
+- Purpose: End-to-end suite run through Docker Compose.
+- Contains: `tests/` (numbered specs `01-…` to `20-…`), `support/` (API, DB, clock, push, logs, compose helpers), `setup/stack.ts`, `global-setup.ts`, `global-teardown.ts`, `playwright.config.ts`, `docker-compose.e2e.yml`, `fixtures/` (recorded Flipp and recipe responses).
+
+**`supabase/`:**
+- `migrations/`: schema, RLS, functions, realtime, service-role bootstrap, notification send times and producers, and departure behavior.
+- `seed/`: `seed-users.ts`, `compute-readiness.ts`, `seed.sql`, run by `pnpm db:seed` with `psql`.
+- `config.toml`: local Supabase stack configuration.
 
 **`docker/`:**
-- Purpose: Production stack.
-- Contains: `docker-compose.yml`, `service.Dockerfile`, `caddy.Dockerfile`, `Caddyfile`, `kong.yml`, `kong-entrypoint.sh`, `caddy-entrypoint.sh`, `db/` (Postgres init).
-
-**`docs/`:**
-- Purpose: Specifications; the only source of truth for behavior (`architecture.md`, `testing.md`, `deploy.md`, `file-map.md`, `design.md`, `branding.md`, `use-cases.md`).
+- Purpose: Production stack and images.
+- Contains: `docker-compose.yml`, `service.Dockerfile`, `caddy.Dockerfile`, `Caddyfile`, `kong.yml`, `caddy-entrypoint.sh`, `kong-entrypoint.sh`, and `db/*.sql` (roles, JWT, realtime, service login init).
 
 **`scripts/`:**
-- Purpose: Operational and tooling scripts: `deploy.sh`, `generate-secrets.sh`, `test-sweep.mjs`, `knip-summary.mjs`, `ci-prepull-images.sh`, and their `*.test.mjs` files.
+- Purpose: Operational and tooling scripts.
+- Contains: `deploy.sh`, `generate-secrets.sh`, `ci-prepull-images.sh`, `test-sweep.mjs` (date and time-zone matrix), `knip-summary.mjs`, and `.test.mjs` files for them.
 
 **`test/`:**
-- Purpose: Shared Vitest/clock harness pinned into every unit config: `clock-setup.mjs`, `global-tz.mjs`, `test-now.mjs`, plus `eslint-clock-ban.test.mjs` and `eslint-service-role-fence.test.mjs` which verify lint rules; `support/` helpers.
+- Purpose: Repository-wide Vitest setup (`clock-setup.mjs` pins `Date`, `global-tz.mjs` validates `TZ`, `test-now.mjs`) and guard tests for the ESLint rules (`eslint-clock-ban.test.mjs`, `eslint-service-role-fence.test.mjs`).
+
+**`.github/`:**
+- `workflows/ci.yml`, `workflows/deploy.yml`, `actions/setup/action.yml`, `dependabot.yml`.
 
 ## Key File Locations
 
 **Entry Points:**
-- `apps/service/src/main.ts`: Service process.
-- `apps/service/src/cli.ts`: `hearth-admin` CLI.
-- `apps/web/src/main.tsx`: Web app bootstrap.
-- `apps/web/src/routes.tsx`: Web route table.
-- `apps/web/src/sw.ts`: Service worker.
+- `apps/service/src/main.ts`: service process
+- `apps/service/src/cli.ts` (built to `apps/service/dist/cli.js`) and `apps/service/bin/hearth-admin`: owner CLI
+- `apps/web/src/main.tsx`: PWA bootstrap
+- `apps/web/src/routes.tsx`: web route table
+- `apps/web/src/sw.ts`: service worker
 
 **Configuration:**
-- `apps/service/src/env.ts`: Service env schema.
-- `apps/service/tsup.config.ts`: Service bundle.
-- `apps/web/vite.config.ts`: Web build and PWA.
-- `apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`: Service test configs.
-- `eslint.config.js`, `knip.json`, `commitlint.config.js`, `.prettierrc.json`, `.lintstagedrc.json`: Tooling.
-- `.env.example`: Documented env keys (production env file lives outside the repo).
+- `apps/service/src/env.ts`: service environment schema (Zod)
+- `apps/service/tsup.config.ts`: service bundle (`src/main.ts`, `src/cli.ts`)
+- `apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`
+- `apps/web/vite.config.ts`: Vite, React, Tailwind, PWA
+- `apps/web/index.html`
+- `tsconfig.base.json`, `apps/service/tsconfig.json`, `apps/web/tsconfig.json`, `packages/*/tsconfig.json`, `e2e/tsconfig.json`
+- `eslint.config.js`, `.prettierrc.json`, `.lintstagedrc.json`, `commitlint.config.js`, `knip.json`
+- `.env.example`: documented environment keys (no secrets)
 
 **Core Logic:**
-- `apps/service/src/app.ts`: Route registration and error handling.
-- `apps/service/src/http/context.ts`: Auth and scoped DB helpers.
-- `apps/service/src/db/user-db.ts`: RLS transaction wrapper.
-- `apps/service/src/services/`: Business rules.
-- `packages/shared/src/api/`: API contract.
-- `packages/recurrence/src/`, `packages/matching/src/`: Pure logic.
+- `apps/service/src/db/user-db.ts`: RLS transaction wrapper
+- `apps/service/src/http/context.ts`: request context and validation helper
+- `apps/service/src/app.ts`: app assembly and error handler
+- `apps/service/src/jobs/scheduler.ts`: job registration and run tracking
+- `apps/web/src/lib/api/client.ts`: API fetch wrapper
+- `apps/web/src/lib/offline/write-queue.ts`: queued mutations
+- `packages/shared/src/api/*.ts`: request and response contracts
+
+**Database:**
+- `supabase/migrations/*.sql`: schema and policies
+- `apps/service/src/db/types.ts`: generated types
 
 **Testing:**
-- Unit tests: co-located `*.test.ts(x)` beside the source.
-- Integration tests: `apps/service/src/**/*.integration.test.ts` and `apps/service/src/db/*.integration.test.ts`.
-- Component tests: `apps/web/src/**/*.test.tsx`, helpers in `apps/web/src/test/`.
-- E2E: `e2e/tests/`.
-- Harness: `apps/service/src/test/`, `test/`.
+- Co-located unit tests: `apps/*/src/**/*.test.ts(x)` and `packages/*/src/**/*.test.ts`
+- Integration tests: `apps/service/src/**/*.integration.test.ts`, `apps/service/src/db/*.integration.test.ts`
+- Component tests: `apps/web/src/**/*.test.tsx` (jsdom)
+- E2E: `e2e/tests/*.spec.ts`
+- Test setup: `test/`, `apps/*/vitest.config.ts`, `e2e/playwright.config.ts`
 
 ## Naming Conventions
 
 **Files:**
-- Service and package modules: kebab-case `.ts`, e.g. `apps/service/src/services/bills.ts`, `apps/service/src/deals/flipp/request-queue.ts`.
-- Web components: PascalCase `.tsx` matching the component, e.g. `apps/web/src/components/ui/Button.tsx`, `apps/web/src/components/bills/BillRow.tsx`.
+- Service modules: kebab-case `.ts`, e.g. `apps/service/src/services/bills.ts`, `apps/service/src/deals/flipp/request-queue.ts`.
+- Web components: PascalCase `.tsx` named after the component, e.g. `apps/web/src/components/ui/Button.tsx`, `apps/web/src/screens/bills/BillDetailScreen.tsx`.
 - Web non-component modules: kebab-case `.ts`, e.g. `apps/web/src/lib/format.ts`.
-- Web hooks: `use-*.ts(x)` (`apps/web/src/lib/use-online-status.ts`); API hook modules `*-hooks.ts` (`apps/web/src/lib/api/bills-hooks.ts`).
-- Copy catalogs: `*-copy.ts` beside the feature (`apps/web/src/components/bills/bills-copy.ts`).
-- Screens: `*Screen.tsx` under `apps/web/src/screens/<feature>/`; route wrappers `*Route.tsx`.
+- Web hooks: `use-*.ts` (e.g. `apps/web/src/lib/use-online-status.ts`); API hook modules `*-hooks.ts` (e.g. `apps/web/src/lib/api/bills-hooks.ts`).
+- Screens: `*Screen.tsx`; route wrappers `*Route.tsx`.
+- Copy catalogs: `*-copy.ts` next to the feature (e.g. `apps/web/src/components/bills/bills-copy.ts`, `apps/service/src/notifications/copy.ts`).
 - Tests: `<name>.test.ts(x)` co-located; `<name>.integration.test.ts` for database and route integration.
 - Migrations: `supabase/migrations/YYYYMMDDHHMMSS_<name>.sql`.
 
 **Directories:**
-- Lowercase, kebab-case where multi-word (`meal-plan.ts` route, `match-overrides.ts`, `offline/`).
-- Feature folders use the domain noun: `bills`, `chores`, `lists`, `meals`, `deals`, `errands`.
+- Feature folders are kebab-case or single words (`meal-plan`, `deals`, `chores`). Web feature folders are singular or plural nouns matching the screen group.
+- Route plugin files are named by resource under `apps/service/src/routes/` (`meal-plan.ts`, `match-overrides.ts`).
 
-**Code identifiers:**
-- Functions are camelCase verbs (`listBills`, `payBill`). Components are PascalCase. Module constants are SCREAMING_SNAKE_CASE. Zod schemas end in `Schema`, with the inferred type sharing the stem.
+**Identifiers:**
+- Service and domain functions are verbs: `listBills`, `createHouseholdBill`, `payBill`.
+- Zod schemas are camelCase with `Schema` suffix; inferred types are PascalCase (`billSchema` / `Bill`).
+- Module constants are SCREAMING_SNAKE_CASE (e.g. `REFRESH_DEALS_SCHEDULE` in `apps/service/src/jobs/scheduler.ts`).
+
+**Imports:**
+- Service and packages use NodeNext: relative imports end in `.js` for `.ts` sources.
+- Web uses explicit `.ts`/`.tsx` extensions in relative imports.
+- Cross-package imports use `@hearth/*` names.
 
 ## Where to Add New Code
 
-**New API feature (service):**
-- Route plugin: `apps/service/src/routes/<feature>.ts`, exported as `<feature>Routes: FastifyPluginAsync<{ ctx: RouteContext }>`, registered in `apps/service/src/app.ts`.
-- Business rules: `apps/service/src/services/<feature>.ts`.
-- Request/response schemas: `packages/shared/src/api/<feature>.ts`, re-exported from `packages/shared/src/index.ts`.
-- Database changes: new migration under `supabase/migrations/`, then `pnpm db:types`.
-- Tests: co-located `apps/service/src/services/<feature>.test.ts`; integration `apps/service/src/<feature>.integration.test.ts`.
+**New HTTP endpoint on an existing resource:**
+- Route: add to the matching plugin in `apps/service/src/routes/<resource>.ts`; keep it to authenticate, parse, call a service, reply.
+- Business logic: add to `apps/service/src/services/<resource>.ts` (or `apps/service/src/chores/` for chores and errands), taking the scoped `db` first.
+- Request and response schemas: `packages/shared/src/api/<resource>.ts`, then re-export is already handled by `packages/shared/src/index.ts`.
+- Tests: `apps/service/src/services/<resource>.test.ts` for logic; `apps/service/src/<resource>.integration.test.ts` for the route against Postgres.
+
+**New resource or service module:**
+- Route plugin: `apps/service/src/routes/<resource>.ts`, exported as `<resource>Routes: FastifyPluginAsync<{ ctx: RouteContext }>`, then registered in `apps/service/src/app.ts`.
+- Service: `apps/service/src/services/<resource>.ts`.
+- Migration and RLS: new file in `supabase/migrations/` with a timestamp later than the last one; regenerate types with `pnpm db:types`.
 
 **New scheduled job:**
-- Implementation: `apps/service/src/jobs/<job>.ts`, registered in `apps/service/src/jobs/scheduler.ts` with a schedule constant and a `JobName` entry.
+- Implementation: `apps/service/src/jobs/<job-name>.ts`, taking `JobDatabase` and `JobLogger` from `apps/service/src/jobs/types.ts`.
+- Registration: add a schedule constant and a `cron.schedule` entry in `apps/service/src/jobs/scheduler.ts`, a `JobName` member, and a branch in `runJob`.
+- Export: add to `apps/service/src/jobs/index.ts`.
 
 **New web screen:**
-- Screen: `apps/web/src/screens/<feature>/<Name>Screen.tsx`; route wrapper if it needs data: `<Name>Route.tsx`.
-- Route entry: add to `apps/web/src/routes.tsx` with `lazy: () => import(...)`.
-- Data hook: `apps/web/src/lib/api/<feature>-hooks.ts`; add the key to `apps/web/src/lib/api/keys.ts`.
-- Tests: co-located `*.test.tsx`.
+- Screen: `apps/web/src/screens/<feature>/<Name>Screen.tsx`; route wrapper if needed as `<Name>Route.tsx`.
+- Route: add a lazy entry in `apps/web/src/routes.tsx` under `AuthenticatedLayout` (or public, if it needs no session).
+- Data: hooks in `apps/web/src/lib/api/<feature>-hooks.ts`, query keys in `apps/web/src/lib/api/keys.ts` (household-scoped keys start with `HOUSEHOLD_SCOPE`).
 
-**New web component:**
-- Feature-specific: `apps/web/src/components/<feature>/<Name>.tsx`.
-- Generic primitive: `apps/web/src/components/ui/<Name>.tsx`.
+**New reusable component:**
+- Primitive: `apps/web/src/components/ui/<Name>.tsx`.
+- Feature component: `apps/web/src/components/<feature>/<Name>.tsx`.
 
-**New shared/pure logic:**
-- Recurrence: `packages/recurrence/src/`; matching: `packages/matching/src/`; API contract or problem types: `packages/shared/src/`.
-- Do not add logic to the `index.ts` barrels.
+**New pure logic shared by client and server:**
+- `packages/recurrence/src/` or `packages/matching/src/` for domain math; `packages/shared/src/` for contracts and validation. Keep these free of I/O.
 
-**New utility:**
-- Web: `apps/web/src/lib/`. Service: the closest feature folder, or `apps/service/src/services/` for domain logic.
+**New protocol or external client:**
+- `apps/service/src/<protocol>/`, injected into `buildApp` or the scheduler from `apps/service/src/main.ts`.
 
-**New external integration:**
-- Adapter directory under `apps/service/src/` (like `gotrue/`, `push/`, `deals/flipp/`), injected through `buildApp` options or `main.ts`.
+**Utilities:**
+- Shared service helpers: `apps/service/src/services/` (feature-specific) or `packages/shared/src/` (contract-level).
+- Web helpers: `apps/web/src/lib/`.
 
-**Restricted privileged code:**
-- Only `apps/service/src/privileged/`; expose a narrow function to the consumer. Do not import it from routes, services, or jobs.
+**Tests for E2E:**
+- `e2e/tests/NN-<topic>.spec.ts` with support helpers in `e2e/support/`.
 
 ## Special Directories
 
-**`supabase/.temp/`:**
+**`apps/service/dist/`, `apps/web/dist/`, `packages/*/dist/`:**
+- Purpose: Build output (service bundle, PWA).
+- Generated: Yes. Committed: No (`.gitignore`).
+
+**`coverage/`, `playwright-report/`, `test-results/`, `blob-report/`, `dev-dist/`:**
+- Purpose: Test and dev artifacts.
+- Generated: Yes. Committed: No (`.gitignore`).
+
+**`supabase/.temp/`, `supabase/.branches/`:**
 - Purpose: Supabase CLI local state.
-- Generated: Yes. Committed: No.
-
-**`packages/recurrence/coverage/`:**
-- Purpose: Coverage report output.
-- Generated: Yes. Committed: No.
-
-**`apps/service/dist/` and `apps/web/dist/`:**
-- Purpose: Build output (`dist/main.js` for the service).
-- Generated: Yes. Committed: No.
-
-**`apps/service/bin/`:**
-- Purpose: Holds the `hearth-admin` wrapper and the built CLI.
-- Generated: The CLI bundle is generated; the wrapper is committed. Committed: Yes (wrapper).
+- Generated: Yes. Committed: No (`supabase/.gitignore`, root `.gitignore`).
 
 **`apps/service/src/db/types.ts`:**
-- Purpose: Kysely types from the schema.
-- Generated: Yes (`pnpm db:types`). Committed: Yes.
+- Purpose: Kysely types generated from the migrated schema.
+- Generated: Yes (`pnpm db:types`). Committed: Yes. Do not hand-edit.
 
-**`apps/service/src/openapi.ts` output:**
-- Purpose: OpenAPI document emitted by `apps/service/src/write-openapi.ts` during `build`.
-- Generated: Yes at build time.
+**`apps/web/public/icons/`:**
+- Purpose: PWA icons.
+- Generated: Yes, by `apps/web/scripts/generate-icons.mjs`. Committed: Yes.
 
-**`node_modules/`:**
-- Generated: Yes. Committed: No.
+**`e2e/fixtures/` and `apps/service/src/recipes/fixtures/`:**
+- Purpose: Recorded external responses for deterministic tests and the E2E fixture transports.
+- Generated: `e2e/fixtures/flipp/normalized/` is regenerated from `e2e/fixtures/flipp/raw/` by `apps/service/scripts/normalize-fixtures.ts`; `apps/service/src/recipes/fixtures/` is hand-maintained. Committed: Yes.
+
+**`packages/shared/src/data/`, `packages/matching/src/data/`:**
+- Purpose: Large static data tables (common passwords, brands, units, descriptors).
+- Generated: No. Committed: Yes.
 
 **`.planning/`:**
-- Purpose: GSD planning and codebase maps (`.planning/codebase/`).
-- Committed: per project policy.
+- Purpose: GSD planning workspace, including `codebase/` analysis documents. Not part of the product build.
+- Generated: Mixed. Committed: Mostly yes; `.planning/research/.cache/` and `.planning/cleanup/logs/` are ignored.
 
 ---
 
-*Structure analysis: 2026-10-21*
+*Structure analysis: 2026-10-22*

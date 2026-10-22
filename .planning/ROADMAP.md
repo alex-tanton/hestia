@@ -181,10 +181,10 @@ Plans:
   1. The six CI jobs share one composite setup action instead of repeating the preamble, and the workflow is still named `CI` with its job ids unchanged.
   2. The seed typecheck runs exactly once in CI.
   3. The duplicated test fixtures flagged by the scan live in a single shared place, all tests still pass, and a re-scan shows fewer clones than the Phase 2 baseline.
-  4. The 262 stale spec citations are removed as comment-only edits, verified by identical transformed output, with `supabase/migrations/` untouched.
+  4. The stale spec citations (1,116 lines in 456 files at PR C's base, recounted with the full retired-spec vocabulary; 262 was a Phase 2 count) are removed as comment-only edits, verified by identical transformed output, with `supabase/migrations/` untouched; test titles and three fixture pages were changed in separately proven commits.
   5. `docs/` and `.planning/codebase/` match the code: statements spot-checked against the repo hold (for example, `hearth-admin` is described as hand-written), and no review, decision-log, or ADR file was added under `docs/`.
 
-**Plans:** 10/13 plans executed
+**Plans:** 12/13 plans executed
 
 **Scope note:** seven plans exceed the 100k-token smart-zone estimate (05-04 110k, 05-06 140k, 05-07 130k, 05-08 140k, 05-09 150k, 05-10 130k, 05-12 110k; confidence low, no calibration samples yet). This is accepted and the plans are not re-sliced: the work is mechanical, gated per batch, and executed in worktrees.
 
@@ -214,10 +214,10 @@ Plans:
 - [x] 05-10-PLAN.md — PR C: non-TS code and config files, recipe HTML fixtures, and the 46 test titles in their own commit
 
 **Wave 8** *(blocked on Wave 7 completion)*
-- [ ] 05-11-PLAN.md — PR C landing: whole-range proof, post-condition, six green jobs, owner merge
+- [x] 05-11-PLAN.md — PR C landing: whole-range proof, post-condition, six green jobs, owner merge
 
 **Wave 9** *(blocked on Wave 8 completion and on the owner's merge of PR C)*
-- [ ] 05-12-PLAN.md — PR D finish: docs for this phase's files, map regeneration (operator), D-11 Comments text, CLAUDE.md regenerated, RED-04 count restated
+- [x] 05-12-PLAN.md — PR D finish: docs for this phase's files, map regeneration (operator), D-11 Comments text, CLAUDE.md regenerated, RED-04 count restated
 
 **Wave 10** *(blocked on Wave 9 completion)*
 - [ ] 05-13-PLAN.md — PR D landing and phase close: repo-wide post-conditions, phase index, six green jobs, owner merge
@@ -248,5 +248,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Baseline, Net Stabilization, and Analysis | 9/9 | Complete    | 2026-10-19 |
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
-| 5. Redundancy Reduction and Text Sync | 10/13 | In Progress | - |
+| 5. Redundancy Reduction and Text Sync | 12/13 | In Progress | - |
 | 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |

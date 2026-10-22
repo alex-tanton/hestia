@@ -32,3 +32,83 @@ import('../privileged/…')	syntax example of a dynamic import, with an ellipsis
 components/icons	named in a negation: the doc says no such directory exists in the web app
 Dialog.tsx	named in a negation: the doc says there is no general-purpose Dialog.tsx, only the alert-dialog wrapper
 lg:pl-56	Tailwind utility class, not a script (the colon makes it look like one)
+../App.tsx	relative import in an example; apps/web/src/App.tsx exists and apps/web/src/test/harness.tsx imports it
+.js	bare file extension in a naming rule
+.only	bare Vitest modifier named in a rule about focused tests
+.planning/cleanup/logs/	gitignored raw logs directory (.gitignore)
+.planning/research/.cache/	gitignored research cache (.gitignore)
+.skip	bare Vitest modifier named in a rule about skipped tests
+.test.mjs	bare file suffix in a naming rule
+.ts	bare file extension in a naming rule
+.tsx	bare file extension in a naming rule
+actions/checkout@v7	GitHub Action reference, not a path; used in .github/workflows/ci.yml
+actions/setup-node@v7	GitHub Action reference, not a path; used in .github/actions/setup/action.yml
+actions/upload-artifact@v7	GitHub Action reference, not a path; used in .github/workflows/ci.yml
+api/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+application/problem+json	media type, not a path
+apps/*/src/**/*.test.ts(x)	glob pattern describing test file placement, not a path
+apps/service/dist/	build output directory, gitignored
+apps/service/dist/cli.js	build output (tsup), gitignored
+apps/web/dist/	build output directory, gitignored
+auth.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+auth/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+bills/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+blob-report/	generated Playwright output, gitignored
+chores.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+chores/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+client.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+common-passwords.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+coverage/	generated coverage output, gitignored
+data/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+deals.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+deals/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+dev-dist/	generated PWA dev output, gitignored
+docker/login-action@v4	GitHub Action reference, not a path; used in .github/workflows/ci.yml
+e2e/playwright-report/	generated Playwright report, gitignored
+env.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+errands.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+flipp/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+functions.sql	short name for supabase/migrations/20260919070200_functions.sql, the only migration with that suffix
+hearth-service:3000	compose service name and port (docker/Caddyfile:50), not a script
+households.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+invites.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+kong/kong	container image repository name (docker/docker-compose.yml), not a path
+kong/kong:3.9.3	container image reference (docker/docker-compose.yml:146), not a path
+lists.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+lists/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+lists/deals	client route path in apps/web/src/routes.tsx, not a file
+lists/flyers	client route path in apps/web/src/routes.tsx, not a file
+match-overrides.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+meal-plan.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+meals/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+membership.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+notifications.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+packages/*/dist/	build output glob, gitignored
+pantry.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+password.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+playwright-report/	generated Playwright report, gitignored
+pnpm/action-setup@v6	GitHub Action reference, not a path; used in .github/actions/setup/action.yml
+problem.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+prodrigestivill/postgres-backup-local	container image repository name (docker/docker-compose.yml:259), not a path
+prodrigestivill/postgres-backup-local:17-debian-d257e5d	container image reference (docker/docker-compose.yml:259), not a path
+public.ecr.aws/supabase/gotrue:v2.196.0	container image reference (docker/docker-compose.yml:63), not a path
+public.ecr.aws/supabase/realtime:v2.130.0	container image reference (docker/docker-compose.yml:106), not a path
+push-double.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+push/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+recipes.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+src/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+supabase/.branches/	local Supabase CLI state, gitignored
+supabase/.temp/	local Supabase CLI state, gitignored
+system.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+test-results/	generated Playwright output, gitignored
+tsconfig.json	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+types.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+users.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+origin/main	git remote ref, not a path
+.claude/skills/	skill directories the generated skills block says may be added; none exists yet
+.agents/skills/	skill directory the generated skills block says may be added; none exists yet
+.cursor/skills/	skill directory the generated skills block says may be added; none exists yet
+.github/skills/	skill directory the generated skills block says may be added; none exists yet
+.codex/skills/	skill directory the generated skills block says may be added; none exists yet
+SKILL.md	index file name a skill directory would carry; no skill exists yet
+!docker/ca.crt	dockerignore pattern in the hand-maintained cloud-sandbox workaround; the file is created locally and never committed

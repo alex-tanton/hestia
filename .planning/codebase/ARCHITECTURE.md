@@ -1,277 +1,303 @@
 ---
-last_mapped_commit: 431e646ab110c804b7229cecc9e151d343790b3a
-last_mapped_at: 2026-10-21
+last_mapped_commit: 283f15dbb2b5ed8ded0ba14e04d5015e5d0d367c
+last_mapped_at: 2026-10-22
 ---
-<!-- refreshed: 2026-10-21 -->
+<!-- refreshed: 2026-10-22 -->
 
 # Architecture
 
-**Analysis Date:** 2026-10-21
+**Analysis Date:** 2026-10-22
 
 ## System Overview
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────┐
-│                     Browser: installable PWA (apps/web)                   │
-│  screens/ + pillars/ + components/  →  lib/api (TanStack Query hooks)     │
-│  lib/auth (Supabase auth client)    lib/realtime   lib/offline (IDB)      │
-└───────────┬────────────────────────────────┬─────────────────┬───────────┘
-            │ /api/* (bearer JWT)            │ /auth/v1, /realtime │ static
-            ▼                                ▼                 ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│  Caddy (docker/Caddyfile)  — static PWA + reverse proxy, :8080 on loopback │
-└───────────┬────────────────────────────────┬─────────────────────────────┘
-            │ /api/*                         │ auth, realtime
-            ▼                                ▼
-┌───────────────────────────────┐   ┌──────────────────────────────────────┐
-│ hearth-service (apps/service) │   │ Kong (docker/kong.yml) → GoTrue,     │
-│  app.ts  → routes/*.ts        │   │ Realtime                              │
-│  http/context.ts (auth, scope)│   └──────────────────┬───────────────────┘
-│  services/*.ts (rules)        │                      │
-│  jobs/ (node-cron scheduler)  │                      │
-│  privileged/ (service_role)   │──── GoTrue admin API ┘
-└───────┬──────────────┬────────┘
-        │ hearth_service role, withUserDb / withAnonDb / privileged fns
-        ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│  Postgres 17 (supabase/migrations/*.sql) — RLS policies are the isolation │
-│  boundary; helper functions, notification outbox, record_app_error        │
-└──────────────────────────────────────────────────────────────────────────┘
-
-Shared pure packages used across the boundary:
-  packages/shared (Zod schemas, problem details, scrubbing)
-  packages/recurrence (bill/chore occurrence and rotation)
-  packages/matching (ingredient/item matching)
+                         Browser (installed PWA)
+        apps/web  src/main.tsx -> App.tsx -> routes.tsx (lazy screens)
+        TanStack Query cache + paused-mutation write queue (IndexedDB)
+        Service worker apps/web/src/sw.ts (precache, push display)
+                                   |
+                                   v  HTTPS via Tailscale Funnel
+                    Caddy  docker/Caddyfile  (:8080, only published port)
+          /api/*  ----------------------+     /auth/v1/*, /realtime/v1/*
+          /*      static SPA from /srv  |        |
+                                        v        v
+        hearth-service  apps/service   |    kong:8000 -> GoTrue (auth), Realtime
+        (Fastify, dist/main.js)  <-----+
+          |  routes/*.ts  -> services/*.ts, chores/*.ts, ...
+          |  http/context.ts: authenticate -> withUserDb (RLS transaction)
+          |  jobs/scheduler.ts (node-cron, in-process)
+          |        |                     |                    |
+          v        v                     v                    v
+   Postgres 17   GoTrue admin/API    Flipp (deals)     Web Push services
+   (Supabase)    (service role)      recipe hosts       (VAPID)
 ```
+
+Two separate paths reach the database. Request handlers and jobs use the `hearth_service` pool through transactions that switch role (`authenticated` for callers, `service_role` only inside `apps/service/src/privileged/`). Caddy never forwards `/api/*` to Postgres or PostgREST.
 
 ## Component Responsibilities
 
 | Component | Responsibility | File |
 |-----------|----------------|------|
-| Service bootstrap | Reads env, builds Flipp/recipe/push clients, builds the Fastify app, starts the scheduler, handles SIGTERM/SIGINT | `apps/service/src/main.ts` |
-| App assembly | Error handler, global rate limit, registers every route plugin under `/api` | `apps/service/src/app.ts` |
-| Env validation | Zod parse of process env; fails startup on invalid values | `apps/service/src/env.ts` |
+| Service bootstrap | Reads env, builds the Flipp, recipe, and push clients, builds the Fastify app, starts the scheduler, handles SIGTERM and SIGINT | `apps/service/src/main.ts` |
+| App assembly | Error handler, global rate limit, registers every route plugin (every route lives under `/api`) | `apps/service/src/app.ts` |
+| Env validation | Zod parse of process env; fails startup on a missing or invalid value; `parseCliEnv` for the owner CLI | `apps/service/src/env.ts` |
 | Route context | Bearer-token authentication, `asUser` / `inHousehold` helpers that wrap `withUserDb` | `apps/service/src/http/context.ts` |
-| RLS transaction wrapper | `set local role authenticated`, installs JWT claims; `withAnonDb` for error recording | `apps/service/src/db/user-db.ts` |
+| RLS transaction wrapper | Opens a transaction, `set local role authenticated`, installs JWT claims; `withAnonDb` for error recording | `apps/service/src/db/user-db.ts` |
 | Database pool | Kysely over `pg`, connects as `hearth_service` | `apps/service/src/db.ts`, `apps/service/src/db/types.ts` (generated) |
 | Routes | Thin HTTP layer per feature: parse input with shared schemas, call a service, shape the reply | `apps/service/src/routes/*.ts` |
-| Services | Business rules per feature (recurrence, repricing, readiness, membership, invites, notifications) | `apps/service/src/services/*.ts`, `apps/service/src/services/deals/` |
-| Jobs | Cron-driven work: deal refresh, autopay logging, notification dispatch, cache pruning, plan refresh | `apps/service/src/jobs/*.ts` |
-| Scheduler | Registers node-cron tasks; wraps each run in an advisory lock | `apps/service/src/jobs/scheduler.ts`, `apps/service/src/jobs/advisory-lock.ts` |
+| Services | Business rules per feature (recurrence, repricing, readiness, membership, invites, notifications); chores and errands sit in a sibling folder | `apps/service/src/services/*.ts`, `apps/service/src/services/deals/`, `apps/service/src/chores/*.ts`, `apps/service/src/notifications/*.ts` |
+| Jobs | Cron-driven work: deal refresh, autopay logging, notification dispatch, cache pruning (four scheduled jobs; `refresh-plan.ts` is a planner that `refresh-deals.ts` calls, not a job) | `apps/service/src/jobs/*.ts` |
+| Scheduler | Registers the node-cron tasks; wraps each run in an advisory lock | `apps/service/src/jobs/scheduler.ts`, `apps/service/src/jobs/advisory-lock.ts` |
 | Privileged access | The only `service_role` code: notification outbox, GoTrue admin, job DB, system health, scheduled reminders | `apps/service/src/privileged/*.ts` |
-| Auth verification | JWT verify and JWKS fetch from GoTrue | `apps/service/src/auth/jwt.ts`, `apps/service/src/gotrue/client.ts` |
-| Deals source | Flipp HTTP client behind one rate-limited request queue; fixture transport for E2E | `apps/service/src/deals/flipp/*.ts`, `apps/service/src/deals/deal-source.ts` |
-| Recipe import | Fetch pasted URL server-side, extract JSON-LD, parse ingredients, per-host rate limit | `apps/service/src/recipes/*.ts` |
+| Auth verification | Verifies the bearer token's signature and expiry (HS256 with `JWT_SECRET`; ES256 only for a key GoTrue publishes at its JWKS endpoint, as `supabase start` does); GoTrue HTTP client | `apps/service/src/auth/jwt.ts`, `apps/service/src/gotrue/client.ts` |
+| Deals source | Flipp HTTP client behind one rate-limited request queue, with a fixture transport for E2E | `apps/service/src/deals/flipp/*.ts`, `apps/service/src/deals/deal-source.ts` |
+| Recipe import | Fetches a pasted URL server-side, extracts JSON-LD, parses ingredients, rate-limits per host | `apps/service/src/recipes/*.ts` |
 | Push | Web Push transport (VAPID), recording transport for E2E, E2E seam route | `apps/service/src/push/*.ts` |
-| CLI | `hearth-admin` owner commands (password reset, etc.) | `apps/service/src/cli.ts`, `apps/service/bin/hearth-admin` |
+| CLI | `hearth-admin reset-password`, the only owner command; the shell wrapper runs `node dist/cli.js` | `apps/service/src/cli.ts`, `apps/service/bin/hearth-admin` |
 | Web bootstrap | Creates the Supabase client, auth client, query client, persisters, realtime port | `apps/web/src/main.tsx` |
 | Web routing | Route table with lazy-loaded screens and session guards | `apps/web/src/routes.tsx`, `apps/web/src/screens/AuthenticatedLayout.tsx` |
 | API client | `fetch` wrapper that attaches the bearer token, refreshes once, parses problem responses | `apps/web/src/lib/api/client.ts` |
 | Query hooks | TanStack Query hooks per domain, validated with shared Zod schemas | `apps/web/src/lib/api/hooks.ts`, `apps/web/src/lib/api/*-hooks.ts` |
 | Offline writes | Queueable mutations as paused TanStack mutations, persisted to IndexedDB | `apps/web/src/lib/offline/write-queue.ts`, `apps/web/src/lib/offline/persist.ts` |
-| Realtime | Per-list Supabase channels for shopping list items and list row | `apps/web/src/lib/realtime/supabase-realtime.ts` |
+| Realtime | One Supabase channel per open shopping list, for item changes and the list row | `apps/web/src/lib/realtime/supabase-realtime.ts` |
 | Service worker | Installability, offline caching, push display | `apps/web/src/sw.ts`, `apps/web/src/lib/push/service-worker-handlers.ts` |
-| Shared contract | Request/response Zod schemas, OpenAPI source, problem details, scrubbing | `packages/shared/src/api/*.ts`, `packages/shared/src/problem.ts`, `packages/shared/src/scrub.ts` |
+| Shared contract | Request and response Zod schemas, OpenAPI source, problem details, scrubbing | `packages/shared/src/api/*.ts`, `packages/shared/src/problem.ts`, `packages/shared/src/scrub.ts` |
 | Recurrence math | Pure bill and chore occurrence and rotation logic | `packages/recurrence/src/*.ts` |
 | Matching | Pure ingredient normalization, similarity, matcher | `packages/matching/src/*.ts` |
 | Schema | Migrations (schema, RLS, functions, realtime, notifications) | `supabase/migrations/*.sql` |
 
 ## Pattern Overview
 
-**Overall:** Modular monolith in a pnpm workspace. A single Fastify API process plus a React PWA, backed by Postgres with row-level security. The service is a thin, RLS-scoped gateway: business rules live in service modules, isolation lives in the database.
+**Overall:** Modular monolith with a thin HTTP layer, domain service modules, and database-enforced isolation. Pure logic lives in workspace packages shared by the browser and the service.
 
 **Key Characteristics:**
-- Every data-bearing request is authenticated by the service, then executed inside a Postgres transaction running as `authenticated` with the caller's claims. RLS decides what is visible, not application code (`apps/service/src/db/user-db.ts`, `docs/architecture.md`).
-- The service is the only HTTP path to application data; PostgREST is not used. Supabase Auth and Realtime are reached directly through Caddy and Kong.
-- Privileged `service_role` access is fenced into `apps/service/src/privileged/` and enforced by an ESLint `no-restricted-imports` rule (`eslint.config.js`).
-- Background jobs run in-process via `node-cron` and are guarded against overlap with Postgres advisory locks (`apps/service/src/jobs/advisory-lock.ts`). The design assumes one running service instance.
-- The web app is a route-split SPA: pillar tabs, Settings, and onboarding load lazily (`apps/web/src/routes.tsx`); the dashboard ships in the shell.
+- Every data-bearing request is authenticated in the service, then runs inside one Postgres transaction that sets `role authenticated` and the caller's JWT claims (`apps/service/src/db/user-db.ts`). Row-level security decides what is visible; application code does not re-implement it.
+- Route plugins are thin: authenticate, `parse` input with a shared Zod schema, call a service function on the scoped transaction, shape the reply (`apps/service/src/routes/bills.ts`).
+- Service-role access is fenced. Only `apps/service/src/main.ts` and `apps/service/src/cli.ts` import modules from `apps/service/src/privileged/`; the fence is an ESLint rule (`eslint.config.js`, `no-restricted-imports` and an `ImportExpression` selector for dynamic imports). Jobs and routes receive narrow injected functions instead.
+- The service is the only HTTP path to application data. PostgREST is not used. Supabase Auth and Realtime are reached directly through Caddy and Kong (`docker/Caddyfile`, `docker/kong.yml`).
+- Background work runs in-process via `node-cron` in a single service process, guarded by Postgres advisory locks (`apps/service/src/jobs/advisory-lock.ts`). The design therefore assumes one running service instance.
+- The web app is a route-split SPA: pillar tabs, Settings, and onboarding are lazy chunks (`apps/web/src/routes.tsx`).
+- Shared contract: request and response Zod schemas live once in `packages/shared/src/api/*.ts` and are imported by both the service and the web client.
 - Pure packages (`packages/recurrence`, `packages/matching`, `packages/shared`) hold logic shared across the API boundary and carry no framework or I/O dependency.
-- Dependencies are injected by hand: `main.ts` builds concrete clients and passes narrow functions into `buildApp` and `createScheduler`. There is no DI container.
 
 ## Layers
 
-**Web presentation:**
-- Purpose: Render each route and interaction.
-- Location: `apps/web/src/screens/`, `apps/web/src/components/`, `apps/web/src/pillars/`
-- Contains: Screens (`*Screen.tsx`, `*Route.tsx`), feature components, UI primitives (`components/ui/`), shell (`components/shell/`), state blocks (`components/states/`).
-- Depends on: `apps/web/src/lib/` hooks, `packages/shared` schemas and types, `packages/recurrence` for due-date display.
-- Used by: `apps/web/src/routes.tsx` only.
+**Web screens and components:**
+- Purpose: Render routes and interactions.
+- Location: `apps/web/src/screens/`, `apps/web/src/pillars/`, `apps/web/src/components/`
+- Contains: `*Screen.tsx`, `*Route.tsx` wrappers, feature components, primitives under `apps/web/src/components/ui/`, shell under `apps/web/src/components/shell/`.
+- Depends on: `apps/web/src/lib/` hooks, `@hearth/shared`, `@hearth/recurrence` (due-date display).
+- Used by: `apps/web/src/routes.tsx`.
 
-**Web data access:**
-- Purpose: Talk to the API and Supabase; manage cache and offline state.
+**Web data and session layer:**
+- Purpose: Talk to the API and Supabase, manage cache, offline writes, and realtime.
 - Location: `apps/web/src/lib/api/`, `apps/web/src/lib/auth/`, `apps/web/src/lib/offline/`, `apps/web/src/lib/realtime/`, `apps/web/src/lib/push/`
-- Contains: `client.ts` (fetch wrapper), `*-hooks.ts` (TanStack Query hooks), `keys.ts` (query keys), `query-client.ts`, `write-queue.ts`, `persist.ts`.
-- Depends on: `packages/shared`, `@supabase/supabase-js` (lazy), TanStack Query.
+- Contains: `client.ts` (fetch wrapper, one refresh retry, problem parsing), `api-context.tsx` (providers and `useApi`, `useAuthState`), `keys.ts` (household-scoped query keys), `*-hooks.ts` (TanStack Query hooks), `write-queue.ts` and `chore-errand-writes.ts` (queued mutations), `persist.ts` (IndexedDB persistence), `supabase-realtime.ts` (realtime port).
+- Depends on: `@hearth/shared`, `@supabase/supabase-js` (lazy-loaded), TanStack Query.
 - Used by: screens and `apps/web/src/main.tsx`.
 
 **HTTP routes (service):**
 - Purpose: Map HTTP to domain calls.
 - Location: `apps/service/src/routes/`
-- Contains: One `FastifyPluginAsync<{ ctx: RouteContext }>` per feature (`bills.ts`, `chores.ts`, `lists.ts`, `households.ts`, `meal-plan.ts`, `deals.ts`, `errands.ts`, `recipes.ts`, `match-overrides.ts`, `users.ts`, `auth.ts`, `health.ts`, `system.ts`).
-- Depends on: `apps/service/src/http/context.ts`, `apps/service/src/services/`, `packages/shared`.
-- Used by: `apps/service/src/app.ts` registers each plugin under `/api`.
+- Contains: One `FastifyPluginAsync<{ ctx: RouteContext }>` per resource (`auth.ts`, `users.ts`, `households.ts`, `lists.ts`, `bills.ts`, `chores.ts`, `errands.ts`, `meal-plan.ts`, `recipes.ts`, `deals.ts`, `match-overrides.ts`, `system.ts`, `health.ts`).
+- Depends on: `apps/service/src/http/context.ts`, domain modules, `@hearth/shared`.
+- Used by: `apps/service/src/app.ts`, which registers each plugin.
 
-**Services (business rules):**
+**Request context:**
+- Purpose: Authentication, input validation helper, and the only sanctioned path to the database for handlers.
+- Location: `apps/service/src/http/context.ts`, `apps/service/src/db/user-db.ts`, `apps/service/src/db.ts`
+- Contains: `createRouteContext` (`authenticate`, `asUser`, `inHousehold`, `isOwner`), `parse(schema, value)`, `withUserDb`, `withAnonDb`, the Kysely `Database` type from `apps/service/src/db/types.ts`.
+- Depends on: `apps/service/src/auth/jwt.ts` (token verification), `apps/service/src/services/households.ts` (`markHouseholdActive`).
+
+**Domain services:**
 - Purpose: Business rules and the queries that implement them.
-- Location: `apps/service/src/services/` (flat), `apps/service/src/services/deals/`, plus domain helpers in `apps/service/src/chores/`, `apps/service/src/notifications/`, `apps/service/src/recipes/`, `apps/service/src/deals/`.
-- Contains: e.g. `listBills(db, householdId, userId)`, `payBill`, `repriceExpiredItems` (`services/repricing.ts`), `recomputeReadinessForHousehold` (`services/readiness.ts`).
-- Depends on: `packages/recurrence`, `packages/matching`, `apps/service/src/db/types.ts`.
-- Used by: routes and jobs. Each takes a Kysely handle that is already scoped by `withUserDb`.
+- Location: `apps/service/src/services/` (flat, plus `services/deals/`), and two sibling domain folders: `apps/service/src/chores/` (chores, errands, occurrence logic) and `apps/service/src/notifications/` (copy and planners).
+- Contains: functions such as `listBills(db, householdId, userId)`, `createHouseholdBill`, `payBill`, `repriceExpiredItems`, `recomputeReadinessForHousehold`, `createMatchOverride`, `markHouseholdActive`. Each takes a Kysely handle already bound to the caller's transaction.
+- Depends on: `@hearth/recurrence`, `@hearth/matching`, `@hearth/shared`, the generated DB types.
+- Used by: route plugins and scheduled jobs (through the scheduler's injected functions).
 
 **Database access:**
 - Purpose: Run every request as the caller.
 - Location: `apps/service/src/db.ts`, `apps/service/src/db/user-db.ts`, `apps/service/src/db/types.ts`
-- Contains: `withUserDb` (authenticated role plus claims), `withAnonDb` (error recording only), Kysely types generated from the schema.
-- Depends on: Postgres as `hearth_service` (NOINHERIT).
-- Used by: `http/context.ts`, `main.ts` (error recorder), and `privileged/job-database.ts`.
+- Contains: `withUserDb` (authenticated role plus claims), `withAnonDb` (error recording only), the Kysely pool, and the Kysely types generated from the schema.
+- Depends on: Postgres as `hearth_service`, a NOINHERIT login role that holds no table rights until a transaction switches role.
+- Used by: `apps/service/src/http/context.ts` (`withUserDb`), `apps/service/src/routes/deals.ts` (`claimForUser`, the one route that opens its own transaction), and `apps/service/src/main.ts` (`withAnonDb`, for the error recorder).
 
-**Privileged access:**
+**Privileged access (service role):**
 - Purpose: The few cross-household operations.
 - Location: `apps/service/src/privileged/`
-- Contains: `service-role-db.ts` (`withServiceRoleDb`, `readSystemHealth`), `notification-outbox.ts` (claim-then-send), `scheduled-reminders.ts`, `gotrue-admin.ts` (email change), `job-database.ts` (narrow job DB).
-- Depends on: Postgres as `service_role`; GoTrue admin API.
-- Used by: `main.ts` and `cli.ts` only at the module level. Routes and jobs receive narrow functions instead (`changeEmail`, `systemHealth`, `DispatchOutbox`, `JobDatabase`).
+- Contains: `service-role-db.ts` (`withServiceRoleDb`, `readSystemHealth`), `notification-outbox.ts` (outbox claim and send), `scheduled-reminders.ts`, `gotrue-admin.ts` (email change, recovery links), `job-database.ts` (builds the `JobDatabase` handed to jobs).
+- Depends on: Postgres as the service role, GoTrue admin API.
+- Used by: `apps/service/src/main.ts` and `apps/service/src/cli.ts` only, plus the type-only `SystemHealthRow` import in `apps/service/src/http/context.ts`.
 
 **Jobs:**
 - Purpose: Scheduled and on-demand background work.
 - Location: `apps/service/src/jobs/`
-- Contains: `refresh-deals.ts`, `log-autopay.ts`, `dispatch-notifications.ts`, `prune-cache.ts`, `refresh-plan.ts`; `scheduler.ts` registers the crons; `advisory-lock.ts` wraps each run; `types.ts` declares the narrow `JobDatabase`, `JobLogger`.
-- Depends on: `jobs/types.ts`, services.
-- Used by: `apps/service/src/main.ts` (`createScheduler`, `scheduler.start()`).
+- Contains: `scheduler.ts` (registers cron tasks, runs and tracks jobs, `stop()` waits for in-flight runs), `advisory-lock.ts`, `refresh-deals.ts`, `log-autopay.ts`, `dispatch-notifications.ts`, `prune-cache.ts`, and `refresh-plan.ts`, which is a pure planner used by `refresh-deals.ts` and is not scheduled itself. `types.ts` defines the narrow `JobDatabase`, `DispatchOutbox`, and `JobLogger` interfaces.
+- Depends on: `JobDatabase` injected from `apps/service/src/privileged/job-database.ts`, services.
+- Used by: `apps/service/src/main.ts` (`createScheduler`, `scheduler.start()`), plus `queueBackgroundRefresh` injected into the deals service.
 
-**Third-party adapters:**
-- Purpose: Isolate external protocols.
-- Location: `apps/service/src/gotrue/` (GoTrue HTTP), `apps/service/src/auth/jwt.ts` (JWT verify, JWKS), `apps/service/src/deals/flipp/` (Flipp), `apps/service/src/recipes/` (URL fetch and JSON-LD), `apps/service/src/push/` (Web Push).
-- Used by: `main.ts` injects them into `buildApp` and the scheduler.
+**External protocol adapters:**
+- Purpose: Isolate third-party protocols.
+- Location: `apps/service/src/gotrue/` (GoTrue HTTP client), `apps/service/src/auth/jwt.ts` (token verification: HS256 with `JWT_SECRET`; ES256 only for keys GoTrue publishes at its JWKS endpoint), `apps/service/src/deals/flipp/` (Flipp HTTP through one rate-limited queue, fixture transport for E2E), `apps/service/src/deals/price/` (price parsing), `apps/service/src/recipes/` (recipe fetch, JSON-LD, host rate limiter, private-address guard), `apps/service/src/push/` (Web Push transport, recording transport, E2E test seam).
+- Used by: `apps/service/src/main.ts`, which injects them into `buildApp` and the scheduler.
 
-**Shared contract and pure logic:**
+**Shared packages (pure):**
 - Purpose: One contract and one set of rules for both sides of the API.
-- Location: `packages/shared/src/`, `packages/recurrence/src/`, `packages/matching/src/`
-- Depends on: Zod, date-fns (recurrence) and no I/O.
+- Location: `packages/shared/src/` (Zod request/response schemas in `api/`, problem details, scrubbing, password rules; subpath export `@hearth/shared/common-passwords`), `packages/recurrence/src/` (bill and chore occurrence and rotation), `packages/matching/src/` (ingredient normalization, similarity, matcher).
+- Depends on: Zod, date-fns and `@date-fns/tz` (recurrence), `fastest-levenshtein` (matching). No I/O.
 - Used by: `apps/web`, `apps/service`, and `supabase/seed` (matching).
 
 ## Data Flow
 
-### Primary Request Path (authenticated read or write)
+### Primary Request Path (authenticated household write)
 
-1. Caddy terminates the public origin and proxies `/api/*` to the service (`docker/Caddyfile`).
-2. `app.ts` applies the per-IP rate limit to `/api/*` and trusts proxies listed in `HEARTH_TRUSTED_PROXIES` (`apps/service/src/app.ts`).
-3. The route plugin calls `ctx.authenticate(request)`, which reads the `Bearer` token and verifies it via `deps.verifyToken` (`apps/service/src/http/context.ts`, `apps/service/src/auth/jwt.ts`).
-4. The route parses the body or params with a shared schema via `parse(schema, value)` (`apps/service/src/http/context.ts`, schemas in `packages/shared/src/api/*.ts`).
-5. The route calls `ctx.inHousehold(user, householdId, fn)` or `ctx.asUser(user, fn)`, which opens a transaction with `set local role authenticated` and the JWT claims (`apps/service/src/db/user-db.ts`). `inHousehold` first stamps the household active and answers 404 to non-members.
-6. The service function runs its queries; RLS filters rows as the caller.
-7. The route returns the value or `reply.code(201).send(...)`. Errors are thrown as `ProblemError` and rendered as `application/problem+json` by the global handler (`apps/service/src/problem.ts`).
+Example: `POST /api/households/:id/bills`, defined in `apps/service/src/routes/bills.ts`.
 
-### Offline Write Path
+1. Caddy terminates the request and proxies `/api/*` to `hearth-service:3000` with the resolved client address (`docker/Caddyfile`).
+2. `buildApp` in `apps/service/src/app.ts` runs the global rate limit (only `/api/*` routes are limited) and dispatches to the plugin.
+3. `ctx.authenticate(request)` reads the `Authorization: Bearer` header and verifies the token; failures become 401 problems (`apps/service/src/http/context.ts`).
+4. `parse(householdIdParamsSchema, request.params)` and `parse(createBillRequestSchema, request.body)` validate input; failures become 400 problems.
+5. `ctx.inHousehold(user, id, fn)` opens `withUserDb`: a transaction with `set local role authenticated` and `request.jwt.claims` set, then calls `markHouseholdActive`, which answers 404 to non-members.
+6. `createHouseholdBill(db, id, user.id, body)` in `apps/service/src/services/bills.ts` runs its queries; RLS policies in `supabase/migrations/20260919070100_rls.sql` apply to every statement.
+7. The route returns `reply.code(201).send(bill)`. The transaction commits when the callback resolves and rolls back when it throws.
 
-1. Queueable writes (list items, chore and errand writes) are TanStack mutations registered in `apps/web/src/lib/offline/chore-errand-writes.ts` and `write-queue.ts`.
-2. While offline the mutation pauses; `persist.ts` stores the paused mutation and cache in IndexedDB via `idb-keyval`.
-3. On reconnect, `use-write-queue.ts` resumes the mutations; each replays through the normal API client.
-4. Other writes are ordinary online mutations that disable controls while offline.
+### Error Path
+
+1. Services throw `ProblemError` via `fail(status, detail)` (`apps/service/src/problem.ts`).
+2. The global `setErrorHandler` in `apps/service/src/app.ts` maps Postgres errors (`problemFromDatabaseError`), GoTrue errors, and recipe fetch errors to problems.
+3. For status 500 and above, the handler logs a scrubbed record, calls `deps.recordError` (which writes through `withAnonDb` to `public.record_app_error`), and returns a generic problem with no internal detail.
+
+### Offline Write Path (list items, chore and errand writes)
+
+1. `apps/web/src/main.tsx` calls `registerQueueDefaults` before the persisted cache hydrates (`apps/web/src/lib/offline/chore-errand-writes.ts`, `apps/web/src/lib/offline/write-queue.ts`).
+2. A queueable mutation runs as a TanStack mutation; while offline it stays paused.
+3. `PersistQueryClientProvider` (`apps/web/src/App.tsx`) stores the paused mutation in IndexedDB through `apps/web/src/lib/offline/persist.ts`; the flush persister writes it immediately.
+4. On hydrate, `onSuccess` calls `resumePausedMutations()`, so queued writes resume after a reload.
+5. Other writes (bills, recipes, households) are ordinary online mutations; their controls are disabled while offline.
 
 ### Realtime Sync Path
 
-1. `apps/web/src/lib/realtime/supabase-realtime.ts` subscribes to per-list Supabase channels routed through Kong.
-2. A change event invalidates the matching TanStack Query keys (`apps/web/src/lib/api/keys.ts`), prompting a refetch through the service.
-3. The change feed is a signal only; authorization still applies on the refetch.
+1. `apps/web/src/lib/realtime/supabase-realtime.ts` creates a realtime port over the lazily loaded Supabase client.
+2. `apps/web/src/lib/realtime/use-list-realtime.ts` subscribes per list; Caddy proxies `/realtime/v1/*` through Kong to the Realtime service.
+3. A realtime message only invalidates the affected TanStack queries (for example `queryKeys.list` and `queryKeys.lists` in `apps/web/src/lib/realtime/use-list-realtime.ts`); the server stays the source of truth.
 
 ### Scheduled Job Path
 
-1. `main.ts` builds the scheduler with a `JobDatabase` from `privileged/job-database.ts` and dispatch/refresh deps.
-2. `scheduler.ts` registers node-cron tasks in UTC (`refresh-deals` 08:00, `log-autopay` and `dispatch-notifications` every 2 minutes, `prune-cache` 04:00).
-3. Each run calls `withJobLock` (`pg_try_advisory_lock(hashtext('<job name>'))`) and skips if the lock is held.
-4. Jobs resolve user-facing time against household or user timezones inside the job, not at cron time.
+1. `apps/service/src/main.ts` builds the scheduler with `createJobDatabase` (service role) and injected dispatch and refresh dependencies, then calls `scheduler.start()`.
+2. `apps/service/src/jobs/scheduler.ts` registers four `node-cron` tasks in UTC:
+   - `refresh-deals`: `0 8 * * *`
+   - `log-autopay`: `*/2 * * * *`
+   - `dispatch-notifications`: `*/2 * * * *`
+   - `prune-cache`: `0 4 * * *`
+3. Each run goes through `withJobLock` (`apps/service/src/jobs/advisory-lock.ts`), which takes `pg_try_advisory_lock` on a dedicated connection and skips if the lock is held.
+4. Errors are logged with scrubbed messages; `stop()` waits for in-flight runs before the pool closes.
 
 ### Notification Pipeline
 
-1. Planners in `apps/service/src/notifications/planners.ts` and producers in the database (`supabase/migrations/20261004090000_notification_producers.sql`) enqueue outbox rows.
-2. `dispatch-notifications` claims rows through `privileged/notification-outbox.ts` (claim-then-send), then calls the push transport (`push/web-push-transport.ts`).
-3. The service worker displays the push (`apps/web/src/lib/push/service-worker-handlers.ts`).
+1. Producers write notification rows through database functions and services (`supabase/migrations/20261004090000_notification_producers.sql`, `apps/service/src/services/notifications.ts`).
+2. `apps/service/src/jobs/dispatch-notifications.ts` consumes a `DispatchOutbox` built in `apps/service/src/privileged/notification-outbox.ts`.
+3. Pushes go through `apps/service/src/push/web-push-transport.ts`; with `HEARTH_PUSH_TRANSPORT=test-double` the recording transport is used instead.
+4. The browser receives pushes in `apps/web/src/sw.ts` and `apps/web/src/lib/push/service-worker-handlers.ts`.
+
+### Deals and Recipe Import Paths
+
+- Deals: `apps/service/src/routes/deals.ts` calls `DealsService` (`apps/service/src/services/deals/deals.ts`), which reads through caches in `services/deals/cache.ts` and `services/deals/storage.ts`. Fetches to Flipp go through the single `FlippRequestQueue` (`apps/service/src/deals/flipp/request-queue.ts`) shared by requests and the refresh job.
+- Recipes: `apps/service/src/routes/recipes.ts` calls `parseRecipeUrl` (`apps/service/src/recipes/parse-recipe-url.ts`), which fetches through `fetch-recipe.ts` and `host-rate-limiter.ts`, and extracts JSON-LD with `json-ld.ts`.
 
 **State Management:**
-- Server state: Postgres, read through the service. Web caches it in TanStack Query, persisted to IndexedDB (`apps/web/src/lib/api/query-client.ts`, `apps/web/src/lib/offline/persist.ts`).
-- Session: Supabase auth client (`apps/web/src/lib/auth/auth-client.ts`), gated by `RequireSession` and `SignedOutOnly` in `apps/web/src/screens/AuthenticatedLayout.tsx`.
-- Active household: stored on `profile.active_household_id`, stamped by `markHouseholdActive` (`apps/service/src/services/households.ts`).
-- Service in-memory state: deal skip rates (`apps/service/src/services/skip-rates.ts`), the Flipp request queue (`apps/service/src/deals/flipp/request-queue.ts`), the recipe host rate limiter (`apps/service/src/recipes/host-rate-limiter.ts`).
+- Server state: Postgres, read through the service, cached in TanStack Query and persisted to IndexedDB (`apps/web/src/lib/api/query-client.ts`, `apps/web/src/lib/offline/persist.ts`).
+- Session: Supabase auth client (`apps/web/src/lib/auth/auth-client.ts`), exposed through `useAuthState`; `RequireSession` and `SignedOutOnly` in `apps/web/src/screens/AuthenticatedLayout.tsx` act as route guards.
+- Active household: stored on `profile.active_household_id` and stamped by `markHouseholdActive` (`apps/service/src/services/households.ts`) on each household-scoped request.
+- In-memory service state: skip-rate registry (`apps/service/src/services/skip-rates.ts`), Flipp request queue, recipe host rate limiter.
 
 ## Key Abstractions
 
-**RLS-scoped database handle:**
-- Purpose: The only sanctioned way for a request to reach the database.
-- Examples: `apps/service/src/db/user-db.ts`, `apps/service/src/http/context.ts`
-- Pattern: Transaction-local role switch and claims. `inHousehold` also answers 404 to non-members.
+**RouteContext and `withUserDb`:**
+- Purpose: The only sanctioned way for a request to reach the database as a user.
+- Examples: `apps/service/src/http/context.ts`, `apps/service/src/db/user-db.ts`
+- Pattern: Transaction-local role switch and claims. `inHousehold` also returns 404 to non-members.
 
 **Route plugin:**
-- Purpose: Each feature is one Fastify plugin receiving `{ ctx: RouteContext }`.
+- Purpose: Each feature is one Fastify plugin receiving `{ ctx }`.
 - Examples: `apps/service/src/routes/bills.ts`, `apps/service/src/routes/lists.ts`
 - Pattern: `export const billRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => { app.get(...) }`
 
-**Shared API schema:**
-- Purpose: One definition for request validation, response parsing, and OpenAPI.
+**Shared schema:**
+- Purpose: One definition for request validation, response parsing on the client, and OpenAPI.
 - Examples: `packages/shared/src/api/bills.ts`, `packages/shared/src/api/lists.ts`, `apps/service/src/openapi.ts`
-- Pattern: Schema exported from `@hearth/shared`, used by `parse(...)` on the server and by the client request helper on the web.
+- Pattern: Schema exported from `@hearth/shared`, used by `parse(...)` on the server and by `api.request({ schema })` on the client.
 
-**Narrow job capabilities:**
-- Purpose: Capabilities handed to jobs so they cannot reach `service_role` directly.
-- Examples: `apps/service/src/jobs/types.ts`, `apps/service/src/privileged/job-database.ts`
-- Pattern: Dependency injection from `main.ts` through `createScheduler({ database, dispatch, refresh })`.
+**Injected narrow capabilities:**
+- Purpose: Give jobs and routes only the privilege they need.
+- Examples: `apps/service/src/jobs/types.ts` (`JobDatabase`, `DispatchOutbox`), `apps/service/src/privileged/job-database.ts`
+- Pattern: Dependency injection from `main.ts` into `createScheduler({ database, dispatch, refresh })` and `buildApp(deps, options)`.
 
-**Pillar:**
-- Purpose: Declares each top-level area (Lists, Meals, Chores, Bills, Deals) and whether it is released.
+**Pillars and released sections:**
+- Purpose: Declares each top-level area (Lists, Meals, Bills, Chores; Deals, Flyers, and Pantry are sub-tabs of Lists) and whether it is released. All four are in `RELEASED_PILLARS` today.
 - Examples: `apps/web/src/lib/sections.ts` (`PILLARS`, `RELEASED_PILLARS`), `apps/web/src/pillars/*/*Route.tsx`
-- Pattern: Unreleased pillars render `ComingSoon` through `PillarScreen`.
+- Pattern: Unreleased pillars render `ComingSoon` through `PillarScreen` (`apps/web/src/screens/PillarScreen.tsx`).
 
 **Problem details:**
 - Purpose: Uniform error contract across service and client.
 - Examples: `apps/service/src/problem.ts`, `packages/shared/src/problem.ts`, `apps/web/src/lib/api/problem.ts`
-- Pattern: `fail(status, detail)` throws a `ProblemError`. The error handler sends `application/problem+json`. Non-5xx details reach clients; 5xx details are scrubbed and recorded through `recordAppError`.
-
-**Dependency-injected port interfaces (web):**
-- Purpose: Keep the browser singletons swappable.
-- Examples: `AuthClient`, `RealtimePort`, `PushPort` referenced from `apps/web/src/main.tsx` and `apps/web/src/lib/api/api-context.tsx`.
+- Pattern: `fail(status, detail)` throws a `ProblemError`; the error handler sends `application/problem+json`. The detail of an unexpected 5xx error never reaches the client: it is scrubbed, recorded through `recordAppError`, and the reply is a generic problem. Client `ApiError` has status 0 for network failures.
 
 ## Entry Points
 
 **Service process:**
 - Location: `apps/service/src/main.ts`
-- Triggers: `node` on the built bundle `dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`), or `pnpm --filter @hearth/service dev`.
-- Responsibilities: Parse env, build clients, call `buildApp`, start the scheduler, register SIGTERM/SIGINT shutdown, listen on `HOST`/`PORT`.
+- Triggers: `node dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hearth/service dev` runs `tsx watch src/main.ts`.
+- Responsibilities: Parse env (`apps/service/src/env.ts`), build the pool, GoTrue, Flipp, recipe, and push clients, call `buildApp`, start the scheduler, handle SIGTERM and SIGINT, listen on the configured host and port.
 
-**Admin CLI:**
-- Location: `apps/service/src/cli.ts` (wrapper `apps/service/bin/hearth-admin`)
-- Triggers: Manual operator command, e.g. `hearth-admin reset-password <email>`.
-- Responsibilities: Privileged operations through GoTrue admin with `SERVICE_ROLE_KEY`.
+**Owner CLI:**
+- Location: `apps/service/src/cli.ts`, built to `apps/service/dist/cli.js`. The hand-written POSIX shell wrapper `apps/service/bin/hearth-admin` resolves its own path and runs `node dist/cli.js`.
+- Triggers: `docker compose exec hearth-service hearth-admin reset-password <email>`.
+- Responsibilities: Creates a one-time GoTrue recovery link through the admin API. The only CLI command is `reset-password`.
 
-**Web app:**
+**Web bootstrap:**
 - Location: `apps/web/src/main.tsx`
 - Triggers: Browser load of the PWA.
-- Responsibilities: Install error reporting, create Supabase, auth, and query clients, register queue defaults before cache hydration, render `<App>` (`apps/web/src/App.tsx`).
+- Responsibilities: Install error reporting, create the Supabase client, auth client, query client, and write-queue defaults, then render `<App>` with the realtime port and persisters.
 
 **Web routes:**
 - Location: `apps/web/src/routes.tsx`
 - Triggers: Every navigation.
-- Responsibilities: Map paths to lazy screens. `/` is the dashboard (`DashboardRoute`). `/sign-in`, `/sign-up`, `/set-password`, and `/forgot-password` are public. `/onboarding` and `/join` require a session. Pillar routes sit under `AuthenticatedLayout`. Magic-link routes exist only when `VITE_MAGIC_LINK_ENABLED` is `true` at build time.
+- Responsibilities: Map paths to lazily loaded screens. `/` is the dashboard (`DashboardRoute`). Public routes are `/sign-in`, `/sign-up`, `/forgot-password`, `/set-password`. `/onboarding` and `/join` require a session. Pillar routes and Settings sit under `AuthenticatedLayout`. Magic-link routes exist only when `VITE_MAGIC_LINK_ENABLED` is `'true'` at build time.
 
 **Service worker:**
-- Location: `apps/web/src/sw.ts`
+- Location: `apps/web/src/sw.ts` (built with `injectManifest` by `vite-plugin-pwa`, `apps/web/vite.config.ts`)
 - Triggers: Browser service worker lifecycle.
-- Responsibilities: Precache, offline support, push event display.
+- Responsibilities: Precache, navigation fallback, offline caching strategies, push event display (`apps/web/src/lib/push/service-worker-handlers.ts`).
 
-**Database migrations:**
-- Location: `supabase/migrations/` (applied in filename order)
-- Triggers: `supabase db reset`, `supabase start`, and `scripts/deploy.sh`.
-- Responsibilities: Schema, RLS, helper and lifecycle functions, realtime publication, notification send-time logic.
+**Database schema:**
+- Location: `supabase/migrations/*.sql` (applied in filename order; eight files from `20260919060000_hearth_service_role.sql` to `20261004090100_depart_clears_notification_preferences.sql`).
+- Triggers: `supabase db reset`, `supabase start`, the database container's init scripts (`docker/docker-compose.yml`), and `scripts/deploy.sh`, which runs `supabase migration up` against the Compose database.
+- Responsibilities: Schema, RLS policies, helper and lifecycle functions, realtime publication, notification send times and producers.
+
+**Build and deploy:**
+- `apps/service/src/write-openapi.ts` runs at the end of the service `build` script and emits the OpenAPI document.
+- `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh`.
 
 ## Architectural Constraints
 
-- **Threading:** Single-threaded Node event loop for the service. Work runs as async I/O. No worker threads are used.
-- **Process count:** One service process is assumed. Cron jobs and in-memory queues (Flipp, recipe rate limiter, skip rates) are per process. Advisory locks protect jobs only against overlap within the database.
-- **Global state:** Module-level singletons are built in `apps/service/src/main.ts` (`wiring`, `skipRates`, `flippQueue`, `recipeFetchLimiter`, `recordingTransport`). The web client builds its singletons in `apps/web/src/main.tsx`.
-- **Build-time configuration:** `VITE_MAGIC_LINK_ENABLED` and `VITE_SUPABASE_ANON_KEY` are fixed at build time (`apps/web/src/routes.tsx`, `apps/web/src/main.tsx`). Changing them requires a rebuild.
-- **Test-only seams:** Fixture transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`) and the push double (`HEARTH_PUSH_TRANSPORT=test-double`) are reachable only through the E2E Compose overlay (`e2e/docker-compose.e2e.yml`). The E2E push seam route is registered only when that switch is set (`apps/service/src/app.ts`, `apps/service/src/push/test-seam.ts`).
-- **Pinned origin:** The public origin is baked into installed PWAs and push subscriptions (`README.md`). Changing the host is a breaking change.
-- **Circular imports:** Not analyzed in this pass.
+- **Threading:** Single-threaded Node event loop for the service; async I/O only. No worker threads.
+- **Process count:** One service process is assumed. Cron jobs and in-memory state (Flipp queue, recipe rate limiter, skip rates) are per process. Advisory locks prevent overlap of the same job, and only through the database.
+- **Global state:** Module-level singletons are created in `apps/service/src/main.ts` (`wiring`, `skipRates`, `flippQueue`, `recipeFetchLimiter`, `recordingTransport`). The web client creates its singletons in `apps/web/src/main.tsx`.
+- **Build-time configuration:** `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, and `VITE_MAGIC_LINK_ENABLED` are fixed at build time; a change requires a rebuild.
+- **Test-only seams:** Fixture transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`), the push double (`HEARTH_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
+- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`README.md`, "Pinned names"). `HEARTH_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
+- **Public unauthenticated routes:** `/api/health`, `/api/signup`, `/api/client-error` (rate limited per IP, `apps/service/src/routes/system.ts`), `/api/openapi.json`. All others call `ctx.authenticate`.
+
+## Layering Deviations (observed)
+
+These are places where the code does not follow the default layering. Each is deliberate or noted for review; none is a behavior change proposal.
+
+- **Chores and errands** do not live under `services/`. `apps/service/src/routes/chores.ts` and `routes/errands.ts` import from the domain folder `apps/service/src/chores/`. Searching only `services/` misses this logic.
+- **Deals** span two folders: the orchestrator `apps/service/src/services/deals/deals.ts` and the Flipp adapter in `apps/service/src/deals/flipp/`.
+- **Deals route opens its own transaction:** `apps/service/src/routes/deals.ts` calls `withUserDb` directly (the `claimForUser` helper) so a dormant postal-code claim commits independently of the request. This is the only route file that imports `withUserDb`.
+- **Type-only privileged import:** `apps/service/src/http/context.ts` imports `SystemHealthRow` from `apps/service/src/privileged/service-role-db.ts`. The lint fence allows type imports.
+- **Shadowed sub-route:** `apps/web/src/routes.tsx` maps `lists/deals` and `lists/flyers` before the `lists/*` pillar wrapper, so the `deals` branch inside `apps/web/src/pillars/lists/ListsRoute.tsx` (which renders `SubSectionComingSoon`) is not reached through the router.
 
 ## Anti-Patterns
 
@@ -279,53 +305,55 @@ These are the patterns the codebase forbids. Each one has a sanctioned alternati
 
 ### Querying the database outside `withUserDb`
 
-**What happens:** A route or service receives the raw `db` handle and runs queries directly.
-**Why it's wrong:** The query runs as `hearth_service` without the caller's claims, bypassing the RLS boundary.
-**Do this instead:** Go through `ctx.inHousehold(user, householdId, fn)` or `ctx.asUser(user, fn)` (`apps/service/src/http/context.ts`).
+- **What happens:** A route or service receives the raw `db` handle and runs queries on it directly.
+- **Why it's wrong:** Nothing sets the caller's role and claims, so RLS has no caller to judge. `hearth_service` is NOINHERIT and holds no table rights until a transaction switches role (`supabase/migrations/20260919060000_hearth_service_role.sql`), so such a query fails; the shortcut of switching to `service_role` by hand runs outside the policies, because `service_role` bypasses RLS.
+- **Do this instead:** Go through `ctx.inHousehold(user, householdId, fn)` or `ctx.asUser(user, fn)` (`apps/service/src/http/context.ts`). `withAnonDb` is for error recording only.
 
 ### Importing `privileged/` from a route, service, or job
 
-**What happens:** A feature module imports `apps/service/src/privileged/*` to reach `service_role`.
-**Why it's wrong:** It widens the blast radius of the service-role key beyond the few audited uses.
-**Do this instead:** Accept a narrow function or interface injected through `RouteContext` or the scheduler deps (`changeEmail`, `systemHealth`, `JobDatabase`). `eslint.config.js` enforces this.
+- **What happens:** A feature module imports `apps/service/src/privileged/*` to reach `service_role`.
+- **Why it's wrong:** It widens the blast radius of the service-role key beyond the few audited uses.
+- **Do this instead:** Accept a narrow function or interface injected through `RouteContext` or the scheduler dependencies (`changeEmail`, `systemHealth`, `JobDatabase`). `eslint.config.js` enforces this for value imports and for dynamic `import()`; type-only imports are allowed.
 
 ### Enforcing household isolation only in application code
 
-**What happens:** A query filters by `household_id` in TypeScript and skips RLS.
-**Why it's wrong:** A missed filter leaks another household's data; RLS is the backstop.
-**Do this instead:** Write the access rule as a policy in `supabase/migrations/20260919070100_rls.sql` and reach data through `withUserDb`.
+- **What happens:** A query relies on a `household_id` filter written in TypeScript as the only isolation rule, with no policy behind it.
+- **Why it's wrong:** A missed filter leaks another household's data. RLS is the boundary; application filters are not.
+- **Do this instead:** Write the access rule as a policy in `supabase/migrations/20260919070100_rls.sql` and reach data through `withUserDb`.
 
 ### Duplicating schemas on client and server
 
-**What happens:** A request shape is redefined in `apps/web` or `apps/service`.
-**Why it's wrong:** Validation drifts between the two sides of the API.
-**Do this instead:** Define the Zod schema once in `packages/shared/src/api/*.ts` and import it on both sides.
+- **What happens:** A request or response shape is redefined in `apps/web` or `apps/service`.
+- **Why it's wrong:** Validation drifts between the two sides of the API.
+- **Do this instead:** Define the Zod schema once in `packages/shared/src/api/*.ts` and import it on both sides.
 
 ### Hand-edited generated database types
 
-**What happens:** `apps/service/src/db/types.ts` is edited by hand.
-**Why it's wrong:** The next `kysely-codegen` run overwrites the change, and types diverge from the schema.
-**Do this instead:** Change the migration, then run `pnpm db:types`.
+- **What happens:** `apps/service/src/db/types.ts` is edited by hand.
+- **Why it's wrong:** The next `kysely-codegen` run overwrites the change, and the types diverge from the schema.
+- **Do this instead:** Change the migration, apply it to a local database, then run `pnpm db:types`.
 
 ## Error Handling
 
-**Strategy:** Typed problem responses on the wire; scrubbed recording for server faults.
+**Strategy:** Errors are problem details end to end. Business-rule violations are caller-facing; unexpected errors are scrubbed, recorded, and reduced to a generic problem.
 
 **Patterns:**
-- Route code throws `fail(status, detail)` or a service-level error from `apps/service/src/services/errors.ts`. The error handler maps it (`apps/service/src/app.ts`).
-- Postgres errors map through `problemFromDatabaseError` (SQLSTATE table in `apps/service/src/problem.ts`). GoTrue errors map through `problemFromGoTrueError` (`apps/service/src/gotrue/http.ts`). Recipe fetch errors map through `problemFromRecipeFetchError`.
-- Server errors are recorded via `recordAppError`, which writes through `public.record_app_error` as `anon` (`apps/service/src/db/user-db.ts`, `withAnonDb`).
-- The web client throws `ApiError` (status 0 for network failures); the query layer decides retries (`apps/web/src/lib/api/client.ts`, `apps/web/src/lib/offline/write-queue.ts`).
-- Render-time errors are caught by `apps/web/src/components/states/ErrorBoundary.tsx` and the router's `errorElement` (`RouteError` in `apps/web/src/routes.tsx`).
+- Route code throws `fail(status, detail)` or a service-level error (`apps/service/src/services/errors.ts`). The error handler maps it (`apps/service/src/app.ts`).
+- Postgres errors map by SQLSTATE through `DATABASE_PROBLEMS` in `apps/service/src/problem.ts`, via `problemFromDatabaseError`. GoTrue errors map through `problemFromGoTrueError` and recipe fetch errors through `problemFromRecipeFetchError`, both in the same file.
+- Server errors are recorded through `recordAppError`, which writes as `anon` through `public.record_app_error` (`apps/service/src/db/user-db.ts`, `withAnonDb`).
+- The client throws `ApiError`; the query layer decides on retry (`apps/web/src/lib/api/client.ts`, `apps/web/src/lib/offline/write-queue.ts`).
+- Render-time crashes are caught by `apps/web/src/components/states/ErrorBoundary.tsx` and the router's `errorElement` (`RouteError` in `apps/web/src/routes.tsx`).
 
 ## Cross-Cutting Concerns
 
-**Logging:** Fastify's pino logger in `apps/service/src/app.ts`; query strings are stripped from logged paths. No `console.*` in shipped source.
-**Validation:** Zod schemas from `packages/shared` at the route boundary (`parse`) and in web hooks.
-**Authentication:** Bearer JWT verified against GoTrue JWKS in `apps/service/src/auth/jwt.ts`; the owner is identified by `HEARTH_OWNER_EMAIL` (`isOwner` in `RouteContext`).
-**Rate limiting:** `@fastify/rate-limit` on `/api/*` (`HEARTH_RATE_LIMIT_PER_MINUTE`); Flipp and recipe fetches have their own outbound limiters.
-**Time:** Jobs run in UTC; user-facing dates resolve in household timezone. Tests pin `Date` through `test/clock-setup.mjs`.
+**Logging:** Fastify's pino logger in the service, with the request serializer limited to method, path (no query string), and remote address (`apps/service/src/app.ts`). Request IDs are generated server-side. Job loggers are child loggers bound to the job name (`apps/service/src/jobs/scheduler.ts`). The web client reports through `apps/web/src/lib/error-reporting.ts`.
+
+**Validation:** Zod schemas from `packages/shared` on both sides; service input validated at the route boundary with `parse`; web-side field errors through `apps/web/src/lib/use-field-errors.ts` and `apps/web/src/lib/validation.ts`.
+
+**Authentication:** Supabase/GoTrue issues tokens; the service verifies them with `JWT_SECRET` (HS256), and accepts ES256 only for keys GoTrue publishes at its JWKS endpoint, as `supabase start` signs (`apps/service/src/auth/jwt.ts`). Owner checks use `HEARTH_OWNER_EMAIL` through `isOwner` in `apps/service/src/http/context.ts`. Caddy refuses GoTrue's public signup and user-update endpoints from outside (`docker/Caddyfile`), so account password changes and signups must go through `POST /api/signup` (`apps/service/src/routes/auth.ts`) and `POST /api/users/me/password` (`apps/service/src/routes/users.ts`, which re-verifies the current password first).
+
+**Isolation:** Enforced in Postgres by RLS (`supabase/migrations/20260919070100_rls.sql`), with `hearth_service` as a NOINHERIT login role (`docker/db/hearth-service-login.sql`, `supabase/migrations/20260919060000_hearth_service_role.sql`).
 
 ---
 
-*Architecture analysis: 2026-10-21*
+*Architecture analysis: 2026-10-22*

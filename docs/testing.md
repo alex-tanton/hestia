@@ -233,6 +233,14 @@ natural keys like a postal code), and raises the test/hook timeouts to 20s/30s f
    `beforeEach` or wiped wholesale in `afterAll` (see `jobs.integration.test.ts`), so a stale row
    from one test run never leaks into a later one.
 
+Many route-level files do not write the `beforeAll`/`beforeEach`/`afterAll` trio themselves: they
+call `registerStackHooks()` from `apps/service/src/test/stack-hooks.ts` once at the top level, which
+starts one stack per file, builds a fresh app per test and closes the stack at the end, and import
+the live `stack` and `app` bindings it fills. A file that builds its apps differently keeps its own
+hooks. `expectStatus(response, status)` from the same module asserts a response's status code and
+prints the body when it fails, and `recordingJobLogger(lines)` from `test/job-logger.ts` is a job
+logger that collects what a job writes so a test can read it back.
+
 `apps/service/src/test/fixture-deal-source.ts` and `apps/service/src/test/push-double.ts` are test
 doubles used by both patterns to stand in for the live Flipp fetch and for Web Push.
 
@@ -263,6 +271,13 @@ runs before every test file: it mocks the PWA update-prompt hook (`virtual:pwa-r
 a build-time virtual module unavailable under Vitest), stubs layout APIs jsdom lacks
 (`ResizeObserver`, `scrollIntoView`, pointer capture) that Radix components call, and calls
 Testing Library's `cleanup()` after each test.
+
+**Shared helpers:** `apps/web/src/test/browser.ts` holds the browser state component tests set.
+`setOnline(isOnline)` switches both `navigator.onLine` and TanStack Query's online manager;
+`stubCoarsePointer()` makes `(pointer: coarse)` match, as on a phone; `registerBrowserStubs()`
+applies both around each test and undoes them afterwards; `registerHouseholdClock(instant)` pins
+`Date` to an explicit instant for tests that read the household's calendar from a device in another
+zone. Call the `register…` helpers at the top level of the test file.
 
 **Asserting async UI state:** never a fixed delay (`setTimeout`/`sleep`). Use `waitFor` from
 `@testing-library/react` to poll for a condition — a resolved query, a re-rendered element — the
@@ -687,11 +702,14 @@ pnpm db:seed              # re-seed from scratch
 ## Coverage
 
 - **`packages/recurrence`**, **`packages/matching`**, and **`packages/shared`** — the three pure-logic
-  packages with no I/O — each configure and enforce a coverage threshold: every one of their
-  `vitest.config.ts` sets `thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 }`,
-  and their `test`/`test:coverage` scripts both run with `--coverage`, so `pnpm test` — which CI's
-  `test-unit` job runs — fails the moment coverage drops below 90% on any of the four metrics in any
-  of the three. Each package's `index.ts` (a pure re-export barrel with no logic of its own) is
+  packages with no I/O — each configure a coverage threshold: every one of their
+  `vitest.config.ts` sets `thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 }`.
+  Only `packages/recurrence` runs with `--coverage` in its `test` script, so `pnpm test` — which
+  CI's `test-unit` job runs — fails the moment recurrence's coverage drops below 90% on any of the
+  four metrics. The `test` script of `packages/matching` and `packages/shared` is a plain
+  `vitest run --passWithNoTests`, so their thresholds apply only to their `test:coverage` script
+  (`vitest run --coverage --passWithNoTests`), which CI does not run. The `index.ts` of
+  `packages/matching` and `packages/shared` (a pure re-export barrel with no logic of its own) is
   excluded from the `coverage.exclude` glob rather than counted against the threshold.
 - **`apps/service`** has a coverage threshold configured on `vitest.coverage.config.ts`:
   `thresholds: { statements: 95, branches: 83, functions: 96, lines: 97 }`, each a few points under
@@ -703,6 +721,24 @@ pnpm db:seed              # re-seed from scratch
   plain `pnpm test:integration` (the same job already pays for `supabase start`), enforcing the
   thresholds on every pull request and push to main; `test-unit` still runs plain `pnpm test`
   separately, with no coverage step.
-- **`apps/web`** has no `test:coverage` script and no coverage configuration at all — component
-  tests aren't measured by line coverage; the E2E journeys are what stand in for coverage on the
-  UI.
+- **`apps/web`** has a `test:coverage` script (`vitest run --coverage --passWithNoTests`) and a
+  coverage configuration in `vite.config.ts`: `thresholds: { statements: 82, branches: 78,
+  functions: 74, lines: 84 }`, each a few points under the measured value. CI does not run it, and
+  the `test` script of the workspace has no `--coverage`, so the thresholds are checked only when
+  someone runs `pnpm --filter @hearth/web test:coverage`. The E2E journeys are what stand in for
+  coverage of the running UI.
+
+### Analysis tools
+
+Two report-only scans look for unused and duplicated code. Neither is part of `pnpm test` or CI, and
+neither fails a run:
+
+- **knip** reports unused files, exports and dependencies across the workspaces. `pnpm knip` scans
+  everything, `pnpm knip:production` scans production code only (it leaves out `e2e` and
+  `supabase/seed`), and `pnpm knip:summary {report.json} {out.txt}` turns a `knip --reporter json`
+  report into sorted lines that two runs can be compared with. Its configuration is `knip.json`.
+- **jscpd** reports duplicated code. It is not a dependency of the repository; run it on demand as
+  `pnpm dlx jscpd@5.4.1 apps packages e2e supabase/seed --format typescript,tsx --min-tokens 60
+  --min-lines 8 --ignore "**/node_modules/**,**/dist/**,**/coverage/**,**/db/types.ts"
+  --reporters json,console --output {directory}`. The scan includes test files; adding
+  `**/*.test.ts,**/*.test.tsx,**/*.spec.ts` to `--ignore` limits it to source.
