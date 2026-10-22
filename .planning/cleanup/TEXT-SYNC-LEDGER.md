@@ -224,11 +224,81 @@ tests-after-c.web=728
 
 ## Titles
 
-Not started (05-10).
+One commit on `refactor/drop-spec-citations` restates the test titles that cited the retired spec (D-19):
+`test: restate test titles without spec citations`. It changes 45 titles (one per `count-titles` row; the plan
+text and the research say 46, which counted differently, see Counts) in 28 files: 15 service, 23 web, 1 e2e
+and 6 matching titles. `titles.tsv` has one row per title with its old and new text (no header). The message says
+plainly that the commit is not comment-only.
+
+Style: a `describe` names its subject in plain words; an `it` or `test` states the expected behavior in the present
+tense, in lower case; no title names a document, a section, a screen number or a numbered rule; a rule the citation
+carried stays in plain words (`per-ounce price: /oz gives oz`, `notification copy length: at most 60 characters`);
+the seed fixtures read `the seed data`; the two concatenated titles became one literal each.
+
+titles-commit=96fb846dfe75ff669abdd97192fa8e06b2e5a8fe
+
+Proofs:
+
+- `comment-only-check.mjs --base 96fb846~1 --head 96fb846 --titles -- apps packages e2e` prints `OK 28 files`: the
+  compiler print is equal once the first argument of `describe`, `it` and `test` is ignored, so no other literal and no
+  code changed.
+
+titles-proof=OK
+
+- The same command without `--titles` prints `FAILED 28 of 28 files`, and the failing files are exactly the 28 files of
+  `titles.tsv`.
+
+titles-plain-check=FAIL as expected
+
+- No consumer of test names: `git grep -nE -- '--grep|testNamePattern| -t '` over the package scripts, `scripts`,
+  the Playwright config, `.github` and `docs` finds only `mapfile -t lines` in `scripts/ci-prepull-images.sh`, a shell
+  flag, not a test filter.
+
+title-consumers=none
+
+- Counts before and after at C's tip (`pnpm -r test`): matching 156/156, shared 172/172, recurrence 77/77, service
+  757/757, web 728/728, e2e support tests 15/15. The integration titles are covered by `vitest list --config
+  vitest.integration.config.ts` (382 lines before and after), and `playwright test --list` reports `Total: 104 tests in
+  19 files` before and after.
+
+titles-counts-equal=yes
+
+- Gates: `pnpm typecheck`, `pnpm lint`, `pnpm format:check` pass; migrations identical to the phase base.
+
+Left alone on purpose (the plan limits the title edit to the inventory's `title` rows): nine titles still say `Design`,
+`Branding`, `Requirements` or `the ... document` without matching the vocabulary, so they are neither counted nor
+changed: `parse-price.test.ts:34`, `Toast.test.tsx:34`, `password.test.ts:12`, `sections.test.ts:15`,
+`onboarding.test.tsx:225` and `:243`, `settings.test.tsx:95`, `tokens.test.ts:99`, `similarity.test.ts:42`. They
+are reported for the owner or 05-11 to decide.
+
+Post-condition: `citation-inventory.mjs inventory` over the PR C tree (`. ':!README.md' ':!.claude'`) has a header and
+no rows, and `git grep -E -f cit-rx.txt` outside `.planning`, `docs`, `supabase/migrations`, `README.md` and
+`.claude` prints nothing.
+
+pr-c-left=0
 
 ## HTML fixtures
 
-Not started (05-10).
+Commit `4f4c124` on `refactor/drop-spec-citations` (`test(e2e): drop retired spec citations from recipe
+fixture pages`), the three files `e2e/fixtures/recipes/full-json-ld-light.html`, `full-json-ld-dark.html`
+and `no-json-ld.html`, one `<p>` paragraph each (4 base rows: two in the light page). Each paragraph keeps its
+purpose and loses the retired document references; the dark page now says the broccoli is a match against
+the "Broccoli Crowns" deal "in the seed data".
+
+Proofs:
+
+- `nonts-comment-check.mjs --html` on the working tree and on the commit prints `OK 3 files` (ld+json
+  blocks byte-identical, text outside the paragraphs equal).
+- `$L/05-10-extract.mts` ran `extractRecipeJsonLd` on the base and new version of each page: light and
+  dark `equal`, `no-json-ld.html` `equal` (both `undefined`).
+- `git grep -F` for each removed phrase (`Done when`, `E2E environment`, `Favorite-store groceries`,
+  `A recipe imports from a URL`) over `e2e` and `apps` outside the fixtures prints nothing. Spec 13 asserts
+  titles, readiness and prices from the JSON-LD, never the paragraph text. The recipe-import journey runs in
+  PR C's CI.
+
+html-consumers=none
+html-jsonld-identical=yes
+html-extract-equal=yes
 
 ## Non-TS proofs
 
