@@ -134,6 +134,7 @@ ESLint with `--max-warnings=0` passes on both `.mjs` tools.
 | web-lib | `apps/web` lib, pillars, test helpers, top-level source, `scripts/check-build.mjs`, `vite.config.ts` (non-test) | 144 | 67 | 77 | 79255b5 | comment-only OK | gates OK |
 | web-components | `apps/web/src/components` (source and tests) | 138 | 45 | 90 | 94fa9bd | comment-only OK | gates OK |
 | web-screens | `apps/web/src/screens`, `apps/web/src/lib/**/*.test.ts(x)`, top-level `apps/web/src/*.test.ts(x)` | 192 | 71 | 101 | 3ef8862 | comment-only OK | gates OK |
+| nonts | `.env.example`, `docker/` (Caddyfile, caddy.Dockerfile, docker-compose.yml, kong.yml), `e2e/docker-compose.e2e.yml`, `e2e/fixtures/e2e-seed.sql`, `scripts/deploy.sh`, `supabase/config.toml`, `supabase/seed/seed.sql`, `apps/web/src/index.css`, `commitlint.config.js`, `eslint.config.js` | 62 | 46 | 16 | 05cebd4 | comment-only OK | gates OK |
 
 Batch notes: `sites` counts matching lines of the base inventory. `removed` counts lines of class
 `pure`, where a pointer-only parenthetical was deleted (by `apply-pure`, or by hand when the
@@ -231,7 +232,52 @@ Not started (05-10).
 
 ## Non-TS proofs
 
-Not started (05-10).
+Tool: `.planning/cleanup/tools/nonts-comment-check.mjs` (rules: parsed YAML deep-equal; `#` files with
+whole-line comments and blanks dropped, every diff line a comment, shebang and Dockerfile parser
+directive untouched; SQL with `--` to end of line dropped after an unsafe-quote guard; CSS with block
+comments dropped and whitespace collapsed; HTML with `--html`: ld+json blocks byte-identical and
+paragraph contents blanked). Controls: `.planning/cleanup/tools/nonts-comment-controls.sh` (output
+`.planning/cleanup/logs/05-10-controls.log`), each line is the code-changing mutant's verdict, then the
+comment-only change's verdict:
+
+nonts-control-yaml=FAIL OK
+nonts-control-hash=FAIL OK
+nonts-control-sql=FAIL OK
+nonts-control-css=FAIL OK
+nonts-control-html=FAIL OK
+
+Batch `nonts` (commit `05cebd4` on `refactor/drop-spec-citations`), proofs per file, taken on the working
+tree and again on the commit (`--base HEAD~1 --head HEAD`, `OK 11 files` plus `OK 2 files`):
+
+| file | rule |
+| ---- | ---- |
+| `.env.example`, `docker/Caddyfile`, `docker/caddy.Dockerfile`, `scripts/deploy.sh`, `supabase/config.toml` | `#` comments only; non-comment text equal; shebang and `# syntax=docker/dockerfile:1` untouched |
+| `docker/docker-compose.yml`, `docker/kong.yml`, `e2e/docker-compose.e2e.yml` | parsed YAML deep-equal |
+| `e2e/fixtures/e2e-seed.sql`, `supabase/seed/seed.sql` | `--` comments only; SQL text equal; no `--` after an open quote in the base |
+| `apps/web/src/index.css` | `/* */` comments only; CSS text equal |
+| `commitlint.config.js`, `eslint.config.js` | `comment-only-check.mjs` compiler-print equal |
+
+kong-yaml-equal=yes
+
+`docker/kong.yml` parses to the same configuration, so the Kong allowlist test (part of the service
+suite, 757 passed before and after) passes and no Kong recreate is needed on the host.
+
+Decisions and notes for 05-10 Task 1:
+
+- The two root JS configs (3 lines: `commitlint.config.js` 1, `eslint.config.js` 98 and 135) are in PR C,
+  because D-09 names "the two root JS configs". They are proven by the TypeScript compiler print, not the
+  non-TS checker.
+- `apply-pure` is not used for the non-TS files: its refill reflowed `.env.example` (it merged the
+  commented-out `HEARTH_RATE_LIMIT_PER_MINUTE=300` example into a sentence), broke comment indentation in
+  `e2e/docker-compose.e2e.yml` and deleted the `-- ----` rule lines in the SQL files. All 62 sites were
+  edited by hand (exact-string replacements, no reflow), so those separator and example lines are intact.
+- Bare references the vocabulary does not catch were reworded in the same files (`Design:`, `Branding:`,
+  `the Branding ones`, `Seed Data` as a subject, `Phase 3 "Done when"`), as in 05-09.
+- Gates: `bash -n scripts/deploy.sh`, `pnpm test:harness` (231 pass, 0 fail: deploy test and both ESLint
+  config tests), `pnpm lint`, `pnpm format:check`, service suite 757 passed (Kong allowlist test
+  included), `pnpm --filter @hearth/web build` (`App shell 198.0 KB gzipped (budget 200 KB)`). Migrations
+  identical to the phase base. `citation-inventory.mjs queue` over the batch lists 0 sites.
+- Counts: 62 sites (46 pure, 9 mixed, 7 prose), 46 removed, 16 rewritten; `batch-nonts.tsv` has 62 rows.
 
 ## Retained
 
