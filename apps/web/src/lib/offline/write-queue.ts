@@ -12,14 +12,14 @@ import { ApiError } from '../api/problem.ts';
 import { withItemPatch, withNewItem } from './list-cache.ts';
 
 /*
- * The offline write queue (Engineering Practices › The write queue). The queue *is* TanStack
+ * The offline write queue. The queue *is* TanStack
  * Query's paused mutations: there is no custom queue, no client_mutation table, and no
  * server-side dedupe. This module supplies the one thing paused mutations need to survive a
  * reload — a default `mutationFn` and its callbacks, registered with `setMutationDefaults` — plus
  * the optimistic update, the rollback, and the single surfacing of a permanent failure.
  *
- * v1.0 queues list item add, check, uncheck, and edit, and nothing else (Requirements › Offline
- * behavior). Check and uncheck are ordinary edits: they send an absolute `status`.
+ * v1.0 queues list item add, check, uncheck, and edit, and nothing else. Check and uncheck are
+ * ordinary edits: they send an absolute `status`.
  */
 
 /** Every queued list write starts with this, so one registration covers them all by prefix. */
@@ -32,8 +32,8 @@ export function listWriteMutationKey(listId: string, kind: ListWriteKind): Mutat
 }
 
 /**
- * Mutations in one scope run one at a time, in the order they were made (Engineering Practices).
- * TanStack persists the scope with the mutation, so the order survives a reload too.
+ * Mutations in one scope run one at a time, in the order they were made. TanStack persists the
+ * scope with the mutation, so the order survives a reload too.
  */
 export function listWriteScope(listId: string): { id: string } {
   return { id: `list:${listId}` };
@@ -43,7 +43,7 @@ export interface AddListItemVariables {
   kind: 'add-item';
   householdId: string;
   listId: string;
-  /** Carries the client-generated id, so a replayed add is a no-op (non-negotiable 9). */
+  /** Carries the client-generated id, so a replayed add is a no-op. */
   request: CreateListItemRequest;
   /** The row to show while the write is in flight. */
   optimistic: ListItem;
@@ -54,7 +54,7 @@ export interface UpdateListItemVariables {
   householdId: string;
   listId: string;
   itemId: string;
-  /** Absolute values only — never a toggle or an increment (non-negotiable 9). */
+  /** Absolute values only — never a toggle or an increment. */
   patch: UpdateListItemRequest;
   /** Names what could not be saved if this write fails for good. */
   itemName: string;
@@ -108,7 +108,7 @@ function isRetryable(error: unknown): boolean {
   return error instanceof ApiError && (error.isOffline || error.status >= 500);
 }
 
-/** Bounded, so a write is never retried forever (Engineering Practices › The write queue). */
+/** Bounded, so a write is never retried forever. */
 export function retryQueuedWrite(failureCount: number, error: unknown): boolean {
   return isRetryable(error) && failureCount < 3;
 }

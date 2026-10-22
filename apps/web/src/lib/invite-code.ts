@@ -1,5 +1,5 @@
 /**
- * The typed 8-character invite code (Requirements, "Joining a household").
+ * The typed 8-character invite code.
  *
  * The code is drawn from the Crockford Base32 alphabet, so the field reads what a person is
  * likely to type rather than insisting they get it exactly right: case, spaces, and hyphens are
@@ -12,7 +12,7 @@ export const INVITE_CODE_LENGTH = 8;
 
 const CROCKFORD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
-/** Design › Screens › 1: the copy for a code that matches no invite. */
+/** The copy for a code that matches no invite. */
 export const INVITE_CODE_MISMATCH_MESSAGE =
   "That code doesn't match an invite. Check it and try again.";
 export const INVITE_CODE_LENGTH_MESSAGE = 'Enter the 8-character code from the invite.';

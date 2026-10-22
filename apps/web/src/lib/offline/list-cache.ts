@@ -7,15 +7,15 @@ import type {
 
 /*
  * Optimistic edits to a cached list. Every offline-queueable write is applied at once and rolled
- * back visibly on failure (Design › Loading rules).
+ * back visibly on failure.
  *
  * Money is deliberately untouched: `subtotalCents` and `unpricedCount` belong to the server, and
- * the client never does money arithmetic (Technical Architecture, "API surface"). A group holding
- * a pending write therefore shows its last server-known subtotal, marked pending, until the write
- * lands and the response replaces the whole list.
+ * the client never does money arithmetic. A group holding a pending write therefore shows its last
+ * server-known subtotal, marked pending, until the write lands and the response replaces the whole
+ * list.
  */
 
-/** Store groups sort by merchant name with the unassigned "Anywhere" group last (Design › 8). */
+/** Store groups sort by merchant name with the unassigned "Anywhere" group last. */
 function byMerchant(left: StoreGroup, right: StoreGroup): number {
   if (left.merchantId === null) return right.merchantId === null ? 0 : 1;
   if (right.merchantId === null) return -1;
@@ -77,7 +77,7 @@ function withItem(detail: ShoppingListDetail, item: ListItem): ShoppingListDetai
 }
 
 /**
- * Applies an absolute-value patch (Handoff non-negotiable 9: never a toggle). A status or store
+ * Applies an absolute-value patch (never a toggle). A status or store
  * change moves the row between groups, which is what makes checking an item off visible at once.
  */
 export function withItemPatch(

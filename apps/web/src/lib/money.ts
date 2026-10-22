@@ -1,12 +1,11 @@
 import type { PriceUnit } from '@hearth/shared';
 
 /**
- * Money crosses the API as an integer number of cents and is only ever *formatted* here
- * (Handoff non-negotiable: money in integer cents). Nothing in the client adds, discounts, or
+ * Money crosses the API as an integer number of cents and is only ever *formatted* here.
+ * Nothing in the client adds, discounts, or
  * divides a price — every figure the UI shows was computed by the service.
  *
- * USD with a `$` prefix, through `Intl`, so a future locale is a change of constants
- * (Requirements, "Locale").
+ * USD with a `$` prefix, through `Intl`, so a future locale is a change of constants.
  */
 
 const LOCALE = 'en-US';
@@ -21,7 +20,7 @@ export function formatCents(cents: number): string {
   return MONEY.format(cents / 100);
 }
 
-/** Design › `DealCard`: "$2.49/lb", "$3.99". An each-priced item carries no suffix. */
+/** Shown on a deal card: "$2.49/lb", "$3.99". An each-priced item carries no suffix. */
 export const UNIT_SUFFIX: Readonly<Record<PriceUnit, string>> = {
   each: '',
   lb: '/lb',

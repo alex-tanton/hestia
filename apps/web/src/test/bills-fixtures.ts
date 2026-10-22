@@ -7,7 +7,7 @@ import type {
 } from '@hearth/shared';
 import { ALEX_ID, JORDAN_ID, SAM_ID } from './fixtures.ts';
 
-/** Seed Data › "Bills": realistic fixtures so tests read like the real app. */
+/** Realistic bill fixtures from the seed data, so tests read like the real app. */
 
 export function billFixture(overrides: Partial<Bill> = {}): Bill {
   return {
@@ -48,7 +48,7 @@ export function billPaymentFixture(overrides: Partial<BillPayment> = {}): BillPa
   };
 }
 
-/** Seed Data: Duke Energy's current occurrence is 5 days overdue, with no logged payment. */
+/** Seed data: Duke Energy's current occurrence is 5 days overdue, with no logged payment. */
 export const dukeEnergyFixture: Bill = billFixture({
   id: '10000002-0000-4000-8000-000000000002',
   name: 'Duke Energy',
@@ -61,7 +61,7 @@ export const dukeEnergyFixture: Bill = billFixture({
   isOverdue: true,
 });
 
-/** Seed Data: household subscription, autopay, due in 3 days. */
+/** Seed data: household subscription, autopay, due in 3 days. */
 export const spectrumInternetFixture: Bill = billFixture({
   id: '10000003-0000-4000-8000-000000000003',
   name: 'Spectrum Internet',
@@ -75,7 +75,7 @@ export const spectrumInternetFixture: Bill = billFixture({
   isOverdue: false,
 });
 
-/** Seed Data: Alex's personal subscription, due in 12 days. */
+/** Seed data: Alex's personal subscription, due in 12 days. */
 export const spotifyFixture: Bill = billFixture({
   id: '10000004-0000-4000-8000-000000000004',
   householdId: null,
@@ -91,7 +91,7 @@ export const spotifyFixture: Bill = billFixture({
   isOverdue: false,
 });
 
-/** Seed Data: Water and Sewer has one skipped occurrence in its history. */
+/** Seed data: Water and Sewer has one skipped occurrence in its history. */
 export const waterAndSewerFixture: Bill = billFixture({
   id: '10000005-0000-4000-8000-000000000005',
   name: 'Water and Sewer',
@@ -155,7 +155,7 @@ export function subscriptionFixture(overrides: Partial<Subscription> = {}): Subs
   };
 }
 
-/** Seed Data › "Subscriptions view": Alex at Oak Street sees Spectrum Internet and Spotify. */
+/** Seed data: Alex at Oak Street sees Spectrum Internet and Spotify. */
 export const subscriptionsResponseFixture: SubscriptionsResponse = {
   subscriptions: [
     subscriptionFixture(),

@@ -9,7 +9,7 @@ import type {
 import { ALEX_ID, OAK_STREET_ID } from './fixtures.ts';
 
 /*
- * Seed Data › "Recipes" and "Matching test cases", used as the oracle these fixtures mirror.
+ * The seed data's recipes and matching test cases, used as the oracle these fixtures mirror.
  * Percentages and bucket splits match the seed table exactly, so component tests can assert
  * against the same numbers the seed's own tests do.
  */
@@ -545,7 +545,7 @@ function baseRecipe(detail: RecipeDetail): Recipe {
   };
 }
 
-/** `GET /households/:id/recipes` carries no readiness (Technical Architecture › "API surface"). */
+/** `GET /households/:id/recipes` carries no readiness. */
 export const recipeListResponseFixture: RecipeListResponse = {
   recipes: [
     baseRecipe(grilledCheeseFixture),

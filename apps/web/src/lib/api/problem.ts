@@ -41,7 +41,7 @@ export function isPlainDetail(detail: string): boolean {
   return /^[A-Za-z0-9 ,.;:()/%$#+\-–—‘’“”…?!]+$/.test(trimmed);
 }
 
-/** What each status means when the caller has no better copy of its own (Branding › Voice). */
+/** What each status means when the caller has no better copy of its own. */
 const STATUS_MESSAGES: Readonly<Record<number, string>> = {
   400: 'That did not work. Check what you entered and try again.',
   401: 'Your session has expired. Sign in again.',

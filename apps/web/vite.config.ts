@@ -8,10 +8,9 @@ import pkg from './package.json' with { type: 'json' };
 const THEME_COLOR = '#475569';
 
 /*
- * In production one origin serves the PWA, `/api`, and `/auth/v1` (Technical Architecture,
- * "Routing"), so the app only ever calls same-origin paths. The dev server and `vite preview`
- * stand in for Caddy by proxying those two prefixes; the addresses default to `supabase start`
- * and a locally run service.
+ * In production one origin serves the PWA, `/api`, and `/auth/v1`, so the app only ever calls
+ * same-origin paths. The dev server and `vite preview` stand in for Caddy by proxying those two
+ * prefixes; the addresses default to `supabase start` and a locally run service.
  */
 const proxy = {
   '/api': { target: process.env['HEARTH_DEV_API'] ?? 'http://127.0.0.1:3000', changeOrigin: true },
@@ -35,14 +34,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       /*
-       * The service worker is ours, not generated (Engineering Practices › Service worker): `src/sw.ts`
+       * The service worker is ours, not generated: `src/sw.ts`
        * precaches the build and adds the push handlers, and this plugin only injects the precache
        * manifest into it. Every other caching rule lives in that file.
        */
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
-      // Engineering Practices: a waiting service worker must never reload under the user;
+      // A waiting service worker must never reload under the user;
       // the shell shows an "Update available" affordance instead.
       registerType: 'prompt',
       // The app registers the worker itself through useRegisterSW (the update prompt), so no

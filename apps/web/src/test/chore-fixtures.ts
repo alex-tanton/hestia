@@ -3,14 +3,14 @@ import { addDays } from '../lib/household-date.ts';
 import { ALEX_ID, JORDAN_ID, OAK_STREET_ID, SAM_ID } from './fixtures.ts';
 
 /*
- * Seed Data › "Chores" and "Errands", mirrored as test oracles (same convention as
+ * The seed data's chores and errands, mirrored as test oracles (same convention as
  * `meal-fixtures.ts`). `TODAY` is a Sunday, so "this week" runs `TODAY` through
  * `addDays(TODAY, 6)` with no day-of-week guesswork in the tests that group by it.
  */
 
 export const TODAY = '2026-09-27';
 
-/** Casey: a former member of Oak Street (Seed Data › "Households": "left 5 weeks ago"). */
+/** Casey: a former member of Oak Street (left 5 weeks ago). */
 export const CASEY_ID = '44444444-4444-4444-8444-444444444444';
 
 const CREATED_AT = '2026-01-04T12:00:00.000Z';
@@ -209,7 +209,7 @@ export const choreListFixture: Chore[] = [
   waterPlantsFixture,
 ];
 
-/** Seed Data › "Errands": six for Oak Street. */
+/** Seed data: six errands for Oak Street. */
 export const RETURN_PACKAGE_ID = 'e1111111-0000-4000-8000-000000000001';
 export const DRY_CLEANING_ID = 'e1111111-0000-4000-8000-000000000002';
 export const CAR_REGISTRATION_ID = 'e1111111-0000-4000-8000-000000000003';

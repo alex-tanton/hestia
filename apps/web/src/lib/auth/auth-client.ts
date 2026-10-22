@@ -19,8 +19,8 @@ export interface AuthClient extends AuthPort {
   signUp: (input: SignupRequest) => Promise<void>;
   signOut: () => Promise<void>;
   /**
-   * Magic link (Requirements › Authentication). Nothing calls either of these unless the build
-   * included the magic-link screens, which is what `VITE_MAGIC_LINK_ENABLED` decides.
+   * Magic link. Nothing calls either of these unless the build included the magic-link screens,
+   * which is what `VITE_MAGIC_LINK_ENABLED` decides.
    */
   sendSignInLink: (email: string) => Promise<void>;
   verifySignInCode: (email: string, code: string) => Promise<void>;
@@ -46,13 +46,12 @@ export class AuthError extends Error {
 
 /**
  * Sign-in, refresh, and sign-out go straight to GoTrue through Caddy and Kong; only signup goes
- * through the service, which is where the common-password check lives (Technical Architecture,
- * "Request paths"). supabase-js keeps the tokens in its default storage (Requirements,
- * "Sessions").
+ * through the service, which is where the common-password check lives. supabase-js keeps the tokens
+ * in its default storage.
  *
  * It is imported here and nowhere else, and dynamically: its one entry point carries the auth,
  * realtime, storage, and postgrest clients together, which is more than the app shell's budget
- * can hold (Engineering Practices › Performance budget). Nothing can be shown until the session
+ * can hold. Nothing can be shown until the session
  * is known anyway, and `loading` is the state every guard already renders for that.
  */
 export function loadSupabaseClient(origin: string, anonKey: string): Promise<SupabaseAuthClient> {
@@ -138,9 +137,8 @@ export function createAuthClient(client: Promise<SupabaseAuthClient>): AuthClien
       const { auth } = await ready;
       const { error } = await auth.signInWithOtp({
         email,
-        // The email carries a link and a 6-digit code (Technical Architecture, "Appendix:
-        // Enabling magic link later"). The link lands on the app's root with the session in the
-        // URL fragment, which `detectSessionInUrl` above is already watching for.
+        // The email carries a link and a 6-digit code. The link lands on the app's root with the
+        // session in the URL fragment, which `detectSessionInUrl` above is already watching for.
         options: { emailRedirectTo: `${window.location.origin}/` },
       });
       // The screen chooses the sentence: GoTrue's own message is for the log, not the user.

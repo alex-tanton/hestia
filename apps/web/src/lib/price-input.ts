@@ -1,7 +1,7 @@
 /**
  * A hand-entered price, at the one boundary where dollars become money. Money is integer cents
- * everywhere else (Engineering Practices, "Money is integer cents"), so the digits are read as
- * integers rather than multiplied: `Number('5.99') * 100` is 598.9999999999999.
+ * everywhere else, so the digits are read as integers rather than multiplied: `Number('5.99') *
+ * 100` is 598.9999999999999.
  */
 
 export const PRICE_INPUT_MESSAGE = 'Enter a price like 5.99.';
