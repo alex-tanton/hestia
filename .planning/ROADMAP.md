@@ -181,7 +181,7 @@ Plans:
   1. The six CI jobs share one composite setup action instead of repeating the preamble, and the workflow is still named `CI` with its job ids unchanged.
   2. The seed typecheck runs exactly once in CI.
   3. The duplicated test fixtures flagged by the scan live in a single shared place, all tests still pass, and a re-scan shows fewer clones than the Phase 2 baseline.
-  4. The 262 stale spec citations are removed as comment-only edits, verified by identical transformed output, with `supabase/migrations/` untouched.
+  4. The stale spec citations (1,116 lines in 456 files at PR C's base, recounted with the full retired-spec vocabulary; 262 was a Phase 2 count) are removed as comment-only edits, verified by identical transformed output, with `supabase/migrations/` untouched; test titles and three fixture pages were changed in separately proven commits.
   5. `docs/` and `.planning/codebase/` match the code: statements spot-checked against the repo hold (for example, `hearth-admin` is described as hand-written), and no review, decision-log, or ADR file was added under `docs/`.
 
 **Plans:** 11/13 plans executed
