@@ -494,3 +494,26 @@ main-integration-tests-c=1190
 Logs: `05-11-pr-integration.log`, `05-11-main-integration.log`, `05-11-pr-e2e.log`, `05-11-pr-files.txt`.
 
 Merge: not done; it is the owner's squash merge (05-11 Task 3).
+
+### CI after the follow-up sweep
+
+The follow-up commits (`aaed732`, `33baf2d`) and the merge of the working branch were pushed to PR C (plain push, no force).
+The PR body (`.planning/cleanup/logs/05-11-pr-c.md`) was updated to describe them. The earlier head `e1997a7` (run
+39705754497, all green) is superseded.
+
+pr-c-head=0ce37f6484fec01a3b431eff266b315eadae594d
+
+CI run 39707916284 (`pull_request`, one attempt, no rerun), all six jobs `success`:
+
+| job | job id | conclusion |
+| --- | ------ | ---------- |
+| lint | 119592204713 | success |
+| typecheck | 119592204651 | success |
+| test-unit | 119592204296 | success |
+| test-integration | 119592204535 | success |
+| test-e2e | 119592204568 | success |
+| build | 119592204623 | success |
+
+pr-c-ci=39707916284 lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success
+
+PR #28 is still open (`mergeable_state` clean); the merge stays the owner's.
