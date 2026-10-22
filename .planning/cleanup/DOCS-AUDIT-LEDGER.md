@@ -122,6 +122,25 @@ maps-misses-before=182 (of 1270 tokens checked)
 | maps-3 | .planning/codebase/*.md (research row 7) | stale statements: RotationEditor suppression, Kong `auth-v1-all`, "eslint-disable appears only twice", console use in the deleted benchmark, tests never depend on the wall clock | `grep -rniE 'rotation\|catch-all\|auth-v1-all\|benchmark\|wall clock\|console\.' .planning/codebase`: none of the five old statements remains; CONCERNS.md:131 describes the pin and the real-clock integration and E2E runs; `git grep -n 'console\.'` over `apps/**/src`, `packages/**/src` and `e2e` is empty | holds in the regenerated maps | - |
 | maps-4 | .planning/codebase/ARCHITECTURE.md:256, CONCERNS.md:113, ARCHITECTURE.md:258 | deals route is the only route importing `withUserDb`; `functions.sql` has 13 function definitions and 14 `search_path` lines; `lists/deals` and `lists/flyers` precede `lists/*` | `git grep withUserDb -- apps/service/src/routes` (`deals.ts:14` import, `recipes.ts:25` comment only); `grep -ciE 'create (or replace )?function'` is 13 and `grep -ci search_path` is 14 in `20260919070200_functions.sql`; `apps/web/src/routes.tsx:83-89` | holds | - |
 | maps-5 | .planning/codebase/*.md, .claude/CLAUDE.md | checker misses (72 map tokens, 8 more in CLAUDE.md) | the raw output has 138 misses over the maps (72 distinct tokens): 34 distinct `ambiguous` bare names shared by several tracked files, and 38 other tokens that are `missing`: that are file suffixes, gitignored build output (`dist/`, `coverage/`, `playwright-report/`), image and Action references, route paths and a media type; no token is a path that should exist and does not; CLAUDE.md adds `origin/main`, the skill directories its generated skills block says may be added, `SKILL.md` and the `!docker/ca.crt` dockerignore line | allowed: 80 rows in all, a reason each, in `docs-claims-allow.tsv` | 2a02f8a |
+| restore-1 | `.claude/CLAUDE.md` Anti-Patterns (old), subsection "Querying the database outside `withUserDb`" | "The query runs as `hearth_service` without the caller's claims, bypassing the RLS boundary" | `supabase/migrations/20260919060000_hearth_service_role.sql:1-5`: `hearth_service` is NOINHERIT and holds no rights of its own until a transaction switches role, "so a query that forgets to switch fails instead of running with them"; `apps/service/src/privileged/service-role-db.ts` and `docs/architecture.md:50`: `service_role` bypasses RLS | corrected: a bare query fails; switching to `service_role` by hand runs outside the policies. Restored in `ARCHITECTURE.md` | 82324c0 |
+| restore-2 | Anti-Patterns (old), "Enforcing household isolation only in application code" | "A query filters by `household_id` in TypeScript and skips RLS" | services legitimately filter by `household_id` under RLS (`apps/service/src/services/lists.ts:153,161`, `invites.ts`); the rule is that the filter must not be the only isolation rule | corrected: "relies on a `household_id` filter written in TypeScript as the only isolation rule, with no policy behind it" | 82324c0 |
+| restore-3 | Anti-Patterns (old), "Hand-edited generated database types" | "Change the migration, then run `pnpm db:types`" | `STACK.md`: `pnpm db:types` runs `kysely-codegen` against a running local database | corrected: change the migration, apply it to a local database, then run `pnpm db:types` | 82324c0 |
+| restore-4 | Component Responsibilities (old map row "Jobs") and Key Dependencies (old, `node-cron`) | jobs include "plan refresh" / "refresh plan"; the job list is in `apps/service/src/jobs/index.ts` | `apps/service/src/jobs/scheduler.ts:131-138` registers four tasks (`refresh-deals`, `log-autopay`, `dispatch-notifications`, `prune-cache`); `refresh-plan.ts` is a pure planner called by `refresh-deals.ts`; `jobs/index.ts` is a barrel with no `cron.schedule` | corrected in the Jobs row, the Scheduler row and the Key Dependencies bullet (`STACK.md` pointed at `jobs/index.ts` too) | 82324c0 |
+| restore-5 | Component Responsibilities (old), "Auth verification"; also `ARCHITECTURE.md` External protocol adapters and Cross-Cutting Authentication | "JWT verify and JWKS fetch from GoTrue" / "verifies against JWKS" | `apps/service/src/auth/jwt.ts:11-16`: production GoTrue signs HS256 with `JWT_SECRET`; ES256 is accepted only when the token's `kid` names a key GoTrue publishes at its JWKS endpoint (`supabase start`) | corrected in the new row and in the two existing map sentences | 82324c0 |
+| restore-6 | Component Responsibilities (old), "CLI"; Entry Points (old), "built to `apps/service/bin/hearth-admin`" | "owner commands (password reset, etc.)" | `apps/service/src/cli.ts`: the only command is `reset-password`; `bin/hearth-admin` is a hand-written `sh` wrapper (row 1) | corrected: the row names `reset-password` as the only command and the wrapper as `node dist/cli.js` | 82324c0 |
+| restore-7 | Component Responsibilities (old), "App assembly" | registers every route plugin "under `/api`" | `apps/service/src/app.ts:159-171` registers plugins with no prefix; route paths carry `/api` themselves (`routes/bills.ts:36`); the rate-limit comment says every service route lives under `/api` | corrected: "registers every route plugin (every route lives under `/api`)" | 82324c0 |
+| restore-8 | Component Responsibilities (old), "Services" | `services/*.ts` only | `apps/service/src/chores/` (chores, errands, occurrence) and `apps/service/src/notifications/` (copy, planners) hold business rules outside `services/` (Layering Deviations) | extended: the row names both sibling folders | 82324c0 |
+| restore-9 | Layers (old), "Database access", Used by | "`http/context.ts` and the jobs' `privileged/job-database.ts`" | `grep -rn user-db apps/service/src`: importers are `http/context.ts` (`withUserDb`), `routes/deals.ts` (`withUserDb`), `main.ts` (`withAnonDb`); `privileged/job-database.ts` imports `withServiceRoleDb` only | corrected in the restored layer | 82324c0 |
+| restore-10 | `CONVENTIONS.md` Functions (existing, and old); old raw-row reference | `planBillMove` "in `packages/recurrence/src/bills.ts`"; raw rows "see `packages/recurrence/src/bills.test.ts`" | `grep -rn planBillMove` finds the definition at `apps/service/src/services/bills.ts:409`; `packages/recurrence/src/bills.ts` exports only `currentBillOccurrence`; `billOccurrence` is `services/bills.ts:92`; snake_case raw rows are in `apps/service/src/services/bills.test.ts:11` | corrected in `CONVENTIONS.md` (the wrong path was in the old file and in the regenerated one); `TESTING.md` already had it right | 82324c0 |
+| restore-11 | Key Abstractions (old), "Pillar" | "top-level area (Lists, Meals, Chores, Bills, Deals)" | `apps/web/src/lib/sections.ts`: `PillarId` is lists, meals, bills, chores; Deals and Flyers are sub-tabs of Lists; `RELEASED_PILLARS` has all four | corrected in the Pillars abstraction | 82324c0 |
+| restore-12 | Module Design (old), barrels | "`packages/*/src/index.ts` ... coverage is excluded in `packages/*/vitest.config.ts`" | only `packages/matching/vitest.config.ts` and `packages/shared/vitest.config.ts` list `src/index.ts` in coverage `exclude`; `packages/recurrence` does not and has `index.test.ts` | corrected: the two configs are named; "the barrel" avoids an ambiguous bare path for the checker | 82324c0 |
+| restore-13 | CI/CD Toolchain (old) | Actions list without `docker/login-action@v4`; jobs described without the shared setup action | `.github/workflows/ci.yml` (`docker/login-action@v4` twice; every job runs `./.github/actions/setup`, which holds `pnpm/action-setup@v6` and `actions/setup-node@v7`; `test-e2e` runs on pull requests and `main` only); `deploy.yml` skips a docs-only change | extended and corrected in the restored section | 82324c0 |
+| restore-14 | Container table Notes (old), kong | "API gateway" | `docker/kong.yml` and `docs/deploy.md`: an allowlist for GoTrue and Realtime only | extended: "API gateway for GoTrue and Realtime" | 82324c0 |
+| restore-15 | Entry Points (old), database migrations | Triggers: `supabase db reset`, `supabase start`, `scripts/deploy.sh`; Responsibilities: schema, RLS, functions, realtime, send-time logic | `scripts/deploy.sh:97` runs `supabase migration up`; migrations also add notification producers (`20261004090000`) and the depart cleanup (`20261004090100`) | restored; Responsibilities extended with producers | 82324c0 |
+| restore-16 | Error handling (old) | GoTrue errors map through `problemFromGoTrueError` (`apps/service/src/gotrue/http.ts`) | `problemFromGoTrueError`, `problemFromRecipeFetchError` and `problemFromDatabaseError` are all in `apps/service/src/problem.ts` and chained in `app.ts:98-106` | corrected path; restored the three mappings | 82324c0 |
+| restore-17 | Problem details (old) | "Non-5xx details are shown to clients; 5xx details are scrubbed and recorded" | `apps/service/src/app.ts:108-134`: a `ProblemError` is sent as is; an unexpected 5xx is logged scrubbed, recorded, and answered with a generic problem | restated precisely | 82324c0 |
+| restore-18 | Test time (old), Conventions | "Do not set `TZ` by hand" | `docs/testing.md:182-184`: set it only through the sweep or an `env` object passed to a spawned process; never force `TZ=UTC` for a suite | restored with the full rule | 82324c0 |
+| restore-19 | Unchanged on check (no correction) | Database section; package table; Vitest setup detail; Playwright zone and locale; knip:production; Husky hooks; Tailscale command and `docker` group; `/` dashboard route; service worker handlers path; HR001 to 410; tokens.test.ts; `active_household_id`; Pinned names heading; E2E overlay | `config.toml:16`, `package.json:16-27`, `vitest*.config.ts`, `playwright.config.ts:34-35`, `.husky/`, `README.md:150,173,192`, `routes.tsx:80`, `sw.ts:21`, `problem.ts:47`, `tokens.test.ts:7`, `schema.sql:45`, `docker-compose.e2e.yml:54-60` | held; restored as written (with the file-level checks listed) | 82324c0 |
 
 ## Final check (05-12 Task 1)
 
@@ -160,6 +179,7 @@ maps-mapped-at=283f15dbb2b5ed8ded0ba14e04d5015e5d0d367c
 maps-misses=0
 hearth-admin-claims=hand-written
 e2e-section-restored=no
+claude-md-restored=yes
 
 `/gsd-map-codebase` (run by the operator session) wrote all seven maps in `e486d7f` with one
 `last_mapped_commit`, `283f15d`, a WB commit that contains `pr-c-merged` (`9fdc9c9`). The only edits
@@ -185,6 +205,33 @@ follows the new `ARCHITECTURE.md`: `refresh-plan.ts` is described as a planner u
 Deviations (observed)`, and `### Error Path` and `### Deals and Recipe Import Paths` added; (5) the
 workflow, skills and profile blocks are unchanged. The mapper dropped the Anti-Patterns and Component
 Responsibilities headings; that is the generated content, left as produced.
+
+Owner request (05-13 rework, PR D): the dropped sections were put back through the maps, then
+`.claude/CLAUDE.md` was regenerated again (`claude-md-restored=yes`; the E2E section is byte-identical
+to `logs/05-12-e2e-section-before.md`, `e2e-section-restored=no`). The loss inventory is in the
+gitignored `logs/05-13-claude-md-loss-inventory.md`: it compared every old line with the new file.
+Came back: `## Anti-Patterns` (five subsections, now as headings plus bullets so the text reaches
+CLAUDE.md; before, the old file had only the headings), the `## Component Responsibilities` table
+(all 28 rows of the old map, which is 21 of the old CLAUDE.md plus Env validation, Database pool,
+Scheduler, Auth verification, Recipe import and Push), a Database access layer, `## Database` and
+`## CI/CD Toolchain`, the workspace package table, the container Notes column, the Vitest clock and
+zone setup, Playwright zone and locale, `knip:production`, the Husky hook names, the Test time
+convention, the Import Organization bullets, barrel and design-token statements, the PostgREST and
+"one service instance" statements, the Tailscale command and the `docker` group, the dashboard
+route, the migrations Triggers and Responsibilities, and the error mappings. In the maps these are
+bullets and tables because `generate-claude-md` copies only headings, `- ` bullets, `|` rows and
+fence markers (so the numbered Data Flow steps, the System Overview diagram and the Cross-Cutting
+Concerns lines are in `ARCHITECTURE.md` but not in CLAUDE.md, as before). Corrected instead of
+copied: rows restore-1 to restore-18 (the Anti-Patterns RLS reasoning, the jobs list and the
+`refresh-plan.ts` status, token verification, CLI, route registration, `planBillMove` location,
+the pillar list, the barrel coverage exclusion, CI actions, the GoTrue error mapping path, the
+database layer's callers). Not restored on purpose: the "Circular imports: Not analyzed" placeholder,
+two line-number citations, the keep-spec-citations rule (D-11) and a test helper used as a
+component example. Checks after the restore: the checker over `.planning/codebase/*.md
+.claude/CLAUDE.md` with the allowlist as committed (no new rows needed): `checked=2071`, `misses=0`;
+`git grep -nE -f cit-rx.txt -- .planning/codebase .claude` prints nothing; both hearth-admin wording
+searches print nothing; the token scans (pattern and `GH_TOKEN` value) over `.planning` and
+`.claude` are clean.
 
 ## CI
 
