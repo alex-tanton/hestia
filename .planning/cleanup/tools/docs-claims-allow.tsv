@@ -1,0 +1,34 @@
+tests/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in tests/
+fixtures/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in fixtures/
+support/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in support/
+setup/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in setup/
+.env	the real configuration file at /srv/hearth/.env, never committed (only .env.example is tracked)
+.mjs	the bare file extension, named in prose to say the test/ files are Node ES modules
+dist/cli.js	build output of tsup (apps/service/dist), gitignored and never tracked
+America/New_York	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+America/Chicago	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+America/Los_Angeles	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Asia/Tokyo	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Etc/UTC	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Pacific/Kiritimati	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Pacific/Pago_Pago	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+:America/New_York	POSIX leading-colon spelling of an IANA time-zone id, quoted as an accepted TZ value
+.test.ts	bare file suffix in prose, naming the convention for co-located test files
+money.ts	bare name in prose; the sentence names its directory (apps/service/src/deals, apps/web/src/lib), several tracked files carry the name
+money.test.ts	bare name in prose; the sentence names its directory, several tracked files carry the name
+occurrence.ts	bare name in prose next to its test in packages/recurrence/src; several tracked files carry the name
+app.ts	bare name in prose naming the service entry of apps/service/src; several tracked files carry the name
+bills.ts	bare name in prose; several tracked files carry the name (routes, services, web hooks)
+db.ts	bare name in prose; several tracked files carry the name
+index.ts	bare name in prose for a package barrel; every package has one
+vitest.config.ts	bare name in prose; every workspace has one
+ghcr.io/supabase	container registry namespace, not a path
+public.ecr.aws/supabase	container registry namespace, not a path
+public.ecr.aws/supabase/postgres:17.6.1.167	container image reference; the tag equals the image in docker/docker-compose.yml
+supabase/setup-cli@v3	GitHub Action reference used by .github/workflows/ci.yml, not a path
+virtual:pwa-register/react	build-time virtual module of vite-plugin-pwa, not a file
+import('../privileged/…')	syntax example of a dynamic import, with an ellipsis for the file
+**/*.test.ts,**/*.test.tsx,**/*.spec.ts	comma-joined ignore globs of the jscpd command, not a path
+components/icons	named in a negation: the doc says no such directory exists in the web app
+Dialog.tsx	named in a negation: the doc says there is no general-purpose Dialog.tsx, only the alert-dialog wrapper
+lg:pl-56	Tailwind utility class, not a script (the colon makes it look like one)

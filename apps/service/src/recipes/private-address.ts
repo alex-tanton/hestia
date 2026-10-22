@@ -1,9 +1,9 @@
 import { isIP } from 'node:net';
 
 /**
- * Refuses private, loopback, and link-local address ranges (Technical Architecture, "Recipe
- * fetching"). Checked against the resolved IP, never the URL's hostname text, because a hostname
- * can resolve to a private address (DNS rebinding) regardless of how public-looking it reads.
+ * Refuses private, loopback, and link-local address ranges. Checked against the resolved IP, never
+ * the URL's hostname text, because a hostname can resolve to a private address (DNS rebinding)
+ * regardless of how public-looking it reads.
  */
 
 /** [network, prefix bits], IPv4. */

@@ -18,7 +18,7 @@ interface AppApi {
   realtime: RealtimePort | undefined;
   /**
    * A second, unthrottled persister over the same storage and key as `PersistQueryClientProvider`'s
-   * own throttled one (Engineering Practices › The write queue: a queued write must survive a
+   * own throttled one (a queued write must survive a
    * restart, not wait out the query cache's throttled save). Absent in a test that does not
    * exercise persistence.
    */

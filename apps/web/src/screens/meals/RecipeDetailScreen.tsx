@@ -27,7 +27,7 @@ export interface RecipeDetailScreenProps {
   recipeId: string;
 }
 
-/** Design › Screens › 12: title, servings, source link, readiness, ingredients, instructions. */
+/** Title, servings, source link, readiness, ingredients, instructions. */
 export function RecipeDetailScreen({
   householdId,
   recipeId,

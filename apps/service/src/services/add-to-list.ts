@@ -10,10 +10,10 @@ import { recordListActivity } from './list-activity.js';
 import { toNumber } from './money.js';
 
 /*
- * "Add missing to list" (Requirements, "Add missing to list"): one converging function behind all
- * three entry points (a recipe, a planned meal, a whole planned week) — only the list of recipe
- * ids differs per caller, and duplicates are deliberate (a recipe planned twice contributes its
- * ingredients twice; "cook it twice, buy it twice").
+ * "Add missing to list": one converging function behind all three entry points (a recipe, a planned
+ * meal, a whole planned week) — only the list of recipe ids differs per caller, and duplicates are
+ * deliberate (a recipe planned twice contributes its ingredients twice; "cook it twice, buy it
+ * twice").
  */
 
 export async function addMissingIngredientsToList(
@@ -96,9 +96,8 @@ export async function addMissingIngredientsToList(
       .values({
         list_id: listId,
         added_by: userId,
-        // The ingredient's own name, not the deal's product name (Requirements, "Add missing to
-        // list"): a recipe-sourced item stays named after the ingredient even though its
-        // price/store/validity is the matched deal's.
+        // The ingredient's own name, not the deal's product name: a recipe-sourced item stays named
+        // after the ingredient even though its price/store/validity is the matched deal's.
         item_name: aggregated.itemName,
         normalized_name: aggregated.normalizedName,
         quantity: aggregated.quantity,

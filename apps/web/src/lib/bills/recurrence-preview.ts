@@ -3,10 +3,10 @@ import type { RecurrenceUnit } from '@hearth/shared';
 import { formatCalendarDate, formatList } from '../format.ts';
 
 /**
- * The recurrence a bill's create/edit form is holding, before it is known to be valid. Design ›
- * Screens › 15: editing unit, interval, or the first due date shows a plain-language preview of
- * the next three due dates, since anchored recurrence is easy to misunderstand. There is no server
- * round trip for this (Technical Architecture's Bills API surface has no preview endpoint) — it
+ * The recurrence a bill's create/edit form is holding, before it is known to be valid. Editing
+ * unit, interval, or the first due date shows a plain-language preview of the next three due
+ * dates, since anchored recurrence is easy to misunderstand. There is no server round trip for
+ * this (the Bills API has no preview endpoint) — it
  * uses the same anchored-recurrence package the service itself computes occurrences with
  * (`@hearth/recurrence`), so the preview can never disagree with what the bill actually does once
  * saved.
@@ -29,9 +29,9 @@ function isValidDraft(draft: RecurrenceDraft): boolean {
 }
 
 /**
- * The next due dates as MM/DD/YYYY, formatted (Requirements › "Locale"). A one-time bill
- * (`unit` null) has a single occurrence on the anchor date, so the preview is that one date.
- * Returns an empty array while the draft is incomplete or malformed, rather than guessing.
+ * The next due dates as MM/DD/YYYY, formatted. A one-time bill (`unit` null) has a single
+ * occurrence on the anchor date, so the preview is that one date. Returns an empty array while the
+ * draft is incomplete or malformed, rather than guessing.
  */
 export function previewDueDates(draft: RecurrenceDraft, count = 3): string[] {
   if (!isValidDraft(draft)) return [];
@@ -44,7 +44,7 @@ export function previewDueDates(draft: RecurrenceDraft, count = 3): string[] {
   return previewOccurrences(recurrence, count).map(formatCalendarDate);
 }
 
-/** The sentence Screen 15 shows beneath the recurrence fields, or `undefined` until it can. */
+/** The sentence shown beneath the recurrence fields, or `undefined` until it can. */
 export function recurrencePreviewSentence(draft: RecurrenceDraft): string | undefined {
   const dates = previewDueDates(draft);
   const [first] = dates;

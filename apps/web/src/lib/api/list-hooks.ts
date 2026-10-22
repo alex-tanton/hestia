@@ -26,9 +26,9 @@ import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 
 /*
- * Shopping lists and the pantry (Technical Architecture, "API surface"). Server state lives in
- * TanStack Query and is never copied into component state (Engineering Practices › Frontend
- * patterns) — realtime and the write queue both go through the cache rather than around it.
+ * Shopping lists and the pantry. Server state lives in TanStack Query and is never copied into
+ * component state — realtime and the write queue both
+ * go through the cache rather than around it.
  *
  * Every item write answers with the whole list, subtotals and unpriced counts already computed,
  * so the response is written straight into the detail query and the client never does money
@@ -180,8 +180,8 @@ export function useDeleteList(householdId: string): UseMutationResult<void, Erro
 }
 
 /**
- * Deleting an item is not queueable (Requirements › Offline behavior lists add, check, uncheck,
- * and edit and nothing else), so it is an ordinary online mutation.
+ * Deleting an item is not queueable (only add, check, uncheck, and edit are), so it is an
+ * ordinary online mutation.
  */
 export function useDeleteListItem(
   householdId: string,
@@ -219,9 +219,8 @@ export function useAddBoughtToPantry(
 
 /*
  * The two queueable writes. Neither names a `mutationFn`: it comes from the defaults registered
- * with `setMutationDefaults`, which is what lets a paused write resume after a reload
- * (Engineering Practices › The write queue). The scope makes writes to one list run one at a
- * time, in the order they were made.
+ * with `setMutationDefaults`, which is what lets a paused write resume after a reload. The scope
+ * makes writes to one list run one at a time, in the order they were made.
  */
 
 export function useAddListItem(

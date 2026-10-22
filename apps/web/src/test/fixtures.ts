@@ -7,7 +7,7 @@ import type {
   ProfileResponse,
 } from '@hearth/shared';
 
-/** The Seed Data households and people, so tests read like the real app (Seed Data). */
+/** The seed data's households and people, so tests read like the real app. */
 export const ALEX_ID = '11111111-1111-4111-8111-111111111111';
 export const SAM_ID = '22222222-2222-4222-8222-222222222222';
 export const JORDAN_ID = '33333333-3333-4333-8333-333333333333';

@@ -26,9 +26,9 @@ import { RecipeDetailScreen } from './RecipeDetailScreen.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * Meal-plan dates are household dates (Handoff non-negotiable 8; PRD, "Timezone"). The browser here
- * is Kiritimati (UTC+14): at 02:30 UTC on Oct 4 it is Sunday Oct 4 there, while New York is still
- * Saturday Oct 3, so "today" differs by a day and the planner's week by a whole week.
+ * Meal-plan dates are household dates. The browser here is Kiritimati (UTC+14): at 02:30 UTC on Oct
+ * 4 it is Sunday Oct 4 there, while New York is still Saturday Oct 3, so "today" differs by a day
+ * and the planner's week by a whole week.
  */
 
 const BROWSER_ZONE = 'Pacific/Kiritimati';

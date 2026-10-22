@@ -16,7 +16,7 @@ export interface SheetProps {
 
 /**
  * Bottom sheet for quick-add flows and the household switcher. Radix Dialog traps focus and
- * returns it to the trigger on close (Design › Accessibility › Focus management).
+ * returns it to the trigger on close.
  */
 export function Sheet({
   open,

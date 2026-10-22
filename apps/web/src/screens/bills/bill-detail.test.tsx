@@ -37,7 +37,7 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
 
 registerBrowserStubs();
 
-describe('Bill detail (Design › Screens › 15)', () => {
+describe('Bill detail', () => {
   it('loading: announces it with skeletons', () => {
     mount(baseHandlers({ 'GET /api/bills/:id': () => new Promise(() => undefined) }));
     expect(screen.getByRole('status')).toHaveTextContent('Loading this bill');

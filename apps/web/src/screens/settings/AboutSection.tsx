@@ -10,7 +10,7 @@ import { usePushPort } from '../../lib/push/use-push-device.tsx';
 import { ReadOnlyValue, SettingsSection } from './SettingsSection.tsx';
 
 /**
- * Design › Screens › 4, "About": version and sign out, with System health for the server owner
+ * About: version and sign out, with System health for the server owner
  * only — `isServerOwner` comes from `GET /api/users/me`, and the endpoint behind the screen
  * checks the caller again.
  */

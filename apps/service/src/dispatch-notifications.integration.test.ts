@@ -13,9 +13,8 @@ import { RecordingPushTransport } from './test/push-double.js';
 import { adminPool, enableServiceLogin, seedAuthUser, stackConfig } from './test/service-stack.js';
 
 /*
- * The dispatch send step against `supabase start` (Technical Architecture, "Scheduled jobs" ›
- * "Dispatch" and "Idempotency"). The job runs as `service_role`, so it sees
- * every recipient, and the push transport is always the recording double: no push endpoint is ever
+ * The dispatch send step against `supabase start`. The job runs as `service_role`, so it sees every
+ * recipient, and the push transport is always the recording double: no push endpoint is ever
  * contacted from here.
  *
  * The job works on every due row in the database, not only this file's, so each assertion reads

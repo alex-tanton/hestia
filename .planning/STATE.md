@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Completed 05-07-PLAN.md
-last_updated: "2026-10-21T20:19:39.476Z"
-last_activity: 2026-10-21
+stopped_at: Completed 05-11-PLAN.md
+last_updated: "2026-10-22T02:14:17.031Z"
+last_activity: 2026-10-22
 last_activity_desc: Phase 05 execution started
-state_head: 4446af08054b3798cb0eca4e662652eac52c2fcb
+state_head: 9760693db1c3149b7d6738169f2cf38f246a69bc
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 38
+  completed_plans: 42
   percent: 67
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 7 of 13 complete (05-01 to 05-07); next 05-08 (PR D content), then 05-09 (PR C: apps/web comments)
+Plan: 11 of 13 complete (05-01 to 05-11); next 05-12 (finish PR D: sync WB with main, maps, .claude/CLAUDE.md)
 Status: Ready to execute
-Last activity: 2026-10-21 — Plan 05-07 complete (apps/service cleared; PR C branch refactor/drop-spec-citations at da58b20)
+Last activity: 2026-10-22 — Plan 05-11 complete (PR C #28 squash-merged by the owner as 9fdc9c9; main CI run 39709025122 six of six green; Deploy pending on the self-hosted runner)
 
 Progress: [███████░░░] 67%
 
@@ -86,6 +86,10 @@ Progress: [███████░░░] 67%
 | Phase 05 P05 | 1h45m | 3 tasks | 5 files |
 | Phase 05 P06 | 30min | 3 tasks | 82 files |
 | Phase 05 P07 | about 35min | 3 tasks | 144 files |
+| Phase 05 P08 | about 20min | 3 tasks | 11 files |
+| Phase 05 P09 | 80min | 3 tasks | 211 files |
+| Phase 05 P10 | 50min | 3 tasks | 44 files |
+| Phase 05 P11 | about 1h | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -123,6 +127,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 05-01: PR A content is on origin as ci/setup-action (43672635, tree fd704a4c); composite setup action keeps checkout in each job (D-12 deviation, ledger row for PR A body); seed typechecked once; GitHub refused the token push (no workflow scope) so the owner pushed via apply.sh (Windows Git Bash needs MSYS_NO_PATHCONV=1); working branch is claude/eloquent-mayer-szjtjf, not the plan's claude/vigilant-gates-a4ihid
 - [Phase 05]: Plan 05-04: web fixtures consolidated on test/shared-fixtures-wip (8a7e8e4): browser.ts, WithQueue, stubFetch, dealScreenHandlers, emptyDealSearch; jscpd 87 -> 66 clones, web 728 = 728; 14 pairs kept with reasons in FIXTURE-LEDGER.md (hoisted viewer-zone blocks, retry assertions, variant hooks); no PR opened
 - [Phase 05]: Plan 05-05: WB synced past PR A by one ordinary merge (no workflow-scope refusal); PR B (#27) opened from test/shared-fixtures with six green jobs, jscpd 96 -> 66 clones, integration tests 1190 = main; owner squash-merged as a660d58, main CI green
+- [Phase 05]: Plan 05-08: docs/sync-specs (158fd52) holds the seven specs and README audited against the code; docs-claims-check.mjs 582 tokens, 0 misses with a 34-token reasoned allowlist; hearth-admin documented as a hand-written shell wrapper; Kong routes, held deal-add id, per-list add-to-list lock and coverage setup stated as they are; README retired-spec citations removed; 14-row behavioral sample in DOCS-AUDIT-LEDGER.md; PR D opens in 05-13
+- [Phase 05]: Plan 05-11: PR C (#28) squash-merged by the owner as 9fdc9c9 (refactor: remove retired spec citations from code); main CI run 39709025122 six of six green; follow-up sweep (aaed732 comments, 33baf2d nine titles) included; Journey N labels and README pointers left for the owner and PR D; RED-04 completes with PR D
 
 ### Pending Todos
 
@@ -160,6 +166,59 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-21T20:19:39.354Z
-Stopped at: Completed 05-07-PLAN.md
+Last session: 2026-10-22T02:14:16.898Z
+Stopped at: Completed 05-11-PLAN.md
 Resume file: None
+
+### Resume point for Phase 5 (after 05-11, 2026-10-22)
+
+Update on 05-11: PR C (#28) is merged to `main` as `9fdc9c910410d5e0bcdd5ff6472bb7f3cff75423`; `main` CI (run 39709025122) is green in all six jobs. The follow-up sweep (`aaed732`, `33baf2d`) is part of it. `refactor/drop-spec-citations` no longer exists on `origin`. Next is 05-12, which syncs WB with `origin/main` first (phase rule 7). Left for PR D: README lines 69, 121 and 146 and `.claude/CLAUDE.md` line 232 (`left-for-pr-d=4`), plus the README pointers in `.env.example:9` and `docker/docker-compose.yml:275`. Reported for the owner, not edited: `Journey N` labels in the E2E suite and the items in the ledger's "Follow-up sweep". The text below is as of 05-10 where it mentions PR C as unmerged.
+
+Resume with `/gsd-execute-phase 5`. Plans 05-01 to 05-10 have SUMMARYs; 05-11 to 05-13 remain. Update on 05-10: PR C's content is complete (`pr-c-left=0`): `refactor/drop-spec-citations` is pushed at `b8decf1` (non-TS files and root configs `05cebd4`, recipe fixtures `4f4c124`, 45 test titles `96fb846`); test counts are unchanged in every workspace. Nine test titles with bare `Design`, `Branding` or `Requirements` wording were left as out of the plan's scope (listed in the 05-10 SUMMARY). The WB tip and the table below are as of 05-08, except that `refactor/drop-spec-citations` is now at `b8decf1`.
+
+Working branch (WB) for all `.planning/` state: `claude/eloquent-mayer-szjtjf` (the plans name `claude/vigilant-gates-a4ihid`, which never existed). Pushed, tip `5d7c32e`; always read the newest STATE from `origin` of this branch.
+
+Merged to `main`: PR A #26 (`ac8ef34`, RED-01/02) and PR B #27 (`a660d58`, RED-03); main CI green on both. The deploy runs for those merges were pending on the self-hosted runner.
+
+Unmerged work, all pushed (no PR opened for either):
+
+| Branch | Worktree | Tip | Holds | PR |
+|--------|----------|-----|-------|----|
+| `refactor/drop-spec-citations` | `/home/user/hearth-citations` | `da58b20` | PR C so far: recurrence, matching, shared, seed-ts, e2e, service batches; 15 service test titles left for 05-10 | opened and landed by 05-11 |
+| `docs/sync-specs` | `/home/user/hearth-docs-sync` | `158fd52` | PR D so far: docs claims checker output, `docs/*.md` and `README.md` fixes | opened by 05-13 |
+
+Before pushing either branch again, run `git merge --no-edit claude/eloquent-mayer-szjtjf` in its worktree (D-04). `test/shared-fixtures-wip` is a redundant backup (its content is merged via PR B). Worktrees are local to the container that ran this session; recreate with `git worktree add <path> <branch>` from `origin` if they are gone.
+
+Next, in order: 05-11 (open and land PR C: owner merge), 05-12 (finish PR D: sync, maps, `.claude/CLAUDE.md`), 05-13 (land PR D and close the phase: owner merge).
+
+Open items for the owner: squash-merges of PR C and PR D; journey 7 e2e test (`e2e/tests/18-chores-and-errands-offline.spec.ts:140`) flaked once on `main` and passed on one approved rerun; if a PR touches `.github/workflows` and GitHub refuses for the `workflow` scope, use the `apply.sh` hand-off with `export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` on Windows Git Bash and a save-to-file invocation.
+
+### Start-up checklist and standing rules for the next session (read before dispatching executors)
+
+Start-up, in order:
+1. You must be on `claude/eloquent-mayer-szjtjf` at tip `origin/claude/eloquent-mayer-szjtjf` (`git fetch origin && git status -sb`). `main` carries only the older `.planning/` state, so do not read STATE from it.
+2. Run `/gsd-execute-phase 5`. Expected: 10 of 13 plans have SUMMARYs, 05-11 is ready, and `blocked_by` is empty. The first dispatch is 05-11.
+3. Recreate the PR C worktree before 05-09 (the old ones lived in a previous container): `git fetch origin && git worktree add /home/user/hearth-citations refactor/drop-spec-citations` (if the branch is not checked out locally, `git worktree add -b refactor/drop-spec-citations /home/user/hearth-citations origin/refactor/drop-spec-citations`). For PR D later: `git worktree add -b docs/sync-specs /home/user/hearth-docs-sync origin/docs/sync-specs`. Use the same paths the plans and ledgers name. Tip check after adding: `refactor/drop-spec-citations` = `b8decf1`, `docs/sync-specs` = `158fd52`.
+4. `config.json` has `workflow.use_worktrees: false`, so executors run one at a time on the primary checkout, with code branches in separate `git worktree` directories as above. Do not run two executors at once: they all commit to this branch.
+
+Corrections to the plan text:
+- Plans 05-01 to 05-08 (already executed) name the working branch (WB) `claude/vigilant-gates-a4ihid`; that branch never existed and is left as history there. Plans 05-09 to 05-13 have been corrected to name `claude/eloquent-mayer-szjtjf`. WB is `claude/eloquent-mayer-szjtjf` everywhere (plan files, ledgers and commands); if an older summary or ledger line says otherwise, it means this branch.
+- `.planning/` files go in the PRs (D-04), so each of `refactor/drop-spec-citations` and `docs/sync-specs` needs `git merge --no-edit claude/eloquent-mayer-szjtjf` run in its worktree before every push.
+
+Environment rules that earlier executors followed:
+- Use Node 24: `export PATH=/opt/node-v24/bin:$PATH` (default `node` there was 22.22; `/opt/node-v24/bin/node` is 24.21.0). Re-check it exists in a new container; otherwise install Node 24 per `.nvmrc`.
+- Commitlint (`commitlint.config.js`) allows scopes `web, service, shared, recurrence, matching, db, e2e, docker` or no scope; subjects must stay within the repo's length rule (keep to 71 characters or fewer). Never use `--no-verify`. Husky runs typecheck and lint-staged on every commit.
+- Commit planning files path-limited (`git commit -- <paths>`), then check the file mode of any script (`git ls-tree`); path-limited commits reset the executable bit, so run `git update-index --chmod=+x` first for scripts.
+- Leave the untracked `.planning/milestone.lock` alone (add `.planning/milestone.lock` to `.git/info/exclude` if the stop hook complains).
+- `GH_TOKEN` is passed through the environment for the session and is never written to a file, log or commit. It lacks the `workflow` scope, so pushes that add or change `.github/workflows/*` fail; use the D-22 hand-off (patches under `.planning/cleanup/patches/` plus an `apply.sh` for the owner). PR C and PR D should touch no workflow files, so none is expected.
+- Never rerun a CI job without the owner's explicit OK (registry `toomanyrequests` flakes are the only allowed exception, up to the number the plan states). A red job that is not a registry flake becomes a decision for the owner.
+- Never force-push, never merge a PR (the owner squash-merges), and never add files under `docs/` beyond editing the seven existing specs.
+
+Comment-only proof tooling for PR C (`.planning/cleanup/tools/`):
+- `citation-inventory.mjs` (modes `inventory`, `apply-pure`, `queue`), `comment-only-check.mjs` (compiler-print comparison, `--titles` mode, directive guard), `comment-only-controls.sh` (six self-checks).
+- In the controls output, controls 3, 4 and 6 are negative controls, so `FAIL FAIL` is the correct result for them. Controls 1, 2 and 5 must print `OK OK`.
+- Ledger: `.planning/cleanup/TEXT-SYNC-LEDGER.md`, with per-batch TSVs under `.planning/cleanup/text-sync/`. Citation recount at plan 05-06: 1,116 lines in 456 files (592 pure, 239 mixed, 240 prose, 45 titles); 340 service sites are done; 15 service test titles are deferred to 05-10.
+
+Decided in 05-10: the three root config lines (`commitlint.config.js` once, `eslint.config.js` twice) are in PR C, because D-09 names "the two root JS configs". The knip tool reports `.planning/cleanup/tools/expand-compare.mjs`, `jscpd-compare.mjs` and `nonts-comment-check.mjs` as unused files; Phase 6's CI-01 must account for them.
+
+PR C wording the owner may want to look at when it opens: `services/bills.ts` `updateBillPayment` ("(autopay-logged ones included)") and `services/subscriptions.ts` `monthlyCents` (lists the conversion factors), both rewritten because the cited spec text could not be recovered.

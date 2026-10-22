@@ -11,12 +11,11 @@ import type { JobDatabase } from '../jobs/types.js';
 import { enqueueScheduledNotifications } from './scheduled-reminders.js';
 
 /**
- * The dispatch job's SQL against other users' rows (Technical Architecture, "Scheduled jobs" ›
- * "Dispatch"). The outbox holds rows for every recipient and the job works on all of them in one
- * run, so it has to read and delete notifications and push subscriptions that belong to users other
- * than the one who would normally see them. Only `service_role` can do that under the RLS rule,
- * which is why this lives here, behind the same fence as the rest of the service-role work, rather
- * than in the job.
+ * The dispatch job's SQL against other users' rows. The outbox holds rows for every recipient and
+ * the job works on all of them in one run, so it has to read and delete notifications and push
+ * subscriptions that belong to users other than the one who would normally see them. Only
+ * `service_role` can do that under the RLS rule, which is why this lives here, behind the same
+ * fence as the rest of the service-role work, rather than in the job.
  *
  * Each call is its own service-role transaction. The advisory lock stops two runs working the same
  * rows; `claim` is still conditional on `sent_at is null`, so a row is stamped once no matter what

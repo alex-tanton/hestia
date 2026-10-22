@@ -25,10 +25,10 @@ export interface IngredientRowProps {
 }
 
 /**
- * Design › Screens › 12: one ingredient's bucket, what it matched, and its inline correction.
- * "Not a match" and "Match to…" give way to a "Corrected" label with a remove action once an
- * override governs the row — the same swapped-control idiom as `ChangePasswordForm` (Design ›
- * Accessibility › Focus management: focus moves into what replaced the control, not the document).
+ * One ingredient's bucket, what it matched, and its inline correction. "Not a match" and
+ * "Match to…" give way to a "Corrected" label with a remove action once an override governs the
+ * row — the same swapped-control idiom as `ChangePasswordForm` (focus moves into what replaced
+ * the control, not the document).
  */
 export function IngredientRow({
   householdId,
@@ -48,12 +48,12 @@ export function IngredientRow({
   const governing = overrides.filter(
     (o) => o.ingredientNormalizedName === ingredient.normalizedName,
   );
-  // Design › Screens › 12: "An ingredient governed by an override shows a small 'Corrected'
-  // label" — governed, not merely "currently decided by one". A household can hold more than one
-  // override for the same ingredient (a blocked deal it no longer sells, a newer correction), and
-  // the winning match can still come from an ordinary (non-overridden) candidate even so — Seed
-  // Data's own override fixture is exactly this case ("cheese" forced away from "snack cheese"
-  // still matches Food Lion's "chunk or cheese" normally). So this reads `governing.length > 0`,
+  // An ingredient governed by an override shows a small 'Corrected' label — governed, not merely
+  // "currently decided by one". A household can hold more than one override for the same
+  // ingredient (a blocked deal it no longer sells, a newer correction), and the winning match can
+  // still come from an ordinary (non-overridden) candidate even so — the seed data's own override
+  // fixture is exactly this case ("cheese" forced away from "snack cheese" still matches Food
+  // Lion's "chunk or cheese" normally). So this reads `governing.length > 0`,
   // not the breakdown's own `overridden` flag, which reflects only the specific match actually
   // chosen.
   const isOverridden = governing.length > 0;

@@ -39,7 +39,7 @@ function DepartureBody({
   const remaining = members.filter((member) => member.userId !== userId);
   const owned = ownedItemIds(preview);
   const isEverythingAssigned = owned.every((id) => assignments[id] !== undefined);
-  // Design › Offline rules: membership changes need a connection, and say so rather than failing.
+  // Membership changes need a connection, and say so rather than failing.
   const offlineReason = isOnline ? undefined : OFFLINE_MESSAGE;
 
   const run = (confirmName?: string): void => {
@@ -132,9 +132,9 @@ function DepartureBody({
 }
 
 /**
- * The departure preview (Design › Screens › 4, "Leaving and removing"). Leaving and removing open
- * the same pushed screen: what the member owns, a picker for each, rotations for information,
- * and — for the last member — the household deletion instead.
+ * The departure preview. Leaving and removing open the same pushed screen: what the member owns, a
+ * picker for each, rotations for information, and — for the last member — the household deletion
+ * instead.
  */
 export function DepartureScreen(): ReactElement {
   const params = useParams();

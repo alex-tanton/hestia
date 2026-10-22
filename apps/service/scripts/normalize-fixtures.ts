@@ -8,8 +8,8 @@ import { NORMALIZED_FIXTURE_DIR } from '../src/deals/flipp/fixture-transport.js'
 /**
  * Regenerates `e2e/fixtures/flipp/normalized/` from the committed raw captures
  * (`pnpm fixtures:normalize`). Run deliberately, never automatically: the point is that a
- * change upstream, or in the parsers, lands as a reviewable diff (Technical Architecture,
- * "Development"). It reads the raw fixtures from disk and makes no network call.
+ * change upstream, or in the parsers, lands as a reviewable diff. It reads the raw fixtures from
+ * disk and makes no network call.
  */
 const { files, skipCounts } = await buildNormalizedFixtures();
 

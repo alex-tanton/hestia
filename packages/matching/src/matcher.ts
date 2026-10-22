@@ -2,8 +2,7 @@ import { tokenize } from './normalize.js';
 import { tokensFuzzyMatch } from './similarity.js';
 
 /**
- * Token containment, overrides, and the pantry-beats-sale precedence (Requirements, "Matching
- * mechanics", "Match overrides", "Deal-matched suggestions"; Data model, "Meal planning" —
+ * Token containment, overrides, and the pantry-beats-sale precedence (overrides are stored in
  * `ingredient_match_override`). Pure and dependency-free of the service and the database: every
  * input here is already a normalized name or an already-loaded override row, so a later readiness
  * unit can call `matchIngredient` once per ingredient against the household's pantry and deal set
@@ -26,7 +25,7 @@ export interface MatchCandidate {
 
 /**
  * One `ingredient_match_override` row. Applies only when both normalized names equal the
- * override's exact recorded strings (Requirements, "Match overrides") — this package never
+ * override's exact recorded strings — this package never
  * fuzzy-matches an override itself, only the ingredient-to-candidate pair it governs.
  */
 export interface MatchOverride {
@@ -80,9 +79,9 @@ interface Winner {
  * matching: a force-no-match override removes a pair from consideration entirely (the fuzzy layer
  * is never even consulted for it), and a force-match override matches a pair regardless of
  * similarity, as long as a candidate with that exact target normalized name is present. When both
- * a pantry and a deal candidate match, the pantry one wins (Requirements, "Deal-matched
- * suggestions": "An ingredient that matches both the pantry and a deal goes into the pantry
- * bucket"), so callers get the bucket precedence for free rather than re-deriving it.
+ * a pantry and a deal candidate match, the pantry one wins (an ingredient that matches both the
+ * pantry and a deal goes into the pantry bucket), so callers get the bucket precedence for free
+ * rather than re-deriving it.
  */
 export function matchIngredient(
   ingredientNormalizedName: string,

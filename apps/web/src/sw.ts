@@ -1,5 +1,5 @@
 /*
- * The app's service worker (Engineering Practices › PWA implementation). It is the only one:
+ * The app's service worker. It is the only one:
  * vite-plugin-pwa injects the precache manifest into it (`injectManifest`), and nothing else is
  * cached by hand. Built with Workbox, so caching rules are written here rather than hand-rolled.
  */
@@ -44,7 +44,7 @@ declare const self: WorkerGlobal;
 
 /*
  * Precache the build: the shell, its stylesheet, and the icons, revisioned at build time. The
- * update flow is prompt-style (Engineering Practices › Service worker): a new worker waits until
+ * update flow is prompt-style: a new worker waits until
  * the user asks for it, so nothing reloads mid-task.
  */
 precacheAndRoute(self.__WB_MANIFEST);
@@ -62,8 +62,8 @@ registerRoute(
 
 /*
  * Deal images come straight from Flipp's CDN: cache-first, 7-day expiry, 100-entry cap. These two
- * hosts are the only ones the CSP's img-src allows for images (Technical Architecture, "Routing").
- * Cross-origin responses are opaque, so status 0 counts as cacheable alongside 200.
+ * hosts are the only ones the CSP's img-src allows for images. Cross-origin responses are opaque,
+ * so status 0 counts as cacheable alongside 200.
  */
 // Workbox's plugin typings predate exactOptionalPropertyTypes; the plugins are valid at runtime.
 type CachePlugin = NonNullable<

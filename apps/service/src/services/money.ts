@@ -1,7 +1,6 @@
 /**
- * Money is integer cents everywhere above the database boundary (Engineering Practices, "Code
- * conventions"). `numeric(10, 2)` arrives from pg as a decimal string, so these convert without
- * ever going through a floating-point dollar amount.
+ * Money is integer cents everywhere above the database boundary. `numeric(10, 2)` arrives from pg
+ * as a decimal string, so these convert without ever going through a floating-point dollar amount.
  */
 
 const NUMERIC = /^(-?)(\d+)(?:\.(\d*))?$/;
@@ -24,8 +23,8 @@ export function fromCents(cents: number | null): string | null {
 }
 
 /**
- * `cents × quantity`, rounded half-up to a whole cent (Requirements, "Deal price normalization").
- * The quantity is a `numeric` column's decimal string, so the multiplication stays in integers.
+ * `cents × quantity`, rounded half-up to a whole cent. The quantity is a `numeric` column's decimal
+ * string, so the multiplication stays in integers.
  */
 export function multiplyCents(cents: number, quantity: string): number {
   const match = NUMERIC.exec(quantity.trim());

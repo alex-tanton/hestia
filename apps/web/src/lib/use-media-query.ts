@@ -2,8 +2,8 @@ import { useSyncExternalStore } from 'react';
 
 /**
  * Tracks a media query, so a screen can pick one rendering rather than shipping both and hiding
- * one with CSS (Design › Screens › 10: "Mobile: day tabs … Desktop: full week grid" are two
- * different structures, not a show/hide of the same one). Mirrors `Select`'s own
+ * one with CSS (mobile day tabs and a desktop week grid are two different structures, not a
+ * show/hide of the same one). Mirrors `Select`'s own
  * `subscribeToPointer`/`isCoarsePointer` pair, which uses the same `useSyncExternalStore` shape
  * for a `matchMedia` query.
  */
@@ -26,5 +26,5 @@ export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(subscribe(query), getSnapshot(query), () => false);
 }
 
-/** Design › Breakpoints: the desktop layout begins at 1024px. */
+/** The desktop layout begins at 1024px. */
 export const DESKTOP_QUERY = '(min-width: 1024px)';

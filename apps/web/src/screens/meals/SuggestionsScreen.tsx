@@ -14,7 +14,7 @@ import { useSuggestions } from '../../lib/api/meal-hooks.ts';
 import { formatCalendarDate, formatDateTime } from '../../lib/format.ts';
 import { weekStart } from '../../lib/household-date.ts';
 
-/** Design › Screens › 13: ranked by readiness descending, ties by title. */
+/** Ranked by readiness descending, ties by title. */
 export function SuggestionsScreen({ householdId }: { householdId: string }): ReactElement {
   const navigate = useNavigate();
   const suggestions = useSuggestions(householdId);

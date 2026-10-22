@@ -3,18 +3,16 @@ import type { Suggestion, SuggestionsResponse } from '@hearth/shared';
 import type { Database } from '../db.js';
 
 /**
- * Deal-matched suggestions (Requirements, "Deal-matched suggestions"; Design, "13. Deal-matched
- * suggestions"). Every household recipe, ranked by readiness, alongside the deal data's own
- * as-of date. `dealsAsOf` null (no deal rows at all for the household's postal code) is what the
- * UI reads as "no deals available", so the response needs no separate boolean flag for it.
+ * Deal-matched suggestions. Every household recipe, ranked by readiness, alongside the deal data's
+ * own as-of date. `dealsAsOf` null (no deal rows at all for the household's postal code) is what
+ * the UI reads as "no deals available", so the response needs no separate boolean flag for it.
  */
 export type SuggestionsResult = SuggestionsResponse;
 
 /**
- * Readiness descending, title ascending among ties (Seed Data: "ranked by title" for the
- * all-0%-scored case). `Array.prototype.sort` is stable, so recipes tied on readiness keep
- * whatever title-ascending order the caller already gave them — pure and exported for a unit test
- * that needs no database.
+ * Readiness descending, title ascending among ties (ranked by title for the all-0%-scored case).
+ * `Array.prototype.sort` is stable, so recipes tied on readiness keep whatever title-ascending
+ * order the caller already gave them — pure and exported for a unit test that needs no database.
  */
 export function rankByReadiness(recipes: readonly Suggestion[]): Suggestion[] {
   return [...recipes].sort((left, right) => right.readinessPercent - left.readinessPercent);

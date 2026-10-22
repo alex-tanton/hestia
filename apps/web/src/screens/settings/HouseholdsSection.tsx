@@ -8,7 +8,7 @@ import { useOnlineStatus } from '../../lib/use-online-status.ts';
 import { HouseholdCard } from './HouseholdCard.tsx';
 import { SettingsSection } from './SettingsSection.tsx';
 
-/** Design › Screens › 4, "My Households". */
+/** My Households: every household the member belongs to. */
 export function HouseholdsSection({ profile }: { profile: ProfileResponse }): ReactElement {
   const navigate = useNavigate();
   const isOnline = useOnlineStatus();

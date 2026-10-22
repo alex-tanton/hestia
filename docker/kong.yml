@@ -1,4 +1,4 @@
-# Kong declarative config: auth and realtime only (Technical Architecture, "Compose layout").
+# Kong declarative config: auth and realtime only.
 # There are deliberately no rest, graphql, storage, functions, analytics, or meta routes.
 # $SUPABASE_ANON_KEY and $SUPABASE_SERVICE_KEY are substituted by kong-entrypoint.sh.
 #

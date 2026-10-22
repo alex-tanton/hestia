@@ -21,11 +21,11 @@ import { currentInstant, dateInZone, daysBetween, householdDate } from './test/z
 
 /*
  * Bills, the payment log, skip, archive, confirm-usage, and the subscriptions view, against
- * `supabase start` (Technical Architecture, "API surface" — "Bills"). Every request goes through
- * withUserDb, so RLS decides every isolation assertion; the database-level RLS/trigger suite
- * itself (personal-bill invisibility, the household-move refusal) already lives in
- * db/rls-isolation.integration.test.ts and db/policies.integration.test.ts from Phase 1 — this
- * file is about the service and route layer built in this unit.
+ * `supabase start`. Every request goes through withUserDb, so RLS decides every isolation
+ * assertion; the database-level RLS/trigger suite itself (personal-bill invisibility, the
+ * household-move refusal) already lives in db/rls-isolation.integration.test.ts and
+ * db/policies.integration.test.ts from Phase 1 — this file is about the service and route layer
+ * built in this unit.
  *
  * Dates use generous offsets (well clear of "today") rather than exact boundaries, since none of
  * these tests are about timezone-edge precision — that is meal-plan.integration.test.ts's job.
@@ -333,7 +333,7 @@ describe('archive', () => {
       bill.id,
     );
 
-    // Payment history survives archiving (PRD, "Bills"): the bill itself is still readable by id.
+    // Payment history survives archiving: the bill itself is still readable by id.
     const detail = await as(app, home.user, 'GET', `/api/bills/${bill.id}`);
     expectStatus(detail, 200);
     expect(detail.json<BillDetail>().payments).toHaveLength(1);
@@ -587,9 +587,9 @@ describe.each(['Pacific/Kiritimati', 'Pacific/Pago_Pago'])(
 );
 
 /*
- * Every date is read in the household timezone (non-negotiable 8). The household here is Kiritimati
- * (UTC+14) and the owner's profile is Pago Pago (UTC-11), so their calendar dates are always a day
- * or more apart: a service that dated by the profile would classify these bills differently.
+ * Every date is read in the household timezone. The household here is Kiritimati (UTC+14) and the
+ * owner's profile is Pago Pago (UTC-11), so their calendar dates are always a day or more apart: a
+ * service that dated by the profile would classify these bills differently.
  */
 describe('dates follow the household timezone, not the profile zone', () => {
   const HOUSEHOLD_ZONE = 'Pacific/Kiritimati';

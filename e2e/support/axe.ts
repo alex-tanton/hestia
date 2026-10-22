@@ -1,7 +1,7 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-/** WCAG 2.1 Level AA is the target (Design › Accessibility). */
+/** WCAG 2.1 Level AA is the target. */
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 /**
@@ -39,9 +39,9 @@ export async function settleAnimations(page: Page): Promise<void> {
 }
 
 /**
- * Design › Accessibility › Verification: axe-core runs on every screen a journey visits, in both
- * themes. It catches roughly half of real issues, so it stands alongside the manual keyboard and
- * screen-reader passes rather than replacing them.
+ * axe-core runs on every screen a journey visits, in both themes. It catches roughly half of real
+ * issues, so it stands alongside the manual keyboard and screen-reader passes rather than
+ * replacing them.
  */
 export async function expectAccessible(page: Page, screen: string): Promise<void> {
   await settleAnimations(page);

@@ -23,10 +23,10 @@ import { DashboardRoute } from './DashboardRoute.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * Household dates on the dashboard (PRD, "Timezone"): "today", tomorrow, the week's end and every
- * card's due set come from the household's clock. The browser here is Kiritimati (UTC+14). At
- * 02:30 UTC on Oct 4 it is Oct 4 there and still Oct 3 (a Saturday) in New York, so the browser has
- * already crossed midnight into a new week that the household has not.
+ * Household dates on the dashboard: "today", tomorrow, the week's end and every card's due set come
+ * from the household's clock. The browser here is Kiritimati (UTC+14). At 02:30 UTC on Oct 4 it is
+ * Oct 4 there and still Oct 3 (a Saturday) in New York, so the browser has already crossed midnight
+ * into a new week that the household has not.
  */
 
 const BROWSER_ZONE = 'Pacific/Kiritimati';

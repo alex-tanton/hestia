@@ -16,10 +16,10 @@ export interface BillRowProps {
 }
 
 /**
- * Design › Screens › 14, `BillRow`: name, amount, due date, autopay indicator, and visibility.
- * Overdue carries both the danger color and the word "Overdue" (Design › Accessibility — never
- * color alone); the same is true of the "Personal" and "Autopay" badges, which both pair an icon
- * or label with their meaning rather than relying on a color swatch.
+ * `BillRow`: name, amount, due date, autopay indicator, and visibility. Overdue carries both the
+ * danger color and the word "Overdue" (never color alone); the same is true of the "Personal"
+ * and "Autopay" badges, which both pair an icon or label with their meaning rather than relying
+ * on a color swatch.
  */
 export function BillRow({
   bill,

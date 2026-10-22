@@ -24,7 +24,7 @@ export interface ErrandRowProps {
 }
 
 /**
- * Design › "18. Errands": a flat row with its due date and assignee; done rows show who completed
+ * A flat row with its due date and assignee; done rows show who completed
  * it and when. The checkbox is a real input, separate from the row's own tap target (opening the
  * same sheet for editing), so toggling done and editing stay two distinct, announced controls.
  */

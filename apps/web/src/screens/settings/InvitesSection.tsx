@@ -14,9 +14,9 @@ import { useOnlineStatus } from '../../lib/use-online-status.ts';
 import { SettingsSection } from './SettingsSection.tsx';
 
 /**
- * Design › Screens › 4, "Invites" (admin only). Creating one shows the link and the 8-character
- * code exactly once — afterwards only their digests exist (Technical Architecture, "Membership
- * lifecycle functions") — so the panel stays until it is dismissed.
+ * Invites (admin only). Creating one shows the link and the 8-character
+ * code exactly once — afterwards only their digests exist — so the panel stays until it is
+ * dismissed.
  */
 export function InvitesSection({ householdId }: { householdId: string }): ReactElement {
   const isOnline = useOnlineStatus();

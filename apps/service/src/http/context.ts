@@ -26,12 +26,12 @@ export interface AppDependencies {
   recordError: (record: ErrorRecord) => Promise<void>;
   newestBackupTime: () => Promise<Date | null>;
   merchantSkipRates: () => MerchantSkipRate[];
-  /** The deals read path: the Flipp wrapper behind its caches (Technical Architecture, "Caching"). */
+  /** The deals read path: the Flipp wrapper behind its caches. */
   deals: DealsService;
   /**
    * Fetches a pasted recipe URL server-side and extracts JSON-LD, never throwing on unusable
-   * markup (Technical Architecture, "Recipe fetching"). A network or fetch-limit failure still
-   * throws, and the route maps it to a problem response.
+   * markup. A network or fetch-limit failure still throws, and the route maps it to a problem
+   * response.
    */
   parseRecipeUrl: (url: string) => Promise<ParseRecipeResponse>;
 }

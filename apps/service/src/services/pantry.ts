@@ -7,9 +7,9 @@ import { fail } from '../problem.js';
 import { recomputeReadinessForHousehold } from './readiness.js';
 
 /*
- * The pantry (Requirements, "Pantry"): a lightweight inventory that feeds readiness scoring and
- * stops duplicate buying. It is unique on (household_id, normalized_name), so adding something
- * already there updates it rather than duplicating it.
+ * The pantry: a lightweight inventory that feeds readiness scoring and stops duplicate buying. It
+ * is unique on (household_id, normalized_name), so adding something already there updates it rather
+ * than duplicating it.
  */
 
 export interface PantryRow {
@@ -69,8 +69,7 @@ export async function addPantryItem(
     .returningAll()
     .executeTakeFirstOrThrow();
   // A pantry write can change which recipes' ingredients match it (pantry-beats-sale), so
-  // readiness is recomputed inline, in the same transaction (Requirements, "Deal-matched
-  // suggestions"; the design's recompute-trigger list).
+  // readiness is recomputed inline, in the same transaction.
   await recomputeReadinessForHousehold(db, householdId);
   return toPantryItem(row);
 }

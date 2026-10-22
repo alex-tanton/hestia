@@ -41,7 +41,7 @@ export function isPlainDetail(detail: string): boolean {
   return /^[A-Za-z0-9 ,.;:()/%$#+\-–—‘’“”…?!]+$/.test(trimmed);
 }
 
-/** What each status means when the caller has no better copy of its own (Branding › Voice). */
+/** What each status means when the caller has no better copy of its own. */
 const STATUS_MESSAGES: Readonly<Record<number, string>> = {
   400: 'That did not work. Check what you entered and try again.',
   401: 'Your session has expired. Sign in again.',
@@ -56,7 +56,7 @@ export const OFFLINE_MESSAGE = 'Offline. This needs a connection.';
 export const UNEXPECTED_MESSAGE = 'Something went wrong. Try again.';
 
 export interface UserMessageOptions {
-  /** Copy for specific statuses, e.g. Design's invite states on the join screen. */
+  /** Copy for specific statuses, e.g. the invite states on the join screen. */
   byStatus?: Readonly<Record<number, string>>;
   /** Used when nothing more specific applies. */
   fallback?: string;

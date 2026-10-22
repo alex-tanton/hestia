@@ -24,9 +24,9 @@ export interface SubscriptionsScreenProps {
 }
 
 /**
- * Design › Screens › 16: the total monthly figure, then every subscription sorted by monthly cost
+ * The total monthly figure, then every subscription sorted by monthly cost
  * descending, each with its annualized figure. Every money figure here comes straight from the
- * API's normalized response (Technical Architecture: the client never does money arithmetic) — the
+ * API's normalized response (the client never does money arithmetic) — the
  * screen only formats and orders what it's given, and the service has already sorted it.
  */
 export function SubscriptionsScreen({ householdId }: SubscriptionsScreenProps): ReactElement {

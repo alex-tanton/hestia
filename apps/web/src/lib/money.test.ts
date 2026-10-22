@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatCents, formatUnitPrice, parsePriceInput, speakUnitPrice } from './money.ts';
 
-/** Values are the Seed Data deal fixtures, so the formatting is checked against real prices. */
+/** Values are the seed data's deal fixtures, so the formatting is checked against real prices. */
 describe('formatting money from integer cents', () => {
   it.each([
     [250, '$2.50'],

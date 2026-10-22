@@ -12,10 +12,9 @@ import { hearthAdmin } from '../support/db.ts';
 import { SEED, SEED_PASSWORD } from '../support/env.ts';
 
 /**
- * The screen states no journey passes through (Handoff, Phase 5 "Done when": axe-core on every
- * screen in both themes; Engineering Practices › Testing, "E2E journeys"). Each one needs a
- * special seed, an offline connection, a device or browser the suite fakes, or a dialog a journey
- * does not open. Every state runs in both themes.
+ * The screen states no journey passes through (axe-core runs on every screen in both themes). Each
+ * one needs a special seed, an offline connection, a device or browser the suite fakes, or a dialog
+ * a journey does not open. Every state runs in both themes.
  *
  * Accounts: Riley (light) and Drew (dark) each own a household journey 1 created with no data
  * and no favorite stores, so it is the first-run household. Alex owns Oak Street, which is read
@@ -37,7 +36,7 @@ const FIRST_RUN: Record<Theme, { email: string; household: string }> = {
 const IOS_IPHONE_UA =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
 
-/** The copy each state shows, as the screens word it (Branding, Design). */
+/** The copy each state shows, as the screens word it. */
 const COPY = {
   signInEmail: 'Enter your email address.',
   resetExpired: 'This reset link has expired. Ask your server owner for a new one.',
@@ -80,9 +79,9 @@ async function setPermission(page: Page, value: NotificationPermission): Promise
 }
 
 /**
- * Signs up a new account, which has no household, so the screen after sign-up is create-or-join
- * (Design › Screens › 1). The address carries a random suffix so a rerun on a kept stack still
- * gets a fresh account; the account is never used again.
+ * Signs up a new account, which has no household, so the screen after sign-up is create-or-join.
+ * The address carries a random suffix so a rerun on a kept stack still gets a fresh account; the
+ * account is never used again.
  */
 async function signUpWithoutHousehold(page: Page, name: string): Promise<void> {
   const email = `${name.toLowerCase()}-${randomBytes(3).toString('hex')}@example.com`;

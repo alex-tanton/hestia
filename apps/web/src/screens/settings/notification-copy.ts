@@ -1,7 +1,7 @@
 import type { NotificationType } from '@hearth/shared';
 
 /*
- * Copy for Settings › Notifications (Design › Screens › 4; Branding › Voice and tone). Each type
+ * Copy for Settings › Notifications. Each type
  * gets a short name and one line on when it arrives, so a toggle says what it will do.
  */
 
@@ -51,7 +51,7 @@ export const NOTIFICATION_TYPES_LOADING = 'Loading notification types';
 export const NOTIFICATION_TYPES_LOAD_ERROR = "Couldn't load notification types. Try again.";
 export const NOTIFICATION_TYPES_OFFLINE = 'Notification settings need a connection.';
 
-/** Shown beside a toggle that cannot be changed right now (Design › Offline rules). */
+/** Shown beside a toggle that cannot be changed right now. */
 export const WRITE_NEEDS_CONNECTION = 'Needs a connection.';
 
 export const SAVING_MESSAGE = 'Saving…';
@@ -70,6 +70,6 @@ export const DEVICE_MESSAGES = {
   failed: "Couldn't turn on notifications on this device. Try again.",
 } as const;
 
-/** Where to read about changing a browser's notification permission (Design › Screens › 4). */
+/** Where to read about changing a browser's notification permission. */
 export const BROWSER_SETTINGS_HELP_URL = 'https://support.google.com/chrome/answer/114662';
 export const BROWSER_SETTINGS_HELP_LABEL = 'How to allow notifications';

@@ -1,5 +1,5 @@
 /**
- * Error scrubbing (Technical Architecture, "Error recording"; Handoff non-negotiable 3).
+ * Error scrubbing.
  *
  * A recorded error may name a route, a job, a user id, or a household id. It must never carry a
  * bill amount, list or pantry contents, recipe data, an email address, or an auth token. The

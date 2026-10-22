@@ -4,9 +4,9 @@ import type { Database } from '../../db.js';
 import { fail } from '../../problem.js';
 
 /**
- * Favorite stores (Requirements, "Store selection"). Favorites scope the default deal search, the
- * flyer list, the daily flyer-item refresh, readiness matching, and `flyer_refresh`; browsing
- * every merchant near the postal code stays available regardless. Any member may edit them.
+ * Favorite stores. Favorites scope the default deal search, the flyer list, the daily flyer-item
+ * refresh, readiness matching, and `flyer_refresh`; browsing every merchant near the postal code
+ * stays available regardless. Any member may edit them.
  *
  * Stored by Flipp's merchant id, which is stable week to week, unlike its item ids.
  */

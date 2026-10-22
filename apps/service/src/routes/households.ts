@@ -21,7 +21,7 @@ import {
 import { createInvite, listInvites, revokeInvite } from '../services/invites.js';
 import { depart, departurePreview, transferAdmin } from '../services/membership.js';
 
-/** Households, invites, and membership (Technical Architecture, "API surface"). */
+/** Households, invites, and membership. */
 export const householdRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/households', async (request) => {
     const user = await ctx.authenticate(request);

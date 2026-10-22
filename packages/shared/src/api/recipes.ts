@@ -4,10 +4,9 @@ import { pageSchema } from './deals.js';
 import { matchOverrideSchema } from './matching.js';
 
 /**
- * Recipes (Requirements, "Recipe library"; Technical Architecture, "Recipe fetching"). A
- * household's recipe is title, source URL, instructions, servings, and an ordered ingredient
- * list. `rawText` survives on a parsed ingredient so the original line is never lost; a manually
- * entered one has none. Servings are recorded as published and never scaled.
+ * Recipes. A household's recipe is title, source URL, instructions, servings, and an ordered
+ * ingredient list. `rawText` survives on a parsed ingredient so the original line is never lost; a
+ * manually entered one has none. Servings are recorded as published and never scaled.
  */
 
 export const recipeTitleSchema = z.string().trim().min(1, 'Enter a title.').max(200);
@@ -45,10 +44,10 @@ export const recipeSchema = z.object({
 export type Recipe = z.infer<typeof recipeSchema>;
 
 /**
- * Recipe readiness (Requirements, "Deal-matched suggestions"; Technical Architecture, "Database" —
- * `recipe_readiness`: "breakdown (jsonb: per ingredient id, its bucket and the matched deal or
- * pantry name)"). `readiness` is null only in the never-computed edge case, which the recompute
- * triggers in `services/readiness.ts` are meant to make unreachable in practice.
+ * Recipe readiness (`recipe_readiness`: the breakdown is jsonb holding, per ingredient id, its
+ * bucket and the matched deal or pantry name). `readiness` is null only in the never-computed edge
+ * case, which the recompute triggers in `services/readiness.ts` are meant to make unreachable in
+ * practice.
  */
 export const readinessBucketSchema = z.enum(['on_sale', 'in_pantry', 'to_buy']);
 export type ReadinessBucket = z.infer<typeof readinessBucketSchema>;
@@ -76,15 +75,14 @@ export const recipeDetailSchema = recipeSchema.extend({
   ingredients: z.array(recipeIngredientSchema),
   readiness: recipeReadinessSchema.nullable(),
   /**
-   * The household's overrides that apply to this recipe (Technical Architecture, "API surface":
-   * "the overrides that apply to a recipe come back in `GET /recipes/:id`") — filtered to those
-   * whose `ingredientNormalizedName` matches one of this recipe's ingredients.
+   * The household's overrides that apply to this recipe (they come back in `GET /recipes/:id`) —
+   * filtered to those whose `ingredientNormalizedName` matches one of this recipe's ingredients.
    */
   matchOverrides: z.array(matchOverrideSchema),
 });
 export type RecipeDetail = z.infer<typeof recipeDetailSchema>;
 
-/** GET /households/:id/suggestions (Design, "13. Deal-matched suggestions"). */
+/** GET /households/:id/suggestions. */
 export const suggestionSchema = z.object({
   recipeId: idSchema,
   title: z.string(),
@@ -106,7 +104,7 @@ export const suggestionsResponseSchema = z.object({
 });
 export type SuggestionsResponse = z.infer<typeof suggestionsResponseSchema>;
 
-/** Requirements, "Scale and pagination": recipe libraries paginate at the same size as deals. */
+/** Recipe libraries paginate at the same size as deals. */
 export const RECIPE_PAGE_SIZE = 50;
 
 const pageNumber = z.coerce.number().int().min(1).max(1_000);
@@ -123,7 +121,7 @@ export type RecipeListResponse = z.infer<typeof recipeListResponseSchema>;
 /**
  * One ingredient as either a manual entry or a parsed-and-edited line contributes it. `rawText`
  * missing (or null) is what makes a manual ingredient distinguishable from a parsed one that
- * happens to keep the same values (Requirements, "Recipe sources").
+ * happens to keep the same values.
  */
 export const ingredientInputSchema = z.object({
   itemName: ingredientItemNameSchema,
@@ -149,8 +147,8 @@ export type CreateRecipeRequest = z.infer<typeof createRecipeRequestSchema>;
 /**
  * PATCH /api/recipes/:id. `ingredients`, if given, replaces the recipe's ingredient list
  * wholesale rather than merging, so the client always sends the full edited set (mirrors the
- * create shape; Technical Architecture does not specify a partial-ingredient PATCH, and a partial
- * merge would need a merge key this resource has no stable one for prior to saving).
+ * create shape; no partial-ingredient PATCH is specified, and a partial merge would need a merge
+ * key this resource has no stable one for prior to saving).
  */
 export const updateRecipeRequestSchema = z
   .object({
@@ -178,9 +176,9 @@ export type ParsedIngredient = z.infer<typeof parsedIngredientSchema>;
 
 /**
  * The parse-and-preview result. `needsManualEntry` is true only when the page carried no usable
- * schema.org/JSON-LD `Recipe` markup at all (Technical Architecture, "Recipe fetching"); a page
- * with partial markup (say, ingredients but no instructions) still comes back with
- * `needsManualEntry: false` and the gaps left null, for the same editable preview to fill in.
+ * schema.org/JSON-LD `Recipe` markup at all; a page with partial markup (say, ingredients but no
+ * instructions) still comes back with `needsManualEntry: false` and the gaps left null, for the
+ * same editable preview to fill in.
  */
 export const parseRecipeResponseSchema = z.object({
   needsManualEntry: z.boolean(),

@@ -54,9 +54,9 @@ import { ChoresListScreen } from './ChoresListScreen.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * Chores (Design › Screens › 17). Dates come from Seed Data's "today" (a Sunday), so the fake
- * clock is pinned to noon in New York that day: every "overdue", "today", and "this week" in the
- * assertions is read against the same calendar the fixtures were written for.
+ * Chores. Dates come from the seed data's "today" (a Sunday), so the fake clock is pinned to
+ * noon in New York that day: every "overdue", "today", and "this week" in the assertions is read
+ * against the same calendar the fixtures were written for.
  */
 
 const PROFILE: StubHandler = () => ({ status: 200, body: profileFixture });
@@ -137,7 +137,7 @@ function groupOf(heading: string): string[] {
 }
 
 beforeEach(() => {
-  // Pin "today" to Seed Data's Sunday, noon in New York; timers keep running for the screens.
+  // Pin "today" to the seed data's Sunday, noon in New York; timers keep running for the screens.
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-09-27T16:00:00.000Z'));
   setOnline(true);
@@ -151,7 +151,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Chores list (Design › Screens › 17)', () => {
+describe('Chores list', () => {
   it('loading: shows skeleton rows labelled for screen readers', () => {
     mountList({ 'GET /api/households/:id/chores': () => new Promise(() => undefined) });
     expect(screen.getByRole('status')).toHaveTextContent('Loading chores');
@@ -375,7 +375,7 @@ describe('Chores list (Design › Screens › 17)', () => {
   });
 });
 
-describe('Chore detail (Design › Screens › 17)', () => {
+describe('Chore detail', () => {
   it('shows the recurrence, the next three dates, and the rotation with the current turn and the next', async () => {
     mountDetail({
       'GET /api/chores/:id': () => ({ status: 200, body: takeOutTrashDetailFixture }),
@@ -458,7 +458,7 @@ describe('Chore detail (Design › Screens › 17)', () => {
   });
 });
 
-describe('Chore sheet (Design › Screens › 17)', () => {
+describe('Chore sheet', () => {
   it('name is required and the interval must be a whole number of 1 or more', async () => {
     mountForm({});
     const user = userEvent.setup();

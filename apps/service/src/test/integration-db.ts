@@ -3,8 +3,7 @@ import pg from 'pg';
 
 /**
  * Harness for database integration tests. Every test gets one connection inside a transaction
- * that is rolled back at the end, so nothing a test writes survives it (Engineering Practices,
- * "Integration test database").
+ * that is rolled back at the end, so nothing a test writes survives it.
  *
  * The connection is the local superuser-like `postgres` role, which sets up fixtures directly.
  * `as(user)` then runs statements exactly the way `withUserDb` does: `set local role

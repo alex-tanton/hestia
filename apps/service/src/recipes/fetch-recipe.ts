@@ -8,12 +8,12 @@ import type { HostRateLimiter } from './host-rate-limiter.js';
 import { isPrivateAddress } from './private-address.js';
 
 /**
- * Fetches a user-pasted recipe URL server-side (Technical Architecture, "Recipe fetching"). Every
- * limit named there is enforced here: `http`/`https` only, private/loopback/link-local address
- * ranges refused by resolved IP (not by string-matching the URL, since DNS rebinding is the real
- * threat), a 10-second timeout, a 5 MB body cap, and a descriptive User-Agent. Fetches are
- * user-initiated and low volume by design (no crawling, no link following): a redirect is refused
- * rather than followed, so this never becomes a general-purpose fetcher.
+ * Fetches a user-pasted recipe URL server-side. Every limit named there is enforced here:
+ * `http`/`https` only, private/loopback/link-local address ranges refused by resolved IP (not by
+ * string-matching the URL, since DNS rebinding is the real threat), a 10-second timeout, a 5 MB
+ * body cap, and a descriptive User-Agent. Fetches are user-initiated and low volume by design (no
+ * crawling, no link following): a redirect is refused rather than followed, so this never becomes a
+ * general-purpose fetcher.
  */
 
 export const FETCH_TIMEOUT_MS = 10_000;
@@ -139,7 +139,7 @@ export function requestWithLimits(url: URL, options: RequestLimitsOptions): Prom
       (res) => {
         const status = res.statusCode ?? 0;
         if (status >= 300 && status < 400) {
-          // "No link following" (Technical Architecture): a redirect is refused, not chased.
+          // "No link following": a redirect is refused, not chased.
           res.resume();
           finish(() => {
             reject(new RecipeFetchError(`That page redirected (${String(status)}).`, 'http_error'));

@@ -3,7 +3,7 @@ import { scrubErrorReport } from '@hearth/shared';
 /**
  * Unexpected errors are reported to `POST /api/client-error` after passing through the shared
  * scrubbing function, so nothing that reaches the server names a bill amount, a list's contents,
- * or an address (Engineering Practices › Client error reporting; non-negotiable 3). There is no
+ * or an address. There is no
  * third-party error SDK, and at most ten reports leave a page load.
  */
 export const MAX_REPORTS_PER_PAGE_LOAD = 10;

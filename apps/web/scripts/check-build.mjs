@@ -1,9 +1,9 @@
 /*
  * Post-build checks on `dist/`, run by `pnpm build`.
  *
- * 1. The app shell stays under its 200KB gzipped budget (Engineering Practices › Performance
- *    budget). The shell is the entry chunk plus everything `index.html` preloads with it.
- * 2. The magic-link screens obey their flag (Technical Architecture, "Auth configuration"):
+ * 1. The app shell stays under its 200KB gzipped budget. The shell is the entry chunk plus
+ *    everything `index.html` preloads with it.
+ * 2. The magic-link screens obey their flag:
  *    with `VITE_MAGIC_LINK_ENABLED` off, none of their copy is in the build at all; with it on,
  *    the copy is there but never in the shell, because both screens are behind lazy routes.
  */

@@ -12,7 +12,7 @@ import { OnboardingLayout } from './OnboardingLayout.tsx';
 
 type Field = 'email' | 'password';
 
-/** Design › Screens › 1: sign in with email and password, with a "Forgot password?" link. */
+/** Sign in with email and password, with a "Forgot password?" link. */
 export function SignInScreen(): ReactElement {
   const auth = useAuthClient();
   const navigate = useNavigate();
@@ -94,9 +94,9 @@ export function SignInScreen(): ReactElement {
       </form>
       <div className="flex flex-col gap-2 text-body-sm">
         {/*
-         * Magic link is built but disabled (Requirements › Authentication). The flag is a
-         * build-time constant, so with it off this option — and the sentence naming it — is
-         * folded out of the build rather than hidden at runtime.
+         * Magic link is built but disabled. The flag is a build-time constant, so with it off this
+         * option — and the sentence naming it — is folded out of the build rather than hidden at
+         * runtime.
          */}
         {import.meta.env.VITE_MAGIC_LINK_ENABLED === 'true' && (
           <Link to="/sign-in/link" className="font-semibold text-section">

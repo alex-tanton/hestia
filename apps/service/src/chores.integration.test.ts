@@ -13,9 +13,8 @@ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
- * Chores, completions, rotation, and undo, against real Postgres (Technical Architecture, "API
- * surface" › "Chores"; PRD, "Recurrence is anchored and derived on read", "Rotation"). Every
- * request goes through withUserDb as hearth_service, so RLS decides every isolation assertion.
+ * Chores, completions, rotation, and undo, against real Postgres. Every request goes through
+ * withUserDb as hearth_service, so RLS decides every isolation assertion.
  */
 
 registerStackHooks();
@@ -141,8 +140,8 @@ describe('chores: rotation', () => {
     expect(chore.currentTurn).toBe(alex.id);
     expect(chore.nextTurn).toBe(sam.id);
 
-    // Jordan does Alex's scheduled turn (PRD, "Rotation": "If Sam does Alex's turn, the next turn
-    // is still the member after Alex").
+    // Jordan does Alex's scheduled turn (if Sam does Alex's turn, the next turn is still the member
+    // after Alex).
     const afterCompletion = await complete(jordan, chore.id);
     expect(afterCompletion.lastCompletion?.completedBy).toBe(jordan.id);
     expect(afterCompletion.currentTurn).toBe(sam.id);
@@ -742,8 +741,8 @@ describe('chores: explicit occurrenceDate (Phase 5 forward-compatibility)', () =
       anchorDate: anchor,
     });
     // The anchor itself is the very first occurrence — 60 days (far more than one week) before
-    // today, so it has long since stopped being the current occurrence (PRD: "missed occurrences
-    // do not stack up and are never backfilled").
+    // today, so it has long since stopped being the current occurrence (missed occurrences do not
+    // stack up and are never backfilled).
     const response = await as(app, home.admin, 'POST', `/api/chores/${chore.id}/complete`, {
       occurrenceDate: anchor,
     });

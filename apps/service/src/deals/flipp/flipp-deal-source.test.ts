@@ -14,8 +14,8 @@ import {
 } from './request-queue.js';
 
 /**
- * The wrapper against the recorded 27514 responses. Every quirk Technical Architecture lists
- * under "Endpoints" has a case here. No test makes a live call (non-negotiable 17).
+ * The wrapper against the recorded 27514 responses. Every known quirk of the Flipp endpoints has a
+ * case here. No test makes a live call.
  */
 
 function sourceWith(get: HttpGet = fixtureTransport(), logger?: QueueLogger) {

@@ -91,7 +91,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Shopping lists index (Design › Screens › 7)', () => {
+describe('Shopping lists index', () => {
   it('loading: announces it with skeletons rather than a spinner', () => {
     index(baseHandlers({ 'GET /api/households/:id/lists': () => new Promise(() => undefined) }));
     expect(screen.getByRole('status')).toHaveTextContent('Loading your lists');
@@ -287,7 +287,7 @@ describe('Creating and renaming a list', () => {
   });
 });
 
-describe('Shopping list detail (Design › Screens › 8)', () => {
+describe('Shopping list detail', () => {
   it('groups items by store with the subtotals the API computed', async () => {
     detail();
     expect(await screen.findByRole('heading', { name: 'Food Lion' })).toBeInTheDocument();
@@ -412,7 +412,7 @@ describe('Shopping list detail (Design › Screens › 8)', () => {
   });
 });
 
-describe('Pantry (Design › Screens › 9)', () => {
+describe('Pantry', () => {
   function pantry(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
     return mount(<PantryScreen householdId={OAK_STREET_ID} />, handlers);
   }

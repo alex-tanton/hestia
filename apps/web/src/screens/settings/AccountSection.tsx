@@ -8,7 +8,7 @@ import { ChangePasswordForm } from './account/ChangePasswordForm.tsx';
 import { DisplayNameForm } from './account/DisplayNameForm.tsx';
 
 /**
- * Design › Screens › 4, "Account": email, display name, and password, each editable; the
+ * Account: email, display name, and password, each editable; the
  * timezone is shown as detected and is read-only, because it follows the browser on every open.
  */
 export function AccountSection({ profile }: { profile: ProfileResponse }): ReactElement {

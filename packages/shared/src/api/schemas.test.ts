@@ -129,8 +129,7 @@ describe('request schemas', () => {
     expect(createRecipeRequestSchema.safeParse({ title: '  ', ingredients: [] }).success).toBe(
       false,
     );
-    // A recipe with no ingredients at all is allowed (Requirements: "A recipe with no
-    // ingredients scores 0%").
+    // A recipe with no ingredients at all is allowed (a recipe with no ingredients scores 0%).
     expect(createRecipeRequestSchema.safeParse({ title: 'Empty', ingredients: [] }).success).toBe(
       true,
     );

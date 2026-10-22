@@ -7,12 +7,11 @@ import { markHouseholdActive } from './households.js';
 import { recomputeReadinessForHousehold } from './readiness.js';
 
 /*
- * Match overrides (Requirements, "Match overrides"; Data model, "Meal planning" —
- * `ingredient_match_override`). A correction made from a recipe's breakdown; it applies to every
- * recipe in the household until a member removes it. Unique on (household_id,
+ * Match overrides (`ingredient_match_override`). A correction made from a recipe's breakdown; it
+ * applies to every recipe in the household until a member removes it. Unique on (household_id,
  * ingredient_normalized_name, target_kind, target_normalized_name) — creating one that already
  * exists updates its decision rather than failing, the same idempotent-POST pattern as
- * favorite-stores and the pantry (Requirements, "Match overrides").
+ * favorite-stores and the pantry.
  */
 
 interface MatchOverrideRow {
@@ -68,7 +67,7 @@ export async function createMatchOverride(
     .executeTakeFirst();
   if (row === undefined) throw fail(404, 'Household not found.');
   // An override can change a bucket assignment (force a match, or block one) for every recipe in
-  // the household, so readiness is recomputed inline (the design's recompute-trigger list).
+  // the household, so readiness is recomputed inline.
   await recomputeReadinessForHousehold(db, householdId);
   return toMatchOverride(row);
 }

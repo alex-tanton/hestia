@@ -27,8 +27,8 @@ import {
 import { ChoresListScreen } from './ChoresListScreen.tsx';
 
 /*
- * A chore completion as a queued write (Requirements, "Offline behavior"; Engineering Practices ›
- * The write queue). The queue's own rules are unit-tested in `chore-errand-writes.test.ts`; these
+ * A chore completion as a queued write. The queue's own rules are unit-tested in
+ * `chore-errand-writes.test.ts`; these
  * drive the list the way a member does, offline and back online.
  */
 
@@ -75,7 +75,7 @@ function postCalls(stub: ReturnType<typeof createFetchStub>): typeof stub.calls 
 }
 
 beforeEach(() => {
-  // Pin "today" to Seed Data's Sunday, noon in New York; timers keep running for the screens.
+  // Pin "today" to the seed data's Sunday, noon in New York; timers keep running for the screens.
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date(DONE_AT));
   setOnline(true);

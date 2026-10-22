@@ -29,7 +29,7 @@ export interface ItemSheetProps {
   onOpenChange: (open: boolean) => void;
   /** Editing an existing row, or adding a new one. */
   item?: ListItem | undefined;
-  /** Stores a manual item can be assigned to (Requirements, "Per-store splitting"). */
+  /** Stores a manual item can be assigned to. */
   stores: readonly StoreChoice[];
   onSubmit: (draft: ItemDraft) => void;
 }
@@ -47,9 +47,8 @@ function toPriceUnit(value: string): PriceUnit {
 }
 
 /**
- * The quick-add and edit sheet (Design › Screens › 8). Price is editable only for a manual item:
- * a deal-sourced row carries the deal's own snapshot, which the client must never invent
- * (Technical Architecture, "API surface").
+ * The quick-add and edit sheet. Price is editable only for a manual item: a deal-sourced row
+ * carries the deal's own snapshot, which the client must never invent.
  *
  * The fields start from `item`, so a caller opening it for a different row gives it a `key` and
  * gets a fresh form rather than the last row's values.

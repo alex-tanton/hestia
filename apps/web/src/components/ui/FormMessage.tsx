@@ -2,8 +2,8 @@ import { CircleAlert } from 'lucide-react';
 import type { ReactElement } from 'react';
 
 /**
- * A form-level failure: what failed and what to do, announced when it appears (Branding › Copy
- * patterns; Design › Error rules). Field-level errors belong to the field itself.
+ * A form-level failure: what failed and what to do, announced when it appears. Field-level
+ * errors belong to the field itself.
  */
 export function FormMessage({ message }: { message: string | undefined }): ReactElement {
   return (

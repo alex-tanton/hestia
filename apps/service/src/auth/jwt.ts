@@ -8,8 +8,7 @@ import {
 } from 'node:crypto';
 
 /**
- * Access-token verification (Technical Architecture, "The RLS rule": signature and expiry, with
- * the GoTrue JWT secret).
+ * Access-token verification (signature and expiry, with the GoTrue JWT secret).
  *
  * The production GoTrue signs with HS256 and JWT_SECRET. `supabase start` (CLI 2.x) signs user
  * sessions with ES256 instead, publishing the public key at GoTrue's

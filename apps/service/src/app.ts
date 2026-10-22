@@ -109,7 +109,7 @@ export async function buildApp(
       const name = error instanceof Error ? error.name : 'Error';
       const message = error instanceof Error ? error.message : String(error);
       const route = request.routeOptions.url ?? 'unknown';
-      // Scrubbed like everything recorded (Handoff non-negotiable 3); the stack stays out.
+      // Scrubbed like everything recorded; the stack stays out.
       request.log.error(
         { err: { name: scrubErrorName(name), message: scrubErrorText(message) }, route },
         'unhandled request error',

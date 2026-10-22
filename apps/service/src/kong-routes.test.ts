@@ -1,10 +1,10 @@
 /*
  * Static checks on `docker/kong.yml`, the declarative config for the gateway in front of GoTrue.
- * GoTrue is an allowlist (Technical Architecture, "Routing"): each call the browser makes has a
- * route with its method, and everything else under /auth/v1 ends at one refusing route. This test
- * pins that table exactly, so a route added, a method widened, or an ACL group added fails here
- * before it reaches a host. It cannot start Kong; `e2e/tests/08-caddy-refuses-gotrue-endpoints
- * .spec.ts` and the sign-in journeys prove the running gateway behaves as this file says.
+ * GoTrue is an allowlist: each call the browser makes has a route with its method, and everything
+ * else under /auth/v1 ends at one refusing route. This test pins that table exactly, so a route
+ * added, a method widened, or an ACL group added fails here before it reaches a host. It cannot
+ * start Kong; `e2e/tests/08-caddy-refuses-gotrue-endpoints .spec.ts` and the sign-in journeys prove
+ * the running gateway behaves as this file says.
  */
 
 import { readFileSync } from 'node:fs';

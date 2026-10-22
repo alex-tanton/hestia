@@ -1,4 +1,4 @@
-# Hearth ingress (Technical Architecture, "Ingress", "Routing", "Client IP passthrough").
+# Hearth ingress.
 # Tailscale Funnel terminates TLS on the host and forwards plain HTTP to 127.0.0.1:8080.
 {
 	auto_https off

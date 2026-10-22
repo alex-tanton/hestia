@@ -5,12 +5,12 @@ import { hearthAdmin } from '../support/db.ts';
 import { BASE_URL, SEED } from '../support/env.ts';
 
 /**
- * Handoff, Phase 1 "Done when": the owner CLI prints a reset link that lets a user set a new
- * password, and the forgot-password screen tells everyone else to ask the server owner.
+ * The owner CLI prints a reset link that lets a user set a new password, and the forgot-password
+ * screen tells everyone else to ask the server owner.
  *
- * There is no email-based reset — nothing is ever emailed (Requirements, "Password reset") — so
- * the link comes from `hearth-admin reset-password`, run where it lives: a bin on the service
- * container's PATH. Morgan is the subject, because no other test depends on Morgan's password.
+ * There is no email-based reset — nothing is ever emailed — so the link comes from `hearth-admin
+ * reset-password`, run where it lives: a bin on the service container's PATH. Morgan is the
+ * subject, because no other test depends on Morgan's password.
  */
 
 const NEW_PASSWORD = 'hearth-reset-pass-2026';

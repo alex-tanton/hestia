@@ -7,11 +7,10 @@ import { fromCents, toCents } from '../money.js';
 import type { RefreshBookkeeping } from './dormancy.js';
 
 /**
- * Deal storage (Technical Architecture, "Caching and storage"). `deal` rows are upserted on
- * (`postal_code`, `external_id`), with `normalized_name` from the matching package and
- * `fetched_at` set to the time of the fetch, so a rerun of a job changes nothing (Technical
- * Architecture, "Idempotency"). `deal_query_cache` holds the ids one search returned, in the
- * order the source ranked them, so a cached search keeps its relevance order.
+ * Deal storage. `deal` rows are upserted on (`postal_code`, `external_id`), with `normalized_name`
+ * from the matching package and `fetched_at` set to the time of the fetch, so a rerun of a job
+ * changes nothing. `deal_query_cache` holds the ids one search returned, in the order the source
+ * ranked them, so a cached search keeps its relevance order.
  *
  * Every function here takes a Kysely bound to a transaction: the caller's `withUserDb` one for a
  * request, or a job's `service_role` one. Nothing here chooses its own privileges.

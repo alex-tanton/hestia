@@ -32,11 +32,10 @@ import { useApi, useFlushPersister } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE, queryKeys } from './keys.ts';
 
 /*
- * Recipes, readiness, the week planner, and match overrides (Technical Architecture › "API
- * surface" — Recipes, Match overrides, Meal plan rows). None of these writes are offline-queueable
- * (Requirements › "Offline behavior" lists only list-item and, from v1.3, chore/errand writes), so
- * every mutation here is an ordinary online one, disabled by the screen while offline rather than
- * going through the write queue.
+ * Recipes, readiness, the week planner, and match overrides. None of these writes are
+ * offline-queueable (only list-item and, from v1.3, chore/errand writes queue), so every mutation
+ * here is an ordinary online one, disabled by the screen while offline rather than going through
+ * the write queue.
  */
 
 export function useRecipes(
@@ -182,8 +181,8 @@ export function useDeleteRecipe(householdId: string): UseMutationResult<void, Er
       api.send({ method: 'DELETE', path: `/api/recipes/${recipeId}` }),
     onSuccess: async (_result, recipeId) => {
       queryClient.removeQueries({ queryKey: queryKeys.recipe(householdId, recipeId) });
-      // A deleted recipe's meal-plan entries keep their snapshot title (Requirements › "Meal plan
-      // history and deleted recipes"), which only the meal-plan response itself carries.
+      // A deleted recipe's meal-plan entries keep their snapshot title, which only the meal-plan
+      // response itself carries.
       await Promise.all([invalidate(), invalidateMealPlan(queryClient, householdId)]);
     },
   });
@@ -194,7 +193,7 @@ export function useParseRecipe(
 ): UseMutationResult<ParseRecipeResponse, Error, string> {
   const api = useApi();
   return useMutation({
-    // Never persists (Requirements › "Recipe library"): the client reviews and edits the result.
+    // Never persists: the client reviews and edits the result.
     mutationFn: (url: string) =>
       api.request({
         method: 'POST',
@@ -214,10 +213,9 @@ export function useParseRecipe(
  * 1000ms so a busy screen does not hammer IndexedDB on every settle (`persist.ts`) — has not
  * necessarily saved it yet. A reload that lands inside that window would otherwise restore the
  * list as it was *before* this write and, since the restored snapshot is still within its own
- * staleTime, show that stale state indefinitely rather than refetching (journey 4, "lists exactly
- * what is missing": the picker's own list, visited empty right after creation, is exactly such a
+ * staleTime, show that stale state indefinitely rather than refetching (the picker's own list, visited empty right after creation, is exactly such a
  * case). `flushPersister` is the same unthrottled, second persister the write queue uses for the
- * identical reason (Engineering Practices › Offline data) — here it makes a just-completed,
+ * identical reason — here it makes a just-completed,
  * already-successful write durable immediately rather than leaving the index down to the
  * throttle's next tick.
  */
@@ -347,8 +345,8 @@ function useOverrideInvalidator(householdId: string): (recipeId: string) => Prom
   const invalidateRecipes = useRecipeInvalidator(householdId);
   return async (recipeId: string) => {
     // An override can move any recipe's bucket assignment, but it is corrected from one
-    // recipe's breakdown, so that recipe's own detail is refetched too (Requirements ›
-    // "Match overrides": "An override applies to every recipe in the household").
+    // recipe's breakdown, so that recipe's own detail is refetched too (an override applies to
+    // every recipe in the household).
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.recipe(householdId, recipeId) }),
       invalidateRecipes(),

@@ -10,10 +10,10 @@ import {
 import { FlippRequestQueue, buildUserAgent } from './request-queue.js';
 
 /**
- * Builds the normalized fixtures from the raw captures (Technical Architecture, "Development":
- * both fixture kinds are checked in, and refreshed deliberately so an upstream change shows up
- * as a diff). One function, shared by the generator script and the test that asserts the
- * committed files still match, so the two can never drift.
+ * Builds the normalized fixtures from the raw captures (both fixture kinds are checked in, and
+ * refreshed deliberately so an upstream change shows up as a diff). One function, shared by the
+ * generator script and the test that asserts the committed files still match, so the two can never
+ * drift.
  */
 
 export interface NormalizedFixtures {

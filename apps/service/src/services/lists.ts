@@ -20,9 +20,8 @@ import { repriceExpiredItems } from './repricing.js';
 import { subtotal } from './subtotals.js';
 
 /*
- * Shopping lists (Requirements, "Shopping lists", "Per-store splitting", "Shopping list
- * lifecycle"). Every function takes a Kysely bound to the caller's withUserDb transaction, so RLS
- * decides what it can see; a row RLS hides is reported as not found, never as forbidden.
+ * Shopping lists. Every function takes a Kysely bound to the caller's withUserDb transaction, so
+ * RLS decides what it can see; a row RLS hides is reported as not found, never as forbidden.
  */
 
 function iso(value: Date | string): string {
@@ -74,8 +73,8 @@ function toList(row: ListRow, items: readonly ListItem[]): ShoppingList {
 }
 
 /**
- * Items grouped by store, each group carrying its own subtotal (Design › Screens › 8). The
- * unassigned "Anywhere" group sorts last; the rest sort by merchant name.
+ * Items grouped by store, each group carrying its own subtotal. The unassigned "Anywhere" group
+ * sorts last; the rest sort by merchant name.
  */
 function groupByStore(items: readonly ListItem[]): StoreGroup[] {
   const groups = new Map<string, ListItem[]>();
@@ -188,7 +187,7 @@ export async function createList(
 
 /**
  * A list as its detail screen shows it. Expired deal prices are corrected first, so a subtotal
- * is never quietly built on last week's sale price (Handoff non-negotiable 22).
+ * is never quietly built on last week's sale price.
  */
 export async function getList(db: Kysely<Database>, listId: string): Promise<ShoppingListDetail> {
   const row = await requireList(db, listId);
@@ -221,7 +220,7 @@ export async function renameList(
   return detailOf(db, row);
 }
 
-/** Archiving hides a list from the main view and keeps it readable (Requirements). */
+/** Archiving hides a list from the main view and keeps it readable. */
 export async function setListArchived(
   db: Kysely<Database>,
   listId: string,
@@ -298,7 +297,7 @@ function manualValues(input: Extract<CreateListItemRequest, { source: 'manual' }
 
 /**
  * Adds an item. The id may be client-generated, and a replay of the same id changes nothing
- * rather than failing (Handoff non-negotiable 9); `added_by` always comes from the caller's JWT.
+ * rather than failing; `added_by` always comes from the caller's JWT.
  */
 export async function addListItem(
   db: Kysely<Database>,
@@ -333,7 +332,7 @@ export async function addListItem(
 
 /**
  * Sets an item's absolute values. Two members editing the same item is last-write-wins, with the
- * quirk the Requirements document accepts: a late offline "in cart" can move a bought item back.
+ * accepted quirk that a late offline "in cart" can move a bought item back.
  */
 export async function updateListItem(
   db: Kysely<Database>,
@@ -379,9 +378,9 @@ export async function deleteListItem(
 }
 
 /**
- * The list's bought items become pantry items, merged on `normalized_name` (Requirements,
- * "Pantry"). The pantry does not track quantities, so a list quantity is not carried over, and
- * the bought items stay on their list.
+ * The list's bought items become pantry items, merged on `normalized_name`. The pantry does not
+ * track quantities, so a list quantity is not carried over, and the bought items stay on their
+ * list.
  */
 export async function addBoughtToPantry(
   db: Kysely<Database>,

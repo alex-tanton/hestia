@@ -95,8 +95,7 @@ export default tseslint.config(
   },
   {
     // The service role bypasses RLS. Only main.ts and the owner CLI may build a privileged
-    // client; everything else gets the narrow functions they hand out (Technical Architecture,
-    // "The RLS rule"). Type-only imports carry no capability, so they are allowed.
+    // client; everything else gets the narrow functions they hand out. Type-only imports carry no capability, so they are allowed.
     files: ['apps/service/src/**/*.ts'],
     ignores: [
       'apps/service/src/main.ts',
@@ -132,7 +131,7 @@ export default tseslint.config(
     },
   },
   {
-    // Engineering Practices allows non-null assertions in tests only.
+    // Non-null assertions are allowed in tests only.
     files: ['**/*.test.{ts,tsx}', '**/*.spec.ts', 'e2e/**/*.ts'],
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
   },

@@ -3,9 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWebPushTransport } from './web-push-transport.js';
 
 /*
- * The real transport's mapping from push-service answers to outcomes (Technical Architecture,
- * "Failure handling": 404 and 410 delete the subscription). `sendNotification` is replaced, so no
- * request leaves the process.
+ * The real transport's mapping from push-service answers to outcomes (404 and 410 delete the
+ * subscription). `sendNotification` is replaced, so no request leaves the process.
  */
 
 const KEYS = { p256dh: 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA', auth: 'tBHItJI5svbpez7KI4CCXg' };

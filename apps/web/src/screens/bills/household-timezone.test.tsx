@@ -15,10 +15,10 @@ import { BillsIndexScreen } from './BillsIndexScreen.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * "This week" runs through the household's Saturday (PRD, "This Week"; Design › Screens › 14).
- * The browser here is Kiritimati (UTC+14): at 02:30 UTC on Oct 4 it is Sunday Oct 4 there, so its
- * week would already run to Oct 10, while New York is still on Saturday Oct 3 and its week ends
- * there. A bill due Tuesday Oct 6 is therefore Later for this household.
+ * "This week" runs through the household's Saturday. The browser here is Kiritimati (UTC+14): at
+ * 02:30 UTC on Oct 4 it is Sunday Oct 4 there, so its week would already run to Oct 10, while New
+ * York is still on Saturday Oct 3 and its week ends there. A bill due Tuesday Oct 6 is therefore
+ * Later for this household.
  */
 
 const BROWSER_ZONE = 'Pacific/Kiritimati';

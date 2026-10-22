@@ -72,11 +72,11 @@ describe('normalize over the raw Flipp captures', () => {
 });
 
 /**
- * Seed Data, "Deal fixtures", states the minimum contents of both lists, and the normalized names
- * in that document are quoted against them. A term quietly missing from a list would make those
+ * The seed data's deal fixtures state the minimum contents of both lists, and the normalized names
+ * in them are quoted against those lists. A term quietly missing from a list would make those
  * oracles wrong without failing anything else, so the claim is asserted here.
  */
-describe('the lists Seed Data says these are', () => {
+describe('the lists the seed data says these are', () => {
   const documentedDescriptors = [
     'boneless',
     'skinless',
@@ -121,11 +121,11 @@ describe('the lists Seed Data says these are', () => {
 });
 
 /**
- * Seed Data, "Matching test cases". Phase 3 owns the 0.85 fuzzy threshold; what these assert is
+ * The seed data's matching test cases. Phase 3 owns the 0.85 fuzzy threshold; what these assert is
  * the half normalization is responsible for — that exact token containment already lands on the
  * documented answer, so a later fuzzy step is not papering over a normalization bug.
  */
-describe('Seed Data matching test cases', () => {
+describe('the seed data matching test cases', () => {
   const contains = (ingredient: string, candidate: string): boolean => {
     const candidateTokens = new Set(normalizeTokens(candidate));
     return normalizeTokens(ingredient).every((token) => candidateTokens.has(token));

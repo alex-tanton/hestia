@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /*
  * The browser's own push port (push-port.ts) is what `push-double.ts` stands in for everywhere
- * else (Engineering Practices › Testing: no test contacts a push service) — which is exactly why
+ * else (no test contacts a push service) — which is exactly why
  * its own logic is otherwise never exercised. This file drives `browserPushPort` directly, faking
  * only the browser APIs it reads: `Notification`, `PushManager`, and `navigator.serviceWorker`.
  */

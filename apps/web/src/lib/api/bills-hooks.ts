@@ -24,10 +24,10 @@ import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 
 /*
- * Bills, the payment log, skip, archive, and subscriptions (Technical Architecture › "API surface"
- * — "Bills"). None of these writes are offline-queueable (Engineering Practices › "PWA
- * implementation": only list-item and chore/errand writes queue), so every mutation here is an
- * ordinary online one; the screen disables its controls while offline instead.
+ * Bills, the payment log, skip, archive, and subscriptions. None of these writes are
+ * offline-queueable (only list-item and chore/errand
+ * writes queue), so every mutation here is an ordinary online one; the screen disables its controls
+ * while offline instead.
  */
 
 export function useBills(householdId: string | undefined): UseQueryResult<Bill[]> {
@@ -210,7 +210,7 @@ export function useArchiveBill(householdId: string): UseMutationResult<Bill, Err
   });
 }
 
-/** "Still using this?" → "Still using": resets the 60-day clock (Requirements › "Subscriptions view"). */
+/** "Still using this?" → "Still using": resets the 60-day clock. */
 export function useConfirmBillUsage(householdId: string): UseMutationResult<Bill, Error, string> {
   const api = useApi();
   const invalidate = useBillInvalidator(householdId);

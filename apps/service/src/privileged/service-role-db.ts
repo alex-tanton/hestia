@@ -2,8 +2,7 @@ import { sql, type Kysely } from 'kysely';
 import type { Database } from '../db.js';
 
 /**
- * Database work as `service_role`, which bypasses RLS. Sanctioned only for the uses Technical
- * Architecture lists under "The RLS rule": scheduled jobs, and `system_health()` after the caller
+ * Database work as `service_role`, which bypasses RLS. Sanctioned only for scheduled jobs, and `system_health()` after the caller
  * has been checked as the server owner. Never for a user's data request. ESLint keeps every
  * module except main.ts and the CLI from importing this one.
  */

@@ -2,9 +2,8 @@ import type { CalendarDate, Recurrence } from '@hearth/recurrence';
 import { isValidOccurrence } from '../chores/occurrence.js';
 
 /*
- * The pure rules behind the notification producers (Requirements, "Notifications" › "Rules";
- * Technical Architecture, "Scheduled jobs" › "Dispatch"). Nothing here touches the database: the
- * jobs and services read the facts, ask these functions what to write, and write it.
+ * The pure rules behind the notification producers. Nothing here touches the database: the jobs and
+ * services read the facts, ask these functions what to write, and write it.
  */
 
 const MINUTE_MS = 60_000;
@@ -57,7 +56,7 @@ export function addCalendarDays(date: CalendarDate, days: number): CalendarDate 
     .slice(0, 10);
 }
 
-/** The calendar date `instant` falls on in `timezone` (Handoff non-negotiable 8). */
+/** The calendar date `instant` falls on in `timezone`. */
 export function localDate(instant: Date, timezone: string): CalendarDate {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,

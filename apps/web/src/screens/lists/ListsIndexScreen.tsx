@@ -19,7 +19,7 @@ export const LISTS_EMPTY_COPY =
   'No lists yet. Create one for this week and add what you need to buy.';
 export const OFFLINE_ACTION_REASON = 'Needs a connection.';
 
-/** Design › Screens › 7, "delete requires confirmation". */
+/** Deleting a list requires confirmation. */
 export function deleteListConfirmation(list: ShoppingList): string {
   return `Delete ${list.name}? Its ${pluralize(list.itemCount, 'item')} are removed permanently.`;
 }

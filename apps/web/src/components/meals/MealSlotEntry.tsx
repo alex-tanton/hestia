@@ -14,10 +14,10 @@ export interface MealSlotEntryProps {
 }
 
 /**
- * Design › Screens › 10: "A placed meal shows title and readiness percentage. An entry whose
- * recipe has since been deleted shows its snapshot title in `text-secondary` with no readiness
- * and no link." Its own recipe gone, "Add missing to list" is never offered here either
- * (Requirements › "Add missing to list": the action 404s without a recipe to compute from).
+ * A placed meal shows title and readiness percentage. An entry whose recipe has since been
+ * deleted shows its snapshot title in `text-secondary` with no readiness and no link. Its own
+ * recipe gone, "Add missing to list" is never offered here either (the action 404s without a
+ * recipe to compute from).
  */
 export function MealSlotEntry({
   entry,

@@ -22,10 +22,10 @@ function paymentLine(payment: BillPayment): string {
 }
 
 /**
- * Design › Screens › 15: payment history, newest occurrence first (the order `GET /bills/:id`
- * already returns it in). An automatic payment carries the "Autopay" label everywhere it appears
- * (Requirements › "Bills"), and every entry — automatic or manual — can be edited or removed,
- * except a skipped occurrence, which has no amount to correct.
+ * Payment history, newest occurrence first (the order `GET /bills/:id`
+ * already returns it in). An automatic payment carries the "Autopay" label everywhere it appears,
+ * and every entry — automatic or manual — can be edited or removed, except a skipped occurrence,
+ * which has no amount to correct.
  */
 export function PaymentHistory({
   payments,

@@ -3,8 +3,7 @@ import { ProblemError } from '../problem.js';
 import { billOccurrence, billScope, planBillMove } from './bills.js';
 
 /*
- * Pure logic only (Engineering Practices, "Testing" — "Recurrence" and "visibility constraint
- * logic"); everything that touches Postgres (RLS, the payment log, the job) is covered by
+ * Pure logic only; everything that touches Postgres (RLS, the payment log, the job) is covered by
  * bills.integration.test.ts and log-autopay.integration.test.ts instead.
  */
 

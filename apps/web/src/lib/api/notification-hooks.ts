@@ -16,10 +16,9 @@ import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 
 /*
- * Notification preferences (Technical Architecture, "API surface" › "Notifications"). One row per
- * type, and one per household for the weekly meal nudge. Neither write is queueable offline, so
- * the screen disables the toggles without a connection rather than queueing them (Design › Offline
- * rules).
+ * Notification preferences. One row per type, and one per household for the weekly meal nudge.
+ * Neither write is queueable offline, so the screen disables the toggles without a connection
+ * rather than queueing them.
  */
 
 /**

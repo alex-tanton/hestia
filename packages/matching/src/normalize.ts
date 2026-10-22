@@ -4,7 +4,7 @@ import { UNITS } from './data/units.js';
 import { singularize } from './singularize.js';
 
 /**
- * Ingredient and product-name normalization (Requirements, "Matching mechanics").
+ * Ingredient and product-name normalization.
  *
  * Both sides of a match go through this: a recipe's "chicken breast" and a flyer's "Boneless
  * Skinless Chicken Breast, Family Pack" have to meet somewhere. The pipeline is, in order:

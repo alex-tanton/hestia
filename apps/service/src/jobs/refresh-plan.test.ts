@@ -3,8 +3,8 @@ import type { Flyer } from '../deals/deal-source.js';
 import { planFlyerRefreshNotifications, planRefresh } from './refresh-plan.js';
 
 /**
- * Technical Architecture, "Daily refresh", and Handoff non-negotiable 19: one fetch per active
- * postal code, flyer items only for favorited merchants, and each flyer only once.
+ * Rate discipline: one fetch per active postal code, flyer items only for favorited merchants, and
+ * each flyer only once.
  */
 
 const TODAY = '2026-09-25';

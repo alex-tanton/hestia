@@ -9,7 +9,7 @@ import type {
 import { ALEX_ID, OAK_STREET_ID } from './fixtures.ts';
 
 /*
- * Seed Data › "Recipes" and "Matching test cases", used as the oracle these fixtures mirror.
+ * The seed data's recipes and matching test cases, used as the oracle these fixtures mirror.
  * Percentages and bucket splits match the seed table exactly, so component tests can assert
  * against the same numbers the seed's own tests do.
  */
@@ -161,8 +161,8 @@ export const sheetPanChickenFixture: RecipeDetail = {
 };
 
 /**
- * Baked Ziti — 5 of 7, 71% (1 on sale, 4 pantry). Also the Recipe detail override fixture (Seed
- * Data): a force-no-match override on "cheese" against Harris Teeter's "snack cheese", which
+ * Baked Ziti — 5 of 7, 71% (1 on sale, 4 pantry). Also the Recipe detail override fixture (seed
+ * data): a force-no-match override on "cheese" against Harris Teeter's "snack cheese", which
  * changes no score because "cheese" already matches Food Lion's "chunk or cheese" instead.
  */
 export const cheeseOverrideFixture: MatchOverride = {
@@ -545,7 +545,7 @@ function baseRecipe(detail: RecipeDetail): Recipe {
   };
 }
 
-/** `GET /households/:id/recipes` carries no readiness (Technical Architecture › "API surface"). */
+/** `GET /households/:id/recipes` carries no readiness. */
 export const recipeListResponseFixture: RecipeListResponse = {
   recipes: [
     baseRecipe(grilledCheeseFixture),

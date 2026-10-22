@@ -2,8 +2,7 @@ import { z } from 'zod';
 import { idSchema } from './common.js';
 
 /**
- * Notifications (Requirements, "Notifications"; Technical Architecture, "API surface" ›
- * "Notifications"). The type list is the database enum `notification_type`, in its order.
+ * Notifications. The type list is the database enum `notification_type`, in its order.
  */
 export const notificationTypes = [
   'bill_due',
@@ -18,8 +17,8 @@ export const notificationTypeSchema = z.enum(notificationTypes);
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 
 /**
- * The one type opted into separately for each household (Requirements, "Notifications" › "Types
- * and defaults"). Every other type is a single setting per user.
+ * The one type opted into separately for each household. Every other type is a single setting per
+ * user.
  */
 export const householdNotificationType = 'weekly_meal_nudge' satisfies NotificationType;
 
@@ -103,9 +102,8 @@ export type PushSubscriptionRequest = z.infer<typeof pushSubscriptionRequestSche
 export const deletePushSubscriptionRequestSchema = z.object({ endpoint: pushEndpointSchema });
 
 /**
- * A notification's title and body (Branding, "Notification copy"). Every producer
- * validates its copy against this, so an overlong line fails in the producer rather than on the
- * device.
+ * A notification's title and body. Every producer validates its copy against this, so an overlong
+ * line fails in the producer rather than on the device.
  */
 export const notificationCopySchema = z.object({
   title: z.string().trim().min(1).max(60),
