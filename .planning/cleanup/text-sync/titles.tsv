@@ -1,0 +1,45 @@
+apps/service/src/deals.integration.test.ts	327	serves the stale cache with its as-of date when a live fetch fails (non-negotiable 18)	serves the stale cache with its as-of date when a live fetch fails
+apps/service/src/deals/price/parse-price.test.ts	97	per-ounce price (Requirements: "/oz likewise gives oz")	per-ounce price: /oz gives oz
+apps/service/src/jobs.integration.test.ts	429	readiness recompute across households (Technical Architecture, "Daily refresh")	readiness recompute across households
+apps/service/src/jobs.integration.test.ts	538	dedupes a rerun on the outbox key (non-negotiable 7)	dedupes a rerun on the outbox key
+apps/service/src/jobs/log-autopay.test.ts	33	never backfills an occurrence dated before created_at, even though it is on or before today (Engineering Practices, "Testing": the named no-backfill case)	never backfills an occurrence dated before created_at, even though it is on or before today (the named no-backfill case)
+apps/service/src/log-autopay.integration.test.ts	157	never backfills an occurrence dated before created_at, and that occurrence stays overdue (Engineering Practices, "Testing")	never backfills an occurrence dated before created_at, and that occurrence stays overdue
+apps/service/src/meal-plan.integration.test.ts	179	computes the current week’s Sunday in the household’s own timezone, not a naive UTC date (non-negotiable 8)	computes the current week’s Sunday in the household’s own timezone, not a naive UTC date
+apps/service/src/meal-plan.integration.test.ts	251	a past week is excluded from the default view but still viewable as history (Use Cases, "Plan the week": "Past plan entries")	a past week is excluded from the default view but still viewable as history
+apps/service/src/notifications/copy.test.ts	16	notification copy length (Branding, "Notification copy": at most 60 characters)	notification copy length: at most 60 characters
+apps/service/src/readiness.integration.test.ts	283	recipe readiness — the Seed Data table	recipe readiness against the seed data
+apps/service/src/services/deals/cache.test.ts	42	stale beats empty (non-negotiable 18)	stale beats empty
+apps/service/src/services/deals/dormancy.test.ts	46	returns one entry per postal code, never one per household (non-negotiable 19)	returns one entry per postal code, never one per household
+apps/service/src/services/list-aggregation.test.ts	34	sums matching units, as Seed Data’s red onion does	sums matching units, as the seed data’s red onion does
+apps/service/src/services/subscriptions.test.ts	65	is true well past 60 days (Seed Data: Sam’s Adobe subscription, confirmed 70 days ago)	is true well past 60 days (Sam’s Adobe subscription in the seed data, confirmed 70 days ago)
+apps/service/src/services/subtotals.test.ts	125	matches Seed Data’s %s header	matches the seed data’s %s header
+apps/web/src/components/meals/meal-components.test.tsx	36	names every bucket in the breakdown line, even at zero (PRD › Transparency)	names every bucket in the breakdown line, even at zero
+apps/web/src/components/meals/meal-components.test.tsx	117	MealSlotEntry and PlannerDay (Design › Screens › 10)	MealSlotEntry and PlannerDay
+apps/web/src/components/meals/meal-components.test.tsx	228	sorting (Design › Screens 11, 13)	sorting
+apps/web/src/lib/bills/recurrence-preview.test.ts	13	clamps a month-end anchor the same way the service does (PRD › "Recurrence")	clamps a month-end anchor the same way the service does
+apps/web/src/screens/bills/bill-detail.test.tsx	40	Bill detail (Design › Screens › 15)	Bill detail
+apps/web/src/screens/bills/bills-index.test.tsx	63	Bills dashboard (Design › Screens › 14)	Bills dashboard
+apps/web/src/screens/bills/subscriptions.test.tsx	51	Subscriptions (Design › Screens › 16)	Subscriptions
+apps/web/src/screens/chores/chores.test.tsx	154	Chores list (Design › Screens › 17)	Chores list
+apps/web/src/screens/chores/chores.test.tsx	378	Chore detail (Design › Screens › 17)	Chore detail
+apps/web/src/screens/chores/chores.test.tsx	461	Chore sheet (Design › Screens › 17)	Chore sheet
+apps/web/src/screens/chores/errands.test.tsx	93	Errands list (Design › Screens › 18)	Errands list
+apps/web/src/screens/chores/errands.test.tsx	214	Errand quick-add and edit sheet (Design › Screens › 18)	Errand quick-add and edit sheet
+apps/web/src/screens/chores/errands.test.tsx	311	Errands offline (Design › Offline rules)	Errands offline
+apps/web/src/screens/chores/errands.test.tsx	330	Errand copy (Handoff non-negotiable 13)	Errand copy
+apps/web/src/screens/lists/lists.test.tsx	94	Shopping lists index (Design › Screens › 7)	Shopping lists index
+apps/web/src/screens/lists/lists.test.tsx	290	Shopping list detail (Design › Screens › 8)	Shopping list detail
+apps/web/src/screens/lists/lists.test.tsx	415	Pantry (Design › Screens › 9)	Pantry
+apps/web/src/screens/meals/planner.test.tsx	103	Week planner (Design › Screens › 10)	Week planner
+apps/web/src/screens/meals/recipe-detail.test.tsx	51	Recipe detail (Design › Screens › 12)	Recipe detail
+apps/web/src/screens/meals/recipe-detail.test.tsx	402	Recipe detail: readiness bucket display (Design › Composite components)	Recipe detail: readiness bucket display
+apps/web/src/screens/meals/recipe-library.test.tsx	46	Recipe library (Design › Screens › 11)	Recipe library
+apps/web/src/screens/meals/recipe-library.test.tsx	132	paginates at 50 (Requirements › "Scale and pagination"), reaching a second page	paginates at 50, reaching a second page
+apps/web/src/screens/meals/suggestions.test.tsx	48	Deal-matched suggestions (Design › Screens › 13)	Deal-matched suggestions
+e2e/tests/13-recipe-import-and-readiness.spec.ts	130	imports by URL, matches Seed Data readiness, and lists exactly what is missing	imports by URL, matches the seed data readiness, and lists exactly what is missing
+packages/matching/src/fixtures.test.ts	79	the lists Seed Data says these are	the lists the seed data says these are
+packages/matching/src/fixtures.test.ts	128	Seed Data matching test cases	the seed data matching test cases
+packages/matching/src/matcher.test.ts	21	Seed Data "Matching test cases" (12 rows)	the seed data matching test cases (12 rows)
+packages/matching/src/matcher.test.ts	82	named false-positive cases (Engineering Practices, "Testing")	named false-positive cases
+packages/matching/src/matcher.test.ts	137	overrides applied before fuzzy matching (Requirements, "Match overrides")	overrides applied before fuzzy matching
+packages/matching/src/matcher.test.ts	214	pantry beats sale (Requirements, "Deal-matched suggestions")	pantry beats sale
