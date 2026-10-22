@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Completed 05-11-PLAN.md
-last_updated: "2026-10-22T02:14:17.031Z"
+stopped_at: Completed 05-12-PLAN.md
+last_updated: "2026-10-22T02:29:11.599Z"
 last_activity: 2026-10-22
 last_activity_desc: Phase 05 execution started
-state_head: 9760693db1c3149b7d6738169f2cf38f246a69bc
+state_head: ca15d8923b7bd26f1a3dbd9df7c511e8b76f0b09
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 42
+  completed_plans: 43
   percent: 67
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 11 of 13 complete (05-01 to 05-11); next 05-12 (finish PR D: sync WB with main, maps, .claude/CLAUDE.md)
+Plan: 12 of 13 complete (05-01 to 05-12); next 05-13 (land PR D and close the phase)
 Status: Ready to execute
-Last activity: 2026-10-22 — Plan 05-11 complete (PR C #28 squash-merged by the owner as 9fdc9c9; main CI run 39709025122 six of six green; Deploy pending on the self-hosted runner)
+Last activity: 2026-10-22 — Plan 05-12 complete (maps `e486d7f` from `283f15d`, CLAUDE.md regenerated, RED-04 count restated; `docs/sync-specs` pushed at `8bd18ab`, PR D not opened)
 
 Progress: [███████░░░] 67%
 
@@ -90,6 +90,7 @@ Progress: [███████░░░] 67%
 | Phase 05 P09 | 80min | 3 tasks | 211 files |
 | Phase 05 P10 | 50min | 3 tasks | 44 files |
 | Phase 05 P11 | about 1h | 3 tasks | 3 files |
+| Phase 05 P12 | 1 session | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -166,11 +167,15 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-22T02:14:16.898Z
-Stopped at: Completed 05-11-PLAN.md
+Last session: 2026-10-22T02:29:11.459Z
+Stopped at: Completed 05-12-PLAN.md
 Resume file: None
 
-### Resume point for Phase 5 (after 05-11, 2026-10-22)
+### Resume point for Phase 5 (after 05-12, 2026-10-22)
+
+Update on 05-12: the seven maps (`e486d7f`, `last_mapped_commit` `283f15d`, contains PR C's `9fdc9c9`) and `.claude/CLAUDE.md` (`b506589`) are regenerated with the D-11 Comments rule; RED-04 is restated as 1,116 lines in 456 files (`34a753c`); `docs/sync-specs` is pushed at `8bd18ab` (also fixes the file-map `jobs` row and the compose comment citing README "Restore"). WB tip is the `docs: complete plan 05-12` commit. Next is 05-13: open PR D after merging WB into `docs/sync-specs` once more, then the owner merges. The old CLAUDE.md Anti-Patterns and Component Responsibilities sections are not in the regenerated one (mapper output); the owner may want them back.
+
+(Notes below are from after 05-11.)
 
 Update on 05-11: PR C (#28) is merged to `main` as `9fdc9c910410d5e0bcdd5ff6472bb7f3cff75423`; `main` CI (run 39709025122) is green in all six jobs. The follow-up sweep (`aaed732`, `33baf2d`) is part of it. `refactor/drop-spec-citations` no longer exists on `origin`. Next is 05-12, which syncs WB with `origin/main` first (phase rule 7). Left for PR D: README lines 69, 121 and 146 and `.claude/CLAUDE.md` line 232 (`left-for-pr-d=4`), plus the README pointers in `.env.example:9` and `docker/docker-compose.yml:275`. Reported for the owner, not edited: `Journey N` labels in the E2E suite and the items in the ledger's "Follow-up sweep". The text below is as of 05-10 where it mentions PR C as unmerged.
 
