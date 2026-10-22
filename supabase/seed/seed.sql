@@ -1,4 +1,4 @@
--- Development seed data (Seed Data). Run by `pnpm db:seed` after seed-users.ts has created the
+-- Development seed data. Run by `pnpm db:seed` after seed-users.ts has created the
 -- five users through GoTrue; it is not a migration and never runs in production.
 --
 --   psql "$DB_URL" -v ON_ERROR_STOP=1 -v invite_token=<token> -f supabase/seed/seed.sql
@@ -12,9 +12,9 @@ select pg_catalog.set_config('hearth.seed_invite_token', :'invite_token', false)
 begin;
 
 -- Session-local helper for the bills section below: the same clamped-month-add
--- `packages/recurrence` uses (PRD, "Recurrence is anchored and derived on read": "Monthly and
--- yearly anchors past the 28th clamp to the last day of shorter months... Each occurrence is
--- computed from the anchor, never from the previous clamped date."). Postgres's own
+-- `packages/recurrence` uses: monthly and yearly
+-- anchors past the 28th clamp to the last day of shorter months, and each occurrence is
+-- computed from the anchor, never from the previous clamped date. Postgres's own
 -- `date + interval 'N months'` does not clamp — it overflows into the following month when the
 -- day does not exist there (Jan 31 + 1 month lands on Mar 3, not Feb 28) — so computing seeded
 -- bill occurrences with plain interval arithmetic would quietly disagree with how the service
@@ -56,12 +56,12 @@ declare
   -- Deal validity is a calendar date in the store's own local offset, and every 27514 household
   -- is in America/New_York. Using the server's `current_date` instead would put "yesterday" on
   -- today's date for a seed run made in the evening Eastern time, and the three expired deals
-  -- would not be expired in the timezone that owns them (Handoff non-negotiable 8).
+  -- would not be expired in the timezone that owns them.
   local_today date := (pg_catalog.now() at time zone 'America/New_York')::date;
   -- The current week's Sunday in the same timezone, the same "current week" the week planner's
-  -- own default computes (Technical Architecture, "API surface" — "Meal plan").
+  -- own default computes.
   this_sunday date := local_today - extract(dow from local_today)::int;
-  -- Bills (Seed Data, "Bills"): each bill's own current occurrence ("C" in that table), from which
+  -- Bills: each bill's own current occurrence ("C" below), from which
   -- its anchor_date is derived. Every household bill here is in Oak Street, whose timezone is the
   -- same America/New_York every owner's profile uses too, so local_today owns every one of these.
   rent_c date;
@@ -114,7 +114,7 @@ begin
   end if;
 
   -- -------------------------------------------------------------------------------------------
-  -- Households, members, and active households (Seed Data, "Households")
+  -- Households, members, and active households
   -- -------------------------------------------------------------------------------------------
 
   insert into public.household (name, postal_code, timezone, last_active_at, created_by,
@@ -150,7 +150,7 @@ begin
   update public.profile set active_household_id = empty_house where id = casey;
 
   -- -------------------------------------------------------------------------------------------
-  -- Favorite stores (Seed Data, "Stores"), by Flipp's stable merchant ids
+  -- Favorite stores, by Flipp's stable merchant ids
   -- -------------------------------------------------------------------------------------------
 
   insert into public.household_favorite_store (household_id, merchant_id, merchant_name) values
@@ -163,7 +163,7 @@ begin
     (empty_house, '2100', 'Food Lion');
 
   -- -------------------------------------------------------------------------------------------
-  -- Notification settings (Seed Data, "Households")
+  -- Notification settings
   -- -------------------------------------------------------------------------------------------
 
   update public.profile set household_bill_reminders = true where id = jordan;
@@ -173,7 +173,7 @@ begin
   values (alex, 'weekly_meal_nudge', oak_street, true);
 
   -- -------------------------------------------------------------------------------------------
-  -- Invites (Seed Data, "Edge-case fixtures"). Only SHA-256 hashes are stored, as the service
+  -- Invites. Only SHA-256 hashes are stored, as the service
   -- stores them. The outstanding invite's link token is the one seed-users.ts prints.
   -- -------------------------------------------------------------------------------------------
 
@@ -198,7 +198,7 @@ begin
       now() - interval '3 days');
 
   -- -------------------------------------------------------------------------------------------
-  -- Deals and postal code refreshes (Seed Data, "Deal fixtures")
+  -- Deals and postal code refreshes
   --
   -- Every current row is a real 27514 item, quoted from the committed normalized fixtures in
   -- `e2e/fixtures/flipp/normalized/`, down to its `external_id`, `flyer_id`, and `display_price`.
@@ -339,7 +339,7 @@ begin
       'https://f.wishabi.net/page_items/433696196/1789219836/extra_large.jpg', null, '8132883',
       '27514', local_today - 2, local_today + 4, now() - interval '6 hours'),
 
-    -- Expired (Seed Data, "Expired"): last week's flyers, ended yesterday, attached to the items
+    -- Expired: last week's flyers, ended yesterday, attached to the items
     -- on the "This Week" list that exercise the three repricing outcomes — a re-match to this
     -- week's broccoli deal, a fall back to a known regular price, and a cleared price.
     ('1038221844', '2100', 'Food Lion', 'Broccoli Crowns', 'broccoli',
@@ -362,9 +362,9 @@ begin
     ('27514', now() - interval '6 hours', null),
     ('27601', now() - interval '6 hours', null);
 
-  -- Search cache (Seed Data, "State-specific fixtures"). "saffron" is the filtered-empty state.
+  -- Search cache. "saffron" is the filtered-empty state.
   -- "chicken" is cached 7 hours ago, past the 6-hour TTL, so it re-fetches; when that fetch
-  -- fails, this row is what the stale "as of" state renders (Handoff non-negotiable 18).
+  -- fails, this row is what the stale "as of" state renders.
   insert into public.deal_query_cache (postal_code, normalized_query, deal_ids, cached_at) values
     ('27514', 'saffron', '{}', now() - interval '1 hour'),
     ('27514', 'chicken',
@@ -378,7 +378,7 @@ begin
       now() - interval '7 hours');
 
   -- -------------------------------------------------------------------------------------------
-  -- Pantry (Seed Data, "Pantry"): twenty staples for Oak Street. `normalized_name` is what the
+  -- Pantry: twenty staples for Oak Street. `normalized_name` is what the
   -- matcher stores, so eggs, bread, and pasta match deals and exercise pantry-beats-sale.
   -- -------------------------------------------------------------------------------------------
 
@@ -406,17 +406,17 @@ begin
     (oak_street, 'Pasta', 'pasta', null, now() - interval '20 days');
 
   -- -------------------------------------------------------------------------------------------
-  -- Shopping lists (Seed Data, "Shopping lists"). The two Oak Street lists are created by Sam
+  -- Shopping lists. The two Oak Street lists are created by Sam
   -- and by Jordan, because the departure preview reassigns the lists a member created.
   --
-  -- Deal-sourced items carry a snapshot, not a reference: the prices below are Seed Data's, so
+  -- Deal-sourced items carry a snapshot, not a reference: the prices below are the seed data's, so
   -- the lists seed identically whether or not the deal rows exist yet. Where a deal row is
   -- there, the item borrows its `external_id` and `valid_to`; where it is not, the link is null
   -- and the validity falls back to the same flyer week.
   --
   -- The three expired items are seeded in the state they were added in, still at last week's
   -- sale price. Repricing runs whenever the list is fetched, which is what turns them into the
-  -- three outcomes Seed Data documents — a re-match to this week's broccoli deal at $1.99/lb, a
+  -- three outcomes — a re-match to this week's broccoli deal at $1.99/lb, a
   -- fall back to the bacon's $6.99 regular price, and a cleared price for the shampoo — rather
   -- than the seed asserting them by hand. Food Lion then subtotals $18.26 with one unpriced,
   -- Harris Teeter $7.00, CVS Pharmacy $10.78, and Anywhere $0.00 with three unpriced.
@@ -586,7 +586,7 @@ begin
   -- other row here, and is kept so the insert above reads like its neighbours.
 
   -- -------------------------------------------------------------------------------------------
-  -- Recipes (Seed Data, "Recipes", "Recipe sources"): 12 for Oak Street, 2 for Rivera Family.
+  -- Recipes: 12 for Oak Street, 2 for Rivera Family.
   -- `normalized_name` is `@hearth/matching`'s `normalize()` run once offline and pasted here, the
   -- same way the deal and pantry rows above do it — there is no SQL implementation to call.
   -- Readiness, match overrides, and the meal plan are a later unit's seed rows: this unit's job is
@@ -743,7 +743,7 @@ begin
     (recipe_id, 4, '1 bell pepper, diced', 'bell pepper', 'bell pepper', 1, null),
     (recipe_id, 5, '1/2 cup salsa', 'salsa', 'salsa', 0.5, 'cup');
 
-  -- Manual entry (Seed Data, "Recipe sources"): no source_url, no raw_text on any ingredient.
+  -- Manual entry: no source_url, no raw_text on any ingredient.
   insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
     created_at)
   values (oak_street, 'Lentil Curry', null,
@@ -780,7 +780,7 @@ begin
     (recipe_id, 3, '1 (28 oz) can crushed tomatoes', 'canned tomatoes', 'canned tomato', 28, 'oz'),
     (recipe_id, 4, '1 cup milk', 'milk', 'milk', 1, 'cup');
 
-  -- Manual entry (Seed Data, "Recipe sources"): no source_url, no raw_text on any ingredient.
+  -- Manual entry: no source_url, no raw_text on any ingredient.
   insert into public.recipe (household_id, title, source_url, instructions, servings, created_by,
     created_at)
   values (oak_street, 'Shrimp Pad Thai', null,
@@ -849,10 +849,10 @@ begin
     (recipe_id, 4, null, 'wakame', 'wakame', 2, 'tbsp');
 
   -- -------------------------------------------------------------------------------------------
-  -- Match override (Seed Data, "Recipes": "Oak Street has a force-no-match override for
-  -- ingredient 'cheese' against deal 'snack cheese', Harris Teeter's. It demonstrates the
-  -- 'Corrected' label, and it changes no score above, because 'cheese' already matches Food
-  -- Lion's 'chunk or cheese'."). recipe_readiness itself is derived data: computed by
+  -- Match override: Oak Street has a force-no-match override for ingredient 'cheese' against deal
+  -- 'snack cheese', Harris Teeter's. It demonstrates the 'Corrected' label, and it changes no
+  -- score above, because 'cheese' already matches Food Lion's 'chunk or cheese'.
+  -- recipe_readiness itself is derived data: computed by
   -- seed-users.ts after this script applies, never hand-written here.
   -- -------------------------------------------------------------------------------------------
 
@@ -862,7 +862,7 @@ begin
     now() - interval '1 day');
 
   -- -------------------------------------------------------------------------------------------
-  -- Meal plan (Seed Data, "Meal plan"). The current week has seven entries, including two in
+  -- Meal plan. The current week has seven entries, including two in
   -- Wednesday's dinner slot (Baked Ziti and Greek Salad) — so one entry per day across the other
   -- five days, and Saturday left without one. The previous week has five, one of which stands
   -- for a deleted recipe ("Mushroom Stroganoff", a null recipe_id and a title snapshot with
@@ -904,7 +904,7 @@ begin
     now() - interval '8 days');
 
   -- -------------------------------------------------------------------------------------------
-  -- Bills and payment history: Phase 4 (Seed Data, "Bills"). Nine bills: every occurrence from
+  -- Bills and payment history: Phase 4. Nine bills: every occurrence from
   -- `anchor_date` up to, but not including, "C" (each bill's own current occurrence) has a paid
   -- or skipped log row; only Duke Energy's C is past due and unlogged, and only Old Phone Plan is
   -- archived. Dates are relative to the seed run via local_today (declared above), so this section
@@ -912,7 +912,7 @@ begin
   -- -------------------------------------------------------------------------------------------
 
   -- Rent: anchor_date is given directly — the 1st of the month 5 months ago (not derived from C;
-  -- unlike the bills below, Seed Data gives Rent's and Old Phone Plan's anchors in absolute terms).
+  -- unlike the bills below, Rent's and Old Phone Plan's anchors are given in absolute terms).
   -- Six occurrences get paid (indices 0-5), which puts the unresolved seventh (index 6, six months
   -- after the anchor) on next month's 1st — matching C, "1st of next month", as a consistency
   -- check rather than a derivation. The anchor is always day 1, so no month-end clamping is ever
@@ -932,8 +932,7 @@ begin
   select rent_id, occ, occ, 1850.00, alex
   from (select pg_temp.clamped_month_add(rent_anchor, k) as occ from generate_series(0, 5) as k) s;
 
-  -- Duke Energy: C is 5 days ago, left deliberately unlogged so it is the one overdue bill
-  -- (Seed Data: "Only Duke Energy's C is past due and unlogged").
+  -- Duke Energy: C is 5 days ago, left deliberately unlogged so it is the one overdue bill.
   duke_c := local_today - 5;
   duke_anchor := pg_temp.clamped_month_add(duke_c, -6);
   insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
@@ -954,7 +953,7 @@ begin
   -- created_at is the anchor date itself, so every auto-logged occurrence is on or after
   -- created_at, as the no-backfill rule requires. last_used_confirmed_at is set recently so this
   -- one does NOT trigger "Still using this?" — Sam's Adobe subscription below is the only
-  -- fixture meant to (Seed Data: "which triggers the 'Still using this?' prompt", singular).
+  -- fixture meant to.
   spectrum_c := local_today + 3;
   spectrum_anchor := pg_temp.clamped_month_add(spectrum_c, -3);
   insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
@@ -968,8 +967,7 @@ begin
   from (select pg_temp.clamped_month_add(spectrum_anchor, k) as occ from generate_series(0, 2) as k)
     s;
 
-  -- Water and Sewer: three past occurrences are paid, skipped, paid (Seed Data: "for the skip
-  -- display").
+  -- Water and Sewer: three past occurrences are paid, skipped, paid, for the skip display.
   water_c := local_today + 9;
   water_anchor := pg_temp.clamped_month_add(water_c, -3);
   insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit, "interval",
@@ -1051,8 +1049,7 @@ begin
     from generate_series(0, 6) as k) s;
 
   -- -------------------------------------------------------------------------------------------
-  -- Chores, completions (including Casey's), and errands: Phase 4 (Seed Data, "Chores",
-  -- "Errands"). Occurrence dates are evaluated in America/New_York, Oak Street's timezone, so
+  -- Chores, completions (including Casey's), and errands: Phase 4. Occurrence dates are evaluated in America/New_York, Oak Street's timezone, so
   -- every occurrence_date below is computed from local_today, never from a plain interval off
   -- now() (the same reasoning the deal-validity dates above this give for local_today).
   -- -------------------------------------------------------------------------------------------
@@ -1067,7 +1064,7 @@ begin
 
   -- Eight completions, one per past occurrence (k = 0..7); the k=3 completion was recorded three
   -- days after its occurrence_date, which the anchored-recurrence rule keeps from shifting the
-  -- occurrence after it (Requirements, "Recurrence is anchored and derived on read").
+  -- occurrence after it.
   insert into public.chore_completion (chore_id, occurrence_date, completed_by, completed_at)
   select trash_chore, local_today - 56 + 7 * k,
     (array[alex, sam, jordan])[((2 + k) % 3) + 1],
@@ -1142,9 +1139,8 @@ begin
       now() - interval '6 days', sam, now() - interval '14 days');
 
   -- -------------------------------------------------------------------------------------------
-  -- App errors, for System health (Seed Data, "App errors"). The fingerprint is the SHA-256 of
-  -- source, error name, and route or job, newline-separated (Technical Architecture, "Error
-  -- recording").
+  -- App errors, for System health. The fingerprint is the SHA-256 of
+  -- source, error name, and route or job, newline-separated.
   -- -------------------------------------------------------------------------------------------
 
   insert into public.app_error (fingerprint, message, count, first_seen, last_seen) values

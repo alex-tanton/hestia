@@ -1,8 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * The install prompt is offered after onboarding completes, never on first paint (Engineering
- * Practices › Install and notifications). Chromium fires `beforeinstallprompt` whenever it likes,
+ * The install prompt is offered after onboarding completes, never on first paint. Chromium fires `beforeinstallprompt` whenever it likes,
  * so the event is captured at load and held until onboarding asks for it.
  *
  * iOS has no such event: a PWA is installed from the Share sheet, and web push works only once

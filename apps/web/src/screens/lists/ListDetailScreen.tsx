@@ -88,7 +88,7 @@ export function ListDetailScreen({
     (members.data ?? []).map((member) => [member.userId, member.displayName]),
   );
 
-  /** Every item write sends absolute values, never a toggle (Handoff non-negotiable 9). */
+  /** Every item write sends absolute values, never a toggle. */
   const setStatus = (item: ListItem, status: ListItemStatus): void => {
     updateItem.mutate({
       kind: 'update-item',
@@ -189,7 +189,7 @@ export function ListDetailScreen({
       label: 'Delete',
       icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
       isDestructive: true,
-      // Deleting an item is not one of the four queueable writes (Requirements › Offline).
+      // Deleting an item is not one of the four queueable writes.
       disabledReason: offlineReason,
       onSelect: () => {
         setDeleting(item);
@@ -221,7 +221,7 @@ export function ListDetailScreen({
          * Any queued write can move any subtotal — checking an item off takes it out of its
          * group, and an edit can move it to another store — and the client never recomputes
          * money, so while writes are queued every group says its figure is the last one the
-         * server sent rather than letting one of them be quietly wrong (non-negotiable 22).
+         * server sent rather than letting one of them be quietly wrong.
          */}
         <StoreGroupHeader group={group} headingId={headingId} isPending={pending.size > 0} />
         <ul>{group.items.map((item) => renderRow(item, false))}</ul>
@@ -281,11 +281,10 @@ export function ListDetailScreen({
 
         {detail.bought.length > 0 && (
           /*
-           * Bought items collapse to a dimmed group rather than disappearing (Requirements,
-           * "Shopping list lifecycle"). The dimming is the muted text token and the recessed
-           * surface, not an opacity: blending text toward its background is what drops a
-           * contrast ratio under 4.5:1, and WCAG AA is an acceptance criterion
-           * (Handoff non-negotiable 16).
+           * Bought items collapse to a dimmed group rather than disappearing. The dimming is the
+           * muted text token and the recessed surface, not an opacity: blending text toward its
+           * background is what drops a contrast ratio under 4.5:1, and WCAG AA is an acceptance
+           * criterion.
            */
           <div className="rounded-md border border-border bg-raised">
             <div className="flex items-center justify-between gap-2 bg-raised px-2 py-1">
@@ -346,7 +345,7 @@ export function ListDetailScreen({
     <section className="flex flex-col gap-4">
       {/*
        * In the tree before it has anything to say, because a live region that arrives already
-       * populated is announced unreliably (Design › Accessibility › Specific patterns).
+       * populated is announced unreliably.
        */}
       <p role="status" className="sr-only">
         {announcement}

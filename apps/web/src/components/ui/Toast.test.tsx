@@ -31,7 +31,7 @@ afterEach(() => {
 });
 
 describe('toastDuration', () => {
-  it('follows the Design timings', () => {
+  it('gives each variant its display duration', () => {
     expect(toastDuration({ variant: 'success', message: 'Added to Grocery List.' })).toBe(4000);
     expect(toastDuration({ variant: 'info', message: '3 changes synced.' })).toBe(4000);
     expect(

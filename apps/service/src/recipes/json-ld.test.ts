@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { extractRecipeJsonLd } from './json-ld.js';
 
 /**
- * JSON-LD extraction over the Seed Data fixture set (Seed Data, "Recipe sources"): full markup,
- * none at all, partial markup, and awkward ingredient lines. These are local fixtures under
- * `fixtures/`, never a live URL — the parser is exercised on saved HTML, not the network.
+ * JSON-LD extraction over the seed data fixture set: full markup, none at all, partial markup, and
+ * awkward ingredient lines. These are local fixtures under `fixtures/`, never a live URL — the
+ * parser is exercised on saved HTML, not the network.
  */
 function fixture(name: string): string {
   return readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)), 'utf8');

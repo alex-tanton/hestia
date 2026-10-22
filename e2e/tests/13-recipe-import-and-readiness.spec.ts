@@ -4,28 +4,25 @@ import { expectAccessible } from '../support/axe.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Journey 4 (Engineering Practices › "E2E journeys"): import a recipe by URL, view its readiness
- * breakdown, and add its missing ingredients to a list (Requirements, "Recipe library",
- * "Deal-matched suggestions", "Add missing to list"; Design › Screens › 11 and 12; Handoff, Phase
- * 3 "Done when"). Also covers the acceptance-critical parse-failure fallback, and folds in two
- * "Done when" spot checks that are cheap to verify live rather than only at the unit/integration
- * layer: Seed Data's own readiness percentages, and that a match-override correction is reachable.
+ * Journey 4: import a recipe by URL, view its readiness breakdown, and add its missing ingredients
+ * to a list. Also covers the acceptance-critical parse-failure fallback, and folds in two "Done
+ * when" spot checks that are cheap to verify live rather than only at the unit/integration layer:
+ * the seed data's own readiness percentages, and that a match-override correction is reachable.
  *
- * Every URL pasted is a fixture the E2E stack serves in-process (Engineering Practices › "E2E
- * environment"): `HEARTH_RECIPE_FIXTURE_DIR` swaps the recipe-fetch step itself for a read of the
- * matching file under `e2e/fixtures/recipes/`, so nothing here ever opens a socket, real or
- * loopback. See that file's own comment and `apps/service/src/recipes/fixture-fetch.ts` for why a
- * same-network fixture server was not an option: `fetchRecipePage`'s private-address refusal
- * (Technical Architecture, "Recipe fetching") would refuse the Compose network's own subnet just
- * as correctly as it refuses loopback.
+ * Every URL pasted is a fixture the E2E stack serves in-process: `HEARTH_RECIPE_FIXTURE_DIR` swaps
+ * the recipe-fetch step itself for a read of the matching file under `e2e/fixtures/recipes/`, so
+ * nothing here ever opens a socket, real or loopback. See that file's own comment and
+ * `apps/service/src/recipes/fixture-fetch.ts` for why a same-network fixture server was not an
+ * option: `fetchRecipePage`'s private-address refusal would refuse the Compose network's own subnet
+ * just as correctly as it refuses loopback.
  *
  * Each theme imports a different fixture recipe, so the two runs never save a same-titled recipe
  * or fight over one shopping list: light imports "Baked Cod with Asparagus" (both new ingredients
  * land in the to-buy bucket); dark imports "Baked Cod with Broccoli", whose broccoli is a
- * deliberate match against Food Lion's current "Broccoli Crowns" deal (Seed Data, "Favorite-store
- * groceries"), so that run's "add missing to list" also exercises the on-sale bucket. Both recipes
- * share the same five pantry ingredients (butter, garlic, salt, black pepper, olive oil), all of
- * which are on Oak Street's seeded pantry, so neither is ever added to the list.
+ * deliberate match against Food Lion's current "Broccoli Crowns" deal, so that run's "add missing
+ * to list" also exercises the on-sale bucket. Both recipes share the same five pantry ingredients
+ * (butter, garlic, salt, black pepper, olive oil), all of which are on Oak Street's seeded pantry,
+ * so neither is ever added to the list.
  */
 
 const FIXTURE_ORIGIN = 'https://fixtures.hearth-e2e.test';
@@ -76,7 +73,7 @@ const SCENARIOS: Readonly<Record<'light' | 'dark', Scenario>> = {
 const NO_JSON_LD_URL = `${FIXTURE_ORIGIN}/recipes/no-recipe-markup`;
 const PANTRY_ONLY_INGREDIENTS = ['butter', 'garlic', 'salt', 'black pepper', 'olive oil'];
 
-/** Seed Data, "Recipes": three of the twelve Oak Street readiness buckets, spanning the range. */
+/** Three of the twelve seeded Oak Street readiness buckets, spanning the range. */
 const SEED_READINESS_SPOT_CHECKS = [
   {
     title: 'Grilled Cheese and Tomato Soup',
@@ -121,7 +118,7 @@ async function pasteAndParse(sheet: Locator, url: string): Promise<void> {
   await sheet.getByRole('button', { name: 'Parse' }).click();
 }
 
-/** An ingredient row's bucket badge, scoped to the `Readiness` region (Design › `IngredientRow`). */
+/** An ingredient row's bucket badge, scoped to the `Readiness` region. */
 function ingredientRow(readiness: Locator, itemName: string): Locator {
   return readiness.getByRole('listitem').filter({ hasText: itemName });
 }
@@ -130,7 +127,7 @@ for (const theme of ['light', 'dark'] as const) {
   test.describe(`journey 4 — import a recipe, view readiness, add missing to a list (${theme})`, () => {
     test.use({ colorScheme: theme });
 
-    test('imports by URL, matches Seed Data readiness, and lists exactly what is missing', async ({
+    test('imports by URL, matches the seed data readiness, and lists exactly what is missing', async ({
       page,
     }) => {
       const scenario = SCENARIOS[theme];
@@ -139,8 +136,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expectDashboard(page, SEED.oakStreet.name);
 
       // A list to add the missing ingredients to, created up front so the picker later has
-      // something new and empty to assert against (Design › Screens › 10, 12: the picker opens
-      // "always", for any list).
+      // something new and empty to assert against (the picker opens "always", for any list).
       await createList(page, scenario.listName);
       await expectAccessible(page, `new empty list (${theme})`);
 
@@ -156,8 +152,8 @@ for (const theme of ['light', 'dark'] as const) {
 
       await expect(sheet.getByLabel('Title')).toHaveValue(scenario.recipeTitle);
       await expect(sheet.getByLabel('Servings')).toHaveValue('4');
-      // Every parsed row keeps its original line, so a bad split can be corrected before saving
-      // (Design › Screens › 11); this one line is enough to prove the raw text survived.
+      // Every parsed row keeps its original line, so a bad split can be corrected before saving;
+      // this one line is enough to prove the raw text survived.
       await expect(sheet.getByText('"1 lb cod fillets"')).toBeVisible();
       await expect(sheet.getByRole('button', { name: /^Remove ingredient/ })).toHaveCount(7);
       await expectAccessible(page, `add-a-recipe, parsed preview (${theme})`);
@@ -222,7 +218,7 @@ for (const theme of ['light', 'dark'] as const) {
       }
       await expectAccessible(page, `list with exactly the missing ingredients (${theme})`);
 
-      // --- Seed Data readiness spot check: real seeded recipes still score exactly as documented. ---
+      // --- Readiness spot check: real seeded recipes still score exactly as documented. ---
       await page.goto('/meals/recipes');
       for (const check of SEED_READINESS_SPOT_CHECKS) {
         const card = page.getByRole('listitem').filter({ hasText: check.title });
@@ -232,8 +228,8 @@ for (const theme of ['light', 'dark'] as const) {
       await expectAccessible(page, `recipe library with seed readiness (${theme})`);
 
       // --- Match override reachability: Oak Street's seeded "cheese" force-no-match override. ---
-      // Not anchored: `RecipeCard`'s accessible name leads with its sr-only readiness sentence
-      // (Design › `RecipeCard`), so the title itself is a substring, never a prefix.
+      // Not anchored: `RecipeCard`'s accessible name leads with its sr-only readiness sentence,
+      // so the title itself is a substring, never a prefix.
       await page.getByRole('link', { name: /Black Bean Tacos/ }).click();
       await expect(page.getByRole('heading', { name: 'Black Bean Tacos', level: 1 })).toBeVisible();
       const overrideReadiness = page.getByRole('region', { name: 'Readiness' });
@@ -241,7 +237,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(cheeseRow.getByText('Corrected')).toBeVisible();
       await expect(cheeseRow.getByRole('button', { name: 'Remove correction' })).toBeVisible();
       // The override forces away Harris Teeter's "snack cheese" only; "cheese" still matches Food
-      // Lion's "chunk or cheese" normally (Seed Data, "Recipes"), so the bucket stays on_sale.
+      // Lion's "chunk or cheese" normally, so the bucket stays on_sale.
       await expect(cheeseRow.getByText('On sale', { exact: true })).toBeVisible();
       await expectAccessible(page, `recipe detail with a match override (${theme})`);
 

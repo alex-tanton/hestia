@@ -21,9 +21,9 @@ import {
 
 /**
  * Wires the queue into the running app: its defaults, its notices, the drop of a write that has
- * failed for good, and the reconnect summary — "on reconnect, the queue replays and the banner is
- * replaced by a 4-second success toast stating how many changes synced" (Design › Offline rules).
- * Mounted once, inside the shell's toast provider.
+ * failed for good, and the reconnect summary: on reconnect the queue replays and the banner is
+ * replaced by a 4-second success toast stating how many changes synced. Mounted once, inside the
+ * shell's toast provider.
  */
 export function useWriteQueue(): void {
   const queryClient = useQueryClient();
@@ -72,10 +72,9 @@ export function useWriteQueue(): void {
         /*
          * The query cache's persister throttles its saves (`persist.ts`, 1000ms) so a busy screen
          * does not hammer IndexedDB on every settle -- but a write is not durable until it is
-         * written, and "the queue survives ... a browser restart; it is not in memory"
-         * (Engineering Practices › The write queue) has no exception for whatever is still inside
-         * that window. A restart landing there would otherwise lose the write silently, which is
-         * exactly what Handoff non-negotiable 9 rules out. `flushPersister` is a second, unthrottled
+         * written, and the queue survives a browser restart (it is not in memory) with no exception
+         * for whatever is still inside that window. A restart landing there would otherwise lose the
+         * write silently, which the queue must never do. `flushPersister` is a second, unthrottled
          * persister over the same storage and key, so this save goes through uncoupled from the
          * query cache's own throttled one.
          */
@@ -86,7 +85,7 @@ export function useWriteQueue(): void {
       }
 
       // A write that failed leaves the queue, so nothing can replay it; the error toast it
-      // already raised is the single surfacing it gets (Engineering Practices › The write queue).
+      // already raised is the single surfacing it gets.
       // A chore or errand write has no optimistic cache to roll back and no error toast of its own,
       // so its drop is announced here, once for the whole pass, with a message that names no one.
       let dropped = 0;

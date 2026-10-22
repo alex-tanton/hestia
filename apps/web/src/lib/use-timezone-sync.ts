@@ -9,7 +9,7 @@ export function browserTimezone(): string {
 
 /**
  * Each time the app opens it compares the browser's timezone with `profile.timezone` and sends
- * `PATCH /api/users/me` when they differ (Engineering Practices › Frontend patterns). Personal
+ * `PATCH /api/users/me` when they differ. Personal
  * dates — personal bills, quiet hours, personal send times — are evaluated in the stored value,
  * so a move must reach the server; a match must not, or every open would write.
  */

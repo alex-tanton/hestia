@@ -1,8 +1,7 @@
 /**
- * Seeds a development database (Seed Data, "Using this data"): creates the five seed users through
- * GoTrue's admin API, which fires the profile trigger exactly as a real signup does, then applies
- * seed.sql with psql, computes recipe readiness for Oak Street and Rivera Family (Seed Data,
- * "Recipes"), and prints the outstanding Oak Street invite.
+ * Seeds a development database: creates the five seed users through GoTrue's admin API, which fires
+ * the profile trigger exactly as a real signup does, then applies seed.sql with psql, computes
+ * recipe readiness for Oak Street and Rivera Family, and prints the outstanding Oak Street invite.
  *
  *   pnpm db:seed
  *
@@ -144,9 +143,9 @@ async function main(): Promise<void> {
 
   console.log('seeded households, members, favorites, notification settings, and invites');
 
-  // Readiness is derived data (Seed Data, "Recipes"): computed here, not hand-written into
-  // seed.sql, so it is always the real matcher's own output for the seeded pantry, deals, and
-  // overrides — the strongest check that the matching rules and the fixtures agree.
+  // Readiness is derived data: computed here, not hand-written into seed.sql, so it is always the
+  // real matcher's own output for the seeded pantry, deals, and overrides — the strongest check
+  // that the matching rules and the fixtures agree.
   const pool = new pg.Pool({ connectionString: dbUrl });
   try {
     const { rows } = await pool.query<{ id: string; name: string }>(

@@ -1,9 +1,9 @@
 import type { MerchantSkipRate } from '@hearth/shared';
 
 /**
- * Per-merchant skip rates from the most recent deal refresh (Technical Architecture, "Health
- * checks"). In memory: a restart forgets them until the next refresh, which is acceptable for a
- * diagnostic. The Phase 2 refresh job fills it; until then it is empty.
+ * Per-merchant skip rates from the most recent deal refresh. In memory: a restart forgets them
+ * until the next refresh, which is acceptable for a diagnostic. The Phase 2 refresh job fills it;
+ * until then it is empty.
  */
 export class SkipRateRegistry {
   private rates = new Map<string, MerchantSkipRate>();

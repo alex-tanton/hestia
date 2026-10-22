@@ -25,9 +25,9 @@ import { useApi, useAuthClient } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE } from './keys.ts';
 
 /*
- * Deals, flyers, merchants, favorite stores, and the one list write a deal screen makes
- * (Technical Architecture, "API surface › Deals"). Keys are household-scoped and start with
- * `HOUSEHOLD_SCOPE`, so switching household removes them with everything else.
+ * Deals, flyers, merchants, favorite stores, and the one list write a deal screen makes.
+ * Keys are household-scoped and start with `HOUSEHOLD_SCOPE`, so switching household removes them
+ * with everything else.
  */
 
 export const dealKeys = {
@@ -40,7 +40,7 @@ export const dealKeys = {
   merchants: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'merchants'] as const,
   favoriteStores: (householdId: string) =>
     [...HOUSEHOLD_SCOPE, householdId, 'favorite-stores'] as const,
-  /** The lists index, which the add-to-list picker reads (Design › Screens › 7 owns the screen). */
+  /** The lists index, which the add-to-list picker reads. */
   lists: (householdId: string) => [...HOUSEHOLD_SCOPE, householdId, 'lists'] as const,
 };
 
@@ -186,7 +186,7 @@ function useFavoritesWriter(householdId: string): () => Promise<void> {
   };
 }
 
-/** Any member may edit the household's favorite stores (Design › Screens › 4). */
+/** Any member may edit the household's favorite stores. */
 export function useAddFavoriteStore(
   householdId: string,
 ): UseMutationResult<void, Error, AddFavoriteStoreRequest> {
@@ -254,10 +254,10 @@ function heldDealAddIds(queryClient: QueryClient, userId: string | null): Map<st
 
 /**
  * Adding a deal to a list sends the deal's id and nothing else: the service reads the `deal` row
- * and takes the snapshot itself, so a client can never invent a price (Technical Architecture,
- * "API surface"). The row id is client-generated, which is what makes a replayed add a no-op
- * (Handoff non-negotiable 9), and it is held across a retry: a tap after an error carries the id
- * of the add that failed, and only a success starts the next add with a fresh one.
+ * and takes the snapshot itself, so a client can never invent a price. The row id is
+ * client-generated, which is what makes a replayed add a no-op, and it is held across a retry: a
+ * tap after an error carries the id of the add that failed, and only a success starts the next add
+ * with a fresh one.
  */
 export function useAddDealToList(
   householdId: string,

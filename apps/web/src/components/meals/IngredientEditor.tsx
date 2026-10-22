@@ -44,7 +44,7 @@ export function fromRecipeIngredient(ingredient: RecipeIngredient): EditableIngr
   };
 }
 
-/** A row with a blank item name would save silently as nothing (Design › Screens › 11). */
+/** A row with a blank item name would save silently as nothing. */
 export function ingredientRowError(row: EditableIngredient): string | undefined {
   return row.itemName.trim() === '' ? 'Enter an ingredient.' : undefined;
 }
@@ -70,9 +70,9 @@ export interface IngredientEditorProps {
 }
 
 /**
- * Design › Screens › 11: "each ingredient shows its original line, with quantity, unit, and item
- * name as editable fields beneath it, so a bad split can be corrected before saving." A manually
- * added row has no original line to show.
+ * Each ingredient shows its original line, with quantity, unit, and item name as editable
+ * fields beneath it, so a bad split can be corrected before saving. A manually added row has
+ * no original line to show.
  */
 export function IngredientEditor({
   ingredients,

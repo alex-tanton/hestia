@@ -5,9 +5,8 @@ import { queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Journey 7, chores and errands portion (Engineering Practices › E2E journeys; Handoff, Phase 5
- * "Done when"; Design › Offline rules): as Oak Street's member, complete a rotating chore and mark an
- * errand done, with the household's date labels; then go offline, complete a chore and mark an
+ * Journey 7, chores and errands portion: as Oak Street's member, complete a rotating chore and mark
+ * an errand done, with the household's date labels; then go offline, complete a chore and mark an
  * errand done, reload, and assert the queued marks survive the reload and that the two writes replay
  * in order on reconnect, with the toast naming how many synced.
  *
@@ -46,7 +45,7 @@ function rowFor(page: Page, text: string): Locator {
 /** Light run only: the online completion, the labels, and the history it leaves behind. */
 async function onlineSteps(page: Page): Promise<void> {
   // Household-timezone labels: "today" and "in 2 days" are counted in Oak Street's zone, so they
-  // are the same whatever zone the browser is in (PRD, "Household timezone").
+  // are the same whatever zone the browser is in.
   await page.goto('/chores');
   await expect(page.getByRole('link', { name: /^Take out trash/ })).toContainText('Due today');
   await expect(page.getByRole('link', { name: /^Clean bathroom/ })).toContainText('in 2 days');
@@ -98,8 +97,7 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
   await expect(page.getByRole('checkbox', { name: new RegExp(`^Mark ${errand}`) })).toBeVisible();
   await subTabs.getByText('Chores', { exact: true }).click();
   await expect(page.getByRole('button', { name: `Mark ${chore} done` })).toBeVisible();
-  // Precached before the loss of network, so the reload below has an app shell to serve
-  // (Engineering Practices › "Service worker").
+  // Precached before the loss of network, so the reload below has an app shell to serve.
   await waitForServiceWorker(page);
   await page.context().setOffline(true);
 
@@ -114,8 +112,8 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
   await expect(rowFor(page, errand)).toContainText(PENDING);
   await expectAccessible(page, `chores and errands, offline with queued writes (${theme})`);
 
-  // Survives a reload (Engineering Practices › "The write queue"): still offline, and both the
-  // marks and the queue come back from IndexedDB, not from memory.
+  // Survives a reload: still offline, and both the marks and the queue come back from IndexedDB,
+  // not from memory.
   await subTabs.getByText('Chores', { exact: true }).click();
   await expect(rowFor(page, chore)).toContainText(PENDING);
   await page.reload();

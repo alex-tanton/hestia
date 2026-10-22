@@ -12,11 +12,11 @@ import { OAK_STREET_ID, ALEX_ID, oakStreetFixture, profileFixture } from './fixt
 import type { StubHandler } from './harness.tsx';
 
 /**
- * The 27514 deals from Seed Data › Deal fixtures, quoted by their normalized values, so a
+ * The 27514 deals from the seed data, quoted by their normalized values, so a
  * component test reads the same names and prices the seeded app shows. Prices are integer cents.
  */
 
-/** Seed Data › Stores: merchant ids are stable week to week, so fixtures may rely on them. */
+/** Merchant ids are stable week to week, so fixtures may rely on them. */
 export const HARRIS_TEETER = '2431';
 export const FOOD_LION = '2100';
 export const PUBLIX = '2361';
@@ -211,7 +211,7 @@ export function flyersResponse(
   return { flyers, ...FRESH, ...overrides };
 }
 
-/** Seed Data: Oak Street favorites Harris Teeter, Food Lion, and CVS. */
+/** Seed data: Oak Street favorites Harris Teeter, Food Lion, and CVS. */
 export const merchantFixtures: Merchant[] = [
   { merchantId: HARRIS_TEETER, name: 'Harris Teeter', logoUrl: null, isFavorite: true },
   { merchantId: FOOD_LION, name: 'Food Lion', logoUrl: null, isFavorite: true },
@@ -244,7 +244,7 @@ function list(id: string, name: string, outstandingCount: number): ShoppingList 
   };
 }
 
-/** Seed Data › E2E-only fixtures: Oak Street's two lists. */
+/** Seed data: Oak Street's two lists. */
 export const thisWeekList = list(THIS_WEEK_LIST_ID, 'This Week', 15);
 export const weekendCookoutList = list(WEEKEND_LIST_ID, 'Weekend Cookout', 6);
 

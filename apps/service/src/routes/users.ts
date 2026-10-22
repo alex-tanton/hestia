@@ -52,8 +52,8 @@ export const userRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx
     });
   });
 
-  // Technical Architecture, "Auth configuration": re-verify the current password unless the
-  // session came from a reset link, apply the policy, then GoTrue's PUT /user as the caller.
+  // Re-verify the current password unless the session came from a reset link, apply the policy,
+  // then GoTrue's PUT /user as the caller.
   app.post('/api/users/me/password', async (request, reply) => {
     const user = await ctx.authenticate(request);
     const body = parse(changePasswordBodySchema, request.body);

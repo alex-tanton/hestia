@@ -24,7 +24,7 @@ export interface ChoresListScreenProps {
   householdId: string;
 }
 
-/** Design › "17. Chores": grouped by Overdue, Today, This week, Later; the primary action adds a chore. */
+/** Grouped by Overdue, Today, This week, Later; the primary action adds a chore. */
 export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();

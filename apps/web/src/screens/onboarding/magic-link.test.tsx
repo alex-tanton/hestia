@@ -51,7 +51,7 @@ function renderCodeScreen(auth = signedOut()): AuthStub {
 }
 
 /*
- * Handoff, Phase 1: "With the magic-link flag off, no magic-link UI is reachable." The flag is a
+ * With the magic-link flag off, no magic-link UI is reachable. The flag is a
  * build-time constant and is unset in a test run, so this is the default build.
  */
 describe('with the magic-link flag off', () => {

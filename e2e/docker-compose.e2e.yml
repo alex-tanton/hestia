@@ -1,4 +1,4 @@
-# E2E overlay for docker/docker-compose.yml (Engineering Practices › Testing, "E2E environment").
+# E2E overlay for docker/docker-compose.yml.
 #
 #   docker compose -p hearth-e2e-<run> --env-file <generated .env> \
 #     -f docker/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --wait
@@ -19,14 +19,14 @@
 #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
 #     public origin an https one; E2E is plain HTTP on the loopback, so HEARTH_HOST — the only
 #     thing that entrypoint derives — is given directly
-#   * hearth-service reads the checked-in Flipp captures instead of the live endpoint (Handoff
-#     non-negotiable 17), and logs at info rather than warn so the rate discipline the deal
-#     journeys exercise is readable in `docker compose logs` (Handoff, Phase 2 "Done when")
+#   * hearth-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
+#     info rather than warn so the rate discipline the deal journeys exercise is readable in
+#     `docker compose logs`
 #   * hearth-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
-#     for real: `fetchRecipePage`'s private/loopback/link-local refusal (Technical Architecture,
-#     "Recipe fetching") would just as correctly refuse a fixture server reachable only on this
-#     network, so journey 4 (Phase 3 "Done when": "A recipe imports from a URL with JSON-LD…")
-#     swaps the fetch step itself rather than trying to make a reachable address pass that check
+#     for real: `fetchRecipePage`'s private/loopback/link-local refusal would just as correctly
+#     refuse a fixture server reachable only on this network, so journey 4 (a recipe imports from
+#     a URL with JSON-LD) swaps the fetch step itself rather than trying to make a reachable
+#     address pass that check
 #
 # The `backup` service is left out: nothing in the suite reads a backup, and the stack starts
 # faster without it.
@@ -45,17 +45,17 @@ services:
     environment:
       HEARTH_TRUSTED_PROXIES: ${HEARTH_E2E_SUBNET:?}
       # Every browser context and API call in the suite comes from the loopback, so they all share
-      # one per-IP bucket. Production's 300 a minute (Technical Architecture, "Rate limits") is
+      # one per-IP bucket. Production's 300 a minute is
       # exhausted by a full run; the limiter stays on, just with room for the suite's own traffic.
       HEARTH_RATE_LIMIT_PER_MINUTE: 3000
       LOG_LEVEL: info
-      # The fixture set's own instant (`FIXTURE_NOW`, Technical Architecture › "Development"), so
+      # The fixture set's own instant (`FIXTURE_NOW`), so
       # the wrapper's active-flyer window matches what the captures cover regardless of today.
       HEARTH_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
       HEARTH_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
       HEARTH_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
       # Pushes are recorded by the service rather than sent, and the suite reads them back through
-      # the service-role seam under /api/test/push (Engineering Practices › Testing). No push service
+      # the service-role seam under /api/test/push. No push service
       # is reachable from the stack in E2E. Only this file sets the value; production never does.
       HEARTH_PUSH_TRANSPORT: test-double
 

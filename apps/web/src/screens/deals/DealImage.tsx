@@ -3,10 +3,10 @@ import { useState, type ReactElement } from 'react';
 import { cn } from '../../lib/cn.ts';
 
 /**
- * The only image hosts the Content-Security-Policy allows (Technical Architecture, "Routing"):
- * `f.wishabi.net` serves Flipp item and flyer images, `images.wishabi.net` serves merchant logos.
- * Anything else would be blocked by the browser and render as a broken image, so it takes the
- * placeholder instead — the CSP is the rule, and this is the UI keeping to it.
+ * The only image hosts the Content-Security-Policy allows: `f.wishabi.net` serves Flipp item and
+ * flyer images, `images.wishabi.net` serves merchant logos. Anything else would be blocked by the
+ * browser and render as a broken image, so it takes the placeholder instead — the CSP is the rule,
+ * and this is the UI keeping to it.
  */
 const ALLOWED_IMAGE_ORIGINS: readonly string[] = [
   'https://f.wishabi.net',
@@ -29,12 +29,12 @@ export interface DealImageProps {
 }
 
 /**
- * Design › `DealCard`: the item image from Flipp's CDN, with a neutral placeholder when it is
+ * The deal card's item image from Flipp's CDN, with a neutral placeholder when it is
  * absent. A missing or failed image is ordinary here — flyers often carry none — so it degrades
  * to the placeholder rather than to a broken-image icon.
  *
  * The image is decorative: the item name sits beside it and carries the meaning, so an alt text
- * repeating it would only be heard twice (Design › Accessibility, "Semantic HTML first").
+ * repeating it would only be heard twice.
  */
 export function DealImage({ url, className }: DealImageProps): ReactElement {
   const [hasFailed, setHasFailed] = useState(false);

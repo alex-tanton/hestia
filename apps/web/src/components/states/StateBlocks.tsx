@@ -9,16 +9,16 @@ interface StateAction {
 
 export interface EmptyStateProps {
   icon: LucideIcon;
-  /** What this holds + the action (Branding › Copy patterns). */
+  /** What this holds + the action. */
   message: string;
   /**
-   * First run: the primary action ("Add a recipe"). Filtered: "Clear filters" — Design keeps
-   * the two states' copy different, so callers pass distinct messages.
+   * First run: the primary action ("Add a recipe"). Filtered: "Clear filters" — the two states'
+   * copy is different, so callers pass distinct messages.
    */
   action?: StateAction;
 }
 
-/** Empty state: icon in the section color, one line, one primary action (Design › State patterns). */
+/** Empty state: icon in the section color, one line, one primary action. */
 export function EmptyState({ icon: Icon, message, action }: EmptyStateProps): ReactElement {
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-6 text-center">
@@ -38,7 +38,7 @@ export interface ErrorStateProps {
   alternative?: StateAction;
 }
 
-/** Inline, scoped to the failing region, never a full-screen takeover (Design › Error rules). */
+/** Inline, scoped to the failing region, never a full-screen takeover. */
 export function ErrorState({
   message,
   onRetry,
@@ -78,7 +78,7 @@ export interface OfflineStateProps {
   message: string;
 }
 
-/** Dedicated offline empty state for screens that need live data (Design › Offline rules). */
+/** Dedicated offline empty state for screens that need live data. */
 export function OfflineState({ message }: OfflineStateProps): ReactElement {
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-6 text-center">

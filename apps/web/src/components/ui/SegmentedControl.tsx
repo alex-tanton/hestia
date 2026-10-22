@@ -15,8 +15,8 @@ export interface SegmentedControlProps {
 }
 
 /**
- * Radix Toggle Group in single selection (Design › Primitives): arrow keys move between
- * segments, Enter or Space selects. The selected segment takes the section color.
+ * Radix Toggle Group in single selection: arrow keys move between segments, Enter or Space selects.
+ * The selected segment takes the section color.
  */
 export function SegmentedControl({
   label,

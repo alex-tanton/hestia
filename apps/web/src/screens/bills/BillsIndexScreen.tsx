@@ -34,7 +34,7 @@ export interface BillGroups {
 }
 
 /**
- * PRD › "This Week" and Design › Screens › 14: Overdue, This week (through Saturday, household
+ * Grouped as Overdue, This week (through Saturday, household
  * timezone), then Later. A bill's own `isOverdue` flag already accounts for its occurrence being
  * in the past, so grouping needs only that flag and a same-or-before comparison against the end
  * of the current week — no second overdue check is possible here.

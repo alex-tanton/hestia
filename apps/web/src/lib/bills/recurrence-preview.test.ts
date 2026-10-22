@@ -10,7 +10,7 @@ describe('previewDueDates', () => {
     ]);
   });
 
-  it('clamps a month-end anchor the same way the service does (PRD › "Recurrence")', () => {
+  it('clamps a month-end anchor the same way the service does', () => {
     expect(previewDueDates({ unit: 'month', interval: 1, anchorDate: '2026-01-31' })).toEqual([
       '01/31/2026',
       '02/28/2026',

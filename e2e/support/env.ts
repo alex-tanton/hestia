@@ -10,11 +10,11 @@ import { parseEnvFile, runNames } from './run-identity.ts';
 export const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 /*
- * One run's identity is fixed once per process tree (Engineering Practices › Testing, "E2E
- * environment"). This module is first loaded by the Playwright config in the runner, which writes
- * the values into the environment; the workers, global setup, and global teardown inherit them, so
- * every process in a run addresses the same stack, and two runs on one machine never share one.
- * `HEARTH_E2E_RUN_ID` names a run explicitly, which is how a reused stack is found again.
+ * One run's identity is fixed once per process tree. This module is first loaded by the Playwright
+ * config in the runner, which writes the values into the environment; the workers, global setup,
+ * and global teardown inherit them, so every process in a run addresses the same stack, and two
+ * runs on one machine never share one. `HEARTH_E2E_RUN_ID` names a run explicitly, which is how a
+ * reused stack is found again.
  */
 const STATE_ROOT = process.env['HEARTH_E2E_STATE_DIR'] ?? join(tmpdir(), 'hearth-e2e');
 
@@ -47,8 +47,8 @@ export const IMAGE_TAG = names.imageTag;
 
 /**
  * Everything a run writes lives here, outside the checkout: the generated `.env` and the backup
- * directory the Compose file mounts. Nothing here is ever committed (Handoff, non-negotiable 4).
- * Each run gets its own directory under the root, so its teardown removes only its own files.
+ * directory the Compose file mounts. Nothing here is ever committed. Each run gets its own
+ * directory under the root, so its teardown removes only its own files.
  */
 export const STATE_DIR = join(STATE_ROOT, RUN_ID);
 export const ENV_FILE = join(STATE_DIR, '.env');
@@ -91,10 +91,10 @@ function distinctFreePort(avoid: string): string {
   return port;
 }
 
-/** Seed Data, "Using this data". */
+/** The password every seed user signs in with. */
 export const SEED_PASSWORD = 'hearth-seed-pass-2026';
 
-/** Seed Data, "Users" and "Households". */
+/** The seed users and households. */
 export const SEED = {
   alex: { email: 'alex@example.com', name: 'Alex Rivera' },
   sam: { email: 'sam@example.com', name: 'Sam Chen' },
@@ -104,7 +104,7 @@ export const SEED = {
   oakStreet: { name: 'Oak Street', postalCode: '27514' },
   riveraFamily: { name: 'Rivera Family', postalCode: '27601' },
   emptyHouse: { name: 'Empty House', postalCode: '27705' },
-  /** Seed Data, "Edge-case fixtures": the outstanding Oak Street invite's code. */
+  /** The outstanding Oak Street invite's code, an edge-case seed fixture. */
   outstandingInviteCode: 'K7M2Q9XA',
 } as const;
 

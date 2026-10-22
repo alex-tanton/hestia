@@ -2,9 +2,7 @@ import { z } from 'zod';
 import { calendarDateSchema, idSchema, timestampSchema } from './common.js';
 
 /**
- * Errands: one-off tasks with a name, an optional due date, and a status of open or done
- * (Requirements, "Chores and errands" › "Errands"; Technical Architecture, "API surface" ›
- * "Errands").
+ * Errands: one-off tasks with a name, an optional due date, and a status of open or done.
  */
 
 export const errandStatusSchema = z.enum(['open', 'done']);
@@ -28,9 +26,8 @@ export type Errand = z.infer<typeof errandSchema>;
 export const errandListSchema = z.array(errandSchema);
 
 /**
- * POST /api/households/:id/errands. `id` is client-generated (PRD, "Data model" › "Chores":
- * `errand` has "id (client-generated UUID)"), so a replayed offline add is a no-op (Handoff
- * non-negotiable 9), the same as a shopping-list item.
+ * POST /api/households/:id/errands. `id` is client-generated, so a replayed offline add is a no-op,
+ * the same as a shopping-list item.
  */
 export const createErrandRequestSchema = z.object({
   id: idSchema.optional(),
@@ -41,13 +38,13 @@ export const createErrandRequestSchema = z.object({
 export type CreateErrandRequest = z.infer<typeof createErrandRequestSchema>;
 
 /**
- * PATCH /api/errands/:id. Every field is an absolute value (Handoff non-negotiable 9), the same
- * convention `updateListItemRequestSchema` follows. `status` is set absolutely: `done` stamps
+ * PATCH /api/errands/:id. Every field is an absolute value, the same convention
+ * `updateListItemRequestSchema` follows. `status` is set absolutely: `done` stamps
  * `completedAt`/`completedBy` from the caller's JWT, and `open` clears them — the schema's own
- * check constraint supports both directions, and the design's flat list ("done collapsed below")
- * implies a done errand can be reopened, the same as a bought list item can move back to needed
- * (Requirements, "Offline behavior" › "Conflict resolution"). The completion fields are never
- * client-supplied: only `status` drives them, so attribution can never be spoofed.
+ * check constraint supports both directions, and the flat list ("done collapsed below") implies
+ * a done errand can be reopened, the same as a bought list item can move back to needed.
+ * The completion fields are never client-supplied: only `status` drives them, so attribution can
+ * never be spoofed.
  */
 export const updateErrandRequestSchema = z
   .object({
@@ -56,9 +53,8 @@ export const updateErrandRequestSchema = z
     assignedTo: idSchema.nullable().optional(),
     status: errandStatusSchema.optional(),
     /**
-     * The action time of a `done` made offline (Requirements, "Offline behavior"). Stored as the
-     * earlier of this and the service's clock, the same rule a chore completion follows. Only a
-     * `done` status may carry it.
+     * The action time of a `done` made offline. Stored as the earlier of this and the service's
+     * clock, the same rule a chore completion follows. Only a `done` status may carry it.
      */
     doneAt: timestampSchema.optional(),
   })

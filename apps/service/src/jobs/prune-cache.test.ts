@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { SEARCH_TTL_MS } from '../services/deals/cache.js';
 import { pruneCutoffs } from './prune-cache.js';
 
-/** Technical Architecture, "Scheduled jobs"; Requirements, "Retention". */
-
 const NOW = new Date('2026-09-25T04:00:00.000Z');
 
 describe('pruneCutoffs', () => {

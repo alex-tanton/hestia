@@ -4,11 +4,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildOpenApiDocument, loadOpenApiDocument } from './openapi.js';
 
 /**
- * `loadOpenApiDocument` (Technical Architecture, "Conventions"): `pnpm build` writes
- * `dist/openapi.json` next to the compiled bundle, and the running service serves that file; from
- * source (as every test runs) there is no `src/openapi.json`, so only the fallback branch is ever
- * exercised incidentally. This drives both branches directly: a written file is read back
- * verbatim, and its absence falls back to generating the document fresh.
+ * `loadOpenApiDocument`: `pnpm build` writes `dist/openapi.json` next to the compiled bundle, and
+ * the running service serves that file; from source (as every test runs) there is no
+ * `src/openapi.json`, so only the fallback branch is ever exercised incidentally. This drives both
+ * branches directly: a written file is read back verbatim, and its absence falls back to generating
+ * the document fresh.
  */
 describe('loadOpenApiDocument', () => {
   const fixturePath = fileURLToPath(new URL('./openapi.json', import.meta.url));

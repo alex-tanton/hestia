@@ -10,7 +10,7 @@ export interface FieldErrors<F extends string> {
 /**
  * Form errors that are announced and reachable: each message is rendered by the field (which
  * links it with `aria-describedby` and marks the control `aria-invalid`), and on submit focus
- * moves to the first field in error (Design › Accessibility › Forms).
+ * moves to the first field in error.
  */
 export function useFieldErrors<F extends string>(): FieldErrors<F> {
   const [errors, setErrorsState] = useState<Partial<Record<F, string>>>({});

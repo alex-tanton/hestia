@@ -1,7 +1,7 @@
 /**
- * Calendar-date arithmetic in the household's timezone (Requirements › "Locale": weeks start on
- * Sunday; Handoff non-negotiable 8: meal-plan dates are evaluated in the timezone that owns them,
- * never the server's or the browser's). Every date here is a `YYYY-MM-DD` calendar value with no
+ * Calendar-date arithmetic in the household's timezone (weeks start on Sunday; meal-plan dates
+ * are evaluated in the timezone that owns them, never the server's or the browser's). Every date
+ * here is a `YYYY-MM-DD` calendar value with no
  * time component: once "today" is read out of the household's own clock, everything after is pure
  * calendar math done at UTC midnight, which never crosses a DST boundary the way arithmetic in a
  * local zone could.
@@ -24,7 +24,7 @@ export function todayInTimezone(timezone: string, now: Date = new Date()): strin
 /**
  * The calendar date an instant falls on in a timezone. Timestamps are stored in UTC, so a
  * completion stamped 01:00Z on the 4th is still the 3rd in New York; labelling it by its UTC date
- * would be a day wrong for a household evening (Handoff non-negotiable 8).
+ * would be a day wrong for a household evening.
  */
 export function calendarDateOfInstant(instant: string, timezone: string): string {
   const parts = datePartsFormatter(timezone).formatToParts(new Date(instant));
@@ -50,7 +50,7 @@ export function addDays(date: string, days: number): string {
   return fromUtcMillis(toUtcMillis(date) + days * 86_400_000);
 }
 
-/** The Sunday that starts the week containing this date (Requirements › "Locale"). */
+/** The Sunday that starts the week containing this date. */
 export function weekStart(date: string): string {
   const dayOfWeek = new Date(toUtcMillis(date)).getUTCDay();
   return addDays(date, -dayOfWeek);

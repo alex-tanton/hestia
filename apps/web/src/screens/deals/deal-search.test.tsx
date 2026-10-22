@@ -242,7 +242,7 @@ describe('deal search', () => {
     const user = userEvent.setup();
     stubDeals(() => ({ status: 200, body: searchResponse([], { total: 0 }) }));
     renderScreen(<DealSearchScreen />);
-    // Seed Data's empty-result fixture.
+    // The seed data's empty-result fixture.
     await search('saffron');
 
     expect(

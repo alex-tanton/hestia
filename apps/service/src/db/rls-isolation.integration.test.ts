@@ -3,9 +3,9 @@ import { closeTestDb, withTestDb, type Actor, type TestDb } from '../test/integr
 import { buildWorld, type World } from '../test/world.js';
 
 /**
- * The isolation suite (Engineering Practices, "RLS testing is mandatory"): a member of household A
- * tries to read, insert, update, and delete every household-B resource, and the database refuses
- * each one, either by returning no rows or by raising insufficient_privilege.
+ * The isolation suite: a member of household A tries to read, insert, update, and delete every
+ * household-B resource, and the database refuses each one, either by returning no rows or by
+ * raising insufficient_privilege.
  */
 
 afterAll(closeTestDb);

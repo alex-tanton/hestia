@@ -10,10 +10,9 @@ export interface BillOccurrenceState {
 }
 
 /**
- * PRD, "Recurrence is anchored and derived on read" (Bills): "A bill's current occurrence is its
- * earliest occurrence with no `bill_payment_log` row, meaning neither paid nor skipped. That
- * occurrence is overdue once its date is before today. It stays current, and overdue, until it is
- * paid or skipped."
+ * A bill's current occurrence is its earliest occurrence with no `bill_payment_log` row, meaning
+ * neither paid nor skipped. That occurrence is overdue once its date is before today. It stays
+ * current, and overdue, until it is paid or skipped.
  *
  * `resolvedDates` is every occurrence date the caller already has a payment or skip row for
  * (`bill_payment_log`, the caller's concern, not this package's). The loop below terminates in at

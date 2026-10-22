@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { PROBLEM_CONTENT_TYPE, problemDetailsSchema } from './problem.js';
 
 /**
- * RFC 9457 problem details is the only error body the API returns (Technical Architecture).
- * Nothing in the service or its tests imports this schema directly — each caller builds its own
- * problem body shape — so without a test here the module never loads at all.
+ * RFC 9457 problem details is the only error body the API returns. Nothing in the service or its
+ * tests imports this schema directly — each caller builds its own problem body shape — so without a
+ * test here the module never loads at all.
  */
 describe('problemDetailsSchema', () => {
   it('accepts a full problem body with an in-range HTTP status', () => {

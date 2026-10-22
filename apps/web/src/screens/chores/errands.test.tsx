@@ -39,8 +39,8 @@ import { ErrandsListScreen } from './ErrandsListScreen.tsx';
 configure({ asyncUtilTimeout: 5000 });
 
 /*
- * Errands (Design › Screens › 18). The clock is pinned to Seed Data's "today" (a Sunday, noon in
- * New York), so the due dates and completion stamps in the fixtures read as they are written.
+ * Errands. The clock is pinned to the seed data's "today" (a Sunday, noon in New York), so the due
+ * dates and completion stamps in the fixtures read as they are written.
  */
 
 function mount(
@@ -90,7 +90,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Errands list (Design › Screens › 18)', () => {
+describe('Errands list', () => {
   it('open errands come first, in order, with due dates and assignees', async () => {
     mount();
     await screen.findByRole('button', { name: /^Return Amazon package/ });
@@ -211,7 +211,7 @@ describe('Errands list (Design › Screens › 18)', () => {
   });
 });
 
-describe('Errand quick-add and edit sheet (Design › Screens › 18)', () => {
+describe('Errand quick-add and edit sheet', () => {
   it('name is required', async () => {
     mount();
     const user = userEvent.setup();
@@ -308,7 +308,7 @@ describe('Errand quick-add and edit sheet (Design › Screens › 18)', () => {
   });
 });
 
-describe('Errands offline (Design › Offline rules)', () => {
+describe('Errands offline', () => {
   it('with the household cached, marking done is queued; Add is disabled with the reason', async () => {
     mount();
     await screen.findByRole('button', { name: /^Return Amazon package/ });
@@ -327,7 +327,7 @@ describe('Errands offline (Design › Offline rules)', () => {
   });
 });
 
-describe('Errand copy (Handoff non-negotiable 13)', () => {
+describe('Errand copy', () => {
   it('no gamification words in any errand string the screen renders or exports', async () => {
     mount();
     await screen.findByRole('button', { name: /^Return Amazon package/ });

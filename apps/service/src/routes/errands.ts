@@ -14,7 +14,7 @@ import {
 } from '../chores/errands.js';
 import { parse, type RouteContext } from '../http/context.js';
 
-/** Errands (Technical Architecture, "API surface" › "Errands"). */
+/** Errands. */
 export const errandRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.get('/api/households/:id/errands', async (request) => {
     const user = await ctx.authenticate(request);

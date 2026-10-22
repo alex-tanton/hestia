@@ -8,7 +8,7 @@ import { requireAdmin } from './households.js';
 /** Crockford Base32: no I, L, O, or U, so a typed code is hard to misread. */
 export const CROCKFORD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
-/** The link token: 32 random bytes, base64url (Technical Architecture, "Membership lifecycle"). */
+/** The link token: 32 random bytes, base64url. */
 export function generateInviteToken(): string {
   return randomBytes(32).toString('base64url');
 }

@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import * as jobsBarrel from './index.js';
 
 /**
- * The `jobs/` barrel (Technical Architecture, "Scheduled jobs"): `main.ts` is the only importer,
- * and `main.ts` itself is excluded from coverage (never run by a test), so nothing else exercises
- * these re-export statements. This asserts the barrel actually forwards the real implementations
- * — not that the re-export syntax merely compiles — so a typo'd specifier or a wrong source path
- * would fail here instead of only surfacing as "main.ts can't find createScheduler" at runtime.
+ * The `jobs/` barrel: `main.ts` is the only importer, and `main.ts` itself is excluded from
+ * coverage (never run by a test), so nothing else exercises these re-export statements. This
+ * asserts the barrel actually forwards the real implementations — not that the re-export syntax
+ * merely compiles — so a typo'd specifier or a wrong source path would fail here instead of only
+ * surfacing as "main.ts can't find createScheduler" at runtime.
  */
 describe('the jobs barrel', () => {
   it('re-exports the real job runners and scheduler, not placeholders', () => {

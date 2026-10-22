@@ -12,7 +12,7 @@ import {
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
 
-/** Design › Screens › 1, "States". */
+/** The message shown for each failed redemption status. */
 export const INVITE_PROBLEMS: Readonly<Record<number, string>> = {
   404: INVITE_CODE_MISMATCH_MESSAGE,
   410: 'This invite has expired. Ask for a new link or code.',
@@ -26,9 +26,8 @@ export interface JoinHouseholdStepProps {
 }
 
 /**
- * Joining by link or by the 8-character code (Requirements, "Joining a household"). The code
- * field accepts what people actually type: lowercase, spaces, hyphens, and the letters Crockford
- * Base32 reads as digits.
+ * Joining by link or by the 8-character code. The code field accepts what people actually type:
+ * lowercase, spaces, hyphens, and the letters Crockford Base32 reads as digits.
  */
 export function JoinHouseholdStep({ autoToken, onJoined }: JoinHouseholdStepProps): ReactElement {
   const isOnline = useOnlineStatus();
@@ -42,8 +41,8 @@ export function JoinHouseholdStep({ autoToken, onJoined }: JoinHouseholdStepProp
   const join = joinHousehold.mutateAsync;
 
   // A failed redemption swaps the status message back to the code form. Focus follows into what
-  // replaced it rather than falling back to the document (Design › Accessibility › Focus
-  // management); an ordinary visit starts on the form already and is left alone.
+  // replaced it rather than falling back to the document; an ordinary visit starts on the form
+  // already and is left alone.
   useEffect(() => {
     if (wasRedeeming.current === isRedeemingLink) return;
     wasRedeeming.current = isRedeemingLink;

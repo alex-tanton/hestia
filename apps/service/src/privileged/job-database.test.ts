@@ -3,10 +3,10 @@ import { emptyDb } from '../test/fake-app.js';
 import { createJobDatabase } from './job-database.js';
 
 /**
- * The service-role capability jobs receive (Technical Architecture, "The RLS rule": scheduled
- * jobs are a sanctioned service-role use). Only `main.ts` and the CLI build one, and `main.ts` is
- * excluded from coverage, so nothing else ever calls `createJobDatabase` — this exercises it
- * directly rather than through the excluded entrypoint.
+ * The service-role capability jobs receive (scheduled jobs are a sanctioned service-role use). Only
+ * `main.ts` and the CLI build one, and `main.ts` is excluded from coverage, so nothing else ever
+ * calls `createJobDatabase` — this exercises it directly rather than through the excluded
+ * entrypoint.
  */
 describe('createJobDatabase', () => {
   it('exposes the pool unchanged, and runs asServiceRole through a transaction', async () => {

@@ -21,8 +21,8 @@ export interface MatchToSheetProps {
 }
 
 const DEAL_SEARCH_DEFAULTS: Omit<DealSearchParams, 'q'> = {
-  // Only a favorite-merchant deal counts toward a recipe's "on sale" bucket (Requirements ›
-  // "Deal-matched suggestions"), so this is the same scope the readiness matcher itself honors.
+  // Only a favorite-merchant deal counts toward a recipe's "on sale" bucket, so this is the same
+  // scope the readiness matcher itself honors.
   scope: 'favorites',
   stores: [],
   category: undefined,
@@ -33,14 +33,14 @@ const DEAL_SEARCH_DEFAULTS: Omit<DealSearchParams, 'q'> = {
 };
 
 /**
- * Design › Screens › 12: "'Match to…' picks a pantry item or current deal and stores a
- * force-match override." There is no endpoint that lists every current deal (Technical
- * Architecture only offers a keyword search), so the deal half of this picker searches the
- * household's favorite-merchant deals by keyword — the same search "Deal search" itself uses —
- * rather than inventing a new listing endpoint. It starts from the ingredient's own name, since
+ * "Match to…" picks a pantry item or current deal and stores a force-match override. There is no
+ * endpoint that lists every current deal (the API only offers a keyword search), so the deal half
+ * of this picker searches the household's favorite-merchant deals by keyword — the same search
+ * deal search itself uses — rather than inventing a new listing endpoint. It starts from the
+ * ingredient's own name, since
  * that is usually what the shopper typed to name the ingredient in the first place, but the field
  * is editable: the ingredient's name is only ever a starting guess, and the deal a member actually
- * wants may share none of its tokens (Requirements › "Matching mechanics" needs 0.85 token
+ * wants may share none of its tokens (matching needs 0.85 token
  * similarity, which a real product name often misses entirely).
  */
 export function MatchToSheet({

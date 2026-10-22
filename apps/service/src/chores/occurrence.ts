@@ -12,10 +12,10 @@ import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 
 /**
- * Household-timezone "today" (Handoff non-negotiable 8; PRD, "Timezone": chore dates are always
- * evaluated in the household's own timezone, never the server's or the browser's). Resolved from
- * Postgres's own clock, the same way `services/meal-plan.ts`'s `currentWeekSunday` resolves the
- * current week's Sunday, so every date in a request comes from one clock.
+ * Household-timezone "today" (chore dates are always evaluated in the household's own timezone,
+ * never the server's or the browser's). Resolved from Postgres's own clock, the same way
+ * `services/meal-plan.ts`'s `currentWeekSunday` resolves the current week's Sunday, so every date
+ * in a request comes from one clock.
  */
 export async function householdToday(
   db: Kysely<Database>,
@@ -38,12 +38,12 @@ export function isValidOccurrence(recurrence: Recurrence, date: CalendarDate): b
 }
 
 /**
- * The next `count` occurrence dates starting at `from` (Design, "17. Chores" › "Chore detail":
- * "the next three dates"). The caller always passes the chore's own `dueDate` here, never "today"
- * directly: an overdue chore's `dueDate` is itself in the past, and starting the preview from
- * "today" instead would silently skip straight past the very occurrence that is overdue. Since
- * `dueDate` is already guaranteed to land exactly on one of `recurrence`'s own occurrences,
- * `occurrenceIndexAtOrAfter` resolves to that occurrence's own index rather than the next one.
+ * The next `count` occurrence dates starting at `from` (the chore detail shows the next three
+ * dates). The caller always passes the chore's own `dueDate` here, never "today" directly: an
+ * overdue chore's `dueDate` is itself in the past, and starting the preview from "today" instead
+ * would silently skip straight past the very occurrence that is overdue. Since `dueDate` is already
+ * guaranteed to land exactly on one of `recurrence`'s own occurrences, `occurrenceIndexAtOrAfter`
+ * resolves to that occurrence's own index rather than the next one.
  */
 export function nextOccurrenceDates(
   recurrence: Recurrence,
@@ -63,11 +63,10 @@ export interface DerivedChoreState {
 
 /**
  * The fields a chore's list and detail views need beyond its stored columns, all derived from the
- * recurrence and the completions on hand (PRD, "Recurrence is anchored and derived on read";
- * "Rotation"). `occurrenceToComplete` never returns a date in the past when the current occurrence
- * is already completed (the next occurrence of a positive-interval recurrence is always later
- * than "today" in that case), so comparing it to `today` is enough to know overdue-ness without a
- * second call to `currentChoreOccurrence`.
+ * recurrence and the completions on hand. `occurrenceToComplete` never returns a date in the past
+ * when the current occurrence is already completed (the next occurrence of a positive-interval
+ * recurrence is always later than "today" in that case), so comparing it to `today` is enough to
+ * know overdue-ness without a second call to `currentChoreOccurrence`.
  */
 export function deriveChoreState(
   recurrence: Recurrence,

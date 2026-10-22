@@ -23,9 +23,8 @@ import { claimOnDemandRefresh } from '../services/deals/storage.js';
 import { getHousehold } from '../services/households.js';
 
 /**
- * Deals, flyers, merchants, and favorite stores (Technical Architecture, "API surface").
- * Handlers stay thin: validate with a shared schema, then one service function on the caller's
- * `withUserDb` transaction (Engineering Practices, "Service patterns").
+ * Deals, flyers, merchants, and favorite stores. Handlers stay thin: validate with a shared schema,
+ * then one service function on the caller's `withUserDb` transaction.
  */
 export const dealRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   /** The household's postal code, read under RLS, so a non-member gets 404 and nothing else. */

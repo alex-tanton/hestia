@@ -4,11 +4,10 @@ import type { Database } from '../db.js';
 import { favoriteMerchantIds } from './deals/favorite-stores.js';
 
 /**
- * The shared candidate-building step behind readiness and "Add missing to list" (Requirements,
- * "Deal-matched suggestions", "Add missing to list"; Technical Architecture, "The Node service").
- * Both features match a household's recipe ingredients against the same two candidate pools — its
- * pantry and its favorite-merchant deals — so this is built once and handed to
- * `@hearth/matching`'s pure `matchIngredient`, rather than re-implemented per caller.
+ * The shared candidate-building step behind readiness and "Add missing to list". Both features
+ * match a household's recipe ingredients against the same two candidate pools — its pantry and its
+ * favorite-merchant deals — so this is built once and handed to `@hearth/matching`'s pure
+ * `matchIngredient`, rather than re-implemented per caller.
  */
 
 type DealRow = Selectable<Database['deal']>;
@@ -20,9 +19,9 @@ export interface HouseholdMatchContext {
    * tiebreak). `matchIngredient` keeps the *first* matching deal candidate it sees
    * (`dealMatch ??= ...`), so pre-sorting the deals by ascending price makes "first match" and
    * "lowest-price match" the same thing. That is what encodes "When several favorite-merchant
-   * deals match, the one with the lowest unit price is used" (Requirements, "Add missing to
-   * list") without duplicating any matching logic here or in `@hearth/matching` — a lower-price
-   * deal is simply seen, and therefore kept, before a higher-priced one.
+   * deals match, the one with the lowest unit price is used" without duplicating any matching logic
+   * here or in `@hearth/matching` — a lower-price deal is simply seen, and therefore kept, before a
+   * higher-priced one.
    */
   candidates: MatchCandidate[];
   dealsById: Map<string, DealRow>;
@@ -40,8 +39,8 @@ export async function buildMatchCandidates(
   db: Kysely<Database>,
   householdId: string,
 ): Promise<HouseholdMatchContext> {
-  // "Today" is the household's own calendar date (Requirements, "Timezone"), the same
-  // `at time zone` idiom `repricing.ts` uses for "does a deal's valid_to still cover today".
+  // "Today" is the household's own calendar date, the same `at time zone` idiom `repricing.ts` uses
+  // for "does a deal's valid_to still cover today".
   const { rows } = await sql<{ postal_code: string; today: string }>`
     select postal_code, (pg_catalog.now() at time zone timezone)::date::text as today
     from public.household

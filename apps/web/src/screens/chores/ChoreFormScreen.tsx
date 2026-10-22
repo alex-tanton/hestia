@@ -46,7 +46,7 @@ const ASSIGNMENT_OPTIONS: readonly { value: AssignmentType; label: string }[] = 
 /**
  * Radix options need a non-empty value, so "Unassigned" travels as this sentinel and is mapped
  * back to `null` when the form is saved. Without an option for it, a single assignee could be
- * changed but never cleared (Design › "17. Chores": a single member "can be left unassigned").
+ * changed but never cleared (a single member can be left unassigned).
  */
 const UNASSIGNED_VALUE = 'unassigned';
 
@@ -148,14 +148,14 @@ interface ChoreFormProps {
 }
 
 /**
- * Design › "17. Chores" › Chore sheet, a pushed screen (not an overlay): name, recurrence editor
+ * The chore sheet, a pushed screen (not an overlay): name, recurrence editor
  * with a live preview, and assignment as a rotation or a single member. Delete lives in the
  * overflow menu here, with confirmation — only while editing; a chore that was never saved has
  * nothing to delete.
  *
  * Saving a rotation sends its order and nothing else. The service keeps whose turn it is when that
- * member is still in the order and starts the turn at the top only when they were removed (PRD ›
- * "Rotation"), so reordering or adding a member never reassigns the turn from here.
+ * member is still in the order and starts the turn at the top only when they were removed, so
+ * reordering or adding a member never reassigns the turn from here.
  */
 function ChoreForm({
   householdId,

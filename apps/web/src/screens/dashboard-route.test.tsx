@@ -21,7 +21,7 @@ const EMPTY_WEEK: StubHandler = ({ query }) => ({
 const EMPTY_CHORES: StubHandler = () => ({ status: 200, body: [] });
 const EMPTY_BILLS: StubHandler = () => ({ status: 200, body: [] });
 
-/** PRD › This Week: the Shopping card shows the active list's status and items outstanding. */
+/** The Shopping card shows the active list's status and items outstanding. */
 function mount(
   lists: StubHandler,
   mealPlan: StubHandler = EMPTY_WEEK,

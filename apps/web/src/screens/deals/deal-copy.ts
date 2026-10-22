@@ -7,7 +7,7 @@ import { formatUnitPrice, speakUnitPrice } from '../../lib/money.ts';
  * spoken sentence and the visible fragments can never drift apart.
  */
 
-/** Requirements: a conditional price names which one it is, never just "conditional". */
+/** A conditional price names which one it is, never just "conditional". */
 export const CONDITIONAL_LABEL: Readonly<Record<ConditionalReason, string>> = {
   coupon: 'Coupon',
   loyalty_card: 'Card',
@@ -27,8 +27,8 @@ export function validityLabel(deal: Pick<Deal, 'validFrom' | 'validTo'>): string
 }
 
 /**
- * Design › Accessibility: "Deal cards announce price and discount as a sentence, not as
- * disconnected fragments." Flipp's own copy ("2/$5.00") is kept alongside the computed unit
+ * Deal cards announce price and discount as a sentence, not as disconnected fragments. Flipp's
+ * own copy ("2/$5.00") is kept alongside the computed unit
  * price, because the shelf tag reads the first way and the comparison reads the second.
  */
 export function dealSentence(deal: Deal): string {

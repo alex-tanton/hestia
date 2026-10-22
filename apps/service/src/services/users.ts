@@ -43,8 +43,8 @@ export async function getProfile(
       'h.name',
       'm.role',
       'm.joined_at',
-      // The switcher shows a member count per household (Design › Screens › 3). Counting here
-      // avoids a request per household, and the member_read policy already scopes it.
+      // The switcher shows a member count per household. Counting here avoids a request per
+      // household, and the member_read policy already scopes it.
       eb
         .selectFrom('household_member as c')
         .whereRef('c.household_id', '=', 'm.household_id')

@@ -19,8 +19,8 @@ export interface ListPickerSheetProps {
 
 /**
  * The list picker "Add missing to list" opens from a recipe, a planned meal, or a whole planned
- * week (Design › Screens › 10, 12; Requirements › "Add missing to list") — one target list, so one
- * picker. Mirrors `AddToList`'s own sheet body, the pattern Design's week planner reuses.
+ * week — one target list, so one picker. Mirrors `AddToList`'s own sheet body, the pattern the
+ * week planner reuses.
  */
 export function ListPickerSheet({
   householdId,

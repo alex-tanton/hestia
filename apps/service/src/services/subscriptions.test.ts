@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { monthlyCents, needsUsageConfirmation } from './subscriptions.js';
 
 /*
- * The money-normalization table (PRD, "Subscriptions view") and the 60-day-unconfirmed boundary,
- * pure logic (Engineering Practices, "Testing"). Every division rounds half-up to the cent.
+ * The money-normalization table and the 60-day-unconfirmed boundary, pure logic. Every division
+ * rounds half-up to the cent.
  */
 
 describe('monthlyCents', () => {
@@ -62,7 +62,7 @@ describe('needsUsageConfirmation', () => {
     expect(needsUsageConfirmation('2026-03-02', '2026-01-01')).toBe(true); // 60 days
   });
 
-  it('is true well past 60 days (Seed Data: Sam’s Adobe subscription, confirmed 70 days ago)', () => {
+  it('is true well past 60 days (Sam’s Adobe subscription in the seed data, confirmed 70 days ago)', () => {
     expect(needsUsageConfirmation('2026-09-30', '2026-07-22')).toBe(true); // 70 days
   });
 

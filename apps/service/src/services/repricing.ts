@@ -4,9 +4,8 @@ import type { Database } from '../db.js';
 import { toCents } from './money.js';
 
 /**
- * Expired deal repricing (Requirements, "Expired deal repricing"; Technical Architecture,
- * "Repricing"). An item added from a sale that ended before the shopping happens is corrected,
- * never left at the stale sale price (Handoff non-negotiable 22).
+ * Expired deal repricing. An item added from a sale that ended before the shopping happens is
+ * corrected, never left at the stale sale price.
  *
  * It applies to every item whose `deal_valid_to` has passed — in the household's timezone, which
  * owns the household's dates — and whose status is not bought. Each is re-matched against

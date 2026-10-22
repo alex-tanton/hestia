@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRealtime } from '../api/api-context.tsx';
 import { queryKeys } from '../api/keys.ts';
 
-/** How long a row another member changed stays marked, per Design › Screens › 8. */
+/** How long a row another member changed stays marked. */
 export const REALTIME_HIGHLIGHT_MS = 2000;
 
 export interface ListRealtime {
@@ -16,7 +16,7 @@ export interface ListRealtime {
 const ANNOUNCEMENT = 'This list was updated by another member.';
 
 /**
- * Keeps an open list live (Requirements › Real-time sharing). Realtime never becomes a second
+ * Keeps an open list live. Realtime never becomes a second
  * source of truth: a message only invalidates the queries, so the list the screen renders is
  * always the one TanStack Query holds. The subscription is torn down when the screen unmounts and
  * when the household changes, because both change which list, if any, is open.
@@ -56,7 +56,7 @@ export function useListRealtime(
         timers.add(timer);
       },
       // The list row's own update is the signal for a delete, which a filtered subscription
-      // cannot deliver (Technical Architecture, "Realtime subscriptions").
+      // cannot deliver.
       onListChange: refetch,
     });
 

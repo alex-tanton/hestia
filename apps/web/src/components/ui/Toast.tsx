@@ -30,7 +30,7 @@ interface ToastEntry extends ToastInput {
 }
 
 /**
- * Design › Primitives › Toast: success and info dismiss after 4s, a toast with an action (Undo)
+ * Success and info dismiss after 4s, a toast with an action (Undo)
  * stays 5s, and errors stay until dismissed.
  */
 export function toastDuration(toast: ToastInput): number {

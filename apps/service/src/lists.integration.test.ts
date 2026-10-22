@@ -419,7 +419,7 @@ describe('list items', () => {
   it('groups by store, sorts Anywhere last, and subtotals each group', async () => {
     const home = await household();
     const list = await createList(home);
-    // Seed Data's "This Week" Harris Teeter group: 2 lb × $2.49 + $3.99, plus one unpriced.
+    // The seed data's "This Week" Harris Teeter group: 2 lb × $2.49 + $3.99, plus one unpriced.
     await addItem(home, list.id, {
       source: 'manual',
       itemName: 'Chicken breast',
@@ -472,7 +472,7 @@ describe('list items', () => {
     const list = await createList(home);
     const store = { merchantId: '2431', merchantName: 'Harris Teeter' };
     for (const body of [
-      // $3.33/lb × 1.5 lb is 499.5 cents, which rounds up to 500 (Requirements, "Subtotals").
+      // $3.33/lb × 1.5 lb is 499.5 cents, which rounds up to 500.
       { itemName: 'Beef', priceCents: 333, priceUnit: 'lb', quantity: 1.5 },
       { itemName: 'Sliver', priceCents: 1, priceUnit: 'lb', quantity: 0.5 },
       // `each` with no quantity counts as one.
@@ -593,8 +593,7 @@ describe('offline writes replay safely', () => {
     const home = await household();
     const list = await createList(home);
     expectStatus(await as(app, home.user, 'POST', `/api/lists/${list.id}/archive`), 200);
-    // Archiving is a state the device could not have known about (Requirements, "Shopping list
-    // lifecycle"): the queued write still lands.
+    // Archiving is a state the device could not have known about: the queued write still lands.
     const item = itemNamed(
       await addItem(home, list.id, { source: 'manual', itemName: 'Late milk' }),
       'Late milk',
@@ -659,7 +658,7 @@ describe('offline writes replay safely', () => {
     await addItem(home, list.id, { source: 'manual', id, itemName: 'Milk' });
     const url = `/api/lists/${list.id}/items/${id}`;
 
-    // The quirk the Requirements document accepts: a late offline "in cart" moves a bought item
+    // An accepted quirk: a late offline "in cart" moves a bought item
     // back to "in cart", because the last write to arrive wins.
     expectStatus(await as(app, home.user, 'PATCH', url, { status: 'bought' }), 200);
     const late = await as(app, home.user, 'PATCH', url, { status: 'in_cart' });
@@ -811,7 +810,7 @@ describe('expired deal repricing', () => {
 
   it('decides that a deal has expired in the household’s own timezone', async () => {
     // Two households 25 hours apart, so their local dates always differ. One `deal_valid_to` is
-    // therefore today in the west and yesterday in the east (Handoff non-negotiable 8).
+    // therefore today in the west and yesterday in the east.
     const west = await household('West Rivera', POSTAL_CODE, 'Pacific/Niue');
     const east = await household('East Rivera', POSTAL_CODE, 'Pacific/Kiritimati');
     const validTo = await todayIn('Pacific/Niue');

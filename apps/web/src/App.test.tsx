@@ -172,7 +172,7 @@ describe('switching household', () => {
       });
     });
 
-    // Design › Navigation rules: the switch returns every tab to its root.
+    // The switch returns every tab to its root.
     expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
     expect(screen.queryByText('Sam Chen')).not.toBeInTheDocument();
   });

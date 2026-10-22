@@ -8,10 +8,9 @@ import { parse, type RouteContext } from '../http/context.js';
 import { createMatchOverride, deleteMatchOverride } from '../services/match-overrides.js';
 
 /**
- * Match overrides (Technical Architecture, "API surface"). Handlers stay thin: validate with a
- * shared schema, call a service function with the caller's transaction, send the mapped response.
- * The overrides that apply to a recipe come back on `GET /recipes/:id` (a later unit); this file
- * only owns creating and removing them.
+ * Match overrides. Handlers stay thin: validate with a shared schema, call a service function with
+ * the caller's transaction, send the mapped response. The overrides that apply to a recipe come
+ * back on `GET /recipes/:id` (a later unit); this file only owns creating and removing them.
  */
 export const matchOverrideRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => {
   app.post('/api/households/:id/match-overrides', async (request, reply) => {

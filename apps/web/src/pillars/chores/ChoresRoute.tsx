@@ -22,10 +22,10 @@ function ChoreEditRoute({ householdId }: { householdId: string }): ReactElement 
 }
 
 /**
- * The Chores tab (Design › Screens › 17, 18). The sub-tab roots — Chores and Errands — sit inside
- * `PillarScreen`, which draws the segmented control; a chore's own create/edit and detail screens
- * render without it, since the top bar has already swapped the switcher for a back control (the
- * same split `MealsRoute` uses for a recipe's own detail).
+ * The Chores tab. The sub-tab roots — Chores and Errands — sit inside `PillarScreen`, which draws
+ * the segmented control; a chore's own create/edit and detail screens render without it, since the
+ * top bar has already swapped the switcher for a back control (the same split `MealsRoute` uses for
+ * a recipe's own detail).
  */
 export function Component(): ReactElement {
   const profile = useProfile();

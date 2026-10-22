@@ -6,7 +6,7 @@ import { OfflineBanner } from '../../components/shell/OfflineBanner.tsx';
 import { ToastProvider } from '../../components/ui/Toast.tsx';
 
 export interface OnboardingLayoutProps {
-  /** The onboarding headline (Branding › Typography: `display`). */
+  /** The onboarding headline (`display` type). */
   title: string;
   description?: string | undefined;
   /** A back control, where the step has somewhere to go back to. */
@@ -15,9 +15,9 @@ export interface OnboardingLayoutProps {
 }
 
 /**
- * The frame every onboarding and account-recovery screen sits in (Design › Screens › 1). It is
- * outside the app shell: there is no household yet, so there is no switcher, no tab bar, and no
- * section but the neutral Dashboard slate.
+ * The frame every onboarding and account-recovery screen sits in. It is outside the app shell:
+ * there is no household yet, so there is no switcher, no tab bar, and no section but the neutral
+ * Dashboard slate.
  */
 export function OnboardingLayout({
   title,

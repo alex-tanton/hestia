@@ -32,7 +32,7 @@ export interface ErrandsListScreenProps {
   householdId: string;
 }
 
-/** Design › "18. Errands": a flat list, open first, done collapsed below with who and when. */
+/** A flat list, open first, done collapsed below with who and when. */
 export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
@@ -52,7 +52,7 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
   // Marking done is queueable and needs the household's cached timezone offline; reopening is not
-  // queueable, so it is online-only (Requirements, "Offline behavior"; Design, "Offline rules").
+  // queueable, so it is online-only.
   const doneReason = queueableWriteReason(
     isOnline,
     household.data !== undefined,

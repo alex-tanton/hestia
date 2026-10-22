@@ -2,9 +2,9 @@ import type { ConditionalReason, PriceUnit } from './price/price-copy.js';
 import type { SkipReason } from './price/parsers.js';
 
 /**
- * The deal-source contract (Technical Architecture, "Flipp wrapper"). Everything that knows
- * Flipp's response shape lives behind this, so an upstream schema change is a one-file fix and
- * the rest of the service — and every test double — sees only these types.
+ * The deal-source contract. Everything that knows Flipp's response shape lives behind this, so an
+ * upstream schema change is a one-file fix and the rest of the service — and every test double —
+ * sees only these types.
  */
 export interface DealSource {
   searchItems(postalCode: string, query: string): Promise<NormalizedDeal[]>;
@@ -18,7 +18,7 @@ export interface NormalizedDeal {
   name: string;
   merchantId: string;
   merchantName: string;
-  /** Integer cents, rounded half-up (Engineering Practices: money is integer cents). */
+  /** Integer cents, rounded half-up. */
   unitPrice: number;
   priceUnit: PriceUnit;
   /** Integer cents, or null when no original is known or the one given is implausible. */
@@ -55,8 +55,7 @@ export interface Merchant {
 
 /**
  * Per-merchant skip counts since the last reset, for System health's "since last refresh"
- * figures (Technical Architecture, "Price normalization"). The shape `SkipRateRegistry.replace`
- * takes, plus the reasons, which only the logs use.
+ * figures. The shape `SkipRateRegistry.replace` takes, plus the reasons, which only the logs use.
  */
 export interface MerchantSkipCount {
   merchantId: string;

@@ -4,10 +4,8 @@ import { expectAccessible } from '../support/axe.ts';
 import { SEED } from '../support/env.ts';
 
 /**
- * Journey 3 (Engineering Practices › E2E journeys): two browser contexts on one list, assert
- * realtime propagation between members within a second (Requirements › "Real-time sharing";
- * Handoff, Phase 2 "Done when": "Two browser contexts on one list see each other's changes within
- * a second"). Neither context ever reloads or clicks a retry — `useListRealtime` invalidates the
+ * Journey 3: two browser contexts on one list, assert realtime propagation between members within
+ * a second. Neither context ever reloads or clicks a retry — `useListRealtime` invalidates the
  * list query on a Postgres change, and TanStack Query's own refetch is what the other member sees.
  *
  * Alex and Casey are both Oak Street members by this point in the suite (Casey joined by code in

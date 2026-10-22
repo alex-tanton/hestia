@@ -24,13 +24,13 @@ export const IN_CART_LABEL = 'In cart';
 
 export interface ShoppingListRowProps {
   item: ListItem;
-  /** Display names by user id, so a shared list stays legible (Requirements). */
+  /** Display names by user id, so a shared list stays legible. */
   memberNames: ReadonlyMap<string, string>;
   /** The Bought group is not grouped by store, so its rows name their own. */
   showStore?: boolean;
   /** A queued write is in flight for this row. */
   isPending?: boolean;
-  /** Another member just changed this row (Design › Screens › 8). */
+  /** Another member just changed this row. */
   isChanged?: boolean;
   /** An archived list is read-only apart from unarchiving and deleting it. */
   isReadOnly?: boolean;
@@ -47,9 +47,8 @@ function quantityText(item: ListItem): string | undefined {
 }
 
 /**
- * Design › Composite components › `ShoppingListRow`. The checkbox is a real input with the row as
- * its label, so it is announced as a checkbox rather than as a clickable div, and the whole row
- * is its target (Branding › Tap targets).
+ * The checkbox is a real input with the row as its label, so it is announced as a checkbox
+ * rather than as a clickable div, and the whole row is its target.
  */
 export function ShoppingListRow({
   item,

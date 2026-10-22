@@ -3,7 +3,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 interface ErrorBoundaryProps {
   /** Rendered in place of the children after a render error; `reset` retries them. */
   fallback: (reset: () => void) => ReactNode;
-  /** Hook for client error reporting (Engineering Practices › Client error reporting). */
+  /** Hook for client error reporting. */
   onError?: (error: unknown, info: ErrorInfo) => void;
   children: ReactNode;
 }
@@ -15,7 +15,7 @@ interface ErrorBoundaryState {
 /**
  * The one class component in the app: React can only catch render errors in a class
  * (`getDerivedStateFromError` has no hook equivalent). It scopes a failure to its region, so
- * one broken dashboard card never blanks the others (Design › Error rules).
+ * one broken dashboard card never blanks the others.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   override state: ErrorBoundaryState = { hasError: false };

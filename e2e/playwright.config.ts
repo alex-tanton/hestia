@@ -4,9 +4,9 @@ import { BASE_URL } from './support/env.ts';
 const isCi = process.env['CI'] !== undefined;
 
 /**
- * Journeys run against the full Compose stack through Caddy, never against Flipp itself
- * (Engineering Practices › Testing). global-setup brings that stack up from an empty database and
- * global-teardown takes it down, so `pnpm test:e2e` is the whole command.
+ * Journeys run against the full Compose stack through Caddy, never against Flipp itself.
+ * global-setup brings that stack up from an empty database and global-teardown takes it down, so
+ * `pnpm test:e2e` is the whole command.
  *
  * One worker, in file order: the journeys share one database and each leaves the seeded
  * households in a state the next accounts for. For the same reason there are no retries — a retry

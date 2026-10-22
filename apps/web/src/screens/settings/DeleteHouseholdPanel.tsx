@@ -31,9 +31,8 @@ export interface DeleteHouseholdPanelProps {
 }
 
 /**
- * The last member's departure deletes the household and everything in it (Requirements,
- * "Membership lifecycle"). Deletion is irreversible, so it names the counts of what is lost and
- * takes the typed household name — never a single tap (non-negotiable 21).
+ * The last member's departure deletes the household and everything in it. Deletion is irreversible,
+ * so it names the counts of what is lost and takes the typed household name — never a single tap.
  */
 export function DeleteHouseholdPanel({
   preview,

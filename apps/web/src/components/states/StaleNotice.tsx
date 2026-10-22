@@ -4,9 +4,8 @@ import { formatDateTime } from '../../lib/format.ts';
 import { Button } from '../ui/Button.tsx';
 
 /**
- * Stale-over-empty (Handoff non-negotiable 18, Design › Error rules): where a cache exists and a
- * fetch fails, the cached content stays on screen with an "as of" label rather than being
- * replaced by nothing.
+ * Stale-over-empty: where a cache exists and a fetch fails, the cached content stays on screen with
+ * an "as of" label rather than being replaced by nothing.
  */
 export function StaleNotice({
   updatedAt,

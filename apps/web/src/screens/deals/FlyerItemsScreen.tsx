@@ -18,12 +18,11 @@ const SORT_OPTIONS = [
 ];
 
 /**
- * Design › Screens › 6: one flyer's items, in the same `DealCard` list with category filtering.
+ * One flyer's items, in the same `DealCard` list with category filtering.
  * It is a pushed screen, so the top bar carries a back control to the flyer list it came from.
  *
- * A flyer-items request never fetches from Flipp inline (Technical Architecture, "Dormant postal
- * codes"), so an empty answer with `refreshing` is the no-cache state, and the results appear when
- * the queued background refresh finishes.
+ * A flyer-items request never fetches from Flipp inline, so an empty answer with `refreshing` is
+ * the no-cache state, and the results appear when the queued background refresh finishes.
  */
 export function FlyerItemsScreen(): ReactElement {
   const navigate = useNavigate();

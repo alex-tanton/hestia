@@ -8,7 +8,7 @@ import type { SkipReason } from './parsers.js';
 /**
  * The chain over every captured search item, merchant by merchant. The Phase 0 spike measured
  * these skip rates by hand; holding the parsers to them turns a parser regression into a failing
- * test rather than a quiet drop in yield (Technical Architecture, "Price normalization").
+ * test rather than a quiet drop in yield.
  */
 
 interface RawItem {
@@ -95,7 +95,7 @@ describe('parser yield over the 27514 captures', () => {
   });
 
   it('leaves no priced item unparseable', () => {
-    // Every skip has to name a rule from the Requirements table; "unparseable" means the chain
+    // Every skip has to name a pricing rule; "unparseable" means the chain
     // met a price shape nobody has written a parser for yet.
     const stragglers = [...tallies.values()].flatMap((tally) => tally.unparseable);
     expect(stragglers).toEqual([]);

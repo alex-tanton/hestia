@@ -13,8 +13,8 @@ import { todayInTimezone } from '../household-date.ts';
 import { registerListWriteDefaults, LIST_WRITE_PREFIX, retryQueuedWrite } from './write-queue.ts';
 
 /*
- * Queued chore completion and errand done (Engineering Practices › The write queue; Requirements ›
- * "Offline behavior"). Like list writes, these are TanStack Query's paused mutations: a default
+ * Queued chore completion and errand done. Like list writes, these are TanStack Query's paused
+ * mutations: a default
  * `mutationFn` per prefix, so a paused write resumes after a reload, and a scope per chore or
  * errand, so writes to one run one at a time in the order they were made.
  *
@@ -29,7 +29,7 @@ export interface ChoreCompleteVariables {
   kind: 'complete';
   householdId: string;
   choreId: string;
-  /** Client-generated; a replay with the same id is a no-op (Handoff non-negotiable 9). */
+  /** Client-generated; a replay with the same id is a no-op. */
   completionId: string;
   /**
    * The occurrence closed, computed on the client in the household timezone. Sent only for a
@@ -208,8 +208,8 @@ function isErrandDoneVariables(value: unknown): value is ErrandDoneVariables {
 
 /**
  * Whether a queueable write can be made right now. Online, everything can. Offline, a queueable
- * write needs the household's cached data, because its timezone comes from there (Engineering
- * Practices; Design, "Offline rules"). Without it the control is disabled with "Needs a connection."
+ * write needs the household's cached data, because its timezone comes from there. Without it the
+ * control is disabled with "Needs a connection."
  */
 export function queueableWriteReason(
   isOnline: boolean,
@@ -222,8 +222,7 @@ export function queueableWriteReason(
 
 /**
  * The occurrence a completion made now closes, computed on the client: the household's "today"
- * (not the browser's, which may be in another zone), then the same rule the service applies
- * (PRD, "Recurrence is anchored and derived on read").
+ * (not the browser's, which may be in another zone), then the same rule the service applies.
  */
 export function offlineChoreOccurrence(
   chore: Chore,

@@ -28,8 +28,8 @@ const ScreenChromeContext = createContext<ChromeStore>({
 
 /**
  * A pushed detail screen names itself and where its back control returns to. The top bar then
- * shows that back control in place of the household switcher (Design › Layout shell › Chrome),
- * and a back control always returns to the screen that opened it, not the tab root.
+ * shows that back control in place of the household switcher, and a back control always
+ * returns to the screen that opened it, not the tab root.
  */
 export function useScreenChrome(chrome: ScreenChrome): void {
   const { setChrome } = useContext(ScreenChromeContext);

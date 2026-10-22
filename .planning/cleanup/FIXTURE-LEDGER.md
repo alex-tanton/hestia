@@ -250,3 +250,92 @@ PR A's squash commit `ac8ef34`) in `../hearth-fixtures`, and the nine fixture co
 `git diff {wb-after-a} HEAD -- apps` on the new branch (`pr-b-patch-id=`). Merging the working branch
 in was a no-op. The branch touches 41 files, all under `apps/service/src/` and `apps/web/src/`,
 besides the `.planning/` state that rides along (D-04). It is pushed at `pr-b-head-initial=`.
+
+## PR B proof and CI (05-05)
+
+Local gates in `../hearth-fixtures` at the pushed head (Node 24.21.0; logs `05-05-{frozen,lint,
+format-check,typecheck,test-workspaces,harness,build,commitlint}.log`, each ending `exit=0`).
+
+tests-final.matching=156
+tests-final.shared=172
+tests-final.recurrence=77
+tests-final.service-unit=757
+tests-final.web=728
+
+The same `pnpm -r test` in a throwaway worktree detached at `origin/main` (`ac8ef34`, log
+`05-05-base-test.log`) reports 156, 172, 77, 757 and 728, so every count is equal to `main`'s and to
+`tests-before.service-unit` and `tests-before.web`.
+
+### Final scan
+
+Phase 2 jscpd command, label `05-05` (`.planning/cleanup/jscpd/phase5-05-05/jscpd-report.json`):
+
+final-b-clones=66
+final-b-duplicated-lines=858
+final-b-percentage=1.11
+
+| Point | Clones | Duplicated lines | Percentage |
+| ----- | ------ | ---------------- | ---------- |
+| Phase 2 baseline (TRIAGE.md) | 96 | 1,438 | 1.87% |
+| `main` at `05-02-before` | 99 | 1,472 | 1.90% |
+| PR B head (`05-05`) | 66 | 858 | 1.11% |
+
+`jscpd-compare.mjs --max-clones 95` exits 0. The scan is identical to `05-04` (the cherry-pick and
+the PR A sync change no test code), 28 cross-file pairs, 17 of them with a test side, and no pair
+names two helper files or any helper file.
+
+### knip
+
+knip-new=files .planning/cleanup/tools/expand-compare.mjs; files .planning/cleanup/tools/jscpd-compare.mjs
+
+`knip` reports one `devDependencies` line (`tailwindcss` in `apps/web/package.json`) on both
+`origin/main` and the PR B head; the PR B head adds only the two `files` lines above (the proof tools
+under `.planning/`, which ride along) and the changed `total` line. Phase 6's CI-01 must account for
+them.
+
+### Pull request
+
+pr-b=27
+pr-b-url=https://github.com/alex-tanton/hearth/pull/27
+pr-b-title=test: share integration and web test fixtures
+pr-b-head=8e3239b0f8068540ee1fce85b03668eb034bee04
+
+PR B opened through REST from `test/shared-fixtures` into `main`. The head is the cherry-picked
+fixture work on the synced working branch plus a no-op-for-code merge of the working branch's newer
+`.planning/` state (head `13fcc01` before that merge). Its 66 changed files are under `.planning/`,
+`apps/service/src/` and `apps/web/src/` only, and GitHub reports it `clean` and not merged. The body
+is `05-05-pr-b.md` (gitignored).
+
+pr-b-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=39658694324
+
+The run is attempt 1 on a `pull_request` event (no rerun, no registry flake). Job ids: build
+119425701314, lint 119425701114, typecheck 119425701104, test-unit 119425701017, test-integration
+119425701010, test-e2e 119425700321.
+
+### Integration test count
+
+pr-b-integration-tests=1190
+main-integration-tests=1190
+
+The final `Tests  N passed` line of the `test-integration` job (the coverage run over the service
+suite, 76 files) is 1190 on PR B's head (job 119425701010, log `05-05-pr-test-integration.log`) and
+1190 on `main`'s last green run (run 39653516611 attempt 2 on `ac8ef34`, job 119414327218, log
+`05-05-main-test-integration.log`). The integration files on the shared hooks execute every test.
+
+## Merge (05-05)
+
+The owner squash-merged PR #27 on 2026-10-21 at 19:23:45Z with the title
+`test: share integration and web test fixtures`.
+
+pr-b-merged=a660d58101321dbfa0d98c2ceb93783e06ed161c
+
+### main's CI on the squash commit
+
+`CI` run 39661257811 on `a660d58` (event push, branch main), attempt 1, concluded `success` with no
+rerun. Job ids: build 119434530306, lint 119434530627, typecheck 119434530446, test-unit
+119434530598, test-integration 119434530316, test-e2e 119434530606.
+
+main-ci-after-b=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=39661257811
+
+Deploy run 39662881431 for `a660d58` was `pending` (waiting for the self-hosted `hearth` runner, as
+for any merge) when last read.

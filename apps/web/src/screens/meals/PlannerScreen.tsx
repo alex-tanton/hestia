@@ -40,9 +40,9 @@ function dayLabel(date: string): string {
 }
 
 /**
- * Design › Screens › 10: Sunday-to-Saturday, mobile day tabs, desktop full grid. Every week, day and
- * "today" on the planner is a household date (PRD, "Timezone"), so nothing is drawn until the
- * household's timezone is known.
+ * Sunday-to-Saturday, mobile day tabs, desktop full grid. Every week, day and
+ * "today" on the planner is a household date, so nothing is drawn until the household's timezone is
+ * known.
  */
 export function PlannerScreen({ householdId }: { householdId: string }): ReactElement {
   const household = useHousehold(householdId);
@@ -83,9 +83,9 @@ function PlannerWeek({
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
   // A past week hides its write controls entirely, the same as the archived-lists screen
-  // (Design › Screens › 10: "Past weeks remain reachable as read-only history"). Offline is a
-  // different state — its controls stay visible but disabled with a reason (Design › Offline
-  // rules: "A control is never hidden, and never fails silently").
+  // (past weeks remain reachable as read-only history). Offline is a different state — its
+  // controls stay visible but disabled with a reason (a control is never hidden, and never
+  // fails silently).
   const isPastWeek = week < currentWeek;
   const isReadOnly = isPastWeek;
 

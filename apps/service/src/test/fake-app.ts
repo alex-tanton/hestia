@@ -81,7 +81,7 @@ export function fakeDeps(overrides: Partial<AppDependencies> = {}): AppDependenc
     recordError: () => Promise.resolve(),
     newestBackupTime: () => Promise.resolve(null),
     merchantSkipRates: () => [],
-    // The recorded fixtures, never the network (Handoff non-negotiable 17).
+    // The recorded fixtures, never the network.
     deals: createDealsService({
       source: fixtureDealSource(),
       queueBackgroundRefresh: () => undefined,

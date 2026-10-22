@@ -12,9 +12,9 @@ export interface ReadinessBreakdownProps {
 }
 
 /**
- * Design › Composite components › `ReadinessBreakdown`: per-ingredient bucket, what it matched,
+ * `ReadinessBreakdown`: per-ingredient bucket, what it matched,
  * and the inline correction. The ring is decorative (`aria-hidden`); the sentence beside it is what
- * a screen reader hears (Accessibility › "Specific patterns").
+ * a screen reader hears.
  */
 export function ReadinessBreakdown({
   householdId,

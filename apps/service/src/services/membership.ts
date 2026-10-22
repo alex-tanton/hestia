@@ -3,8 +3,7 @@ import type { DeparturePreview, DepartResult } from '@hearth/shared';
 import type { Database } from '../db.js';
 
 /*
- * Reassign-and-depart and the admin transfer are the membership functions (Technical
- * Architecture, "Membership lifecycle functions"); each checks its caller itself. These wrappers
+ * Reassign-and-depart and the admin transfer are the membership functions; each checks its caller itself. These wrappers
  * only call them and map the result.
  */
 
