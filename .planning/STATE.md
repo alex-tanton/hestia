@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Completed 05-08-PLAN.md
-last_updated: "2026-10-21T20:34:56.686Z"
-last_activity: 2026-10-21
+stopped_at: Completed 05-09-PLAN.md
+last_updated: "2026-10-22T01:01:39.344Z"
+last_activity: 2026-10-22
 last_activity_desc: Phase 05 execution started
-state_head: b8a4111b77c7cb1a6f5585fb713a321216fe607a
+state_head: e035af3a0097604518fb04d41db16facf1fce945
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 39
+  completed_plans: 40
   percent: 67
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 8 of 13 complete (05-01 to 05-08); next 05-09 (PR C: apps/web comments), then 05-10 (non-TS files and titles)
+Plan: 9 of 13 complete (05-01 to 05-09); next 05-10 (non-TS files, index.css, root configs and the 45 test-title lines)
 Status: Ready to execute
-Last activity: 2026-10-21 — Plan 05-08 complete (docs checker and audit; PR D branch docs/sync-specs at 158fd52, not yet a pull request)
+Last activity: 2026-10-22 — Plan 05-09 complete (apps/web comments cleared in three proven batches; PR C branch refactor/drop-spec-citations at 343efc6, not yet a pull request)
 
 Progress: [███████░░░] 67%
 
@@ -87,6 +87,7 @@ Progress: [███████░░░] 67%
 | Phase 05 P06 | 30min | 3 tasks | 82 files |
 | Phase 05 P07 | about 35min | 3 tasks | 144 files |
 | Phase 05 P08 | about 20min | 3 tasks | 11 files |
+| Phase 05 P09 | 80min | 3 tasks | 211 files |
 
 ## Accumulated Context
 
@@ -162,13 +163,13 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-21T20:34:56.562Z
-Stopped at: Completed 05-08-PLAN.md (paused by the owner before 05-09)
+Last session: 2026-10-22T01:01:39.196Z
+Stopped at: Completed 05-09-PLAN.md
 Resume file: None
 
-### Resume point for Phase 5 (paused after 05-08, 2026-10-21)
+### Resume point for Phase 5 (after 05-09, 2026-10-22)
 
-Resume with `/gsd-execute-phase 5`. Plans 05-01 to 05-08 have SUMMARYs; 05-09 to 05-13 remain.
+Resume with `/gsd-execute-phase 5`. Plans 05-01 to 05-09 have SUMMARYs; 05-10 to 05-13 remain. Update on 05-09: `refactor/drop-spec-citations` is pushed at `343efc6` with `apps/web` done (web suite 728 before and after; 23 web title lines and the 2 `apps/web/src/index.css` rows are left for 05-10); the tips and table below are as of 05-08.
 
 Working branch (WB) for all `.planning/` state: `claude/eloquent-mayer-szjtjf` (the plans name `claude/vigilant-gates-a4ihid`, which never existed). Pushed, tip `5d7c32e`; always read the newest STATE from `origin` of this branch.
 
@@ -216,4 +217,3 @@ Comment-only proof tooling for PR C (`.planning/cleanup/tools/`):
 Open decisions already known for later plans: three root config lines (`commitlint.config.js` once, `eslint.config.js` twice) match the citation vocabulary and are outside every plan's scope so far, so decide in 05-10 whether to include them (D-09 names "the two root JS configs", so they likely belong there). The knip tool reports `.planning/cleanup/tools/expand-compare.mjs` and `jscpd-compare.mjs` as unused files; Phase 6's CI-01 must account for them.
 
 PR C wording the owner may want to look at when it opens: `services/bills.ts` `updateBillPayment` ("(autopay-logged ones included)") and `services/subscriptions.ts` `monthlyCents` (lists the conversion factors), both rewritten because the cited spec text could not be recovered.
-
