@@ -11,11 +11,16 @@ Baseline for duplication (Phase 2, `TRIAGE.md`): 96 clones, 1,438 duplicated lin
 | RED-01 | One composite setup action (`.github/actions/setup`) replaces the preamble repeated in six jobs; workflow name `CI` and the six job ids unchanged | PR A #26 (`ac8ef34`) | `expand-compare=OK` (expanded workflow deep-equals the original), `steps-compare=as-expected`, `deploy-yaml-equal=yes`, `pr-a-ci` (six success, run 39650921896), `main-ci-after-a` (one owner-approved rerun, attempt 2 green) | `CI-SETUP-LEDGER.md` |
 | RED-02 | The duplicate seed typecheck is removed (the service `typecheck` script is `tsc --noEmit`; the seed is typechecked once) | PR A #26 (`ac8ef34`) | `typecheck-after=seed once`, `ci-seed-typecheck=once` | `CI-SETUP-LEDGER.md` |
 | RED-03 | Duplicated integration and web test fixtures consolidated into shared helpers (`stack-hooks.ts`, `job-logger.ts`, `browser.ts`, `WithQueue`, `deal-fixtures.ts`) | PR B #27 (`a660d58`) | `before-clones=99`, `final-b-clones=66` (858 lines, 1.11%) against 96, `final-clones=66` (see `DOCS-AUDIT-LEDGER.md`), `pr-b-integration-tests=1190` = `main-integration-tests=1190`, `pr-b-ci` (six success, run 39658694324), `main-ci-after-b` (run 39661257811 six success) | `FIXTURE-LEDGER.md` |
-| RED-04 | Retired-spec citations removed outside `.planning/`, `docs/` and `supabase/migrations/`, comment-only and verified; README and `.claude/CLAUDE.md` finished in PR D | PR C #28 (`9fdc9c9`) for code, tests and fixtures; PR D (pending until Task 3) for README, `.claude/CLAUDE.md` and the maps | `count-lines=1116` and `count-files=456` against the Phase 2 count of 262 (recounted with the full vocabulary), controls 1 to 6 (`OK OK`, `OK OK`, `FAIL FAIL`, `FAIL FAIL`, `OK OK`, `FAIL FAIL` as expected), `titles-commit=96fb846` with `titles-proof=OK` and `titles-counts-equal=yes`, `pr-c-left=0`, `pr-c-ci` (six success, run 39707916284), `main-ci-after-c` (run 39709025122 six success), `final-citations=0`, `migrations-untouched=yes` | `TEXT-SYNC-LEDGER.md`, `DOCS-AUDIT-LEDGER.md` |
-| RED-05 | `docs/` and the codebase maps match the code; nothing added under `docs/` | PR D (pending until Task 3) | `misses-final=0` (docs and README, `checked-final=591`), `final-claims-misses=0` (docs, README, maps and `.claude/CLAUDE.md`, 2,353 tokens), `maps-commit=e486d7f692c29a79476a815cf858b6d63c3b496b`, `maps-mapped-at=283f15d` (contains `9fdc9c9`), `hearth-admin-claims=hand-written`, `docs-files=7`, the 14-row behavioral sample, `filemap-complete=yes` | `DOCS-AUDIT-LEDGER.md` |
+| RED-04 | Retired-spec citations removed outside `.planning/`, `docs/` and `supabase/migrations/`, comment-only and verified; README and `.claude/CLAUDE.md` finished in PR D | PR C #28 (`9fdc9c9`) for code, tests and fixtures; PR D #29 (`a5c4384`) for README, `.claude/CLAUDE.md` and the maps | `count-lines=1116` and `count-files=456` against the Phase 2 count of 262 (recounted with the full vocabulary), controls 1 to 6 (`OK OK`, `OK OK`, `FAIL FAIL`, `FAIL FAIL`, `OK OK`, `FAIL FAIL` as expected), `titles-commit=96fb846` with `titles-proof=OK` and `titles-counts-equal=yes`, `pr-c-left=0`, `pr-c-ci` (six success, run 39707916284), `main-ci-after-c` (run 39709025122 six success), `final-citations=0`, `migrations-untouched=yes` | `TEXT-SYNC-LEDGER.md`, `DOCS-AUDIT-LEDGER.md` |
+| RED-05 | `docs/` and the codebase maps match the code; nothing added under `docs/` | PR D #29 (`a5c4384`) | `misses-final=0` (docs and README, `checked-final=591`), `final-claims-misses=0` (docs, README, maps and `.claude/CLAUDE.md`, 2,353 tokens), `maps-commit=e486d7f692c29a79476a815cf858b6d63c3b496b`, `maps-mapped-at=283f15d` (contains `9fdc9c9`), `hearth-admin-claims=hand-written`, `docs-files=7`, the 14-row behavioral sample, `filemap-complete=yes`, `pr-d-ci` (six success, run 39716090446), `main-ci-after-d` (run 39718363858, six success on attempt 3 after two failed test-e2e attempts treated as owner-approved flake exceptions) | `DOCS-AUDIT-LEDGER.md` |
 
-PR D: the number, head, six CI conclusions and squash commit are in `DOCS-AUDIT-LEDGER.md`
-(`pr-d=`, `pr-d-head=`, `pr-d-ci=`, `pr-d-merged=`, `main-ci-after-d=`, `phase-close-main=`).
+PR D: #29, head `35a03ab`, squash commit `a5c43841a90b1ec3f98ea219b577b9100c2d712a`
+(`phase-close-main=` is the same SHA). The number, head, CI conclusions and squash commit are in
+`DOCS-AUDIT-LEDGER.md` (`pr-d=`, `pr-d-head=`, `pr-d-ci=`, `pr-d-merged=`, `main-ci-after-d=`,
+`phase-close-main=`). Squash commits: PR A `ac8ef34`, PR B `a660d58`, PR C `9fdc9c9`, PR D `a5c4384`.
+
+On `phase-close-main` the citation inventory is empty, migrations equal the phase base, `docs/` holds
+seven files and the path checker reports `checked=2662 misses=0`.
 
 ## Final post-conditions (D head, `DOCS-AUDIT-LEDGER.md` "Phase close")
 
@@ -55,6 +60,12 @@ PR D: the number, head, six CI conclusions and squash commit are in `DOCS-AUDIT-
   the self-hosted `hearth` runner, which is not registered (STATE.md blocker); nothing here confirmed that
   `workflow_run` fires Deploy correctly after the setup-action change beyond the runs being created.
   CI-07 stays open.
+- Notification e2e flakiness: main CI on PR D's squash commit needed three attempts. Attempt 1 failed at
+  `19-notifications.spec.ts:140`, attempt 2 at `17-accessibility-states.spec.ts:497` and `:526`, attempt 3
+  was green. All three attempts ran around midnight America/New_York (23:43 to 00:19); a time-of-day
+  cause is a hypothesis only. Together with the earlier flakes at `17-accessibility-states.spec.ts:527`
+  and `19-notifications.spec.ts:141`, the notification specs need a look in Phase 6.
 - Owner-visible items carried from this phase: `Journey N` labels in the E2E suite and the follow-up
   sweep items in `TEXT-SYNC-LEDGER.md` were reported, not edited; the regenerated `.claude/CLAUDE.md`
-  dropped the old Anti-Patterns and Component Responsibilities sections (owner decision in PR D).
+  dropped the old Anti-Patterns and Component Responsibilities sections; on the owner's request they were
+  restored in PR D (`restore-1` to `restore-19` in `DOCS-AUDIT-LEDGER.md`).

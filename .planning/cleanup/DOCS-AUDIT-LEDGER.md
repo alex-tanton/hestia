@@ -324,3 +324,40 @@ At `166ae77`, `test-integration` reports `Tests  1190 passed (1190)` in 76 files
 `main-integration-tests=1190` (`logs/05-13-pr-integration.log`); the restore commits change only
 maps, `.claude/CLAUDE.md` and the ledger, so no test input changed. The PR head will lack the last
 ledger-only WB commit (this record), as before.
+
+## Merge and phase close
+
+pr-d-merged=a5c43841a90b1ec3f98ea219b577b9100c2d712a
+
+The owner squash-merged PR D (#29) as `a5c4384` (`merged_at` 2026-10-22T03:42:56Z, title
+`docs: bring specs and codebase maps in line with the code`). `origin/main` is at that commit.
+
+main-ci-after-d=39718363858 lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success
+
+Run 39718363858 on `a5c4384` took three attempts. The final conclusions above are from attempt 3.
+Attempt 3 job ids: lint 119633317033, typecheck 119633290677, test-unit 119633290925,
+test-integration 119633335387, test-e2e 119633288783, build 119633336520.
+
+- Attempt 1: `test-e2e` failed at `e2e/tests/19-notifications.spec.ts:140` (`expected /Oak Street/`). Not a
+  registry flake (no `toomanyrequests`); a known notification-area flake, also seen once before
+  (`FIX-LEDGER-INFRA.md`). The owner approved one rerun of the failed job.
+- Attempt 2 (rerun by this plan, job 119630093448): `test-e2e` failed again, now at
+  `17-accessibility-states.spec.ts:497` (`Couldn't save that setting. Try again.` never shown, 15 s
+  timeout) and `:526` (no unchecked switch, `index` was -1; probably a knock-on of `:497`, unconfirmed).
+  102 passed, 2 failed. Not a registry flake. Log: `logs/05-13-test-e2e-attempt2.log` (gitignored).
+- Attempt 3: the owner performed the rerun themselves; all six jobs succeeded.
+
+The three attempts ran from about 03:43 to 04:19 UTC, which is 23:43 to 00:19 America/New_York (the
+E2E browser is pinned to that zone). That the notification specs flake around local midnight is a
+hypothesis, not confirmed; no test was run to check it. Handed to Phase 6 and the owner's open items.
+
+Attempts 1 and 2 are owner-approved flake exceptions, not red evidence; no code was changed in
+response and nothing was reverted.
+
+phase-close-main=a5c43841a90b1ec3f98ea219b577b9100c2d712a
+
+WB `0db4b1b` merged `origin/main` at that SHA (tree-equal to PR D's squash). Post-conditions on
+`phase-close-main`: the citation inventory over the default scope has 0 rows; `supabase/migrations`
+is identical to `phase-base=c64d79e` (`git diff --exit-code` exit 0); `docs/` holds 7 files and none was
+added since the phase base; the path checker over docs, README, maps and `.claude/CLAUDE.md` reports
+`checked=2662 misses=0`.

@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 05
 current_phase_name: Redundancy Reduction and Text Sync
 status: executing
-stopped_at: Completed 05-12-PLAN.md
-last_updated: "2026-10-22T02:29:11.599Z"
+stopped_at: Completed 05-13-PLAN.md
+last_updated: "2026-10-22T04:40:00.000Z"
 last_activity: 2026-10-22
-last_activity_desc: Phase 05 execution started
+last_activity_desc: Plan 05-13 complete (PR D merged as a5c4384); phase 05 awaiting verification
 state_head: ca15d8923b7bd26f1a3dbd9df7c511e8b76f0b09
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 44
-  completed_plans: 43
+  completed_plans: 44
   percent: 67
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 05 (Redundancy Reduction and Text Sync) — EXECUTING
-Plan: 12 of 13 complete (05-01 to 05-12); next 05-13 (land PR D and close the phase)
-Status: Ready to execute
-Last activity: 2026-10-22 — Plan 05-12 complete (maps `e486d7f` from `283f15d`, CLAUDE.md regenerated, RED-04 count restated; `docs/sync-specs` pushed at `8bd18ab`, PR D not opened)
+Plan: 13 of 13 complete (05-01 to 05-13); the phase is not marked complete, verification runs next
+Status: Plans complete, awaiting phase verification
+Last activity: 2026-10-22 — Plan 05-13 complete (PR D #29 squash-merged by the owner as `a5c4384`; main CI run 39718363858 green on attempt 3; `REDUNDANCY-LEDGER.md` indexes RED-01 to RED-05)
 
 Progress: [███████░░░] 67%
 
@@ -91,6 +91,7 @@ Progress: [███████░░░] 67%
 | Phase 05 P10 | 50min | 3 tasks | 44 files |
 | Phase 05 P11 | about 1h | 3 tasks | 3 files |
 | Phase 05 P12 | 1 session | 3 tasks | 8 files |
+| Phase 05 P13 | 3 sessions | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -129,6 +130,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 05-04: web fixtures consolidated on test/shared-fixtures-wip (8a7e8e4): browser.ts, WithQueue, stubFetch, dealScreenHandlers, emptyDealSearch; jscpd 87 -> 66 clones, web 728 = 728; 14 pairs kept with reasons in FIXTURE-LEDGER.md (hoisted viewer-zone blocks, retry assertions, variant hooks); no PR opened
 - [Phase 05]: Plan 05-05: WB synced past PR A by one ordinary merge (no workflow-scope refusal); PR B (#27) opened from test/shared-fixtures with six green jobs, jscpd 96 -> 66 clones, integration tests 1190 = main; owner squash-merged as a660d58, main CI green
 - [Phase 05]: Plan 05-08: docs/sync-specs (158fd52) holds the seven specs and README audited against the code; docs-claims-check.mjs 582 tokens, 0 misses with a 34-token reasoned allowlist; hearth-admin documented as a hand-written shell wrapper; Kong routes, held deal-add id, per-list add-to-list lock and coverage setup stated as they are; README retired-spec citations removed; 14-row behavioral sample in DOCS-AUDIT-LEDGER.md; PR D opens in 05-13
+- [Phase 05]: Plan 05-13: PR D (#29) squash-merged by the owner as a5c4384 (docs: bring specs and codebase maps in line with the code); the dropped CLAUDE.md Anti-Patterns and Component Responsibilities were restored with 19 recorded corrections; main CI run 39718363858 needed three attempts (test-e2e failed at 19-notifications.spec.ts:140, then 17-accessibility-states.spec.ts:497 and :526, then green after the owner's rerun), treated as owner-approved flake exceptions; REDUNDANCY-LEDGER.md indexes RED-01 to RED-05; post-conditions on main: citations 0, migrations equal to c64d79e, docs 7 files, checker 2662 tokens 0 misses
 - [Phase 05]: Plan 05-11: PR C (#28) squash-merged by the owner as 9fdc9c9 (refactor: remove retired spec citations from code); main CI run 39709025122 six of six green; follow-up sweep (aaed732 comments, 33baf2d nine titles) included; Journey N labels and README pointers left for the owner and PR D; RED-04 completes with PR D
 
 ### Pending Todos
@@ -138,6 +140,7 @@ None yet.
 ### Blockers/Concerns
 
 - [Phase 3]: Main CI gap: `test-e2e` is red on the main runs for 51c077e (PR 1) and aefe63a (PR 2) from the registry pre-pull flake; the owner chose not to re-run them so Deploy does not pick up superseded commits (each PR's own CI was green on an identical tree). 9819e7c is green after one re-run; `17-accessibility-states.spec.ts:527` and `19-notifications.spec.ts:141` flaked once there (look at them in Phase 6)
+- [Phase 5]: Notification e2e specs flaked across three attempts of main CI on a5c4384 (`19-notifications.spec.ts:140`, then `17-accessibility-states.spec.ts:497` and `:526`); the attempts ran about 23:43 to 00:19 America/New_York, so a time-of-day cause is a hypothesis, unconfirmed. Look at these specs in Phase 6
 - [Phase 3]: DEAD-05 is marked complete on the owner-authorized local Docker run (`pnpm db:types` twice, both equal to the committed file; `pnpm db:seed` exit 0), not CI; the permanent drift check is Phase 6 CI-03
 - [Phase 3]: `knip:production` reports `scripts/knip-summary.mjs` as a files line (owner decision keep-reported); revisit with Phase 6 CI-01, together with the `**/test/**` hidden-entry blind spot of the committed knip config
 - [Phase 1]: The "Main PR Enforcement" ruleset (id 23693495) was changed by the owner to permit the main push (the API now returns 404 for it, so it appears deleted rather than disabled). Nothing is enforced on main now; if it is re-created, a required check plus the red test-unit (favorites.test.tsx timezone test, Phase 2 TIME-01 class) will block PRs. CONTRIBUTING.md says branch protection is not configured; reconcile in Phase 6. Owner may cancel a queued Deploy run and delete origin/curated-main.
@@ -167,11 +170,15 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-22T02:29:11.459Z
-Stopped at: Completed 05-12-PLAN.md
+Last session: 2026-10-22T04:40:00.000Z
+Stopped at: Completed 05-13-PLAN.md
 Resume file: None
 
-### Resume point for Phase 5 (after 05-12, 2026-10-22)
+### Resume point for Phase 5 (after 05-13, 2026-10-22)
+
+Update on 05-13: PR D (#29) is merged to `main` as `a5c43841a90b1ec3f98ea219b577b9100c2d712a`; `origin/main` is at that commit and WB merged it (`0db4b1b`). All four PRs are on `main` (A `ac8ef34`, B `a660d58`, C `9fdc9c9`, D `a5c4384`). Main CI run 39718363858 is green on attempt 3 after two test-e2e failures that were not registry flakes (owner-approved exceptions, recorded in `DOCS-AUDIT-LEDGER.md`). The phase is not marked complete; the orchestrator verifies next. `REDUNDANCY-LEDGER.md` is the index with the Phase 6 hand-offs. The summary and state ride along with Phase 6's first pull request (D-04). The notes below are older and mention PR D as unmerged.
+
+(Older notes, as of 05-12.)
 
 Update on 05-12: the seven maps (`e486d7f`, `last_mapped_commit` `283f15d`, contains PR C's `9fdc9c9`) and `.claude/CLAUDE.md` (`b506589`) are regenerated with the D-11 Comments rule; RED-04 is restated as 1,116 lines in 456 files (`34a753c`); `docs/sync-specs` is pushed at `8bd18ab` (also fixes the file-map `jobs` row and the compose comment citing README "Restore"). WB tip is the `docs: complete plan 05-12` commit. Next is 05-13: open PR D after merging WB into `docs/sync-specs` once more, then the owner merges. The old CLAUDE.md Anti-Patterns and Component Responsibilities sections are not in the regenerated one (mapper output); the owner may want them back.
 
@@ -196,7 +203,7 @@ Before pushing either branch again, run `git merge --no-edit claude/eloquent-may
 
 Next, in order: 05-11 (open and land PR C: owner merge), 05-12 (finish PR D: sync, maps, `.claude/CLAUDE.md`), 05-13 (land PR D and close the phase: owner merge).
 
-Open items for the owner: squash-merges of PR C and PR D; journey 7 e2e test (`e2e/tests/18-chores-and-errands-offline.spec.ts:140`) flaked once on `main` and passed on one approved rerun; if a PR touches `.github/workflows` and GitHub refuses for the `workflow` scope, use the `apply.sh` hand-off with `export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` on Windows Git Bash and a save-to-file invocation.
+Open items for the owner: `Journey N` labels in the E2E suite (34 lines, reported in `TEXT-SYNC-LEDGER.md` "Follow-up sweep", not edited); `Phase N` mentions (29 lines naming the app's build phases, unchanged); the requirement ID `TIME-05` in `bills.integration.test.ts:533`; the flaky notification e2e specs (`19-notifications.spec.ts:140` and `:141`, `17-accessibility-states.spec.ts:497`, `:526` and `:527`; three attempts of main CI on `a5c4384` ran around midnight America/New_York, a hypothesis only; `18-chores-and-errands-offline.spec.ts:140` also flaked once earlier); if a PR touches `.github/workflows` and GitHub refuses for the `workflow` scope, use the `apply.sh` hand-off with `export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` on Windows Git Bash and a save-to-file invocation.
 
 ### Start-up checklist and standing rules for the next session (read before dispatching executors)
 
