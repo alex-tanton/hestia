@@ -351,7 +351,57 @@ Decisions and notes for 05-10 Task 1:
 
 ## Retained
 
-Not started.
+Whole-range proofs at PR C's head (05-11, taken from `base=` in `../hearth-citations`; logs `05-11-range-*.log`):
+
+- `comment-only-check.mjs --base 708c714 --head 96fb846~1 -- . ':!.planning'` prints `OK 429 files (14 non-TS skipped)`.
+- `comment-only-check.mjs --base 96fb846~1 --head 96fb846 --titles -- . ':!.planning'` prints `OK 28 files`.
+- `nonts-comment-check.mjs --base 708c714 --head 96fb846 --html` over the non-script paths (the tool fails
+  `.ts`, `.tsx`, `.mjs` and `.js` as an unknown type, so the pathspec excludes them with
+  `':(exclude,glob)**/*.ts'` and the like; the plan's command without that exclusion cannot print OK) prints
+  `OK 14 files`: the same 14 non-TS files the range changes (11 non-TS config and script files, 3 HTML fixtures).
+- The range holds 14 non-merge commits touching code, each recorded above (12 batch rows, the HTML commit
+  `4f4c124` and `titles-commit`); nothing else.
+
+range-commits=14
+
+Post-condition (D-21): `citation-inventory.mjs inventory --repo C -- . ':!README.md' ':!.claude'` has a header and 0 rows
+(`pr-c-left=0` holds on the merged head); `git grep -E -f cit-rx.txt` outside `.planning`, `docs`,
+`supabase/migrations`, `README.md` and `.claude` prints nothing.
+
+- Migrations: 17 citation lines in 8 files, equal to `count-migrations`; `git diff --exit-code c64d79e -- supabase/migrations`
+  is empty (untouched).
+- `count-phase-mentions`: 27 at `base=`, 29 on the head under the same pathspec. They name product phases, not
+  citations (research A10): lines that used to match the vocabulary as well (for example `seed.sql`,
+  `matching/similarity.ts`) now match only `Phase N` after the document name was dropped. Left alone.
+- `README.md` and `.claude/CLAUDE.md` sites, PR D's:
+
+left-for-pr-d=4
+
+(`README.md` lines 69, 121 and 146, and `.claude/CLAUDE.md` line 232.)
+
+Local gates at the head (logs `05-11-{frozen,lint,format-check,typecheck,test,build,commitlint}.log`, all `exit=0`; Node 24.21.0):
+frozen install, `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test` (harness 231 pass, 0 fail, then workspaces),
+`pnpm build` and `commitlint --from 708c714 --to HEAD`. Counts at the head equal those measured in a throwaway worktree detached
+at `base=` (`05-11-base-test.log`, removed afterwards):
+
+tests-final-c.matching=156
+tests-final-c.shared=172
+tests-final-c.recurrence=77
+tests-final-c.service=757
+tests-final-c.web=728
+tests-final-c.e2e-support=15
+
+Clone count (Phase 2 test-inclusive command, label `05-11`, `.planning/cleanup/jscpd/phase5-05-11/jscpd-report.json`;
+`jscpd-compare.mjs --max-clones 95` exits 0): 66 clones, 858 duplicated lines, 1.11%, identical to `final-b-clones=66`
+(a comment-only sweep adds no clone).
+
+after-c-clones=66
+
+Open item for the owner (not edited, outside the plan's `title` class): nine test titles still name a retired
+document in bare words: `parse-price.test.ts:34`, `Toast.test.tsx:34`, `password.test.ts:12`, `sections.test.ts:15`,
+`onboarding.test.tsx:225` and `:243`, `settings.test.tsx:95`, `tokens.test.ts:99`, `similarity.test.ts:42`.
+
+pr-c-ready=2ae102e79ae1982d049263d53492b0dc0d5747d5
 
 ## CI
 
