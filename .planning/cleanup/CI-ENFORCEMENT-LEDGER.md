@@ -330,3 +330,15 @@ Notes:
 
 dry-run=tree-match
 - Dry run from the primary checkout (`DRY_RUN=1 bash apply.sh`, log `.planning/cleanup/logs/06-07-apply-dry.log`, gitignored): six `git am --3way` applications onto `d0c587c`, built `ef4c6a6` and printed `tree matches (54069f0...)`; the temporary worktree was removed.
+
+## Plan 06-07 Task 3: owner gate
+
+pr2-pushed=0061269c32e30c9f84eb3d80198577888dd31084
+pr2-pushed-tree-match=yes
+gate-pr2=pushed approve-pr2 canary=with-migration (owner reply, 2026-10-23)
+canary-choice=with-migration
+
+Notes:
+
+- The owner ran `owner-command=` from their own clone. `git ls-remote --heads origin ci/enforce-gates` returns `0061269c32e30c9f84eb3d80198577888dd31084`, and `gh api repos/alex-tanton/hearth/git/commits/0061269c32e30c9f84eb3d80198577888dd31084 --jq .tree.sha` returns `54069f099544ee0c93b741e935104ffe6a271acd`, equal to `pr2-tree=` (the commit SHA differs from `pr2-head=` because `git am` rewrites committer data; the tree is the identity).
+- The owner saw the four deploy-behavior changes (OD-4 a to d) in the gate text and chose the canary with the one-line newest-migration edit (PC-11, D-03 exception). PR 2 is not opened yet; 06-08 opens it and puts OD-4 a to d in its body.
