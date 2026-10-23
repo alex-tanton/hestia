@@ -235,7 +235,38 @@ Plans:
   4. Unit and component tests run across a date and timezone matrix on `main` and nightly, and pass.
   5. A throwaway PR confirms that a merge to `main` still fires `deploy.yml` from the workflow named `CI` after all workflow changes.
 
-**Plans**: TBD
+**Plans:** 3/10 plans executed
+
+Plans:
+**Wave 1**
+- [x] 06-01-PLAN.md — PR 1 start: tracer knip gate (config, 28-row baseline, checker), repository hygiene gate with the three `.planning` mode fixes, migration append-only gate; phase ledger with the owner decisions
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 06-02-PLAN.md — PR 1: tracer audit gate (fail-closed, expiring allowlist, braces moot), owner legitimacy check, jscpd 5.4.1 at 2% with a config test
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 06-03-PLAN.md — PR 1: tracer sweep today cell (42/42 locally), deploy gate script for the running revision (OD-4 a to c)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 06-04-PLAN.md — PR 1 finish: tracer docs checked by the claims checker, thirteen local gates, push, owner gate
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 06-05-PLAN.md — PR 1 landing: tracer open with six green jobs, owner squash merge, `main` CI, WB sync
+
+**Wave 6** *(blocked on Wave 5 completion and on the owner's merge of PR 1)*
+- [ ] 06-06-PLAN.md — PR 2 content: tracer hygiene job emulated from the YAML, web coverage and thresholds, `db:types` drift, timeouts, `sweep.yml`, `deploy.yml` through the gate
+
+**Wave 7** *(blocked on Wave 6 completion)*
+- [ ] 06-07-PLAN.md — PR 2 finish: tracer docs and the CI-05 review, sixteen local gates, patches and `apply.sh` hand-off, owner push and gate (canary choice)
+
+**Wave 8** *(blocked on Wave 7 completion and on the owner's push of PR 2)*
+- [ ] 06-08-PLAN.md — PR 2 landing: tracer open with seven green jobs, owner-gated canary PR shows every gate red on CI, owner merge
+
+**Wave 9** *(blocked on Wave 8 completion and on the owner's merge of PR 2)*
+- [ ] 06-09-PLAN.md — tracer `main` green and `Sweep`'s first run after PR 2; PR 3 content (CONTRIBUTING, CLAUDE.md, maps), owner gate
+
+**Wave 10** *(blocked on Wave 9 completion)*
+- [ ] 06-10-PLAN.md — PR 3 landing as the CI-07 proof (Deploy from `CI`'s `workflow_run`), today-cell and nightly sweeps, phase close
 
 ## Progress
 
@@ -249,4 +280,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
 | 5. Redundancy Reduction and Text Sync | 13/13 | Complete    | 2026-10-22 |
-| 6. CI Enforcement and Lock-in | 0/TBD | Not started | - |
+| 6. CI Enforcement and Lock-in | 3/10 | In Progress | - |

@@ -1,0 +1,9 @@
+{
+  "path": ["apps", "packages", "e2e", "supabase/seed"],
+  "format": ["typescript", "tsx"],
+  "minTokens": 60,
+  "minLines": 8,
+  "ignore": ["**/node_modules/**", "**/dist/**", "**/coverage/**", "**/db/types.ts"],
+  "reporters": ["console"],
+  "threshold": 2
+}

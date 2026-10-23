@@ -112,3 +112,5 @@ origin/main	git remote ref, not a path
 .codex/skills/	skill directory the generated skills block says may be added; none exists yet
 SKILL.md	index file name a skill directory would carry; no skill exists yet
 !docker/ca.crt	dockerignore pattern in the hand-maintained cloud-sandbox workaround; the file is created locally and never committed
+hearth-service:current	Docker image reference of the running service image that deploy-gate.sh inspects, not a path
+i/lf	index line-ending column of `git ls-files --eol` output quoted in CONTRIBUTING.md, not a path

@@ -2,9 +2,19 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreExportsUsedInFile": true,
   "ignoreBinaries": ["supabase", "psql"],
+  "ignore": [".planning/**"],
+  "ignoreDependencies": ["tailwindcss"],
+  "node": false,
   "workspaces": {
     ".": {
-      "entry": ["test/*.mjs!", "scripts/test-sweep.mjs!"]
+      "entry": [
+        "test/**/*.mjs!",
+        "scripts/test-sweep.mjs!",
+        "scripts/check-knip-baseline.mjs!",
+        "scripts/check-repo-hygiene.mjs!",
+        "scripts/check-migrations-append-only.mjs!",
+        "scripts/audit-prod.mjs!"
+      ]
     },
     "apps/service": {
       "entry": ["src/main.ts!", "src/cli.ts!", "src/write-openapi.ts!"],
