@@ -219,3 +219,21 @@ Notes:
 - W2 is `/home/user/hearth-enforce-gates` on `ci/enforce-gates`, cut from the WB tip `d0c587c` (which is on `origin`, contains PR 1's `b585d25` and the dependency fix). The token cannot push workflow files, so W2 stays local and its commits are saved as patches under `.planning/cleanup/patches/ci-enforce-gates/` after each commit (phase rule 5).
 - The six hygiene commands were read from the YAML by `.planning/cleanup/tools/workflow-facts.mjs` and run in W2 with `BASE_SHA` at `origin/main`: knip, the baseline check (28 rows), jscpd (66 clones), the audit (0 advisories, now green on a tree cut from `main` after PR #32), repository hygiene (971 files, 13 scripts) and the migration check (0 added). Logs: `.planning/cleanup/logs/06-06-hygiene-{3..8}.log` (gitignored).
 - `actionlint` (ignoring only the self-hosted `hearth` label), prettier, `pnpm knip` and the baseline check pass on W2 after the commit.
+
+## Plan 06-06 Task 2: coverage, db:types drift, timeouts (W2, not pushed)
+
+coverage-measured=85.38/81.83/78.59/86.96
+coverage-thresholds=84/80/77/85
+coverage-negative=statements99-fail
+test-unit-split=ok
+db-types-run1=81209804cfa662518d6e0546e38ba4b02ca0bb467a1fc463400cf07867b7ffdb
+db-types-run2=81209804cfa662518d6e0546e38ba4b02ca0bb467a1fc463400cf07867b7ffdb
+db-types-committed=81209804cfa662518d6e0546e38ba4b02ca0bb467a1fc463400cf07867b7ffdb
+db-types-deterministic=yes
+
+Notes:
+
+- Web coverage was measured in W2 on 2026-10-23 at `pr2-base` `d0c587c` (`pnpm --filter @hearth/web test:coverage`, exit 0; 3884/4549 statements, 2401/2934 branches, 1212/1542 functions, 3616/4158 lines). Thresholds are the measured value rounded down minus one (PC-10), all at or above today's 82/78/74/84. `test:coverage` passes at them; `vitest run --coverage --coverage.thresholds.statements=99` exits 1 (`Coverage for statements (85.38%) does not meet global threshold (99%)`).
+- `test-unit` now runs `pnpm test:harness` (382 tests, exit 0), `pnpm -r --filter '!@hearth/web' test` (exit 0; output from `@hearth/service`, `@hearth/e2e`, `@hearth/matching`, `@hearth/recurrence` and `@hearth/shared`, nothing from `@hearth/web`; `@hearth/seed` has no `test` script) and `pnpm --filter @hearth/web test:coverage` (the measurement run above). Logs: `.planning/cleanup/logs/06-06-unit-{1,2,3}.log` (gitignored).
+- `db:types` determinism: `supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,storage-api,postgrest,postgres-meta` on a fresh stack (Node 24.21.0), `pnpm db:types` twice gave the same sha256 as the committed `types.ts` blob, `git diff --exit-code -- apps/service/src/db/types.ts` exited 0, and the stack was stopped with `supabase stop --no-backup`. This equals the hash research recorded. The runner proof is PR 2's CI run (06-08).
+- `ci.yml` after this commit: every job has the planned `timeout-minutes` (lint, typecheck, build, hygiene 10; test-unit 15; test-integration 25; test-e2e 40) and every checkout has `persist-credentials: false`; `run-interpolation=0`.
