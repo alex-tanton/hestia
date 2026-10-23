@@ -1,7 +1,7 @@
 From dc55e6570bd4f869d5820368b5801d4396c1bc1a Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Fri, 23 Oct 2026 19:40:53 +0000
-Subject: [PATCH 3/5] ci: enforce web coverage, db types drift and job timeouts
+Subject: [PATCH 3/6] ci: enforce web coverage, db types drift and job timeouts
 
 - test-unit runs the harness, every workspace but web, then web with coverage
 - test-integration fails when pnpm db:types changes types.ts, before any test

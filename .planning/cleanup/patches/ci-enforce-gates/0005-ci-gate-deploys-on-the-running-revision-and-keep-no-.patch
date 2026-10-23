@@ -1,7 +1,7 @@
 From a2bb3177537d91597086d70a1ec9648fc2149d4e Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Fri, 23 Oct 2026 19:42:28 +0000
-Subject: [PATCH 5/5] ci: gate deploys on the running revision and keep no
+Subject: [PATCH 5/6] ci: gate deploys on the running revision and keep no
  token
 
 - deploy-gate.sh decides, with full history, instead of the tip-only diff

@@ -1,7 +1,7 @@
 From ccfb84aad7aea78d4d418cffcbb9927bb3a2a065 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Fri, 23 Oct 2026 19:42:13 +0000
-Subject: [PATCH 4/5] ci: run the date and time-zone sweep on main and nightly
+Subject: [PATCH 4/6] ci: run the date and time-zone sweep on main and nightly
 
 - push to main (not for docs or planning only), nightly 05:17 UTC and on demand
 - failure uploads the sweep logs for 14 days; never runs on pull requests

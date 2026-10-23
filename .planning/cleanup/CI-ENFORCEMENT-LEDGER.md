@@ -252,3 +252,64 @@ Notes:
 - `deploy.yml` keeps `name: Deploy`, `workflows: [CI]`, `types: [completed]`, `branches: [main]`, the three-part `if`, job `deploy` and `[self-hosted, hearth]`; it adds `timeout-minutes: 60`, `fetch-depth: 0` and `persist-credentials: false` on the checkout, and the `changes` step runs `scripts/deploy-gate.sh >> "$GITHUB_OUTPUT"` with `HEARTH_DEPLOY_SHA` in `env`. Facts: `.planning/cleanup/logs/06-06-deploy-facts.txt` (gitignored); `run-interpolation=0` for all three workflows.
 - Wiring smoke test: with a stub `docker` that exits 1 first on `PATH`, `GITHUB_OUTPUT` a temp file and `HEARTH_DEPLOY_SHA` the W2 HEAD, the `changes` command read from the YAML left exactly `deploy=true` in the file (the gate's stderr said the image does not exist; deploying).
 - `actionlint` (ignoring only the `hearth` label) passes on all three workflows; prettier passes on `.github/workflows`; `pnpm knip` and the baseline check pass. The secret scan over the W2 diff matched nothing. The Deploy workflow still waits on an unregistered `hearth` self-hosted runner; it was not touched.
+
+## Plan 06-07 Task 1: docs and CI-05 review (W2, not pushed)
+
+docs-commit-pr2=45ca790 docs: describe the CI gates, the sweep workflow and the deploy gate (ci/enforce-gates, local)
+
+Notes:
+
+- `docs/testing.md` now states the web thresholds 84/80/77/85 and that `test-unit` runs `pnpm --filter @hearth/web test:coverage` while web's `test` script stays plain; that `test-unit` runs `pnpm test:harness` first, then every non-web workspace's `test` script; that `test-integration` regenerates `types.ts` with `pnpm db:types` and fails on a difference; `sweep.yml` (six fixed cells on `main` pushes that change more than `docs/` and `.planning/`, the today cell nightly at 05:17 UTC and in manual runs, `sweep-logs` artifact for 14 days, never gates or triggers a deploy); and that the `hygiene` job runs every check on every pull request and push, every step even after a failure, with the date-dependent audit and allowance expiry holding back a deploy on an unchanged tree. `docs/deploy.md` and `README.md` state the OD-4 rule (running-revision comparison through `scripts/deploy-gate.sh`; skips `docs/` and `.planning/` only changes and any commit older than the running one; redeploys the running commit; deploys when no labelled image runs; full history, no token). `docs/file-map.md` names `sweep.yml`, seven jobs, the `knip.json`, `.jscpd.json` and `deploy-gate.sh` rows and the knip tool row.
+- `README.md` passes `prettier --check` (the `docs/` files are in `.prettierignore`). The stale-phrase search over W2's `docs/` and `README.md` prints nothing. `CONTRIBUTING.md`, `.claude/CLAUDE.md` and `.planning/codebase/*` are PR 3's (06-09).
+
+## CI-05 review
+
+Scope: `.github/workflows/ci.yml`, `.github/workflows/sweep.yml`, `.github/workflows/deploy.yml` and `.github/actions/setup/action.yml` on `ci/enforce-gates` at the docs commit above. Evidence: `actionlint -ignore 'label "hearth" is unknown'` over the three workflows (exit 0, no output; the ignore is only the self-hosted `hearth` label, F13); `workflow-facts.mjs` outputs for all three (`.planning/cleanup/logs/06-07-facts-{ci,sweep,deploy}.txt`, gitignored: every job has a timeout, `run-interpolation=0` in each, checkouts `false/unset` or `false/0` meaning `persist-credentials: false`); zizmor 1.31.1 offline over W2's `.github` (`docker run --rm -v $W2:/repo:ro ghcr.io/zizmorcore/zizmor:1.31.1 --offline /repo/.github`, log `.planning/cleanup/logs/06-07-zizmor.log`): 42 findings, 13 suppressed, 29 shown = 17 `unpinned-uses` (F7), 8 `self-repository` (a style hint to write `$/.github/actions/setup` for `./.github/actions/setup`, kept: the local path works and is what the repository uses), 3 `dependabot-cooldown` (F14), 1 `dangerous-triggers` (F5), and none for `artipacked`, `template-injection` or `excessive-permissions` (research's run had `artipacked` x7, now fixed, F8).
+
+| Area | `ci.yml` | `sweep.yml` | `deploy.yml` | setup action | Disposition |
+|------|----------|-------------|--------------|--------------|-------------|
+| Triggers | `pull_request` and `push` to `main` | `push` to `main` (`paths-ignore` `docs/**`, `.planning/**`), `schedule` `17 5 * * *`, `workflow_dispatch`; no `pull_request` (OD-2) | `workflow_run` of `CI`, `completed`, `branches: [main]` | composite action, none | kept; the new workflow cannot trigger a deploy because it is named `Sweep` |
+| Permissions | workflow `contents: read`; `test-e2e` adds `packages: read`; `hygiene` inherits read | workflow `contents: read` | workflow `contents: read` | inherits the caller's | kept (F9); no job writes |
+| Concurrency | `ci-${{ github.ref }}`, cancels only for pull requests | `sweep-${{ github.ref }}`, never cancels | `deploy`, never cancels | none | kept (F2); the deploy ordering problem is fixed in the gate, not here |
+| Secrets | optional `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`, `GITHUB_TOKEN` (both logins `continue-on-error`) | none | none (the self-hosted job reads the host's `.env`, not a secret) | none | kept (F10) |
+| `workflow_run` safety | not applicable | not applicable | `conclusion == 'success'` and `event == 'push'` and `head_branch == 'main'`, trigger limited to `branches: [main]`, checks out `workflow_run.head_sha`; a fork pull request run has event `pull_request` and is rejected; the gate receives the SHA through `env`, and it refuses a SHA that is not 40 lowercase hex or not HEAD | not applicable | kept (F5); zizmor's `dangerous-triggers` is this trigger and the guard is its mitigation |
+| Action pinning | `checkout@v7`, `supabase/setup-cli@v3`, `docker/login-action@v4`, `upload-artifact@v7` | `checkout@v7`, `upload-artifact@v7` | `checkout@v7` | `pnpm/action-setup@v6`, `setup-node@v7` | kept (F7): tags, not SHAs; SHA pinning is CIX-01 and Dependabot bumps actions weekly |
+| Caching | setup action's pnpm store cache; Playwright browsers reinstalled each run | same setup action | none | `setup-node` `cache: pnpm` | kept (F11): performance, not correctness |
+| Artifacts | `playwright-report` on failure, 7 days | `sweep-logs/` only, on failure, 14 days, never the workspace | none | none | kept (F12) |
+| Timeouts | lint, typecheck, build, hygiene 10; test-unit 15; test-integration 25; test-e2e 40 | 60 | 60 | not applicable | fixed in PR 2 (F1): `ci: enforce web coverage, db types drift and job timeouts` and the commits adding each job |
+| Credentials | `persist-credentials: false` on all seven checkouts | `false` | `false` with `fetch-depth: 0` | not applicable | fixed in PR 2 (F8, OD-4 d): `ci: enforce web coverage, db types drift and job timeouts`, `ci: gate deploys on the running revision and keep no token` |
+| Script injection | `run-interpolation=0`; the pull request base reaches the migration check through `env: BASE_SHA` | `run-interpolation=0` | `run-interpolation=0`; `HEARTH_DEPLOY_SHA` through `env` | the one `run:` is a fixed command | kept: no expression is interpolated into a `run:` |
+
+| Finding | Evidence | Disposition |
+|---------|----------|-------------|
+| F1 | five of six jobs had no `timeout-minutes`; now every job in the three workflows has one (`workflow-facts` `job.*.timeout`) | fixed in PR 2: `ci: enforce web coverage, db types drift and job timeouts` (and `ci: add a hygiene job that runs the repository gates`, `ci: run the date and time-zone sweep on main and nightly`, `ci: gate deploys on the running revision and keep no token` for the new job and `deploy`) |
+| F2 | `ci.yml` concurrency unchanged; main runs queue, a newer pending run replaces an older pending one | kept: correct for deploy ordering; the replaced-run case no longer loses a code deploy because the gate compares with the running revision (F3) |
+| F3 | a code commit's Deploy replaced by a later docs-only run was never deployed (tip-only `HEAD~1..HEAD` diff) | fixed in PR 2: `ci: gate deploys on the running revision and keep no token` (the decision is `scripts/deploy-gate.sh`, 36 harness cases, from PR 1); this is OD-4 a |
+| F4 | `.planning/`-only pushes deployed because only `^docs/` was exempt | fixed in PR 2: `ci: gate deploys on the running revision and keep no token` (the gate treats `docs/` and `.planning/` as not deployed code); this is OD-4 b |
+| F5 | `deploy.yml` three-part `if`, `branches: [main]`, `head_sha` checkout; zizmor `dangerous-triggers` x1 | kept: the guard is the mitigation and was not weakened; the gate adds a SHA format check |
+| F6 | a re-run of an older CI run on `main` would deploy its older `head_sha` | fixed in PR 2: `ci: gate deploys on the running revision and keep no token` (a commit that is an ancestor of the running revision gives `deploy=false`); this is OD-4 c |
+| F7 | all actions tag-pinned; zizmor `unpinned-uses` x17 (research saw 14 before the sweep workflow and the hygiene job) | kept: SHA pinning is CIX-01 (v2, deferred) and Dependabot bumps actions weekly |
+| F8 | zizmor `artipacked` x7 in research; now 0; `workflow-facts` shows `false` on every checkout | fixed in PR 2: `ci: enforce web coverage, db types drift and job timeouts` for `ci.yml`, `ci: run the date and time-zone sweep on main and nightly` for `sweep.yml`, `ci: gate deploys on the running revision and keep no token` for `deploy.yml` (OD-4 d) |
+| F9 | workflow-level `contents: read` in all three; `test-e2e` adds `packages: read` | kept: `sweep.yml` has the same block |
+| F10 | only the optional Docker Hub secrets and `GITHUB_TOKEN`; logins are `continue-on-error`; the new workflows read no secret | kept |
+| F11 | `setup-node` `cache: pnpm`; Playwright browsers reinstalled every run | kept: performance, not correctness |
+| F12 | Playwright report 7 days; the sweep uploads only `sweep-logs/` for 14 days on failure | kept: the sweep follows the same pattern |
+| F13 | actionlint reports only the self-hosted label `hearth` as unknown; run with `-ignore 'label "hearth" is unknown'` it is clean for all three workflows | kept: adopting actionlint in CI would need a config file (not added) |
+| F14 | zizmor `dependabot-cooldown` x3 | kept: not CI correctness; the owner may add `cooldown` to `.github/dependabot.yml` |
+| F15 | the repository allows merge commits and rebase merges as well as squash | deferred: owner repository setting; the deploy gate now compares with the running revision, so a multi-commit merge is judged on the whole range, which removes the tip-only risk |
+| F16 | `main` is not protected and has no rulesets | deferred: owner repository setting |
+| F17 | `test-e2e` is the job that fails most (registry flakes and the notification specs) | deferred: DA-4 (the notification E2E spec flakiness is out of scope; registry flakes are re-run per phase rule 9) |
+| OD-4 a | a docs-only tip superseding a pending code deploy | fixed in PR 2: `ci: gate deploys on the running revision and keep no token`; flagged to the owner in PR 2's body (D-20) |
+| OD-4 b | `.planning/`-only pushes deployed | fixed in PR 2: `ci: gate deploys on the running revision and keep no token`; flagged to the owner in PR 2's body (D-20) |
+| OD-4 c | a re-run of an old CI run deployed a stale SHA | fixed in PR 2: `ci: gate deploys on the running revision and keep no token`; flagged to the owner in PR 2's body (D-20) |
+| OD-4 d | `persist-credentials` on the self-hosted deploy runner | fixed in PR 2: `ci: gate deploys on the running revision and keep no token` (`persist-credentials: false`, `fetch-depth: 0`); flagged to the owner in PR 2's body (D-20) |
+
+ci05-review=complete findings=21
+
+## Plan 06-07 Task 1: full local proof on W2
+
+pr2-local=16/16
+
+Notes:
+
+- All sixteen gates ran in W2 at `45ca790` into `.planning/cleanup/logs/06-07-{name}.log` (gitignored), each ending `exit=0`: `frozen`, `lint`, `format-check`, `typecheck`, `test` (13 harness files, then matching 156, shared 172, recurrence 77, service 757, web 728, e2e 15), `knip`, `knip-baseline`, `jscpd`, `audit` (0 advisories, tree cut from `main` after PR #32), `hygiene`, `migrations` (`--base origin/main`), `web-coverage` (85.38/81.83/78.59/86.96 against 84/80/77/85), `build`, `actionlint` (all three workflows, only the `hearth` label ignored), `commitlint` (`d0c587c..HEAD`, six commits) and `docs-claims` (`checked=2767 misses=0` over W2's `docs/*.md`, `README.md`, `CONTRIBUTING.md`, `.planning/codebase/*.md` and `.claude/CLAUDE.md`; no allowlist change needed). W2 is clean at `45ca790`.
