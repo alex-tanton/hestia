@@ -6,7 +6,7 @@ Four layers, each catching a different class of bug:
 
 | Layer | Tool | Runs where | Catches |
 | --- | --- | --- | --- |
-| Unit | Vitest, plus nine `node --test` files: two in `e2e/support`, seven harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
+| Unit | Vitest, plus fifteen `node --test` files: two in `e2e/support`, thirteen harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
 | Integration | Vitest against a real Postgres | `supabase start`'s local Postgres/GoTrue | Bugs in SQL, RLS policies, transactions, and the service's route layer |
 | Component (frontend) | Vitest + Testing Library | jsdom (a simulated browser DOM, no real browser) | Bugs in how a React component renders and reacts to state |
 | End-to-end | Playwright | A real Chromium browser against the full Docker Compose stack | Bugs that only show up with real HTTP, real Caddy routing, and a real browser |
@@ -26,10 +26,12 @@ page, tests substitute a fixture or a test double instead.
 The exceptions use Node's built-in test runner (`node --test`) instead of Vitest, so they need no
 dependencies and no Docker to run. Two are in `e2e/support`: `run-identity.test.ts`, which tests the
 pure run-naming logic in `run-identity.ts` (Compose project/network/image-tag derivation), and
-`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other seven are the
+`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other thirteen are the
 harness tests (the four for the clock pin, the zone hook, the sweep and the lint ban, plus the
-service-role fence probe, the deploy script's password test and the CI image pre-pull test),
-described under Dates and time zones below.
+service-role fence probe, the deploy script's password test and the CI image pre-pull test, then
+six for the gate scripts: the knip baseline check, repository hygiene, migration append-only, the
+production audit, the jscpd configuration and the deploy gate), described under Dates and time
+zones below.
 
 **What they're for:** pure logic with no I/O — no database, no HTTP, no filesystem. This is where
 correctness actually lives for three areas that get deliberately exhaustive, table-driven coverage:
@@ -43,13 +45,13 @@ memory with `apps/service/src/test/fake-app.ts`, which wires fake dependencies (
 `DummyDriver`, no real database, no GoTrue) and drives it with Fastify's `inject()`. These still
 count as unit tests: nothing touches a socket or a real database.
 
-**Runner:** Vitest everywhere except the nine `node --test` files above.
+**Runner:** Vitest everywhere except the fifteen `node --test` files above.
 
 **How to run them:**
 
 ```sh
 pnpm test                              # the harness tests, then every workspace's unit + component tests
-pnpm test:harness                      # only the seven harness tests
+pnpm test:harness                      # only the thirteen harness tests
 pnpm --filter @hearth/recurrence test  # one workspace
 pnpm --filter @hearth/matching test
 pnpm --filter @hearth/service test     # excludes *.integration.test.ts (vitest.config.ts)
@@ -114,7 +116,12 @@ controlled, not inherited from the machine.
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
   takes `--workspace`, `--cell`, `--only`, `--log-dir` and `--list`, and prints
   `sweep: {passed}/{total} passed`. An `--only` that selects no test file exits 2 with a message
-  before anything runs, instead of passing an empty run.
+  before anything runs, instead of passing an empty run. `--with-today` adds one more unit cell,
+  `today`: the real instant at the start of the run, in one of 11 zones chosen by the UTC day
+  (the UTC epoch day modulo 11, so a weekday does not keep its zone). `--today-instant {ISO}`
+  fixes that instant (it takes what `HEARTH_TEST_NOW` takes) and needs `--with-today`. The
+  cell's result line carries `now=` and `tz=`; a failing today cell is reproduced by running the
+  unit suite with `HEARTH_TEST_NOW` and `TZ` set to those two values.
 
   | Unit cell | Instant (UTC) | `TZ` | What it covers |
   | --- | --- | --- | --- |
@@ -149,7 +156,10 @@ controlled, not inherited from the machine.
     because `TZ` is process-wide. It parses `HEARTH_TEST_NOW` with `test/test-now.mjs`, the module
     the pin shares with the hook.
   - `scripts/test-sweep.test.mjs` runs the sweep as a child process: argument rejection, an
-    `--only` that selects nothing, a listing that cannot run, and one real single-cell run.
+    `--only` that selects nothing, a listing that cannot run, and one real single-cell run. The
+    today-cell cases fix `--today-instant` and check the zone it selects, the UTC day boundaries,
+    that the zone changes day by day over an eleven-day run, that the flag combinations the sweep
+    refuses run nothing, and one real two-cell run with its logs.
   - `test/eslint-clock-ban.test.mjs` lints snippets with the repo's own ESLint config: a snippet
     that reads the real clock must raise the rule, one with an explicit instant must not.
   - `test/eslint-service-role-fence.test.mjs` lints probe snippets with the repo's own ESLint
@@ -174,6 +184,42 @@ controlled, not inherited from the machine.
     six failed attempts end in an `::error::` annotation, with the delays scaled by
     `CI_PREPULL_DELAY_SCALE`. One case reads the real `docker/` files. Nothing pulls an image or
     needs a Docker daemon.
+  - `scripts/check-knip-baseline.test.mjs` runs `scripts/check-knip-baseline.mjs` as a child
+    process against fixture `knip --reporter json` reports and baseline files, so knip itself
+    never runs. It checks that findings equal to the baseline pass, that a new finding and a
+    stale baseline row each fail, that unusable input exits 2, and that the committed
+    `scripts/knip-production-baseline.txt` has the 28 owner-reviewed rows.
+  - `scripts/check-repo-hygiene.test.mjs` builds a temporary git repository per case, stages
+    files and runs `scripts/check-repo-hygiene.mjs` on its index. It checks that a tracked file
+    `.gitignore` ignores, a shebang file or `*.sh` file that is not `100755`, and a file with
+    CRLF or mixed endings in the index each fail, that symlinks and `-text` files are skipped, and
+    that a directory that is not a git work tree exits 2.
+  - `scripts/check-migrations-append-only.test.mjs` builds a temporary repository with two applied
+    migrations and a branch per case, and runs `scripts/check-migrations-append-only.mjs`. It
+    checks that an added file passes and that an edit, delete, rename, mode change or type change
+    fails, that an all-zero or unresolvable base exits 2, and that a hostile `--base` never
+    reaches a shell (the marker file a command substitution would create stays absent).
+  - `scripts/audit-prod.test.mjs` runs `scripts/audit-prod.mjs` on saved `pnpm audit --prod
+    --json` reports with a fixed `--today`, and in four cases with a stub `pnpm` first on `PATH`
+    so no registry is contacted. It checks the allowlist rules (an unlisted advisory fails, a
+    listed one passes, an expired entry fails, and an entry without a reason, with a bad id or
+    date, more than 180 days ahead or duplicated is refused with exit 2), that a report with an
+    `error` key, without an `advisories` object or that is not JSON exits 2 instead of passing,
+    that pnpm's own exit status is ignored, and that an unavailable audit is tried three times.
+  - `scripts/jscpd-config.test.mjs` runs the installed `jscpd` with the repository's own
+    `.jscpd.json` (only the scanned path replaced) against fixture trees. It checks that two
+    files sharing a 40-line block fail, that files sharing no 8-line, 60-token sequence pass, that
+    a directory with no TypeScript file fails, and that the config keeps its token, line,
+    threshold, path and format settings and the `jscpd` script in `package.json` keeps
+    `--fail-on-empty`.
+  - `scripts/deploy-gate.test.mjs` copies the real `scripts/deploy-gate.sh` into a temporary git
+    repository with a stub `docker` that answers `image inspect hearth-service:current` with a
+    revision label. It checks the three rules (a commit older than the running revision, and a
+    change confined to `docs/` and `.planning/`, print `deploy=false`; a re-run, an unknown or
+    diverged running revision and any other change print `deploy=true`), that code moved into
+    `docs/` still deploys, and that a `HEARTH_DEPLOY_SHA` that is not the checked-out commit's 40
+    lowercase hex digits exits 1 with empty stdout before docker is asked. Nothing reaches a
+    Docker daemon.
 - **The Kong route table.** `apps/service/src/kong-routes.test.ts` is a Vitest test in the service
   unit suite. It reads `docker/kong.yml` (and the Compose `KONG_PLUGINS` value) through the
   service's `yaml` devDependency and pins the GoTrue allowlist: the routes, their methods and
@@ -730,15 +776,40 @@ pnpm db:seed              # re-seed from scratch
 
 ### Analysis tools
 
-Two report-only scans look for unused and duplicated code. Neither is part of `pnpm test` or CI, and
-neither fails a run:
+The checks below are local commands. None is part of `pnpm test` or CI yet: they start running in
+CI with the pull request that wires them into the workflows. Their harness tests are part of
+`pnpm test` (see Harness tests above). Run them before pushing:
 
 - **knip** reports unused files, exports and dependencies across the workspaces. `pnpm knip` scans
-  everything, `pnpm knip:production` scans production code only (it leaves out `e2e` and
-  `supabase/seed`), and `pnpm knip:summary {report.json} {out.txt}` turns a `knip --reporter json`
-  report into sorted lines that two runs can be compared with. Its configuration is `knip.json`.
-- **jscpd** reports duplicated code. It is not a dependency of the repository; run it on demand as
-  `pnpm dlx jscpd@5.4.1 apps packages e2e supabase/seed --format typescript,tsx --min-tokens 60
-  --min-lines 8 --ignore "**/node_modules/**,**/dist/**,**/coverage/**,**/db/types.ts"
-  --reporters json,console --output {directory}`. The scan includes test files; adding
-  `**/*.test.ts,**/*.test.tsx,**/*.spec.ts` to `--ignore` limits it to source.
+  everything and must report nothing; `pnpm knip:production` scans production code only (it leaves
+  out `e2e` and `supabase/seed`), and `pnpm knip:summary {report.json} {out.txt}` turns a
+  `knip --reporter json` report into sorted lines that two runs can be compared with. Its
+  configuration is `knip.json`, which ignores `.planning/**` and turns the node plugin off, so
+  files under `test` folders are checked too; every non-test `scripts/*.mjs` is listed there as a
+  production entry. `node scripts/check-knip-baseline.mjs` compares the production findings with
+  the rows in `scripts/knip-production-baseline.txt` and fails on a new finding and on a baseline
+  row knip no longer reports. A new row needs the owner's review before it is added.
+- **jscpd** reports duplicated code. It is a root devDependency (5.4.1); `pnpm jscpd` reads
+  `.jscpd.json`, scans `apps`, `packages`, `e2e` and `supabase/seed` as TypeScript and TSX
+  (minimum 60 tokens and 8 lines, test files included, `dist`, `coverage`, `node_modules` and the
+  generated `db/types.ts` ignored), and fails above 2% duplicated lines or when the scan finds
+  nothing to read. The recorded figure is 1.11% (66 clones, 858 duplicated lines).
+- **The audit** is `node scripts/audit-prod.mjs`. It runs `pnpm audit --prod --json` and decides
+  from the parsed report, ignoring pnpm's exit status. An advisory passes only when
+  `scripts/audit-allowlist.json` has an entry for its GHSA id; an entry has the `id`, an
+  `expires` day (YYYY-MM-DD, valid through that day and at most 180 days ahead) and a `reason`.
+  An expired entry fails whether or not it still matches, and an unexpired entry that matches
+  nothing only prints a note. The allowlist is empty today. When the registry cannot be reached
+  pnpm prints an `error` object and exits 0; the script tries three times and then exits 2
+  rather than reading it as "no advisories".
+- **The hygiene check** is `node scripts/check-repo-hygiene.mjs`. It reads the git index and fails
+  on a tracked file that `.gitignore` ignores, a script that is not mode `100755` (a file that
+  starts with `#!`, or whose name ends in .sh), and a text file whose committed copy has CRLF or mixed
+  line endings.
+- **The migration check** is `node scripts/check-migrations-append-only.mjs --base {ref}`. It
+  compares `supabase/migrations/` with the merge base of `{ref}` and `HEAD` and fails on anything
+  but added files: an edit, a delete, a rename, a mode change or a type change. It needs history
+  back to the merge base, and it does not check that new files sort after the old ones.
+
+Each script exits 0 when it passes, 1 when it finds a problem and 2 when it could not decide (bad
+usage, an unreadable input, a tool that did not run).

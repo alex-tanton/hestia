@@ -91,6 +91,106 @@ describe('test-sweep: other arguments are rejected with exit 2', () => {
   });
 });
 
+describe('test-sweep: the today cell', () => {
+  const rotation = [
+    ['2026-10-22T14:00:00.000Z', 'Asia/Kolkata'],
+    ['2026-10-23T14:00:00.000Z', 'Europe/London'],
+    ['2026-10-21T23:59:59.999Z', 'America/Los_Angeles'],
+    ['2026-10-22T00:00:00.000Z', 'Asia/Kolkata'],
+    ['2026-10-22T23:59:59.999Z', 'Asia/Kolkata'],
+    ['2026-10-23T00:00:00.000Z', 'Europe/London'],
+    ['2026-10-23T01:00:00+02:00', 'Asia/Kolkata'],
+    ['2026-10-22T01:00:00+02:00', 'America/Los_Angeles'],
+  ];
+  for (const [instant, zone] of rotation) {
+    it(`--list --with-today maps ${instant} to ${zone}`, () => {
+      const run = sweep('--list', '--with-today', '--today-instant', instant);
+      assert.equal(run.status, 0, run.stderr);
+      const now = new Date(instant).toISOString();
+      assert.match(run.stdout, /^today cell:$/m);
+      assert.ok(
+        run.stdout.split('\n').includes(`  today: HEARTH_TEST_NOW=${now} TZ=${zone}`),
+        run.stdout,
+      );
+      assert.doesNotMatch(run.stdout, /result=/);
+    });
+  }
+
+  it('eleven consecutive days use eleven different zones, then repeat', () => {
+    const zones = [];
+    for (let day = 0; day < 12; day += 1) {
+      const instant = new Date(Date.UTC(2026, 9, 1 + day, 12)).toISOString();
+      const run = sweep('--list', '--with-today', '--today-instant', instant);
+      assert.equal(run.status, 0, run.stderr);
+      zones.push(/^ {2}today: HEARTH_TEST_NOW=\S+ TZ=(\S+)$/m.exec(run.stdout)?.[1]);
+    }
+    assert.equal(new Set(zones.slice(0, 11)).size, 11, zones.join(' '));
+    assert.equal(zones[11], zones[0]);
+  });
+
+  it('--list alone prints no today cell', () => {
+    const run = sweep('--list');
+    assert.equal(run.status, 0, run.stderr);
+    assert.doesNotMatch(run.stdout, /today/);
+  });
+
+  it('--list --with-today without an instant reads the real clock once and lists a zone', () => {
+    const run = sweep('--list', '--with-today');
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(
+      run.stdout,
+      /^ {2}today: HEARTH_TEST_NOW=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z TZ=[A-Za-z_]+\/[A-Za-z_]+$/m,
+    );
+  });
+
+  const rejected = [
+    [['--today-instant', '2026-10-22T14:00:00.000Z'], /--today-instant needs --with-today/],
+    [['--with-today', '--today-instant', '2026-10-22T14:00:00'], /HEARTH_TEST_NOW=/],
+    [['--with-today', '--today-instant', 'nope'], /HEARTH_TEST_NOW="nope"/],
+    [['--with-today', '--today-instant'], /--today-instant needs a value/],
+    [['--with-today', '--today-instant', '--list'], /--today-instant needs a value/],
+    [['--suite', 'integration', '--with-today'], /the today cell is a unit cell/],
+    [['--suite', 'integration', '--with-today', '--list'], /the today cell is a unit cell/],
+    [['--cell', 'today'], /unknown unit cell today/],
+    [['--cell', 'today', '--with-today'], /unknown unit cell today/],
+  ];
+  for (const [args, message] of rejected) {
+    it(`exit 2, nothing run: ${args.join(' ')}`, () => {
+      const run = sweep(...args, '--workspace', 'shared');
+      assert.equal(run.status, 2, `${run.stdout}\n${run.stderr}`);
+      assert.match(run.stderr, /^test-sweep: /m);
+      assert.match(run.stderr, message);
+      assert.doesNotMatch(run.stdout, /result=|sweep:|today:/);
+    });
+  }
+
+  it('a fixed cell and the today cell run, and the today line says how to reproduce it', () => {
+    const logs = join(scratch, 'today-logs');
+    const run = sweep(
+      '--workspace',
+      'shared',
+      '--cell',
+      'default',
+      '--with-today',
+      '--today-instant',
+      '2026-10-22T14:00:00.000Z',
+      '--only',
+      'src/api/schemas.test.ts',
+      '--log-dir',
+      logs,
+    );
+    assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+    const lines = run.stdout.split('\n');
+    assert.deepEqual(lines.slice(0, 3), [
+      'cell=default workspace=shared result=PASS exit=0',
+      'cell=today now=2026-10-22T14:00:00.000Z tz=Asia/Kolkata workspace=shared result=PASS exit=0',
+      'sweep: 2/2 passed',
+    ]);
+    assert.ok(existsSync(join(logs, 'today-shared.log')), 'the today cell has its own log');
+    assert.ok(existsSync(join(logs, 'default-shared.log')));
+  });
+});
+
 describe('test-sweep: an --only that selects no test fails the sweep', () => {
   it('a path that matches no unit test file', () => {
     const run = sweep(
