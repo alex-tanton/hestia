@@ -70,3 +70,4 @@ Notes: the three scripts are `.planning/cleanup/tools/comment-only-controls.sh`,
 migrations-live=pass
 
 Notes: `--base origin/main` printed `migrations: 0 added, nothing else changed` (PR 1 adds no migration); the all-zero base exited 2. Raw log: `.planning/cleanup/logs/06-01-migrations-live.log` (gitignored).
+pr1-branch-push=e5895b2fd62069c06e28774e200a514119da4824
