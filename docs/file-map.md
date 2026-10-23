@@ -18,7 +18,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, the gate scripts (the knip baseline, repository hygiene, migration append-only and production audit checks) and the deploy gate that decides whether a commit is deployed, with harness tests for the scripts that have one. |
 | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
-| `.github/` | Continuous integration and deployment automation (GitHub Actions), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
+| `.github/` | Continuous integration and deployment automation (GitHub Actions: `ci.yml`, `sweep.yml` and `deploy.yml`), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
 | `README.md` | The entry point: prerequisites, local development, deployment, and backup/restore steps. |
 | `CONTRIBUTING.md` | How changes land: which go straight to `main`, which need a pull request, and the commit rules. |
@@ -26,8 +26,8 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `tsconfig.base.json` | Shared TypeScript compiler settings every workspace builds on. |
 | `eslint.config.js`, `.prettierrc.json`, `.prettierignore` | Code style and quality rules enforced across the repo. |
 | `commitlint.config.js`, `.lintstagedrc.json` | Rules for commit message format and pre-commit checks. |
-| `knip.json` | Configuration for the knip report of unused files, exports and dependencies (`pnpm knip`, `pnpm knip:production`); report-only. |
-| `.jscpd.json` | Configuration for the jscpd duplicate-code check (`pnpm jscpd`): the scanned folders, the minimum clone size and the 2% limit. |
+| `knip.json` | Configuration for the knip report of unused files, exports and dependencies (`pnpm knip`, `pnpm knip:production`). CI's `hygiene` job blocks on it: no finding in the default scan, and the production scan must match `scripts/knip-production-baseline.txt`. |
+| `.jscpd.json` | Configuration for the jscpd duplicate-code check (`pnpm jscpd`): the scanned folders, the minimum clone size and the 2% limit. CI's `hygiene` job runs it. |
 | `.nvmrc` | Pins the Node.js version contributors and CI should use. |
 | `.gitattributes`, `.gitignore`, `.dockerignore` | Tell Git and Docker which files to normalize, ignore, or exclude from builds. |
 | `.env.example` | A template for the real, never-committed configuration file used in production. |
@@ -167,7 +167,7 @@ shopping list.
 | `audit-prod.test.mjs` | Harness test for the audit script, run on saved audit reports and a stub `pnpm`. Run by `pnpm test:harness`. |
 | `audit-allowlist.json` | The advisories the audit script accepts, each with an id, an expiry day and a reason. Empty today. |
 | `jscpd-config.test.mjs` | Harness test for the duplicate-code check: runs jscpd with the settings in `.jscpd.json` on fixture trees. Run by `pnpm test:harness`. |
-| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hearth-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. |
+| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hearth-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
 | `deploy-gate.test.mjs` | Harness test for the deploy gate, run on temporary git repositories with a stub `docker`. Run by `pnpm test:harness`. |
 | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
 | `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |
@@ -193,14 +193,14 @@ shopping list.
 | ESLint, `eslint.config.js` | A linter: it scans code for likely bugs, risky patterns, and style inconsistencies beyond what the type checker catches. | Enforces project-specific rules too, such as which parts of the service are allowed to use privileged database access. |
 | Prettier, `.prettierrc.json`, `.prettierignore` | An automatic code formatter — it rewrites code into one consistent style so contributors don't argue over formatting. | Keeps every file formatted the same way regardless of who wrote it. |
 | commitlint, `commitlint.config.js` | Checks that every commit message follows the Conventional Commits format (a `type(scope): subject` style) with an approved list of types and scopes. | Keeps commit history readable and consistent, and scopes it to the project's actual areas (web, service, shared, etc.). |
-| knip, `knip.json` | A tool that reads every workspace and reports files, exports and dependencies that nothing uses. It only reports; it never edits or deletes anything. | Finds unused code across workspaces, which the linter and type checker cannot see. Code it reports is removed only when a text search and the tests also show it is unused. |
+| knip, `knip.json` | A tool that reads every workspace and reports files, exports and dependencies that nothing uses. It only reports; it never edits or deletes anything. CI's `hygiene` job fails on any finding it does not accept. | Finds unused code across workspaces, which the linter and type checker cannot see. Code it reports is removed only when a text search and the tests also show it is unused. |
 | Husky, `.husky/` | Installs Git hooks — small scripts that run automatically at points like "before a commit is created." | Runs linting, formatting, and type-checking before a commit, and checks the commit message, so problems are caught before they're even committed. |
 | lint-staged, `.lintstagedrc.json` | Runs linters and formatters only on the files actually being committed, not the whole repo. | Keeps the pre-commit check fast. |
 | Vitest | The test runner used for unit, component, and integration tests throughout the repo (in `apps/web`, `apps/service`, and the packages) — distinct from Playwright, which drives full end-to-end journeys in `e2e/`. | Fast, consistent testing across every workspace. |
 | `.nvmrc` | Pins the exact Node.js version the project expects. | Keeps every contributor and CI on the same JavaScript runtime version, avoiding "works on my machine" issues. |
 | `.dockerignore` | Lists files and folders excluded when building a Docker image. | Keeps build context small and makes sure secrets, test artifacts, and unrelated folders never end up inside a built image. |
 | `.gitattributes` | Tells Git how to handle certain files — here, normalizing line endings to LF for text files and marking binary files (images, archives) so Git doesn't try to treat them as text. | Prevents line-ending mismatches between contributors on different operating systems. |
-| CI, `.github/workflows/` | GitHub Actions automation: `ci.yml` runs checks (lint, typecheck, tests) on every pull request and push, and each of its six jobs calls the composite action in `.github/actions/setup/` (pnpm, Node from `.nvmrc`, and a lockfile install) after checkout; `deploy.yml` deploys a passing `main` commit to production. `dependabot.yml` opens automated pull requests to keep dependencies up to date. | Catches problems before merge and automates getting a verified change into production. |
+| CI, `.github/workflows/` | GitHub Actions automation: `ci.yml` runs checks (lint, typecheck, tests, and the `hygiene` repository gates) on every pull request and push, and each of its seven jobs calls the composite action in `.github/actions/setup/` (pnpm, Node from `.nvmrc`, and a lockfile install) after checkout; `sweep.yml` runs the unit suite across the date and time-zone matrix on `main` and nightly, and never gates a deploy; `deploy.yml` deploys a passing `main` commit to production through `scripts/deploy-gate.sh`. `dependabot.yml` opens automated pull requests to keep dependencies up to date. | Catches problems before merge and automates getting a verified change into production. |
 
 ## 11. test/
 

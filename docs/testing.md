@@ -122,6 +122,10 @@ controlled, not inherited from the machine.
   fixes that instant (it takes what `HEARTH_TEST_NOW` takes) and needs `--with-today`. The
   cell's result line carries `now=` and `tz=`; a failing today cell is reproduced by running the
   unit suite with `HEARTH_TEST_NOW` and `TZ` set to those two values.
+  `.github/workflows/sweep.yml` (workflow `Sweep`) runs the six fixed cells on every push to `main`
+  that changes more than `docs/` and `.planning/`, and adds the today cell in the nightly run at
+  05:17 UTC and in manual runs. When it fails it uploads the per-cell logs as the `sweep-logs`
+  artifact for 14 days. It is not the workflow named `CI`, so it never gates or triggers a deploy.
 
   | Unit cell | Instant (UTC) | `TZ` | What it covers |
   | --- | --- | --- | --- |
@@ -143,7 +147,8 @@ controlled, not inherited from the machine.
 - **Harness tests.** The clock pin, the zone hook, the sweep and the lint ban are code with
   consequences for every other test, so they have tests of their own. They run with `node --test`
   through the root script `pnpm test:harness`, and `pnpm test` runs that script first
-  (`pnpm test:harness && pnpm -r test`), as does CI's `test-unit` job. One red harness test stops
+  (`pnpm test:harness && pnpm -r test`); CI's `test-unit` job runs `pnpm test:harness` as its first
+  test step. One red harness test stops
   the run before any workspace suite starts, so a harness failure shows no workspace results; run
   `pnpm -r test` to see those on their own.
   - `test/clock-setup.test.mjs` checks the pin from inside real Vitest workers. Each scenario is a
@@ -251,7 +256,10 @@ controlled, not inherited from the machine.
 (`supabase start`), migrated from `supabase/migrations/`, so they exercise real SQL, real Row Level
 Security policies, and real triggers — not a mock. `vitest.integration.config.ts` only includes
 `*.integration.test.ts`, runs files one at a time (`fileParallelism: false`, because fixtures share
-natural keys like a postal code), and raises the test/hook timeouts to 20s/30s for the slower I/O.
+natural keys like a postal code), and raises the test/hook timeouts to 20s/30s for the slower I/O. Before the tests, CI's
+`test-integration` job regenerates `apps/service/src/db/types.ts` with `pnpm db:types` against the
+freshly migrated stack and fails if the result differs from the committed file, so a migration
+without regenerated types, or a hand edit of the generated file, fails CI.
 
 **Test isolation — there are two patterns used side by side, by what the test is checking:**
 
@@ -750,9 +758,9 @@ pnpm db:seed              # re-seed from scratch
 - **`packages/recurrence`**, **`packages/matching`**, and **`packages/shared`** — the three pure-logic
   packages with no I/O — each configure a coverage threshold: every one of their
   `vitest.config.ts` sets `thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 }`.
-  Only `packages/recurrence` runs with `--coverage` in its `test` script, so `pnpm test` — which
-  CI's `test-unit` job runs — fails the moment recurrence's coverage drops below 90% on any of the
-  four metrics. The `test` script of `packages/matching` and `packages/shared` is a plain
+  Only `packages/recurrence` runs with `--coverage` in its `test` script, so `pnpm test`, and CI's
+  `test-unit` job through its run of every non-web workspace's `test` script, fails the moment
+  recurrence's coverage drops below 90% on any of the four metrics. The `test` script of `packages/matching` and `packages/shared` is a plain
   `vitest run --passWithNoTests`, so their thresholds apply only to their `test:coverage` script
   (`vitest run --coverage --passWithNoTests`), which CI does not run. The `index.ts` of
   `packages/matching` and `packages/shared` (a pure re-export barrel with no logic of its own) is
@@ -765,20 +773,24 @@ pnpm db:seed              # re-seed from scratch
   tests together (a unit-only number would understate what's exercised through the integration
   suite). It needs `supabase start` running, so CI's `test-integration` job runs it in place of a
   plain `pnpm test:integration` (the same job already pays for `supabase start`), enforcing the
-  thresholds on every pull request and push to main; `test-unit` still runs plain `pnpm test`
-  separately, with no coverage step.
+  thresholds on every pull request and push to main. `test-unit` runs `pnpm test:harness`, every
+  other workspace's `test` script and web's `test:coverage`, and never starts a database.
 - **`apps/web`** has a `test:coverage` script (`vitest run --coverage --passWithNoTests`) and a
-  coverage configuration in `vite.config.ts`: `thresholds: { statements: 82, branches: 78,
-  functions: 74, lines: 84 }`, each a few points under the measured value. CI does not run it, and
-  the `test` script of the workspace has no `--coverage`, so the thresholds are checked only when
-  someone runs `pnpm --filter @hearth/web test:coverage`. The E2E journeys are what stand in for
-  coverage of the running UI.
+  coverage configuration in `vite.config.ts`: `thresholds: { statements: 84, branches: 80,
+  functions: 77, lines: 85 }`, each the measured value (85.38% / 81.83% / 78.59% / 86.96%) rounded
+  down, minus one point. CI's `test-unit` job runs `pnpm --filter @hearth/web test:coverage` on
+  every pull request and push to main, so a drop below a threshold fails CI. The `test` script of
+  the workspace still has no `--coverage`, so `pnpm test` and the sweep stay plain and pay nothing
+  for it. The E2E journeys are what stand in for coverage of the running UI.
 
 ### Analysis tools
 
-The checks below are local commands. None is part of `pnpm test` or CI yet: they start running in
-CI with the pull request that wires them into the workflows. Their harness tests are part of
-`pnpm test` (see Harness tests above). Run them before pushing:
+CI's `hygiene` job runs each check below as its own step on every pull request and push to main,
+and any finding fails CI. Every step runs even after an earlier one failed, so one run shows every
+finding. The audit and the allowance expiry depend on the date, so a new production advisory or an
+expired allowance fails an unchanged tree and holds back the deploy until it is fixed or
+allowlisted with an expiry. The checks are also local commands, and their harness tests are part
+of `pnpm test` (see Harness tests above). Run them before pushing:
 
 - **knip** reports unused files, exports and dependencies across the workspaces. `pnpm knip` scans
   everything and must report nothing; `pnpm knip:production` scans production code only (it leaves
