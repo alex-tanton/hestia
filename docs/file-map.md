@@ -15,7 +15,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `supabase/` | Configuration, database migrations, and seed data for the self-hosted Supabase stack. |
 | `docker/` | Everything needed to build and run the production stack with Docker Compose. |
 | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
-| `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, with harness tests for the scripts that have one. |
+| `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, the gate scripts (the knip baseline, repository hygiene, migration append-only and production audit checks) and the deploy gate that decides whether a commit is deployed, with harness tests for the scripts that have one. |
 | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
 | `.github/` | Continuous integration and deployment automation (GitHub Actions), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
@@ -27,6 +27,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `eslint.config.js`, `.prettierrc.json`, `.prettierignore` | Code style and quality rules enforced across the repo. |
 | `commitlint.config.js`, `.lintstagedrc.json` | Rules for commit message format and pre-commit checks. |
 | `knip.json` | Configuration for the knip report of unused files, exports and dependencies (`pnpm knip`, `pnpm knip:production`); report-only. |
+| `.jscpd.json` | Configuration for the jscpd duplicate-code check (`pnpm jscpd`): the scanned folders, the minimum clone size and the 2% limit. |
 | `.nvmrc` | Pins the Node.js version contributors and CI should use. |
 | `.gitattributes`, `.gitignore`, `.dockerignore` | Tell Git and Docker which files to normalize, ignore, or exclude from builds. |
 | `.env.example` | A template for the real, never-committed configuration file used in production. |
@@ -153,8 +154,21 @@ shopping list.
 | `deploy.test.mjs` | Harness test for `deploy.sh`: runs the real script against stub `docker`, `supabase` and `curl` binaries and checks that the database password reaches the Supabase CLI through its environment and appears in no argument. Run by `pnpm test:harness`. |
 | `ci-prepull-images.sh` | Pre-pulls the images the end-to-end stack needs, with retries and a `ghcr.io` mirror tried first for the three Supabase images, so a rate-limited registry does not fail `docker compose up` in CI. |
 | `ci-prepull-images.test.mjs` | Harness test for the pre-pull script, run against stub `docker` and `sleep` binaries so no image is pulled. Run by `pnpm test:harness`. |
-| `test-sweep.mjs` | Runs the unit or service integration test suite once per cell of a fixed matrix of pinned dates and time zones, each cell in its own process (`pnpm test:sweep`, `pnpm test:sweep:integration`). |
-| `test-sweep.test.mjs` | Harness test for the sweep: argument checks, an `--only` that selects nothing, a listing that cannot run, and one real single-cell run. Run by `pnpm test:harness`. |
+| `test-sweep.mjs` | Runs the unit or service integration test suite once per cell of a fixed matrix of pinned dates and time zones, each cell in its own process (`pnpm test:sweep`, `pnpm test:sweep:integration`). With `--with-today` it adds a unit cell at the real instant in a zone chosen by the UTC day, and prints the instant and zone so a failure can be reproduced. |
+| `test-sweep.test.mjs` | Harness test for the sweep: argument checks, an `--only` that selects nothing, a listing that cannot run, the today cell's zone for fixed instants, and real single-cell and two-cell runs. Run by `pnpm test:harness`. |
+| `check-knip-baseline.mjs` | Runs knip in production mode and compares its findings with `knip-production-baseline.txt`; fails on a new finding and on a baseline row knip no longer reports. |
+| `check-knip-baseline.test.mjs` | Harness test for the baseline check, run on fixture knip reports so knip itself never runs. Run by `pnpm test:harness`. |
+| `knip-production-baseline.txt` | The owner-reviewed production-mode knip findings (28 rows and a `total` row) that the baseline check accepts. A new row needs the owner's review. |
+| `check-repo-hygiene.mjs` | Reads the git index and fails on a tracked file that `.gitignore` ignores, a script that is not mode `100755`, and a text file committed with CRLF or mixed line endings. |
+| `check-repo-hygiene.test.mjs` | Harness test for the hygiene check, run on temporary git repositories. Run by `pnpm test:harness`. |
+| `check-migrations-append-only.mjs` | Compares `supabase/migrations/` with the merge base of a given ref and fails on anything but added files, because an applied migration must never change. |
+| `check-migrations-append-only.test.mjs` | Harness test for the migration check, run on temporary repositories, including a base ref that must never reach a shell. Run by `pnpm test:harness`. |
+| `audit-prod.mjs` | Runs `pnpm audit --prod --json` and fails on an advisory that `audit-allowlist.json` does not allow, on an expired allowance, and when the registry could not be reached. |
+| `audit-prod.test.mjs` | Harness test for the audit script, run on saved audit reports and a stub `pnpm`. Run by `pnpm test:harness`. |
+| `audit-allowlist.json` | The advisories the audit script accepts, each with an id, an expiry day and a reason. Empty today. |
+| `jscpd-config.test.mjs` | Harness test for the duplicate-code check: runs jscpd with the settings in `.jscpd.json` on fixture trees. Run by `pnpm test:harness`. |
+| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hearth-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. |
+| `deploy-gate.test.mjs` | Harness test for the deploy gate, run on temporary git repositories with a stub `docker`. Run by `pnpm test:harness`. |
 | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
 | `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |
 
