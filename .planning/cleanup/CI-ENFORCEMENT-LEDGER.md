@@ -342,3 +342,21 @@ Notes:
 
 - The owner ran `owner-command=` from their own clone. `git ls-remote --heads origin ci/enforce-gates` returns `0061269c32e30c9f84eb3d80198577888dd31084`, and `gh api repos/alex-tanton/hearth/git/commits/0061269c32e30c9f84eb3d80198577888dd31084 --jq .tree.sha` returns `54069f099544ee0c93b741e935104ffe6a271acd`, equal to `pr2-tree=` (the commit SHA differs from `pr2-head=` because `git am` rewrites committer data; the tree is the identity).
 - The owner saw the four deploy-behavior changes (OD-4 a to d) in the gate text and chose the canary with the one-line newest-migration edit (PC-11, D-03 exception). PR 2 is not opened yet; 06-08 opens it and puts OD-4 a to d in its body.
+
+## Plan 06-08 Task 1: PR 2 opened, CI attempt 1
+
+pr2=36
+pr2-url=https://github.com/alex-tanton/hearth/pull/36
+pr2-opened-head=0061269c32e30c9f84eb3d80198577888dd31084
+pr2-ci-attempt1=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success hygiene:success run=40017353021
+pr2-hygiene-steps=knip:success,knip-production:success,jscpd:success,audit:success,hygiene:success,migrations:success
+pr2-db-types-on-ci=success
+pr2-runner-coverage=85.38/81.83/78.59/86.96
+pr2-e2e-failure=tests/17-accessibility-states.spec.ts:497 notification type: saving, then a failed save (light) 103 passed 1 failed; not a registry flake; DA-4; job=120632739896
+
+Notes:
+
+- PR 2 (#36) was opened through REST from `ci/enforce-gates` at `0061269` (tree `54069f0`) into `main`, title `ci: block regressions and gate deploys on the running revision`, with `## Deploy behavior changes (flagged)` listing OD-4 a to d (body kept at `.planning/cleanup/logs/06-08-pr2.md`, gitignored). Claude does not merge it.
+- Attempt 1 (run 40017353021): six of seven jobs `success`. `hygiene` ran all six check steps green, `test-integration` ran `db:types matches the migrated schema` green (the runner's generated file equals the committed bytes), and web coverage on the runner (`All files`) is 85.38/81.83/78.59/86.96 against thresholds 84/80/77/85.
+- `test-e2e` failed on one spec: `17-accessibility-states.spec.ts:497`, light theme, `notification type: saving, then a failed save` (`getByText("Couldn't save that setting. Try again.")` not visible within 15 s); the same spec passed in the dark theme in the same run and 103 of 104 passed. No `toomanyrequests` in the log, so phase rule 9's registry-flake rerun does not apply; the notification E2E spec flakiness is DA-4 (out of scope), so a re-run is the owner's call. Logs (gitignored): `.planning/cleanup/logs/06-08-test-e2e.log`, `06-08-test-unit.log`.
+- Canary prepared, not pushed: W3 `/home/user/hearth-gate-canaries` on `ci/gate-canaries` holds one commit `1d5cbf1` on top of `0061269` with every plant and the local pre-check logs `06-08-canary-local-*.log`. Deviation: `yaml@2.9.1` as an `apps/web` devDependency is not reported by knip (`yaml` is an optional peer dependency of installed packages such as vite, which knip counts as used), so the unused-dependency plant is `fastest-levenshtein@1.0.16` (already a dependency of `@hearth/matching`, no new lockfile entry; knip reports `Unused devDependencies fastest-levenshtein apps/web/package.json`).
