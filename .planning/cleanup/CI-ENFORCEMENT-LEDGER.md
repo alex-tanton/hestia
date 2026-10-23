@@ -421,3 +421,18 @@ Notes:
 - Not a registry flake and not a notification flake: `test-e2e` passed on this run (first attempt). Phase rule 9 stops here with a checkpoint:decision; no rerun was made.
 - `Sweep` push run 40024555056 (created 21:08:28Z, completed 21:31:36Z, event `push`) concluded `success`; the `Six fixed cells` step ran and its log ends `sweep: 36/36 passed` (`.planning/cleanup/logs/06-09-sweep.log`); the today-cell, upload and artifact steps were skipped as designed, and no `sweep-logs` artifact exists.
 - Deploy: one `workflow_run` run, 40025921613, created 21:19:30Z when the red `CI` run completed; its `deploy` job (labels `self-hosted, hearth`) is `skipped`, which is `deploy.yml`'s `conclusion == 'success'` guard rejecting a failed CI run. That is the intended guard, so it is not yet evidence that a green CI run on `main` still reaches the `deploy` job (CI-07 stays unproven until one does). The older Deploy runs (including 40011784566 for `b585d25`) are all `cancelled`; Claude cancelled nothing.
+
+## Plan 06-09 zod advisory fix (owner chose an exact-pin PR)
+
+zod-fix-pr=38
+zod-fix-url=https://github.com/alex-tanton/hearth/pull/38
+zod-fix-head=b302bfcba28c5a6a6d69e8825fd297b6aaa8471f
+zod-fix-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40028399096
+
+Notes:
+
+- Owner replies (2026-10-23): remedy for `GHSA-mrhx-c7xc-m3w5` is "My exact-pin PR"; the WB sync may resolve its four `.planning` conflicts with `git checkout --ours` on exactly `ROADMAP.md`, `STATE.md`, `state.json` and `CI-ENFORCEMENT-LEDGER.md`, and any conflict outside `.planning` aborts the merge.
+- Branch `deps/fix-zod-advisory` (worktree `/home/user/hearth-zod-fix`, cut from `origin/main` at `5643554`) holds one commit `b302bfc` `build: bump zod from 4.6.5 to 4.6.6`: `zod` exact-pinned in `apps/service`, `packages/shared` and `apps/web` through `pnpm add --save-exact`, and `pnpm-lock.yaml` (19 changed lines: the three importer entries, one new `zod@4.6.6` package and snapshot, and the `kysely-codegen` snapshot's zod reference). `zod@4.6.5` remains in the lockfile for `eslint-plugin-react-hooks`, its `zod-validation-error` and `knip` (dev-only; `pnpm audit --prod` does not reach them). Nothing else moved; no `.github/`, migration or product code change.
+- Local evidence in the worktree (`.planning/cleanup/logs/06-09-zod-*.log`, gitignored, each `exit=0`): `pnpm audit --prod` no known vulnerabilities, `audit-prod.mjs` `0 advisories, 0 allowed, 0 problems`, lint, format:check, typecheck, `pnpm test` (matching 156, shared 172, recurrence 77, service 757, web 728), build, knip, knip baseline, jscpd, repository hygiene, migrations.
+- PR #38 (title `build: bump zod from 4.6.5 to 4.6.6`, body `.planning/cleanup/logs/06-09-zod-pr.md`) is open and not draft. The `CI` pull_request run 40028399096 concluded `success` on all seven jobs on the first attempt (no rerun); the `hygiene` steps knip, knip --production, jscpd, audit, repository hygiene and migrations are all `success`. Claude does not merge it.
+- Still open for 06-09 after the owner merges PR #38: re-check `main`'s CI on the new squash commit, the Deploy run, and the WB sync (Task 1 steps 1, 3, 4); Tasks 2 and 3 not started.
