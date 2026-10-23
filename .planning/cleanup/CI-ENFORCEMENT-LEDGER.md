@@ -406,3 +406,18 @@ Notes:
 
 - REST shows PR #36 `state=closed`, `merged=true`, merged at 2026-10-23T21:08:26Z by `alex-tanton` as squash commit `5643554`, which is `origin/main`'s tip with the subject `ci: block regressions and gate deploys on the running revision`. PR #37 (canary) is `closed`, `merged=false`, closed 2026-10-23T21:08:53Z, and `git ls-remote --heads origin ci/gate-canaries` prints nothing (branch deleted by the owner). Claude closed and deleted nothing.
 - Post-merge evidence (`main`'s CI run, the first Sweep run, the Deploy run under the new rule) and the WB sync with `main` belong to 06-09.
+
+## Plan 06-09 Task 1: PR 2 on main (stopped: hygiene red on main)
+
+main-ci-after-pr2=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:failure run=40024555057
+main-hygiene-failure=audit-prod GHSA-mrhx-c7xc-m3w5 zod high via apps__service>zod (installed 4.6.5, patched 4.6.6); steps knip, knip-production, jscpd, repository hygiene and migrations (Migrations are append-only) success, audit step failure; job=120657335578
+sweep-first-push=run 40024555056 success 36/36
+deploy-after-pr2=40025921613 workflow_run completed job=deploy completed skipped labels=self-hosted,hearth
+wb-sync=blocked (merge of origin/main conflicted in 4 .planning paths; the classifier denied git checkout --ours, merge aborted, WB unchanged at 6382daf)
+
+Notes:
+
+- `main`'s `CI` push run 40024555057 on `5643554` has six `success` jobs and a red `hygiene` job: `pnpm audit --prod` now reports `GHSA-mrhx-c7xc-m3w5` (zod, high, `<4.6.6`, patched `>=4.6.6`, installed 4.6.5 in `apps/service`, `packages/shared` and `apps/web`). It is the date-dependent case (research Pitfall 10): the audit was clean on 2026-10-23 at the 06-06 to 06-08 runs and the tree did not change, and the advisory appeared in the registry's data afterwards. `Dependabot` has an open PR #35 `build: bump zod from 4.6.5 to 4.6.6` (branch `dependabot/npm_and_yarn/zod-4.6.6`) and PR #34 for the `npm_and_yarn` group; Claude did not look inside them or touch them. The hygiene log is `.planning/cleanup/logs/06-09-hygiene.log`, the local audit report `06-09-audit-prod.json` (gitignored).
+- Not a registry flake and not a notification flake: `test-e2e` passed on this run (first attempt). Phase rule 9 stops here with a checkpoint:decision; no rerun was made.
+- `Sweep` push run 40024555056 (created 21:08:28Z, completed 21:31:36Z, event `push`) concluded `success`; the `Six fixed cells` step ran and its log ends `sweep: 36/36 passed` (`.planning/cleanup/logs/06-09-sweep.log`); the today-cell, upload and artifact steps were skipped as designed, and no `sweep-logs` artifact exists.
+- Deploy: one `workflow_run` run, 40025921613, created 21:19:30Z when the red `CI` run completed; its `deploy` job (labels `self-hosted, hearth`) is `skipped`, which is `deploy.yml`'s `conclusion == 'success'` guard rejecting a failed CI run. That is the intended guard, so it is not yet evidence that a green CI run on `main` still reaches the `deploy` job (CI-07 stays unproven until one does). The older Deploy runs (including 40011784566 for `b585d25`) are all `cancelled`; Claude cancelled nothing.
