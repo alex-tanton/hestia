@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 current_phase: 06
-current_phase_name: ci-enforcement-and-lock-in
+current_phase_name: CI Enforcement and Lock-in
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-10-22T16:57:30.012Z"
-last_activity: 2026-10-22
-last_activity_desc: Phase 5 complete, transitioned to Phase 6
-state_head: 2d436107df90a63f3168da45d2dfe5d25fe3f1b1
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-10-23T18:17:14.265Z"
+last_activity: 2026-10-23
+last_activity_desc: Phase 06 execution started
+state_head: 0ae08ff2e2e86567278dde5aa8442e7a81f50dc6
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 54
-  completed_plans: 44
-  percent: 81
+  completed_plans: 45
+  percent: 83
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-19)
 
 **Core value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
-**Current focus:** Phase 05 — Redundancy Reduction and Text Sync
+**Current focus:** Phase 06 — CI Enforcement and Lock-in
 
 ## Current Position
 
-Phase: 06 (ci-enforcement-and-lock-in) — READY TO EXECUTE
-Plan: Not started
+Phase: 06 (CI Enforcement and Lock-in) — EXECUTING
+Plan: 2 of 10
 Status: Ready to execute
-Last activity: 2026-10-22 — Phase 5 complete, transitioned to Phase 6
+Last activity: 2026-10-23 — Phase 06 execution started
 
-Progress: [████████░░] 81%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -93,6 +93,7 @@ Progress: [████████░░] 81%
 | Phase 05 P11 | about 1h | 3 tasks | 3 files |
 | Phase 05 P12 | 1 session | 3 tasks | 8 files |
 | Phase 05 P13 | 3 sessions | 3 tasks | 6 files |
+| Phase 06 P01 | 12min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -133,6 +134,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 05-08: docs/sync-specs (158fd52) holds the seven specs and README audited against the code; docs-claims-check.mjs 582 tokens, 0 misses with a 34-token reasoned allowlist; hearth-admin documented as a hand-written shell wrapper; Kong routes, held deal-add id, per-list add-to-list lock and coverage setup stated as they are; README retired-spec citations removed; 14-row behavioral sample in DOCS-AUDIT-LEDGER.md; PR D opens in 05-13
 - [Phase 05]: Plan 05-13: PR D (#29) squash-merged by the owner as a5c4384 (docs: bring specs and codebase maps in line with the code); the dropped CLAUDE.md Anti-Patterns and Component Responsibilities were restored with 19 recorded corrections; main CI run 39718363858 needed three attempts (test-e2e failed at 19-notifications.spec.ts:140, then 17-accessibility-states.spec.ts:497 and :526, then green after the owner's rerun), treated as owner-approved flake exceptions; REDUNDANCY-LEDGER.md indexes RED-01 to RED-05; post-conditions on main: citations 0, migrations equal to c64d79e, docs 7 files, checker 2662 tokens 0 misses
 - [Phase 05]: Plan 05-11: PR C (#28) squash-merged by the owner as 9fdc9c9 (refactor: remove retired spec citations from code); main CI run 39709025122 six of six green; follow-up sweep (aaed732 comments, 33baf2d nine titles) included; Journey N labels and README pointers left for the owner and PR D; RED-04 completes with PR D
+- [Phase 06]: Plan 06-01: ci/gate-scripts pushed at e5895b2 with the knip baseline (28 rows, byte-equal to Phase 3), repo hygiene and migration append-only gates; check-knip-baseline runs knip-summary.mjs as a child process (PC-1); three .planning scripts now 100755; no PR opened
 
 ### Pending Todos
 
@@ -171,9 +173,9 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-22T04:40:00.000Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-ci-enforcement-and-lock-in/06-CONTEXT.md
+Last session: 2026-10-23T18:17:14.138Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
 
 ### Resume point for Phase 5 (after 05-13, 2026-10-22)
 
