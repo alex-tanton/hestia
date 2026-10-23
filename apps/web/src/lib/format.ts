@@ -84,3 +84,5 @@ export function formatList(parts: readonly string[]): string {
   if (parts.length === 1) return parts[0] ?? '';
   return `${parts.slice(0, -1).join(', ')}, and ${String(parts.at(-1))}`;
 }
+
+export const zzCanaryDeadExport = 'canary: nothing imports this export';

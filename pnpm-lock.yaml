@@ -200,6 +200,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 5.0.1
         version: 5.0.1(vitest@5.0.1)
+      fastest-levenshtein:
+        specifier: 1.0.16
+        version: 1.0.16
       jsdom:
         specifier: 30.1.0
         version: 30.1.0

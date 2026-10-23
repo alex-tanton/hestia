@@ -369,3 +369,7 @@ export interface DB {
   shopping_list: ShoppingList;
   shopping_list_item: ShoppingListItem;
 }
+
+export interface ZzCanaryDrift {
+  zz_canary: string;
+}

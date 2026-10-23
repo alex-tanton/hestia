@@ -189,3 +189,4 @@ begin
   );
 end;
 $$;
+-- canary: never merged
