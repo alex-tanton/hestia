@@ -182,3 +182,16 @@ gate-pr1=approve-pr1
 Notes:
 
 - The owner pre-authorized opening PR 1 in the session, superseding the Task 3 question: Claude creates the pull request, tells the owner when CI has passed, and the owner merges it. Task 3 therefore asked nothing and 06-04 opened no pull request; 06-05 opens PR 1 from `ci/gate-scripts` at `pr1-head` and never merges it.
+
+## Plan 06-05 Task 1: PR 1 opened, CI green
+
+pr1=33
+pr1-url=https://github.com/alex-tanton/hearth/pull/33
+pr1-opened-head=f79f84eb51be0d109f8884426aa9ed3527cf3415
+pr1-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=40007205181
+pr1-harness-on-ci=13
+
+Notes:
+
+- PR 1 (#33) was opened through REST from `ci/gate-scripts` at `pr1-head` into `main`, with the body kept at `.planning/cleanup/logs/06-05-pr1.md` (gitignored) and title `ci: add the CI gate scripts and their tests`. Claude does not merge it; the owner squash-merges.
+- All six jobs of the `CI` pull_request run 40007205181 concluded `success` on the first attempt (no registry-flake rerun). The `test-unit` log shows `node --test` over the thirteen harness files, 382 of 382 passing; saved to `.planning/cleanup/logs/06-05-test-unit.log` (gitignored).
