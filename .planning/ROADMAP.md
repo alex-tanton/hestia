@@ -235,7 +235,7 @@ Plans:
   4. Unit and component tests run across a date and timezone matrix on `main` and nightly, and pass.
   5. A throwaway PR confirms that a merge to `main` still fires `deploy.yml` from the workflow named `CI` after all workflow changes.
 
-**Plans:** 2/10 plans executed
+**Plans:** 3/10 plans executed
 
 Plans:
 **Wave 1**
@@ -245,7 +245,7 @@ Plans:
 - [x] 06-02-PLAN.md — PR 1: tracer audit gate (fail-closed, expiring allowlist, braces moot), owner legitimacy check, jscpd 5.4.1 at 2% with a config test
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 06-03-PLAN.md — PR 1: tracer sweep today cell (42/42 locally), deploy gate script for the running revision (OD-4 a to c)
+- [x] 06-03-PLAN.md — PR 1: tracer sweep today cell (42/42 locally), deploy gate script for the running revision (OD-4 a to c)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 06-04-PLAN.md — PR 1 finish: tracer docs checked by the claims checker, thirteen local gates, push, owner gate
@@ -280,4 +280,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
 | 5. Redundancy Reduction and Text Sync | 13/13 | Complete    | 2026-10-22 |
-| 6. CI Enforcement and Lock-in | 2/10 | In Progress | - |
+| 6. CI Enforcement and Lock-in | 3/10 | In Progress | - |

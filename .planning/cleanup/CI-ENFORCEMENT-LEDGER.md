@@ -135,7 +135,7 @@ Notes:
 
 - `--with-today` adds one unit cell after the selected fixed cells; `--today-instant ISO` (validated by `parseTestNow`) fixes its instant. The zone is `TODAY_ZONES[floor(epoch ms / 86400000) % 11]`. Verified instants: `2026-10-22T14:00:00.000Z` is `Asia/Kolkata`, `2026-10-23T14:00:00.000Z` is `Europe/London`, `2026-10-21T23:59:59.999Z` is `America/Los_Angeles`. `sweep-list-today` above is the line `--list --with-today --today-instant 2026-10-22T14:00:00.000Z` printed; the live run's own instant (`now=` above) resolved to `Europe/London`.
 - The local run was `node scripts/test-sweep.mjs --with-today --log-dir` on Node 24 with `TZ` unset: 36 fixed-cell runs (six cells by six workspaces) and 6 today-cell runs, all PASS, `sweep: 42/42 passed`. Its dependency state is `ci/gate-scripts` (the two production advisories are an audit matter, not a test matter).
-- `scripts/test-sweep.test.mjs` passes 54 of 54 (it was 29 before; the new cases cover the three fixed instants, the UTC day boundaries, an eleven-day rotation, the rejections, and a real two-cell run). Raw logs (gitignored): `.planning/cleanup/logs/06-03-sweep.log`, `06-03-sweep/`.
+- `scripts/test-sweep.test.mjs` passes 54 of 54 (it was 33 before; the 21 new cases cover the three fixed instants, the UTC day boundaries, an eleven-day rotation, the rejections, and a real two-cell run). Raw logs (gitignored): `.planning/cleanup/logs/06-03-sweep.log`, `06-03-sweep/`.
 
 ## Plan 06-03 Task 2: deploy gate
 
@@ -147,3 +147,16 @@ Notes:
 
 - `scripts/deploy-gate.sh` (`100755`, shellcheck clean) compares HEAD with the revision label of `hearth-service:current`: HEAD older than it gives `deploy=false` (OD-4 c); only `docs/` and `.planning/` changed since it gives `deploy=false` (OD-4 a, b); a re-run, no image, a non-commit label, an unknown or diverged revision, or anything else changed gives `deploy=true` (PC-5). A bad `HEARTH_DEPLOY_SHA` (unset, not 40 lowercase hex digits, not HEAD) exits 1 with empty stdout before docker is asked.
 - Beyond the plan's list, the diff is read with `--no-renames` so code moved into `docs/` is still seen as a code change, and a git ancestry check that cannot decide (a shallow clone) deploys with the reason on stderr. `.github/workflows/deploy.yml` is untouched; PR 2 wires the gate in.
+
+pr1-branch-push=22d7f26048656123f2f0b16285071e3fa96ec331
+
+## Plan 06-04 Task 1: PR 1 docs
+
+docs-commit=d0e985d (ci/gate-scripts, local; pushed with Task 2)
+docs-claims-pr1=checked=2746 misses=0
+
+Notes:
+
+- `docs/testing.md` now counts fifteen `node --test` files (two in `e2e/support`, thirteen harness tests), lists the six new harness tests, documents `--with-today` and `--today-instant`, and replaces the on-demand dlx jscpd command with `pnpm jscpd` and `.jscpd.json`; "Analysis tools" now covers the knip baseline check, jscpd (1.11%), the audit and its allowlist rules, the hygiene check and the migration check, and says they are local commands that start running in CI with PR 2. `docs/file-map.md` has rows for the thirteen new files under `scripts/` and for `.jscpd.json`, and a longer `scripts/` summary. Neither file claims CI runs a gate or that `deploy.yml` calls `deploy-gate.sh`.
+- The first claims run reported 3 misses: `hearth-service:current` (a Docker image reference) and `i/lf` (a column of `git ls-files --eol` output, already in `CONTRIBUTING.md` on `main`) were added to `docs-claims-allow.tsv` with reasons; a bare `.sh` token in the new hygiene text was reworded.
+- Raw log: `.planning/cleanup/logs/06-04-docs-claims.log` (gitignored).
