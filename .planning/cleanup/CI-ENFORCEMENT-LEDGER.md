@@ -360,3 +360,12 @@ Notes:
 - Attempt 1 (run 40017353021): six of seven jobs `success`. `hygiene` ran all six check steps green, `test-integration` ran `db:types matches the migrated schema` green (the runner's generated file equals the committed bytes), and web coverage on the runner (`All files`) is 85.38/81.83/78.59/86.96 against thresholds 84/80/77/85.
 - `test-e2e` failed on one spec: `17-accessibility-states.spec.ts:497`, light theme, `notification type: saving, then a failed save` (`getByText("Couldn't save that setting. Try again.")` not visible within 15 s); the same spec passed in the dark theme in the same run and 103 of 104 passed. No `toomanyrequests` in the log, so phase rule 9's registry-flake rerun does not apply; the notification E2E spec flakiness is DA-4 (out of scope), so a re-run is the owner's call. Logs (gitignored): `.planning/cleanup/logs/06-08-test-e2e.log`, `06-08-test-unit.log`.
 - Canary prepared, not pushed: W3 `/home/user/hearth-gate-canaries` on `ci/gate-canaries` holds one commit `1d5cbf1` on top of `0061269` with every plant and the local pre-check logs `06-08-canary-local-*.log`. Deviation: `yaml@2.9.1` as an `apps/web` devDependency is not reported by knip (`yaml` is an optional peer dependency of installed packages such as vite, which knip counts as used), so the unused-dependency plant is `fastest-levenshtein@1.0.16` (already a dependency of `@hearth/matching`, no new lockfile entry; knip reports `Unused devDependencies fastest-levenshtein apps/web/package.json`).
+
+## Plan 06-08 Task 1: CI attempt 2 (owner-authorized single rerun)
+
+pr2-ci-attempt2=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success hygiene:success run=40017353021 (rerun-failed-jobs, test-e2e job 120637865531)
+pr2-e2e-failure-attempt2=tests/19-notifications.spec.ts:140 meal reminder with the push double (light) enables a type, delivers its reminder once; 103 passed 1 failed; no toomanyrequests
+
+Notes:
+
+- The owner answered the rule 9 decision with "Rerun once"; exactly one `rerun-failed-jobs` was posted. Attempt 2 failed again on a different notification spec: after `page.goto(push.url?household=<oakStreet>)` the household switcher still read "Rivera Family, switch household" instead of "Oak Street" for 15 s (`19-notifications.spec.ts:199`). The attempt 1 spec (`17-accessibility-states.spec.ts:497`) passed in attempt 2. Another rerun is not authorized; the log is `.planning/cleanup/logs/06-08-test-e2e-attempt2.log` (gitignored).
