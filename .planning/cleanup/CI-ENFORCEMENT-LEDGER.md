@@ -206,3 +206,16 @@ Notes:
 
 - The owner squash-merged PR #33 at 2026-10-23T19:11:17Z as `b585d25` (`ci: add the CI gate scripts and their tests`), after PR #32 (`f624a34`, the fastify and ip-address fix). The `CI` push run 40009409885 on `b585d25` sat `pending` for about two minutes, then ran; all six jobs concluded `success`.
 - Deploy: two `workflow_run` Deploy runs exist for `b585d25`. 40009996509 (created 19:15:42Z) ended `cancelled` at 19:29:23Z, which is the `deploy` concurrency group replacing a pending run; 40011784566 (created 19:29:16Z) is `pending` with no jobs, held for the unregistered `hearth` self-hosted runner. An older run, 39788747697 for `cb808e6`, is also still `pending`. Nothing was cancelled or touched by Claude.
+
+## Plan 06-06 Task 1: hygiene job (W2, not pushed)
+
+pr2-base=d0c587c0b55cf3f4c68404b80d6ed7ad40f1c59f
+hygiene-emulated=6/6
+ci-facts-jobs=lint,typecheck,test-unit,test-integration,test-e2e,build,hygiene
+ci-facts-name=CI
+
+Notes:
+
+- W2 is `/home/user/hearth-enforce-gates` on `ci/enforce-gates`, cut from the WB tip `d0c587c` (which is on `origin`, contains PR 1's `b585d25` and the dependency fix). The token cannot push workflow files, so W2 stays local and its commits are saved as patches under `.planning/cleanup/patches/ci-enforce-gates/` after each commit (phase rule 5).
+- The six hygiene commands were read from the YAML by `.planning/cleanup/tools/workflow-facts.mjs` and run in W2 with `BASE_SHA` at `origin/main`: knip, the baseline check (28 rows), jscpd (66 clones), the audit (0 advisories, now green on a tree cut from `main` after PR #32), repository hygiene (971 files, 13 scripts) and the migration check (0 added). Logs: `.planning/cleanup/logs/06-06-hygiene-{3..8}.log` (gitignored).
+- `actionlint` (ignoring only the self-hosted `hearth` label), prettier, `pnpm knip` and the baseline check pass on W2 after the commit.

@@ -1,0 +1,68 @@
+From bc856fd8fa7539a0b9430140f7032f84b6f016eb Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 23 Oct 2026 19:33:24 +0000
+Subject: [PATCH] ci: add a hygiene job that runs the repository gates
+
+- knip, the production baseline, jscpd, the audit, the hygiene and migration checks
+- every step runs after an earlier failure; the migration base passes through env
+- full-history checkout without a persisted token
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01SMdgjb52uEVQdK1fhxdcUh
+---
+ .github/workflows/ci.yml | 42 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 5310d2b..6074594 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -119,3 +119,45 @@ jobs:
+       - uses: actions/checkout@v7
+       - uses: ./.github/actions/setup
+       - run: pnpm build
++
++  # The repository gates that keep what the cleanup removed from coming back: unused code and
++  # dependencies (knip, and the production-mode baseline), duplication over 2% (jscpd), a production
++  # dependency with a known advisory, generated or oddly moded files, and edits to applied
++  # migrations. Each step runs even when an earlier one failed, so one run shows every finding
++  # instead of the first. The audit reads today's advisory database and its allowances expire by
++  # date, so an unchanged tree can turn red; a red run on main holds back the deploy until the
++  # dependency is fixed or the advisory is allowlisted in scripts/audit-allowlist.json.
++  hygiene:
++    runs-on: ubuntu-latest
++    timeout-minutes: 10
++    steps:
++      # The migration check diffs against the pull request's base or the previous push tip, so it
++      # needs history; nothing after checkout fetches or pushes, so the token is not kept.
++      - uses: actions/checkout@v7
++        with:
++          fetch-depth: 0
++          persist-credentials: false
++      - id: setup
++        uses: ./.github/actions/setup
++      - name: 'knip: no unused files, exports or dependencies'
++        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
++        run: pnpm knip
++      - name: 'knip --production: no finding outside the baseline'
++        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
++        run: node scripts/check-knip-baseline.mjs
++      - name: 'jscpd: duplication at most 2%'
++        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
++        run: pnpm jscpd
++      - name: 'pnpm audit --prod: no advisory outside the allowlist'
++        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
++        run: node scripts/audit-prod.mjs
++      - name: 'Repository hygiene: ignored files, script modes, line endings'
++        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
++        run: node scripts/check-repo-hygiene.mjs
++      # The base arrives through env, never inside the script text, because a pull request
++      # controls its own refs and a value spliced into `run` would be executed as shell.
++      - name: Migrations are append-only
++        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
++        env:
++          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
++        run: node scripts/check-migrations-append-only.mjs --base "$BASE_SHA"
+-- 
+2.43.0
+
