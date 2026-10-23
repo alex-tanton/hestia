@@ -160,3 +160,25 @@ Notes:
 - `docs/testing.md` now counts fifteen `node --test` files (two in `e2e/support`, thirteen harness tests), lists the six new harness tests, documents `--with-today` and `--today-instant`, and replaces the on-demand dlx jscpd command with `pnpm jscpd` and `.jscpd.json`; "Analysis tools" now covers the knip baseline check, jscpd (1.11%), the audit and its allowlist rules, the hygiene check and the migration check, and says they are local commands that start running in CI with PR 2. `docs/file-map.md` has rows for the thirteen new files under `scripts/` and for `.jscpd.json`, and a longer `scripts/` summary. Neither file claims CI runs a gate or that `deploy.yml` calls `deploy-gate.sh`.
 - The first claims run reported 3 misses: `hearth-service:current` (a Docker image reference) and `i/lf` (a column of `git ls-files --eol` output, already in `CONTRIBUTING.md` on `main`) were added to `docs-claims-allow.tsv` with reasons; a bare `.sh` token in the new hygiene text was reworded.
 - Raw log: `.planning/cleanup/logs/06-04-docs-claims.log` (gitignored).
+
+## Plan 06-04 Task 2: local proof on ci/gate-scripts
+
+harness-files=13
+gates-local=frozen,lint,format-check,typecheck,test,knip,knip-baseline,jscpd,audit,hygiene,migrations,build,commitlint all exit=0 (audit against the fix-branch report, see Notes)
+pr1-head=f79f84eb51be0d109f8884426aa9ed3527cf3415
+pr1-tree=153eae06a1462353c42bf426762511b7c7828db9
+pr1-files=.jscpd.json docs/file-map.md docs/testing.md knip.json package.json pnpm-lock.yaml scripts/audit-allowlist.json scripts/audit-prod.mjs scripts/audit-prod.test.mjs scripts/check-knip-baseline.mjs scripts/check-knip-baseline.test.mjs scripts/check-migrations-append-only.mjs scripts/check-migrations-append-only.test.mjs scripts/check-repo-hygiene.mjs scripts/check-repo-hygiene.test.mjs scripts/deploy-gate.sh scripts/deploy-gate.test.mjs scripts/jscpd-config.test.mjs scripts/knip-production-baseline.txt scripts/test-sweep.mjs scripts/test-sweep.test.mjs
+
+Notes:
+
+- Every gate ran in W1 at `d0e985d` into `.planning/cleanup/logs/06-04-{name}.log` (gitignored), each ending `exit=0`. `pnpm test`: 13 harness files (382 tests) then packages/matching 156, packages/shared 172, packages/recurrence 77, apps/service 757, apps/web 728 and e2e 15, all passing. `pnpm jscpd`: 66 clones, under the 2% limit. The knip baseline check: 28 rows match. `--base origin/main` migration check: 0 added, nothing else changed. Commitlint over `origin/main..HEAD` passed.
+- Deviation (audit): `node scripts/audit-prod.mjs` on ci/gate-scripts is red (`exit=1`, 2 advisories: `GHSA-389g-gv7q-r4x8` fastify and `GHSA-rxp7-6hxx-x8q5` ip-address), as recorded under 06-02, because `deps/fix-prod-advisories` (PR #32) is not on `main` yet. That run is kept as `06-04-audit-live.log`. `06-04-audit.log` is the script run with `--report` on the fix-branch `pnpm audit --prod --json` output saved in 06-02 (`06-02-audit-fixbranch.json`): `0 advisories, 0 allowed, 0 problems`, `exit=0`. PR 1's own CI does not run the audit; merge PR #32 before PR 2 wires the gate.
+- After merging WB into W1 (`f79f84e`) hygiene (13 scripts clean), `pnpm knip` (exit 0) and the baseline check were rerun and are clean; the secret scan over `git diff origin/main...HEAD` matched nothing; the branch touches nothing under `.github/`, `supabase/migrations/` or `apps/service/src/db/types.ts`. `origin/ci/gate-scripts` equals `pr1-head`.
+
+## Plan 06-04 Task 3: owner gate
+
+gate-pr1=approve-pr1
+
+Notes:
+
+- The owner pre-authorized opening PR 1 in the session, superseding the Task 3 question: Claude creates the pull request, tells the owner when CI has passed, and the owner merges it. Task 3 therefore asked nothing and 06-04 opened no pull request; 06-05 opens PR 1 from `ci/gate-scripts` at `pr1-head` and never merges it.
