@@ -378,3 +378,20 @@ pr2-e2e-flake-evidence=attempt1 17-accessibility-states.spec.ts:497 (light) fail
 Notes:
 
 - The owner authorized three attempts in total (two single reruns after the rule 9 decisions). On attempt 3 all seven jobs concluded `success` on the unchanged head; `hygiene` (six steps), the `db:types` drift step and the runner's web coverage (85.38/81.83/78.59/86.96 against 84/80/77/85) are as recorded above. The recorded `pr2-hygiene-steps=`, `pr2-db-types-on-ci=` and `pr2-runner-coverage=` hold for the final attempt.
+
+## Plan 06-08 Task 2: canary
+
+canary-pr=37
+canary-url=https://github.com/alex-tanton/hearth/pull/37
+canary-head=1d5cbf11d2c7e992b71a879dab68500e45345512
+canary-steps=knip:failure,knip-production:failure,jscpd:failure,audit:failure,hygiene:failure,migrations:failure,db-types:failure
+canary-extra=test-unit:failure (scripts/audit-prod.test.mjs 'ships an empty allowlist' sees the planted entry); build, typecheck, lint:success; test-e2e not waited for
+canary-crlf=planted (index i/crlf at 100755)
+canary-dependency-plant=fastest-levenshtein@1.0.16 (deviation: yaml@2.9.1 is not reported by knip, it is an optional peer dependency of installed packages)
+canary=done
+
+Notes:
+
+- Draft PR #37 from `ci/gate-canaries` (one commit `1d5cbf1` on `0061269`, no `.github/` change) into `ci/enforce-gates`, CI run 40023558441. `hygiene` failed on all six steps and `test-integration` failed on `db:types matches the migrated schema`; the step conclusions come from the jobs API.
+- Hygiene log `.planning/cleanup/logs/06-08-canary-hygiene.log` names `zz-canary-dead.ts`, `zzCanaryDeadExport`, `allowance expired`, `coverage/zz-canary.txt`, `zz-canary-mode.sh`, `zz-canary-crlf.sh`, `jscpd found too many duplicates (2.9%)` and the migration append-only message; `fastest-levenshtein` replaces `yaml` in the plan's name list (the string `yaml` appears only in `pnpm-lock.yaml`). The drift diff is in `06-08-canary-integration.log`.
+- W3 and the local branch are removed; the remote branch `ci/gate-canaries` is the owner's to delete.
