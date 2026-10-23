@@ -195,3 +195,14 @@ Notes:
 
 - PR 1 (#33) was opened through REST from `ci/gate-scripts` at `pr1-head` into `main`, with the body kept at `.planning/cleanup/logs/06-05-pr1.md` (gitignored) and title `ci: add the CI gate scripts and their tests`. Claude does not merge it; the owner squash-merges.
 - All six jobs of the `CI` pull_request run 40007205181 concluded `success` on the first attempt (no registry-flake rerun). The `test-unit` log shows `node --test` over the thirteen harness files, 382 of 382 passing; saved to `.planning/cleanup/logs/06-05-test-unit.log` (gitignored).
+
+## Plan 06-05 Task 3: PR 1 merged, main's CI, Deploy
+
+pr1-merged=b585d25f97920c4d15a0f65b3bc7fea6eb1bc0d7
+main-ci-after-pr1=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success run=40009409885
+deploy-after-pr1=40011784566 workflow_run pending job=none
+
+Notes:
+
+- The owner squash-merged PR #33 at 2026-10-23T19:11:17Z as `b585d25` (`ci: add the CI gate scripts and their tests`), after PR #32 (`f624a34`, the fastify and ip-address fix). The `CI` push run 40009409885 on `b585d25` sat `pending` for about two minutes, then ran; all six jobs concluded `success`.
+- Deploy: two `workflow_run` Deploy runs exist for `b585d25`. 40009996509 (created 19:15:42Z) ended `cancelled` at 19:29:23Z, which is the `deploy` concurrency group replacing a pending run; 40011784566 (created 19:29:16Z) is `pending` with no jobs, held for the unregistered `hearth` self-hosted runner. An older run, 39788747697 for `cb808e6`, is also still `pending`. Nothing was cancelled or touched by Claude.
