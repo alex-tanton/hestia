@@ -1,7 +1,7 @@
 From 6dab328bd59c37e83b9fe6b497b73af78d8c64d3 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Fri, 23 Oct 2026 19:38:37 +0000
-Subject: [PATCH 2/3] test(web): raise the coverage thresholds to the measured
+Subject: [PATCH 2/5] test(web): raise the coverage thresholds to the measured
  values
 
 - measured 85.38/81.83/78.59/86.96 on 2026-10-23, thresholds 84/80/77/85

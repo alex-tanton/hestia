@@ -237,3 +237,18 @@ Notes:
 - `test-unit` now runs `pnpm test:harness` (382 tests, exit 0), `pnpm -r --filter '!@hearth/web' test` (exit 0; output from `@hearth/service`, `@hearth/e2e`, `@hearth/matching`, `@hearth/recurrence` and `@hearth/shared`, nothing from `@hearth/web`; `@hearth/seed` has no `test` script) and `pnpm --filter @hearth/web test:coverage` (the measurement run above). Logs: `.planning/cleanup/logs/06-06-unit-{1,2,3}.log` (gitignored).
 - `db:types` determinism: `supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,storage-api,postgrest,postgres-meta` on a fresh stack (Node 24.21.0), `pnpm db:types` twice gave the same sha256 as the committed `types.ts` blob, `git diff --exit-code -- apps/service/src/db/types.ts` exited 0, and the stack was stopped with `supabase stop --no-backup`. This equals the hash research recorded. The runner proof is PR 2's CI run (06-08).
 - `ci.yml` after this commit: every job has the planned `timeout-minutes` (lint, typecheck, build, hygiene 10; test-unit 15; test-integration 25; test-e2e 40) and every checkout has `persist-credentials: false`; `run-interpolation=0`.
+
+## Plan 06-06 Task 3: sweep.yml and deploy.yml (W2, not pushed)
+
+deploy-wiring-smoke=deploy=true
+sweep-facts=ok
+deploy-facts=ok
+pr2-commits=bc856fd ci: add a hygiene job that runs the repository gates; 6dab328 test(web): raise the coverage thresholds to the measured values; dc55e65 ci: enforce web coverage, db types drift and job timeouts; ccfb84a ci: run the date and time-zone sweep on main and nightly; a2bb317 ci: gate deploys on the running revision and keep no token
+pr2-head-local=a2bb317 (ci/enforce-gates, not on origin: the token has no workflow scope)
+
+Notes:
+
+- `sweep.yml` is named `Sweep` with triggers `push` (main, `paths-ignore` `docs/**` and `.planning/**`), `schedule` (`17 5 * * *`) and `workflow_dispatch`, no `pull_request`; one job `sweep` (timeout 60, `persist-credentials: false`, `permissions: contents: read`) with the push step `pnpm test:sweep --log-dir sweep-logs`, the schedule and dispatch step `pnpm test:sweep --with-today --log-dir sweep-logs`, and a failure-only `sweep-logs` upload for 14 days. `node scripts/test-sweep.mjs --list --with-today` exits 0 and prints a `today:` line. Facts: `.planning/cleanup/logs/06-06-sweep-facts.txt` (gitignored).
+- `deploy.yml` keeps `name: Deploy`, `workflows: [CI]`, `types: [completed]`, `branches: [main]`, the three-part `if`, job `deploy` and `[self-hosted, hearth]`; it adds `timeout-minutes: 60`, `fetch-depth: 0` and `persist-credentials: false` on the checkout, and the `changes` step runs `scripts/deploy-gate.sh >> "$GITHUB_OUTPUT"` with `HEARTH_DEPLOY_SHA` in `env`. Facts: `.planning/cleanup/logs/06-06-deploy-facts.txt` (gitignored); `run-interpolation=0` for all three workflows.
+- Wiring smoke test: with a stub `docker` that exits 1 first on `PATH`, `GITHUB_OUTPUT` a temp file and `HEARTH_DEPLOY_SHA` the W2 HEAD, the `changes` command read from the YAML left exactly `deploy=true` in the file (the gate's stderr said the image does not exist; deploying).
+- `actionlint` (ignoring only the `hearth` label) passes on all three workflows; prettier passes on `.github/workflows`; `pnpm knip` and the baseline check pass. The secret scan over the W2 diff matched nothing. The Deploy workflow still waits on an unregistered `hearth` self-hosted runner; it was not touched.
