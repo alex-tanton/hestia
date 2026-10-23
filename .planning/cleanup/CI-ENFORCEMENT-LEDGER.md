@@ -313,3 +313,17 @@ pr2-local=16/16
 Notes:
 
 - All sixteen gates ran in W2 at `45ca790` into `.planning/cleanup/logs/06-07-{name}.log` (gitignored), each ending `exit=0`: `frozen`, `lint`, `format-check`, `typecheck`, `test` (13 harness files, then matching 156, shared 172, recurrence 77, service 757, web 728, e2e 15), `knip`, `knip-baseline`, `jscpd`, `audit` (0 advisories, tree cut from `main` after PR #32), `hygiene`, `migrations` (`--base origin/main`), `web-coverage` (85.38/81.83/78.59/86.96 against 84/80/77/85), `build`, `actionlint` (all three workflows, only the `hearth` label ignored), `commitlint` (`d0c587c..HEAD`, six commits) and `docs-claims` (`checked=2767 misses=0` over W2's `docs/*.md`, `README.md`, `CONTRIBUTING.md`, `.planning/codebase/*.md` and `.claude/CLAUDE.md`; no allowlist change needed). W2 is clean at `45ca790`.
+
+## Plan 06-07 Task 2: delivery of ci/enforce-gates
+
+pr2-head=45ca790571ee5e0d49211bc45aa91f279bcfa0b4
+pr2-tree=54069f099544ee0c93b741e935104ffe6a271acd
+pr2-files=.github/workflows/ci.yml .github/workflows/deploy.yml .github/workflows/sweep.yml README.md apps/web/vite.config.ts docs/deploy.md docs/file-map.md docs/testing.md
+pr2-push=fallback
+pr2-push-refusal=refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml` without `workflow` scope
+owner-command=git fetch origin && git show origin/claude/confident-dirac-10eu0a:.planning/cleanup/patches/ci-enforce-gates/apply.sh > apply-ci-enforce-gates.sh && MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' bash apply-ci-enforce-gates.sh
+
+Notes:
+
+- The secret scan over `git diff pr2-base..HEAD` in W2 matched nothing. The one token push (inline credential helper, no token on a command line) was refused by GitHub for the missing `workflow` scope; nothing was retried through another ref or shape. Log: `.planning/cleanup/logs/06-07-push.log` (gitignored).
+- `.planning/cleanup/patches/ci-enforce-gates/` holds six patches, one per W2 commit (`pr2-base` `d0c587c`..`pr2-head`), and `apply.sh` (mode `100755`) pinning `BASE=d0c587c0b55cf3f4c68404b80d6ed7ad40f1c59f`, `TREE=pr2-tree` and `BRANCH=ci/enforce-gates`. It stops if `origin` already has the branch, applies with `git am --3way` in a temporary detached worktree, pushes only when the tree equals `TREE`, supports `DRY_RUN=1`, removes the worktree on exit and never reads or prints a token.
