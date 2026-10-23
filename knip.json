@@ -11,7 +11,8 @@
         "test/**/*.mjs!",
         "scripts/test-sweep.mjs!",
         "scripts/check-knip-baseline.mjs!",
-        "scripts/check-repo-hygiene.mjs!"
+        "scripts/check-repo-hygiene.mjs!",
+        "scripts/check-migrations-append-only.mjs!"
       ]
     },
     "apps/service": {

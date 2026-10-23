@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r --parallel typecheck",
     "test": "pnpm test:harness && pnpm -r test",
-    "test:harness": "node --test test/clock-setup.test.mjs test/global-tz.test.mjs scripts/test-sweep.test.mjs test/eslint-clock-ban.test.mjs test/eslint-service-role-fence.test.mjs scripts/deploy.test.mjs scripts/ci-prepull-images.test.mjs scripts/check-knip-baseline.test.mjs scripts/check-repo-hygiene.test.mjs",
+    "test:harness": "node --test test/clock-setup.test.mjs test/global-tz.test.mjs scripts/test-sweep.test.mjs test/eslint-clock-ban.test.mjs test/eslint-service-role-fence.test.mjs scripts/deploy.test.mjs scripts/ci-prepull-images.test.mjs scripts/check-knip-baseline.test.mjs scripts/check-repo-hygiene.test.mjs scripts/check-migrations-append-only.test.mjs",
     "test:integration": "pnpm -r --if-present test:integration",
     "test:sweep": "node scripts/test-sweep.mjs",
     "test:sweep:integration": "node scripts/test-sweep.mjs --suite integration",
