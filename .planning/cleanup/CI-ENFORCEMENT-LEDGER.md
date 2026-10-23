@@ -395,3 +395,14 @@ Notes:
 - Draft PR #37 from `ci/gate-canaries` (one commit `1d5cbf1` on `0061269`, no `.github/` change) into `ci/enforce-gates`, CI run 40023558441. `hygiene` failed on all six steps and `test-integration` failed on `db:types matches the migrated schema`; the step conclusions come from the jobs API.
 - Hygiene log `.planning/cleanup/logs/06-08-canary-hygiene.log` names `zz-canary-dead.ts`, `zzCanaryDeadExport`, `allowance expired`, `coverage/zz-canary.txt`, `zz-canary-mode.sh`, `zz-canary-crlf.sh`, `jscpd found too many duplicates (2.9%)` and the migration append-only message; `fastest-levenshtein` replaces `yaml` in the plan's name list (the string `yaml` appears only in `pnpm-lock.yaml`). The drift diff is in `06-08-canary-integration.log`.
 - W3 and the local branch are removed; the remote branch `ci/gate-canaries` is the owner's to delete.
+
+## Plan 06-08 Task 3: owner gate
+
+pr2-merged=56435543eee0cb765f9e85dddc5d2007dd86862d
+pr2-merged-reply=merged (owner, 2026-10-23)
+canary-closed=yes
+
+Notes:
+
+- REST shows PR #36 `state=closed`, `merged=true`, merged at 2026-10-23T21:08:26Z by `alex-tanton` as squash commit `5643554`, which is `origin/main`'s tip with the subject `ci: block regressions and gate deploys on the running revision`. PR #37 (canary) is `closed`, `merged=false`, closed 2026-10-23T21:08:53Z, and `git ls-remote --heads origin ci/gate-canaries` prints nothing (branch deleted by the owner). Claude closed and deleted nothing.
+- Post-merge evidence (`main`'s CI run, the first Sweep run, the Deploy run under the new rule) and the WB sync with `main` belong to 06-09.
