@@ -369,3 +369,12 @@ pr2-e2e-failure-attempt2=tests/19-notifications.spec.ts:140 meal reminder with t
 Notes:
 
 - The owner answered the rule 9 decision with "Rerun once"; exactly one `rerun-failed-jobs` was posted. Attempt 2 failed again on a different notification spec: after `page.goto(push.url?household=<oakStreet>)` the household switcher still read "Rivera Family, switch household" instead of "Oak Street" for 15 s (`19-notifications.spec.ts:199`). The attempt 1 spec (`17-accessibility-states.spec.ts:497`) passed in attempt 2. Another rerun is not authorized; the log is `.planning/cleanup/logs/06-08-test-e2e-attempt2.log` (gitignored).
+
+## Plan 06-08 Task 1: CI green (attempt 3)
+
+pr2-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40017353021 (test-e2e needed attempt 3)
+pr2-e2e-flake-evidence=attempt1 17-accessibility-states.spec.ts:497 (light) failed; attempt2 19-notifications.spec.ts:140 (light) failed, 17:497 passed; attempt3 all 104 passed. Two distinct notification-area specs, no toomanyrequests, same head 0061269 (DA-4)
+
+Notes:
+
+- The owner authorized three attempts in total (two single reruns after the rule 9 decisions). On attempt 3 all seven jobs concluded `success` on the unchanged head; `hygiene` (six steps), the `db:types` drift step and the runner's web coverage (85.38/81.83/78.59/86.96 against 84/80/77/85) are as recorded above. The recorded `pr2-hygiene-steps=`, `pr2-db-types-on-ci=` and `pr2-runner-coverage=` hold for the final attempt.
