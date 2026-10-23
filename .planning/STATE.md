@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 06
 current_phase_name: CI Enforcement and Lock-in
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-10-23T18:45:25.978Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-10-23T18:53:28.864Z"
 last_activity: 2026-10-23
 last_activity_desc: Phase 06 execution started
-state_head: f404b76aadab927ca18695756e98aee636867b3f
+state_head: 9d1af5511486ba078e2d2442fe45a757ec60faa1
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 54
-  completed_plans: 47
+  completed_plans: 48
   percent: 83
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 06 (CI Enforcement and Lock-in) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
 Status: Ready to execute
 Last activity: 2026-10-23 — Phase 06 execution started
 
@@ -96,6 +96,7 @@ Progress: [████████░░] 83%
 | Phase 06 P01 | 12min | 3 tasks | 13 files |
 | Phase 06 P02 | 55min | 3 tasks | 9 files |
 | Phase 06 P03 | 75min | 2 tasks | 6 files |
+| Phase 06 P04 | 40min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,7 @@ Recent decisions affecting current work:
 - [Phase 06]: Plan 06-01: ci/gate-scripts pushed at e5895b2 with the knip baseline (28 rows, byte-equal to Phase 3), repo hygiene and migration append-only gates; check-knip-baseline runs knip-summary.mjs as a child process (PC-1); three .planning scripts now 100755; no PR opened
 - [Phase 06]: 06-02: the two production advisories are fixed by upgrading on deps/fix-prod-advisories (fastify 5.12.6, ip-address override 10.7.4), allowlist stays empty; jscpd 5.4.1 approved 2026-10-23
 - [Phase 06]: 06-03: today-cell zone is TODAY_ZONES[UTC epoch day % 11]; deploy gate reads the diff with --no-renames and fails open when ancestry cannot be decided
+- [Phase 06]: 06-04: owner pre-authorized opening PR 1; gate-pr1=approve-pr1 recorded without asking, 06-05 opens the pull request and the owner merges after CI passes
 
 ### Pending Todos
 
@@ -177,8 +179,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-23T18:45:25.843Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-10-23T18:53:28.745Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
 
 ### Resume point for Phase 5 (after 05-13, 2026-10-22)
