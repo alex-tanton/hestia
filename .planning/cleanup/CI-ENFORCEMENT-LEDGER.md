@@ -436,3 +436,19 @@ Notes:
 - Local evidence in the worktree (`.planning/cleanup/logs/06-09-zod-*.log`, gitignored, each `exit=0`): `pnpm audit --prod` no known vulnerabilities, `audit-prod.mjs` `0 advisories, 0 allowed, 0 problems`, lint, format:check, typecheck, `pnpm test` (matching 156, shared 172, recurrence 77, service 757, web 728), build, knip, knip baseline, jscpd, repository hygiene, migrations.
 - PR #38 (title `build: bump zod from 4.6.5 to 4.6.6`, body `.planning/cleanup/logs/06-09-zod-pr.md`) is open and not draft. The `CI` pull_request run 40028399096 concluded `success` on all seven jobs on the first attempt (no rerun); the `hygiene` steps knip, knip --production, jscpd, audit, repository hygiene and migrations are all `success`. Claude does not merge it.
 - Still open for 06-09 after the owner merges PR #38: re-check `main`'s CI on the new squash commit, the Deploy run, and the WB sync (Task 1 steps 1, 3, 4); Tasks 2 and 3 not started.
+
+## Plan 06-09 Task 1 (resumed): main after the zod fix
+
+zod-fix-merged=5216fc725e30c09a52851e328182796fd8b15b7c
+main-ci-after-zod=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40039951246
+sweep-after-zod=run 40039951259 success 36/36
+deploy-after-zod=40041408163 workflow_run queued job=deploy queued none labels=self-hosted,hearth
+wb-sync=merged origin/main 5216fc7 into WB as 68e7b25 (4 .planning conflicts resolved with git checkout --ours, owner-approved)
+
+Notes:
+
+- The owner merged PR #38 on 2026-10-23T23:29:13Z as squash commit `5216fc7` (`build: bump zod from 4.6.5 to 4.6.6`). `CI` push run 40039951246 on it concluded `success` on all seven jobs with no rerun (test-e2e passed first time); the six `hygiene` steps (knip, knip --production, jscpd, audit, repository hygiene, migrations) are all `success`, so the audit is green again.
+- `Sweep` push run 40039951259 ran (the zod commit changes files outside `docs/**` and `.planning/**`, so `paths-ignore` did not skip it) and concluded `success`; its log has `sweep: 36/36 passed` (`.planning/cleanup/logs/06-09-sweep-zod.log`, gitignored).
+- Deploy: `CI`'s green completion created `workflow_run` Deploy run 40041408163 (created 23:45:11Z) and its `deploy` job exists, `queued`, labels `self-hosted, hearth`, no runner assigned. The guard accepted the run (not `skipped`), so CI still triggers Deploy under the new `deploy.yml`; it sits queued on the unregistered `hearth` runner. Whether the gate script decides `deploy=true` is only visible once a runner runs it. Claude did not wait on it, touch or cancel it.
+- Deviation from the task text: `main-ci-after-pr2=` and `deploy-after-pr2=` stay as recorded above (PR 2's own squash commit had a red `hygiene` job and a `skipped` Deploy, see the earlier section); the green and accepted evidence is under `main-ci-after-zod=` and `deploy-after-zod=` on the zod fix commit, so Task 1's `main-ci-after-pr2=` check does not hold as written. `sweep-first-push=run 40024555056 success 36/36` is the first push run (TIME-06's evidence).
+- The WB sync merged `origin/main` (`5216fc7`); the four conflicting paths were `.planning/ROADMAP.md`, `.planning/STATE.md`, `.planning/state.json` and this ledger, resolved with `git checkout --ours`; no conflict outside `.planning`.
