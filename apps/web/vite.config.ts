@@ -79,11 +79,12 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/main.tsx', 'src/test-setup.ts'],
       reporter: ['text', 'html', 'json-summary'],
-      // Measured on this branch after closing the worst coverage gaps (sw.ts, the realtime and
-      // push ports, and the untested screens); each number sits a few points under that measured
-      // value as a safety margin, so normal drift doesn't fail the gate while a real regression
-      // still does. Enforced by `pnpm --filter @hearth/web test:coverage`.
-      thresholds: { statements: 82, branches: 78, functions: 74, lines: 84 },
+      // Measured on 2026-10-23 at d0c587c: 85.38% statements, 81.83% branches, 78.59% functions and
+      // 86.96% lines. Each threshold is the measured value rounded down, minus one point, so
+      // ordinary drift passes and a real drop fails. CI's test-unit job runs
+      // `pnpm --filter @hearth/web test:coverage` on every pull request and push to main, so these
+      // numbers gate every merge.
+      thresholds: { statements: 84, branches: 80, functions: 77, lines: 85 },
     },
   },
 });
