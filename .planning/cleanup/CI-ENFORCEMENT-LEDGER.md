@@ -327,3 +327,6 @@ Notes:
 
 - The secret scan over `git diff pr2-base..HEAD` in W2 matched nothing. The one token push (inline credential helper, no token on a command line) was refused by GitHub for the missing `workflow` scope; nothing was retried through another ref or shape. Log: `.planning/cleanup/logs/06-07-push.log` (gitignored).
 - `.planning/cleanup/patches/ci-enforce-gates/` holds six patches, one per W2 commit (`pr2-base` `d0c587c`..`pr2-head`), and `apply.sh` (mode `100755`) pinning `BASE=d0c587c0b55cf3f4c68404b80d6ed7ad40f1c59f`, `TREE=pr2-tree` and `BRANCH=ci/enforce-gates`. It stops if `origin` already has the branch, applies with `git am --3way` in a temporary detached worktree, pushes only when the tree equals `TREE`, supports `DRY_RUN=1`, removes the worktree on exit and never reads or prints a token.
+
+dry-run=tree-match
+- Dry run from the primary checkout (`DRY_RUN=1 bash apply.sh`, log `.planning/cleanup/logs/06-07-apply-dry.log`, gitignored): six `git am --3way` applications onto `d0c587c`, built `ef4c6a6` and printed `tree matches (54069f0...)`; the temporary worktree was removed.
