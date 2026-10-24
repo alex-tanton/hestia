@@ -22,9 +22,12 @@
 #     state), so a change confined to them deploys nothing.
 #   - HEAD an ancestor of the running revision means a re-run of an older CI run; deploying it
 #     would roll production back to a stale commit.
-#   - HEAD equal to the running revision deploys again, as a re-run always has. An unknown running
-#     revision (no image, a hand build labelled `dev`, a commit not in this history, an ambiguous
-#     abbreviation) deploys too: a first deploy or a hand-built image must never block production.
+#   - HEAD equal to the running revision is skipped: a CI push run on main completes, and starts
+#     Deploy, once per attempt, so re-running any job of a green run reached the gate for the commit
+#     already running and rebuilt production for nothing; that commit is now skipped (OD-6).
+#     An unknown running revision (no image, a hand build labelled `dev`, a commit not in this
+#     history, an ambiguous abbreviation) deploys: a first deploy or a hand-built image must
+#     never block production.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -65,7 +68,7 @@ resolved="$(git -C "$repo_root" rev-parse --verify --quiet "${running}^{commit}"
   decide true "not a unique commit in this history; deploying"
 
 if [[ "$resolved" == "$head_sha" ]]; then
-  decide true "equal to HEAD (a re-run); deploying again"
+  decide false "equal to HEAD; that commit is already running, nothing to deploy"
 fi
 
 # 0: yes, 1: no, anything else: git could not tell (e.g. a shallow clone).
