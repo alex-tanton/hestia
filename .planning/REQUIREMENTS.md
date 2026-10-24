@@ -28,7 +28,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **TIME-03**: E2E expectations are derived from seed data with no weekday assumptions (done and green in CI on one calendar day; the weekend confirmation run is deferred by the owner, see the Phase 2 UAT)
 - [x] **TIME-04**: A lint rule bans bare `new Date()` and `Date.now()` in tests and `e2e/`
 - [x] **TIME-05**: The UTC-versus-household-zone date helper flake in `bills.integration.test.ts` is fixed
-- [ ] **TIME-06**: CI runs unit and component tests across a date/timezone matrix on `main` and nightly
+- [x] **TIME-06**: CI runs unit and component tests across a date/timezone matrix on `main` and nightly
 
 ### Dead code and hygiene
 
@@ -59,12 +59,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### CI enforcement
 
-- [ ] **CI-01**: knip is blocking in CI once the tree is clean
-- [ ] **CI-02**: A jscpd source-duplication threshold is enforced
-- [ ] **CI-03**: CI checks for tracked-ignored files, `db:types` drift, migration append-only and script modes
-- [ ] **CI-04**: `pnpm audit --prod` runs with an expiring allowance for `braces`
-- [ ] **CI-05**: Jobs have timeouts, and both workflows get a correctness review
-- [ ] **CI-06**: The web coverage thresholds are either enforced or removed, so config and docs agree
+- [x] **CI-01**: knip is blocking in CI once the tree is clean
+- [x] **CI-02**: A jscpd source-duplication threshold is enforced
+- [x] **CI-03**: CI checks for tracked-ignored files, `db:types` drift, migration append-only and script modes
+- [x] **CI-04**: `pnpm audit --prod` runs with an expiring allowance for `braces`
+- [x] **CI-05**: Jobs have timeouts, and both workflows get a correctness review
+- [x] **CI-06**: The web coverage thresholds are either enforced or removed, so config and docs agree
 - [ ] **CI-07**: A PR confirms that `CI` still triggers deploy correctly
 
 ## v2 Requirements
@@ -133,14 +133,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RED-03 | Phase 5 | Complete |
 | RED-04 | Phase 5 | Complete |
 | RED-05 | Phase 5 | Complete |
-| CI-01 | Phase 6 | Pending |
-| CI-02 | Phase 6 | Pending |
-| CI-03 | Phase 6 | Pending |
-| CI-04 | Phase 6 | Pending |
-| CI-05 | Phase 6 | Pending |
-| CI-06 | Phase 6 | Pending |
+| CI-01 | Phase 6 | Complete |
+| CI-02 | Phase 6 | Complete |
+| CI-03 | Phase 6 | Complete |
+| CI-04 | Phase 6 | Complete |
+| CI-05 | Phase 6 | Complete |
+| CI-06 | Phase 6 | Complete |
 | CI-07 | Phase 6 | Pending |
-| TIME-06 | Phase 6 | Pending |
+| TIME-06 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 39 total (corrected from 37; category counts GIT 4, BASE 4, TIME 6, DEAD 6, FIX 7, RED 5, CI 7 sum to 39)

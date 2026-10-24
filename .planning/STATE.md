@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 06
 current_phase_name: CI Enforcement and Lock-in
 status: executing
-stopped_at: Completed 06-08-PLAN.md
-last_updated: "2026-10-23T21:12:13.968Z"
+stopped_at: Completed 06-09-PLAN.md
+last_updated: "2026-10-24T03:37:15.535Z"
 last_activity: 2026-10-23
 last_activity_desc: Phase 06 execution started
-state_head: 9ef5a0c8cc9a71cfbdee63e6c8f8442feba94946
+state_head: 864573c3d8a071d064a4341e21bdc1305d75f09e
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 54
-  completed_plans: 52
+  completed_plans: 53
   percent: 83
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 06 (CI Enforcement and Lock-in) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
 Status: Ready to execute
 Last activity: 2026-10-23 — Phase 06 execution started
 
@@ -101,6 +101,7 @@ Progress: [████████░░] 83%
 | Phase 06 P06 | about 1h | 3 tasks | 6 files |
 | Phase 06 P07 | 1h | 3 tasks | 8 files |
 | Phase 06 P08 | ~100min | 3 tasks | 1 files |
+| Phase 06 P09 | ~6.5h (CI waits, owner replies) | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -149,6 +150,8 @@ Recent decisions affecting current work:
 - [Phase 06]: 06-07: ci/enforce-gates pushed by the owner at the pinned tree (token lacks workflow scope); canary choice with-migration
 - [Phase 06]: 06-08: unused-dependency canary plant is fastest-levenshtein@1.0.16, not yaml (knip counts yaml as an optional peer, so it is never unused)
 - [Phase 06]: 06-08: PR 2 test-e2e needed three attempts (two distinct notification-spec failures, no registry flake), each rerun owner-authorized under rule 9 (DA-4)
+- [Phase 06]: Plan 06-09: main went red on date-dependent audit advisories twice (zod, then undici and fast-uri); the owner chose small fix PRs #38 and #43 (major-scoped pnpm.overrides) over allowlisting, keeping OD-1's empty allowlist
+- [Phase 06]: Plan 06-09: Sweep's push runs passed 36/36 on main; CI still triggers Deploy (run 40041408163 queued on the unregistered hearth runner); PR 3 (#42) open and green on all seven jobs; main's own latest test-e2e is red on a notification spec (DA-4), accepted by the owner without a rerun
 
 ### Pending Todos
 
@@ -187,8 +190,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-23T21:12:13.858Z
-Stopped at: Completed 06-08-PLAN.md
+Last session: 2026-10-24T03:37:15.362Z
+Stopped at: Completed 06-09-PLAN.md
 Resume file: None
 
 ### Resume point for Phase 5 (after 05-13, 2026-10-22)

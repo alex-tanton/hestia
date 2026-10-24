@@ -235,7 +235,7 @@ Plans:
   4. Unit and component tests run across a date and timezone matrix on `main` and nightly, and pass.
   5. A throwaway PR confirms that a merge to `main` still fires `deploy.yml` from the workflow named `CI` after all workflow changes.
 
-**Plans:** 8/10 plans executed
+**Plans:** 9/10 plans executed
 
 Plans:
 **Wave 1**
@@ -263,7 +263,7 @@ Plans:
 - [x] 06-08-PLAN.md — PR 2 landing: tracer open with seven green jobs, owner-gated canary PR shows every gate red on CI, owner merge
 
 **Wave 9** *(blocked on Wave 8 completion and on the owner's merge of PR 2)*
-- [ ] 06-09-PLAN.md — tracer `main` green and `Sweep`'s first run after PR 2; PR 3 content (CONTRIBUTING, CLAUDE.md, maps), owner gate
+- [x] 06-09-PLAN.md — tracer `main` green and `Sweep`'s first run after PR 2; PR 3 content (CONTRIBUTING, CLAUDE.md, maps), owner gate
 
 **Wave 10** *(blocked on Wave 9 completion)*
 - [ ] 06-10-PLAN.md — PR 3 landing as the CI-07 proof (Deploy from `CI`'s `workflow_run`), today-cell and nightly sweeps, phase close
@@ -280,4 +280,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
 | 5. Redundancy Reduction and Text Sync | 13/13 | Complete    | 2026-10-22 |
-| 6. CI Enforcement and Lock-in | 8/10 | In Progress | - |
+| 6. CI Enforcement and Lock-in | 9/10 | In Progress | - |
