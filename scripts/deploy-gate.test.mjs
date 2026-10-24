@@ -338,7 +338,7 @@ describe('deploy-gate: a bad HEARTH_DEPLOY_SHA is refused before anything else r
   });
 });
 
-describe('deploy-gate: deliberate redeploy of the running commit (OD-7, rerun-deploy)', () => {
+describe('deploy-gate: deliberate redeploy of the commit already running (OD-7, rerun-deploy)', () => {
   it('attempt 1 (a CI re-run starts a new Deploy run) is skipped', () => {
     const dir = createRepository();
     const head = commit(dir, 'code', { 'app.txt': 'one\n' });

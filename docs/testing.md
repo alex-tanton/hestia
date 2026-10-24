@@ -219,12 +219,14 @@ controlled, not inherited from the machine.
     `--fail-on-empty`.
   - `scripts/deploy-gate.test.mjs` copies the real `scripts/deploy-gate.sh` into a temporary git
     repository with a stub `docker` that answers `image inspect hearth-service:current` with a
-    revision label. It checks the three rules (a commit older than the running revision, and a
-    change confined to `docs/` and `.planning/`, print `deploy=false`; a re-run, an unknown or
-    diverged running revision and any other change print `deploy=true`), that code moved into
-    `docs/` still deploys, and that a `HEARTH_DEPLOY_SHA` that is not the checked-out commit's 40
-    lowercase hex digits exits 1 with empty stdout before docker is asked. Nothing reaches a
-    Docker daemon.
+    revision label. It checks the rules: a commit older than the running revision, a change confined
+    to `docs/` and `.planning/`, and a commit already running at attempt 1 (or unset) print
+    `deploy=false`; attempt 2 or later of a running commit (a deliberate re-run of the Deploy run),
+    an unknown or diverged running revision and any code change print `deploy=true`. The older-commit
+    and docs-only rules hold under any attempt. Malformed `HEARTH_DEPLOY_ATTEMPT` values and a
+    `HEARTH_DEPLOY_SHA` that is not the checked-out commit's 40 lowercase hex digits exit 1 with
+    empty stdout before docker is asked. It also checks that code moved into `docs/` still deploys.
+    Nothing reaches a Docker daemon.
 - **The Kong route table.** `apps/service/src/kong-routes.test.ts` is a Vitest test in the service
   unit suite. It reads `docker/kong.yml` (and the Compose `KONG_PLUGINS` value) through the
   service's `yaml` devDependency and pins the GoTrue allowlist: the routes, their methods and
