@@ -235,7 +235,7 @@ Plans:
   4. Unit and component tests run across a date and timezone matrix on `main` and nightly, and pass.
   5. A throwaway PR confirms that a merge to `main` still fires `deploy.yml` from the workflow named `CI` after all workflow changes.
 
-**Plans:** 8/10 plans executed
+**Plans:** 11/16 plans executed (06-11 to 06-16 close the UAT gaps G-06-3 and G-06-5)
 
 Plans:
 **Wave 1**
@@ -263,10 +263,30 @@ Plans:
 - [x] 06-08-PLAN.md — PR 2 landing: tracer open with seven green jobs, owner-gated canary PR shows every gate red on CI, owner merge
 
 **Wave 9** *(blocked on Wave 8 completion and on the owner's merge of PR 2)*
-- [ ] 06-09-PLAN.md — tracer `main` green and `Sweep`'s first run after PR 2; PR 3 content (CONTRIBUTING, CLAUDE.md, maps), owner gate
+- [x] 06-09-PLAN.md — tracer `main` green and `Sweep`'s first run after PR 2; PR 3 content (CONTRIBUTING, CLAUDE.md, maps), owner gate
 
 **Wave 10** *(blocked on Wave 9 completion)*
-- [ ] 06-10-PLAN.md — PR 3 landing as the CI-07 proof (Deploy from `CI`'s `workflow_run`), today-cell and nightly sweeps, phase close
+- [x] 06-10-PLAN.md — PR 3 landing as the CI-07 proof (Deploy from `CI`'s `workflow_run`), today-cell and nightly sweeps, phase close
+
+**Gap closure** (06-UAT.md: G-06-3 deploy gate redeploys the running commit; G-06-5 flaky tests in CI)
+
+**Wave 11** *(first: the saved E2E traces start expiring on 2026-10-26)*
+- [x] 06-11-PLAN.md — G-06-5: tracer save of the expiring traces and a REST inventory of every CI failure, classified; flake rate and proof bar; local repeats of the unit, integration and sweep suites
+
+**Wave 12** *(blocked on Wave 11 completion)*
+- [ ] 06-12-PLAN.md — G-06-3: tracer red-then-green "skip the running commit" in the deploy gate, the owner's redeploy path (a re-run of the Deploy run redeploys, a re-run of `CI` does not), docs, local gates, push without the workflow commit
+
+**Wave 13** *(blocked on Wave 12 completion)*
+- [ ] 06-13-PLAN.md — G-06-3: tracer `deploy.yml` commit through the owner hand-off, pull request with the deploy-behavior change flagged, seven green jobs
+
+**Wave 14** *(blocked on Wave 13 completion)*
+- [ ] 06-14-PLAN.md — G-06-5: tracer root cause of every flaky test from its trace and a local repro; owner gate on fixes, proof bar and re-runs
+
+**Wave 15** *(blocked on Wave 14 completion and the owner's gate)*
+- [ ] 06-15-PLAN.md — G-06-5: tracer fixes on `fix/ci-flakes`, red before green, local proof per test and three full E2E runs, gates, push
+
+**Wave 16** *(blocked on Wave 15 completion)*
+- [ ] 06-16-PLAN.md — G-06-5: tracer pull request and N consecutive green CI runs, owner merges both gap pull requests, `main` green on attempt 1, CI-08 and success criterion 6, gaps closed
 
 ## Progress
 
@@ -280,4 +300,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
 | 5. Redundancy Reduction and Text Sync | 13/13 | Complete    | 2026-10-22 |
-| 6. CI Enforcement and Lock-in | 8/10 | In Progress | - |
+| 6. CI Enforcement and Lock-in | 11/16 | In Progress | - |

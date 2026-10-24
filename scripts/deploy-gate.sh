@@ -4,11 +4,14 @@
 # revision and the rule that decided. Exit 0 whenever a decision was printed; exit 1, with nothing
 # on stdout, when HEARTH_DEPLOY_SHA is unusable.
 #
-#   HEARTH_DEPLOY_SHA=$(git rev-parse HEAD) scripts/deploy-gate.sh
+#   HEARTH_DEPLOY_SHA=$(git rev-parse HEAD) [HEARTH_DEPLOY_ATTEMPT=1] scripts/deploy-gate.sh
 #
-#   HEARTH_DEPLOY_SHA   the commit being deployed: 40 lowercase hex digits, equal to the checked-out
-#                       HEAD. It comes from a workflow payload and this runs on the production box,
-#                       so it is checked before anything else uses it.
+#   HEARTH_DEPLOY_SHA       the commit being deployed: 40 lowercase hex digits, equal to the checked-out
+#                           HEAD. It comes from a workflow payload and this runs on the production box,
+#                           so it is checked before anything else uses it.
+#   HEARTH_DEPLOY_ATTEMPT   the attempt number of this Deploy run (1..9999, default 1). Re-running CI
+#                           starts a new Deploy run (attempt 1) and skips the running commit; re-running
+#                           the Deploy run itself raises attempt to 2 or more and redeploys it.
 #
 # Called by the `changes` step of .github/workflows/deploy.yml, with the checkout at fetch-depth 0
 # (the comparison needs history). The decision compares HEAD with the revision of the image that is
@@ -22,9 +25,15 @@
 #     state), so a change confined to them deploys nothing.
 #   - HEAD an ancestor of the running revision means a re-run of an older CI run; deploying it
 #     would roll production back to a stale commit.
-#   - HEAD equal to the running revision deploys again, as a re-run always has. An unknown running
-#     revision (no image, a hand build labelled `dev`, a commit not in this history, an ambiguous
-#     abbreviation) deploys too: a first deploy or a hand-built image must never block production.
+#   - HEAD equal to the running revision is skipped at attempt 1: a CI push run on main completes,
+#     and starts a new Deploy run, once per attempt, so re-running any job of a green run reached
+#     the gate for the commit already running and rebuilt production for nothing; that commit is now
+#     skipped (OD-6). Re-running the Deploy run itself (attempt 2 or later) is the deliberate redeploy
+#     (OD-7), for example after a deploy failed once `current` was already re-tagged; running
+#     `scripts/deploy.sh` by hand on the host also works.
+#     An unknown running revision (no image, a hand build labelled `dev`, a commit not in this
+#     history, an ambiguous abbreviation) deploys: a first deploy or a hand-built image must
+#     never block production.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -49,6 +58,9 @@ sha="${HEARTH_DEPLOY_SHA-}"
 head_sha="$(git -C "$repo_root" rev-parse HEAD)" || refuse "cannot read HEAD of $repo_root"
 [[ "$sha" == "$head_sha" ]] || refuse "HEARTH_DEPLOY_SHA is not the checked-out HEAD ($head_sha)"
 
+attempt="${HEARTH_DEPLOY_ATTEMPT-1}"
+[[ "$attempt" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "HEARTH_DEPLOY_ATTEMPT is invalid: $attempt"
+
 running="$(docker image inspect \
   --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image" 2>/dev/null)" ||
   running=""
@@ -65,7 +77,11 @@ resolved="$(git -C "$repo_root" rev-parse --verify --quiet "${running}^{commit}"
   decide true "not a unique commit in this history; deploying"
 
 if [[ "$resolved" == "$head_sha" ]]; then
-  decide true "equal to HEAD (a re-run); deploying again"
+  if (( attempt > 1 )); then
+    decide true "equal to HEAD, but this is attempt $attempt of this Deploy run, a deliberate re-run; deploying again"
+  else
+    decide false "equal to HEAD; that commit is already running, nothing to deploy"
+  fi
 fi
 
 # 0: yes, 1: no, anything else: git could not tell (e.g. a shallow clone).
