@@ -274,7 +274,7 @@ Plans:
 - [ ] 06-11-PLAN.md — G-06-5: tracer save of the expiring traces and a REST inventory of every CI failure, classified; flake rate and proof bar; local repeats of the unit, integration and sweep suites
 
 **Wave 12** *(blocked on Wave 11 completion)*
-- [ ] 06-12-PLAN.md — G-06-3: tracer red-then-green "skip the running commit" in the deploy gate, owner's choice of redeploy path, docs, local gates, push without the workflow commit
+- [ ] 06-12-PLAN.md — G-06-3: tracer red-then-green "skip the running commit" in the deploy gate, the owner's redeploy path (a re-run of the Deploy run redeploys, a re-run of `CI` does not), docs, local gates, push without the workflow commit
 
 **Wave 13** *(blocked on Wave 12 completion)*
 - [ ] 06-13-PLAN.md — G-06-3: tracer `deploy.yml` commit through the owner hand-off, pull request with the deploy-behavior change flagged, seven green jobs
