@@ -672,3 +672,18 @@ g063-doc-review=done files=7
 g063-docs-claims=checked=1032 misses=0
 g063-gates=frozen,lint,format-check,typecheck,test,shellcheck,knip,knip-baseline,jscpd,audit,hygiene,migrations,commitlint exit=0
 g063-pushed=a36fabadf7fad8ec41add4c679bc3884cf67efb7
+
+## Plan 06-13 Task 1: deploy.yml commit, wiring smoke, push to origin
+
+g063-deploy-facts=ok
+g063-wiring-smoke=attempt1:false attempt2:true
+g063-head=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-tree=25918eebb5b57b8976dc45e0342e3898b9b3deed
+g063-files=.claude/CLAUDE.md,.github/workflows/deploy.yml,CONTRIBUTING.md,README.md,docs/deploy.md,docs/testing.md,scripts/deploy-gate.sh,scripts/deploy-gate.test.mjs
+g063-push=claude 3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+
+## Plan 06-13 Task 2: owner push (auto-skipped: token push accepted)
+
+g063-owner-pushed=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-owner-pushed-tree-match=yes
+
