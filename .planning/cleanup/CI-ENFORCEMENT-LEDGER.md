@@ -520,3 +520,18 @@ audit2-e2e-flake-evidence=attempt1 19-notifications.spec.ts:140 (light) failed (
 Notes:
 
 - The owner answered the rule 9 decision with "Rerun once"; exactly one `rerun-failed-jobs` was posted for run 40054640985. Attempt 2 concluded `success` on all seven jobs on the unchanged head `944552a`. PR #43 is open and ready for the owner to merge; Claude does not merge it. Merging it turns `main`'s `hygiene` green and unblocks PR #42.
+
+## Plan 06-09: main after the undici and fast-uri fix (stopped: test-e2e failure on main)
+
+audit2-fix-merged=7d2b84e172938d8a41a5ecaddbcd65b3f712265b
+main-ci-after-audit2=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success hygiene:success run=40056322936
+sweep-after-audit2=run 40056322945 success 36/36
+deploy-after-audit2=40057102510 workflow_run pending (no jobs listed; CI concluded failure)
+main-e2e-failure=tests/17-accessibility-states.spec.ts:526 notification type on, but this device cannot register (light); 103 passed 1 failed; no toomanyrequests; job=120759988984; DA-4
+
+Notes:
+
+- The owner merged PR #43 on 2026-10-24T02:57:27Z as squash commit `7d2b84e`. `main`'s `CI` push run 40056322936 passed six jobs, including `hygiene` (the audit is green again), and `test-e2e` failed on a third distinct notification-area spec, `17-accessibility-states.spec.ts:526` (light, `Expected: >= 0, Received: -1`, an ordering assertion). Earlier flakes: `17:497` and `19:140` on PR 2, `19:140` on PR #43 attempt 1. No `toomanyrequests` in the log, so phase rule 9's registry rerun does not apply and a rerun is the owner's call (DA-4); none was made. Log `.planning/cleanup/logs/06-09-main-audit2-test-e2e.log` (gitignored).
+- `Sweep` push run 40056322945 concluded `success` (`sweep: 36/36 passed`, log `.planning/cleanup/logs/06-09-sweep-audit2.log`).
+- Deploy: because `CI` concluded `failure`, Deploy run 40057102510 (event `workflow_run`) is `pending` with no jobs listed yet (it sits behind the queued run 40041408163 in the `deploy` concurrency group); the `if` guard will skip its job. Claude touched and cancelled nothing.
+- The W4 merge, the PR #42 re-poll and the 06-09 close-out wait for the owner's decision on this red `main`.
