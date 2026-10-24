@@ -320,7 +320,7 @@ Seven jobs are in `.github/workflows/ci.yml`, each with a timeout, on every pull
 | --- | --- | --- |
 | `lint` | `pnpm lint`, `pnpm format:check` | `--max-warnings=0` |
 | `typecheck` | `pnpm typecheck` | |
-| `test-unit` | `pnpm test:harness`, `pnpm -r --filter '!@hearth/web' test`, `pnpm --filter @hearth/web test:coverage` | Harness tests, the non-web workspaces' tests, then web with its coverage thresholds |
+| `test-unit` | `pnpm test:harness`, then `pnpm -r test` without `@hearth/web`, then `pnpm --filter @hearth/web test:coverage` | Harness tests, the non-web workspaces' tests, then web with its coverage thresholds |
 | `test-integration` | `supabase start`, then `pnpm db:types` (drift check), then `pnpm --filter @hearth/service test:coverage` | Supabase CLI 2.117.0 via `supabase/setup-cli@v3`; coverage gate; fails when `apps/service/src/db/types.ts` differs from the regenerated file |
 | `test-e2e` | `pnpm test:e2e` | Pull requests and `main` only; pre-pulls images with `scripts/ci-prepull-images.sh` |
 | `build` | `pnpm build` | |
