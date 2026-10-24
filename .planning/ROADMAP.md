@@ -281,7 +281,7 @@ Plans:
 - [x] 06-13-PLAN.md — G-06-3: tracer `deploy.yml` commit through direct push, pull request with the deploy-behavior change flagged, seven green jobs
 
 **Wave 14** *(blocked on Wave 13 completion)*
-- [ ] 06-14-PLAN.md — G-06-5: tracer root cause of every flaky test from its trace and a local repro; owner gate on fixes, proof bar and re-runs
+- [x] 06-14-PLAN.md — G-06-5: tracer root cause of every flaky test from its trace and a local repro; owner gate on fixes, proof bar and re-runs
 
 **Wave 15** *(blocked on Wave 14 completion and the owner's gate)*
 - [ ] 06-15-PLAN.md — G-06-5: tracer fixes on `fix/ci-flakes`, red before green, local proof per test and three full E2E runs, gates, push

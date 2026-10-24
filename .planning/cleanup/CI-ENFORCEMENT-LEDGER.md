@@ -724,3 +724,19 @@ Notes:
 - F-02, F-03, F-04, and F-05 are all `test` class bugs: F-02 hangs intercepted route without aborting/fulfilling, leaving `save.isPending` true; F-03 fails when earlier tests leave Alex's switches checked; F-04 unloads the page before `PATCH /api/lists/:id` completes; F-05 reloads offline before the 1000ms cache persister throttle persists to IndexedDB.
 - All three infrastructure signatures (`Could not pull public.ecr.aws...`, `toomanyrequests: Rate exceeded`, `ERR_PNPM_PNPM_ENGINE_IDENTITY_UNVERIFIABLE`) have proposed dispositions (`mitigated`, `mitigated`, `external`) recorded in `FLAKE-INVENTORY.md` for the owner at Task 3's gate.
 - The throwaway repro worktree and all containers have been cleaned up and verified.
+## Plan 06-14 Task 3: owner decision gate
+
+gate-flake-fixes=approve 2026-10-24
+proof-bar-ci=15
+proof-reruns=14
+infra-disposition-ecr-pull=mitigated
+infra-disposition-toomanyrequests=mitigated
+infra-disposition-pnpm-identity=external
+
+Notes:
+
+- The owner approved the fixes for all five flaky tests (F-01 through F-05) as diagnosed and presented on 2026-10-24.
+- Product change for F-01 (React Query active-household mutation query cancellation in apps/web/src/lib/api/hooks.ts) approved with Vitest regression test required.
+- Infra dispositions approved: ECR rate limit pull retry mitigated by pre-pull script; Docker rate limit mitigated by pre-pull script; transient npm registry signature verification failure classified as external re-run per rule 9.
+- CI proof bar N = 15 consecutive complete CI passes on fix/ci-flakes approved, with proof-reruns budget of 14.
+- All five flaky tests reproduced locally; no tests classified as not-reproduced.
