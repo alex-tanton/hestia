@@ -107,7 +107,7 @@ last_mapped_at: 2026-10-22
 
 **Deploy (`.github/workflows/deploy.yml`):**
 - Triggered by `workflow_run` on CI completing for `main`, only on successful push events; runs on the self-hosted runner `[self-hosted, hearth]`
-- Asks `scripts/deploy-gate.sh` first: it deploys when anything outside `docs/` and `.planning/` changed since the revision of the running `hearth-service` image, never deploys a commit older than the running one, and redeploys a re-run of the running commit
+- Asks `scripts/deploy-gate.sh` first: it deploys when anything outside `docs/` and `.planning/` changed since the revision of the running `hearth-service` image, skips a commit already running (a `CI` re-run starts a new Deploy run at attempt 1 which skips), never deploys a commit older than the running one, and a re-run of the Deploy run itself (attempt 2 or later) redeploys the running commit
 - Then runs `scripts/deploy.sh` at the CI-tested commit (`HEARTH_DEPLOY_SHA`)
 
 **Dependency updates:** Dependabot (`.github/dependabot.yml`), weekly, for npm, GitHub Actions, and Docker images

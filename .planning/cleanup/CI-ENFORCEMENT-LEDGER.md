@@ -665,3 +665,8 @@ g063-green=pass 36 of 36
 force-path=rerun-deploy
 g063-attempt-evidence=CI re-runs on a5c4384 started new Deploy runs 39719463322 39720541360 39721751275, each run_attempt=1
 g063-force=red 8 green 47 of 47
+
+## Plan 06-12 Task 3: docs, local gates, branch pushed
+
+g063-doc-review=done files=7
+g063-docs-claims=checked=1032 misses=0
