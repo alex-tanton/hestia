@@ -60,12 +60,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### CI enforcement
 
 - [x] **CI-01**: knip is blocking in CI once the tree is clean
-- [x] **CI-02**: A jscpd source-duplication threshold is enforced
+- [x] **CI-02**: A jscpd source-duplication threshold is enforced (the gate is the test-inclusive percentage at 2%, per D-08; 1.11% when it was turned on)
 - [x] **CI-03**: CI checks for tracked-ignored files, `db:types` drift, migration append-only and script modes
-- [x] **CI-04**: `pnpm audit --prod` runs with an expiring allowance for `braces`
+- [x] **CI-04**: `pnpm audit --prod` runs with an expiring allowance for `braces` (the expiring-allowance mechanism exists and is tested with the braces advisory; braces is reachable only through the devDependency kysely-codegen, outside --prod, so the allowlist starts empty per D-09)
 - [x] **CI-05**: Jobs have timeouts, and both workflows get a correctness review
 - [x] **CI-06**: The web coverage thresholds are either enforced or removed, so config and docs agree
-- [ ] **CI-07**: A PR confirms that `CI` still triggers deploy correctly
+- [x] **CI-07**: A PR confirms that `CI` still triggers deploy correctly (complete with a caveat: PR 3's merge ran `CI` green and `CI` created Deploy run 40059927037 within two seconds; that run's own `deploy` job was never evaluated because the `hearth` self-hosted runner is not provisioned and an older queued run holds the concurrency group; the guard accepting a green run was observed on 5216fc7)
 
 ## v2 Requirements
 
@@ -139,7 +139,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CI-04 | Phase 6 | Complete |
 | CI-05 | Phase 6 | Complete |
 | CI-06 | Phase 6 | Complete |
-| CI-07 | Phase 6 | Pending |
+| CI-07 | Phase 6 | Complete |
 | TIME-06 | Phase 6 | Complete |
 
 **Coverage:**

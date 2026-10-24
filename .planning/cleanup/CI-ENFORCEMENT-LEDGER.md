@@ -586,3 +586,40 @@ Notes:
 - `CI` push run 40059342546 on `f1c8583` (updated 03:50:14Z) concluded `success` with all seven jobs `success` (no rerun; `test-e2e` green). Two seconds later (03:50:16Z) `CI`'s completion created Deploy run 40059927037 with event `workflow_run`, so `deploy.yml` still fires from the workflow named `CI` after every workflow change. The run is `pending` with no jobs because the owner did not cancel the older runs: 40041408163 (for `5216fc7`, its `deploy` job `queued` on `self-hosted, hearth` since 23:45Z) holds the `deploy` concurrency group, and GitHub itself replaced the pending run 40057102510 (for `7d2b84e`) with 40059927037 (it is now `cancelled`; Claude cancelled nothing). The guard's evaluation of this run's `deploy` job is therefore not observable until 40041408163 is cancelled or a runner takes it; the guard's acceptance of a green push run was observed on `5216fc7` (`deploy-after-zod=` above: job `queued` on the `hearth` labels). Under the plan's rule this needs the owner to cancel 40041408163 (checkpoint:human-action) before `ci07=proven` can be recorded.
 - `Sweep` push run 40059342611 on `f1c8583` concluded `success` (`sweep: 36/36 passed`, `.planning/cleanup/logs/06-10-sweep-push.log`). The manual `workflow_dispatch` run 40060752810 (dispatch accepted with the token, created 04:02:27Z, completed 04:22:47Z) concluded `success` with `sweep: 42/42 passed` and six `cell=today` PASS lines, all `now=2026-10-24T04:03:34.735Z tz=Pacific/Pago_Pago` (log `.planning/cleanup/logs/06-10-sweep-today.log`, gitignored; no `sweep-logs` artifact).
 - Remaining for 06-10: the first scheduled `Sweep` run (05:17 UTC) and its conclusion, the Deploy decision above, the `## Phase close` section, `phase6-close=done`, the CI-07 tick and the CI-02 and CI-04 notes in `.planning/REQUIREMENTS.md`, the WB sync with `main` (rule 7) and the SUMMARY.
+
+## Plan 06-10 Task 3 (resumed): first nightly, CI-07 decision, WB sync
+
+sweep-first-nightly=run 40082646319 success 2026-10-24T09:36:49Z
+sweep-first-nightly-detail=schedule run created 09:36:49Z (GitHub started it about 4h20m after the 05:17 UTC cron), completed 10:00:22Z; log has sweep: 42/42 passed; six cell=today PASS lines with now=2026-10-24T09:37:11.818Z tz=Pacific/Pago_Pago; no sweep-logs artifact; log .planning/cleanup/logs/06-10-sweep-nightly.log (gitignored)
+ci07=partial
+ci07-closure=complete-with-caveat (chosen; see Notes)
+wb-sync-final=merged origin/main f1c8583 into WB as de4b338 (4 .planning conflicts resolved with git checkout --ours, owner-approved; no conflict outside .planning; outside .planning WB equals main)
+
+Notes:
+
+- Owner reply (2026-10-24): the deploy runner is not provisioned yet, this is not a requirement, and the work may continue; the queued Deploy run 40041408163 is left alone and no cancel was requested.
+- CI-07 choice: the requirement ("a PR confirms that `CI` still triggers deploy correctly") and ROADMAP criterion 5 ("a merge to `main` still fires `deploy.yml` from the workflow named `CI`") are met by the trigger: PR 3's squash commit `f1c8583` ran `CI` (run 40059342546, seven jobs `success`) and two seconds after it completed GitHub created Deploy run 40059927037 with event `workflow_run` for the same SHA (`ci07-deploy-run=` above). So CI-07 is ticked as complete with a caveat, not as strictly proven: the plan's stricter acceptance (this merge's own `deploy` job `queued` or later) was not observed, because the run is `pending` behind the older queued run 40041408163 in the `deploy` concurrency group and the `hearth` self-hosted runner is not provisioned. Guard acceptance of a green push run was observed on `5216fc7` (`deploy-after-zod=`: `deploy` job `queued` on `self-hosted, hearth`). `ci07=proven` is not written. If the owner ever wants the strict state recorded, it needs run 40041408163 cancelled or a runner registered.
+
+## Phase close
+
+Mapping of the five ROADMAP success criteria (Phase 6) to the evidence keys above:
+
+1. knip and jscpd fail a PR: `canary-steps=` (PR #37: `knip:failure,knip-production:failure,jscpd:failure,...`), `knip-default=0`, `knip-production=baseline-equal`, `jscpd-percentage=1.11`, `jscpd-negative=threshold1-exit1`.
+2. Tracked-ignored files, `db/types.ts` drift, applied-migration edits, script modes and CRLF fail a PR: `canary-steps=` (hygiene, migrations and db-types steps `failure`), `canary-crlf=planted`, `pr2-db-types-on-ci=success`, `hygiene-negative=3-modes`, the hygiene and migration harness tests (`harness-files=13`).
+3. Audit, timeouts, review and coverage: `audit-prod-live=clean-on-fix-branch` and the live green audit on `main` (`main-ci-after-zod=`, `pr3-ci=`), `ci04-braces-note=`, the timeout facts in the 06-06 section (every job has `timeout-minutes`), `ci05-review=complete findings=21`, `coverage-thresholds=84/80/77/85`, `pr2-runner-coverage=85.38/81.83/78.59/86.96`.
+4. Date and time-zone matrix on `main` and nightly: `sweep-first-push=`, `sweep-second-push=`, `sweep-today=`, `sweep-first-nightly=` (all 36/36 or 42/42 passed).
+5. `CI` still triggers Deploy after the workflow changes: `ci07-ci-run=`, `ci07-deploy-run=`, `ci07-deploy-job=`, with `ci07=partial` and the choice above (trigger observed, guard acceptance observed on `5216fc7`, this merge's job not evaluated).
+
+Wording notes: `jscpd-wording-note=` (the roadmap says "source duplication"; D-08 gates the test-inclusive percentage, 1.11% when turned on, limit 2%) and `ci04-braces-note=` (braces is reachable only through the `kysely-codegen` devDependency, so `--prod` never reports it and the allowlist starts empty per D-09 and OD-1).
+
+Deviations to know about: the audit gate turned `hygiene` red on `main` twice without any code change (research Pitfall 10) and needed owner-merged fix PRs: #38 (zod 4.6.5 to 4.6.6, merged `5216fc7`) and #43 (major-scoped overrides for undici and fast-uri, merged `7d2b84e`); the fix PR for the original two advisories, #32, came before PR 1. The owner may want to decide whether a date-dependent blocking audit is the right gate for `main` (it holds back the next deploy until someone upgrades the package), for example whether it should keep blocking, run as a separate non-deploy-blocking job or schedule, or be paired with automatic security-update PRs; nothing was changed in this phase.
+
+Deferred items:
+
+- The unprovisioned `hearth` self-hosted runner: Deploy runs 40041408163 (queued) and 40059927037 (pending behind it) never reach a runner; the owner says it is not a requirement for now. CI-07's strict job-evaluation proof waits on it.
+- The notification E2E spec flakiness (DA-4), seen as four failed `test-e2e` runs on three heads and three distinct specs, none with `toomanyrequests`: `17-accessibility-states.spec.ts:497` and `19-notifications.spec.ts:140` on PR 2 (06-08), `19-notifications.spec.ts:140` on PR #43 attempt 1 (one authorized rerun passed), and `17-accessibility-states.spec.ts:526` on `main` after PR #43 (run 40056322936, not rerun).
+- Branch protection, required status checks and the squash-only merge setting (F15, F16): a red `CI` run blocks nothing on its own.
+- The integration sweep in CI (`pnpm test:sweep:integration` runs locally only), automatic Kong recreate after a `kong.yml` change, SHA pinning of actions (CIX-01), migration ordering (PC-8) and the 28 owner-reviewed knip baseline rows.
+- Open Dependabot PRs #39, #40 and #41 and the leftover sibling worktrees (`hearth-audit-fix`, `hearth-audit-fix2`, `hearth-zod-fix`, `hearth-enforce-gates`, `hearth-gate-scripts`, `hearth-ci-lock-in`) are the owner's to triage or remove.
+
+phase6-close=done
