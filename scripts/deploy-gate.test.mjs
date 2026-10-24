@@ -3,9 +3,9 @@
  * throwaway git repository, copies the real script into it, and runs it with a stub `docker` that
  * answers `image inspect hearth-service:current` with the running revision label (or fails, as when
  * no image exists). Nothing reaches a real Docker daemon, the network or the host's repository.
- * The cases pin the three deploy rules (a commit older than the running revision is skipped, a
- * change confined to docs/ and .planning/ is skipped, anything else deploys, including a re-run and
- * an unknown running revision) and that a hostile `HEARTH_DEPLOY_SHA` never reaches a shell. Run by
+ * The cases pin the deploy rules (a commit equal to or older than the running revision is skipped,
+ * a change confined to docs/ and .planning/ is skipped, anything else deploys, including an unknown
+ * running revision) and that a hostile `HEARTH_DEPLOY_SHA` never reaches a shell. Run by
  * `pnpm test` through the root `test:harness` script.
  */
 
@@ -179,17 +179,21 @@ describe('deploy-gate: an unknown running revision deploys', () => {
   });
 });
 
-describe('deploy-gate: the running revision is the checked-out commit', () => {
-  it('a 12-digit label equal to HEAD deploys again (a re-run)', () => {
+describe('deploy-gate: the running revision is the checked-out commit (skipped)', () => {
+  it('a 12-digit label equal to HEAD is skipped (already running)', () => {
     const dir = createRepository();
     const head = commit(dir, 'code', { 'app.txt': 'one\n' });
-    assertDecision(gate(dir, { revision: head.slice(0, 12) }), 'true', /equal to HEAD/);
+    assertDecision(
+      gate(dir, { revision: head.slice(0, 12) }),
+      'false',
+      /equal to HEAD.*already running/,
+    );
   });
 
-  it('a full 40-digit label equal to HEAD deploys again', () => {
+  it('a full 40-digit label equal to HEAD is skipped (already running)', () => {
     const dir = createRepository();
     const head = commit(dir, 'code', { 'app.txt': 'one\n' });
-    assertDecision(gate(dir, { revision: head }), 'true', /equal to HEAD/);
+    assertDecision(gate(dir, { revision: head }), 'false', /equal to HEAD.*already running/);
   });
 });
 
