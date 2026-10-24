@@ -30,6 +30,7 @@ main=cb808e6d360909ec9714b66d7216a2a319eaa57b
 | PC-11 | Success criteria 1 and 2 are shown on CI by an owner-gated throwaway canary pull request; it edits a migration only if the owner opts in (D-03). | planner, flagged |
 | OD-5 | G-06-5: "All flakiness in tests must be resolved before the CI milestone is considered complete: review all flaky tests in CI history and fix them so CI is reliable." It supersedes DA-4, so the flaky specs are in scope; Phase 6 is not complete until G-06-5 is closed. | owner, UAT 2026-10-24 |
 | PC-13 | The CI proof bar is N = max(10, ceil(ln 0.05 / ln(1 - p))), at most 25, where p is the per-attempt test-e2e flake rate from this inventory (N = 10 when p is 0): N consecutive CI runs that all pass on one head have under a 5% chance at the old rate. | planner, flagged; the owner confirms N at 06-14's gate |
+| OD-6 | G-06-3: "The deploy gate should not redeploy the same commit. Owner does not understand why it would." A commit equal to the running revision gives `deploy=false`; it supersedes PC-5's re-run clause (the rest of PC-5 stands); a deliberate redeploy keeps a path (OD-7); flagged as a deploy-behavior change in the pull request body (D-20). | owner, UAT 2026-10-24 |
 
 ## Flagged assumptions
 
@@ -650,3 +651,10 @@ local-integration-repeat=3/3
 local-integration-sweep=5/5
 local-sweep=42/42 now=2026-10-24T16:30:19.493Z tz=Pacific/Pago_Pago
 flake-inventory=done
+
+## Plan 06-12 Task 1: deploy gate skips running commit
+
+g063-why=each completed attempt of a CI push run on main starts its own Deploy run (a5c4384: CI run 39718363858, 3 attempts, Deploy runs 39719463322 39720541360 39721751275)
+g063-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+g063-red=fail 2 of 36
+g063-green=pass 36 of 36
