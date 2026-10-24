@@ -482,3 +482,17 @@ gate-pr3=approve-pr3
 Notes:
 
 - The owner answered "Open PR 3 now" (2026-10-24). Per the owner's standing instruction Claude opens the pull request, reports when CI has passed, and the owner merges; Claude merges, closes and cancels nothing.
+
+## Plan 06-09 Task 3: PR 3 opened, CI attempt 1 (stopped: hygiene red)
+
+pr3=42
+pr3-url=https://github.com/alex-tanton/hearth/pull/42
+pr3-opened-head=2bca1474add3accde83c367a80b2391a104437b8
+pr3-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:failure run=40053383467
+pr3-hygiene-failure=audit-prod 11 advisories (undici 7.30.0 via apps__service>cheerio>undici: GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 moderate, GHSA-xjj6-f33q-929c high, patched 7.30.1; fast-uri 4.2.2 via apps__service>fastify>@fastify/ajv-compiler: GHSA-w74x-v6f9-j3xg, GHSA-wjr9-j795-jxcr moderate, GHSA-xhq7-xmqj-769h, GHSA-333x-w4r6-6crp low, patched 4.2.3; the pairs are two paths each); the other five hygiene steps success; job=120750818738
+
+Notes:
+
+- PR #42 was opened through REST from `docs/ci-lock-in` at `pr3-head` into `main` (title `docs: state what CI enforces and when a merge deploys`, body `.planning/cleanup/logs/06-09-pr3.md`, gitignored). Claude does not merge it.
+- Its `CI` run 40053383467 has six `success` jobs and a red `hygiene` job: `pnpm audit --prod` now reports advisories published after the zod fix merged (the same date-dependent case as before, research Pitfall 10); PR 3 changes no dependency, so `main` would fail the same way on its next push. Not a registry flake, no rerun made. Log `.planning/cleanup/logs/06-09-pr3-hygiene.log` (gitignored).
+- Open Dependabot PRs at this time: #39 zod 4.6.6 to 4.6.7, #40 serialize-javascript 7.1.2 to 7.1.4, #41 an npm_and_yarn group bump in `apps/service`. Claude did not inspect them. `undici` 7.30.1 and `fast-uri` 4.2.3 are the patched versions on the lines in the lockfile (undici is also locked at 8.11.2, fast-uri at 3.1.8, not reported).
