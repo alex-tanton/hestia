@@ -1,0 +1,77 @@
+From ccfb84aad7aea78d4d418cffcbb9927bb3a2a065 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 23 Oct 2026 19:42:13 +0000
+Subject: [PATCH 4/6] ci: run the date and time-zone sweep on main and nightly
+
+- push to main (not for docs or planning only), nightly 05:17 UTC and on demand
+- failure uploads the sweep logs for 14 days; never runs on pull requests
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01SMdgjb52uEVQdK1fhxdcUh
+---
+ .github/workflows/sweep.yml | 53 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+ create mode 100644 .github/workflows/sweep.yml
+
+diff --git a/.github/workflows/sweep.yml b/.github/workflows/sweep.yml
+new file mode 100644
+index 0000000..d817d68
+--- /dev/null
++++ b/.github/workflows/sweep.yml
+@@ -0,0 +1,53 @@
++# Runs the unit suites across the fixed date and time-zone matrix of scripts/test-sweep.mjs, which
++# CI's single-zone run cannot catch (a test that passes only on one day or in one zone).
++#
++# This workflow must never be named `CI`: deploy.yml listens to the workflow named `CI`, so a
++# sweep with that name would gate, or trigger, a deploy. It never runs on pull requests.
++name: Sweep
++
++on:
++  push:
++    branches: [main]
++    # The sweep costs Actions minutes on a private repository, and neither path holds code.
++    paths-ignore:
++      - 'docs/**'
++      - '.planning/**'
++  schedule:
++    # 05:17 UTC, off the hour because scheduled runs are delayed most at the top of it. GitHub mails
++    # a failed scheduled run to whoever last changed this line.
++    - cron: '17 5 * * *'
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++concurrency:
++  group: sweep-${{ github.ref }}
++  cancel-in-progress: false
++
++jobs:
++  sweep:
++    runs-on: ubuntu-latest
++    # About 10 minutes locally, about twice that on a runner, plus the install.
++    timeout-minutes: 60
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: ./.github/actions/setup
++      - name: Six fixed cells
++        if: github.event_name == 'push'
++        run: pnpm test:sweep --log-dir sweep-logs
++      # The nightly and manual runs add today's cell, a rotating zone at the real instant, so a
++      # date-dependent test fails on the night it breaks instead of on a pull request later. A red
++      # run prints `now=` and `tz=`, which reproduce it with HEARTH_TEST_NOW and TZ.
++      - name: Six fixed cells and today's cell
++        if: github.event_name != 'push'
++        run: pnpm test:sweep --with-today --log-dir sweep-logs
++      # Only the sweep's own logs, never the workspace.
++      - uses: actions/upload-artifact@v7
++        if: failure()
++        with:
++          name: sweep-logs
++          path: sweep-logs/
++          retention-days: 14
+-- 
+2.43.0
+

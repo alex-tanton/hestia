@@ -32,7 +32,7 @@ hearth/
 │   └── config.toml           # Supabase CLI local stack config
 ├── docker/                   # Compose stack, Dockerfiles, Caddy, Kong, DB init SQL
 │   └── db/                   # roles, JWT, realtime, hearth-service login SQL
-├── scripts/                  # deploy.sh, generate-secrets.sh, CI helpers, test sweep
+├── scripts/                  # deploy.sh, deploy-gate.sh, generate-secrets.sh, CI gate scripts, test sweep
 ├── test/                     # shared Vitest/clock/TZ setup and config-guard tests
 │   └── support/
 ├── docs/                     # specification documents (source of truth for behavior)
@@ -141,13 +141,13 @@ hearth/
 
 **`scripts/`:**
 - Purpose: Operational and tooling scripts.
-- Contains: `deploy.sh`, `generate-secrets.sh`, `ci-prepull-images.sh`, `test-sweep.mjs` (date and time-zone matrix), `knip-summary.mjs`, and `.test.mjs` files for them.
+- Contains: `deploy.sh`, `deploy-gate.sh` (decides whether a deploy runs), `generate-secrets.sh`, `ci-prepull-images.sh`, `test-sweep.mjs` (date and time-zone matrix), `knip-summary.mjs`, the `hygiene` job's gate scripts `check-knip-baseline.mjs`, `check-repo-hygiene.mjs`, `check-migrations-append-only.mjs` and `audit-prod.mjs`, their data files `knip-production-baseline.txt` and `audit-allowlist.json`, and `.test.mjs` files for them.
 
 **`test/`:**
 - Purpose: Repository-wide Vitest setup (`clock-setup.mjs` pins `Date`, `global-tz.mjs` validates `TZ`, `test-now.mjs`) and guard tests for the ESLint rules (`eslint-clock-ban.test.mjs`, `eslint-service-role-fence.test.mjs`).
 
 **`.github/`:**
-- `workflows/ci.yml`, `workflows/deploy.yml`, `actions/setup/action.yml`, `dependabot.yml`.
+- `workflows/ci.yml`, `workflows/deploy.yml`, `workflows/sweep.yml`, `actions/setup/action.yml`, `dependabot.yml`.
 
 ## Key File Locations
 
