@@ -474,3 +474,11 @@ Notes:
 
 - `docs/ci-lock-in` (W4 `/home/user/hearth-ci-lock-in`) is pushed with a plain push of a new branch (no workflow file touched), at `pr3-head`, after a last merge of WB. Outside `.planning/` it differs from `origin/main` (`5216fc7`) only in `CONTRIBUTING.md` and `.claude/CLAUDE.md`; nothing under `.github/`, `supabase/migrations/` or `apps/service/src/db/types.ts`. The secret scan over the added lines matched nothing. No pull request exists from this branch (REST list is empty); PR 3 opens only after `gate-pr3=approve-pr3`.
 - `CONTRIBUTING.md` is outside `docs/` and `.planning/`, so PR 3's squash merge must make `deploy.yml` run and reach the `deploy` job (D-21); with no runner registered the job will queue (as `deploy-after-zod=` shows). The queued run 40041408163 for `5216fc7` is still pending; the owner may want to cancel it before merging PR 3 (06-10 asks again).
+
+## Plan 06-09 Task 3: owner gate
+
+gate-pr3=approve-pr3
+
+Notes:
+
+- The owner answered "Open PR 3 now" (2026-10-24). Per the owner's standing instruction Claude opens the pull request, reports when CI has passed, and the owner merges; Claude merges, closes and cancels nothing.
