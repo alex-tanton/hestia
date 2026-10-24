@@ -164,14 +164,6 @@ Cross-check with STATE.md blocker mentions:
 - Deliberate FIX-07 red run: Run 39457296052 on branch `fix/kong-allowlist` (PR #18), intentional red evidence in FIX-LEDGER-INFRA.md (rows O-058, O-059, O-060, O-061, O-062).
 - Deliberate FIX-02 red run: Run 39440151507 on branch `fix/list-adds-rotation` (PR #15), intentional red evidence in FIX-LEDGER-WEB.md (rows O-044, O-045).
 
-## Registry and infrastructure
-
-Infrastructure failure signatures, mitigations in place, and proposed dispositions for the owner at 06-14's gate:
-
-- `Could not pull public.ecr.aws/supabase/gotrue:v2.196.0 after 6 attempts`: Public ECR rate limit exceeded before 2026-10-20. Mitigation: `scripts/ci-prepull-images.sh` added in commit 387bde7 pulls from ghcr.io mirror first. Proposed disposition: mitigated; for the owner at 06-14's gate.
-- `toomanyrequests: Rate exceeded`: Docker daemon ECR pull rate limits on hosted runners before pre-pull script. Mitigation: ghcr.io pre-pull mirror and Docker Hub authenticated logins. Proposed disposition: mitigated; for the owner at 06-14's gate.
-- `ERR_PNPM_PNPM_ENGINE_IDENTITY_UNVERIFIABLE`: Run 39453673854; transient npm registry signature verification failure during self-installer step. Proposed disposition: external transient error; re-run per rule 9; for the owner at 06-14's gate.
-
 ## Local repetition
 
 Local test repetition was executed against commit `f1c858395725c1d72a004a704dc0a0c3e31e2df4` (`origin/main`) in a detached throwaway worktree:
@@ -233,6 +225,14 @@ No intermittent unit, component, or integration failure was observed across all 
 - Fix: In `tests/18-chores-and-errands-offline.spec.ts:119`, wait for the 1000ms cache persistence throttle window to settle (`await page.waitForTimeout(1100)` or await persister idle event) before calling `page.reload()`.
 - Regression test: `tests/18-chores-and-errands-offline.spec.ts:140` under local repro conditions.
 - Confidence: high
+
+## Registry and infrastructure
+
+Infrastructure failure signatures, mitigations in place, and proposed dispositions for the owner at 06-14's gate:
+
+- `Could not pull public.ecr.aws/supabase/gotrue:v2.196.0 after 6 attempts`: Public ECR rate limit exceeded before 2026-10-20. Mitigation: `scripts/ci-prepull-images.sh` added in commit 387bde7 pulls from ghcr.io mirror first. Proposed disposition: mitigated; for the owner at 06-14's gate.
+- `toomanyrequests: Rate exceeded`: Docker daemon ECR pull rate limits on hosted runners before pre-pull script. Mitigation: ghcr.io pre-pull mirror and Docker Hub authenticated logins. Proposed disposition: mitigated; for the owner at 06-14's gate.
+- `ERR_PNPM_PNPM_ENGINE_IDENTITY_UNVERIFIABLE`: Run 39453673854; transient npm registry signature verification failure during self-installer step. Proposed disposition: external transient error; re-run per rule 9; for the owner at 06-14's gate.
 
 ## Proof
 
