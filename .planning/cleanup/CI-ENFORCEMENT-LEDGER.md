@@ -569,3 +569,20 @@ deploy-cleared=no (the owner did not cancel the waiting Deploy runs; REST at the
 Notes:
 
 - REST shows PR #42 `state=closed`, `merged=true`, merged at 2026-10-24T03:41:37Z by `alex-tanton` as squash commit `f1c8583` (`docs: state what CI enforces and when a merge deploys`), `origin/main`'s tip. The merge reply is the GitHub event; Claude merged, closed and cancelled nothing. Because the older Deploy runs were not cancelled, the new Deploy run is expected to wait in the `deploy` concurrency group behind 40041408163 (research Pitfall 9); that is recorded below as it happens.
+
+## Plan 06-10 Task 3 (partial): CI-07 evidence, Sweep on the merge, the today cell
+
+main-ci-after-pr3=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40059342546
+ci07-ci-run=40059342546 name=CI event=push conclusion=success
+ci07-deploy-run=40059927037 event=workflow_run status=pending created=2026-10-24T03:50:16Z
+ci07-deploy-job=none (the run is pending with no jobs listed 33 minutes after CI completed; held by the deploy concurrency group behind queued run 40041408163)
+ci07=partial (Deploy run created by CI's completion; its deploy job not yet evaluated)
+sweep-second-push=run 40059342611 success 36/36
+sweep-today=run 40060752810 success 42/42 now=2026-10-24T04:03:34.735Z tz=Pacific/Pago_Pago
+sweep-first-nightly=pending (scheduled 05:17 UTC on 2026-10-24; no schedule run existed at 04:23Z)
+
+Notes:
+
+- `CI` push run 40059342546 on `f1c8583` (updated 03:50:14Z) concluded `success` with all seven jobs `success` (no rerun; `test-e2e` green). Two seconds later (03:50:16Z) `CI`'s completion created Deploy run 40059927037 with event `workflow_run`, so `deploy.yml` still fires from the workflow named `CI` after every workflow change. The run is `pending` with no jobs because the owner did not cancel the older runs: 40041408163 (for `5216fc7`, its `deploy` job `queued` on `self-hosted, hearth` since 23:45Z) holds the `deploy` concurrency group, and GitHub itself replaced the pending run 40057102510 (for `7d2b84e`) with 40059927037 (it is now `cancelled`; Claude cancelled nothing). The guard's evaluation of this run's `deploy` job is therefore not observable until 40041408163 is cancelled or a runner takes it; the guard's acceptance of a green push run was observed on `5216fc7` (`deploy-after-zod=` above: job `queued` on the `hearth` labels). Under the plan's rule this needs the owner to cancel 40041408163 (checkpoint:human-action) before `ci07=proven` can be recorded.
+- `Sweep` push run 40059342611 on `f1c8583` concluded `success` (`sweep: 36/36 passed`, `.planning/cleanup/logs/06-10-sweep-push.log`). The manual `workflow_dispatch` run 40060752810 (dispatch accepted with the token, created 04:02:27Z, completed 04:22:47Z) concluded `success` with `sweep: 42/42 passed` and six `cell=today` PASS lines, all `now=2026-10-24T04:03:34.735Z tz=Pacific/Pago_Pago` (log `.planning/cleanup/logs/06-10-sweep-today.log`, gitignored; no `sweep-logs` artifact).
+- Remaining for 06-10: the first scheduled `Sweep` run (05:17 UTC) and its conclusion, the Deploy decision above, the `## Phase close` section, `phase6-close=done`, the CI-07 tick and the CI-02 and CI-04 notes in `.planning/REQUIREMENTS.md`, the WB sync with `main` (rule 7) and the SUMMARY.
