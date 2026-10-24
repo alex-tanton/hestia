@@ -687,3 +687,23 @@ g063-push=claude 3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
 g063-owner-pushed=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
 g063-owner-pushed-tree-match=yes
 
+## Plan 06-13 Task 3: pull request and CI
+
+gate-g063-pr=approve (owner standing instruction, 2026-10-24)
+g063-pr=44
+g063-pr-url=https://github.com/alex-tanton/hearth/pull/44
+g063-preflake-occurrence=40115799178/1 tests/17-accessibility-states.spec.ts:526
+g063-pr-head=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-route=rerun
+g063-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40115799178 (attempt 2, owner-approved re-run)
+
+Notes:
+
+- PR #44 (https://github.com/alex-tanton/hearth/pull/44) was opened with title `fix: stop redeploying the commit that is already running` and body flagged with `## Deploy behavior changes (flagged)` and `## Why the running commit was redeployed`.
+- On attempt 1, 6/7 jobs passed; `test-e2e` failed on known flaky spec F-03 (`tests/17-accessibility-states.spec.ts:526:5`). The failure was recorded as pre-fix occurrence O-117 in `FLAKE-INVENTORY.md` and log/report artifacts saved.
+- Per Task 3 Step 4, owner approved route (a) `rerun` exception. A single `rerun-failed-jobs` was executed, bringing `test-e2e` to `success` on attempt 2. All 7 CI jobs concluded `success`.
+- PR #44 is left open waiting for owner's squash merge. Claude does not merge.
+
+
+
+

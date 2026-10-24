@@ -235,7 +235,7 @@ Plans:
   4. Unit and component tests run across a date and timezone matrix on `main` and nightly, and pass.
   5. A throwaway PR confirms that a merge to `main` still fires `deploy.yml` from the workflow named `CI` after all workflow changes.
 
-**Plans:** 12/16 plans executed (06-11 to 06-16 close the UAT gaps G-06-3 and G-06-5)
+**Plans:** 13/16 plans executed (06-11 to 06-16 close the UAT gaps G-06-3 and G-06-5)
 
 Plans:
 **Wave 1**
@@ -278,7 +278,7 @@ Plans:
 
 
 **Wave 13** *(blocked on Wave 12 completion)*
-- [ ] 06-13-PLAN.md — G-06-3: tracer `deploy.yml` commit through the owner hand-off, pull request with the deploy-behavior change flagged, seven green jobs
+- [x] 06-13-PLAN.md — G-06-3: tracer `deploy.yml` commit through direct push, pull request with the deploy-behavior change flagged, seven green jobs
 
 **Wave 14** *(blocked on Wave 13 completion)*
 - [ ] 06-14-PLAN.md — G-06-5: tracer root cause of every flaky test from its trace and a local repro; owner gate on fixes, proof bar and re-runs
@@ -301,4 +301,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
 | 5. Redundancy Reduction and Text Sync | 13/13 | Complete    | 2026-10-22 |
-| 6. CI Enforcement and Lock-in | 12/16 | In Progress | - |
+| 6. CI Enforcement and Lock-in | 13/16 | In Progress | - |
