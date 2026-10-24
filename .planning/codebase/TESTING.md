@@ -295,7 +295,7 @@ This shape is illustrative. The real matching table is in `packages/matching/src
 
 **E2E tests (Playwright):** 19 journey specs in `e2e/tests/` against the full Compose stack, run in a real Chromium browser.
 
-**Harness tests (`node --test`):** seven files, run by `pnpm test:harness` (listed in the root `package.json`) before any workspace suite:
+**Harness tests (`node --test`):** thirteen files, run by `pnpm test:harness` (listed in the root `package.json`) before any workspace suite:
 - `test/clock-setup.test.mjs`: the clock pin, checked from inside real Vitest workers.
 - `test/global-tz.test.mjs`: the zone hook, one child process per case.
 - `scripts/test-sweep.test.mjs`: sweep argument handling and one real single-cell run.
@@ -303,26 +303,35 @@ This shape is illustrative. The real matching table is in `packages/matching/src
 - `test/eslint-service-role-fence.test.mjs`: the `privileged/` import fence, against probe snippets.
 - `scripts/deploy.test.mjs`: the deploy script, against stub `docker`, `supabase`, and `curl` binaries.
 - `scripts/ci-prepull-images.test.mjs`: the CI image pre-pull script, against stub binaries.
+- `scripts/check-knip-baseline.test.mjs`: the knip baseline check, against stub knip reports.
+- `scripts/check-repo-hygiene.test.mjs`: the repository hygiene check, against temporary git repositories.
+- `scripts/check-migrations-append-only.test.mjs`: the migration append-only check, against temporary git repositories.
+- `scripts/audit-prod.test.mjs`: the production audit check and its allowlist rules, against stub pnpm reports.
+- `scripts/jscpd-config.test.mjs`: the `.jscpd.json` settings and the `jscpd` script.
+- `scripts/deploy-gate.test.mjs`: the deploy gate, against temporary git repositories and a stub `docker`.
 
 **Other:** `apps/service/src/kong-routes.test.ts` is a Vitest unit test that reads `docker/kong.yml` and pins the GoTrue allowlist routes.
 
 ## CI
 
-Jobs are in `.github/workflows/ci.yml`. Every job runs the composite action `.github/actions/setup`, which installs pnpm (`pnpm/action-setup@v6`), then Node from `.nvmrc` with the pnpm cache (`actions/setup-node@v7`), then runs `pnpm install --frozen-lockfile`.
+Seven jobs are in `.github/workflows/ci.yml`, each with a timeout, on every pull request and push to `main`. Every job runs the composite action `.github/actions/setup`, which installs pnpm (`pnpm/action-setup@v6`), then Node from `.nvmrc` with the pnpm cache (`actions/setup-node@v7`), then runs `pnpm install --frozen-lockfile`.
 
 | Job | Runs | Notes |
 | --- | --- | --- |
 | `lint` | `pnpm lint`, `pnpm format:check` | `--max-warnings=0` |
 | `typecheck` | `pnpm typecheck` | |
-| `test-unit` | `pnpm test` | Harness tests, then every workspace's unit and component tests |
-| `test-integration` | `supabase start`, then `pnpm --filter @hearth/service test:coverage` | Supabase CLI 2.117.0 via `supabase/setup-cli@v3`; coverage gate |
+| `test-unit` | `pnpm test:harness`, `pnpm -r --filter '!@hearth/web' test`, `pnpm --filter @hearth/web test:coverage` | Harness tests, the non-web workspaces' tests, then web with its coverage thresholds |
+| `test-integration` | `supabase start`, then `pnpm db:types` (drift check), then `pnpm --filter @hearth/service test:coverage` | Supabase CLI 2.117.0 via `supabase/setup-cli@v3`; coverage gate; fails when `apps/service/src/db/types.ts` differs from the regenerated file |
 | `test-e2e` | `pnpm test:e2e` | Pull requests and `main` only; pre-pulls images with `scripts/ci-prepull-images.sh` |
 | `build` | `pnpm build` | |
+| `hygiene` | `pnpm knip`, `node scripts/check-knip-baseline.mjs`, `pnpm jscpd`, `node scripts/audit-prod.mjs`, `node scripts/check-repo-hygiene.mjs`, `node scripts/check-migrations-append-only.mjs` | Each is its own step and every step runs after a failure; the audit depends on the date |
+
+The `Sweep` workflow (`.github/workflows/sweep.yml`) is separate from `CI`: it runs `pnpm test:sweep` on pushes to `main` that change more than `docs/` and `.planning/`, and adds the today cell nightly at 05:17 UTC and on demand. It gates nothing and triggers no deploy.
 
 ## Coverage
 
 **Requirements:**
-- Web: enforced thresholds (statements 82, branches 78, functions 74, lines 84), checked by `pnpm --filter @hearth/web test:coverage`.
+- Web: enforced thresholds (statements 84, branches 80, functions 77, lines 85, set in `apps/web/vite.config.ts`), checked by `pnpm --filter @hearth/web test:coverage`, which CI's `test-unit` job runs.
 - Service: enforced by `apps/service/vitest.coverage.config.ts`, measured over unit and integration tests together, because many service functions are exercised only through integration tests. CI's `test-integration` job runs it.
 
 **View coverage:**
