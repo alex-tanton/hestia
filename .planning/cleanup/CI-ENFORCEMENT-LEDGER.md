@@ -535,3 +535,17 @@ Notes:
 - `Sweep` push run 40056322945 concluded `success` (`sweep: 36/36 passed`, log `.planning/cleanup/logs/06-09-sweep-audit2.log`).
 - Deploy: because `CI` concluded `failure`, Deploy run 40057102510 (event `workflow_run`) is `pending` with no jobs listed yet (it sits behind the queued run 40041408163 in the `deploy` concurrency group); the `if` guard will skip its job. Claude touched and cancelled nothing.
 - The W4 merge, the PR #42 re-poll and the 06-09 close-out wait for the owner's decision on this red `main`.
+
+## Plan 06-09: PR 3 refreshed on the green fixes
+
+pr3-head=8b47f6b853f95dfd0a27a009a9e829cc226d731b
+pr3-tree=13a49d801fa3f31812dc720d1cacb3a99503d9f0
+pr3-files=.claude/CLAUDE.md CONTRIBUTING.md
+pr3-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40058213754
+pr3-branch-push=8b47f6b853f95dfd0a27a009a9e829cc226d731b
+
+Notes:
+
+- Owner reply (2026-10-24): "Skip main rerun, refresh PR 3". `origin/main` (`7d2b84e`, with the zod and undici/fast-uri fixes) and then WB were merged into `docs/ci-lock-in` in W4 with plain merge commits (no conflicts); the W4 checks were rerun (lint, format:check, hygiene, knip, baseline, commitlint, the audit and the claims checker `checked=2865 misses=0`, stale-claim grep empty; logs `.planning/cleanup/logs/06-09-r2-*.log`, gitignored, each `exit=0`) and `docs/ci-lock-in` was pushed with a plain fast-forward from `2bca147` to `8b47f6b`. Outside `.planning/` the branch still differs from `origin/main` only in `CONTRIBUTING.md` and `.claude/CLAUDE.md`; nothing under `.github/`, `supabase/migrations/` or `apps/service/src/db/types.ts`; the secret scan matched nothing.
+- PR #42's `CI` run 40058213754 on the new head concluded `success` on all seven jobs on the first attempt (`test-e2e` green; `hygiene` and its audit step green). PR #42 is open for the owner to merge; Claude does not merge it. `main`'s own last CI run 40056322936 has a red `test-e2e` from a notification spec and the owner chose not to rerun it, so the next push to `main` (PR #42's merge) may need the owner's rerun decision again.
+- Notification-area `test-e2e` evidence across this plan: `17-accessibility-states.spec.ts:497` and `19-notifications.spec.ts:140` on PR 2 (06-08), `19-notifications.spec.ts:140` on PR #43 attempt 1, and `17-accessibility-states.spec.ts:526` on `main` after PR #43; four failed runs over three heads (PR 2's `0061269`, PR #43's `944552a`, `main`'s `7d2b84e`) that show three distinct specs, none with `toomanyrequests` (DA-4).
