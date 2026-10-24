@@ -1,49 +1,50 @@
 ---
-status: testing
+status: complete
 phase: 06-ci-enforcement-and-lock-in
 source: [06-01-SUMMARY.md, 06-02-SUMMARY.md, 06-03-SUMMARY.md, 06-04-SUMMARY.md, 06-05-SUMMARY.md, 06-06-SUMMARY.md, 06-07-SUMMARY.md, 06-08-SUMMARY.md, 06-09-SUMMARY.md, 06-10-SUMMARY.md]
 started: 2026-10-24T13:24:16Z
-updated: 2026-10-24T13:24:16Z
+updated: 2026-10-24T13:50:00Z
 ---
 
 ## Current Test
-<!-- OVERWRITE each test - shows where we are -->
 
-number: 1
-name: Whether the gates behave as the owner wants on CI (day-dependent behavior, wordi
-expected: |
-  Whether the gates behave as the owner wants on CI (day-dependent behavior, wording of failures) is judged when PR 2 wires them into workflows
-awaiting: user response
+[testing complete]
 
 ## Tests
 
 ### 1. Whether the gates behave as the owner wants on CI (day-dependent behavior, wording of fail
 expected: Whether the gates behave as the owner wants on CI (day-dependent behavior, wording of failures) is judged when PR 2 wires them into workflows
-result: [pending]
+result: pass
 
 ### 2. Whether the day-dependent audit gate (a new advisory turns CI red and holds back deploys) 
 expected: Whether the day-dependent audit gate (a new advisory turns CI red and holds back deploys) is the behavior the owner wants, and when to merge the fix branch
-result: [pending]
+result: pass
 
 ### 3. Whether the deploy gate's fail-open choices (unknown, diverged or uncomparable running rev
 expected: Whether the deploy gate's fail-open choices (unknown, diverged or uncomparable running revision deploys) and its re-run redeploy match the owner's appetite on the production box
-result: [pending]
+result: issue
+reported: "The deploy gate should not redeploy the same commit. Owner does not understand why it would."
+severity: major
 
 ### 4. audit-prod.mjs is green on the real dependency tree of ci/gate-scripts
 expected: audit-prod.mjs is green on the real dependency tree of ci/gate-scripts
-result: [pending]
+result: pass
 
 ### 5. main's CI on the dependency fixes has the gates running; hygiene (all six steps) is green
 expected: main's CI on the dependency fixes has the gates running; hygiene (all six steps) is green
-result: [pending]
+result: issue
+reported: "main's CI after the dependency fixes is not a pass. All flakiness in tests must be resolved before the CI milestone is considered complete: review all flaky tests in CI history and fix them so CI is reliable."
+severity: blocker
 
 ### 6. CI still triggers Deploy and the guard accepts a green run
 expected: CI still triggers Deploy and the guard accepts a green run
-result: [pending]
+result: pass
+note: Deploy runner not provisioned yet; owner will set up the deployment machine as a next task.
 
 ### 7. After PR 3's squash merge, CI concludes success and a Deploy workflow_run exists for the s
 expected: After PR 3's squash merge, CI concludes success and a Deploy workflow_run exists for the same SHA
-result: [pending]
+result: pass
+note: Deploy runner not provisioned yet; owner will set up the deployment machine as a next task.
 
 ### 8. knip config gives 0 default findings and production findings byte-equal to the 28-row Phas
 expected: knip config gives 0 default findings and production findings byte-equal to the 28-row Phase 3 summary; a planted dead file fails both modes and the apps/web/src/test blind spot is closed
@@ -198,12 +199,40 @@ coverage_id: 06-10 D3
 ## Summary
 
 total: 32
-passed: 25
-issues: 0
-pending: 7
+passed: 30
+issues: 2
+pending: 0
 skipped: 0
 blocked: 0
 
 ## Gaps
 
-[none yet]
+- gap_id: G-06-3
+  truth: "The deploy gate does not redeploy a commit that is already running"
+  status: failed
+  reason: "User reported: The deploy gate should not redeploy the same commit, but I still don't understand why that would happen."
+  severity: major
+  test: 3
+  root_cause: "scripts/deploy-gate.sh deliberately prints deploy=true when HEAD equals the running revision ('a re-run; deploying again'), kept from the old behavior where a re-run of a CI run always redeployed. Every green CI run on main triggers Deploy, so re-running a CI run (for example after a flaky test) redeploys the commit that is already running."
+  artifacts:
+    - path: "scripts/deploy-gate.sh"
+      issue: "equal-to-HEAD branch decides deploy=true"
+    - path: "scripts/deploy-gate.test.mjs"
+      issue: "test cases assert the re-run redeploys"
+    - path: "docs/deploy.md"
+      issue: "documents that a re-run of the running commit redeploys"
+  missing:
+    - "Decide equal-to-HEAD as deploy=false with its own test, and keep an explicit way to force a redeploy (for example a manual dispatch or a failed-deploy retry path)"
+  debug_session: ""
+
+- gap_id: G-06-5
+  truth: "CI is reliable: no test in CI fails intermittently"
+  status: failed
+  reason: "User reported: before considering the CI milestone complete, all flakiness in tests must be resolved; review all flaky tests in CI history and fix them so CI can be reliable again."
+  severity: blocker
+  test: 5
+  root_cause: ""
+  artifacts: []
+  missing:
+    - "Inventory every flaky test failure in CI history (this phase saw 17-accessibility-states:497 and :526 and 19-notifications:140 across PR 2, PR 43 and main, plus earlier history), find root causes, fix them, and prove the fixes with repeated runs"
+  debug_session: ""
