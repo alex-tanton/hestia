@@ -186,6 +186,9 @@ export function useSwitchHousehold(): UseMutationResult<ProfileResponse, Error, 
         body: { householdId },
         schema: profileResponseSchema,
       }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.profile });
+    },
     onSuccess: (profile) => {
       queryClient.removeQueries({ queryKey: HOUSEHOLD_SCOPE });
       queryClient.setQueryData(queryKeys.profile, profile);
