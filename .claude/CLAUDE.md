@@ -14,7 +14,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - **Evidence**: Dead-code removal requires tooling or test proof; ambiguous cases are reported, not deleted
 - **Verification**: Every bug fix ships with a regression test; full suite and CI must remain green
 - **Tech stack**: Existing stack (pnpm, TypeScript, Fastify, React/Vite, Postgres/Supabase, Playwright) — no framework migrations
-- **Git**: `main` is curated and published (Phase 1, `origin/main` from d3da748), and every push to it runs CI and a deploy (only `docs/` is exempt). Work on branches or worktrees and land changes through pull requests per `CONTRIBUTING.md`; never force-push or rewrite published history without the owner's approval
+- **Git**: `main` is curated and published (Phase 1, `origin/main` from d3da748), and every push to it runs CI, and a passing run deploys unless only `docs/` and `.planning/` changed since the running revision (`scripts/deploy-gate.sh`). Work on branches or worktrees and land changes through pull requests per `CONTRIBUTING.md`; never force-push or rewrite published history without the owner's approval
 - **Docs**: Specs in `docs/` are the only source of truth; no review, decision-log, or ADR files are added there
 
 <!-- GSD:project-end -->
@@ -29,8 +29,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - TSX - React screens and components in `apps/web/src/components/`, `apps/web/src/screens/`, `apps/web/src/pillars/`
 - SQL (PostgreSQL dialect) - schema, RLS, and functions in `supabase/migrations/*.sql` (8 files, applied in filename order)
 - HTML and CSS - `apps/web/index.html`, `apps/web/src/index.css` (Tailwind CSS v4)
-- POSIX shell - `scripts/deploy.sh`, `scripts/generate-secrets.sh`, `scripts/ci-prepull-images.sh`, `docker/caddy-entrypoint.sh`, `docker/kong-entrypoint.sh`, and the CLI wrapper `apps/service/bin/hearth-admin` (a hand-written `sh` script that `exec`s `node dist/cli.js`; it is not a build output)
-- Node ESM `.mjs` - `apps/web/scripts/check-build.mjs`, `apps/web/scripts/generate-icons.mjs`, `test/clock-setup.mjs`, `test/global-tz.mjs`, `scripts/test-sweep.mjs`, `scripts/knip-summary.mjs`
+- POSIX shell - `scripts/deploy.sh`, `scripts/deploy-gate.sh`, `scripts/generate-secrets.sh`, `scripts/ci-prepull-images.sh`, `docker/caddy-entrypoint.sh`, `docker/kong-entrypoint.sh`, and the CLI wrapper `apps/service/bin/hearth-admin` (a hand-written `sh` script that `exec`s `node dist/cli.js`; it is not a build output)
+- Node ESM `.mjs` - `apps/web/scripts/check-build.mjs`, `apps/web/scripts/generate-icons.mjs`, `test/clock-setup.mjs`, `test/global-tz.mjs`, `scripts/test-sweep.mjs`, `scripts/knip-summary.mjs`, and the CI gate scripts `scripts/check-knip-baseline.mjs`, `scripts/check-repo-hygiene.mjs`, `scripts/check-migrations-append-only.mjs`, `scripts/audit-prod.mjs`
 
 ## Runtime
 
@@ -90,7 +90,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Prettier 3.9.8 - `.prettierrc.json`, ignores in `.prettierignore`
 - Husky 9.1.7 and lint-staged 17.5.1 - hooks in `.husky/pre-commit` and `.husky/commit-msg`; `.lintstagedrc.json`
 - `@commitlint/cli` and `@commitlint/config-conventional` 21.2.2 - `commitlint.config.js`
-- knip 6.41.0 - report-only unused-code scan; config `knip.json`; run with `pnpm knip` or `pnpm knip:production` (CI does not run it)
+- knip 6.41.0 - unused-code scan; config `knip.json`; run with `pnpm knip` or `pnpm knip:production`. CI's `hygiene` job blocks on `pnpm knip` (zero findings) and on `node scripts/check-knip-baseline.mjs` (production findings must equal `scripts/knip-production-baseline.txt`)
+- jscpd 5.4.1 - duplicate-code scan; config `.jscpd.json` (test files included, 2% limit); run with `pnpm jscpd`, which CI's `hygiene` job also runs
 - kysely-codegen 0.20.0 - `pnpm db:types` regenerates `apps/service/src/db/types.ts` against a running local database
 - `yaml` 2.9.1 - devDependency of `apps/service`
 
@@ -160,9 +161,10 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 ## CI/CD Toolchain
 
-- `.github/workflows/ci.yml` - jobs `lint` (lint and format check), `typecheck`, `test-unit`, `test-integration` (Supabase CLI start, then `test:coverage`), `test-e2e` (Playwright, pull requests and `main`), and `build`; all on GitHub-hosted runners
+- `.github/workflows/ci.yml` - seven jobs, each with a timeout: `lint` (lint and format check), `typecheck`, `test-unit` (harness tests, the non-web workspaces' tests, then web `test:coverage` with thresholds), `test-integration` (Supabase CLI start, then `test:coverage`, and a step that fails when `apps/service/src/db/types.ts` differs from `pnpm db:types`), `test-e2e` (Playwright, pull requests and `main`), `build`, and `hygiene` (`pnpm knip`, `node scripts/check-knip-baseline.mjs`, `pnpm jscpd`, `node scripts/audit-prod.mjs`, `node scripts/check-repo-hygiene.mjs` and `node scripts/check-migrations-append-only.mjs`, each as its own step); all on GitHub-hosted runners
 - `.github/actions/setup/action.yml` - composite action every job runs after checkout: `pnpm/action-setup@v6`, `actions/setup-node@v7` (Node from `.nvmrc`, pnpm store cached), `pnpm install --frozen-lockfile`
-- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hearth`; executes `scripts/deploy.sh` unless only `docs/` changed
+- `.github/workflows/sweep.yml` - workflow `Sweep`: the date and time-zone test matrix on pushes to `main` that change more than `docs/` and `.planning/`, nightly (with the day-dependent cell), and on demand; it never gates a merge or a deploy
+- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hearth`; decides through `scripts/deploy-gate.sh` (compares with the running revision), then executes `scripts/deploy.sh`
 - Actions: `actions/checkout@v7`, `pnpm/action-setup@v6`, `actions/setup-node@v7`, `supabase/setup-cli@v3`, `docker/login-action@v4`, `actions/upload-artifact@v7`
 - `scripts/ci-prepull-images.sh` - pre-pulls the Compose and Dockerfile images for the E2E job
 
@@ -452,7 +454,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Triggers: `supabase db reset`, `supabase start`, the database container's init scripts (`docker/docker-compose.yml`), and `scripts/deploy.sh`, which runs `supabase migration up` against the Compose database.
 - Responsibilities: Schema, RLS policies, helper and lifecycle functions, realtime publication, notification send times and producers.
 - `apps/service/src/write-openapi.ts` runs at the end of the service `build` script and emits the OpenAPI document.
-- `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh`.
+- `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh` only when `scripts/deploy-gate.sh` finds a change outside `docs/` and `.planning/` since the running revision.
 
 ## Architectural Constraints
 
