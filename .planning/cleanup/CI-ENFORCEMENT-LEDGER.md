@@ -28,6 +28,8 @@ main=cb808e6d360909ec9714b66d7216a2a319eaa57b
 | PC-9 | Timeouts 10 for `hygiene`, 60 for `sweep` and `deploy` (no run history). | planner, flagged |
 | PC-10 | Each web coverage threshold is the measured value rounded down minus one point, never lower than today's value. | planner, flagged |
 | PC-11 | Success criteria 1 and 2 are shown on CI by an owner-gated throwaway canary pull request; it edits a migration only if the owner opts in (D-03). | planner, flagged |
+| OD-5 | G-06-5: "All flakiness in tests must be resolved before the CI milestone is considered complete: review all flaky tests in CI history and fix them so CI is reliable." It supersedes DA-4, so the flaky specs are in scope; Phase 6 is not complete until G-06-5 is closed. | owner, UAT 2026-10-24 |
+| PC-13 | The CI proof bar is N = max(10, ceil(ln 0.05 / ln(1 - p))), at most 25, where p is the per-attempt test-e2e flake rate from this inventory (N = 10 when p is 0): N consecutive CI runs that all pass on one head have under a 5% chance at the old rate. | planner, flagged; the owner confirms N at 06-14's gate |
 
 ## Flagged assumptions
 
@@ -623,3 +625,9 @@ Deferred items:
 - Open Dependabot PRs #39, #40 and #41 and the leftover sibling worktrees (`hearth-audit-fix`, `hearth-audit-fix2`, `hearth-zod-fix`, `hearth-enforce-gates`, `hearth-gate-scripts`, `hearth-ci-lock-in`) are the owner's to triage or remove.
 
 phase6-close=done
+
+## Plan 06-11 Task 1: flake inventory tracer
+
+flake-artifacts=saved 18/18 earliest-expiry=2026-10-26T23:00:02Z
+flake-artifacts-runs=39337576259 39346293068 39441333162 39457050434 39457296052 39460683347 39468513683 39517896323 39524273974 39540627984 39653516611 39718363858 40017353021 40054640985 40056322936
+flake-tracer=run 40017353021 rows=2 flaky=2
