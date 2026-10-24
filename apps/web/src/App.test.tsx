@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileResponse } from '@hearth/shared';
-import { useSwitchHousehold } from './lib/api/hooks.ts';
+import { useProfile, useSwitchHousehold } from './lib/api/hooks.ts';
 import { queryKeys } from './lib/api/keys.ts';
 import {
   createAuthStub,
@@ -14,6 +14,7 @@ import {
   testQueryClient,
   type FetchStub,
   type StubHandler,
+  type StubResponse,
 } from './test/harness.tsx';
 import {
   OAK_STREET_ID,
@@ -213,6 +214,60 @@ describe('switching household', () => {
       expect(queryClient.getQueryData(queryKeys.members(OAK_STREET_ID))).toBeUndefined();
     });
     expect(queryClient.getQueryData(queryKeys.household(OAK_STREET_ID))).toBeUndefined();
+    expect(queryClient.getQueryData(queryKeys.profile)).toMatchObject({
+      activeHouseholdId: RIVERA_FAMILY_ID,
+    });
+  });
+  it('cancels an in-flight profile query on switch so stale data does not overwrite active household', async () => {
+    const user = userEvent.setup();
+    let resolveProfile: ((res: StubResponse) => void) | undefined;
+    const profilePromise = new Promise<StubResponse>((resolve) => {
+      resolveProfile = resolve;
+    });
+
+    stub(
+      appHandlers(() => profileFixture, {
+        'GET /api/users/me': () => profilePromise,
+        'PUT /api/users/me/active-household': () => ({
+          status: 200,
+          body: { ...profileFixture, activeHouseholdId: RIVERA_FAMILY_ID },
+        }),
+      }),
+    );
+    const queryClient = testQueryClient();
+
+    function SwitchProbe(): ReactElement {
+      useProfile();
+      const switchHousehold = useSwitchHousehold();
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            switchHousehold.mutate(RIVERA_FAMILY_ID);
+          }}
+        >
+          Switch
+        </button>
+      );
+    }
+
+    renderScreen(<SwitchProbe />, { queryClient });
+
+    await user.click(screen.getByRole('button', { name: 'Switch' }));
+
+    await waitFor(() => {
+      expect(queryClient.getQueryData(queryKeys.profile)).toMatchObject({
+        activeHouseholdId: RIVERA_FAMILY_ID,
+      });
+    });
+
+    resolveProfile!({
+      status: 200,
+      body: { ...profileFixture, activeHouseholdId: OAK_STREET_ID },
+    });
+
+    await new Promise((r) => setTimeout(r, 50));
+
     expect(queryClient.getQueryData(queryKeys.profile)).toMatchObject({
       activeHouseholdId: RIVERA_FAMILY_ID,
     });
