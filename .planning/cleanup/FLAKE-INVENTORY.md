@@ -173,7 +173,13 @@ Infrastructure failure signatures, mitigations in place, and proposed dispositio
 
 ## Local repetition
 
-*(To be populated in Task 3 from repeated local runs of the unit, integration, and sweep suites)*
+Local test repetition was executed against commit `f1c858395725c1d72a004a704dc0a0c3e31e2df4` (`origin/main`) in a detached throwaway worktree:
+- **Unit test suite repeat**: 5 of 5 iterations passed cleanly (`local-unit-repeat=5/5`, logs `.planning/cleanup/logs/06-11-unit-1.log` through `06-11-unit-5.log`).
+- **Integration test suite repeat**: 3 of 3 iterations passed cleanly against local Supabase (`local-integration-repeat=3/3`, logs `.planning/cleanup/logs/06-11-integration-1.log` through `06-11-integration-3.log`).
+- **Integration sweep**: 5 of 5 matrix cells passed (`local-integration-sweep=5/5`, log `.planning/cleanup/logs/06-11-isweep.log`, individual logs under `.planning/cleanup/logs/06-11-isweep/`).
+- **Unit date and timezone sweep (with today cell)**: 42 of 42 workspace cells passed across 7 matrix cells (6 fixed + today: `now=2026-10-24T16:30:19.493Z`, `tz=Pacific/Pago_Pago`) (`local-sweep=42/42`, log `.planning/cleanup/logs/06-11-sweep.log`, individual logs under `.planning/cleanup/logs/06-11-sweep/`).
+
+No intermittent unit, component, or integration failure was observed across all runs. No `L-nn` failure rows were produced.
 
 ## Root causes
 

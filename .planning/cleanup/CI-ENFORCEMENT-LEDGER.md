@@ -641,3 +641,12 @@ flake-rate-e2e=15/81=0.185
 flake-rate-unit=0/93=0.000
 flake-rate-integration=0/104=0.000
 proof-bar-ci=15
+
+## Plan 06-11 Task 3: local repetition
+
+flake-local-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+local-unit-repeat=5/5
+local-integration-repeat=3/3
+local-integration-sweep=5/5
+local-sweep=42/42 now=2026-10-24T16:30:19.493Z tz=Pacific/Pago_Pago
+flake-inventory=done
