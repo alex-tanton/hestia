@@ -31,6 +31,7 @@ main=cb808e6d360909ec9714b66d7216a2a319eaa57b
 | OD-5 | G-06-5: "All flakiness in tests must be resolved before the CI milestone is considered complete: review all flaky tests in CI history and fix them so CI is reliable." It supersedes DA-4, so the flaky specs are in scope; Phase 6 is not complete until G-06-5 is closed. | owner, UAT 2026-10-24 |
 | PC-13 | The CI proof bar is N = max(10, ceil(ln 0.05 / ln(1 - p))), at most 25, where p is the per-attempt test-e2e flake rate from this inventory (N = 10 when p is 0): N consecutive CI runs that all pass on one head have under a 5% chance at the old rate. | planner, flagged; the owner confirms N at 06-14's gate |
 | OD-6 | G-06-3: "The deploy gate should not redeploy the same commit. Owner does not understand why it would." A commit equal to the running revision gives `deploy=false`; it supersedes PC-5's re-run clause (the rest of PC-5 stands); a deliberate redeploy keeps a path (OD-7); flagged as a deploy-behavior change in the pull request body (D-20). | owner, UAT 2026-10-24 |
+| OD-7 | G-06-3: "A deliberate redeploy should work by Re-run the Deploy run (planner's recommendation). A re-run of the Deploy run itself is allowed to redeploy the running commit. A re-run of CI is not." The gate lifts the equal-to-HEAD rule only when the Deploy run's own `github.run_attempt` is above 1, and never the older-commit or docs-only rules; `scripts/deploy.sh` by hand on the host stays available. | owner, 2026-10-24 |
 
 ## Flagged assumptions
 
@@ -658,3 +659,9 @@ g063-why=each completed attempt of a CI push run on main starts its own Deploy r
 g063-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
 g063-red=fail 2 of 36
 g063-green=pass 36 of 36
+
+## Plan 06-12 Task 2: deliberate redeploy via Deploy re-run
+
+force-path=rerun-deploy
+g063-attempt-evidence=CI re-runs on a5c4384 started new Deploy runs 39719463322 39720541360 39721751275, each run_attempt=1
+g063-force=red 8 green 47 of 47
