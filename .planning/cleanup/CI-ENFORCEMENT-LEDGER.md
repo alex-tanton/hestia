@@ -708,8 +708,19 @@ Notes:
 ## Plan 06-14 Task 1: tracer — F-01 root cause and reproduction
 
 rc-F-01=class:product repro:2/5 confidence:high
+## Plan 06-14 Task 2: all other flaky tests, local failures and infra signatures
 
+rc-F-02=class:test repro:5/5 confidence:high
+rc-F-03=class:test repro:5/5 confidence:high
+rc-F-04=class:test repro:2/5 confidence:high
+rc-F-05=class:test repro:2/5 confidence:high
 
+diagnosis=done flaky=5 product=1 test=4 infra=0 not-reproduced=0
 
+Notes:
 
-
+- All 5 flaky tests from CI history have been analyzed via traces and reproduced locally in throwaway worktree `/home/user/hearth-flake-repro-2`.
+- F-01 is a `product` race condition between `GET /api/users/me` and `PUT /api/users/me/active-household` in React Query cache management.
+- F-02, F-03, F-04, and F-05 are all `test` class bugs: F-02 hangs intercepted route without aborting/fulfilling, leaving `save.isPending` true; F-03 fails when earlier tests leave Alex's switches checked; F-04 unloads the page before `PATCH /api/lists/:id` completes; F-05 reloads offline before the 1000ms cache persister throttle persists to IndexedDB.
+- All three infrastructure signatures (`Could not pull public.ecr.aws...`, `toomanyrequests: Rate exceeded`, `ERR_PNPM_PNPM_ENGINE_IDENTITY_UNVERIFIABLE`) have proposed dispositions (`mitigated`, `mitigated`, `external`) recorded in `FLAKE-INVENTORY.md` for the owner at Task 3's gate.
+- The throwaway repro worktree and all containers have been cleaned up and verified.
