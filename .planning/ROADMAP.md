@@ -235,7 +235,7 @@ Plans:
   4. Unit and component tests run across a date and timezone matrix on `main` and nightly, and pass.
   5. A throwaway PR confirms that a merge to `main` still fires `deploy.yml` from the workflow named `CI` after all workflow changes.
 
-**Plans:** 10/16 plans executed (06-11 to 06-16 close the UAT gaps G-06-3 and G-06-5)
+**Plans:** 11/16 plans executed (06-11 to 06-16 close the UAT gaps G-06-3 and G-06-5)
 
 Plans:
 **Wave 1**
@@ -271,7 +271,7 @@ Plans:
 **Gap closure** (06-UAT.md: G-06-3 deploy gate redeploys the running commit; G-06-5 flaky tests in CI)
 
 **Wave 11** *(first: the saved E2E traces start expiring on 2026-10-26)*
-- [ ] 06-11-PLAN.md — G-06-5: tracer save of the expiring traces and a REST inventory of every CI failure, classified; flake rate and proof bar; local repeats of the unit, integration and sweep suites
+- [x] 06-11-PLAN.md — G-06-5: tracer save of the expiring traces and a REST inventory of every CI failure, classified; flake rate and proof bar; local repeats of the unit, integration and sweep suites
 
 **Wave 12** *(blocked on Wave 11 completion)*
 - [ ] 06-12-PLAN.md — G-06-3: tracer red-then-green "skip the running commit" in the deploy gate, the owner's redeploy path (a re-run of the Deploy run redeploys, a re-run of `CI` does not), docs, local gates, push without the workflow commit
@@ -300,4 +300,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Evidence-Gated Removal | 9/9 | Complete    | 2026-10-20 |
 | 4. Bug Fixes With Regression Tests | 8/8 | Complete    | 2026-10-21 |
 | 5. Redundancy Reduction and Text Sync | 13/13 | Complete    | 2026-10-22 |
-| 6. CI Enforcement and Lock-in | 10/16 | In Progress | - |
+| 6. CI Enforcement and Lock-in | 11/16 | In Progress | - |

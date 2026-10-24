@@ -2,18 +2,18 @@
 gsd_state_version: "1.0"
 current_phase: 06
 current_phase_name: CI Enforcement and Lock-in
-status: verifying
-stopped_at: Completed 06-10-PLAN.md
-last_updated: "2026-10-24T13:20:35.785Z"
-last_activity: 2026-10-23
-last_activity_desc: Phase 06 execution started
-state_head: c9fbad05e456f8998b7921dfc1473da33436a010
+status: executing
+stopped_at: Completed 06-11-PLAN.md
+last_updated: "2026-10-24T16:40:00.000Z"
+last_activity: 2026-10-24
+last_activity_desc: Plan 06-11 completed
+state_head: e08f305
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 54
-  completed_plans: 54
-  percent: 83
+  total_plans: 60
+  completed_plans: 55
+  percent: 92
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 06 (CI Enforcement and Lock-in) — EXECUTING
-Plan: 10 of 10
-Status: Phase complete — ready for verification
-Last activity: 2026-10-23 — Phase 06 execution started
+Plan: 11 of 16
+Status: In progress — Plan 06-11 complete, ready for Plan 06-12
+Last activity: 2026-10-24 — Plan 06-11 complete
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -154,6 +154,7 @@ Recent decisions affecting current work:
 - [Phase 06]: Plan 06-09: main went red on date-dependent audit advisories twice (zod, then undici and fast-uri); the owner chose small fix PRs #38 and #43 (major-scoped pnpm.overrides) over allowlisting, keeping OD-1's empty allowlist
 - [Phase 06]: Plan 06-09: Sweep's push runs passed 36/36 on main; CI still triggers Deploy (run 40041408163 queued on the unregistered hearth runner); PR 3 (#42) open and green on all seven jobs; main's own latest test-e2e is red on a notification spec (DA-4), accepted by the owner without a rerun
 - [Phase 06]: Plan 06-10: PR 3 merged as f1c8583; CI green; Deploy workflow_run created within 2s but its deploy job not evaluated (hearth runner not provisioned, older queued run holds the concurrency group); CI-07 ticked complete with a caveat (ci07=partial); Sweep 36/36 on push and 42/42 by hand and on the first scheduled run; phase 6 closed
+- [Phase 06]: Plan 06-11: G-06-5: saved 18 unexpired E2E traces before retention expiry; mined all 89 CI runs and 6 Sweep runs (116 attempts, 676 jobs); classified 116 failure signatures into flaky (17), real (56), intentional (10), and infra (33); summarized 5 flaky specs (F-01..F-05); measured flake rate p = 15/81 = 0.185 for test-e2e (0 for unit and integration) and established proof bar N = 15; verified local suites repeatable with 0 failures (unit 5/5, integration 3/3, isweep 5/5, sweep 42/42 with today cell); flake-inventory=done
 
 ### Pending Todos
 
