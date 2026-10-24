@@ -549,3 +549,23 @@ Notes:
 - Owner reply (2026-10-24): "Skip main rerun, refresh PR 3". `origin/main` (`7d2b84e`, with the zod and undici/fast-uri fixes) and then WB were merged into `docs/ci-lock-in` in W4 with plain merge commits (no conflicts); the W4 checks were rerun (lint, format:check, hygiene, knip, baseline, commitlint, the audit and the claims checker `checked=2865 misses=0`, stale-claim grep empty; logs `.planning/cleanup/logs/06-09-r2-*.log`, gitignored, each `exit=0`) and `docs/ci-lock-in` was pushed with a plain fast-forward from `2bca147` to `8b47f6b`. Outside `.planning/` the branch still differs from `origin/main` only in `CONTRIBUTING.md` and `.claude/CLAUDE.md`; nothing under `.github/`, `supabase/migrations/` or `apps/service/src/db/types.ts`; the secret scan matched nothing.
 - PR #42's `CI` run 40058213754 on the new head concluded `success` on all seven jobs on the first attempt (`test-e2e` green; `hygiene` and its audit step green). PR #42 is open for the owner to merge; Claude does not merge it. `main`'s own last CI run 40056322936 has a red `test-e2e` from a notification spec and the owner chose not to rerun it, so the next push to `main` (PR #42's merge) may need the owner's rerun decision again.
 - Notification-area `test-e2e` evidence across this plan: `17-accessibility-states.spec.ts:497` and `19-notifications.spec.ts:140` on PR 2 (06-08), `19-notifications.spec.ts:140` on PR #43 attempt 1, and `17-accessibility-states.spec.ts:526` on `main` after PR #43; four failed runs over three heads (PR 2's `0061269`, PR #43's `944552a`, `main`'s `7d2b84e`) that show three distinct specs, none with `toomanyrequests` (DA-4).
+
+## Plan 06-10 Task 1: PR 3 opened, CI green (satisfied by PR #42)
+
+pr3=42
+pr3-url=https://github.com/alex-tanton/hearth/pull/42
+pr3-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40058213754
+
+Notes:
+
+- Task 1 was carried out during 06-09: PR #42 was opened from `docs/ci-lock-in` into `main` after `gate-pr3=approve-pr3` and refreshed to head `8b47f6b` (`pr3-head=` above); its `CI` run 40058213754 concluded `success` on all seven jobs; its files outside `.planning/` are `CONTRIBUTING.md` and `.claude/CLAUDE.md`. No new pull request was opened for 06-10.
+
+## Plan 06-10 Task 2: owner merged PR 3
+
+pr3-merged=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+pr3-merged-reply=merged (owner, GitHub event 2026-10-24T03:41:37Z)
+deploy-cleared=no (the owner did not cancel the waiting Deploy runs; REST at the merge shows 40041408163 queued and 40057102510 pending)
+
+Notes:
+
+- REST shows PR #42 `state=closed`, `merged=true`, merged at 2026-10-24T03:41:37Z by `alex-tanton` as squash commit `f1c8583` (`docs: state what CI enforces and when a merge deploys`), `origin/main`'s tip. The merge reply is the GitHub event; Claude merged, closed and cancelled nothing. Because the older Deploy runs were not cancelled, the new Deploy run is expected to wait in the `deploy` concurrency group behind 40041408163 (research Pitfall 9); that is recorded below as it happens.
