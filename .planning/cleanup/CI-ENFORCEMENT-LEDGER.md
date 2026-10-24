@@ -464,3 +464,74 @@ Notes:
 - `CONTRIBUTING.md` (W4): "Deploys" now states the gate's rule (anything outside `docs/` and `.planning/` since the running revision deploys, so `README.md`, `CONTRIBUTING.md` and `.claude/` deploy; a commit older than the running one never deploys; a re-run of the running commit redeploys; a newer Deploy run replaces a pending one) and keeps the self-hosted runner sentence; a new "What CI checks" section lists the seven jobs and the six `hygiene` checks with what fails each and how to fix it, the `db:types` drift rule, the web coverage thresholds, the date-dependence of the audit (CI can go red on an unchanged tree and hold back the next deploy), and the `Sweep` workflow (never gates, nightly, failure mail to the author of the last cron change); "Scripts" names the hygiene job's mode and CRLF rule; "Checks before pushing" adds the gate commands; "Not yet enforced" still says branch protection, required checks and the squash-only setting are not configured.
 - `.claude/CLAUDE.md` (W4, the owner reviews it in PR 3): the Git constraint, the knip line, a new jscpd line, the `ci.yml`, `sweep.yml` and `deploy.yml` lines, the script lists in the languages section and the deploy sentence in the architecture block; the hand-maintained cloud-sandbox section is untouched. The six maps on WB carry the same facts in their own style: the harness list grows to thirteen files, the CI table gains `hygiene` and the new `test-unit` and `test-integration` steps, the web coverage line names 84/80/77/85 and CI, and CONCERNS drops the report-only knip risk and the missing-audit gap (it keeps the 28 baseline rows and the unchecked migration ordering, PC-8; the stale 40-minute integration timeout and a line number are corrected).
 - The stale-claim grep over `CONTRIBUTING.md`, `.claude/CLAUDE.md`, `README.md`, `docs` and `.planning/codebase` prints nothing. The first claims run had 2 misses, both my wording (a bare `.sh` token in CONTRIBUTING and a `!@hearth/web` filter in the testing map); both were reworded, no allowlist change. In W4 `pnpm lint`, `format:check`, the hygiene check, `pnpm knip`, the baseline check and `commitlint --from origin/main --to HEAD` are `exit=0` (`.planning/cleanup/logs/06-09-{lint,format-check,hygiene,knip,knip-baseline,commitlint}.log`, gitignored).
+
+pr3-head=2bca1474add3accde83c367a80b2391a104437b8
+pr3-tree=0a2ea3c2ff12903aa3976c6964125d307cb3fb49
+pr3-files=.claude/CLAUDE.md CONTRIBUTING.md
+pr3-branch-push=2bca1474add3accde83c367a80b2391a104437b8
+
+Notes:
+
+- `docs/ci-lock-in` (W4 `/home/user/hearth-ci-lock-in`) is pushed with a plain push of a new branch (no workflow file touched), at `pr3-head`, after a last merge of WB. Outside `.planning/` it differs from `origin/main` (`5216fc7`) only in `CONTRIBUTING.md` and `.claude/CLAUDE.md`; nothing under `.github/`, `supabase/migrations/` or `apps/service/src/db/types.ts`. The secret scan over the added lines matched nothing. No pull request exists from this branch (REST list is empty); PR 3 opens only after `gate-pr3=approve-pr3`.
+- `CONTRIBUTING.md` is outside `docs/` and `.planning/`, so PR 3's squash merge must make `deploy.yml` run and reach the `deploy` job (D-21); with no runner registered the job will queue (as `deploy-after-zod=` shows). The queued run 40041408163 for `5216fc7` is still pending; the owner may want to cancel it before merging PR 3 (06-10 asks again).
+
+## Plan 06-09 Task 3: owner gate
+
+gate-pr3=approve-pr3
+
+Notes:
+
+- The owner answered "Open PR 3 now" (2026-10-24). Per the owner's standing instruction Claude opens the pull request, reports when CI has passed, and the owner merges; Claude merges, closes and cancels nothing.
+
+## Plan 06-09 Task 3: PR 3 opened, CI attempt 1 (stopped: hygiene red)
+
+pr3=42
+pr3-url=https://github.com/alex-tanton/hearth/pull/42
+pr3-opened-head=2bca1474add3accde83c367a80b2391a104437b8
+pr3-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:failure run=40053383467
+pr3-hygiene-failure=audit-prod 11 advisories (undici 7.30.0 via apps__service>cheerio>undici: GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 moderate, GHSA-xjj6-f33q-929c high, patched 7.30.1; fast-uri 4.2.2 via apps__service>fastify>@fastify/ajv-compiler: GHSA-w74x-v6f9-j3xg, GHSA-wjr9-j795-jxcr moderate, GHSA-xhq7-xmqj-769h, GHSA-333x-w4r6-6crp low, patched 4.2.3; the pairs are two paths each); the other five hygiene steps success; job=120750818738
+
+Notes:
+
+- PR #42 was opened through REST from `docs/ci-lock-in` at `pr3-head` into `main` (title `docs: state what CI enforces and when a merge deploys`, body `.planning/cleanup/logs/06-09-pr3.md`, gitignored). Claude does not merge it.
+- Its `CI` run 40053383467 has six `success` jobs and a red `hygiene` job: `pnpm audit --prod` now reports advisories published after the zod fix merged (the same date-dependent case as before, research Pitfall 10); PR 3 changes no dependency, so `main` would fail the same way on its next push. Not a registry flake, no rerun made. Log `.planning/cleanup/logs/06-09-pr3-hygiene.log` (gitignored).
+- Open Dependabot PRs at this time: #39 zod 4.6.6 to 4.6.7, #40 serialize-javascript 7.1.2 to 7.1.4, #41 an npm_and_yarn group bump in `apps/service`. Claude did not inspect them. `undici` 7.30.1 and `fast-uri` 4.2.3 are the patched versions on the lines in the lockfile (undici is also locked at 8.11.2, fast-uri at 3.1.8, not reported).
+
+## Plan 06-09 audit fix 2 (undici and fast-uri; owner chose an override PR)
+
+audit2-fix-pr=43
+audit2-fix-url=https://github.com/alex-tanton/hearth/pull/43
+audit2-fix-head=944552a8c58652b63830940862228f6ad069b78b
+audit2-fix-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success hygiene:success run=40054640985
+audit2-e2e-failure=tests/19-notifications.spec.ts:140 meal reminder with the push double (light) enables a type, delivers its reminder once; 103 passed 1 failed; no toomanyrequests; job=120754790629; DA-4
+
+Notes:
+
+- Correction to the PR 3 section above: the 11 audit rows are not "two paths each". `fast-uri` is reported at two installed versions, 4.2.2 (patched 4.2.3) and 3.1.8 (patched 3.1.9), for four advisories each (eight rows), plus three `undici` 7.30.0 rows (patched 7.30.1). Only `undici@8.11.2` (a `jsdom` dev dependency) is not reported.
+- Owner reply (2026-10-24): "My override PR"; Dependabot #41 does not cover these packages and is ignored. Branch `deps/fix-undici-fast-uri-advisories` (worktree `/home/user/hearth-audit-fix2`, cut from `origin/main` at `5216fc7`) holds one commit `944552a`: root `pnpm.overrides` gains `"undici@7": "7.30.1"`, `"fast-uri@4": "4.2.3"` and `"fast-uri@3": "3.1.9"`. The dependents already allow the patched versions (`cheerio` asks `undici ^7.19.0`), but `pnpm update -r --depth Infinity undici fast-uri` re-resolved 441 lockfile lines of unrelated packages and was discarded; the major-scoped selectors keep each override inside its own major. The lockfile diff (20 lines in `package.json` and `pnpm-lock.yaml` together: 5 and 29) moves only `undici` 7.30.0 to 7.30.1, `fast-uri` 4.2.2 to 4.2.3 and 3.1.8 to 3.1.9 (packages, snapshots, references) and adds the three override lines; `undici@8.11.2` is untouched.
+- Local evidence (`.planning/cleanup/logs/06-09-audit2-*.log`, gitignored, each `exit=0`): `pnpm audit --prod` no known vulnerabilities, `audit-prod.mjs` `0 advisories, 0 allowed, 0 problems`, frozen install, lint, format:check, typecheck, `pnpm test` (matching 156, shared 172, recurrence 77, service 757, web 728, harness 382), build, knip, knip baseline, jscpd, repository hygiene, migrations.
+- PR #43 (`build: override undici and fast-uri to their patched versions`, body `.planning/cleanup/logs/06-09-audit2-pr.md`) is open. Its `CI` run 40054640985 passed six jobs on the first attempt, including `hygiene` (all six steps, audit green). `test-e2e` failed on the notification spec `19-notifications.spec.ts:140` (light), the same spec that failed on PR 2's second attempt; the log has no `toomanyrequests`, so phase rule 9's registry rerun does not apply and the notification flake is the owner's call (DA-4). No rerun made; log `.planning/cleanup/logs/06-09-audit2-test-e2e.log` (gitignored).
+
+## Plan 06-09 audit fix 2: CI attempt 2 (owner-authorized single rerun)
+
+audit2-fix-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40054640985 (rerun-failed-jobs; test-e2e needed attempt 2)
+audit2-e2e-flake-evidence=attempt1 19-notifications.spec.ts:140 (light) failed (household switcher read Rivera Family, not Oak Street), attempt2 all 104 passed; same head 944552a; no toomanyrequests (DA-4)
+
+Notes:
+
+- The owner answered the rule 9 decision with "Rerun once"; exactly one `rerun-failed-jobs` was posted for run 40054640985. Attempt 2 concluded `success` on all seven jobs on the unchanged head `944552a`. PR #43 is open and ready for the owner to merge; Claude does not merge it. Merging it turns `main`'s `hygiene` green and unblocks PR #42.
+
+## Plan 06-09: main after the undici and fast-uri fix (stopped: test-e2e failure on main)
+
+audit2-fix-merged=7d2b84e172938d8a41a5ecaddbcd65b3f712265b
+main-ci-after-audit2=lint:success typecheck:success test-unit:success test-integration:success test-e2e:failure build:success hygiene:success run=40056322936
+sweep-after-audit2=run 40056322945 success 36/36
+deploy-after-audit2=40057102510 workflow_run pending (no jobs listed; CI concluded failure)
+main-e2e-failure=tests/17-accessibility-states.spec.ts:526 notification type on, but this device cannot register (light); 103 passed 1 failed; no toomanyrequests; job=120759988984; DA-4
+
+Notes:
+
+- The owner merged PR #43 on 2026-10-24T02:57:27Z as squash commit `7d2b84e`. `main`'s `CI` push run 40056322936 passed six jobs, including `hygiene` (the audit is green again), and `test-e2e` failed on a third distinct notification-area spec, `17-accessibility-states.spec.ts:526` (light, `Expected: >= 0, Received: -1`, an ordering assertion). Earlier flakes: `17:497` and `19:140` on PR 2, `19:140` on PR #43 attempt 1. No `toomanyrequests` in the log, so phase rule 9's registry rerun does not apply and a rerun is the owner's call (DA-4); none was made. Log `.planning/cleanup/logs/06-09-main-audit2-test-e2e.log` (gitignored).
+- `Sweep` push run 40056322945 concluded `success` (`sweep: 36/36 passed`, log `.planning/cleanup/logs/06-09-sweep-audit2.log`).
+- Deploy: because `CI` concluded `failure`, Deploy run 40057102510 (event `workflow_run`) is `pending` with no jobs listed yet (it sits behind the queued run 40041408163 in the `deploy` concurrency group); the `if` guard will skip its job. Claude touched and cancelled nothing.
+- The W4 merge, the PR #42 re-poll and the 06-09 close-out wait for the owner's decision on this red `main`.
