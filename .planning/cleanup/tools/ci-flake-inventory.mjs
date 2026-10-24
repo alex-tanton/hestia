@@ -349,11 +349,15 @@ for (const { run, wfName, attempt, job } of allJobs) {
     const isSetupStep =
       currentStep.includes('actions/setup') ||
       currentStep.includes('action-setup') ||
+      currentStep.includes('self-installer') ||
       currentStep.includes('pnpm install') ||
       currentStep.includes('setup-node') ||
       currentStep.includes('setup-cli');
     const isPrePullStep =
-      currentStep.includes('ci-prepull-images') || currentStep.includes('docker pull');
+      currentStep.includes('ci-prepull-images') ||
+      currentStep.includes('docker pull') ||
+      currentStep.includes('Pre-pulling images') ||
+      cleanLog.includes('Pre-pulling images:');
     const isSupabaseStartStep = currentStep.includes('supabase start');
     const isE2EWithoutResults = currentStep.includes('pnpm test:e2e') && !hasPlaywrightResults;
 
@@ -369,13 +373,33 @@ for (const { run, wfName, attempt, job } of allJobs) {
         line.includes('runner has shut down') ||
         line.includes('has exceeded the maximum execution time')
       ) {
-        const sig = line.replace('##[error]', '').trim();
+        let sig = line.replace('##[error]', '').trim();
+        // If the line has 'toomanyrequests', keep clean message
+        if (sig.includes('toomanyrequests')) {
+          sig = sig.slice(sig.indexOf('toomanyrequests'));
+        }
         infraSignatures.add(sig);
       }
     }
 
     // 5. Candidate for other
-    if (line.includes('##[error]')) {
+    if (line.includes('typescript-eslint does not support TS')) {
+      otherSignatures.push('typescript-eslint does not support TS 7.0');
+    } else if (line.includes('ERR_PNPM_OUTDATED_LOCKFILE')) {
+      const match = line.match(/(ERR_PNPM_OUTDATED_LOCKFILE[^\n\r]+)/);
+      if (match?.[1]) {
+        otherSignatures.push(match[1].trim());
+      }
+    } else if (line.includes('error TS') || line.includes(': error TS')) {
+      const match = line.match(/([^\s]+:\s*error\s+TS\d+:[^\n\r]+)/);
+      if (match?.[1]) {
+        otherSignatures.push(match[1].trim());
+      }
+    } else if (line.includes('AssertionError') || line.includes('ERR_ASSERTION')) {
+      otherSignatures.push('AssertionError: values not deep-equal');
+    } else if (line.includes('audit-prod') && line.includes('advisories')) {
+      otherSignatures.push(line.replace('##[error]', '').trim());
+    } else if (line.includes('##[error]')) {
       const err = line.replace('##[error]', '').trim();
       if (err && !err.startsWith('Process completed with exit code')) {
         otherSignatures.push(err);

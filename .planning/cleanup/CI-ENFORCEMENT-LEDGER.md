@@ -631,3 +631,13 @@ phase6-close=done
 flake-artifacts=saved 18/18 earliest-expiry=2026-10-26T23:00:02Z
 flake-artifacts-runs=39337576259 39346293068 39441333162 39457050434 39457296052 39460683347 39468513683 39517896323 39524273974 39540627984 39653516611 39718363858 40017353021 40054640985 40056322936
 flake-tracer=run 40017353021 rows=2 flaky=2
+
+## Plan 06-11 Task 2: full history classified
+
+flake-inventory-runs=ci:89 sweep:6 attempts:116 jobs:676 failed-jobs:85 rows:116
+flake-classes=flaky:17 real:56 intentional:10 infra:33 unexplained:0
+flaky-tests=5 tests/19-notifications.spec.ts:140 tests/17-accessibility-states.spec.ts:497 tests/17-accessibility-states.spec.ts:526 tests/17-accessibility-states.spec.ts:320 tests/18-chores-and-errands-offline.spec.ts:140
+flake-rate-e2e=15/81=0.185
+flake-rate-unit=0/93=0.000
+flake-rate-integration=0/104=0.000
+proof-bar-ci=15
