@@ -32,6 +32,7 @@ main=cb808e6d360909ec9714b66d7216a2a319eaa57b
 | PC-13 | The CI proof bar is N = max(10, ceil(ln 0.05 / ln(1 - p))), at most 25, where p is the per-attempt test-e2e flake rate from this inventory (N = 10 when p is 0): N consecutive CI runs that all pass on one head have under a 5% chance at the old rate. | planner, flagged; the owner confirms N at 06-14's gate |
 | OD-6 | G-06-3: "The deploy gate should not redeploy the same commit. Owner does not understand why it would." A commit equal to the running revision gives `deploy=false`; it supersedes PC-5's re-run clause (the rest of PC-5 stands); a deliberate redeploy keeps a path (OD-7); flagged as a deploy-behavior change in the pull request body (D-20). | owner, UAT 2026-10-24 |
 | OD-7 | G-06-3: "A deliberate redeploy should work by Re-run the Deploy run (planner's recommendation). A re-run of the Deploy run itself is allowed to redeploy the running commit. A re-run of CI is not." The gate lifts the equal-to-HEAD rule only when the Deploy run's own `github.run_attempt` is above 1, and never the older-commit or docs-only rules; `scripts/deploy.sh` by hand on the host stays available. | owner, 2026-10-24 |
+| OD-8 | G-06-5: "The measured failure rate is enough." A `test`-class flake fix needs no committed red-then-green spec: the failure rate this plan measures before the fix (`rc-`) and 06-15's green proof after it are its regression evidence; a `product`-class fix still ships with a Vitest regression test that fails first (amendment 17). | owner, 2026-10-24 |
 
 ## Flagged assumptions
 
@@ -703,6 +704,11 @@ Notes:
 - On attempt 1, 6/7 jobs passed; `test-e2e` failed on known flaky spec F-03 (`tests/17-accessibility-states.spec.ts:526:5`). The failure was recorded as pre-fix occurrence O-117 in `FLAKE-INVENTORY.md` and log/report artifacts saved.
 - Per Task 3 Step 4, owner approved route (a) `rerun` exception. A single `rerun-failed-jobs` was executed, bringing `test-e2e` to `success` on attempt 2. All 7 CI jobs concluded `success`.
 - PR #44 is left open waiting for owner's squash merge. Claude does not merge.
+
+## Plan 06-14 Task 1: tracer — F-01 root cause and reproduction
+
+rc-F-01=class:product repro:2/5 confidence:high
+
 
 
 
