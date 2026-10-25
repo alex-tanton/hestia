@@ -28,6 +28,11 @@ main=cb808e6d360909ec9714b66d7216a2a319eaa57b
 | PC-9 | Timeouts 10 for `hygiene`, 60 for `sweep` and `deploy` (no run history). | planner, flagged |
 | PC-10 | Each web coverage threshold is the measured value rounded down minus one point, never lower than today's value. | planner, flagged |
 | PC-11 | Success criteria 1 and 2 are shown on CI by an owner-gated throwaway canary pull request; it edits a migration only if the owner opts in (D-03). | planner, flagged |
+| OD-5 | G-06-5: "All flakiness in tests must be resolved before the CI milestone is considered complete: review all flaky tests in CI history and fix them so CI is reliable." It supersedes DA-4, so the flaky specs are in scope; Phase 6 is not complete until G-06-5 is closed. | owner, UAT 2026-10-24 |
+| PC-13 | The CI proof bar is N = max(10, ceil(ln 0.05 / ln(1 - p))), at most 25, where p is the per-attempt test-e2e flake rate from this inventory (N = 10 when p is 0): N consecutive CI runs that all pass on one head have under a 5% chance at the old rate. | planner, flagged; the owner confirms N at 06-14's gate |
+| OD-6 | G-06-3: "The deploy gate should not redeploy the same commit. Owner does not understand why it would." A commit equal to the running revision gives `deploy=false`; it supersedes PC-5's re-run clause (the rest of PC-5 stands); a deliberate redeploy keeps a path (OD-7); flagged as a deploy-behavior change in the pull request body (D-20). | owner, UAT 2026-10-24 |
+| OD-7 | G-06-3: "A deliberate redeploy should work by Re-run the Deploy run (planner's recommendation). A re-run of the Deploy run itself is allowed to redeploy the running commit. A re-run of CI is not." The gate lifts the equal-to-HEAD rule only when the Deploy run's own `github.run_attempt` is above 1, and never the older-commit or docs-only rules; `scripts/deploy.sh` by hand on the host stays available. | owner, 2026-10-24 |
+| OD-8 | G-06-5: "The measured failure rate is enough." A `test`-class flake fix needs no committed red-then-green spec: the failure rate this plan measures before the fix (`rc-`) and 06-15's green proof after it are its regression evidence; a `product`-class fix still ships with a Vitest regression test that fails first (amendment 17). | owner, 2026-10-24 |
 
 ## Flagged assumptions
 
@@ -535,3 +540,230 @@ Notes:
 - `Sweep` push run 40056322945 concluded `success` (`sweep: 36/36 passed`, log `.planning/cleanup/logs/06-09-sweep-audit2.log`).
 - Deploy: because `CI` concluded `failure`, Deploy run 40057102510 (event `workflow_run`) is `pending` with no jobs listed yet (it sits behind the queued run 40041408163 in the `deploy` concurrency group); the `if` guard will skip its job. Claude touched and cancelled nothing.
 - The W4 merge, the PR #42 re-poll and the 06-09 close-out wait for the owner's decision on this red `main`.
+
+## Plan 06-09: PR 3 refreshed on the green fixes
+
+pr3-head=8b47f6b853f95dfd0a27a009a9e829cc226d731b
+pr3-tree=13a49d801fa3f31812dc720d1cacb3a99503d9f0
+pr3-files=.claude/CLAUDE.md CONTRIBUTING.md
+pr3-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40058213754
+pr3-branch-push=8b47f6b853f95dfd0a27a009a9e829cc226d731b
+
+Notes:
+
+- Owner reply (2026-10-24): "Skip main rerun, refresh PR 3". `origin/main` (`7d2b84e`, with the zod and undici/fast-uri fixes) and then WB were merged into `docs/ci-lock-in` in W4 with plain merge commits (no conflicts); the W4 checks were rerun (lint, format:check, hygiene, knip, baseline, commitlint, the audit and the claims checker `checked=2865 misses=0`, stale-claim grep empty; logs `.planning/cleanup/logs/06-09-r2-*.log`, gitignored, each `exit=0`) and `docs/ci-lock-in` was pushed with a plain fast-forward from `2bca147` to `8b47f6b`. Outside `.planning/` the branch still differs from `origin/main` only in `CONTRIBUTING.md` and `.claude/CLAUDE.md`; nothing under `.github/`, `supabase/migrations/` or `apps/service/src/db/types.ts`; the secret scan matched nothing.
+- PR #42's `CI` run 40058213754 on the new head concluded `success` on all seven jobs on the first attempt (`test-e2e` green; `hygiene` and its audit step green). PR #42 is open for the owner to merge; Claude does not merge it. `main`'s own last CI run 40056322936 has a red `test-e2e` from a notification spec and the owner chose not to rerun it, so the next push to `main` (PR #42's merge) may need the owner's rerun decision again.
+- Notification-area `test-e2e` evidence across this plan: `17-accessibility-states.spec.ts:497` and `19-notifications.spec.ts:140` on PR 2 (06-08), `19-notifications.spec.ts:140` on PR #43 attempt 1, and `17-accessibility-states.spec.ts:526` on `main` after PR #43; four failed runs over three heads (PR 2's `0061269`, PR #43's `944552a`, `main`'s `7d2b84e`) that show three distinct specs, none with `toomanyrequests` (DA-4).
+
+## Plan 06-10 Task 1: PR 3 opened, CI green (satisfied by PR #42)
+
+pr3=42
+pr3-url=https://github.com/alex-tanton/hearth/pull/42
+pr3-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40058213754
+
+Notes:
+
+- Task 1 was carried out during 06-09: PR #42 was opened from `docs/ci-lock-in` into `main` after `gate-pr3=approve-pr3` and refreshed to head `8b47f6b` (`pr3-head=` above); its `CI` run 40058213754 concluded `success` on all seven jobs; its files outside `.planning/` are `CONTRIBUTING.md` and `.claude/CLAUDE.md`. No new pull request was opened for 06-10.
+
+## Plan 06-10 Task 2: owner merged PR 3
+
+pr3-merged=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+pr3-merged-reply=merged (owner, GitHub event 2026-10-24T03:41:37Z)
+deploy-cleared=no (the owner did not cancel the waiting Deploy runs; REST at the merge shows 40041408163 queued and 40057102510 pending)
+
+Notes:
+
+- REST shows PR #42 `state=closed`, `merged=true`, merged at 2026-10-24T03:41:37Z by `alex-tanton` as squash commit `f1c8583` (`docs: state what CI enforces and when a merge deploys`), `origin/main`'s tip. The merge reply is the GitHub event; Claude merged, closed and cancelled nothing. Because the older Deploy runs were not cancelled, the new Deploy run is expected to wait in the `deploy` concurrency group behind 40041408163 (research Pitfall 9); that is recorded below as it happens.
+
+## Plan 06-10 Task 3 (partial): CI-07 evidence, Sweep on the merge, the today cell
+
+main-ci-after-pr3=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40059342546
+ci07-ci-run=40059342546 name=CI event=push conclusion=success
+ci07-deploy-run=40059927037 event=workflow_run status=pending created=2026-10-24T03:50:16Z
+ci07-deploy-job=none (the run is pending with no jobs listed 33 minutes after CI completed; held by the deploy concurrency group behind queued run 40041408163)
+ci07=partial (Deploy run created by CI's completion; its deploy job not yet evaluated)
+sweep-second-push=run 40059342611 success 36/36
+sweep-today=run 40060752810 success 42/42 now=2026-10-24T04:03:34.735Z tz=Pacific/Pago_Pago
+sweep-first-nightly=pending (scheduled 05:17 UTC on 2026-10-24; no schedule run existed at 04:23Z)
+
+Notes:
+
+- `CI` push run 40059342546 on `f1c8583` (updated 03:50:14Z) concluded `success` with all seven jobs `success` (no rerun; `test-e2e` green). Two seconds later (03:50:16Z) `CI`'s completion created Deploy run 40059927037 with event `workflow_run`, so `deploy.yml` still fires from the workflow named `CI` after every workflow change. The run is `pending` with no jobs because the owner did not cancel the older runs: 40041408163 (for `5216fc7`, its `deploy` job `queued` on `self-hosted, hearth` since 23:45Z) holds the `deploy` concurrency group, and GitHub itself replaced the pending run 40057102510 (for `7d2b84e`) with 40059927037 (it is now `cancelled`; Claude cancelled nothing). The guard's evaluation of this run's `deploy` job is therefore not observable until 40041408163 is cancelled or a runner takes it; the guard's acceptance of a green push run was observed on `5216fc7` (`deploy-after-zod=` above: job `queued` on the `hearth` labels). Under the plan's rule this needs the owner to cancel 40041408163 (checkpoint:human-action) before `ci07=proven` can be recorded.
+- `Sweep` push run 40059342611 on `f1c8583` concluded `success` (`sweep: 36/36 passed`, `.planning/cleanup/logs/06-10-sweep-push.log`). The manual `workflow_dispatch` run 40060752810 (dispatch accepted with the token, created 04:02:27Z, completed 04:22:47Z) concluded `success` with `sweep: 42/42 passed` and six `cell=today` PASS lines, all `now=2026-10-24T04:03:34.735Z tz=Pacific/Pago_Pago` (log `.planning/cleanup/logs/06-10-sweep-today.log`, gitignored; no `sweep-logs` artifact).
+- Remaining for 06-10: the first scheduled `Sweep` run (05:17 UTC) and its conclusion, the Deploy decision above, the `## Phase close` section, `phase6-close=done`, the CI-07 tick and the CI-02 and CI-04 notes in `.planning/REQUIREMENTS.md`, the WB sync with `main` (rule 7) and the SUMMARY.
+
+## Plan 06-10 Task 3 (resumed): first nightly, CI-07 decision, WB sync
+
+sweep-first-nightly=run 40082646319 success 2026-10-24T09:36:49Z
+sweep-first-nightly-detail=schedule run created 09:36:49Z (GitHub started it about 4h20m after the 05:17 UTC cron), completed 10:00:22Z; log has sweep: 42/42 passed; six cell=today PASS lines with now=2026-10-24T09:37:11.818Z tz=Pacific/Pago_Pago; no sweep-logs artifact; log .planning/cleanup/logs/06-10-sweep-nightly.log (gitignored)
+ci07=partial
+ci07-closure=complete-with-caveat (chosen; see Notes)
+wb-sync-final=merged origin/main f1c8583 into WB as de4b338 (4 .planning conflicts resolved with git checkout --ours, owner-approved; no conflict outside .planning; outside .planning WB equals main)
+
+Notes:
+
+- Owner reply (2026-10-24): the deploy runner is not provisioned yet, this is not a requirement, and the work may continue; the queued Deploy run 40041408163 is left alone and no cancel was requested.
+- CI-07 choice: the requirement ("a PR confirms that `CI` still triggers deploy correctly") and ROADMAP criterion 5 ("a merge to `main` still fires `deploy.yml` from the workflow named `CI`") are met by the trigger: PR 3's squash commit `f1c8583` ran `CI` (run 40059342546, seven jobs `success`) and two seconds after it completed GitHub created Deploy run 40059927037 with event `workflow_run` for the same SHA (`ci07-deploy-run=` above). So CI-07 is ticked as complete with a caveat, not as strictly proven: the plan's stricter acceptance (this merge's own `deploy` job `queued` or later) was not observed, because the run is `pending` behind the older queued run 40041408163 in the `deploy` concurrency group and the `hearth` self-hosted runner is not provisioned. Guard acceptance of a green push run was observed on `5216fc7` (`deploy-after-zod=`: `deploy` job `queued` on `self-hosted, hearth`). `ci07=proven` is not written. If the owner ever wants the strict state recorded, it needs run 40041408163 cancelled or a runner registered.
+
+## Phase close
+
+Mapping of the five ROADMAP success criteria (Phase 6) to the evidence keys above:
+
+1. knip and jscpd fail a PR: `canary-steps=` (PR #37: `knip:failure,knip-production:failure,jscpd:failure,...`), `knip-default=0`, `knip-production=baseline-equal`, `jscpd-percentage=1.11`, `jscpd-negative=threshold1-exit1`.
+2. Tracked-ignored files, `db/types.ts` drift, applied-migration edits, script modes and CRLF fail a PR: `canary-steps=` (hygiene, migrations and db-types steps `failure`), `canary-crlf=planted`, `pr2-db-types-on-ci=success`, `hygiene-negative=3-modes`, the hygiene and migration harness tests (`harness-files=13`).
+3. Audit, timeouts, review and coverage: `audit-prod-live=clean-on-fix-branch` and the live green audit on `main` (`main-ci-after-zod=`, `pr3-ci=`), `ci04-braces-note=`, the timeout facts in the 06-06 section (every job has `timeout-minutes`), `ci05-review=complete findings=21`, `coverage-thresholds=84/80/77/85`, `pr2-runner-coverage=85.38/81.83/78.59/86.96`.
+4. Date and time-zone matrix on `main` and nightly: `sweep-first-push=`, `sweep-second-push=`, `sweep-today=`, `sweep-first-nightly=` (all 36/36 or 42/42 passed).
+5. `CI` still triggers Deploy after the workflow changes: `ci07-ci-run=`, `ci07-deploy-run=`, `ci07-deploy-job=`, with `ci07=partial` and the choice above (trigger observed, guard acceptance observed on `5216fc7`, this merge's job not evaluated).
+
+Wording notes: `jscpd-wording-note=` (the roadmap says "source duplication"; D-08 gates the test-inclusive percentage, 1.11% when turned on, limit 2%) and `ci04-braces-note=` (braces is reachable only through the `kysely-codegen` devDependency, so `--prod` never reports it and the allowlist starts empty per D-09 and OD-1).
+
+Deviations to know about: the audit gate turned `hygiene` red on `main` twice without any code change (research Pitfall 10) and needed owner-merged fix PRs: #38 (zod 4.6.5 to 4.6.6, merged `5216fc7`) and #43 (major-scoped overrides for undici and fast-uri, merged `7d2b84e`); the fix PR for the original two advisories, #32, came before PR 1. The owner may want to decide whether a date-dependent blocking audit is the right gate for `main` (it holds back the next deploy until someone upgrades the package), for example whether it should keep blocking, run as a separate non-deploy-blocking job or schedule, or be paired with automatic security-update PRs; nothing was changed in this phase.
+
+Deferred items:
+
+- The unprovisioned `hearth` self-hosted runner: Deploy runs 40041408163 (queued) and 40059927037 (pending behind it) never reach a runner; the owner says it is not a requirement for now. CI-07's strict job-evaluation proof waits on it.
+- The notification E2E spec flakiness (DA-4), seen as four failed `test-e2e` runs on three heads and three distinct specs, none with `toomanyrequests`: `17-accessibility-states.spec.ts:497` and `19-notifications.spec.ts:140` on PR 2 (06-08), `19-notifications.spec.ts:140` on PR #43 attempt 1 (one authorized rerun passed), and `17-accessibility-states.spec.ts:526` on `main` after PR #43 (run 40056322936, not rerun).
+- Branch protection, required status checks and the squash-only merge setting (F15, F16): a red `CI` run blocks nothing on its own.
+- The integration sweep in CI (`pnpm test:sweep:integration` runs locally only), automatic Kong recreate after a `kong.yml` change, SHA pinning of actions (CIX-01), migration ordering (PC-8) and the 28 owner-reviewed knip baseline rows.
+- Open Dependabot PRs #39, #40 and #41 and the leftover sibling worktrees (`hearth-audit-fix`, `hearth-audit-fix2`, `hearth-zod-fix`, `hearth-enforce-gates`, `hearth-gate-scripts`, `hearth-ci-lock-in`) are the owner's to triage or remove.
+
+phase6-close=done
+
+## Plan 06-11 Task 1: flake inventory tracer
+
+flake-artifacts=saved 18/18 earliest-expiry=2026-10-26T23:00:02Z
+flake-artifacts-runs=39337576259 39346293068 39441333162 39457050434 39457296052 39460683347 39468513683 39517896323 39524273974 39540627984 39653516611 39718363858 40017353021 40054640985 40056322936
+flake-tracer=run 40017353021 rows=2 flaky=2
+
+## Plan 06-11 Task 2: full history classified
+
+flake-inventory-runs=ci:89 sweep:6 attempts:116 jobs:676 failed-jobs:85 rows:116
+flake-classes=flaky:17 real:56 intentional:10 infra:33 unexplained:0
+flaky-tests=5 tests/19-notifications.spec.ts:140 tests/17-accessibility-states.spec.ts:497 tests/17-accessibility-states.spec.ts:526 tests/17-accessibility-states.spec.ts:320 tests/18-chores-and-errands-offline.spec.ts:140
+flake-rate-e2e=15/81=0.185
+flake-rate-unit=0/93=0.000
+flake-rate-integration=0/104=0.000
+proof-bar-ci=15
+
+## Plan 06-11 Task 3: local repetition
+
+flake-local-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+local-unit-repeat=5/5
+local-integration-repeat=3/3
+local-integration-sweep=5/5
+local-sweep=42/42 now=2026-10-24T16:30:19.493Z tz=Pacific/Pago_Pago
+flake-inventory=done
+
+## Plan 06-12 Task 1: deploy gate skips running commit
+
+g063-why=each completed attempt of a CI push run on main starts its own Deploy run (a5c4384: CI run 39718363858, 3 attempts, Deploy runs 39719463322 39720541360 39721751275)
+g063-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+g063-red=fail 2 of 36
+g063-green=pass 36 of 36
+
+## Plan 06-12 Task 2: deliberate redeploy via Deploy re-run
+
+force-path=rerun-deploy
+g063-attempt-evidence=CI re-runs on a5c4384 started new Deploy runs 39719463322 39720541360 39721751275, each run_attempt=1
+g063-force=red 8 green 47 of 47
+
+## Plan 06-12 Task 3: docs, local gates, branch pushed
+
+g063-doc-review=done files=7
+g063-docs-claims=checked=1032 misses=0
+g063-gates=frozen,lint,format-check,typecheck,test,shellcheck,knip,knip-baseline,jscpd,audit,hygiene,migrations,commitlint exit=0
+g063-pushed=a36fabadf7fad8ec41add4c679bc3884cf67efb7
+
+## Plan 06-13 Task 1: deploy.yml commit, wiring smoke, push to origin
+
+g063-deploy-facts=ok
+g063-wiring-smoke=attempt1:false attempt2:true
+g063-head=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-tree=25918eebb5b57b8976dc45e0342e3898b9b3deed
+g063-files=.claude/CLAUDE.md,.github/workflows/deploy.yml,CONTRIBUTING.md,README.md,docs/deploy.md,docs/testing.md,scripts/deploy-gate.sh,scripts/deploy-gate.test.mjs
+g063-push=claude 3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+
+## Plan 06-13 Task 2: owner push (auto-skipped: token push accepted)
+
+g063-owner-pushed=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-owner-pushed-tree-match=yes
+
+## Plan 06-13 Task 3: pull request and CI
+
+gate-g063-pr=approve (owner standing instruction, 2026-10-24)
+g063-pr=44
+g063-pr-url=https://github.com/alex-tanton/hearth/pull/44
+g063-preflake-occurrence=40115799178/1 tests/17-accessibility-states.spec.ts:526
+g063-pr-head=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-route=rerun
+g063-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40115799178 (attempt 2, owner-approved re-run)
+
+Notes:
+
+- PR #44 (https://github.com/alex-tanton/hearth/pull/44) was opened with title `fix: stop redeploying the commit that is already running` and body flagged with `## Deploy behavior changes (flagged)` and `## Why the running commit was redeployed`.
+- On attempt 1, 6/7 jobs passed; `test-e2e` failed on known flaky spec F-03 (`tests/17-accessibility-states.spec.ts:526:5`). The failure was recorded as pre-fix occurrence O-117 in `FLAKE-INVENTORY.md` and log/report artifacts saved.
+- Per Task 3 Step 4, owner approved route (a) `rerun` exception. A single `rerun-failed-jobs` was executed, bringing `test-e2e` to `success` on attempt 2. All 7 CI jobs concluded `success`.
+- PR #44 is left open waiting for owner's squash merge. Claude does not merge.
+
+## Plan 06-14 Task 1: tracer — F-01 root cause and reproduction
+
+rc-F-01=class:product repro:2/5 confidence:high
+## Plan 06-14 Task 2: all other flaky tests, local failures and infra signatures
+
+rc-F-02=class:test repro:5/5 confidence:high
+rc-F-03=class:test repro:5/5 confidence:high
+rc-F-04=class:test repro:2/5 confidence:high
+rc-F-05=class:test repro:2/5 confidence:high
+
+diagnosis=done flaky=5 product=1 test=4 infra=0 not-reproduced=0
+
+Notes:
+
+- All 5 flaky tests from CI history have been analyzed via traces and reproduced locally in throwaway worktree `/home/user/hearth-flake-repro-2`.
+- F-01 is a `product` race condition between `GET /api/users/me` and `PUT /api/users/me/active-household` in React Query cache management.
+- F-02, F-03, F-04, and F-05 are all `test` class bugs: F-02 hangs intercepted route without aborting/fulfilling, leaving `save.isPending` true; F-03 fails when earlier tests leave Alex's switches checked; F-04 unloads the page before `PATCH /api/lists/:id` completes; F-05 reloads offline before the 1000ms cache persister throttle persists to IndexedDB.
+- All three infrastructure signatures (`Could not pull public.ecr.aws...`, `toomanyrequests: Rate exceeded`, `ERR_PNPM_PNPM_ENGINE_IDENTITY_UNVERIFIABLE`) have proposed dispositions (`mitigated`, `mitigated`, `external`) recorded in `FLAKE-INVENTORY.md` for the owner at Task 3's gate.
+- The throwaway repro worktree and all containers have been cleaned up and verified.
+## Plan 06-14 Task 3: owner decision gate
+
+gate-flake-fixes=approve 2026-10-24
+proof-bar-ci=15
+proof-reruns=14
+infra-disposition-ecr-pull=mitigated
+infra-disposition-toomanyrequests=mitigated
+infra-disposition-pnpm-identity=external
+
+Notes:
+
+- The owner approved the fixes for all five flaky tests (F-01 through F-05) as diagnosed and presented on 2026-10-24.
+- Product change for F-01 (React Query active-household mutation query cancellation in apps/web/src/lib/api/hooks.ts) approved with Vitest regression test required.
+- Infra dispositions approved: ECR rate limit pull retry mitigated by pre-pull script; Docker rate limit mitigated by pre-pull script; transient npm registry signature verification failure classified as external re-run per rule 9.
+- CI proof bar N = 15 consecutive complete CI passes on fix/ci-flakes approved, with proof-reruns budget of 14.
+- All five flaky tests reproduced locally; no tests classified as not-reproduced.
+
+## Plan 06-15 Task 1: F-01 product fix and proof
+
+flake-fix-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+flake-fix-F-01=commit 7ff1f7b green 30/30 red 2/5
+
+Notes:
+
+- F-01 regression unit test added to `apps/web/src/App.test.tsx` verifying profile queries are cancelled on `useSwitchHousehold.mutate` before mutation commits (commit `7bc09a0`). Red run failed with `exit=1` (`06-15-F-01-unit-red.log`).
+- F-01 product fix implemented in `apps/web/src/lib/api/hooks.ts`: added `onMutate: async () => { await queryClient.cancelQueries({ queryKey: queryKeys.profile }); }` to `useSwitchHousehold` (commit `7ff1f7b`). Green run passed 9/9 unit tests (`06-15-F-01-unit-green.log`).
+- Local proof of F-01 under 25ms route delay on isolated stack `proof01` completed 30 consecutive PASS iterations without a single failure (`06-15-proof-F-01.log`).
+
+## Plan 06-15 Task 2: F-02 through F-05 fixes and cross-check
+
+flake-fix-F-02=commit c2b9ea4 green 30/30 red 5/5
+flake-fix-F-03=commit fbdbd03 green 30/30 red 5/5
+flake-fix-F-04=commit ea4103e green 30/30 red 2/5
+flake-fix-F-05=commit b921b82 green 30/30 red 2/5
+cross-check=F-01:30/30,F-02:30/30,F-03:30/30,F-04:30/30,F-05:30/30
+
+Notes:
+
+- F-02 fix (`tests/17-accessibility-states.spec.ts:497`): Asynchronously hold intercepted PATCH route open until `COPY.saving` and accessibility assertions pass, then abort route before unrouting and triggering the second toggle (which fulfills with 500 and asserts `COPY.saveError`). 30 consecutive iterations passed on isolated stack `proof02` (`06-15-proof-F-02.log`).
+- F-03 fix (`tests/17-accessibility-states.spec.ts:526`): Wait for switch elements to be visible before counting/querying checked status; if all switches are enabled by preceding tests, toggle first switch off to ensure an unchecked switch exists for registration failure testing. 30 consecutive iterations passed on isolated stack `proof03` under forced-all-enabled repro condition (`06-15-proof-F-03.log`).
+- F-04 fix (`tests/17-accessibility-states.spec.ts:320`): Await `page.waitForResponse` on archive mutation (`POST /api/lists/*/archive`) before calling `page.goto('/lists/archived')`, eliminating client-side abort of in-flight archive request. 30 consecutive iterations passed on isolated stack `proof04` under 20ms route delay (`06-15-proof-F-04.log`).
+- F-05 fix (`tests/18-chores-and-errands-offline.spec.ts:140`): Added `await page.waitForTimeout(1100)` before offline `page.reload()` to allow `createCachePersister` 1000ms throttle timer to persist cache to IndexedDB. 30 consecutive iterations passed on isolated stack `proof05` (`06-15-proof-F-05.log`).
+- Cross-check on final W6 commit (`b921b82`): Ran 30 consecutive iterations of all 5 tests on isolated stack `finalproof`. All 5 tests passed 30/30 (150 successful iterations total, logging to `.planning/cleanup/logs/06-15-proof-final-{F-01..F-05}.log`).
