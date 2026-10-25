@@ -1,12 +1,12 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 06
-current_phase_name: CI Enforcement and Lock-in
-status: complete
-stopped_at: Phase 6 UAT complete
-last_updated: "2026-10-25T05:26:00.000Z"
+current_milestone: "v1.0"
+milestone_name: "Cleanup and Hardening"
+status: archived
+stopped_at: v1.0 milestone archived
+last_updated: "2026-10-25T05:35:00.000Z"
 last_activity: 2026-10-25
-last_activity_desc: Phase 6 UAT complete (all 32 tests passed)
+last_activity_desc: Milestone v1.0 archived (6 phases, 60 plans, 40 requirements)
 state_head: c5b74e4
 progress:
   total_phases: 6
@@ -20,17 +20,18 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-19)
+See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
-**Current focus:** Phase 06 — CI Enforcement and Lock-in
+**Current focus:** Milestone v1.0 complete and archived. Ready for next milestone.
 
 ## Current Position
 
-Phase: 06 (CI Enforcement and Lock-in) — COMPLETE
-Plan: 16 of 16
-Status: Milestone complete — Phase 6 verified via UAT (32/32 tests passed)
-Last activity: 2026-10-25 — Phase 6 UAT complete
+Milestone: v1.0 (Cleanup and Hardening) — ARCHIVED
+Phases: 6 of 6 complete
+Plans: 60 of 60 complete
+Status: v1.0 complete, verified, archived, and tagged
+Last activity: 2026-10-25 — Milestone v1.0 archived
 
 Progress: [██████████] 100%
 
