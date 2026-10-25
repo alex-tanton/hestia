@@ -33,7 +33,7 @@
 2. Root `README.md` is concise (<150 lines), well-structured, and focuses on project overview, architecture, and quickstart commands.
 3. In-depth technical runbooks are cleanly organized in `docs/`: `docs/development.md`, `docs/deployment.md`, and `docs/testing.md` with zero loss of operational knowledge.
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -43,7 +43,7 @@ Plans:
 - [x] 07-02-PLAN.md — Doc link and fact-map checker; rename the deployment guide to `docs/deployment.md` and merge the README's deployment, backup and restore material
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 07-03-PLAN.md — Create `docs/development.md` (README development sections plus CONTRIBUTING scripts and pre-push checks); merge README E2E notes into `docs/testing.md`
+- [x] 07-03-PLAN.md — Create `docs/development.md` (README development sections plus CONTRIBUTING scripts and pre-push checks); merge README E2E notes into `docs/testing.md`
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 07-04-PLAN.md — Rewrite `README.md` as a landing page under 150 lines with a docs index; final gates and the README section map

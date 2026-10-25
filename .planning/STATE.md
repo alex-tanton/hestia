@@ -3,17 +3,17 @@ gsd_state_version: "1.0"
 milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
 status: executing
-stopped_at: Completed 07-02-PLAN.md
-last_updated: "2026-10-25T15:28:01.772Z"
+stopped_at: Completed 07-03-PLAN.md
+last_updated: "2026-10-25T15:37:06.987Z"
 last_activity: 2026-10-25
-last_activity_desc: Completed 07-02 deployment guide rename and README merge
-state_head: f8ffa6171c3b1f4e9c76d84dd493c1d5e6159e40
+last_activity_desc: Completed 07-03 development runbook and E2E merge
+state_head: 0cf13b354d7912329c6632cd5023e856c4903cb5
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
-  percent: 0
+  completed_plans: 3
+  percent: 75
 current_milestone: v2.0
 current_phase_name: Planning Cleanup & Documentation Restructure
 ---
@@ -31,11 +31,11 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
 Phases: 0 of 5 complete (Phases 7–11)
-Plans: 2 of 4 complete (07-01, 07-02 done)
+Plans: 3 of 4 complete (07-01, 07-02, 07-03 done)
 Status: Executing Phase 07
-Last activity: 2026-10-25 — Completed 07-02 (docs/deployment.md rename and README merge)
+Last activity: 2026-10-25 — Completed 07-03 (docs/development.md and E2E merge into docs/testing.md)
 
-Progress: [█████░░░░░] 50% of Phase 07 plans
+Progress: [███████░░░] 75% of Phase 07 plans
 
 ## Milestone Roadmap
 
@@ -47,12 +47,12 @@ Progress: [█████░░░░░] 50% of Phase 07 plans
 
 ## Next Action
 
-Execute plan 07-03 (`docs/development.md` and the E2E merge into `docs/testing.md`) with `/gsd-execute-phase 7`.
+Execute plan 07-04 (README landing page under 150 lines with the docs index, final gates) with `/gsd-execute-phase 7`.
 
 ## Session
 
-**Last session:** 2026-10-25T15:27:52.811Z
-**Stopped at:** Completed 07-02-PLAN.md
+**Last session:** 2026-10-25T15:37:06.927Z
+**Stopped at:** Completed 07-03-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -61,8 +61,10 @@ Execute plan 07-03 (`docs/development.md` and the E2E merge into `docs/testing.m
 |------|----------|-------|-------|
 | Phase 07 P01 | 7min | 3 tasks | 289 files |
 | Phase 07 P02 | 9min | 3 tasks | 7 files |
+| Phase 07 P03 | 8min | 3 tasks | 4 files |
 
 ## Decisions
 
 - [Phase 07]: 07-01: all 47 v1.0 raw outputs kept under the D-04 evidence rule (cited by tracked planning files; patches not regenerable in this clone), zero deletions
 - [Phase 07]: 07-02: DOC-02 left open in REQUIREMENTS.md; this plan delivers only the docs/deployment.md part, development.md and testing.md merge and README links follow in 07-03 and 07-04
+- [Phase 07]: 07-03: DOC-02 left open; development.md, the testing.md E2E merge and CONTRIBUTING links are done, the README cut and its links follow in 07-04
