@@ -18,9 +18,9 @@ Milestone v2.0 migrates the application to the custom domain `hestia.aberrance.a
 
 - [x] **CLEAN-01**: Archive v1.0 phase plans (`.planning/phases/`) and cleanup ledgers (`.planning/cleanup/`) to `.planning/milestones/v1.0/`, removing obsolete planning scratch files and bloat.
   - *Acceptance Criteria*: `.planning/phases/` is emptied or contains only active v2.0 phases; historical v1.0 plans are preserved under `.planning/milestones/v1.0/phases/`; git working tree remains clean.
-- [ ] **DOC-01**: Rewrite root `README.md` into an executive, well-structured guide covering project overview, quickstart commands, architecture summary, and clean links to detailed guides.
+- [x] **DOC-01**: Rewrite root `README.md` into an executive, well-structured guide covering project overview, quickstart commands, architecture summary, and clean links to detailed guides.
   - *Acceptance Criteria*: `README.md` is concise (<150 lines), contains no dense deployment or low-level test configuration scripts, and cleanly directs developers to dedicated documentation.
-- [ ] **DOC-02**: Abstract in-depth operational and developer runbooks into dedicated documents in `docs/`:
+- [x] **DOC-02**: Abstract in-depth operational and developer runbooks into dedicated documents in `docs/`:
   - `docs/development.md`: Local environment setup, dev scripts, seed data, database management.
   - `docs/deployment.md`: Docker Compose topology, secrets generation, backups, updates, troubleshooting.
   - `docs/testing.md`: Vitest unit/component suite, integration test setup, time-sweep harness, Playwright E2E suite.
