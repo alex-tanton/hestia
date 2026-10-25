@@ -3,17 +3,17 @@ gsd_state_version: "1.0"
 current_phase: 06
 current_phase_name: CI Enforcement and Lock-in
 status: executing
-stopped_at: Completed 06-11-PLAN.md
-last_updated: "2026-10-24T16:40:00.000Z"
+stopped_at: Completed 06-15-PLAN.md
+last_updated: "2026-10-25T02:15:00.000Z"
 last_activity: 2026-10-24
-last_activity_desc: Plan 06-11 completed
-state_head: e08f305
+last_activity_desc: Plan 06-15 completed
+state_head: 5c44cc9
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 60
-  completed_plans: 55
-  percent: 92
+  completed_plans: 59
+  percent: 98
 ---
 
 # Project State
@@ -28,11 +28,12 @@ See: .planning/PROJECT.md (updated 2026-10-19)
 ## Current Position
 
 Phase: 06 (CI Enforcement and Lock-in) — EXECUTING
-Plan: 11 of 16
-Status: In progress — Plan 06-11 complete, ready for Plan 06-12
-Last activity: 2026-10-24 — Plan 06-11 complete
+Plan: 15 of 16
+Status: In progress — Plan 06-15 complete, ready for Plan 06-16
+Last activity: 2026-10-24 — Plan 06-15 complete
 
-Progress: [█████████░] 92%
+Progress: [█████████▉] 98%
+
 
 ## Performance Metrics
 
@@ -103,6 +104,11 @@ Progress: [█████████░] 92%
 | Phase 06 P08 | ~100min | 3 tasks | 1 files |
 | Phase 06 P09 | ~6.5h (CI waits, owner replies) | 3 tasks | 16 files |
 | Phase 06 P10 | ~10h (waiting for the first scheduled Sweep) | 3 tasks | 2 files |
+| Phase 06 P11 | ~45min | 3 tasks | 4 files |
+| Phase 06 P12 | ~45min | 3 tasks | 7 files |
+| Phase 06 P13 | ~50min | 3 tasks | 8 files |
+| Phase 06 P14 | 1 session | 3 tasks | 4 files |
+| Phase 06 P15 | 1 session | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -155,6 +161,11 @@ Recent decisions affecting current work:
 - [Phase 06]: Plan 06-09: Sweep's push runs passed 36/36 on main; CI still triggers Deploy (run 40041408163 queued on the unregistered hearth runner); PR 3 (#42) open and green on all seven jobs; main's own latest test-e2e is red on a notification spec (DA-4), accepted by the owner without a rerun
 - [Phase 06]: Plan 06-10: PR 3 merged as f1c8583; CI green; Deploy workflow_run created within 2s but its deploy job not evaluated (hearth runner not provisioned, older queued run holds the concurrency group); CI-07 ticked complete with a caveat (ci07=partial); Sweep 36/36 on push and 42/42 by hand and on the first scheduled run; phase 6 closed
 - [Phase 06]: Plan 06-11: G-06-5: saved 18 unexpired E2E traces before retention expiry; mined all 89 CI runs and 6 Sweep runs (116 attempts, 676 jobs); classified 116 failure signatures into flaky (17), real (56), intentional (10), and infra (33); summarized 5 flaky specs (F-01..F-05); measured flake rate p = 15/81 = 0.185 for test-e2e (0 for unit and integration) and established proof bar N = 15; verified local suites repeatable with 0 failures (unit 5/5, integration 3/3, isweep 5/5, sweep 42/42 with today cell); flake-inventory=done
+- [Phase 06]: Plan 06-12: G-06-3: deploy gate modified to check for redeploy run via GitHub API, allowing manual re-run of Deploy to redeploy running commit while skipping CI push runs of the same commit; docs and tests updated; 13 local gates clean.
+- [Phase 06]: Plan 06-13: G-06-3: PR #44 opened with deploy.yml changes; 7/7 CI jobs green.
+- [Phase 06]: Plan 06-14: G-06-5: root cause analysis of all 5 flaky tests from traces; local reproduction of all 5 tests; owner approval of fix strategy (gate-flake-fixes=approve 2026-10-24, proof-bar-ci=15, proof-reruns=14).
+- [Phase 06]: Plan 06-15: G-06-5: flake fixes F-01 through F-05 implemented on fix/ci-flakes; F-01 product fix (cancel in-flight profile queries on active household switch) verified red-before-green with Vitest; F-02..F-05 test fixes verified; all 5 tests passed 30/30 local proof under repro conditions; 30-iteration cross-check on HEAD passed (150 passes); whole-suite proof passed 3 consecutive runs (104 passed each); 15 local gates passed exit=0; WB merged and fix/ci-flakes pushed to origin at 5c44cc9.
+
 
 ### Pending Todos
 

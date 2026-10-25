@@ -12,8 +12,8 @@
  * concurrency.group, push.branches, push.paths-ignore, schedule (crons), workflow_run.workflows,
  * workflow_run.branches, workflow_run.types; per job job.{id}.runs-on, .if, .timeout, .checkout
  * (each actions/checkout step as `{persist-credentials}/{fetch-depth}`, `unset` when absent, joined
- * by ` ; `) and, counting the steps from 1, job.{id}.step.{n}.name, .run (newlines written as \n)
- * and .if (`none` when absent); and run-interpolation (the number of run values that contain a
+ * by ` ; `) and, counting the steps from 1, job.{id}.step.{n}.name, .id, .run (newlines written as \n),
+ * .if (`none` when absent) and job.{id}.step.{n}.env.{KEY}={value}; and run-interpolation (the number of run values that contain a
  * ${{ }} expression). A key that does not apply prints nothing, except where `none` is stated.
  *
  * Exit codes: 0 facts printed; 2 bad usage, unreadable file or a YAML parse error.
@@ -114,8 +114,14 @@ for (const [id, job] of Object.entries(workflow.jobs)) {
   steps.forEach((step, index) => {
     const n = index + 1;
     emit(`job.${id}.step.${n}.name`, text(step.name));
+    emit(`job.${id}.step.${n}.id`, text(step.id));
     emit(`job.${id}.step.${n}.run`, step.run === undefined ? NONE : oneLine(step.run));
     emit(`job.${id}.step.${n}.if`, text(step.if));
+    if (step.env && typeof step.env === 'object') {
+      for (const [key, value] of Object.entries(step.env)) {
+        emit(`job.${id}.step.${n}.env.${key}`, oneLine(value));
+      }
+    }
     if (typeof step.run === 'string' && step.run.includes('${{')) interpolated += 1;
   });
 }

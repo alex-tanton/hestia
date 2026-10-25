@@ -350,7 +350,14 @@ for (const theme of THEMES) {
       await dialog.getByRole('button', { name: 'Cancel' }).click();
 
       await page.getByRole('button', { name: `More actions for ${listName}` }).click();
+      const archiveResponse = page.waitForResponse(
+        (res) =>
+          res.url().includes('/archive') &&
+          res.request().method() === 'POST' &&
+          res.status() === 200,
+      );
       await page.getByRole('menuitem', { name: 'Archive' }).click();
+      await archiveResponse;
       await page.goto('/lists/archived');
       await expect(page.getByRole('link', { name: new RegExp(`^${listName}`) })).toBeVisible();
       await expectAccessible(page, `archived lists, with a list (${theme})`);
@@ -500,13 +507,23 @@ for (const theme of THEMES) {
       await openNotificationSettings(page);
 
       // The write is held open, so the screen stays saving and the server never receives it.
-      await page.route(PREFERENCES_URL, (route) => {
-        if (route.request().method() === 'PATCH') return;
-        void route.continue();
+      let releaseHeldRoute: (() => Promise<void>) | undefined;
+      await page.route(PREFERENCES_URL, async (route) => {
+        if (route.request().method() === 'PATCH') {
+          await new Promise<void>((resolve) => {
+            releaseHeldRoute = async () => {
+              await route.abort('failed');
+              resolve();
+            };
+          });
+          return;
+        }
+        await route.continue();
       });
       await page.getByRole('switch').first().click();
       await expect(page.getByText(COPY.saving)).toBeVisible();
       await expectAccessible(page, `notifications, saving (${theme})`);
+      await releaseHeldRoute?.();
       await page.unroute(PREFERENCES_URL);
 
       // The write is refused, so the stored setting is unchanged.
@@ -518,7 +535,9 @@ for (const theme of THEMES) {
           body: JSON.stringify({ title: 'Server error', status: 500 }),
         });
       });
+      const failedSave = page.waitForResponse(PREFERENCES_URL);
       await page.getByRole('switch').first().click();
+      await failedSave;
       await expect(page.getByText(COPY.saveError)).toBeVisible();
       await expectAccessible(page, `notifications, save failed (${theme})`);
     });
@@ -536,10 +555,18 @@ for (const theme of THEMES) {
 
       // The list keeps its order, so the first switch that is off is the same one after the save.
       const switches = page.getByRole('switch');
+      await expect(switches.first()).toBeVisible();
       const count = await switches.count();
       let index = -1;
       for (let i = 0; i < count && index < 0; i += 1) {
         if (!(await switches.nth(i).isChecked())) index = i;
+      }
+      if (index < 0 && count > 0) {
+        // If preceding journeys or tests left all switches enabled, turn the first switch off
+        // so the test has an unchecked switch to test registration failure against.
+        await switches.first().click();
+        await expect(switches.first()).not.toBeChecked();
+        index = 0;
       }
       expect(index).toBeGreaterThanOrEqual(0);
       const off = switches.nth(index);

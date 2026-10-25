@@ -32,6 +32,7 @@ main=cb808e6d360909ec9714b66d7216a2a319eaa57b
 | PC-13 | The CI proof bar is N = max(10, ceil(ln 0.05 / ln(1 - p))), at most 25, where p is the per-attempt test-e2e flake rate from this inventory (N = 10 when p is 0): N consecutive CI runs that all pass on one head have under a 5% chance at the old rate. | planner, flagged; the owner confirms N at 06-14's gate |
 | OD-6 | G-06-3: "The deploy gate should not redeploy the same commit. Owner does not understand why it would." A commit equal to the running revision gives `deploy=false`; it supersedes PC-5's re-run clause (the rest of PC-5 stands); a deliberate redeploy keeps a path (OD-7); flagged as a deploy-behavior change in the pull request body (D-20). | owner, UAT 2026-10-24 |
 | OD-7 | G-06-3: "A deliberate redeploy should work by Re-run the Deploy run (planner's recommendation). A re-run of the Deploy run itself is allowed to redeploy the running commit. A re-run of CI is not." The gate lifts the equal-to-HEAD rule only when the Deploy run's own `github.run_attempt` is above 1, and never the older-commit or docs-only rules; `scripts/deploy.sh` by hand on the host stays available. | owner, 2026-10-24 |
+| OD-8 | G-06-5: "The measured failure rate is enough." A `test`-class flake fix needs no committed red-then-green spec: the failure rate this plan measures before the fix (`rc-`) and 06-15's green proof after it are its regression evidence; a `product`-class fix still ships with a Vitest regression test that fails first (amendment 17). | owner, 2026-10-24 |
 
 ## Flagged assumptions
 
@@ -670,3 +671,118 @@ g063-force=red 8 green 47 of 47
 
 g063-doc-review=done files=7
 g063-docs-claims=checked=1032 misses=0
+g063-gates=frozen,lint,format-check,typecheck,test,shellcheck,knip,knip-baseline,jscpd,audit,hygiene,migrations,commitlint exit=0
+g063-pushed=a36fabadf7fad8ec41add4c679bc3884cf67efb7
+
+## Plan 06-13 Task 1: deploy.yml commit, wiring smoke, push to origin
+
+g063-deploy-facts=ok
+g063-wiring-smoke=attempt1:false attempt2:true
+g063-head=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-tree=25918eebb5b57b8976dc45e0342e3898b9b3deed
+g063-files=.claude/CLAUDE.md,.github/workflows/deploy.yml,CONTRIBUTING.md,README.md,docs/deploy.md,docs/testing.md,scripts/deploy-gate.sh,scripts/deploy-gate.test.mjs
+g063-push=claude 3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+
+## Plan 06-13 Task 2: owner push (auto-skipped: token push accepted)
+
+g063-owner-pushed=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-owner-pushed-tree-match=yes
+
+## Plan 06-13 Task 3: pull request and CI
+
+gate-g063-pr=approve (owner standing instruction, 2026-10-24)
+g063-pr=44
+g063-pr-url=https://github.com/alex-tanton/hearth/pull/44
+g063-preflake-occurrence=40115799178/1 tests/17-accessibility-states.spec.ts:526
+g063-pr-head=3859fd32ec4e00e9c4a8b82f177143eecbaf73cf
+g063-route=rerun
+g063-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40115799178 (attempt 2, owner-approved re-run)
+
+Notes:
+
+- PR #44 (https://github.com/alex-tanton/hearth/pull/44) was opened with title `fix: stop redeploying the commit that is already running` and body flagged with `## Deploy behavior changes (flagged)` and `## Why the running commit was redeployed`.
+- On attempt 1, 6/7 jobs passed; `test-e2e` failed on known flaky spec F-03 (`tests/17-accessibility-states.spec.ts:526:5`). The failure was recorded as pre-fix occurrence O-117 in `FLAKE-INVENTORY.md` and log/report artifacts saved.
+- Per Task 3 Step 4, owner approved route (a) `rerun` exception. A single `rerun-failed-jobs` was executed, bringing `test-e2e` to `success` on attempt 2. All 7 CI jobs concluded `success`.
+- PR #44 is left open waiting for owner's squash merge. Claude does not merge.
+
+## Plan 06-14 Task 1: tracer — F-01 root cause and reproduction
+
+rc-F-01=class:product repro:2/5 confidence:high
+## Plan 06-14 Task 2: all other flaky tests, local failures and infra signatures
+
+rc-F-02=class:test repro:5/5 confidence:high
+rc-F-03=class:test repro:5/5 confidence:high
+rc-F-04=class:test repro:2/5 confidence:high
+rc-F-05=class:test repro:2/5 confidence:high
+
+diagnosis=done flaky=5 product=1 test=4 infra=0 not-reproduced=0
+
+Notes:
+
+- All 5 flaky tests from CI history have been analyzed via traces and reproduced locally in throwaway worktree `/home/user/hearth-flake-repro-2`.
+- F-01 is a `product` race condition between `GET /api/users/me` and `PUT /api/users/me/active-household` in React Query cache management.
+- F-02, F-03, F-04, and F-05 are all `test` class bugs: F-02 hangs intercepted route without aborting/fulfilling, leaving `save.isPending` true; F-03 fails when earlier tests leave Alex's switches checked; F-04 unloads the page before `PATCH /api/lists/:id` completes; F-05 reloads offline before the 1000ms cache persister throttle persists to IndexedDB.
+- All three infrastructure signatures (`Could not pull public.ecr.aws...`, `toomanyrequests: Rate exceeded`, `ERR_PNPM_PNPM_ENGINE_IDENTITY_UNVERIFIABLE`) have proposed dispositions (`mitigated`, `mitigated`, `external`) recorded in `FLAKE-INVENTORY.md` for the owner at Task 3's gate.
+- The throwaway repro worktree and all containers have been cleaned up and verified.
+## Plan 06-14 Task 3: owner decision gate
+
+gate-flake-fixes=approve 2026-10-24
+proof-bar-ci=15
+proof-reruns=14
+infra-disposition-ecr-pull=mitigated
+infra-disposition-toomanyrequests=mitigated
+infra-disposition-pnpm-identity=external
+
+Notes:
+
+- The owner approved the fixes for all five flaky tests (F-01 through F-05) as diagnosed and presented on 2026-10-24.
+- Product change for F-01 (React Query active-household mutation query cancellation in apps/web/src/lib/api/hooks.ts) approved with Vitest regression test required.
+- Infra dispositions approved: ECR rate limit pull retry mitigated by pre-pull script; Docker rate limit mitigated by pre-pull script; transient npm registry signature verification failure classified as external re-run per rule 9.
+- CI proof bar N = 15 consecutive complete CI passes on fix/ci-flakes approved, with proof-reruns budget of 14.
+- All five flaky tests reproduced locally; no tests classified as not-reproduced.
+
+## Plan 06-15 Task 1: F-01 product fix and proof
+
+flake-fix-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+flake-fix-F-01=commit 7ff1f7b green 30/30 red 2/5
+
+Notes:
+
+- F-01 regression unit test added to `apps/web/src/App.test.tsx` verifying profile queries are cancelled on `useSwitchHousehold.mutate` before mutation commits (commit `7bc09a0`). Red run failed with `exit=1` (`06-15-F-01-unit-red.log`).
+- F-01 product fix implemented in `apps/web/src/lib/api/hooks.ts`: added `onMutate: async () => { await queryClient.cancelQueries({ queryKey: queryKeys.profile }); }` to `useSwitchHousehold` (commit `7ff1f7b`). Green run passed 9/9 unit tests (`06-15-F-01-unit-green.log`).
+- Local proof of F-01 under 25ms route delay on isolated stack `proof01` completed 30 consecutive PASS iterations without a single failure (`06-15-proof-F-01.log`).
+
+## Plan 06-15 Task 2: F-02 through F-05 fixes and cross-check
+
+flake-fix-F-02=commit c2b9ea4 green 30/30 red 5/5
+flake-fix-F-03=commit fbdbd03 green 30/30 red 5/5
+flake-fix-F-04=commit ea4103e green 30/30 red 2/5
+flake-fix-F-05=commit b921b82 green 30/30 red 2/5
+cross-check=F-01:30/30,F-02:30/30,F-03:30/30,F-04:30/30,F-05:30/30
+
+Notes:
+
+- F-02 fix (`tests/17-accessibility-states.spec.ts:497`): Asynchronously hold intercepted PATCH route open until `COPY.saving` and accessibility assertions pass, then abort route before unrouting and triggering the second toggle (which fulfills with 500 and asserts `COPY.saveError`). 30 consecutive iterations passed on isolated stack `proof02` (`06-15-proof-F-02.log`).
+- F-03 fix (`tests/17-accessibility-states.spec.ts:526`): Wait for switch elements to be visible before counting/querying checked status; if all switches are enabled by preceding tests, toggle first switch off to ensure an unchecked switch exists for registration failure testing. 30 consecutive iterations passed on isolated stack `proof03` under forced-all-enabled repro condition (`06-15-proof-F-03.log`).
+- F-04 fix (`tests/17-accessibility-states.spec.ts:320`): Await `page.waitForResponse` on archive mutation (`POST /api/lists/*/archive`) before calling `page.goto('/lists/archived')`, eliminating client-side abort of in-flight archive request. 30 consecutive iterations passed on isolated stack `proof04` under 20ms route delay (`06-15-proof-F-04.log`).
+- F-05 fix (`tests/18-chores-and-errands-offline.spec.ts:140`): Added `await page.waitForTimeout(1100)` before offline `page.reload()` to allow `createCachePersister` 1000ms throttle timer to persist cache to IndexedDB. 30 consecutive iterations passed on isolated stack `proof05` (`06-15-proof-F-05.log`).
+- Cross-check on final W6 commit (`b921b82`): Ran 30 consecutive iterations of all 5 tests on isolated stack `finalproof`. All 5 tests passed 30/30 (150 successful iterations total, logging to `.planning/cleanup/logs/06-15-proof-final-{F-01..F-05}.log`).
+
+## Plan 06-15 Task 3: whole-suite proof, documents, gates, and push of fix/ci-flakes
+
+local-e2e-full=3/3 passed=104 each
+flake-gates=frozen:exit=0 lint:exit=0 format-check:exit=0 typecheck:exit=0 test:exit=0 web-coverage:exit=0 sweep:exit=0 knip:exit=0 knip-baseline:exit=0 jscpd:exit=0 audit:exit=0 hygiene:exit=0 migrations:exit=0 build:exit=0 commitlint:exit=0
+flake-push=5c44cc98a017f829e0cd1fa08d617f3d4769cd7b
+flake-handoff=none
+flake-head=5c44cc98a017f829e0cd1fa08d617f3d4769cd7b
+flake-tree=076a04e356c0fc0fff74d1c89acfb0fd6a1a5d5e
+flake-files=apps/web/src/App.test.tsx apps/web/src/lib/api/hooks.ts e2e/tests/17-accessibility-states.spec.ts e2e/tests/18-chores-and-errands-offline.spec.ts
+
+Notes:
+
+- Whole suite proof passed three consecutive times from an empty database (each passing all 104 tests cleanly, 0 failed, 0 flaky, 0 skipped): pass 1 in 7.2m (06-15-e2e-full-1.log), pass 2 in 7.8m (06-15-e2e-full-2.log), and pass 3 in 8.2m pinned to 2 CPU cores via taskset -c 0,1 (06-15-e2e-full-3.log).
+- All 15 local gates executed on W6, each passing with exit=0: frozen, lint, format-check, typecheck, test (unit + harness), web-coverage (85.38% statements against 84% threshold), sweep (36/36 passed), knip, knip-baseline (28 entries), jscpd (1.14% duplicates), audit (0 advisories), hygiene (clean across 983 files and 14 scripts), migrations (0 added, append-only clean), build, and commitlint (across origin/main..HEAD).
+- WB (claude/confident-dirac-10eu0a) merged into W6 (fix/ci-flakes) cleanly with no conflicts.
+- Pre-push security and hygiene scans verified: 0 token matches, no CA certificate or environment variable traces, no modifications to docker, .dockerignore, supabase/migrations, or apps/service/src/db/types.ts.
+- Pushed fix/ci-flakes to origin as 5c44cc98a017f829e0cd1fa08d617f3d4769cd7b. No workflow changes made (flake-handoff=none).
+
