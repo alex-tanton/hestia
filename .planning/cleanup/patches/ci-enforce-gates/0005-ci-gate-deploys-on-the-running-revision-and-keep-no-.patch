@@ -1,0 +1,72 @@
+From a2bb3177537d91597086d70a1ec9648fc2149d4e Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 23 Oct 2026 19:42:28 +0000
+Subject: [PATCH 5/6] ci: gate deploys on the running revision and keep no
+ token
+
+- deploy-gate.sh decides, with full history, instead of the tip-only diff
+- skips docs and planning only changes and older commits, redeploys a re-run
+- checkout keeps no token; the job has a 60 minute timeout
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01SMdgjb52uEVQdK1fhxdcUh
+---
+ .github/workflows/deploy.yml | 31 ++++++++++++++++++-------------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
+index f74f813..65a6313 100644
+--- a/.github/workflows/deploy.yml
++++ b/.github/workflows/deploy.yml
+@@ -1,8 +1,9 @@
+ name: Deploy
+ 
+-# Deploys only a main commit whose CI run passed. The job runs on the production box, so
+-# it must never run a pull request's code: the trigger is limited to main, and the job
+-# re-checks that the CI run came from a push to main.
++# Deploys a main commit whose CI run passed, when that commit differs from the revision the running
++# image was built from outside docs/ and .planning/, and never a commit older than the running
++# one. The job runs on the production box, so it must never run a pull request's code: the trigger
++# is limited to main, and the job re-checks that the CI run came from a push to main.
+ on:
+   workflow_run:
+     workflows: [CI]
+@@ -23,21 +24,25 @@ jobs:
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main'
+     runs-on: [self-hosted, hearth]
++    timeout-minutes: 60
+     steps:
++      # Full history, because the gate compares the commit with the running revision, which can be
++      # many commits back. No token is kept: nothing in this job fetches or pushes, and the
++      # runner is the production host.
+       - uses: actions/checkout@v7
+         with:
+           ref: ${{ github.event.workflow_run.head_sha }}
+-          fetch-depth: 2
+-      # A change touching only docs/ is not deployed. main is squash-merged, so each push is
+-      # one commit.
++          fetch-depth: 0
++          persist-credentials: false
++      # The gate prints `deploy=true` or `deploy=false`. A change confined to docs/ and .planning/
++      # since the running revision deploys nothing, an older commit (a re-run of an old CI run)
++      # is skipped instead of rolling production back, and a re-run of the running commit deploys
++      # again. Everything since the running revision counts, not only the tip commit, so a code
++      # change whose deploy never ran still ships behind a later docs-only commit.
+       - id: changes
+-        run: |
+-          if git diff --name-only HEAD~1 HEAD | grep -qv '^docs/'; then
+-            echo "deploy=true" >> "$GITHUB_OUTPUT"
+-          else
+-            echo "Only docs/ changed; skipping deploy."
+-            echo "deploy=false" >> "$GITHUB_OUTPUT"
+-          fi
++        run: scripts/deploy-gate.sh >> "$GITHUB_OUTPUT"
++        env:
++          HEARTH_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+       - if: steps.changes.outputs.deploy == 'true'
+         run: scripts/deploy.sh
+         env:
+-- 
+2.43.0
+

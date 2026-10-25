@@ -99,14 +99,16 @@ last_mapped_at: 2026-10-22
 - Public ingress: Tailscale Funnel forwards to `127.0.0.1:8080` (`sudo tailscale funnel --bg http://127.0.0.1:8080`). Origin is `https://<machine>.<tailnet>.ts.net`, which is pinned and baked into installed PWAs and push subscriptions.
 
 **CI pipeline (`.github/workflows/ci.yml`, GitHub-hosted runners):**
-- Jobs: `lint` (`pnpm lint`, `pnpm format:check`), `typecheck`, `test-unit` (`pnpm test`), `test-integration` (`supabase start` then `pnpm --filter @hearth/service test:coverage`), `test-e2e` (pull requests and `main`, `pnpm test:e2e`), `build` (`pnpm build`)
+- Seven jobs, each with a timeout: `lint` (`pnpm lint`, `pnpm format:check`), `typecheck`, `test-unit` (`pnpm test:harness`, the non-web workspaces' tests, then `pnpm --filter @hearth/web test:coverage`), `test-integration` (`supabase start`, a `pnpm db:types` drift check, then `pnpm --filter @hearth/service test:coverage`), `test-e2e` (pull requests and `main`, `pnpm test:e2e`), `build` (`pnpm build`), `hygiene` (`pnpm knip`, `node scripts/check-knip-baseline.mjs`, `pnpm jscpd`, `node scripts/audit-prod.mjs`, `node scripts/check-repo-hygiene.mjs`, `node scripts/check-migrations-append-only.mjs`, each its own step)
+- `Sweep` (`.github/workflows/sweep.yml`, a separate workflow): the date and time-zone test matrix on pushes to `main` that change more than `docs/` and `.planning/`, nightly, and on demand; it gates nothing and triggers no deploy
 - Actions: `actions/checkout@v7`, `pnpm/action-setup@v6`, `actions/setup-node@v7`, `supabase/setup-cli@v3` (CLI 2.117.0), `docker/login-action@v4`, `actions/upload-artifact@v7`
 - Optional Docker Hub login uses repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`; GHCR login uses `GITHUB_TOKEN`
 - Image pre-pull: `scripts/ci-prepull-images.sh` pulls the Compose and Dockerfile images, with the Supabase images from `ghcr.io/supabase` and fallback to `public.ecr.aws`
 
 **Deploy (`.github/workflows/deploy.yml`):**
 - Triggered by `workflow_run` on CI completing for `main`, only on successful push events; runs on the self-hosted runner `[self-hosted, hearth]`
-- Runs `scripts/deploy.sh` at the CI-tested commit (`HEARTH_DEPLOY_SHA`); skipped when only `docs/` changed
+- Asks `scripts/deploy-gate.sh` first: it deploys when anything outside `docs/` and `.planning/` changed since the revision of the running `hearth-service` image, skips a commit already running (a `CI` re-run starts a new Deploy run at attempt 1 which skips), never deploys a commit older than the running one, and a re-run of the Deploy run itself (attempt 2 or later) redeploys the running commit
+- Then runs `scripts/deploy.sh` at the CI-tested commit (`HEARTH_DEPLOY_SHA`)
 
 **Dependency updates:** Dependabot (`.github/dependabot.yml`), weekly, for npm, GitHub Actions, and Docker images
 

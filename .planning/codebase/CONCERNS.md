@@ -58,7 +58,7 @@ No open bugs were confirmed by static inspection in this pass. Regression covera
 
 **Deploy runner has host-level Docker access:**
 - Risk: `.github/workflows/deploy.yml` runs on `runs-on: [self-hosted, hearth]` on the production host. The runner is in the `docker` group (per project docs), which is effectively root on that host. A workflow that runs on this runner executes with that access.
-- Files: `.github/workflows/deploy.yml` (line 25), `scripts/deploy.sh`
+- Files: `.github/workflows/deploy.yml` (the `runs-on` line), `scripts/deploy.sh`, `scripts/deploy-gate.sh`
 - Current mitigation: The deploy triggers only on a successful `push` to `main` with head branch `main` (`workflow_run` conditions, lines 21-24). CI for pull requests runs on GitHub-hosted `ubuntu-latest` only, so untrusted PR code does not reach the self-hosted runner.
 - Recommendations: Keep the self-hosted runner off any path that runs pull request code. Pin `HEARTH_DEPLOY_SHA` to the verified `workflow_run` head as the workflow already does.
 
@@ -101,7 +101,7 @@ No open bugs were confirmed by static inspection in this pass. Regression covera
 - Improvement path: Split the journeys into independent households with their own seed fixtures so they can run in parallel. Keep zero retries.
 
 **Heavy CI integration job:**
-- Problem: The integration job starts the full Supabase CLI stack and pulls several public images. It has a 40-minute timeout (`.github/workflows/ci.yml`, line 60).
+- Problem: The integration job starts the full Supabase CLI stack and pulls several public images. It has a 25-minute timeout (`timeout-minutes` in `.github/workflows/ci.yml`).
 - Files: `.github/workflows/ci.yml`
 - Cause: Pull failures from ECR and GHCR are a recurring source of latency. The workflow has pre-pull retries and optional Docker Hub login (`continue-on-error: true` on the login steps, lines 80 and 92).
 - Improvement path: Cache the Supabase image set between runs, or pin images by digest.
@@ -163,15 +163,15 @@ No open bugs were confirmed by static inspection in this pass. Regression covera
 - Migration plan: Drop the override once `tsup` and `vite` declare a compatible range.
 
 **Unverified dead code and dependencies:**
-- Risk: `knip` (`knip.json`, run through `pnpm knip` and `pnpm knip:production`) is report-only and is not run in CI (`.github/workflows/ci.yml` does not reference it), so unused files, exports, and dependencies can accumulate unnoticed.
-- Impact: The jobs barrel already exports a test-only helper (see Tech Debt). Dead exports will keep accumulating.
-- Migration plan: Add `pnpm knip:production` to CI as a non-blocking report step, then make it blocking once the current findings are triaged.
+- Risk: knip and the other gates block in CI's `hygiene` job (`.github/workflows/ci.yml`): `pnpm knip` must report nothing and `node scripts/check-knip-baseline.mjs` compares the production findings with `scripts/knip-production-baseline.txt`. What remains is that the production baseline keeps 28 owner-reviewed rows that stay reported, and that migration ordering is not checked (`node scripts/check-migrations-append-only.mjs` allows any added file).
+- Impact: A new baseline row passes review only with the owner's sign-off; a migration that sorts before an applied one is not caught by CI.
+- Migration plan: Work the 28 baseline rows down as the owner reviews them; add an ordering check to the migration script if it becomes a risk.
 
 ## Missing Critical Features
 
-**No automatic dependency-vulnerability gate in CI:**
-- Problem: The CI workflow (`.github/workflows/ci.yml`) runs lint, typecheck, unit, integration, E2E, and build, but no `pnpm audit` or equivalent scan.
-- Blocks: Dependency advisories are caught only through Dependabot alerts, not in the merge gate.
+**Date-dependent dependency-vulnerability gate in CI:**
+- Problem: CI's `hygiene` job runs `node scripts/audit-prod.mjs`, which fails on any production advisory without an entry in `scripts/audit-allowlist.json`. A newly published advisory therefore turns `CI` red on an unchanged tree and blocks the next deploy until the package is upgraded or allowlisted with an expiry.
+- Blocks: Nothing is blocked from merging by GitHub itself, because branch protection and required checks are not configured; the red run holds back the deploy.
 
 **No application-level observability backend:**
 - Problem: Errors are recorded through `recordAppError` into `public.record_app_error` (`apps/service/src/services/errors.ts`, `apps/service/src/db/user-db.ts`), and logs go to the container's stdout through Fastify's logger. No alerting or tracing exists.

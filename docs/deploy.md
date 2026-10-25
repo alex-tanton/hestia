@@ -146,8 +146,19 @@ Notes:
 
 A merge to `main` whose CI passed triggers `scripts/deploy.sh` on the self-hosted runner
 (`.github/workflows/deploy.yml`, which watches the `CI` workflow's `workflow_run` and re-checks
-that it was a push to `main` before deploying). The deploy is **skipped when only `docs/`
-changed**. It can also be run by hand from a checkout.
+that it was a push to `main` before deploying). Its `changes` step runs `scripts/deploy-gate.sh`
+against the revision label of the running `hearth-service:current` image, and the deploy runs only
+when that gate says so: it **deploys when something outside `docs/` and `.planning/` changed**
+since the running revision (the whole range, not only the tip commit, so a code change whose deploy
+never ran still ships behind a later docs-only commit), **skips a commit already running** (a `CI`
+push run on `main` starts a new Deploy run, at attempt 1, every time one of its attempts completes,
+so re-running a job of a green run used to rebuild the commit already running; that is now skipped),
+deploys when no labelled image is running, and **skips a commit older than the running one** (a
+re-run of an old CI run never rolls production back). To deliberately redeploy the commit already running,
+re-run the Deploy run from the Actions tab (which raises that run's own attempt number to 2 or later and
+redeploys), or run `scripts/deploy.sh` by hand on the host from a checkout of the commit, with
+`HEARTH_DEPLOY_SHA` set to it. The job checks out the full history the comparison needs and keeps
+no token on the host. A deploy can also be run by hand from a checkout.
 
 `scripts/deploy.sh` performs these steps, in order, aborting before anything is restarted if any
 of the first few fail:
@@ -260,7 +271,12 @@ them re-initialize against the wrong state.
   seconds, `scripts/deploy.sh` re-tags the previously running images `current`, recreates
   `hearth-service` and `caddy` on them, and exits non-zero. If that rollback itself fails to
   become healthy, the script still exits non-zero and leaves the previous images running —
-  check `hearth-compose logs hearth-service caddy` for the cause.
+  check `hearth-compose logs hearth-service caddy` for the cause. When a deploy fails after both
+  images were already tagged `current` but before the containers came up healthy (or a first deploy
+  had nothing to roll back to), retrying requires the deliberate path because the commit is already
+  running: re-run the Deploy run from the Actions tab (attempt 2 or later redeploys the commit
+  already running), or run `scripts/deploy.sh` by hand on the host with `HEARTH_DEPLOY_SHA` set to
+  the commit.
 - **Hung but "running" container:** Docker only restarts a container that exits, never one that's
   merely `unhealthy`. Restart it by hand with `docker compose restart <service>`.
 - **Regenerating secrets:** never run `generate-secrets.sh` against a live install's `.env` path —
@@ -272,5 +288,5 @@ them re-initialize against the wrong state.
 - **Migrations are forward-only:** rolling back `hearth-service`/`caddy` images (manual or
   automatic) never rolls back the database schema. A migration that needs undoing requires a new
   forward migration or a full restore from backup.
-- **Docs-only changes don't deploy:** `deploy.yml` skips the deploy step when a push to `main`
-  touches only paths under `docs/`.
+- **Docs-only changes don't deploy:** `deploy.yml` skips the deploy step when nothing outside
+  `docs/` and `.planning/` changed since the running revision (see "Ongoing deploys").

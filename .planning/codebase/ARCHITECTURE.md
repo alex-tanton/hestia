@@ -277,7 +277,7 @@ Example: `POST /api/households/:id/bills`, defined in `apps/service/src/routes/b
 
 **Build and deploy:**
 - `apps/service/src/write-openapi.ts` runs at the end of the service `build` script and emits the OpenAPI document.
-- `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh`.
+- `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh` only when `scripts/deploy-gate.sh` finds a change outside `docs/` and `.planning/` since the running revision or when you re-run the Deploy run.
 
 ## Architectural Constraints
 

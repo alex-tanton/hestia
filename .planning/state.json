@@ -31,13 +31,13 @@
     {
       "number": "6",
       "name": "CI Enforcement and Lock-in",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 06 of 6 · 81% · executing"
+    "label": "Advance to the next step (verify)",
+    "reason": "Phase 06 of 6 · 83% · ready to verify"
   },
-  "updated_at": "2026-10-22T16:57:30.032Z"
+  "updated_at": "2026-10-24T13:20:33.477Z"
 }

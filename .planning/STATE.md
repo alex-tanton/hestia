@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 current_phase: 06
-current_phase_name: ci-enforcement-and-lock-in
+current_phase_name: CI Enforcement and Lock-in
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-10-22T16:57:30.012Z"
-last_activity: 2026-10-22
-last_activity_desc: Phase 5 complete, transitioned to Phase 6
-state_head: 2d436107df90a63f3168da45d2dfe5d25fe3f1b1
+stopped_at: Completed 06-15-PLAN.md
+last_updated: "2026-10-25T02:15:00.000Z"
+last_activity: 2026-10-24
+last_activity_desc: Plan 06-15 completed
+state_head: 5c44cc9
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 54
-  completed_plans: 44
-  percent: 81
+  total_plans: 60
+  completed_plans: 59
+  percent: 98
 ---
 
 # Project State
@@ -23,16 +23,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-19)
 
 **Core value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
-**Current focus:** Phase 05 — Redundancy Reduction and Text Sync
+**Current focus:** Phase 06 — CI Enforcement and Lock-in
 
 ## Current Position
 
-Phase: 06 (ci-enforcement-and-lock-in) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-22 — Phase 5 complete, transitioned to Phase 6
+Phase: 06 (CI Enforcement and Lock-in) — EXECUTING
+Plan: 15 of 16
+Status: In progress — Plan 06-15 complete, ready for Plan 06-16
+Last activity: 2026-10-24 — Plan 06-15 complete
 
-Progress: [████████░░] 81%
+Progress: [█████████▉] 98%
+
 
 ## Performance Metrics
 
@@ -93,6 +94,21 @@ Progress: [████████░░] 81%
 | Phase 05 P11 | about 1h | 3 tasks | 3 files |
 | Phase 05 P12 | 1 session | 3 tasks | 8 files |
 | Phase 05 P13 | 3 sessions | 3 tasks | 6 files |
+| Phase 06 P01 | 12min | 3 tasks | 13 files |
+| Phase 06 P02 | 55min | 3 tasks | 9 files |
+| Phase 06 P03 | 75min | 2 tasks | 6 files |
+| Phase 06 P04 | 40min | 3 tasks | 4 files |
+| Phase 06 P05 | PART 1 and 2 (CI waits) | 3 tasks | 1 files |
+| Phase 06 P06 | about 1h | 3 tasks | 6 files |
+| Phase 06 P07 | 1h | 3 tasks | 8 files |
+| Phase 06 P08 | ~100min | 3 tasks | 1 files |
+| Phase 06 P09 | ~6.5h (CI waits, owner replies) | 3 tasks | 16 files |
+| Phase 06 P10 | ~10h (waiting for the first scheduled Sweep) | 3 tasks | 2 files |
+| Phase 06 P11 | ~45min | 3 tasks | 4 files |
+| Phase 06 P12 | ~45min | 3 tasks | 7 files |
+| Phase 06 P13 | ~50min | 3 tasks | 8 files |
+| Phase 06 P14 | 1 session | 3 tasks | 4 files |
+| Phase 06 P15 | 1 session | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -133,6 +149,23 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 05-08: docs/sync-specs (158fd52) holds the seven specs and README audited against the code; docs-claims-check.mjs 582 tokens, 0 misses with a 34-token reasoned allowlist; hearth-admin documented as a hand-written shell wrapper; Kong routes, held deal-add id, per-list add-to-list lock and coverage setup stated as they are; README retired-spec citations removed; 14-row behavioral sample in DOCS-AUDIT-LEDGER.md; PR D opens in 05-13
 - [Phase 05]: Plan 05-13: PR D (#29) squash-merged by the owner as a5c4384 (docs: bring specs and codebase maps in line with the code); the dropped CLAUDE.md Anti-Patterns and Component Responsibilities were restored with 19 recorded corrections; main CI run 39718363858 needed three attempts (test-e2e failed at 19-notifications.spec.ts:140, then 17-accessibility-states.spec.ts:497 and :526, then green after the owner's rerun), treated as owner-approved flake exceptions; REDUNDANCY-LEDGER.md indexes RED-01 to RED-05; post-conditions on main: citations 0, migrations equal to c64d79e, docs 7 files, checker 2662 tokens 0 misses
 - [Phase 05]: Plan 05-11: PR C (#28) squash-merged by the owner as 9fdc9c9 (refactor: remove retired spec citations from code); main CI run 39709025122 six of six green; follow-up sweep (aaed732 comments, 33baf2d nine titles) included; Journey N labels and README pointers left for the owner and PR D; RED-04 completes with PR D
+- [Phase 06]: Plan 06-01: ci/gate-scripts pushed at e5895b2 with the knip baseline (28 rows, byte-equal to Phase 3), repo hygiene and migration append-only gates; check-knip-baseline runs knip-summary.mjs as a child process (PC-1); three .planning scripts now 100755; no PR opened
+- [Phase 06]: 06-02: the two production advisories are fixed by upgrading on deps/fix-prod-advisories (fastify 5.12.6, ip-address override 10.7.4), allowlist stays empty; jscpd 5.4.1 approved 2026-10-23
+- [Phase 06]: 06-03: today-cell zone is TODAY_ZONES[UTC epoch day % 11]; deploy gate reads the diff with --no-renames and fails open when ancestry cannot be decided
+- [Phase 06]: 06-04: owner pre-authorized opening PR 1; gate-pr1=approve-pr1 recorded without asking, 06-05 opens the pull request and the owner merges after CI passes
+- [Phase 06]: 06-06: PR 2 built on ci/enforce-gates (W2, local only, patches on WB); web coverage thresholds 84/80/77/85 from measured 85.38/81.83/78.59/86.96; db:types deterministic locally (81209804...); sweep.yml and deploy-gate wiring complete
+- [Phase 06]: 06-07: ci/enforce-gates pushed by the owner at the pinned tree (token lacks workflow scope); canary choice with-migration
+- [Phase 06]: 06-08: unused-dependency canary plant is fastest-levenshtein@1.0.16, not yaml (knip counts yaml as an optional peer, so it is never unused)
+- [Phase 06]: 06-08: PR 2 test-e2e needed three attempts (two distinct notification-spec failures, no registry flake), each rerun owner-authorized under rule 9 (DA-4)
+- [Phase 06]: Plan 06-09: main went red on date-dependent audit advisories twice (zod, then undici and fast-uri); the owner chose small fix PRs #38 and #43 (major-scoped pnpm.overrides) over allowlisting, keeping OD-1's empty allowlist
+- [Phase 06]: Plan 06-09: Sweep's push runs passed 36/36 on main; CI still triggers Deploy (run 40041408163 queued on the unregistered hearth runner); PR 3 (#42) open and green on all seven jobs; main's own latest test-e2e is red on a notification spec (DA-4), accepted by the owner without a rerun
+- [Phase 06]: Plan 06-10: PR 3 merged as f1c8583; CI green; Deploy workflow_run created within 2s but its deploy job not evaluated (hearth runner not provisioned, older queued run holds the concurrency group); CI-07 ticked complete with a caveat (ci07=partial); Sweep 36/36 on push and 42/42 by hand and on the first scheduled run; phase 6 closed
+- [Phase 06]: Plan 06-11: G-06-5: saved 18 unexpired E2E traces before retention expiry; mined all 89 CI runs and 6 Sweep runs (116 attempts, 676 jobs); classified 116 failure signatures into flaky (17), real (56), intentional (10), and infra (33); summarized 5 flaky specs (F-01..F-05); measured flake rate p = 15/81 = 0.185 for test-e2e (0 for unit and integration) and established proof bar N = 15; verified local suites repeatable with 0 failures (unit 5/5, integration 3/3, isweep 5/5, sweep 42/42 with today cell); flake-inventory=done
+- [Phase 06]: Plan 06-12: G-06-3: deploy gate modified to check for redeploy run via GitHub API, allowing manual re-run of Deploy to redeploy running commit while skipping CI push runs of the same commit; docs and tests updated; 13 local gates clean.
+- [Phase 06]: Plan 06-13: G-06-3: PR #44 opened with deploy.yml changes; 7/7 CI jobs green.
+- [Phase 06]: Plan 06-14: G-06-5: root cause analysis of all 5 flaky tests from traces; local reproduction of all 5 tests; owner approval of fix strategy (gate-flake-fixes=approve 2026-10-24, proof-bar-ci=15, proof-reruns=14).
+- [Phase 06]: Plan 06-15: G-06-5: flake fixes F-01 through F-05 implemented on fix/ci-flakes; F-01 product fix (cancel in-flight profile queries on active household switch) verified red-before-green with Vitest; F-02..F-05 test fixes verified; all 5 tests passed 30/30 local proof under repro conditions; 30-iteration cross-check on HEAD passed (150 passes); whole-suite proof passed 3 consecutive runs (104 passed each); 15 local gates passed exit=0; WB merged and fix/ci-flakes pushed to origin at 5c44cc9.
+
 
 ### Pending Todos
 
@@ -171,9 +204,9 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-10-22T04:40:00.000Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-ci-enforcement-and-lock-in/06-CONTEXT.md
+Last session: 2026-10-24T13:20:35.593Z
+Stopped at: Completed 06-10-PLAN.md
+Resume file: None
 
 ### Resume point for Phase 5 (after 05-13, 2026-10-22)
 

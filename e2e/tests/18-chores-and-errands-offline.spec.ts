@@ -116,6 +116,9 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
   // not from memory.
   await subTabs.getByText('Chores', { exact: true }).click();
   await expect(rowFor(page, chore)).toContainText(PENDING);
+  // The cache persister throttles writes to IndexedDB by 1000ms. Wait for persistence to settle
+  // before reloading offline so the cached household and profile are restored.
+  await page.waitForTimeout(1100);
   await page.reload();
   await expect(rowFor(page, chore)).toContainText(PENDING);
   await subTabs.getByText('Errands', { exact: true }).click();

@@ -24,13 +24,13 @@
     "@hearth/recurrence": "workspace:*",
     "@hearth/shared": "workspace:*",
     "cheerio": "1.2.0",
-    "fastify": "5.12.5",
+    "fastify": "5.12.6",
     "kysely": "0.29.6",
     "node-cron": "4.6.0",
     "parse-ingredient": "3.0.0",
     "pg": "8.23.0",
     "web-push": "3.6.7",
-    "zod": "4.6.5"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@types/node": "24.13.6",

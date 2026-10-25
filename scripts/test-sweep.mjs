@@ -6,6 +6,13 @@
  *
  *   node scripts/test-sweep.mjs [--suite unit|integration] [--workspace web|service|shared|
  *     recurrence|matching|e2e|all] [--cell ID]... [--only TEST_PATH] [--log-dir DIR] [--list]
+ *     [--with-today [--today-instant ISO]]
+ *
+ * `--with-today` adds one unit cell, `today`, after the selected fixed cells: `HEARTH_TEST_NOW` is
+ * the real instant at sweep start (or `--today-instant`, parsed with the same rules as
+ * `HEARTH_TEST_NOW`) and `TZ` is one of `TODAY_ZONES`, chosen by the UTC epoch day. Its result
+ * lines carry `now=` and `tz=`, so a red run is reproduced with `HEARTH_TEST_NOW={now} TZ={tz}`.
+ * Without `--with-today` the matrix and the output are unchanged.
  *
  * Cells run one after another and the child inherits the zone, so every Vitest worker, under the
  * forks or the threads pool, runs in it. The sweep exits 0 only when every run passed; a child
@@ -17,6 +24,8 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, closeSync, mkdirSync, openSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+
+import { parseTestNow } from '../test/test-now.mjs';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 
@@ -42,6 +51,40 @@ const INTEGRATION_CELLS = [
   { id: 'tokyo', now: undefined, tz: 'Asia/Tokyo' },
 ];
 
+/**
+ * Zones the `today` cell rotates through, indexed by the UTC epoch day modulo the list length: the
+ * same instant always maps to the same zone, so a failure is reproducible from its `now=` alone.
+ * Eleven is not divisible by seven, so a weekday does not keep its zone from one week to the next.
+ * The list mixes UTC-negative and UTC-positive zones, half- and quarter-hour offsets, a 30-minute
+ * DST zone (Lord Howe), the extreme offsets (Kiritimati, Pago Pago) and zones that observe DST.
+ */
+const TODAY_ZONES = [
+  'Pacific/Kiritimati',
+  'America/Los_Angeles',
+  'Asia/Kolkata',
+  'Europe/London',
+  'Pacific/Pago_Pago',
+  'Australia/Lord_Howe',
+  'America/New_York',
+  'Asia/Kathmandu',
+  'Pacific/Auckland',
+  'America/St_Johns',
+  'Asia/Tokyo',
+];
+
+const MILLISECONDS_PER_DAY = 86_400_000;
+
+/** The `today` cell for an instant given in epoch milliseconds. */
+function todayCell(epochMilliseconds) {
+  const day = Math.floor(epochMilliseconds / MILLISECONDS_PER_DAY);
+  return {
+    id: 'today',
+    now: new Date(epochMilliseconds).toISOString(),
+    tz: TODAY_ZONES[day % TODAY_ZONES.length],
+    reproducible: true,
+  };
+}
+
 const ONLY_PATTERN = /^[A-Za-z0-9._/-]+$/;
 
 const USAGE = `usage: node scripts/test-sweep.mjs [options]
@@ -50,6 +93,8 @@ const USAGE = `usage: node scripts/test-sweep.mjs [options]
   --cell ID                  repeatable; default every cell of the suite
   --only TEST_PATH           one test path, with a single Vitest workspace
   --log-dir DIR              write one log per run and summary.txt there
+  --with-today               unit suite: add the today cell (real instant, rotating zone)
+  --today-instant ISO        fix the today cell's instant; needs --with-today
   --list                     print the matrix and exit`;
 
 function usageError(message) {
@@ -65,6 +110,8 @@ function parseArguments(argv) {
     cells: [],
     only: undefined,
     logDir: undefined,
+    withToday: false,
+    todayInstant: undefined,
   };
   let list = false;
   for (let index = 0; index < argv.length; index += 1) {
@@ -73,7 +120,19 @@ function parseArguments(argv) {
       list = true;
       continue;
     }
-    if (!['--suite', '--workspace', '--cell', '--only', '--log-dir'].includes(flag ?? '')) {
+    if (flag === '--with-today') {
+      options.withToday = true;
+      continue;
+    }
+    const valueFlags = [
+      '--suite',
+      '--workspace',
+      '--cell',
+      '--only',
+      '--log-dir',
+      '--today-instant',
+    ];
+    if (!valueFlags.includes(flag ?? '')) {
       usageError(`unknown flag ${String(flag)}`);
     }
     const value = argv[index + 1];
@@ -83,18 +142,45 @@ function parseArguments(argv) {
     else if (flag === '--workspace') options.workspace = value;
     else if (flag === '--cell') options.cells.push(value);
     else if (flag === '--only') options.only = value;
+    else if (flag === '--today-instant') options.todayInstant = value;
     else options.logDir = resolve(process.cwd(), value);
   }
-  return { options, list };
+
+  if (options.todayInstant !== undefined && !options.withToday) {
+    usageError('--today-instant needs --with-today');
+  }
+  if (options.withToday && options.suite === 'integration') {
+    usageError('the today cell is a unit cell');
+  }
+  let today;
+  if (options.withToday) {
+    let instant;
+    if (options.todayInstant === undefined) {
+      // The one real-clock read: the nightly asks for the day it runs on.
+      instant = Date.now();
+    } else {
+      try {
+        instant = parseTestNow(options.todayInstant);
+      } catch (error) {
+        usageError(`--today-instant: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    today = todayCell(instant);
+  }
+  return { options, list, today };
 }
 
-function printMatrix() {
+function printMatrix(today) {
   const describe = (cell) =>
     `  ${cell.id}: HEARTH_TEST_NOW=${cell.now ?? '(unset)'} TZ=${cell.tz ?? '(unset)'}`;
   console.log('unit cells:');
   for (const cell of UNIT_CELLS) console.log(describe(cell));
   console.log('integration cells:');
   for (const cell of INTEGRATION_CELLS) console.log(describe(cell));
+  if (today !== undefined) {
+    console.log('today cell:');
+    console.log(describe(today));
+  }
 }
 
 function canonicalZone(zone) {
@@ -153,9 +239,9 @@ function selectedTestFiles(suite, workspace, only) {
 }
 
 function main() {
-  const { options, list } = parseArguments(process.argv.slice(2));
+  const { options, list, today } = parseArguments(process.argv.slice(2));
   if (list) {
-    printMatrix();
+    printMatrix(today);
     return 0;
   }
 
@@ -177,12 +263,13 @@ function main() {
     workspaces = options.workspace === 'all' ? WORKSPACES : [options.workspace];
   }
 
-  const selected = options.cells.length === 0 ? cells : [];
+  const selected = options.cells.length === 0 ? [...cells] : [];
   for (const id of options.cells) {
     const cell = cells.find((candidate) => candidate.id === id);
     if (cell === undefined) usageError(`unknown ${options.suite} cell ${id}`);
     if (!selected.includes(cell)) selected.push(cell);
   }
+  if (today !== undefined) selected.push(today);
 
   if (options.only !== undefined) {
     if (!ONLY_PATTERN.test(options.only) || options.only.startsWith('-')) {
@@ -248,7 +335,11 @@ function main() {
       const ok = run.status === 0 && run.signal === null && run.error === undefined;
       if (ok) passed += 1;
       const exit = run.status ?? (run.signal === null ? 'error' : run.signal);
-      const line = `cell=${cell.id} workspace=${workspace} result=${ok ? 'PASS' : 'FAIL'} exit=${String(exit)}`;
+      const label =
+        cell.reproducible === true
+          ? `cell=${cell.id} now=${cell.now} tz=${cell.tz}`
+          : `cell=${cell.id}`;
+      const line = `${label} workspace=${workspace} result=${ok ? 'PASS' : 'FAIL'} exit=${String(exit)}`;
       console.log(line);
       if (summaryPath !== undefined) appendFileSync(summaryPath, `${line}\n`);
     }

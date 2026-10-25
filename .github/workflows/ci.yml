@@ -13,33 +13,56 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Every job runs on GitHub-hosted runners. The self-hosted runner only ever runs deploy.yml.
+#
+# Every job has a timeout, so a hung step fails in minutes instead of holding a runner for the
+# six-hour default. Each is about two to three times the p95 of the 40 most recent runs (324 job
+# records, 2026-10-13 to 2026-10-22), with a floor of 10 minutes; hygiene is new and has no history.
+# No job fetches or pushes after checkout, so every checkout drops its token with
+# `persist-credentials: false` instead of leaving it in .git/config for the rest of the job.
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm format:check
 
   typecheck:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm typecheck
 
   test-unit:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
-      - run: pnpm test
+      - run: pnpm test:harness
+      # Web runs once, with coverage, so its thresholds in apps/web/vite.config.ts gate every pull
+      # request. The sweep (sweep.yml) keeps web's plain `test` script, so coverage is not paid for
+      # in every time zone.
+      - run: pnpm -r --filter '!@hearth/web' test
+      - run: pnpm --filter @hearth/web test:coverage
 
   test-integration:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - uses: supabase/setup-cli@v3
         with:
@@ -47,6 +70,12 @@ jobs:
       # Applies supabase/migrations/ to a fresh local stack, the database the tests run against.
       - name: Start Supabase
         run: supabase start
+      # Runs before any test, so the database holds only the migrated schema: a hand edit of
+      # types.ts, or a migration without regenerated types, fails here.
+      - name: db:types matches the migrated schema
+        run: |
+          pnpm db:types
+          git diff --exit-code -- apps/service/src/db/types.ts
       # Runs unit and integration tests together with coverage, enforcing
       # apps/service/vitest.coverage.config.ts's thresholds, rather than a separate job that would
       # pay for its own `supabase start`.
@@ -66,6 +95,8 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       # The suite's own stack is the Compose stack, so migrations are applied with the CLI the
       # way a deploy applies them, and seeding needs psql (both preinstalled on the runner).
@@ -115,7 +146,52 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm build
+
+  # The repository gates that keep what the cleanup removed from coming back: unused code and
+  # dependencies (knip, and the production-mode baseline), duplication over 2% (jscpd), a production
+  # dependency with a known advisory, generated or oddly moded files, and edits to applied
+  # migrations. Each step runs even when an earlier one failed, so one run shows every finding
+  # instead of the first. The audit reads today's advisory database and its allowances expire by
+  # date, so an unchanged tree can turn red; a red run on main holds back the deploy until the
+  # dependency is fixed or the advisory is allowlisted in scripts/audit-allowlist.json.
+  hygiene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The migration check diffs against the pull request's base or the previous push tip, so it
+      # needs history; nothing after checkout fetches or pushes, so the token is not kept.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+      - name: 'knip: no unused files, exports or dependencies'
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm knip
+      - name: 'knip --production: no finding outside the baseline'
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node scripts/check-knip-baseline.mjs
+      - name: 'jscpd: duplication at most 2%'
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm jscpd
+      - name: 'pnpm audit --prod: no advisory outside the allowlist'
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node scripts/audit-prod.mjs
+      - name: 'Repository hygiene: ignored files, script modes, line endings'
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node scripts/check-repo-hygiene.mjs
+      # The base arrives through env, never inside the script text, because a pull request
+      # controls its own refs and a value spliced into `run` would be executed as shell.
+      - name: Migrations are append-only
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/check-migrations-append-only.mjs --base "$BASE_SHA"

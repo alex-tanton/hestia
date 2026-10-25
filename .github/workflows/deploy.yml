@@ -1,8 +1,12 @@
 name: Deploy
 
-# Deploys only a main commit whose CI run passed. The job runs on the production box, so
-# it must never run a pull request's code: the trigger is limited to main, and the job
-# re-checks that the CI run came from a push to main.
+# Deploys a main commit whose CI run passed, when that commit differs from the revision the running
+# image was built from outside docs/ and .planning/, skips a commit already running (a CI push run
+# starts a new Deploy run, at attempt 1, every time one of its attempts completes; re-running green
+# CI is skipped), and never deploys a commit older than the running one. Re-running this Deploy run
+# from Actions raises its own attempt number (attempt 2+) and is the deliberate redeploy (OD-7).
+# The job runs on the production box, so it must never run a pull request's code: the trigger is
+# limited to main, and the job re-checks that the CI run came from a push to main.
 on:
   workflow_run:
     workflows: [CI]
@@ -23,21 +27,29 @@ jobs:
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
     runs-on: [self-hosted, hearth]
+    timeout-minutes: 60
     steps:
+      # Full history, because the gate compares the commit with the running revision, which can be
+      # many commits back. No token is kept: nothing in this job fetches or pushes, and the
+      # runner is the production host.
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 2
-      # A change touching only docs/ is not deployed. main is squash-merged, so each push is
-      # one commit.
+          fetch-depth: 0
+          persist-credentials: false
+      # The gate prints `deploy=true` or `deploy=false`. A change confined to docs/ and .planning/
+      # since the running revision deploys nothing, a commit already running is skipped at attempt 1
+      # (every completed attempt of a CI push run starts a new Deploy run, so re-running CI skips),
+      # re-running this Deploy run itself (attempt 2 or later) deliberately redeploys the running
+      # commit, and an older commit (a re-run of an old CI run) is skipped instead of rolling
+      # production back. Everything since the running revision counts, not only the tip commit,
+      # so a code change whose deploy never ran still ships behind a later docs-only commit.
       - id: changes
-        run: |
-          if git diff --name-only HEAD~1 HEAD | grep -qv '^docs/'; then
-            echo "deploy=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Only docs/ changed; skipping deploy."
-            echo "deploy=false" >> "$GITHUB_OUTPUT"
-          fi
+        run: scripts/deploy-gate.sh >> "$GITHUB_OUTPUT"
+        env:
+          # This Deploy run's own attempt number: attempt 1 skips the running commit; 2+ redeploys it.
+          HEARTH_DEPLOY_ATTEMPT: ${{ github.run_attempt }}
+          HEARTH_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
       - if: steps.changes.outputs.deploy == 'true'
         run: scripts/deploy.sh
         env:
