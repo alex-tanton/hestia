@@ -227,15 +227,17 @@ Plans:
 **Goal:** CI blocks regressions of everything this milestone cleaned, without turning `main` red or breaking the `CI`-triggers-deploy contract
 **Mode:** mvp
 **Depends on**: Phase 5
-**Requirements**: CI-01, CI-02, CI-03, CI-04, CI-05, CI-06, CI-07, TIME-06
+**Requirements**: CI-01, CI-02, CI-03, CI-04, CI-05, CI-06, CI-07, CI-08, TIME-06
 **Success Criteria** (what must be TRUE):
   1. A PR that adds a dead file, a dead export, or an unused dependency fails CI on the blocking knip check, and a PR that pushes source duplication over the jscpd threshold fails CI.
   2. A PR that tracks an ignored file, lets `db/types.ts` drift from the schema, edits an applied migration, or commits a script without the executable bit or with CRLF endings fails CI.
   3. `pnpm audit --prod` runs in CI and passes with an expiring allowance for `braces`, every job has a `timeout-minutes`, both workflows have had a correctness review, and the web coverage thresholds are either enforced or removed so config and `docs/testing.md` agree.
   4. Unit and component tests run across a date and timezone matrix on `main` and nightly, and pass.
   5. A throwaway PR confirms that a merge to `main` still fires `deploy.yml` from the workflow named `CI` after all workflow changes.
+  6. No test in CI fails intermittently; every flaky test observed in CI history is fixed at its cause with zero masking (no retries, no quarantine, no skips, no longer timeouts, no weakened assertions), proven by 6 consecutive all-green full CI runs on its pull request and green on main's first attempt on the merge commit (CI-08).
 
-**Plans:** 13/16 plans executed (06-11 to 06-16 close the UAT gaps G-06-3 and G-06-5)
+**Plans:** 16/16 plans executed (06-11 to 06-16 close the UAT gaps G-06-3 and G-06-5)
+
 
 Plans:
 **Wave 1**
@@ -288,7 +290,7 @@ Plans:
 
 
 **Wave 16** *(blocked on Wave 15 completion)*
-- [ ] 06-16-PLAN.md — G-06-5: tracer pull request and N consecutive green CI runs, owner merges both gap pull requests, `main` green on attempt 1, CI-08 and success criterion 6, gaps closed
+- [x] 06-16-PLAN.md — G-06-5: tracer pull request and N consecutive green CI runs, owner merges both gap pull requests, `main` green on attempt 1, CI-08 and success criterion 6, gaps closed
 
 ## Progress
 

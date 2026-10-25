@@ -63,9 +63,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **CI-02**: A jscpd source-duplication threshold is enforced (the gate is the test-inclusive percentage at 2%, per D-08; 1.11% when it was turned on)
 - [x] **CI-03**: CI checks for tracked-ignored files, `db:types` drift, migration append-only and script modes
 - [x] **CI-04**: `pnpm audit --prod` runs with an expiring allowance for `braces` (the expiring-allowance mechanism exists and is tested with the braces advisory; braces is reachable only through the devDependency kysely-codegen, outside --prod, so the allowlist starts empty per D-09)
-- [x] **CI-05**: Jobs have timeouts, and both workflows get a correctness review
+- [x] **CI-05**: Jobs have timeouts, and both workflows get a correctness review (the deploy gate no longer redeploys the commit that is already running when CI is re-run, per the owner in G-06-3; finding F17, the flaky test-e2e specs, was deferred under DA-4 and reopened by the owner as G-06-5; closed by CI-08)
 - [x] **CI-06**: The web coverage thresholds are either enforced or removed, so config and docs agree
 - [x] **CI-07**: A PR confirms that `CI` still triggers deploy correctly (complete with a caveat: PR 3's merge ran `CI` green and `CI` created Deploy run 40059927037 within two seconds; that run's own `deploy` job was never evaluated because the `hearth` self-hosted runner is not provisioned and an older queued run holds the concurrency group; the guard accepting a green run was observed on 5216fc7)
+- [x] **CI-08**: No test in the repository fails intermittently in CI; the full test suite passes reliably on pull requests and on main pushes without quarantine, retry, skips or weakened assertions.
+  - Proof: 06-16 closed G-06-5 with 6 consecutive all-green full CI runs on pull request #45 (head `2211010c32750423accea292d8c74b539691b982`), then green on main's first attempt on its merge commit.
+
 
 ## v2 Requirements
 
@@ -141,11 +144,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CI-06 | Phase 6 | Complete |
 | CI-07 | Phase 6 | Complete |
 | TIME-06 | Phase 6 | Complete |
+| CI-08 | Phase 6 | Complete |
 
 **Coverage:**
-- v1 requirements: 39 total (corrected from 37; category counts GIT 4, BASE 4, TIME 6, DEAD 6, FIX 7, RED 5, CI 7 sum to 39)
-- Mapped to phases: 39
+- v1 requirements: 40 total (corrected from 37; category counts GIT 4, BASE 4, TIME 6, DEAD 6, FIX 7, RED 5, CI 8 sum to 40)
+- Mapped to phases: 40
+- Complete: 40
+- Pending: 0
+- Total requirements: 40
 - Unmapped: 0 ✓
+
 
 ---
 *Requirements defined: 2026-10-11*

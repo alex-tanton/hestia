@@ -262,3 +262,9 @@ N = max(10, ceil(ln(0.05) / ln(1 - p))), capped at 25
 - Passed 6 consecutive complete CI runs on GitHub Actions with all 7 jobs green on each attempt (attempts 1, 2, 3, 4, 5, 6), surpassing the 3-run bar with zero failures, zero retries, and zero flaky tests.
 - Combined with 30 consecutive passes per test locally under reproduction conditions (150 passes), 30 consecutive passes across all 5 tests in cross-check (150 passes), and 3 clean full-suite runs (104/104 tests), the fixes have proven 100% reliable across local and cloud environments.
 
+**Post-merge proof on main:**
+- Squash commit: `c5b74e44e901457a3f5c0b74663952e6443e4efb`
+- GitHub Actions push run 40158067209: rejected due to account billing / included minutes exhaustion.
+- Local verification on main: Full 36/36 date and timezone sweep passed cleanly (`sweep: 36/36 passed`).
+
+
