@@ -751,3 +751,19 @@ Notes:
 - F-01 regression unit test added to `apps/web/src/App.test.tsx` verifying profile queries are cancelled on `useSwitchHousehold.mutate` before mutation commits (commit `7bc09a0`). Red run failed with `exit=1` (`06-15-F-01-unit-red.log`).
 - F-01 product fix implemented in `apps/web/src/lib/api/hooks.ts`: added `onMutate: async () => { await queryClient.cancelQueries({ queryKey: queryKeys.profile }); }` to `useSwitchHousehold` (commit `7ff1f7b`). Green run passed 9/9 unit tests (`06-15-F-01-unit-green.log`).
 - Local proof of F-01 under 25ms route delay on isolated stack `proof01` completed 30 consecutive PASS iterations without a single failure (`06-15-proof-F-01.log`).
+
+## Plan 06-15 Task 2: F-02 through F-05 fixes and cross-check
+
+flake-fix-F-02=commit c2b9ea4 green 30/30 red 5/5
+flake-fix-F-03=commit fbdbd03 green 30/30 red 5/5
+flake-fix-F-04=commit ea4103e green 30/30 red 2/5
+flake-fix-F-05=commit b921b82 green 30/30 red 2/5
+cross-check=F-01:30/30,F-02:30/30,F-03:30/30,F-04:30/30,F-05:30/30
+
+Notes:
+
+- F-02 fix (`tests/17-accessibility-states.spec.ts:497`): Asynchronously hold intercepted PATCH route open until `COPY.saving` and accessibility assertions pass, then abort route before unrouting and triggering the second toggle (which fulfills with 500 and asserts `COPY.saveError`). 30 consecutive iterations passed on isolated stack `proof02` (`06-15-proof-F-02.log`).
+- F-03 fix (`tests/17-accessibility-states.spec.ts:526`): Wait for switch elements to be visible before counting/querying checked status; if all switches are enabled by preceding tests, toggle first switch off to ensure an unchecked switch exists for registration failure testing. 30 consecutive iterations passed on isolated stack `proof03` under forced-all-enabled repro condition (`06-15-proof-F-03.log`).
+- F-04 fix (`tests/17-accessibility-states.spec.ts:320`): Await `page.waitForResponse` on archive mutation (`POST /api/lists/*/archive`) before calling `page.goto('/lists/archived')`, eliminating client-side abort of in-flight archive request. 30 consecutive iterations passed on isolated stack `proof04` under 20ms route delay (`06-15-proof-F-04.log`).
+- F-05 fix (`tests/18-chores-and-errands-offline.spec.ts:140`): Added `await page.waitForTimeout(1100)` before offline `page.reload()` to allow `createCachePersister` 1000ms throttle timer to persist cache to IndexedDB. 30 consecutive iterations passed on isolated stack `proof05` (`06-15-proof-F-05.log`).
+- Cross-check on final W6 commit (`b921b82`): Ran 30 consecutive iterations of all 5 tests on isolated stack `finalproof`. All 5 tests passed 30/30 (150 successful iterations total, logging to `.planning/cleanup/logs/06-15-proof-final-{F-01..F-05}.log`).
