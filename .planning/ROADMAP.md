@@ -63,6 +63,27 @@ Plans:
 5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
 
+**Plans:** 6 plans
+
+Plans:
+**Wave 1**
+- [ ] 08-01-PLAN.md — Rename the login role to `hestia_service` by editing the two applied migrations in place, admitted by a content-pinned, self-expiring exemption in the append-only gate
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 08-02-PLAN.md — Rename the workspace packages to `@hestia/*` (seven, with `@hestia/seed`), regenerate the lockfile with pnpm, prove typecheck, builds and every repository gate
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 08-03-PLAN.md — Hard-cut every environment variable to `HESTIA_*`; rename the Compose project, network, service, images, host paths, E2E names, Supabase project id and runner label
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 08-04-PLAN.md — Hestia in the PWA copy, title and manifest (build-checked), `hestia-admin` as a clean break, renamed browser keys
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 08-05-PLAN.md — Catch-all sweep of the remaining references, planning text aligned with the decisions, cloud tooling, owner checklist and PR notes
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 08-06-PLAN.md — Legacy-name guard in the hygiene gate; every CI check, the integration suite and the E2E suite green under the new brand
+
 ---
 
 ### Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)
