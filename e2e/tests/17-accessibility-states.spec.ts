@@ -500,13 +500,23 @@ for (const theme of THEMES) {
       await openNotificationSettings(page);
 
       // The write is held open, so the screen stays saving and the server never receives it.
-      await page.route(PREFERENCES_URL, (route) => {
-        if (route.request().method() === 'PATCH') return;
-        void route.continue();
+      let releaseHeldRoute: (() => Promise<void>) | undefined;
+      await page.route(PREFERENCES_URL, async (route) => {
+        if (route.request().method() === 'PATCH') {
+          await new Promise<void>((resolve) => {
+            releaseHeldRoute = async () => {
+              await route.abort('failed');
+              resolve();
+            };
+          });
+          return;
+        }
+        await route.continue();
       });
       await page.getByRole('switch').first().click();
       await expect(page.getByText(COPY.saving)).toBeVisible();
       await expectAccessible(page, `notifications, saving (${theme})`);
+      await releaseHeldRoute?.();
       await page.unroute(PREFERENCES_URL);
 
       // The write is refused, so the stored setting is unchanged.
@@ -518,7 +528,9 @@ for (const theme of THEMES) {
           body: JSON.stringify({ title: 'Server error', status: 500 }),
         });
       });
+      const failedSave = page.waitForResponse(PREFERENCES_URL);
       await page.getByRole('switch').first().click();
+      await failedSave;
       await expect(page.getByText(COPY.saveError)).toBeVisible();
       await expectAccessible(page, `notifications, save failed (${theme})`);
     });
