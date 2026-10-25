@@ -211,7 +211,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Rules set explicitly: `@typescript-eslint/explicit-module-boundary-types` (error) and `@typescript-eslint/no-non-null-assertion` (error, off in test files).
 - `pnpm lint` runs `eslint --max-warnings=0 .`. Warnings fail the run. It runs in CI and in the pre-commit hook.
 - Service-role fence (`eslint.config.js`): under `apps/service/src/**/*.ts`, value imports of `privileged/` are errors (type-only imports are allowed). `main.ts`, `cli.ts`, `privileged/**`, and test code are exempt. A dynamic `import()` of `privileged` is also an error.
-- Clock fence (`eslint.config.js`): `no-restricted-syntax` bans real-clock reads in test files, `e2e/`, `apps/service/src/test/**`, `apps/web/src/test/**`, `apps/web/src/test-setup.ts`, and `test/**/*.mjs` (see TESTING.md).
+- Clock fence (`eslint.config.js`): `no-restricted-syntax` bans real-clock reads in test files, `e2e/`, `apps/service/src/test/**`, `apps/web/src/test/**`, `apps/web/src/test-setup.ts`, and `test/**/*.mjs` (see `docs/testing.md`, "Dates and time zones").
 - `tsconfig.base.json` is strict: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noPropertyAccessFromIndexSignature`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
 - Run with `pnpm typecheck` (`pnpm -r --parallel typecheck`).
 - Optional props use `?` with `exactOptionalPropertyTypes` in mind: `disabledReason?: string | undefined` in `apps/web/src/components/ui/Button.tsx`.
@@ -283,7 +283,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - New service endpoint: add the request and response schemas in `packages/shared/src/api/`, a service function in `apps/service/src/services/`, and a route in `apps/service/src/routes/` that calls `parse` and the service inside `ctx.inHousehold` or `ctx.asUser`. Register the plugin in `apps/service/src/app.ts`.
 - New database error message: add it to `DATABASE_PROBLEMS` in `apps/service/src/problem.ts`.
 - Never import from `apps/service/src/privileged/` in routes, services, or jobs.
-- New test: co-located, Vitest, `it.each` for table cases. Read time only from the pinned clock or an explicit instant (see TESTING.md).
+- New test: co-located, Vitest, `it.each` for table cases. Read time only from the pinned clock or an explicit instant (see `docs/testing.md`, "Dates and time zones").
 
 <!-- GSD:conventions-end -->
 

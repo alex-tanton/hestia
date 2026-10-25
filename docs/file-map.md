@@ -20,7 +20,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
 | `.github/` | Continuous integration and deployment automation (GitHub Actions: `ci.yml`, `sweep.yml` and `deploy.yml`), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
-| `README.md` | The entry point: prerequisites, local development, deployment, and backup/restore steps. |
+| `README.md` | The entry point, with an overview, prerequisites, a quickstart, the architecture summary with the repository layout, and the documentation index. |
 | `CONTRIBUTING.md` | How changes land: which go straight to `main`, which need a pull request, and the commit rules. |
 | `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` | Define the monorepo's workspaces and pin every dependency's exact version. |
 | `tsconfig.base.json` | Shared TypeScript compiler settings every workspace builds on. |
