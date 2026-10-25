@@ -23,8 +23,11 @@ with the revision the running `hearth-service` image was built from:
   whole range and not only the tip commit. A code change whose deploy never ran therefore still
   ships behind a later docs-only commit. The root `README.md`, `CONTRIBUTING.md` and `.claude/` are
   outside those two folders, so editing them deploys.
-- It never deploys a commit older than the running one (a re-run of an old `CI` run). A re-run of
-  the running commit redeploys it.
+- It never deploys a commit older than the running one (a re-run of an old `CI` run). It skips a
+  commit that is already running: every completed attempt of a `CI` push run on `main` starts a
+  new Deploy run (at attempt 1), so re-running `CI` will not redeploy the running commit. To
+  redeploy that commit, re-run the Deploy run itself (attempt 2 or later) or run `scripts/deploy.sh`
+  on the host.
 - It deploys when no labelled image is running or the running revision is not in the history.
 - A newer Deploy run replaces a pending one; the gate still deploys every change since the running
   revision.

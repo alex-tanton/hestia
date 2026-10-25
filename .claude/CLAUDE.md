@@ -454,7 +454,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Triggers: `supabase db reset`, `supabase start`, the database container's init scripts (`docker/docker-compose.yml`), and `scripts/deploy.sh`, which runs `supabase migration up` against the Compose database.
 - Responsibilities: Schema, RLS policies, helper and lifecycle functions, realtime publication, notification send times and producers.
 - `apps/service/src/write-openapi.ts` runs at the end of the service `build` script and emits the OpenAPI document.
-- `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh` only when `scripts/deploy-gate.sh` finds a change outside `docs/` and `.planning/` since the running revision.
+- `.github/workflows/deploy.yml` runs on `workflow_run` after a successful push-triggered CI run on `main`, on the self-hosted runner, and executes `scripts/deploy.sh` only when `scripts/deploy-gate.sh` finds a change outside `docs/` and `.planning/` since the running revision or when you re-run the Deploy run.
 
 ## Architectural Constraints
 

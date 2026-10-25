@@ -3,9 +3,9 @@
  * throwaway git repository, copies the real script into it, and runs it with a stub `docker` that
  * answers `image inspect hearth-service:current` with the running revision label (or fails, as when
  * no image exists). Nothing reaches a real Docker daemon, the network or the host's repository.
- * The cases pin the three deploy rules (a commit older than the running revision is skipped, a
- * change confined to docs/ and .planning/ is skipped, anything else deploys, including a re-run and
- * an unknown running revision) and that a hostile `HEARTH_DEPLOY_SHA` never reaches a shell. Run by
+ * The cases pin the deploy rules (a commit equal to or older than the running revision is skipped,
+ * a change confined to docs/ and .planning/ is skipped, anything else deploys, including an unknown
+ * running revision) and that a hostile `HEARTH_DEPLOY_SHA` never reaches a shell. Run by
  * `pnpm test` through the root `test:harness` script.
  */
 
@@ -104,16 +104,18 @@ let runs = 0;
  * Runs the repository's copy of the gate. `revision` is what the stub reports as the running
  * image's label (`undefined`: no such image); `deploySha` defaults to the repository's HEAD.
  */
-function gate(dir, { revision, deploySha, omitSha = false } = {}) {
+function gate(dir, { revision, deploySha, omitSha = false, attempt } = {}) {
   runs += 1;
   const log = join(scratch, `docker-${String(runs)}.log`);
   writeFileSync(log, '');
   const env = { ...gitEnvironment(), PATH: `${binDir}${delimiter}${process.env['PATH'] ?? ''}` };
   delete env['HEARTH_DEPLOY_SHA'];
+  delete env['HEARTH_DEPLOY_ATTEMPT'];
   delete env['STUB_REVISION'];
   env['STUB_LOG'] = log;
   if (revision !== undefined) env['STUB_REVISION'] = revision;
   if (!omitSha) env['HEARTH_DEPLOY_SHA'] = deploySha ?? git(dir, 'rev-parse', 'HEAD');
+  if (attempt !== undefined) env['HEARTH_DEPLOY_ATTEMPT'] = String(attempt);
   const run = spawnSync('bash', [join(dir, 'scripts', 'deploy-gate.sh')], {
     cwd: dir,
     encoding: 'utf8',
@@ -179,17 +181,21 @@ describe('deploy-gate: an unknown running revision deploys', () => {
   });
 });
 
-describe('deploy-gate: the running revision is the checked-out commit', () => {
-  it('a 12-digit label equal to HEAD deploys again (a re-run)', () => {
+describe('deploy-gate: the running revision is the checked-out commit (skipped)', () => {
+  it('a 12-digit label equal to HEAD is skipped (already running)', () => {
     const dir = createRepository();
     const head = commit(dir, 'code', { 'app.txt': 'one\n' });
-    assertDecision(gate(dir, { revision: head.slice(0, 12) }), 'true', /equal to HEAD/);
+    assertDecision(
+      gate(dir, { revision: head.slice(0, 12) }),
+      'false',
+      /equal to HEAD.*already running/,
+    );
   });
 
-  it('a full 40-digit label equal to HEAD deploys again', () => {
+  it('a full 40-digit label equal to HEAD is skipped (already running)', () => {
     const dir = createRepository();
     const head = commit(dir, 'code', { 'app.txt': 'one\n' });
-    assertDecision(gate(dir, { revision: head }), 'true', /equal to HEAD/);
+    assertDecision(gate(dir, { revision: head }), 'false', /equal to HEAD.*already running/);
   });
 });
 
@@ -330,4 +336,74 @@ describe('deploy-gate: a bad HEARTH_DEPLOY_SHA is refused before anything else r
     assert.equal(run.stdout, '');
     assert.match(run.stderr, /is not the checked-out HEAD/);
   });
+});
+
+describe('deploy-gate: deliberate redeploy of the commit already running (OD-7, rerun-deploy)', () => {
+  it('attempt 1 (a CI re-run starts a new Deploy run) is skipped', () => {
+    const dir = createRepository();
+    const head = commit(dir, 'code', { 'app.txt': 'one\n' });
+    assertDecision(
+      gate(dir, { revision: head.slice(0, 12), attempt: '1' }),
+      'false',
+      /equal to HEAD.*already running/,
+    );
+  });
+
+  it('attempt 2 (a re-run of the Deploy run itself) redeploys the running commit', () => {
+    const dir = createRepository();
+    const head = commit(dir, 'code', { 'app.txt': 'one\n' });
+    assertDecision(
+      gate(dir, { revision: head.slice(0, 12), attempt: '2' }),
+      'true',
+      /equal to HEAD.*attempt 2/,
+    );
+  });
+
+  it('attempt 10 redeploys the running commit', () => {
+    const dir = createRepository();
+    const head = commit(dir, 'code', { 'app.txt': 'one\n' });
+    assertDecision(
+      gate(dir, { revision: head.slice(0, 12), attempt: '10' }),
+      'true',
+      /equal to HEAD.*attempt 10/,
+    );
+  });
+
+  it('with attempt 2, a HEAD older than the running revision is still skipped', () => {
+    const dir = createRepository();
+    const older = commit(dir, 'code', { 'app.txt': 'one\n' });
+    const running = commit(dir, 'newer code', { 'app.txt': 'two\n' });
+    git(dir, 'checkout', '--quiet', older);
+    assertDecision(
+      gate(dir, { revision: running.slice(0, 12), attempt: '2' }),
+      'false',
+      /older than the running revision/,
+    );
+  });
+
+  it('with attempt 2, a docs-only range is still skipped', () => {
+    const dir = createRepository();
+    const running = commit(dir, 'code', { 'app.txt': 'one\n' });
+    commit(dir, 'docs', { 'docs/x.md': 'x\n' });
+    assertDecision(
+      gate(dir, { revision: running.slice(0, 12), attempt: '2' }),
+      'false',
+      /only docs\/ and \.planning\/ changed/,
+    );
+  });
+});
+
+describe('deploy-gate: a bad HEARTH_DEPLOY_ATTEMPT is refused before anything else runs', () => {
+  for (const value of ['0', '01', 'x', '2;touch x', '', '10000']) {
+    it(`refuses ${JSON.stringify(value)}`, () => {
+      const dir = createRepository();
+      commit(dir, 'code', { 'app.txt': 'one\n' });
+      const run = gate(dir, { attempt: value });
+      assert.equal(run.status, 1);
+      assert.equal(run.stdout, '');
+      assert.match(run.stderr, /^deploy-gate: HEARTH_DEPLOY_ATTEMPT/);
+      assert.equal(run.dockerCalls.length, 0);
+      assert.equal(existsSync(join(dir, 'x')), false);
+    });
+  }
 });

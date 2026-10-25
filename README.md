@@ -201,8 +201,9 @@ The commands in this README use the `hearth-compose` alias above, run from the r
 ### Deploy
 
 A merge to `main` whose CI passed runs `scripts/deploy.sh` on the self-hosted runner (skipped
-when nothing outside `docs/` and `.planning/` changed since the running revision, and never for a
-commit older than the running one). It can also be run by hand from a checkout. It:
+when nothing outside `docs/` and `.planning/` changed since the running revision, for a commit
+already running except a re-run of the Deploy run, and never for a commit older than the running
+one). It can also be run by hand from a checkout. It:
 
 1. records the images tagged `current` as the rollback target
 2. builds `hearth-service:<sha>` and `hearth-caddy:<sha>` (the PWA is built into the Caddy image)
