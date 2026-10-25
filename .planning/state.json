@@ -1,43 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": null,
+  "milestone": "v2.0",
   "phases": [
     {
-      "number": "1",
-      "name": "Git History Curation and Branch Policy",
-      "status": "complete"
+      "number": "7",
+      "name": "Planning Cleanup & Documentation Restructure",
+      "status": "pending"
     },
     {
-      "number": "2",
-      "name": "Baseline, Net Stabilization, and Analysis",
-      "status": "complete"
+      "number": "8",
+      "name": "Full Rebrand to Hestia",
+      "status": "pending"
     },
     {
-      "number": "3",
-      "name": "Evidence-Gated Removal",
-      "status": "complete"
+      "number": "9",
+      "name": "Domain & Network Migration (Cloudflare Tunnel & Ingress)",
+      "status": "pending"
     },
     {
-      "number": "4",
-      "name": "Bug Fixes With Regression Tests",
-      "status": "complete"
+      "number": "10",
+      "name": "Magic Links & Transactional Email",
+      "status": "pending"
     },
     {
-      "number": "5",
-      "name": "Redundancy Reduction and Text Sync",
-      "status": "complete"
-    },
-    {
-      "number": "6",
-      "name": "CI Enforcement and Lock-in",
-      "status": "in_progress"
+      "number": "11",
+      "name": "Web Push & Edge Hardening",
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 06 of 6 · 83% · ready to verify"
+    "command": "/gsd-plan-phase 7",
+    "label": "Plan Phase 07",
+    "reason": "Phase 07 of 5 ready to plan"
   },
-  "updated_at": "2026-10-24T13:20:33.477Z"
+  "updated_at": "2026-10-25T02:00:00.000Z"
 }
