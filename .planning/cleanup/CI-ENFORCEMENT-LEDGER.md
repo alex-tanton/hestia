@@ -767,3 +767,22 @@ Notes:
 - F-04 fix (`tests/17-accessibility-states.spec.ts:320`): Await `page.waitForResponse` on archive mutation (`POST /api/lists/*/archive`) before calling `page.goto('/lists/archived')`, eliminating client-side abort of in-flight archive request. 30 consecutive iterations passed on isolated stack `proof04` under 20ms route delay (`06-15-proof-F-04.log`).
 - F-05 fix (`tests/18-chores-and-errands-offline.spec.ts:140`): Added `await page.waitForTimeout(1100)` before offline `page.reload()` to allow `createCachePersister` 1000ms throttle timer to persist cache to IndexedDB. 30 consecutive iterations passed on isolated stack `proof05` (`06-15-proof-F-05.log`).
 - Cross-check on final W6 commit (`b921b82`): Ran 30 consecutive iterations of all 5 tests on isolated stack `finalproof`. All 5 tests passed 30/30 (150 successful iterations total, logging to `.planning/cleanup/logs/06-15-proof-final-{F-01..F-05}.log`).
+
+## Plan 06-15 Task 3: whole-suite proof, documents, gates, and push of fix/ci-flakes
+
+local-e2e-full=3/3 passed=104 each
+flake-gates=frozen:exit=0 lint:exit=0 format-check:exit=0 typecheck:exit=0 test:exit=0 web-coverage:exit=0 sweep:exit=0 knip:exit=0 knip-baseline:exit=0 jscpd:exit=0 audit:exit=0 hygiene:exit=0 migrations:exit=0 build:exit=0 commitlint:exit=0
+flake-push=5c44cc98a017f829e0cd1fa08d617f3d4769cd7b
+flake-handoff=none
+flake-head=5c44cc98a017f829e0cd1fa08d617f3d4769cd7b
+flake-tree=076a04e356c0fc0fff74d1c89acfb0fd6a1a5d5e
+flake-files=apps/web/src/App.test.tsx apps/web/src/lib/api/hooks.ts e2e/tests/17-accessibility-states.spec.ts e2e/tests/18-chores-and-errands-offline.spec.ts
+
+Notes:
+
+- Whole suite proof passed three consecutive times from an empty database (each passing all 104 tests cleanly, 0 failed, 0 flaky, 0 skipped): pass 1 in 7.2m (06-15-e2e-full-1.log), pass 2 in 7.8m (06-15-e2e-full-2.log), and pass 3 in 8.2m pinned to 2 CPU cores via taskset -c 0,1 (06-15-e2e-full-3.log).
+- All 15 local gates executed on W6, each passing with exit=0: frozen, lint, format-check, typecheck, test (unit + harness), web-coverage (85.38% statements against 84% threshold), sweep (36/36 passed), knip, knip-baseline (28 entries), jscpd (1.14% duplicates), audit (0 advisories), hygiene (clean across 983 files and 14 scripts), migrations (0 added, append-only clean), build, and commitlint (across origin/main..HEAD).
+- WB (claude/confident-dirac-10eu0a) merged into W6 (fix/ci-flakes) cleanly with no conflicts.
+- Pre-push security and hygiene scans verified: 0 token matches, no CA certificate or environment variable traces, no modifications to docker, .dockerignore, supabase/migrations, or apps/service/src/db/types.ts.
+- Pushed fix/ci-flakes to origin as 5c44cc98a017f829e0cd1fa08d617f3d4769cd7b. No workflow changes made (flake-handoff=none).
+
