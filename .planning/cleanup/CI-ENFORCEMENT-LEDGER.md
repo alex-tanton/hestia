@@ -841,37 +841,37 @@ deploy-after-flake=40158072200 workflow_run pending
 ## Gap closure
 
 ### G-06-3: Deploy gate does not redeploy running commit
-- g063-why=redeploy prevention (OD-4 a to d, OD-7)
-- g063-red=redeploy-path-missing exit=1
-- g063-green=redeploy-path-verified exit=0 (38 cases)
-- force-path=tested
-- g063-wiring-smoke=deploy=true (4 cases clean)
-- g063-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40136934547
-- g063-merged=ddd69fdb5da4aedf379cfa8480c45bfd938efe62
-- main-ci-after-g063=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40137187204 attempt=1
-- deploy-after-g063=40137971146 workflow_run queued job=deploy queued none labels=self-hosted,hearth
-- g063=closed
+g063-why=redeploy prevention (OD-4 a to d, OD-7)
+g063-red=redeploy-path-missing exit=1
+g063-green=redeploy-path-verified exit=0 (38 cases)
+force-path=tested
+g063-wiring-smoke=deploy=true (4 cases clean)
+g063-ci=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40136934547
+g063-merged=ddd69fdb5da4aedf379cfa8480c45bfd938efe62
+main-ci-after-g063=lint:success typecheck:success test-unit:success test-integration:success test-e2e:success build:success hygiene:success run=40137187204 attempt=1
+deploy-after-g063=40137971146 workflow_run queued job=deploy queued none labels=self-hosted,hearth
+g063=closed
 
 ### G-06-5: Flaky tests in CI eliminated
-- flake-classes=flaky:17 real:56 intentional:10 infra:33 unexplained:0
-- flaky-tests=5 (F-01 through F-05)
-- flake-rate-e2e=15/81=0.185
-- proof-bar-ci=3
-- rc-F-01=apps/web/src/lib/api/hooks.ts: stale in-flight GET /api/users/me overwriting switch mutation
-- rc-F-02=tests/17-accessibility-states.spec.ts:497: hung PATCH route preventing save.isPending reset
-- rc-F-03=tests/17-accessibility-states.spec.ts:526: shared state leaving all switches checked (index=-1)
-- rc-F-04=tests/17-accessibility-states.spec.ts:320: navigation aborting in-flight archive mutation
-- rc-F-05=tests/18-chores-and-errands-offline.spec.ts:140: reload within 1000ms cache persistence throttle window
-- flake-fix-F-01=commit 7ff1f7b green 30/30 red exit=1
-- flake-fix-F-02=commit c2b9ea4 green 30/30 red 5/5
-- flake-fix-F-03=commit fbdbd03 green 30/30 red 5/5
-- flake-fix-F-04=commit ea4103e green 30/30 red 2/5
-- flake-fix-F-05=commit b921b82 green 30/30 red 2/5
-- local-e2e-full=3/3 passed=104 each
-- flake-proof=6/6 run=40153943310 attempts=1-6 head=2211010c32750423accea292d8c74b539691b982
-- main-ci-after-flake=billing-exhausted run=40158067209 attempt=1 (owner instruction: GitHub Actions included minutes exhausted; verified locally)
-- sweep-after-flake=run 40158067178 success 36/36
-- g065=closed
+flake-classes=flaky:17 real:56 intentional:10 infra:33 unexplained:0
+flaky-tests=5 (F-01 through F-05)
+flake-rate-e2e=15/81=0.185
+proof-bar-ci=3
+rc-F-01=apps/web/src/lib/api/hooks.ts: stale in-flight GET /api/users/me overwriting switch mutation
+rc-F-02=tests/17-accessibility-states.spec.ts:497: hung PATCH route preventing save.isPending reset
+rc-F-03=tests/17-accessibility-states.spec.ts:526: shared state leaving all switches checked (index=-1)
+rc-F-04=tests/17-accessibility-states.spec.ts:320: navigation aborting in-flight archive mutation
+rc-F-05=tests/18-chores-and-errands-offline.spec.ts:140: reload within 1000ms cache persistence throttle window
+flake-fix-F-01=commit 7ff1f7b green 30/30 red exit=1
+flake-fix-F-02=commit c2b9ea4 green 30/30 red 5/5
+flake-fix-F-03=commit fbdbd03 green 30/30 red 5/5
+flake-fix-F-04=commit ea4103e green 30/30 red 2/5
+flake-fix-F-05=commit b921b82 green 30/30 red 2/5
+local-e2e-full=3/3 passed=104 each
+flake-proof=6/6 run=40153943310 attempts=1-6 head=2211010c32750423accea292d8c74b539691b982
+main-ci-after-flake=billing-exhausted run=40158067209 attempt=1 (owner instruction: GitHub Actions included minutes exhausted; verified locally)
+sweep-after-flake=run 40158067178 success 36/36
+g065=closed
 
 gap-close=done
 
