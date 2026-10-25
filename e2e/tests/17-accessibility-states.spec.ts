@@ -548,10 +548,18 @@ for (const theme of THEMES) {
 
       // The list keeps its order, so the first switch that is off is the same one after the save.
       const switches = page.getByRole('switch');
+      await expect(switches.first()).toBeVisible();
       const count = await switches.count();
       let index = -1;
       for (let i = 0; i < count && index < 0; i += 1) {
         if (!(await switches.nth(i).isChecked())) index = i;
+      }
+      if (index < 0 && count > 0) {
+        // If preceding journeys or tests left all switches enabled, turn the first switch off
+        // so the test has an unchecked switch to test registration failure against.
+        await switches.first().click();
+        await expect(switches.first()).not.toBeChecked();
+        index = 0;
       }
       expect(index).toBeGreaterThanOrEqual(0);
       const off = switches.nth(index);
