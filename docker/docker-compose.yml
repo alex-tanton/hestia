@@ -6,7 +6,7 @@
 #
 # Run from the repository root, with the host's .env (which lives outside the checkout):
 #   docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml up -d
-# scripts/deploy.sh is the normal way to build and restart; see README "Deployment".
+# scripts/deploy.sh is the normal way to build and restart; see docs/deployment.md.
 
 name: hearth
 
@@ -272,7 +272,7 @@ services:
       POSTGRES_USER: supabase_admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # Gzip-compressed plain SQL. --clean --if-exists lets the dump replace the objects a fresh
-      # Supabase Postgres container already has (README, "Restore production").
+      # Supabase Postgres container already has (docs/deployment.md, "Restore production").
       POSTGRES_EXTRA_OPTS: -Z1 --clean --if-exists
       SCHEDULE: 0 2 * * *
       TZ: UTC

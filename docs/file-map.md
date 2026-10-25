@@ -121,8 +121,8 @@ defines the full production stack:
 In plain terms, Caddy is the front door: every request from the internet reaches the box through
 it, and it decides whether to hand that request to the web app's static files, the API, or the
 auth service. (TLS — the encryption that makes a connection `https://` — is actually terminated
-upstream by Tailscale Funnel before traffic reaches Caddy; see `docker/Caddyfile` and the README's
-"Deployment" section for specifics.) `docker/kong.yml` configures Kong's routing, the
+upstream by Tailscale Funnel before traffic reaches Caddy; see `docker/Caddyfile` and
+`docs/deployment.md` for specifics.) `docker/kong.yml` configures Kong's routing, the
 `docker/db/*.sql` files set up database roles used only at container start, and the two
 `*.Dockerfile`s describe how to build the service and Caddy container images.
 

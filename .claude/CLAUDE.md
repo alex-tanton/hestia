@@ -463,7 +463,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - **Global state:** Module-level singletons are created in `apps/service/src/main.ts` (`wiring`, `skipRates`, `flippQueue`, `recipeFetchLimiter`, `recordingTransport`). The web client creates its singletons in `apps/web/src/main.tsx`.
 - **Build-time configuration:** `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, and `VITE_MAGIC_LINK_ENABLED` are fixed at build time; a change requires a rebuild.
 - **Test-only seams:** Fixture transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`), the push double (`HEARTH_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
-- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`README.md`, "Pinned names"). `HEARTH_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
+- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`docs/deployment.md`, "Pinned names"). `HEARTH_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
 - **Public unauthenticated routes:** `/api/health`, `/api/signup`, `/api/client-error` (rate limited per IP, `apps/service/src/routes/system.ts`), `/api/openapi.json`. All others call `ctx.authenticate`.
 
 ## Layering Deviations (observed)
