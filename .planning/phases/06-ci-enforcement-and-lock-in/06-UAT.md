@@ -1,14 +1,15 @@
 ---
 status: complete
 phase: 06-ci-enforcement-and-lock-in
-source: [06-01-SUMMARY.md, 06-02-SUMMARY.md, 06-03-SUMMARY.md, 06-04-SUMMARY.md, 06-05-SUMMARY.md, 06-06-SUMMARY.md, 06-07-SUMMARY.md, 06-08-SUMMARY.md, 06-09-SUMMARY.md, 06-10-SUMMARY.md]
+source: [06-01-SUMMARY.md, 06-02-SUMMARY.md, 06-03-SUMMARY.md, 06-04-SUMMARY.md, 06-05-SUMMARY.md, 06-06-SUMMARY.md, 06-07-SUMMARY.md, 06-08-SUMMARY.md, 06-09-SUMMARY.md, 06-10-SUMMARY.md, 06-11-SUMMARY.md, 06-12-SUMMARY.md, 06-13-SUMMARY.md, 06-14-SUMMARY.md, 06-15-SUMMARY.md, 06-16-SUMMARY.md]
 started: 2026-10-24T13:24:16Z
-updated: 2026-10-24T13:50:00Z
+updated: 2026-10-25T05:25:00Z
 ---
 
 ## Current Test
 
 [testing complete]
+
 
 ## Tests
 
@@ -22,9 +23,8 @@ result: pass
 
 ### 3. Whether the deploy gate's fail-open choices (unknown, diverged or uncomparable running rev
 expected: Whether the deploy gate's fail-open choices (unknown, diverged or uncomparable running revision deploys) and its re-run redeploy match the owner's appetite on the production box
-result: issue
-reported: "The deploy gate should not redeploy the same commit. Owner does not understand why it would."
-severity: major
+result: pass
+note: "Resolved by G-06-3 (PR #44, commit ddd69fd). Equal-to-HEAD CI push run outputs deploy=false; manual re-run of Deploy workflow run deliberately redeploys (OD-7). Approved by owner in UAT re-test 2026-10-25."
 
 ### 4. audit-prod.mjs is green on the real dependency tree of ci/gate-scripts
 expected: audit-prod.mjs is green on the real dependency tree of ci/gate-scripts
@@ -32,9 +32,8 @@ result: pass
 
 ### 5. main's CI on the dependency fixes has the gates running; hygiene (all six steps) is green
 expected: main's CI on the dependency fixes has the gates running; hygiene (all six steps) is green
-result: issue
-reported: "main's CI after the dependency fixes is not a pass. All flakiness in tests must be resolved before the CI milestone is considered complete: review all flaky tests in CI history and fix them so CI is reliable."
-severity: blocker
+result: pass
+note: "Resolved by G-06-5 (PR #45, commit c5b74e4). Root causes of all 5 flaky specs (F-01..F-05) identified and resolved without retries or weakened assertions; proved by 6 consecutive cloud CI passes (Run 40153943310, attempts 1-6), 30/30 local stress runs, and 36/36 local sweep on main. CI-08 locked in. Approved by owner in UAT re-test 2026-10-25."
 
 ### 6. CI still triggers Deploy and the guard accepts a green run
 expected: CI still triggers Deploy and the guard accepts a green run
@@ -199,8 +198,8 @@ coverage_id: 06-10 D3
 ## Summary
 
 total: 32
-passed: 30
-issues: 2
+passed: 32
+issues: 0
 pending: 0
 skipped: 0
 blocked: 0
@@ -209,7 +208,7 @@ blocked: 0
 
 - gap_id: G-06-3
   truth: "The deploy gate does not redeploy a commit that is already running"
-  status: failed
+  status: resolved
   reason: "User reported: The deploy gate should not redeploy the same commit, but I still don't understand why that would happen."
   severity: major
   test: 3
@@ -223,16 +222,24 @@ blocked: 0
       issue: "documents that a re-run of the running commit redeploys"
   missing:
     - "Decide equal-to-HEAD as deploy=false with its own test, and keep an explicit way to force a redeploy (for example a manual dispatch or a failed-deploy retry path)"
+  resolution: "PR #44 merged as ddd69fd; deploy gate outputs deploy=false when commit equals running revision; Deploy re-run retains intentional redeployment path. Confirmed passed by owner 2026-10-25."
   debug_session: ""
 
 - gap_id: G-06-5
   truth: "CI is reliable: no test in CI fails intermittently"
-  status: failed
+  status: resolved
   reason: "User reported: before considering the CI milestone complete, all flakiness in tests must be resolved; review all flaky tests in CI history and fix them so CI can be reliable again."
   severity: blocker
   test: 5
-  root_cause: ""
-  artifacts: []
+  root_cause: "Five flaky specs identified across CI history (F-01..F-05) in notification and accessibility suites caused by a product query race on active household switch and DOM timing/event wait races."
+  artifacts:
+    - path: "apps/web/src/hooks/useHouseholdSwitch.ts"
+      issue: "queries not cancelled on switch"
+    - path: "e2e/tests/17-accessibility-states.spec.ts"
+      issue: "timing race with focus/aria states"
+    - path: "e2e/tests/19-notifications.spec.ts"
+      issue: "badge update timing race"
   missing:
     - "Inventory every flaky test failure in CI history (this phase saw 17-accessibility-states:497 and :526 and 19-notifications:140 across PR 2, PR 43 and main, plus earlier history), find root causes, fix them, and prove the fixes with repeated runs"
+  resolution: "PR #45 merged as c5b74e4; 6 consecutive all-green cloud CI runs on head 2211010; 30/30 local stress passes; CI-08 locked in. Confirmed passed by owner 2026-10-25."
   debug_session: ""
