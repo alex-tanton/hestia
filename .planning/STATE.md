@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
-status: active
-stopped_at: Phase 7 context gathered
-last_updated: "2026-10-25T15:06:15.349Z"
+status: executing
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-10-25T15:16:22.337Z"
 last_activity: 2026-10-25
-last_activity_desc: Milestone v2.0 initialized (5 phases, 21 requirements)
-state_head: f535e13b73f18a845cb32de776499f5581418fbe
+last_activity_desc: Completed 07-01 v1.0 planning archive
+state_head: ee9fe79f8ae495289d24439d35e1baa62850ab26
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 current_milestone: v2.0
-current_phase_name: planning-cleanup-documentation-restructure
+current_phase_name: Planning Cleanup & Documentation Restructure
 ---
 
 # Project State
@@ -25,17 +25,17 @@ current_phase_name: planning-cleanup-documentation-restructure
 See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md) (updated 2026-10-25)
 
 **Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
-**Current focus:** Milestone v2.0 initialized. Ready to plan Phase 7.
+**Current focus:** Phase 07 — Planning Cleanup & Documentation Restructure
 
 ## Current Position
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
 Phases: 0 of 5 complete (Phases 7–11)
-Plans: 0 complete
-Status: Ready to plan Phase 7 (Planning Cleanup & Documentation Restructure)
-Last activity: 2026-10-25 — Milestone v2.0 initialized
+Plans: 1 of 4 complete (07-01 done)
+Status: Executing Phase 07
+Last activity: 2026-10-25 — Completed 07-01 (v1.0 planning archive)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 25% of Phase 07 plans
 
 ## Milestone Roadmap
 
@@ -47,10 +47,20 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Next Action
 
-Run `/gsd-plan-phase 7` to plan Phase 7 (Planning Cleanup & Documentation Restructure).
+Execute plan 07-02 (docs checker, `docs/deployment.md` rename and merge) with `/gsd-execute-phase 7`.
 
 ## Session
 
-**Last session:** 2026-10-25T13:52:03.367Z
-**Stopped at:** Phase 7 context gathered
-**Resume file:** .planning/phases/07-planning-cleanup-documentation-restructure/07-CONTEXT.md
+**Last session:** 2026-10-25T15:16:22.276Z
+**Stopped at:** Completed 07-01-PLAN.md
+**Resume file:** None
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 07 P01 | 7min | 3 tasks | 289 files |
+
+## Decisions
+
+- [Phase 07]: 07-01: all 47 v1.0 raw outputs kept under the D-04 evidence rule (cited by tracked planning files; patches not regenerable in this clone), zero deletions

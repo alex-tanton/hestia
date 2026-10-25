@@ -33,11 +33,11 @@
 2. Root `README.md` is concise (<150 lines), well-structured, and focuses on project overview, architecture, and quickstart commands.
 3. In-depth technical runbooks are cleanly organized in `docs/`: `docs/development.md`, `docs/deployment.md`, and `docs/testing.md` with zero loss of operational knowledge.
 
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 07-01-PLAN.md — Archive v1.0 phases, cleanup ledgers and quick tasks into `.planning/milestones/v1.0/` (rename-only), delete `.planning/codebase/`, classify raw outputs and index the archive
+- [x] 07-01-PLAN.md — Archive v1.0 phases, cleanup ledgers and quick tasks into `.planning/milestones/v1.0/` (rename-only), delete `.planning/codebase/`, classify raw outputs and index the archive
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 07-02-PLAN.md — Doc link and fact-map checker; rename the deployment guide to `docs/deployment.md` and merge the README's deployment, backup and restore material
