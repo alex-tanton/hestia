@@ -24,7 +24,7 @@
   - **Common or short password:** rejected with a specific message; GoTrue enforces the minimum length, and both the PWA and the service check the common-password list.
   - **Blank display name:** falls back to the part of the email before the `@`.
   - **Missing or unrecognized browser timezone:** `profile.timezone` falls back to `UTC` until the app's next open replaces it.
-  - **Rate limit exceeded:** signup is refused, along with every other API route, past the server's per-IP request budget (see `docs/deploy.md`'s environment variable table for the configured limit).
+  - **Rate limit exceeded:** signup is refused, along with every other API route, past the server's per-IP request budget (see `docs/deployment.md`'s environment variable table for the configured limit).
 - **Postconditions:** an `auth.users` row and a matching `profile` row exist; the user is signed in with no household membership and no `active_household_id`.
 
 ### Use case: Create a household
