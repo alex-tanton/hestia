@@ -1,95 +1,106 @@
-# Hearth — Cleanup and Hardening
+# Hestia — Household Management PWA
 
 ## What This Is
 
-Hearth is a household-management PWA (shopping lists, chores, bills, meals/recipes, deals, notifications) for a single household, built as a React + Vite PWA and a Fastify service over Postgres/Supabase with RLS as the isolation boundary. The application was built largely with an LLM. This milestone is a cleanup pass: remove dead code, generated and leftover files, and redundancy, and make the repo, CI, and code healthier and more robust before the owner does a manual review.
+Hestia is a self-hosted household-management PWA (grocery deals, shopping lists, meals/recipes, bills, chores, and notifications) for a single household, built as a React + Vite PWA and a Fastify service over Postgres/Supabase with RLS as the tenant isolation boundary.
+
+## Current State
+
+**Shipped Milestone:** v1.0 — Cleanup and Hardening (2026-10-25)
+- Lean, trustworthy base for manual review: clean published git history, deterministic test suite (36-cell date and timezone sweep), bare-clock lint ban, proven-dead code removed with Knip baseline.
+- Known bugs fixed with regression tests: offline list-add replay duplicates, `RotationEditor` keyboard accessibility, PATCH schema default injection, scoped `service_role` and GoTrue route fencing.
+- Redundancy reduced: composite CI setup action, consolidated web/service test fixtures, retired spec citations removed.
+- Blocking CI enforcement ratchet: Knip baseline (0 default findings), JSCPD duplication (<2%), repo hygiene (modes, line endings, tracked-ignored), migration append-only, and zero intermittent CI failures (`CI-08`).
+- 40 requirements verified complete; 100% UAT pass across 32 tests.
+
+**Active Milestone:** v2.0 — Hestia Domain Migration and Rebrand
+- Rebrand the entire application, PWA manifest, CLI, packages, and environment from Hearth to Hestia.
+- Migrate ingress from Tailscale Funnel to custom domain `hestia.aberrance.app` using Cloudflare Tunnel (`cloudflared`) and Cloudflare Edge.
+- Enable GoTrue magic links with transactional SMTP email delivery (Resend / Postmark).
+- Configure Web Push VAPID claims under RFC 8292 (`mailto:admin@aberrance.app`) and verify iOS/Android standalone PWA push notifications.
+- Restructure repository documentation: simplify `README.md` and abstract detailed runbooks into `docs/` (`development.md`, `deployment.md`, `testing.md`).
+- Archive v1.0 planning bloat and reset project memory for v2.0.
 
 ## Core Value
 
-The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
+The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
 
 ## Requirements
 
-### Validated
-
-<!-- Inferred from the existing codebase (.planning/codebase/). -->
+### Validated (v1.0)
 
 - ✓ Authenticated household app with RLS-enforced tenant isolation (service runs each request in a Postgres transaction as `authenticated`) — existing
 - ✓ Feature pillars: shopping lists with realtime and offline write queue, chores with rotation, bills with recurrence and autopay, meals/recipes import and matching, Flipp-backed deals, push notifications — existing
 - ✓ Installable offline-capable PWA with service worker and persisted query cache — existing
-- ✓ Privileged `service_role` access fenced in `apps/service/src/privileged/` with an ESLint restriction — existing
+- ✓ Privileged `service_role` access fenced in `apps/service/src/privileged/` with an ESLint restriction — v1.0 (Phase 4)
 - ✓ In-process cron jobs guarded by Postgres advisory locks — existing
-- ✓ Docker Compose single-host deployment with Caddy gateway, GoTrue, Realtime, Kong, backups, and a CI-gated deploy workflow — existing
-- ✓ Unit, component, service integration, and Playwright E2E test suites with a coverage threshold — existing
-- ✓ Date- and timezone-dependent unit, component, and E2E tests are deterministic: one clock pin and zone hook, a 36-cell weekday-and-zone sweep, a lint ban on bare clock reads, and a household-zone bills regression guard — Phase 2 (E2E on a weekend run is deferred by the owner)
-- ✓ Dead-code and duplication tooling is calibrated and its findings triaged (knip 6.41.0, jscpd 5.4.1; 89-row ledger, owner candidate list) — Phase 2 (identification only; removal is Phase 3)
+- ✓ Docker Compose deployment with Caddy gateway, GoTrue, Realtime, Kong, backups, and a CI-gated deploy workflow — v1.0 (Phase 4/6)
+- ✓ Unit, component, service integration, and Playwright E2E test suites with coverage thresholds — v1.0 (Phase 2/6)
+- ✓ Date- and timezone-dependent unit, component, and E2E tests are deterministic with 36-cell weekday-and-zone sweep and bare-clock lint ban — v1.0 (Phase 2 & 6)
+- ✓ Dead-code and duplication tooling calibrated and enforced (knip 6.41.0, jscpd 5.4.1) — v1.0 (Phase 2, 3, 6)
+- ✓ Clean git history and branch policy published to origin — v1.0 (Phase 1)
+- ✓ Offline replay duplication bug, RotationEditor keyboard accessibility, and PATCH default-injection fixed behind regression tests — v1.0 (Phase 4)
+- ✓ Composite setup action, consolidated fixtures, and docs synchronized with code — v1.0 (Phase 5)
+- ✓ Blocking CI ratchet (hygiene, Knip, JSCPD, audit, migration append-only, deploy gate) with zero flaky tests — v1.0 (Phase 6)
 
-### Active
+### Active (v2.0)
 
-- [ ] Dead code, unused exports, unused dependencies, and stale references are identified by tooling or tests and removed; uncertain candidates are listed for the owner rather than deleted
-- [ ] Committed generated files and LLM-leftover artifacts are removed or git-ignored, and docs match the code
-- [ ] Redundancy and duplication in code, fixtures, scripts, and CI config are reduced
-- [ ] CI is robust: dead-code and dependency checks are enforced, flakiness sources are removed, and the pipeline is reviewed for correctness
-- [ ] Known bug fixed: offline list write replay can create duplicate items after a lost response, with a regression test
-- [ ] Other known bugs and robustness gaps in the codebase concerns map are fixed, each with a regression test (accessibility suppression in `RotationEditor`, PATCH schema rule for shared contracts, service-role key scope enforcement, Kong/Caddy GoTrue path coverage, deploy-script password exposure)
-- [ ] Behavior of the application is otherwise unchanged and the full test suite stays green
-- [ ] Clean git history is published: the ~55 existing local commits are curated (rebased/squashed/reworded as needed) onto the remote's initial commit and pushed to `origin` (GitHub) before cleanup work lands
-- [ ] Cleanup work is developed on local branches or worktrees, with PRs opened for major functionality and only minor/mechanical changes pushed directly to `main`
+- **CLEAN-01**: Archive v1.0 phases and cleanup ledgers to `.planning/milestones/v1.0/`, removing obsolete planning bloat.
+- **DOC-01**: Restructure `README.md` into a clean, concise overview, abstracting deep development, deployment, and testing details into dedicated guides in `docs/`.
+- **DOC-02**: Create `docs/development.md`, `docs/deployment.md`, and `docs/testing.md` preserving all technical runbook knowledge.
+- **BRAND-01**: Rebrand user-facing PWA app name to "Hestia" (page titles, HTML metadata, app shell header, onboarding copy, and install banner).
+- **BRAND-02**: Update PWA manifest with `name: "Hestia"`, `short_name: "Hestia"`, updated description, and matching theme/background tokens.
+- **BRAND-03**: Rename service administrative CLI from `hearth-admin` to `hestia-admin` and update binary references.
+- **BRAND-04**: Migrate workspace package namespaces from `@hearth/*` to `@hestia/*` across `package.json` files and internal imports.
+- **BRAND-05**: Transition environment variables, Docker service names, and container configurations from `HEARTH_*` to `HESTIA_*` with backwards-compatibility fallbacks where appropriate.
+- **BRAND-06**: Update all unit, component, integration, and E2E test suites to pass under the Hestia brand name.
+- **NET-01**: Decommission Tailscale Funnel dependencies, CLI instructions, and host-network proxy configurations.
+- **NET-02**: Provide Cloudflare Tunnel (`cloudflared`) Docker Compose service configuration connecting `hestia.aberrance.app` to Caddy with zero exposed host ports.
+- **NET-03**: Update `docker/Caddyfile` to trust Cloudflare proxy IP ranges and extract client IP from `CF-Connecting-IP`.
+- **NET-04**: Update CSP (`connect-src wss://hestia.aberrance.app`), CORS, and cookie security policies for `hestia.aberrance.app`.
+- **NET-05**: Set base origin and site URL configurations to `https://hestia.aberrance.app`.
+- **AUTH-01**: Enable `VITE_MAGIC_LINK_ENABLED=true` and `HESTIA_MAGIC_LINK_ENABLED=true` in build arguments and runtime environment.
+- **AUTH-02**: Activate and verify magic link routes (`/sign-in/link`, `/sign-in/code`) and screens in the web PWA.
+- **AUTH-03**: Configure GoTrue SMTP settings (`GOTRUE_SMTP_*`) supporting Resend/Postmark with custom sender name ("Hestia") and address (`auth@aberrance.app` or `hestia@aberrance.app`).
+- **AUTH-04**: Update GoTrue site URL and URI allow-list to `https://hestia.aberrance.app` and `https://hestia.aberrance.app/**`.
+- **AUTH-05**: Replace `07-magic-link-disabled.spec.ts` with Playwright E2E tests validating active magic link request and code entry flows.
+- **PUSH-01**: Update Web Push VAPID configuration in `apps/service` to use `mailto:admin@aberrance.app` as RFC 8292 subject.
+- **PUSH-02**: Verify standalone PWA push subscription and notification dispatch over HTTPS for iOS and Android devices.
+- **EDGE-01**: Document Cloudflare Edge caching rules for immutable Vite assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*`.
+- **VERIFY-01**: Full test suite sweep, build validation, Knip, and CI verification green across all packages.
 
 ### Out of Scope
 
-- New product features — this milestone is cleanup and hardening only
-- Off-host backup infrastructure and scheduled restore tests — requires infrastructure decisions outside the repo
-- Replacing the unofficial Flipp deal source — tracked as a dependency risk, not cleanup
-- Scaling beyond a single host (shared rate limiter, shared job lock) — not needed at household scale
-- Aggressive deletion of code that tooling cannot prove unused — listed for owner review instead
+- Multi-tenant household segregation outside existing RLS schema (remains single household or small family circle).
+- Rewriting database migration history (migrations remain append-only).
+- Replacing Fastify/Vite/Postgres core tech stack.
+- Complex federated OAuth providers (retaining email/password + magic link auth).
 
 ## Context
 
-- Brownfield: codebase mapped on 2026-10-11 in `.planning/codebase/` (STACK, ARCHITECTURE, CONCERNS, CONVENTIONS, TESTING, STRUCTURE, INTEGRATIONS).
-- pnpm workspace (TypeScript 6, Node 24): `apps/service`, `apps/web`, `packages/{shared,matching,recurrence}`, `e2e`, `supabase/seed`.
-- Recent commits fixed a PATCH default-reset bug, an E2E weekday flake, and dependency vulnerabilities; the remaining `braces` transitive advisory has no upstream patch.
-- The owner has not yet manually reviewed the LLM-generated code; this cleanup precedes that review.
-- Concerns already catalogued in `.planning/codebase/CONCERNS.md` (date-dependent tests, offline replay duplicates, large test files, security considerations) seed the Active list.
+- Brownfield codebase with 6 completed and archived v1.0 phases.
+- Domain `aberrance.app` purchased via Cloudflare; targeting subdomain `hestia.aberrance.app`.
+- pnpm workspace (TypeScript 6, Node 24).
+- Ingress shifting from Tailscale Funnel to Cloudflare Tunnel.
 
 ## Constraints
 
-- **Behavior**: Existing application behavior must not change except where fixing a documented bug — cleanup must be safe
-- **Evidence**: Dead-code removal requires tooling or test proof; ambiguous cases are reported, not deleted
-- **Verification**: Every bug fix ships with a regression test; full suite and CI must remain green
-- **Tech stack**: Existing stack (pnpm, TypeScript, Fastify, React/Vite, Postgres/Supabase, Playwright) — no framework migrations
-- **Git**: `main` is curated and published (Phase 1, `origin/main` from d3da748), and every push to it runs CI and a deploy (only `docs/` is exempt). Work on branches or worktrees and land changes through pull requests per `CONTRIBUTING.md`; never force-push or rewrite published history without the owner's approval
-- **Docs**: Specs in `docs/` are the only source of truth; no review, decision-log, or ADR files are added there
+- **No open router ports**: Host server must not require opening ports 80/443 directly to the public internet; Cloudflare Tunnel handles ingress.
+- **Zero test regressions**: All existing unit, integration, and E2E tests must remain green after package and brand renaming.
+- **Documentation integrity**: Do not discard operational knowledge when simplifying `README.md`; preserve it in dedicated `docs/` files.
+- **Append-only migrations**: Any schema or seed updates must be forward-only.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Scope includes known bug fixes, not only behavior-preserving cleanup | Owner wants bugs resolved before manual review | — Pending |
-| Remove only proven-dead code; list uncertain candidates | Dynamic imports and Docker/Supabase config defeat static analysis | — Pending |
-| Curate history first, then push; PRs for major functionality, direct-to-main for minor changes | Owner wants a clean public history and reviewable PRs | — Pending |
-| Defer off-host backups and scaling work | Infrastructure outside repo, not cleanup | — Pending |
-| Pin `Date` with a subclass-safe replacement, not `vi.setSystemTime` | `vi.setSystemTime` makes `@date-fns/tz` `TZDate` answer in the machine zone, wrong in every negative-offset zone | ✓ Good — Phase 2 |
-| Phase 5 compares duplication against the test-inclusive jscpd baseline (96 clones, 1.87%) | The source-only scan leaves out the test fixtures RED-03 targets | — Pending (applied in Phase 5) |
-| Defer the weekend E2E run that would confirm TIME-03 | No scheduled run exercises it; waiting for a weekend would take days | — Pending (owner-deferred, recorded in the Phase 2 UAT) |
-| Unused exports in `matching`, `recurrence` and `shared` are removable when nothing imports them, tests included | The packages are internal to the workspace, not a public API | — Pending (applied in Phase 3) |
-
-## Evolution
-
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+| Rename app to Hestia without verbose philosophical justification | Goddess of the Hearth fits household management; keep documentation clean and direct | Pending — v2.0 |
+| Use Cloudflare Tunnel (`cloudflared`) instead of port forwarding or Tailscale Funnel | Zero exposed host ports, automatic edge SSL, and native Cloudflare DNS integration | Pending — v2.0 |
+| Enable GoTrue Magic Links via Resend / Postmark SMTP | Seamless passwordless sign-in with verified deliverability on custom domain | Pending — v2.0 |
+| Update VAPID subject to `mailto:admin@aberrance.app` | RFC 8292 compliance required by Apple and Mozilla push endpoints | Pending — v2.0 |
+| Full rebrand (PWA, CLI, package scopes `@hestia/*`, env vars `HESTIA_*`) | Complete architectural consistency across monorepo and operations | Pending — v2.0 |
+| Abstract `README.md` into dedicated `docs/` runbooks | Keeps main landing clean for new developers while preserving in-depth runbooks | Pending — v2.0 |
+| Archive v1.0 phases into `.planning/milestones/v1.0/` | Clears clutter from active planning directory while preserving audit trail | Pending — v2.0 |
 
 ---
-*Last updated: 2026-10-19 after Phase 2*
+*Last updated: 2026-10-25 starting v2.0 milestone cycle*
