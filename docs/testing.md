@@ -446,6 +446,9 @@ pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
 pnpm test:e2e
 ```
 
+Global setup hands the suite a stack on a free loopback port, printed as `ready at …` (the stack's
+base URL) when it is up.
+
 Needs Docker, the Supabase CLI, and `psql` on the path. For iterating on a single test without
 paying for a full stack bring-up/teardown each time:
 
