@@ -36,9 +36,16 @@
 **Plans:** 4 plans
 
 Plans:
+**Wave 1**
 - [ ] 07-01-PLAN.md — Archive v1.0 phases, cleanup ledgers and quick tasks into `.planning/milestones/v1.0/` (rename-only), delete `.planning/codebase/`, classify raw outputs and index the archive
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 07-02-PLAN.md — Doc link and fact-map checker; rename the deployment guide to `docs/deployment.md` and merge the README's deployment, backup and restore material
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 07-03-PLAN.md — Create `docs/development.md` (README development sections plus CONTRIBUTING scripts and pre-push checks); merge README E2E notes into `docs/testing.md`
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 07-04-PLAN.md — Rewrite `README.md` as a landing page under 150 lines with a docs index; final gates and the README section map
 
 ---

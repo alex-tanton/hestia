@@ -1,7 +1,7 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.0",
+  "milestone": "v2.0 — Hestia — Domain Migration and Rebrand",
   "phases": [
     {
       "number": "7",
@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-plan-phase 7",
-    "label": "Plan Phase 07",
-    "reason": "Phase 07 of 5 ready to plan"
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "0% · executing"
   },
-  "updated_at": "2026-10-25T02:00:00.000Z"
+  "updated_at": "2026-10-25T15:06:15.376Z"
 }
