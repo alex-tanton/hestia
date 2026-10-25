@@ -6,12 +6,12 @@
     {
       "number": "7",
       "name": "Planning Cleanup & Documentation Restructure",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "8",
       "name": "Full Rebrand to Hestia",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "9",
@@ -31,8 +31,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "0% · executing"
+    "label": "Advance to the next step (plan phase 8)",
+    "reason": "Phase 8 of 5 — needs a plan"
   },
-  "updated_at": "2026-10-25T15:09:23.421Z"
+  "updated_at": "2026-10-25T15:47:19.670Z"
 }
