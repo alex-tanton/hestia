@@ -284,7 +284,8 @@ Plans:
 - [x] 06-14-PLAN.md — G-06-5: tracer root cause of every flaky test from its trace and a local repro; owner gate on fixes, proof bar and re-runs
 
 **Wave 15** *(blocked on Wave 14 completion and the owner's gate)*
-- [ ] 06-15-PLAN.md — G-06-5: tracer fixes on `fix/ci-flakes`, red before green, local proof per test and three full E2E runs, gates, push
+- [x] 06-15-PLAN.md — G-06-5: tracer fixes on `fix/ci-flakes`, red before green, local proof per test and three full E2E runs, gates, push
+
 
 **Wave 16** *(blocked on Wave 15 completion)*
 - [ ] 06-16-PLAN.md — G-06-5: tracer pull request and N consecutive green CI runs, owner merges both gap pull requests, `main` green on attempt 1, CI-08 and success criterion 6, gaps closed
