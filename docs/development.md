@@ -120,3 +120,23 @@ HEARTH_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
 Commits follow Conventional Commits, checked by commitlint in a Husky hook; the pre-commit hook
 lints, formats, and typechecks. The hook runs lint-staged, then `pnpm typecheck`. The message, branch
 and pull-request rules are in [CONTRIBUTING.md](../CONTRIBUTING.md#commit-and-squash-messages).
+
+## Scripts
+
+Add a new executable with `git add --chmod=+x {file}` (or `git update-index --chmod=+x {file}`),
+because checkouts with `core.filemode=false` cannot record the bit. Check it with
+`git ls-files -s {file}`, which must show `100755`. Files stay LF through `.gitattributes`;
+`git ls-files --eol {file}` shows `i/lf`. CI's `hygiene` job fails a tracked script (a file that
+starts with a shebang, or whose name ends in .sh) that is not `100755`, and any text file with
+CRLF endings.
+
+## Checks before pushing
+
+Run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, and `pnpm test`. Also run the checks that
+`hygiene` runs: `pnpm knip`, `node scripts/check-knip-baseline.mjs`, `pnpm jscpd`,
+`node scripts/audit-prod.mjs` and `node scripts/check-repo-hygiene.mjs`; for a change that touches
+migrations, `node scripts/check-migrations-append-only.mjs --base origin/main`. See
+[testing.md](testing.md) for integration and E2E runs.
+
+[Commands](#commands) says what the first four commands run, and
+[What CI checks](../CONTRIBUTING.md#what-ci-checks) says what fails each hygiene check.

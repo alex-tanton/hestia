@@ -64,7 +64,7 @@ failed, so one run shows every finding:
 | `node scripts/check-knip-baseline.mjs`          | A production finding is not in `scripts/knip-production-baseline.txt`, or a baseline row no longer appears. | Remove the row that no longer appears. A new row needs the owner's review before it goes into the baseline.                                                                                        |
 | `pnpm jscpd`                                    | Duplicated lines exceed 2% of all lines, tests included.                                                    | Extract the duplicate, or share the test helper.                                                                                                                                                   |
 | `node scripts/audit-prod.mjs`                   | `pnpm audit --prod` reports an advisory that has no allowance.                                              | Upgrade the package. An allowance in `scripts/audit-allowlist.json` needs the GHSA id, an `expires` date at most 180 days ahead and a reason; an expired allowance fails even if it still matches. |
-| `node scripts/check-repo-hygiene.mjs`           | A tracked file is ignored by `.gitignore`, a script is not mode `100755`, or a text file has CRLF endings.  | Untrack the file, or fix the mode or the line endings (see Scripts).                                                                                                                               |
+| `node scripts/check-repo-hygiene.mjs`           | A tracked file is ignored by `.gitignore`, a script is not mode `100755`, or a text file has CRLF endings.  | Untrack the file, or fix the mode or the line endings (see [Scripts](docs/development.md#scripts)).                                                                                                |
 | `node scripts/check-migrations-append-only.mjs` | A change edits, renames or deletes an applied migration under `supabase/migrations/`.                       | Add a new migration; never edit, rename or delete an applied one.                                                                                                                                  |
 
 The audit and an allowance's expiry depend on the date, so `CI` can turn red on an unchanged tree
@@ -98,22 +98,10 @@ git worktree add ../hearth-{topic} -b {type}/{topic}
 Run `pnpm install` inside each new worktree. That installs the Husky hooks there; without it no hook
 runs. Delete the branch after its squash merge.
 
-## Scripts
-
-Add a new executable with `git add --chmod=+x {file}` (or `git update-index --chmod=+x {file}`),
-because checkouts with `core.filemode=false` cannot record the bit. Check it with
-`git ls-files -s {file}`, which must show `100755`. Files stay LF through `.gitattributes`;
-`git ls-files --eol {file}` shows `i/lf`. CI's `hygiene` job fails a tracked script (a file that
-starts with a shebang, or whose name ends in .sh) that is not `100755`, and any text file with
-CRLF endings.
-
 ## Checks before pushing
 
-Run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, and `pnpm test`. Also run the checks that
-`hygiene` runs: `pnpm knip`, `node scripts/check-knip-baseline.mjs`, `pnpm jscpd`,
-`node scripts/audit-prod.mjs` and `node scripts/check-repo-hygiene.mjs`; for a change that touches
-migrations, `node scripts/check-migrations-append-only.mjs --base origin/main`. See
-[`docs/testing.md`](docs/testing.md) for integration and E2E runs.
+The checks to run before a push are listed in
+[docs/development.md](docs/development.md#checks-before-pushing).
 
 ## Not yet enforced
 
