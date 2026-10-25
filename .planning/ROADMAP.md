@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- [x] **[v1.0 Hearth — Cleanup and Hardening](milestones/v1.0-ROADMAP.md)** — 6 phases, 60 plans, 40 requirements; completed 2026-10-25
+- [x] **[v1.0 Hearth — Cleanup and Hardening](milestones/v1.0/ROADMAP.md)** — 6 phases, 60 plans, 40 requirements; completed 2026-10-25
 - [ ] **v2.0 Hestia — Domain Migration and Rebrand** — 5 phases (7–11), 21 requirements; active
 
 ---
