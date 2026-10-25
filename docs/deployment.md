@@ -12,6 +12,24 @@ Realtime. A nightly backup container dumps Postgres to a second physical disk. D
 triggered by a passing CI run on `main` and run on a self-hosted GitHub Actions runner on the same
 box.
 
+## Compose services
+
+`docker/docker-compose.yml` defines seven services. The two built images, `hearth-service` and
+`hearth-caddy`, are tagged `<sha>` by each deploy and run through their `current` tags.
+
+| Service | Image | Role |
+| --- | --- | --- |
+| `db` | `public.ecr.aws/supabase/postgres:17.6.1.167` | The Postgres database. |
+| `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | GoTrue, handling sign-in and account management. |
+| `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | Pushes live updates to connected clients. |
+| `kong` | `kong/kong:3.9.3` | The gateway that routes external requests to `auth` and `realtime` only; nothing else is exposed through it. |
+| `hearth-service` | `hearth-service:<sha>` | The backend API and background jobs (built from `apps/service`). |
+| `caddy` | `hearth-caddy:<sha>` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
+| `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | Runs the nightly database backup and keeps a rotation of older backups. |
+
+Only `caddy` publishes a port, on `127.0.0.1:8080`. All services share the `hearth` network, and
+Postgres data lives in the `db-data` and `db-config` volumes.
+
 ## System requirements
 
 - **OS:** Ubuntu Server LTS is assumed; any Docker-capable Linux distribution works.
@@ -53,8 +71,8 @@ Install on the host before first start:
 > installed apps, orphans service workers, and invalidates every push subscription — there is no
 > migration path for an origin change.
 
-The owner fills in the machine and tailnet names once: in the repository's README ("Pinned
-names" table) and as `HEARTH_ORIGIN` in `/srv/hearth/.env`. Keep the two recordings in sync.
+The owner fills in the machine and tailnet names once, in the table below, and sets
+`HEARTH_ORIGIN` in `/srv/hearth/.env` to the same origin. Keep the two in sync.
 
 | Name    | Value                                |
 | ------- | ------------------------------------ |
@@ -240,6 +258,42 @@ container of the same pinned Postgres image, leaving production untouched:
    `realtime`/`supabase_migrations` schemas exist, a user count, and the applied migration list.
 6. Remove the throwaway container and the error log.
 
+The full command sequence, run from the repository root:
+
+```sh
+set -a; . /srv/hearth/.env; set +a
+DUMP="$BACKUP_DIR/last/postgres-latest.sql.gz"
+
+docker run --detach --name hearth-restore -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+  public.ecr.aws/supabase/postgres:17.6.1.167 \
+  postgres -c config_file=/etc/postgresql/postgresql.conf
+until docker logs hearth-restore 2>&1 | grep -q "PostgreSQL init process complete"; do sleep 1; done
+until docker exec hearth-restore pg_isready -U postgres -h localhost -q; do sleep 1; done
+
+# Roles are not in the dump: hearth_service comes from its migration, and
+# supabase_realtime_admin (created by Realtime, not the image) is created here.
+docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
+  < supabase/migrations/20260919060000_hearth_service_role.sql
+docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+create role supabase_realtime_admin noinherit nologin noreplication;
+grant anon, authenticated, service_role to supabase_realtime_admin;
+SQL
+
+gunzip -c "$DUMP" |
+  docker exec -i hearth-restore psql -U supabase_admin -d postgres -q -o /dev/null \
+  2> restore-errors.log
+grep -c ERROR restore-errors.log    # expect 0
+
+docker exec hearth-restore psql -U supabase_admin -d postgres -c "
+  select rolname, rolinherit, rolcanlogin from pg_roles where rolname = 'hearth_service';
+  select nspname from pg_namespace
+    where nspname in ('auth', 'public', 'realtime', 'supabase_migrations');
+  select count(*) as users from auth.users;
+  select version from supabase_migrations.schema_migrations order by version;"
+
+docker rm -f hearth-restore && rm restore-errors.log
+```
+
 ### Restore production
 
 This replaces the **live** database with a dump; the site is down while it runs.
@@ -255,6 +309,32 @@ This replaces the **live** database with a dump; the site is down while it runs.
    dump the same way, and confirm 0 errors.
 5. `hearth-compose up -d --wait` to bring the rest of the stack up, then
    `curl -fsS http://127.0.0.1:8080/api/health` to confirm.
+
+The full command sequence:
+
+```sh
+set -a; . /srv/hearth/.env; set +a
+DUMP="$BACKUP_DIR/daily/postgres-<yyyymmdd>.sql.gz"    # the dump to restore
+
+hearth-compose stop
+hearth-compose rm --force db
+docker volume rm hearth_db-data
+
+# A fresh database: the image creates the Supabase roles, and the init scripts recreate
+# hearth_service from its migration and give it its login from .env.
+hearth-compose up -d --wait db
+hearth-compose exec -T db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+create role supabase_realtime_admin noinherit nologin noreplication;
+grant anon, authenticated, service_role to supabase_realtime_admin;
+SQL
+gunzip -c "$DUMP" |
+  hearth-compose exec -T db psql -U supabase_admin -d postgres -q -o /dev/null \
+  2> restore-errors.log
+grep -c ERROR restore-errors.log    # expect 0
+
+hearth-compose up -d --wait
+curl -fsS http://127.0.0.1:8080/api/health
+```
 
 Only `db` runs while the dump loads: GoTrue and Realtime keep their own migration state inside the
 database, so they must find the restored state when they start — bringing them up early would let
