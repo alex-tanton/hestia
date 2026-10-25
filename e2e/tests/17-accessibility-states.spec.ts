@@ -350,7 +350,14 @@ for (const theme of THEMES) {
       await dialog.getByRole('button', { name: 'Cancel' }).click();
 
       await page.getByRole('button', { name: `More actions for ${listName}` }).click();
+      const archiveResponse = page.waitForResponse(
+        (res) =>
+          res.url().includes('/archive') &&
+          res.request().method() === 'POST' &&
+          res.status() === 200,
+      );
       await page.getByRole('menuitem', { name: 'Archive' }).click();
+      await archiveResponse;
       await page.goto('/lists/archived');
       await expect(page.getByRole('link', { name: new RegExp(`^${listName}`) })).toBeVisible();
       await expectAccessible(page, `archived lists, with a list (${theme})`);
