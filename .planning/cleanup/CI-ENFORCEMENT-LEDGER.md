@@ -740,3 +740,14 @@ Notes:
 - Infra dispositions approved: ECR rate limit pull retry mitigated by pre-pull script; Docker rate limit mitigated by pre-pull script; transient npm registry signature verification failure classified as external re-run per rule 9.
 - CI proof bar N = 15 consecutive complete CI passes on fix/ci-flakes approved, with proof-reruns budget of 14.
 - All five flaky tests reproduced locally; no tests classified as not-reproduced.
+
+## Plan 06-15 Task 1: F-01 product fix and proof
+
+flake-fix-base=f1c858395725c1d72a004a704dc0a0c3e31e2df4
+flake-fix-F-01=commit 7ff1f7b green 30/30 red 2/5
+
+Notes:
+
+- F-01 regression unit test added to `apps/web/src/App.test.tsx` verifying profile queries are cancelled on `useSwitchHousehold.mutate` before mutation commits (commit `7bc09a0`). Red run failed with `exit=1` (`06-15-F-01-unit-red.log`).
+- F-01 product fix implemented in `apps/web/src/lib/api/hooks.ts`: added `onMutate: async () => { await queryClient.cancelQueries({ queryKey: queryKeys.profile }); }` to `useSwitchHousehold` (commit `7ff1f7b`). Green run passed 9/9 unit tests (`06-15-F-01-unit-green.log`).
+- Local proof of F-01 under 25ms route delay on isolated stack `proof01` completed 30 consecutive PASS iterations without a single failure (`06-15-proof-F-01.log`).
