@@ -178,6 +178,7 @@ shopping list.
 | --- | --- |
 | `file-map.md` | Map of the repository's folders and files. |
 | `testing.md` | How unit, integration, frontend, and end-to-end tests are structured, how to add more of each, and how to test the running app by hand. |
+| `development.md` | Local setup, dev servers and commands, running the API against a local Supabase stack, database and seed commands, commit hooks, scripts, and the checks to run before pushing. |
 | `deployment.md` | The production deployment runbook: system requirements, Compose services, environment variables and secrets, first-time setup, deploys and rollback, backups and restore, and troubleshooting. |
 | `use-cases.md` | Hearth's product requirements, restated as use cases: who does what, under what conditions, with what result. |
 | `architecture.md` | The system's shape — request authorization and the RLS isolation pattern, data model, API surface, background jobs, realtime sync, offline writes, and the notification pipeline. |
