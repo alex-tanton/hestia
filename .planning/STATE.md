@@ -4,18 +4,18 @@ milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
 current_phase: 8
 current_phase_name: Full Rebrand to Hestia
-current_plan: 5
+current_plan: 6
 status: executing
-stopped_at: Completed 08-04-PLAN.md
-last_updated: "2026-10-26T03:49:22.508Z"
+stopped_at: Completed 08-05-PLAN.md
+last_updated: "2026-10-26T03:55:21.542Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 08 execution started
-state_head: cadcdd5df297b42dd18424d589fa11f2e77fa750
+state_head: 6fe2b5a8da05aa532dc7cc1701abc5025304c341
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
   percent: 20
 current_milestone: v2.0
 ---
@@ -33,7 +33,7 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
 Phase: 8 (Full Rebrand to Hestia)
-Current Plan: 5
+Current Plan: 6
 Total Plans in Phase: 7
 Phases: 1 of 5 complete (Phases 7–11)
 Status: Ready to execute
@@ -55,8 +55,8 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 
 ## Session
 
-**Last session:** 2026-10-26T03:49:22.470Z
-**Stopped at:** Completed 08-04-PLAN.md
+**Last session:** 2026-10-26T03:55:17.072Z
+**Stopped at:** Completed 08-05-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -71,6 +71,7 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 | Phase 08 P02 | 7 min | 2 tasks | 216 files |
 | Phase 08 P03 | 7 min | 2 tasks | 73 files |
 | Phase 08 P04 | 7 min | 3 tasks | 41 files |
+| Phase 08 P05 | 8 min | 1 tasks | 52 files |
 
 ## Decisions
 
@@ -84,3 +85,5 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 - [Phase 08]: 08-03: hard cutover to HESTIA_*; no fallback read of any pre-rebrand name anywhere (D-01)
 - [Phase 08]: 08-03: Compose project/network hestia, service hestia-service, runner label hestia; /srv/hestia host path
 - [Phase 08]: 08-04: no alias for the old CLI name and no migration of the old IndexedDB key or notification message type (D-07, D-08); manifest description, start_url, icons unchanged (D-10)
+- [Phase 08]: The outbound User-Agent and the OpenAPI title follow the product name; the dev seed, reset and test database passwords moved with their readers in one commit (08-05)
+- [Phase 08]: The live-file sweep leaves .planning/, the lockfile, the exemptions file and supabase/migrations untouched, so the former name remains there until 08-06 and 08-07 (08-05)
