@@ -1,4 +1,4 @@
-import type { PriceUnit } from '@hearth/shared';
+import type { PriceUnit } from '@hestia/shared';
 
 /**
  * US formatting through `Intl` rather than hand-built strings, so a future locale is a change of

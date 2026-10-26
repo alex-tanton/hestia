@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { StoreGroup } from '@hearth/shared';
+import type { StoreGroup } from '@hestia/shared';
 import { formatCents, pluralize } from '../../lib/format.ts';
 import { PENDING_SUBTOTAL_LABEL, PendingMark } from './PendingMark.tsx';
 

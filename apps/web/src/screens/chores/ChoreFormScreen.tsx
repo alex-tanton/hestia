@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
-import type { ChoreAssignment, ChoreDetail, Member } from '@hearth/shared';
+import type { ChoreAssignment, ChoreDetail, Member } from '@hestia/shared';
 import {
   RecurrenceFields,
   type RecurrenceValue,

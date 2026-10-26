@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
-import { endpoints, problemDetailsSchema, type Endpoint } from '@hearth/shared';
+import { endpoints, problemDetailsSchema, type Endpoint } from '@hestia/shared';
 
 /**
  * The OpenAPI 3.1 document, generated from the shared Zod schemas. `pnpm build` writes it to

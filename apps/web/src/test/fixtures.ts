@@ -5,7 +5,7 @@ import type {
   Invite,
   Member,
   ProfileResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 
 /** The seed data's households and people, so tests read like the real app. */
 export const ALEX_ID = '11111111-1111-4111-8111-111111111111';

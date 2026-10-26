@@ -8,7 +8,7 @@ import { COMMON_PASSWORD_MESSAGE, passwordShapeSchema } from './password.js';
  * The list is 99 KB of text, so it is imported only where a password is actually being set: the
  * service's signup and change-password routes, and the PWA's sign-up, set-password, and
  * change-password screens. Everything else — including every request schema that merely mentions
- * a password — stays on `@hearth/shared`, which never reaches this module, so the app shell never
+ * a password — stays on `@hestia/shared`, which never reaches this module, so the app shell never
  * carries the list. Both sides check it synchronously; only the module boundary moved.
  */
 

@@ -203,7 +203,7 @@ begin
   -- Every current row is a real 27514 item, quoted from the committed normalized fixtures in
   -- `e2e/fixtures/flipp/normalized/`, down to its `external_id`, `flyer_id`, and `display_price`.
   -- Money is `numeric(10, 2)` here and integer cents everywhere above it. `normalized_name` is
-  -- what `@hearth/matching` produces from the raw name, because that is the key repricing and
+  -- what `@hestia/matching` produces from the raw name, because that is the key repricing and
   -- readiness match on.
   --
   -- Validity is relative to the seed run, not the capture: the current rows span this week and
@@ -587,7 +587,7 @@ begin
 
   -- -------------------------------------------------------------------------------------------
   -- Recipes: 12 for Oak Street, 2 for Rivera Family.
-  -- `normalized_name` is `@hearth/matching`'s `normalize()` run once offline and pasted here, the
+  -- `normalized_name` is `@hestia/matching`'s `normalize()` run once offline and pasted here, the
   -- same way the deal and pantry rows above do it — there is no SQL implementation to call.
   -- Readiness, match overrides, and the meal plan are a later unit's seed rows: this unit's job is
   -- the recipe library alone, unscored (recipe_readiness is derived data the matching unit writes).

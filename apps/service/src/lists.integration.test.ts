@@ -6,7 +6,7 @@ import type {
   PantryItem,
   ShoppingList,
   ShoppingListDetail,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import {
   adminPool,
   as,

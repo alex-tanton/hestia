@@ -119,14 +119,14 @@ git config --global user.email "$GIT_USER_EMAIL"
 
 # 8. repo dependencies (only when run from inside the Hearth checkout)
 if root="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -f "$root/package.json" ] \
-  && grep -q '"name": *"hearth"' "$root/package.json"; then
+  && grep -q '"name": *"hestia"' "$root/package.json"; then
   if [ "${SKIP_PNPM_INSTALL:-0}" != "1" ]; then
     log "pnpm install --frozen-lockfile in $root"
     (cd "$root" && pnpm install --frozen-lockfile)
   fi
   if [ "${INSTALL_PLAYWRIGHT:-0}" = "1" ]; then
     log "playwright chromium"
-    (cd "$root" && pnpm --filter @hearth/e2e exec playwright install --with-deps chromium)
+    (cd "$root" && pnpm --filter @hestia/e2e exec playwright install --with-deps chromium)
   fi
   check="$root/.planning/environment/cloud-check.sh"
 else

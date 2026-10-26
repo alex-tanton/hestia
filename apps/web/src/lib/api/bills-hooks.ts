@@ -19,7 +19,7 @@ import {
   type SubscriptionsResponse,
   type UpdateBillPaymentRequest,
   type UpdateBillRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 

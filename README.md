@@ -16,8 +16,8 @@ chores for one household (or a few), running on a single home server. The specif
 
 ```sh
 pnpm install
-pnpm --filter @hearth/web dev        # PWA dev server
-pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
+pnpm --filter @hestia/web dev        # PWA dev server
+pnpm --filter @hestia/service dev    # API (needs DATABASE_URL)
 pnpm lint
 pnpm format:check
 pnpm typecheck

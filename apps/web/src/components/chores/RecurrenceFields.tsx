@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { previewOccurrences, type RecurrenceUnit } from '@hearth/recurrence';
+import { previewOccurrences, type RecurrenceUnit } from '@hestia/recurrence';
 import { formatCalendarDate } from '../../lib/format.ts';
 import { TextField } from '../ui/Field.tsx';
 import { Select } from '../ui/Select.tsx';
@@ -28,7 +28,7 @@ export interface RecurrenceFieldsProps {
 /**
  * The chore sheet's recurrence editor: unit, interval, and anchor date, with a plain-language
  * preview of the next three occurrence dates that updates as the fields change. Reuses
- * `@hearth/recurrence`'s own `previewOccurrences`, the same function behind both the bill and
+ * `@hestia/recurrence`'s own `previewOccurrences`, the same function behind both the bill and
  * chore sheets (`packages/recurrence/src/occurrence.ts`), so the preview can never
  * drift from the anchored-recurrence rules the server applies.
  */

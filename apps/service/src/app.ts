@@ -5,7 +5,7 @@ import Fastify, {
   type FastifyPluginCallback,
   type FastifyRequest,
 } from 'fastify';
-import { scrubErrorName, scrubErrorText } from '@hearth/shared';
+import { scrubErrorName, scrubErrorText } from '@hestia/shared';
 import { DEFAULT_RATE_LIMIT_PER_MINUTE } from './env.js';
 import { GoTrueError } from './gotrue/http.js';
 import { createRouteContext, type AppDependencies } from './http/context.js';

@@ -1,5 +1,5 @@
 import type { Kysely } from 'kysely';
-import { normalize } from '@hearth/matching';
+import { normalize } from '@hestia/matching';
 import type {
   Deal,
   DealSearchQuery,
@@ -9,7 +9,7 @@ import type {
   FlyersQuery,
   FlyersResponse,
   MerchantsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { Database } from '../../db.js';
 import type {
   DealSource,

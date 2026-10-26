@@ -6,7 +6,7 @@ import type {
   FlyerItemsResponse,
   FlyersResponse,
   MerchantsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { createDealsService, type DealsService } from './services/deals/deals.js';
 import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
 import {

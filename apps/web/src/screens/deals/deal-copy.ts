@@ -1,4 +1,4 @@
-import type { ConditionalReason, Deal } from '@hearth/shared';
+import type { ConditionalReason, Deal } from '@hestia/shared';
 import { formatCalendarDate } from '../../lib/format.ts';
 import { formatUnitPrice, speakUnitPrice } from '../../lib/money.ts';
 

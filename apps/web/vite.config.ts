@@ -82,7 +82,7 @@ export default defineConfig({
       // Measured on 2026-10-23 at d0c587c: 85.38% statements, 81.83% branches, 78.59% functions and
       // 86.96% lines. Each threshold is the measured value rounded down, minus one point, so
       // ordinary drift passes and a real drop fails. CI's test-unit job runs
-      // `pnpm --filter @hearth/web test:coverage` on every pull request and push to main, so these
+      // `pnpm --filter @hestia/web test:coverage` on every pull request and push to main, so these
       // numbers gate every merge.
       thresholds: { statements: 84, branches: 80, functions: 77, lines: 85 },
     },

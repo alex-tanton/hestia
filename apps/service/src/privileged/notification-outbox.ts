@@ -1,5 +1,5 @@
 import { sql } from 'kysely';
-import { pushKeysSchema, type NotificationType } from '@hearth/shared';
+import { pushKeysSchema, type NotificationType } from '@hestia/shared';
 import type {
   ClaimOutcome,
   DispatchOutbox,

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import type { MatchOverride, PantryItem, RecipeDetail } from '@hearth/shared';
+import type { MatchOverride, PantryItem, RecipeDetail } from '@hestia/shared';
 import { withServiceRoleDb } from './privileged/service-role-db.js';
 import { recomputeReadinessForHousehold } from './services/readiness.js';
 import {
@@ -17,7 +17,7 @@ import { expectStatus } from './test/stack-hooks.js';
 /*
  * Recipe readiness against `supabase start` (the 12+2 readiness table is this test's own oracle).
  * Real Postgres as hestia_service, every request through withUserDb, so RLS and the real
- * `@hearth/matching` decide every bucket. This file reproduces the seed data (pantry,
+ * `@hestia/matching` decide every bucket. This file reproduces the seed data (pantry,
  * favorite-store deals, the twelve Oak Street recipes and two Rivera Family recipes, the "cheese"
  * override) through the real API and asserts the table's own numbers exactly, one recipe at a time.
  */

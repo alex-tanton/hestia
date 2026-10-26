@@ -1,7 +1,7 @@
 import { SkipForward } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
-import type { Bill } from '@hearth/shared';
+import type { Bill } from '@hestia/shared';
 import { formatCalendarDate, formatCents } from '../../lib/format.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';

@@ -1,5 +1,5 @@
 {
-  "name": "@hearth/service",
+  "name": "@hestia/service",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,9 +20,9 @@
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",
-    "@hearth/matching": "workspace:*",
-    "@hearth/recurrence": "workspace:*",
-    "@hearth/shared": "workspace:*",
+    "@hestia/matching": "workspace:*",
+    "@hestia/recurrence": "workspace:*",
+    "@hestia/shared": "workspace:*",
     "cheerio": "1.2.0",
     "fastify": "5.12.6",
     "kysely": "0.29.6",

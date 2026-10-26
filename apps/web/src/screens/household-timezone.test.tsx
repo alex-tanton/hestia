@@ -1,6 +1,6 @@
 import { configure, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { MealPlanEntry } from '@hearth/shared';
+import type { MealPlanEntry } from '@hestia/shared';
 import { registerHouseholdClock } from '../test/browser.ts';
 import { billFixture } from '../test/bills-fixtures.ts';
 import {

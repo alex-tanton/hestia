@@ -1,6 +1,6 @@
 import { sql, type Kysely } from 'kysely';
-import type { CalendarDate, Recurrence } from '@hearth/recurrence';
-import type { NotificationCopy, NotificationType } from '@hearth/shared';
+import type { CalendarDate, Recurrence } from '@hestia/recurrence';
+import type { NotificationCopy, NotificationType } from '@hestia/shared';
 import { deriveChoreState } from '../chores/occurrence.js';
 import type { Database } from '../db.js';
 import {

@@ -1,7 +1,7 @@
 import { RotateCw } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Navigate } from 'react-router';
-import type { DeepHealthResponse } from '@hearth/shared';
+import type { DeepHealthResponse } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';

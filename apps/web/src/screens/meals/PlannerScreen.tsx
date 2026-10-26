@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import type { MealPlanEntry, MealType } from '@hearth/shared';
+import type { MealPlanEntry, MealType } from '@hestia/shared';
 import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
 import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';

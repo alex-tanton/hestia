@@ -1,4 +1,4 @@
-import { problemDetailsSchema, type ProblemDetails } from '@hearth/shared';
+import { problemDetailsSchema, type ProblemDetails } from '@hestia/shared';
 
 /**
  * A failed API call. `problem` carries the RFC 9457 body when the service sent one; `isOffline`

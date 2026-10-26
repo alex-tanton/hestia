@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import type { RecurrenceUnit, Subscription, SubscriptionsResponse } from '@hearth/shared';
+import type { RecurrenceUnit, Subscription, SubscriptionsResponse } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { toCents } from './money.js';
 

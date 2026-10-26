@@ -9,7 +9,7 @@ import {
   type RouteObject,
 } from 'react-router';
 import { vi } from 'vitest';
-import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
+import { PROBLEM_CONTENT_TYPE } from '@hestia/shared';
 import { AppProviders } from '../App.tsx';
 import { ToastProvider } from '../components/ui/Toast.tsx';
 import { SectionProvider } from '../lib/section-context.tsx';

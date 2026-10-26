@@ -1,4 +1,4 @@
-import type { Recipe, ReadinessBucket } from '@hearth/shared';
+import type { Recipe, ReadinessBucket } from '@hestia/shared';
 
 /**
  * The words readiness and the week planner are shown and announced with. Copy lives here, rather

@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DeparturePreview } from '@hearth/shared';
+import type { DeparturePreview } from '@hestia/shared';
 import {
   createFetchStub,
   renderScreen,

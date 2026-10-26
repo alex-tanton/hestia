@@ -27,7 +27,7 @@ import {
   type ShoppingListDetail,
   type SuggestionsResponse,
   type UpdateRecipeRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { useApi, useFlushPersister } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE, queryKeys } from './keys.ts';
 

@@ -45,13 +45,13 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 | Package | Path | Role |
 |---------|------|------|
-| `@hearth/service` | `apps/service` | Fastify HTTP API, job scheduler, owner CLI |
-| `@hearth/web` | `apps/web` | React PWA (Vite) |
-| `@hearth/shared` | `packages/shared` | Shared Zod request and response schemas, problem and error types, scrubbing, password rules |
-| `@hearth/matching` | `packages/matching` | Ingredient and item fuzzy matching |
-| `@hearth/recurrence` | `packages/recurrence` | Bill and chore recurrence logic |
-| `@hearth/e2e` | `e2e` | Playwright end-to-end suite |
-| `@hearth/seed` | `supabase/seed` | Seed-user, seed-SQL, and pantry-readiness tooling |
+| `@hestia/service` | `apps/service` | Fastify HTTP API, job scheduler, owner CLI |
+| `@hestia/web` | `apps/web` | React PWA (Vite) |
+| `@hestia/shared` | `packages/shared` | Shared Zod request and response schemas, problem and error types, scrubbing, password rules |
+| `@hestia/matching` | `packages/matching` | Ingredient and item fuzzy matching |
+| `@hestia/recurrence` | `packages/recurrence` | Bill and chore recurrence logic |
+| `@hestia/e2e` | `e2e` | Playwright end-to-end suite |
+| `@hestia/seed` | `supabase/seed` | Seed-user, seed-SQL, and pantry-readiness tooling |
 
 ## Frameworks
 
@@ -73,10 +73,10 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Vite 8.3.0 with `@vitejs/plugin-react` 6.1.1 - dev server and bundler (`apps/web/vite.config.ts`)
 - `vite-plugin-pwa` 1.3.0 - `injectManifest` strategy; the service worker is authored in `apps/web/src/sw.ts`; `registerType: 'prompt'`. Workbox 7.4.1 packages (`workbox-precaching`, `workbox-routing`, `workbox-strategies`, `workbox-expiration`, `workbox-cacheable-response`, `workbox-window`) are direct devDependencies of `apps/web`
 - `@supabase/supabase-js` 2.116.0 - browser auth and Realtime client, loaded with a dynamic `import()` (`apps/web/src/lib/auth/auth-client.ts`)
-- `@hearth/shared` (`packages/shared`) - Zod 4.6.5 request and response schemas
-- `@hearth/recurrence` (`packages/recurrence`) - `@date-fns/tz` 1.5.0 and date-fns 4.4.0
-- `@hearth/matching` (`packages/matching`) - fastest-levenshtein 1.0.16
-- `@hearth/seed` (`supabase/seed`) - `@hearth/matching` and `pg` 8.23.0
+- `@hestia/shared` (`packages/shared`) - Zod 4.6.5 request and response schemas
+- `@hestia/recurrence` (`packages/recurrence`) - `@date-fns/tz` 1.5.0 and date-fns 4.4.0
+- `@hestia/matching` (`packages/matching`) - fastest-levenshtein 1.0.16
+- `@hestia/seed` (`supabase/seed`) - `@hestia/matching` and `pg` 8.23.0
 - tsup 8.5.1 - bundles the service to `apps/service/dist/` (`apps/service/tsup.config.ts`); `apps/service/src/write-openapi.ts` runs after it in `build`
 - tsx 4.23.13 - runs TypeScript directly for `dev`, the seed tooling, and fixture scripts
 - Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web/vite.config.ts` test block). Every unit config (and the service coverage config) loads `test/clock-setup.mjs` as a setup file, which pins `Date`, and `test/global-tz.mjs` as `globalSetup`, which validates `TZ`; the integration config loads only `global-tz.mjs`. `pnpm test:sweep` and `pnpm test:sweep:integration` (`scripts/test-sweep.mjs`) run the suites across a fixed date and time-zone matrix; see `docs/testing.md`
@@ -134,7 +134,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Supabase CLI 2.117.0 for `supabase start` and `supabase db reset` (CI pins the same version)
 - `psql` on PATH for `pnpm db:seed`
 - Docker with the Compose plugin for the full stack and the E2E overlay `e2e/docker-compose.e2e.yml`
-- Playwright Chromium: `pnpm --filter @hearth/e2e exec playwright install --with-deps chromium`
+- Playwright Chromium: `pnpm --filter @hestia/e2e exec playwright install --with-deps chromium`
 - Single Linux host running the Compose stack in `docker/docker-compose.yml`
 - Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel (`sudo tailscale funnel --bg http://127.0.0.1:8080`), origin `https://<machine>.<tailnet>.ts.net`
 - A second disk mounted at `BACKUP_DIR`
@@ -226,16 +226,16 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 
 ## Import Organization
 
-- Third-party packages first (`@tanstack/...`, `@testing-library/...`, `react`, `react-router`, `fastify`, `vitest`), then workspace packages (`@hearth/shared`), then relative imports, parent directories before siblings.
+- Third-party packages first (`@tanstack/...`, `@testing-library/...`, `react`, `react-router`, `fastify`, `vitest`), then workspace packages (`@hestia/shared`), then relative imports, parent directories before siblings.
 - This order is a convention, not enforced by ESLint. No import-order rule is configured.
-- None. Cross-package imports use the `@hearth/*` workspace names (`pnpm-workspace.yaml`). Within an app, imports are relative.
-- Each package exports from `packages/*/src/index.ts`. `packages/shared/src/index.ts` is a pure re-export barrel that re-exports the `api/*` modules; consumers import from `@hearth/shared`.
+- None. Cross-package imports use the `@hestia/*` workspace names (`pnpm-workspace.yaml`). Within an app, imports are relative.
+- Each package exports from `packages/*/src/index.ts`. `packages/shared/src/index.ts` is a pure re-export barrel that re-exports the `api/*` modules; consumers import from `@hestia/shared`.
 - `apps/service/src/jobs/index.ts` is also a barrel. Inside an app, prefer the defining file over a barrel.
 
 ## Error Handling
 
 - Errors are RFC 9457 problem details (`type`, `title`, `status`, `detail`), never bare strings. `problem(status, detail?)` builds the body and `fail(status, detail?)` throws a `ProblemError`. Both are in `apps/service/src/problem.ts`.
-- The global error handler in `apps/service/src/app.ts` sends a `ProblemError` unchanged. For 5xx responses it logs the error with `scrubErrorName` and `scrubErrorText` (from `@hearth/shared`) applied to the name and message, not the raw values.
+- The global error handler in `apps/service/src/app.ts` sends a `ProblemError` unchanged. For 5xx responses it logs the error with `scrubErrorName` and `scrubErrorText` (from `@hestia/shared`) applied to the name and message, not the raw values.
 - Validate at the route boundary with `parse(schema, value)` from `apps/service/src/http/context.ts`. It throws a 400 `fail` with detail `"<path>: <message>"`.
 - Database errors map by SQLSTATE in the `DATABASE_PROBLEMS` table in `apps/service/src/problem.ts` (for example `42501` to 403, `23505` to 409, `HR001` to 410). Add new membership or constraint messages there, not in route code. `problemFromDatabaseError` performs the lookup.
 - Route handlers stay thin: authenticate, `parse`, call a service function inside `ctx.inHousehold(...)` or `ctx.asUser(...)`, then return or `reply.code(201).send(...)`. Route files call `parse(` about 119 times across `apps/service/src/routes/`.
@@ -345,17 +345,17 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Purpose: Render routes and interactions.
 - Location: `apps/web/src/screens/`, `apps/web/src/pillars/`, `apps/web/src/components/`
 - Contains: `*Screen.tsx`, `*Route.tsx` wrappers, feature components, primitives under `apps/web/src/components/ui/`, shell under `apps/web/src/components/shell/`.
-- Depends on: `apps/web/src/lib/` hooks, `@hearth/shared`, `@hearth/recurrence` (due-date display).
+- Depends on: `apps/web/src/lib/` hooks, `@hestia/shared`, `@hestia/recurrence` (due-date display).
 - Used by: `apps/web/src/routes.tsx`.
 - Purpose: Talk to the API and Supabase, manage cache, offline writes, and realtime.
 - Location: `apps/web/src/lib/api/`, `apps/web/src/lib/auth/`, `apps/web/src/lib/offline/`, `apps/web/src/lib/realtime/`, `apps/web/src/lib/push/`
 - Contains: `client.ts` (fetch wrapper, one refresh retry, problem parsing), `api-context.tsx` (providers and `useApi`, `useAuthState`), `keys.ts` (household-scoped query keys), `*-hooks.ts` (TanStack Query hooks), `write-queue.ts` and `chore-errand-writes.ts` (queued mutations), `persist.ts` (IndexedDB persistence), `supabase-realtime.ts` (realtime port).
-- Depends on: `@hearth/shared`, `@supabase/supabase-js` (lazy-loaded), TanStack Query.
+- Depends on: `@hestia/shared`, `@supabase/supabase-js` (lazy-loaded), TanStack Query.
 - Used by: screens and `apps/web/src/main.tsx`.
 - Purpose: Map HTTP to domain calls.
 - Location: `apps/service/src/routes/`
 - Contains: One `FastifyPluginAsync<{ ctx: RouteContext }>` per resource (`auth.ts`, `users.ts`, `households.ts`, `lists.ts`, `bills.ts`, `chores.ts`, `errands.ts`, `meal-plan.ts`, `recipes.ts`, `deals.ts`, `match-overrides.ts`, `system.ts`, `health.ts`).
-- Depends on: `apps/service/src/http/context.ts`, domain modules, `@hearth/shared`.
+- Depends on: `apps/service/src/http/context.ts`, domain modules, `@hestia/shared`.
 - Used by: `apps/service/src/app.ts`, which registers each plugin.
 - Purpose: Authentication, input validation helper, and the only sanctioned path to the database for handlers.
 - Location: `apps/service/src/http/context.ts`, `apps/service/src/db/user-db.ts`, `apps/service/src/db.ts`
@@ -364,7 +364,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Purpose: Business rules and the queries that implement them.
 - Location: `apps/service/src/services/` (flat, plus `services/deals/`), and two sibling domain folders: `apps/service/src/chores/` (chores, errands, occurrence logic) and `apps/service/src/notifications/` (copy and planners).
 - Contains: functions such as `listBills(db, householdId, userId)`, `createHouseholdBill`, `payBill`, `repriceExpiredItems`, `recomputeReadinessForHousehold`, `createMatchOverride`, `markHouseholdActive`. Each takes a Kysely handle already bound to the caller's transaction.
-- Depends on: `@hearth/recurrence`, `@hearth/matching`, `@hearth/shared`, the generated DB types.
+- Depends on: `@hestia/recurrence`, `@hestia/matching`, `@hestia/shared`, the generated DB types.
 - Used by: route plugins and scheduled jobs (through the scheduler's injected functions).
 - Purpose: Run every request as the caller.
 - Location: `apps/service/src/db.ts`, `apps/service/src/db/user-db.ts`, `apps/service/src/db/types.ts`
@@ -385,7 +385,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Location: `apps/service/src/gotrue/` (GoTrue HTTP client), `apps/service/src/auth/jwt.ts` (token verification: HS256 with `JWT_SECRET`; ES256 only for keys GoTrue publishes at its JWKS endpoint), `apps/service/src/deals/flipp/` (Flipp HTTP through one rate-limited queue, fixture transport for E2E), `apps/service/src/deals/price/` (price parsing), `apps/service/src/recipes/` (recipe fetch, JSON-LD, host rate limiter, private-address guard), `apps/service/src/push/` (Web Push transport, recording transport, E2E test seam).
 - Used by: `apps/service/src/main.ts`, which injects them into `buildApp` and the scheduler.
 - Purpose: One contract and one set of rules for both sides of the API.
-- Location: `packages/shared/src/` (Zod request/response schemas in `api/`, problem details, scrubbing, password rules; subpath export `@hearth/shared/common-passwords`), `packages/recurrence/src/` (bill and chore occurrence and rotation), `packages/matching/src/` (ingredient normalization, similarity, matcher).
+- Location: `packages/shared/src/` (Zod request/response schemas in `api/`, problem details, scrubbing, password rules; subpath export `@hestia/shared/common-passwords`), `packages/recurrence/src/` (bill and chore occurrence and rotation), `packages/matching/src/` (ingredient normalization, similarity, matcher).
 - Depends on: Zod, date-fns and `@date-fns/tz` (recurrence), `fastest-levenshtein` (matching). No I/O.
 - Used by: `apps/web`, `apps/service`, and `supabase/seed` (matching).
 
@@ -422,7 +422,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Pattern: `export const billRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => { app.get(...) }`
 - Purpose: One definition for request validation, response parsing on the client, and OpenAPI.
 - Examples: `packages/shared/src/api/bills.ts`, `packages/shared/src/api/lists.ts`, `apps/service/src/openapi.ts`
-- Pattern: Schema exported from `@hearth/shared`, used by `parse(...)` on the server and by `api.request({ schema })` on the client.
+- Pattern: Schema exported from `@hestia/shared`, used by `parse(...)` on the server and by `api.request({ schema })` on the client.
 - Purpose: Give jobs and routes only the privilege they need.
 - Examples: `apps/service/src/jobs/types.ts` (`JobDatabase`, `DispatchOutbox`), `apps/service/src/privileged/job-database.ts`
 - Pattern: Dependency injection from `main.ts` into `createScheduler({ database, dispatch, refresh })` and `buildApp(deps, options)`.
@@ -436,7 +436,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 ## Entry Points
 
 - Location: `apps/service/src/main.ts`
-- Triggers: `node dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hearth/service dev` runs `tsx watch src/main.ts`.
+- Triggers: `node dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hestia/service dev` runs `tsx watch src/main.ts`.
 - Responsibilities: Parse env (`apps/service/src/env.ts`), build the pool, GoTrue, Flipp, recipe, and push clients, call `buildApp`, start the scheduler, handle SIGTERM and SIGINT, listen on the configured host and port.
 - Location: `apps/service/src/cli.ts`, built to `apps/service/dist/cli.js`. The hand-written POSIX shell wrapper `apps/service/bin/hearth-admin` resolves its own path and runs `node dist/cli.js`.
 - Triggers: `docker compose exec hearth-service hearth-admin reset-password <email>`.

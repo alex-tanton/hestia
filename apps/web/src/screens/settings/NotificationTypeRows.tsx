@@ -4,7 +4,7 @@ import {
   householdNotificationType,
   type NotificationPreference,
   type ProfileResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { Checkbox } from '../../components/ui/Checkbox.tsx';
 import { EmptyState } from '../../components/states/StateBlocks.tsx';
 import { IOS_INSTALL_MESSAGE } from '../onboarding/InstallStep.tsx';

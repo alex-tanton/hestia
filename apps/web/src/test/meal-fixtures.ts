@@ -5,7 +5,7 @@ import type {
   RecipeListResponse,
   Suggestion,
   SuggestionsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { ALEX_ID, OAK_STREET_ID } from './fixtures.ts';
 
 /*

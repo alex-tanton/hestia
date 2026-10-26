@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { endpoints } from '@hearth/shared';
+import { endpoints } from '@hestia/shared';
 import type { AppDependencies } from '../app.js';
 import { GoTrueError } from '../gotrue/http.js';
 import type { ErrorRecord } from '../services/errors.js';

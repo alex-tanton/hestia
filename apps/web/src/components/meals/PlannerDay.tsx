@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import type { ReactElement } from 'react';
-import type { MealPlanEntry, MealType } from '@hearth/shared';
+import type { MealPlanEntry, MealType } from '@hestia/shared';
 import { Button } from '../ui/Button.tsx';
 import { mealTypeLabel } from './meal-copy.ts';
 import { MealSlotEntry } from './MealSlotEntry.tsx';

@@ -1,6 +1,6 @@
 import type { LightMyRequestResponse } from 'fastify';
 import { describe, expect, it } from 'vitest';
-import type { MatchOverride } from '@hearth/shared';
+import type { MatchOverride } from '@hestia/shared';
 import { adminPool, as, household, signUp, type HouseholdFixture } from './test/service-stack.js';
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
@@ -22,7 +22,7 @@ async function createOverride(
 }
 
 describe('POST /households/:id/match-overrides', () => {
-  it('normalizes both names through @hearth/matching before storing them', async () => {
+  it('normalizes both names through @hestia/matching before storing them', async () => {
     const home = await household(app);
     const response = await createOverride(home, {
       ingredientName: 'Cheese!',

@@ -14,8 +14,8 @@ in [deployment.md](deployment.md).
 
 ```sh
 pnpm install
-pnpm --filter @hearth/web dev        # PWA dev server
-pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
+pnpm --filter @hestia/web dev        # PWA dev server
+pnpm --filter @hestia/service dev    # API (needs DATABASE_URL)
 ```
 
 The API needs `DATABASE_URL` and the rest of its environment; see
@@ -35,7 +35,7 @@ The API needs `DATABASE_URL` and the rest of its environment; see
 | `pnpm build` | Production builds of web and service |
 | `pnpm knip` | Report of unused files, exports and dependencies |
 
-`pnpm --filter @hearth/service test:coverage` reports the service's coverage over its unit and
+`pnpm --filter @hestia/service test:coverage` reports the service's coverage over its unit and
 integration tests together, so it needs `supabase start` running too.
 
 [testing.md](testing.md) describes each suite.
@@ -61,7 +61,7 @@ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://aut
 export HEARTH_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
 export HEARTH_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
 export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
-pnpm --filter @hearth/service dev
+pnpm --filter @hestia/service dev
 ```
 
 | Variable | Used for |
@@ -83,7 +83,7 @@ hearth-admin reset-password <email>`); locally it runs from the built bundle wit
 `SERVICE_ROLE_KEY`, and `HEARTH_ORIGIN` set:
 
 ```sh
-pnpm --filter @hearth/service build
+pnpm --filter @hestia/service build
 ./apps/service/bin/hearth-admin reset-password you@example.com
 ```
 

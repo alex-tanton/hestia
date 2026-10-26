@@ -1,5 +1,5 @@
 import { useId, type ReactElement } from 'react';
-import type { Deal } from '@hearth/shared';
+import type { Deal } from '@hestia/shared';
 import { Badge } from '../../components/ui/Badge.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { formatUnitPrice } from '../../lib/money.ts';

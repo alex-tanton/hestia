@@ -28,7 +28,7 @@ import {
   type ProfileResponse,
   type UpdateHouseholdRequest,
   type UpdateProfileRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { useApi } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE, queryKeys } from './keys.ts';
 

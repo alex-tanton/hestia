@@ -278,7 +278,7 @@
 - **Main flow:**
   1. The user corrects the match from the recipe's breakdown.
   2. The client sends the ingredient's and target's plain names to `POST /households/:id/match-overrides` (not pre-normalized strings) along with the target kind (deal or pantry) and a decision (force match or force no-match).
-  3. The service normalizes both names itself through `@hearth/matching`.
+  3. The service normalizes both names itself through `@hestia/matching`.
   4. A force match puts the ingredient in the target's bucket whenever a target with that normalized name exists; a force no-match prevents that pair from matching.
   5. The override applies to every recipe in the household and stays in effect until a member removes it.
 - **Alternate/exception flows:**

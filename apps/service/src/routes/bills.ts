@@ -8,7 +8,7 @@ import {
   payBillRequestSchema,
   updateBillPaymentRequestSchema,
   updateBillRequestSchema,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { parse, type RouteContext } from '../http/context.js';
 import {
   archiveBill,

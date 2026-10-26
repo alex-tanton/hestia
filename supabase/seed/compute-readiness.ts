@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from 'pg';
-import { matchIngredient, type MatchCandidate, type MatchOverride } from '@hearth/matching';
+import { matchIngredient, type MatchCandidate, type MatchOverride } from '@hestia/matching';
 
 /**
  * Recipe readiness for the seed data (the 12+2 readiness table is the test oracle, and readiness
@@ -12,7 +12,7 @@ import { matchIngredient, type MatchCandidate, type MatchOverride } from '@heart
  * them: they are built on the service's Kysely `Database` type and `db.ts`, and pulling that whole
  * module graph into this plain-`pg` seed script (which has none of the service's other
  * dependencies, and connects as `postgres`, not through `withUserDb`) is a much larger undertaking
- * than this one seed step justifies. `@hearth/matching` — the pure matcher this logic calls — is
+ * than this one seed step justifies. `@hestia/matching` — the pure matcher this logic calls — is
  * a real, unchanged import from its own workspace package, not duplicated: only the SQL that
  * builds its candidates and the bucket/percent bookkeeping around it lives here, kept in lockstep
  * with the two service files' logic by construction (same queries, same rounding, same bucket

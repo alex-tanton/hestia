@@ -1,6 +1,6 @@
 import { CreditCard } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import type { Subscription } from '@hearth/shared';
+import type { Subscription } from '@hestia/shared';
 import { SubscriptionRow } from '../../components/bills/SubscriptionRow.tsx';
 import {
   OFFLINE_ACTION_REASON,

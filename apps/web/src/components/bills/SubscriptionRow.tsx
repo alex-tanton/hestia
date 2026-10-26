@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Subscription } from '@hearth/shared';
+import type { Subscription } from '@hestia/shared';
 import { formatCents } from '../../lib/format.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';

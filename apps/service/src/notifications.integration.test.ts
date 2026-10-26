@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Household, NotificationPreferencesResponse } from '@hearth/shared';
+import type { Household, NotificationPreferencesResponse } from '@hestia/shared';
 import { adminPool, as, signUp, uniqueName, type SignedUpUser } from './test/service-stack.js';
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 

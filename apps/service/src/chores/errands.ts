@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import type { CreateErrandRequest, Errand, UpdateErrandRequest } from '@hearth/shared';
+import type { CreateErrandRequest, Errand, UpdateErrandRequest } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from '../services/households.js';

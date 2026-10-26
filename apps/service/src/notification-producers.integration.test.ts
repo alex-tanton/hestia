@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import type { Household, NotificationType, ShoppingListDetail } from '@hearth/shared';
+import type { Household, NotificationType, ShoppingListDetail } from '@hestia/shared';
 import { createDatabase, type DatabaseHandle } from './db.js';
 import { runDispatchNotifications } from './jobs/dispatch-notifications.js';
 import type { JobDatabase, JobLogger } from './jobs/types.js';

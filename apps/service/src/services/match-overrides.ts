@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely';
-import { normalize } from '@hearth/matching';
-import type { CreateMatchOverrideRequest, MatchOverride } from '@hearth/shared';
+import { normalize } from '@hestia/matching';
+import type { CreateMatchOverrideRequest, MatchOverride } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from './households.js';
@@ -86,7 +86,7 @@ export async function deleteMatchOverride(db: Kysely<Database>, id: string): Pro
   await recomputeReadinessForHousehold(db, existing.household_id);
 }
 
-/** The household's overrides, in the API's own shape (not `@hearth/matching`'s pared-down one). */
+/** The household's overrides, in the API's own shape (not `@hestia/matching`'s pared-down one). */
 export async function listMatchOverrides(
   db: Kysely<Database>,
   householdId: string,

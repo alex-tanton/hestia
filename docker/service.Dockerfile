@@ -14,14 +14,14 @@ COPY . .
 
 FROM source AS build
 RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
-    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/service... \
- && pnpm --filter @hearth/service build
+    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/service... \
+ && pnpm --filter @hestia/service build
 
 # Workspace packages are bundled into dist by tsup, so the runtime needs only the service's
 # own production dependencies.
 FROM source AS prod-deps
 RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
-    pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hearth/service
+    pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hestia/service
 
 FROM node:24.21.0-bookworm-slim
 ARG HEARTH_REVISION=dev

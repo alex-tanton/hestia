@@ -1,4 +1,4 @@
-import { notificationCopySchema } from '@hearth/shared';
+import { notificationCopySchema } from '@hestia/shared';
 import { describe, expect, it } from 'vitest';
 import {
   billReminderCopy,

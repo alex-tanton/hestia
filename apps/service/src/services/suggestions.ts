@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import type { Suggestion, SuggestionsResponse } from '@hearth/shared';
+import type { Suggestion, SuggestionsResponse } from '@hestia/shared';
 import type { Database } from '../db.js';
 
 /**

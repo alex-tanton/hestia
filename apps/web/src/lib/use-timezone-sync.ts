@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { ProfileResponse } from '@hearth/shared';
+import type { ProfileResponse } from '@hestia/shared';
 import { useUpdateProfile } from './api/hooks.ts';
 
 /** The browser's current timezone. */

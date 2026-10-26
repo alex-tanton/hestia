@@ -1,5 +1,5 @@
 import type { Kysely } from 'kysely';
-import type { AddFavoriteStoreRequest, FavoriteStore } from '@hearth/shared';
+import type { AddFavoriteStoreRequest, FavoriteStore } from '@hestia/shared';
 import type { Database } from '../../db.js';
 import { fail } from '../../problem.js';
 

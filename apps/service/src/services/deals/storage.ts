@@ -1,6 +1,6 @@
 import { sql, type Kysely } from 'kysely';
-import { normalize } from '@hearth/matching';
-import type { Deal } from '@hearth/shared';
+import { normalize } from '@hestia/matching';
+import type { Deal } from '@hestia/shared';
 import type { Database } from '../../db.js';
 import type { NormalizedDeal } from '../../deals/deal-source.js';
 import { fromCents, toCents } from '../money.js';

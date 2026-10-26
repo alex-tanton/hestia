@@ -5,7 +5,7 @@ import type {
   HouseholdRole,
   Member,
   UpdateHouseholdRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 

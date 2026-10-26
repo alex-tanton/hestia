@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { normalize } from '@hearth/matching';
+import { normalize } from '@hestia/matching';
 
 /*
- * The service does not normalize names itself: `@hearth/matching` owns the pipeline and its
+ * The service does not normalize names itself: `@hestia/matching` owns the pipeline and its
  * maintained descriptor and brand lists, and the list and pantry services call it on save. The
  * pipeline's own cases live in that package's tests.
  *

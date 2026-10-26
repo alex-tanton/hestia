@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import type { DeparturePreview } from '@hearth/shared';
+import type { DeparturePreview } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';

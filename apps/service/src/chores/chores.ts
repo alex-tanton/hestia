@@ -5,7 +5,7 @@ import {
   rebaseRotationOnEdit,
   type CalendarDate,
   type Recurrence,
-} from '@hearth/recurrence';
+} from '@hestia/recurrence';
 import {
   rotationDuplicateMessage,
   type Chore,
@@ -14,7 +14,7 @@ import {
   type CompleteChoreRequest,
   type CreateChoreRequest,
   type UpdateChoreRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { Database } from '../db.js';
 import { choreRotationCopy, type DroppedCopyReport } from '../notifications/copy.js';
 import { fail } from '../problem.js';
@@ -218,7 +218,7 @@ async function resolveRotationUpdate(
 }
 
 /**
- * Backstop for `rotationOrderSchema` in `@hearth/shared`, which the route already applied. The
+ * Backstop for `rotationOrderSchema` in `@hestia/shared`, which the route already applied. The
  * column is a plain `uuid[]` and would store a repeated member without complaint, so the service
  * refuses it here too rather than trusting that every caller goes through the route. Checked before
  * any database read so a bad order never reaches the rotation math.
@@ -357,7 +357,7 @@ async function enqueueChoreRotation(
  * `userId`.
  *
  * `occurrence_date`: see the PATCH-sized comment on `completeChoreRequestSchema` in
- * `@hearth/shared` for the decision this unit makes. In short: the server always computes its own
+ * `@hestia/shared` for the decision this unit makes. In short: the server always computes its own
  * answer, `occurrenceToComplete`, from the current rotation/recurrence state; a caller that
  * supplies one must name that exact same date and gets a validation error otherwise, never a silent
  * substitution. There is no other value a correct completion can close — the rule is exhaustive (it

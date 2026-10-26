@@ -15,7 +15,7 @@ import {
   type ShoppingList,
   type ShoppingListDetail,
   type UpdatePantryItemRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import {
   listWriteMutationKey,
   listWriteScope,

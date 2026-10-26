@@ -52,9 +52,9 @@ count as unit tests: nothing touches a socket or a real database.
 ```sh
 pnpm test                              # the harness tests, then every workspace's unit + component tests
 pnpm test:harness                      # only the thirteen harness tests
-pnpm --filter @hearth/recurrence test  # one workspace
-pnpm --filter @hearth/matching test
-pnpm --filter @hearth/service test     # excludes *.integration.test.ts (vitest.config.ts)
+pnpm --filter @hestia/recurrence test  # one workspace
+pnpm --filter @hestia/matching test
+pnpm --filter @hestia/service test     # excludes *.integration.test.ts (vitest.config.ts)
 ```
 
 **Adding one:** put `<name>.test.ts` next to the module it tests, in the same package. A minimal
@@ -368,7 +368,7 @@ arbitrary mix.
 **Running them:**
 
 ```sh
-pnpm --filter @hearth/web test
+pnpm --filter @hestia/web test
 ```
 
 ## End-to-end tests
@@ -442,7 +442,7 @@ real push service is ever contacted.
 
 ```sh
 # once: install the browser
-pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
+pnpm --filter @hestia/e2e exec playwright install --with-deps chromium
 
 # the whole suite: builds and starts the Compose stack from an empty database,
 # migrates, seeds, runs every journey, tears the stack down
@@ -460,7 +460,7 @@ paying for a full stack bring-up/teardown each time:
 HEARTH_E2E_REUSE_STACK=1 pnpm test:e2e
 
 # subsequent runs: reuse that stack, point Playwright at one spec file
-HEARTH_E2E_REUSE_STACK=1 HEARTH_E2E_RUN_ID=<id> pnpm --filter @hearth/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
+HEARTH_E2E_REUSE_STACK=1 HEARTH_E2E_RUN_ID=<id> pnpm --filter @hestia/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
 ```
 
 `HEARTH_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
@@ -685,13 +685,13 @@ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
 export HEARTH_ORIGIN=http://127.0.0.1:5173
 export HEARTH_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
 export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
-pnpm --filter @hearth/service dev
+pnpm --filter @hestia/service dev
 ```
 
 In a second terminal:
 
 ```sh
-pnpm --filter @hearth/web dev
+pnpm --filter @hestia/web dev
 ```
 
 Open `http://127.0.0.1:5173`.
@@ -777,7 +777,7 @@ pnpm db:seed              # re-seed from scratch
   `thresholds: { statements: 95, branches: 83, functions: 96, lines: 97 }`, each a few points under
   the suite's actual measured coverage (96.65% / 85.78% / 98.07% / 98.56% as of the coverage unit
   that added it) rather than the exact number, so ordinary churn doesn't fail CI on noise.
-  `pnpm --filter @hearth/service test:coverage` reports coverage across its unit *and* integration
+  `pnpm --filter @hestia/service test:coverage` reports coverage across its unit *and* integration
   tests together (a unit-only number would understate what's exercised through the integration
   suite). It needs `supabase start` running, so CI's `test-integration` job runs it in place of a
   plain `pnpm test:integration` (the same job already pays for `supabase start`), enforcing the
@@ -786,7 +786,7 @@ pnpm db:seed              # re-seed from scratch
 - **`apps/web`** has a `test:coverage` script (`vitest run --coverage --passWithNoTests`) and a
   coverage configuration in `vite.config.ts`: `thresholds: { statements: 84, branches: 80,
   functions: 77, lines: 85 }`, each the measured value (85.38% / 81.83% / 78.59% / 86.96%) rounded
-  down, minus one point. CI's `test-unit` job runs `pnpm --filter @hearth/web test:coverage` on
+  down, minus one point. CI's `test-unit` job runs `pnpm --filter @hestia/web test:coverage` on
   every pull request and push to main, so a drop below a threshold fails CI. The `test` script of
   the workspace still has no `--coverage`, so `pnpm test` and the sweep stay plain and pay nothing
   for it. The E2E journeys are what stand in for coverage of the running UI.

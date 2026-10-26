@@ -7,7 +7,7 @@ import type {
   Merchant,
   MerchantsResponse,
   ShoppingList,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { OAK_STREET_ID, ALEX_ID, oakStreetFixture, profileFixture } from './fixtures.ts';
 import type { StubHandler } from './harness.tsx';
 

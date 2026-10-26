@@ -2,7 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
 import { act, configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Chore, ChoreDetail } from '@hearth/shared';
+import type { Chore, ChoreDetail } from '@hestia/shared';
 import {
   BANNED_GAMIFICATION_WORDS,
   CHORES_EMPTY_COPY,

@@ -6,7 +6,7 @@ import { emailSchema, timezoneSchema } from './common.js';
  * POST /api/signup. A blank display name becomes the part of the email before the @.
  *
  * The password carries the shape rules only; the route composes the common-password rule in from
- * `@hearth/shared/common-passwords`, which is what keeps the list out of the PWA's app shell.
+ * `@hestia/shared/common-passwords`, which is what keeps the list out of the PWA's app shell.
  */
 export const signupRequestSchema = z.object({
   email: emailSchema,

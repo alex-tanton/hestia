@@ -17,7 +17,7 @@ import {
   type Errand,
   type UpdateChoreRequest,
   type UpdateErrandRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 

@@ -9,7 +9,7 @@ import type {
   Invite,
   Member,
   ProfileResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { runCli } from './cli.js';
 import type { Database } from './db.js';
 import { withUserDb } from './db/user-db.js';

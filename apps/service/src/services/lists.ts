@@ -1,5 +1,5 @@
 import { sql, type Kysely, type Selectable } from 'kysely';
-import { normalize } from '@hearth/matching';
+import { normalize } from '@hestia/matching';
 import type {
   CreateListItemRequest,
   ListItem,
@@ -8,7 +8,7 @@ import type {
   ShoppingListDetail,
   StoreGroup,
   UpdateListItemRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from './households.js';

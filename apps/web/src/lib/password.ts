@@ -1,4 +1,4 @@
-import { newPasswordSchema } from '@hearth/shared/common-passwords';
+import { newPasswordSchema } from '@hestia/shared/common-passwords';
 
 /** The rule is shown up front, not only after a failure. */
 export const PASSWORD_HINT = 'At least 8 characters';

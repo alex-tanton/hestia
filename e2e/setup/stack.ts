@@ -147,7 +147,7 @@ export function startStack(): void {
   composeChecked(['up', '--detach', '--wait', '--build', ...APP_SERVICES]);
 
   step('seeding');
-  runChecked('pnpm', ['--filter', '@hearth/service', 'db:seed'], {
+  runChecked('pnpm', ['--filter', '@hestia/service', 'db:seed'], {
     HEARTH_SEED_AUTH_URL: `${BASE_URL}/auth/v1`,
     HEARTH_SEED_SERVICE_ROLE_KEY: env['SERVICE_ROLE_KEY'] ?? '',
     HEARTH_SEED_DB_URL: dbUrl,

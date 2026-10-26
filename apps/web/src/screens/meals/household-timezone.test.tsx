@@ -2,7 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
 import { configure, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MealPlanEntry } from '@hearth/shared';
+import type { MealPlanEntry } from '@hestia/shared';
 import { stubCoarsePointer } from '../../test/browser.ts';
 import { ALEX_ID, OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { queryKeys } from '../../lib/api/keys.ts';

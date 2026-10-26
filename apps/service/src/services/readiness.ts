@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely';
-import { matchIngredient, type MatchOverride } from '@hearth/matching';
-import type { ReadinessBreakdownEntry } from '@hearth/shared';
+import { matchIngredient, type MatchOverride } from '@hestia/matching';
+import type { ReadinessBreakdownEntry } from '@hestia/shared';
 import type { Database } from '../db.js';
 import {
   buildMatchCandidates,

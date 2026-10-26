@@ -1,6 +1,6 @@
 import { configure, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { Bill } from '@hearth/shared';
+import type { Bill } from '@hestia/shared';
 import { registerHouseholdClock } from '../../test/browser.ts';
 import { billFixture } from '../../test/bills-fixtures.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';

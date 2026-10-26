@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { ListItem } from '@hearth/shared';
+import type { ListItem } from '@hestia/shared';
 import { formatCents, formatPrice, speakPrice } from '../../lib/format.ts';
 import { Badge } from '../ui/Badge.tsx';
 

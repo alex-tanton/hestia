@@ -4,7 +4,7 @@ import {
   errandIdParamsSchema,
   householdIdParamsSchema,
   updateErrandRequestSchema,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import {
   createErrand,
   deleteErrand,

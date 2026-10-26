@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
-import type { DealSort } from '@hearth/shared';
+import type { DealSort } from '@hestia/shared';
 import { OfflineState } from '../../components/states/StateBlocks.tsx';
 import { Select } from '../../components/ui/Select.tsx';
 import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';

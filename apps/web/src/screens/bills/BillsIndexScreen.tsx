@@ -1,6 +1,6 @@
 import { Receipt } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import type { Bill, BillVisibility } from '@hearth/shared';
+import type { Bill, BillVisibility } from '@hestia/shared';
 import { BillForm, type BillDraft } from '../../components/bills/BillForm.tsx';
 import { BillRow } from '../../components/bills/BillRow.tsx';
 import {

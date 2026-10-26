@@ -20,7 +20,7 @@ import {
   type FlyersResponse,
   type MerchantsResponse,
   type ShoppingList,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { useApi, useAuthClient } from './api-context.tsx';
 import { HOUSEHOLD_SCOPE } from './keys.ts';
 

@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import type { PriceUnit } from '@hearth/shared';
+import type { PriceUnit } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { toCents } from './money.js';
 

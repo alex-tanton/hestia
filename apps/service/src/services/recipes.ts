@@ -1,5 +1,5 @@
 import type { Kysely, Selectable } from 'kysely';
-import { normalize } from '@hearth/matching';
+import { normalize } from '@hestia/matching';
 import type {
   CreateRecipeRequest,
   IngredientInput,
@@ -10,8 +10,8 @@ import type {
   RecipeListResponse,
   RecipeReadiness,
   UpdateRecipeRequest,
-} from '@hearth/shared';
-import { RECIPE_PAGE_SIZE } from '@hearth/shared';
+} from '@hestia/shared';
+import { RECIPE_PAGE_SIZE } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { paginate } from './deals/filter.js';

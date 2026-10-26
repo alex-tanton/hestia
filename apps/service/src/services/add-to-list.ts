@@ -1,6 +1,6 @@
 import { sql, type Kysely } from 'kysely';
-import { matchIngredient } from '@hearth/matching';
-import type { ShoppingListDetail } from '@hearth/shared';
+import { matchIngredient } from '@hestia/matching';
+import type { ShoppingListDetail } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { aggregateIngredients, type IngredientContribution } from './list-aggregation.js';
 import { detailOf, refreshed, requireList } from './lists.js';

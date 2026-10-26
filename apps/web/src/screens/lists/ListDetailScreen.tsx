@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, Pencil, ShoppingCart, Trash2 } from 'lucide-react';
 import { useId, useState, type ReactElement } from 'react';
-import type { ListItem, ListItemStatus, ShoppingListDetail, StoreGroup } from '@hearth/shared';
+import type { ListItem, ListItemStatus, ShoppingListDetail, StoreGroup } from '@hestia/shared';
 import { ItemSheet, type ItemDraft, type StoreChoice } from '../../components/lists/ItemSheet.tsx';
 import { ShoppingListRow } from '../../components/lists/ShoppingListRow.tsx';
 import { StoreGroupHeader } from '../../components/lists/StoreGroupHeader.tsx';

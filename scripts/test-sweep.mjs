@@ -209,7 +209,7 @@ function cellEnvironment(cell) {
 function commandFor(suite, workspace, only) {
   const script = suite === 'integration' ? 'test:integration' : 'test';
   const filter = only === undefined ? '' : ` ${only}`;
-  return `pnpm --filter @hearth/${workspace} ${script}${filter}`;
+  return `pnpm --filter @hestia/${workspace} ${script}${filter}`;
 }
 
 /**
@@ -222,7 +222,7 @@ function selectedTestFiles(suite, workspace, only) {
   const env = cellEnvironment({ now: undefined, tz: undefined });
   const list = spawnSync(
     'pnpm',
-    ['--filter', `@hearth/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
+    ['--filter', `@hestia/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
     { cwd: REPO_ROOT, env, encoding: 'utf8' },
   );
   if (list.error !== undefined || list.status !== 0) {
@@ -288,7 +288,7 @@ function main() {
       selectedTestFiles(options.suite, single, options.only).length === 0
     ) {
       console.error(
-        `test-sweep: --only ${options.only} matches no test file in @hearth/${single} ` +
+        `test-sweep: --only ${options.only} matches no test file in @hestia/${single} ` +
           `(${options.suite} suite); a sweep that runs nothing is not a pass`,
       );
       return 2;

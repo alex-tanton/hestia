@@ -27,8 +27,8 @@ ENV VITE_SUPABASE_ANON_KEY=$ANON_KEY
 ARG VAPID_PUBLIC_KEY
 ENV VITE_VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
 RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
-    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/web... \
- && pnpm --filter @hearth/web build
+    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/web... \
+ && pnpm --filter @hestia/web build
 
 FROM caddy:2.11.7-alpine
 ARG HEARTH_REVISION=dev

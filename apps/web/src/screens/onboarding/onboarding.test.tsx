@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { COMMON_PASSWORD_MESSAGE } from '@hearth/shared';
+import { COMMON_PASSWORD_MESSAGE } from '@hestia/shared';
 import { createAuthStub, problemBody, renderScreen, stubFetch } from '../../test/harness.tsx';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { merchantsResponse } from '../../test/deal-fixtures.ts';

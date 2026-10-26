@@ -27,7 +27,7 @@ describe('request schemas', () => {
       displayName: 'Alex',
       timezone: 'America/New_York',
     });
-    // The list lives behind `@hearth/shared/common-passwords`, which the route composes in
+    // The list lives behind `@hestia/shared/common-passwords`, which the route composes in
     // (`routes.test.ts` covers the refusal); the wire schema only checks length and bytes.
     expect(
       signupRequestSchema.safeParse({ email: 'alex@example.com', password: 'short' }).success,

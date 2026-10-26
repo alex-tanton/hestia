@@ -1,6 +1,6 @@
 import { Package, ShoppingBasket, Tag, X, type LucideIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import type { MatchOverride, ReadinessBreakdownEntry, RecipeIngredient } from '@hearth/shared';
+import type { MatchOverride, ReadinessBreakdownEntry, RecipeIngredient } from '@hestia/shared';
 import { useCreateMatchOverride, useDeleteMatchOverride } from '../../lib/api/meal-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { Badge } from '../ui/Badge.tsx';

@@ -1,4 +1,4 @@
-import type { NotificationType } from '@hearth/shared';
+import type { NotificationType } from '@hestia/shared';
 
 /*
  * Copy for Settings › Notifications. Each type

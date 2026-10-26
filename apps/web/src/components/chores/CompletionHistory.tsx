@@ -1,6 +1,6 @@
 import { Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import type { ChoreCompletion, Member } from '@hearth/shared';
+import type { ChoreCompletion, Member } from '@hestia/shared';
 import { formatCalendarDate } from '../../lib/format.ts';
 import { calendarDateOfInstant } from '../../lib/household-date.ts';
 import { ConfirmDialog } from '../ui/ConfirmDialog.tsx';

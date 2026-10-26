@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import type { Chore, ChoreDetail, Household } from '@hearth/shared';
+import type { Chore, ChoreDetail, Household } from '@hestia/shared';
 import {
   adminPool,
   as,

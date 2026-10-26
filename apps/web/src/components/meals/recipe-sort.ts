@@ -1,4 +1,4 @@
-import type { Recipe, Suggestion } from '@hearth/shared';
+import type { Recipe, Suggestion } from '@hestia/shared';
 
 /**
  * `GET /households/:id/recipes` carries no readiness (`recipeSchema` has no readiness field,

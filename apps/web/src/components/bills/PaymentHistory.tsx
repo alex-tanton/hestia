@@ -1,6 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
-import type { BillPayment } from '@hearth/shared';
+import type { BillPayment } from '@hestia/shared';
 import { formatCalendarDate, formatCents } from '../../lib/format.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { OverflowMenu, type OverflowMenuItem } from '../ui/OverflowMenu.tsx';

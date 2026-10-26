@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import { useMemo, useState, type ReactElement, type SyntheticEvent } from 'react';
 import { useNavigate } from 'react-router';
-import type { DealScope, DealSort } from '@hearth/shared';
+import type { DealScope, DealSort } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { OfflineState } from '../../components/states/StateBlocks.tsx';
 import { TextField } from '../../components/ui/Field.tsx';

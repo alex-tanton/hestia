@@ -1,7 +1,7 @@
 import { onlineManager } from '@tanstack/react-query';
 import { configure, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { Errand } from '@hearth/shared';
+import type { Errand } from '@hestia/shared';
 import { registerHouseholdClock } from '../../test/browser.ts';
 import {
   OAK_STREET_ID,

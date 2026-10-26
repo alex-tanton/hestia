@@ -1,5 +1,5 @@
 import type { Kysely } from 'kysely';
-import type { ProfileResponse, UpdateProfileRequest } from '@hearth/shared';
+import type { ProfileResponse, UpdateProfileRequest } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 

@@ -1,7 +1,7 @@
 import { Store } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
-import type { Merchant } from '@hearth/shared';
+import type { Merchant } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { Checkbox } from '../../components/ui/Checkbox.tsx';

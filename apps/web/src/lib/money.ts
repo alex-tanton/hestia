@@ -1,4 +1,4 @@
-import type { PriceUnit } from '@hearth/shared';
+import type { PriceUnit } from '@hestia/shared';
 
 /**
  * Money crosses the API as an integer number of cents and is only ever *formatted* here.

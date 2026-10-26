@@ -1,7 +1,7 @@
 import { Tag } from 'lucide-react';
 import { useCallback, type ReactElement } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { Deal, Freshness } from '@hearth/shared';
+import type { Deal, Freshness } from '@hestia/shared';
 import { EmptyState, ErrorState } from '../../components/states/StateBlocks.tsx';
 import { Skeleton } from '../../components/ui/Skeleton.tsx';
 import { useDelayedVisible } from '../../lib/use-delayed-visible.ts';

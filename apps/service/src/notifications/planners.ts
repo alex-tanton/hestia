@@ -1,4 +1,4 @@
-import type { CalendarDate, Recurrence } from '@hearth/recurrence';
+import type { CalendarDate, Recurrence } from '@hestia/recurrence';
 import { isValidOccurrence } from '../chores/occurrence.js';
 
 /*

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { MatchOverride, RecipeDetail } from '@hearth/shared';
+import type { MatchOverride, RecipeDetail } from '@hestia/shared';
 import { IngredientRow } from './IngredientRow.tsx';
 import { readinessSentence } from './meal-copy.ts';
 import { ReadinessRing } from './RecipeCard.tsx';

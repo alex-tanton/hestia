@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Bill, Chore, MealPlanEntry, MealType, ShoppingList } from '@hearth/shared';
+import type { Bill, Chore, MealPlanEntry, MealType, ShoppingList } from '@hestia/shared';
 import { mealTypeLabel } from '../components/meals/meal-copy.ts';
 import type { DashboardCardState } from '../components/dashboard/DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from '../components/dashboard/DashboardCards.tsx';

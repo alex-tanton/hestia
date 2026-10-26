@@ -1,7 +1,7 @@
 import { Archive, Pencil, Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
-import type { BillPayment } from '@hearth/shared';
+import type { BillPayment } from '@hestia/shared';
 import { BillForm, type BillDraft } from '../../components/bills/BillForm.tsx';
 import {
   OFFLINE_ACTION_REASON,

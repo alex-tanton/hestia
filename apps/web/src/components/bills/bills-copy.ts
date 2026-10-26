@@ -1,4 +1,4 @@
-import type { Bill } from '@hearth/shared';
+import type { Bill } from '@hestia/shared';
 import { formatCalendarDate } from '../../lib/format.ts';
 
 /**

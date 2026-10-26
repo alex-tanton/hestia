@@ -21,7 +21,7 @@
  *   its adjustment is applied twice.
  *
  * The pin is a `Date` of its own rather than `vi.setSystemTime`. Vitest's mock leaves
- * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hearth/recurrence`)
+ * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hestia/recurrence`)
  * lists those methods when it loads in order to override them: loaded under that mock, its
  * `TZDate` answers in the machine's zone, which is wrong in every negative-offset zone. This pin
  * is in place before any test module is imported, so it has to look like `Date` to such code and

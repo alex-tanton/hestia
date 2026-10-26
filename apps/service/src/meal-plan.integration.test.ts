@@ -8,7 +8,7 @@ import type {
   RecipeDetail,
   ShoppingListDetail,
   SuggestionsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { adminPool, as, household, type HouseholdFixture } from './test/service-stack.js';
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';

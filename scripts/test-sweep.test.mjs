@@ -203,7 +203,7 @@ describe('test-sweep: an --only that selects no test fails the sweep', () => {
     );
     assert.notEqual(run.status, 0, `passed: ${run.stdout}`);
     assert.match(run.stderr, /--only nonexistent\/foo\.test\.ts matches no test file/);
-    assert.match(run.stderr, /@hearth\/shared/);
+    assert.match(run.stderr, /@hestia\/shared/);
     assert.doesNotMatch(run.stdout, /result=PASS|sweep: 1\/1 passed/);
   });
 

@@ -1,5 +1,5 @@
 {
-  "name": "@hearth/web",
+  "name": "@hestia/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,8 +13,8 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
-    "@hearth/recurrence": "workspace:*",
-    "@hearth/shared": "workspace:*",
+    "@hestia/recurrence": "workspace:*",
+    "@hestia/shared": "workspace:*",
     "@supabase/supabase-js": "2.116.0",
     "@tanstack/query-async-storage-persister": "5.103.1",
     "@tanstack/react-query": "5.103.1",

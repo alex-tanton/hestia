@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { RecipeDetail } from '@hearth/shared';
+import type { RecipeDetail } from '@hestia/shared';
 import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';

@@ -1,4 +1,4 @@
-import type { Chore, ChoreCompletion, ChoreDetail, Errand } from '@hearth/shared';
+import type { Chore, ChoreCompletion, ChoreDetail, Errand } from '@hestia/shared';
 import { addDays } from '../lib/household-date.ts';
 import { ALEX_ID, JORDAN_ID, OAK_STREET_ID, SAM_ID } from './fixtures.ts';
 

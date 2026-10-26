@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely';
-import { normalize } from '@hearth/matching';
-import type { CreatePantryItemRequest, PantryItem, UpdatePantryItemRequest } from '@hearth/shared';
+import { normalize } from '@hestia/matching';
+import type { CreatePantryItemRequest, PantryItem, UpdatePantryItemRequest } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { markHouseholdActive } from './households.js';
 import { fail } from '../problem.js';

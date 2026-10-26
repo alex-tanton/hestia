@@ -1,5 +1,5 @@
-import { previewOccurrences, type Recurrence } from '@hearth/recurrence';
-import type { RecurrenceUnit } from '@hearth/shared';
+import { previewOccurrences, type Recurrence } from '@hestia/recurrence';
+import type { RecurrenceUnit } from '@hestia/shared';
 import { formatCalendarDate, formatList } from '../format.ts';
 
 /**
@@ -8,7 +8,7 @@ import { formatCalendarDate, formatList } from '../format.ts';
  * dates, since anchored recurrence is easy to misunderstand. There is no server round trip for
  * this (the Bills API has no preview endpoint) — it
  * uses the same anchored-recurrence package the service itself computes occurrences with
- * (`@hearth/recurrence`), so the preview can never disagree with what the bill actually does once
+ * (`@hestia/recurrence`), so the preview can never disagree with what the bill actually does once
  * saved.
  */
 export interface RecurrenceDraft {

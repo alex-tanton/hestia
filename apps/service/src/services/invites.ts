@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomInt } from 'node:crypto';
 import type { Kysely } from 'kysely';
-import type { CreatedInvite, Invite } from '@hearth/shared';
+import type { CreatedInvite, Invite } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { requireAdmin } from './households.js';

@@ -3,7 +3,7 @@ import type {
   ShoppingListDetail,
   StoreGroup,
   UpdateListItemRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 
 /*
  * Optimistic edits to a cached list. Every offline-queueable write is applied at once and rolled
