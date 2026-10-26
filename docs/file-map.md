@@ -161,8 +161,9 @@ shopping list.
 | `knip-production-baseline.txt` | The owner-reviewed production-mode knip findings (28 rows and a `total` row) that the baseline check accepts. A new row needs the owner's review. |
 | `check-repo-hygiene.mjs` | Reads the git index and fails on a tracked file that `.gitignore` ignores, a script that is not mode `100755`, and a text file committed with CRLF or mixed line endings. |
 | `check-repo-hygiene.test.mjs` | Harness test for the hygiene check, run on temporary git repositories. Run by `pnpm test:harness`. |
-| `check-migrations-append-only.mjs` | Compares `supabase/migrations/` with the merge base of a given ref and fails on anything but added files, because an applied migration must never change. |
-| `check-migrations-append-only.test.mjs` | Harness test for the migration check, run on temporary repositories, including a base ref that must never reach a shell. Run by `pnpm test:harness`. |
+| `check-migrations-append-only.mjs` | Compares `supabase/migrations/` with the merge base of a given ref and fails on anything but added files, because an applied migration must never change. An entry in `migration-exemptions.json` admits one reviewed edit or rename while the merge base and `HEAD` hold its pinned blobs. |
+| `migration-exemptions.json` | Owner-reviewed one-time exemptions for the append-only check, each pinned to a migration's blob before and after the edit; inert once the edit is on `main`, and removed afterwards. |
+| `check-migrations-append-only.test.mjs` | Harness test for the migration check, run on temporary repositories, including a base ref that must never reach a shell and the exemption rules. Run by `pnpm test:harness`. |
 | `audit-prod.mjs` | Runs `pnpm audit --prod --json` and fails on an advisory that `audit-allowlist.json` does not allow, on an expired allowance, and when the registry could not be reached. |
 | `audit-prod.test.mjs` | Harness test for the audit script, run on saved audit reports and a stub `pnpm`. Run by `pnpm test:harness`. |
 | `audit-allowlist.json` | The advisories the audit script accepts, each with an id, an expiry day and a reason. Empty today. |

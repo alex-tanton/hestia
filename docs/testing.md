@@ -203,7 +203,10 @@ controlled, not inherited from the machine.
     migrations and a branch per case, and runs `scripts/check-migrations-append-only.mjs`. It
     checks that an added file passes and that an edit, delete, rename, mode change or type change
     fails, that an all-zero or unresolvable base exits 2, and that a hostile `--base` never
-    reaches a shell (the marker file a command substitution would create stays absent).
+    reaches a shell (the marker file a command substitution would create stays absent). It also
+    checks the content-pinned exemptions: an exempted rename and edit pass, while a wrong head
+    blob, an expired entry, an unrelated edit next to an exempted one and a wrong rename target
+    each fail, and a file that is not JSON or an invalid entry exits 2.
   - `scripts/audit-prod.test.mjs` runs `scripts/audit-prod.mjs` on saved `pnpm audit --prod
     --json` reports with a fixed `--today`, and in four cases with a stub `pnpm` first on `PATH`
     so no registry is contacted. It checks the allowlist rules (an unlisted advisory fails, a
@@ -826,7 +829,11 @@ of `pnpm test` (see Harness tests above). Run them before pushing:
 - **The migration check** is `node scripts/check-migrations-append-only.mjs --base {ref}`. It
   compares `supabase/migrations/` with the merge base of `{ref}` and `HEAD` and fails on anything
   but added files: an edit, a delete, a rename, a mode change or a type change. It needs history
-  back to the merge base, and it does not check that new files sort after the old ones.
+  back to the merge base, and it does not check that new files sort after the old ones. An entry
+  in `scripts/migration-exemptions.json` admits one edit or rename of an applied migration, and
+  only while the merge base still holds the entry's `fromBlob` and `HEAD` holds its `toBlob`, so it
+  expires by itself once the change is on `main`. Each applied entry prints an `exempt:` line, and
+  an entry needs the owner's review.
 
 Each script exits 0 when it passes, 1 when it finds a problem and 2 when it could not decide (bad
 usage, an unreadable input, a tool that did not run).

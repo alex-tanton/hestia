@@ -44,7 +44,12 @@ integration tests together, so it needs `supabase start` running too.
 
 `supabase start` runs Postgres, GoTrue, Realtime, Kong, and Studio locally and applies
 `supabase/migrations/`. The migrations create `hestia_service` without a login; give it one, then
-point the service at the local database and at GoTrue through Kong:
+point the service at the local database and at GoTrue through Kong.
+
+A local database created before the login role was named `hestia_service` does not have it, and
+the `alter role` line below then fails with `role "hestia_service" does not exist`. Run
+`supabase db reset` (or `supabase stop --no-backup`, then `supabase start`) to recreate the
+database from the migrations. The commands:
 
 ```sh
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
