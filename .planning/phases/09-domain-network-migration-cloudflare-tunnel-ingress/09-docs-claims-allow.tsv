@@ -1,0 +1,3 @@
+cloudflare/cloudflared	container image repository on Docker Hub, not a path
+cloudflare/cloudflared:2026.10.3	container image reference; the tag equals the image in docker/docker-compose.yml
+caddy:8080	Compose service name and port (host:port), the tunnel route target, not a script

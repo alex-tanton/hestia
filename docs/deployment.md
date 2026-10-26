@@ -3,18 +3,21 @@
 ## Overview
 
 Production is one Linux box running the stack defined in `docker/docker-compose.yml` under Docker
-Compose. The box is reached over the internet only through Tailscale Funnel, which terminates TLS
-on the host and forwards plain HTTP to Caddy; Caddy is the only container that publishes a port
-(`127.0.0.1:8080`), and it is the only way in — there is no port forwarded on the router and no
-DNS record to manage. Caddy serves the built PWA directly and reverse-proxies `/api/*` to the
-Hestia service and `/auth/v1/*` / `/realtime/v1/*` to Kong, which fronts GoTrue (auth) and
-Realtime. A nightly backup container dumps Postgres to a second physical disk. Deploys are
-triggered by a passing CI run on `main` and run on a self-hosted GitHub Actions runner on the same
-box.
+Compose. The box is reached over the internet only through a remotely-managed Cloudflare Tunnel.
+Cloudflare's edge terminates TLS for `https://hestia.aberrance.app`; the `cloudflared` container
+dials out to Cloudflare and forwards plain HTTP to `caddy:8080` over the `hestia` network. No
+container publishes a host port and the router forwards none. Caddy serves the built PWA directly
+and reverse-proxies `/api/*` to the Hestia service and `/auth/v1/*` / `/realtime/v1/*` to Kong,
+which fronts GoTrue (auth) and Realtime. A nightly backup container dumps Postgres to a second
+physical disk. Deploys are triggered by a passing CI run on `main` and run on a self-hosted GitHub
+Actions runner on the same box.
+
+TLS ends at Cloudflare's edge, so Cloudflare sees requests in clear text. That is the trade-off of
+a Cloudflare-fronted design; the leg from the edge to the box is the encrypted tunnel.
 
 ## Compose services
 
-`docker/docker-compose.yml` defines seven services. The two built images, `hestia-service` and
+`docker/docker-compose.yml` defines eight services. The two built images, `hestia-service` and
 `hestia-caddy`, are tagged `<sha>` by each deploy and run through their `current` tags.
 
 | Service | Image | Role |
@@ -25,10 +28,12 @@ box.
 | `kong` | `kong/kong:3.9.3` | The gateway that routes external requests to `auth` and `realtime` only; nothing else is exposed through it. |
 | `hestia-service` | `hestia-service:<sha>` | The backend API and background jobs (built from `apps/service`). |
 | `caddy` | `hestia-caddy:<sha>` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
+| `cloudflared` | `cloudflare/cloudflared:2026.10.3` | The tunnel connector: carries public traffic from Cloudflare to `caddy:8080`. |
 | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | Runs the nightly database backup and keeps a rotation of older backups. |
 
-Only `caddy` publishes a port, on `127.0.0.1:8080`. All services share the `hestia` network, and
-Postgres data lives in the `db-data` and `db-config` volumes.
+No service publishes a host port; operator checks use `hestia-compose exec` (the alias is defined in
+"First-time setup"). All services share the `hestia` network, and Postgres data lives in the
+`db-data` and `db-config` volumes.
 
 ## System requirements
 
@@ -54,9 +59,10 @@ Install on the host before first start:
 - **Docker Engine with the Compose plugin** (`docker compose`, not the standalone `docker-compose`).
 - **The Supabase CLI, version 2.117.0** — the exact version CI uses (`supabase/setup-cli@v3` pins
   it in `.github/workflows/ci.yml`) — needed to apply migrations during deploys.
-- **Node 24** (the version pinned in `.nvmrc`), **git**, and **curl**.
-- **Tailscale**, logged in to the tailnet, with **Funnel allowed for this machine in the tailnet
-  policy**. `tailscaled` runs on the host, not in a container.
+- **Node 24** (the version pinned in `.nvmrc`) and **git**.
+- **Cloudflare:** an account with the `aberrance.app` zone active and Zero Trust enabled, which is
+  where the tunnel and its route live. The host needs outbound TCP and UDP to Cloudflare on port 7844;
+  nothing inbound.
 - **For automatic deploys:** a GitHub Actions **self-hosted runner** registered to this
   repository, labeled `self-hosted` and `hestia` (the deploy workflow targets
   `runs-on: [self-hosted, hestia]`), running as a user in the **`docker` group**. This runner must
@@ -65,30 +71,39 @@ Install on the host before first start:
 
 ## Pinned names
 
-> **The machine name and the tailnet name are pinned and must never change once chosen.** The
-> origin `https://<machine>.<tailnet>.ts.net` is baked into every installed PWA, its service
-> worker registration, and every push subscription. Renaming the machine or the tailnet strands
-> installed apps, orphans service workers, and invalidates every push subscription — there is no
-> migration path for an origin change.
+> **The hostname `hestia` in the zone `aberrance.app` is pinned and must never change.** The
+> origin `https://hestia.aberrance.app` is baked into every installed PWA, its service worker
+> registration, every push subscription and GoTrue's URLs. Moving to another hostname or zone
+> strands installed apps, orphans service workers, and invalidates every push subscription — there
+> is no migration path for an origin change.
 
-The owner fills in the machine and tailnet names once, in the table below, and sets
-`HESTIA_ORIGIN` in `/srv/hestia/.env` to the same origin. Keep the two in sync.
+`HESTIA_ORIGIN` in `/srv/hestia/.env` must equal the origin below. Keep the two in sync.
 
-| Name    | Value                                |
-| ------- | ------------------------------------ |
-| Machine | `<machine>`                          |
-| Tailnet | `<tailnet>`                          |
-| Origin  | `https://<machine>.<tailnet>.ts.net` |
+| Name     | Value                         |
+| -------- | ----------------------------- |
+| Hostname | `hestia`                      |
+| Zone     | `aberrance.app`               |
+| Origin   | `https://hestia.aberrance.app` |
 
 ## Dependencies the stack provides for itself
 
-Two services exist purely to route and protect traffic, configured by files in `docker/`:
+Three services exist purely to route and protect traffic, configured by files in `docker/`:
 
-- **Caddy** (`docker/Caddyfile`) is the stack's only published port. It terminates the plain-HTTP
-  side of Funnel, applies security headers (CSP, HSTS, etc.) to every response, serves the built
-  PWA with SPA fallback, reverse-proxies `/api/*` to `hestia-service` and `/auth/v1/*` /
-  `/realtime/v1/*` to Kong, and refuses direct `POST /auth/v1/signup*` and `PUT /auth/v1/user*`
-  calls with a 403 so those paths can only be reached through `hestia-service`.
+- **cloudflared** is the tunnel connector. It is remotely managed: the route lives in the
+  Cloudflare dashboard and the repository holds no credentials or tunnel configuration. It reads
+  its token from `CLOUDFLARE_TUNNEL_TOKEN` through the environment, never from a command line. The
+  image is pinned (`cloudflare/cloudflared:2026.10.3`), runs as a non-root user, and is
+  health-checked with `cloudflared tunnel ready` against metrics served on loopback only. It is
+  never started in E2E.
+- **Caddy** (`docker/Caddyfile`) receives plain HTTP from cloudflared on `caddy:8080` and publishes
+  no port. It takes the client address only from `CF-Connecting-IP`, and only when the connection
+  comes from the Compose subnet (`HESTIA_TRUSTED_PROXIES`, which `docker/caddy-entrypoint.sh`
+  refuses to leave empty). It never reads a client's `X-Forwarded-For` and passes exactly one
+  address downstream. It applies security headers (CSP, HSTS, etc.) to every response, with a CSP
+  whose `connect-src` names the origin's host for WebSockets, serves the built PWA with SPA
+  fallback, reverse-proxies `/api/*` to `hestia-service` and `/auth/v1/*` / `/realtime/v1/*` to
+  Kong, and refuses direct `POST /auth/v1/signup*` and `PUT /auth/v1/user*` calls with a 403 so
+  those paths can only be reached through `hestia-service`.
 - **Kong** (`docker/kong.yml`, started by `docker/kong-entrypoint.sh`) is a minimal declarative API
   gateway in front of GoTrue and Realtime only — there are deliberately no `rest`, `storage`,
   `functions`, or `analytics` routes. It key-authenticates callers as `anon` or `service_role` and
@@ -105,14 +120,15 @@ Two services exist purely to route and protect traffic, configured by files in `
 
 ## Environment variables
 
-Every variable in `.env.example`, in order. The first five are filled in by the owner (three of
+Every variable in `.env.example`, in order. The first six are filled in by the owner (four of
 them copied in by `generate-secrets.sh` when set in its own environment); everything below
 "Generated by `scripts/generate-secrets.sh`" is generated automatically and should never be typed
 by hand.
 
 | Variable | Purpose |
 | --- | --- |
-| `HESTIA_ORIGIN` | The pinned public origin, `https://<machine>.<tailnet>.ts.net`. Baked into every installed PWA and push subscription; must never change. |
+| `HESTIA_ORIGIN` | The pinned public origin, `https://hestia.aberrance.app`. Baked into every installed PWA and push subscription; must never change. |
+| `CLOUDFLARE_TUNNEL_TOKEN` | The tunnel token, read only by `cloudflared`. It cannot be generated: paste it into `/srv/hestia/.env` by editing the file, never on a command line. Compose refuses every command while it is empty. `generate-secrets.sh` copies it only when it is already in its environment, as E2E does. |
 | `HESTIA_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
 | `HESTIA_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
 | `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hestia-service`. |
@@ -132,27 +148,67 @@ unset, the service falls back to `mailto:` + `HESTIA_OWNER_EMAIL`, or else `HEST
 an `https:` URL; a set value must itself be a `mailto:` or `https:` URI, or the service fails at
 startup.
 
+## Cloudflare Tunnel
+
+The tunnel and its route exist only in the Cloudflare dashboard. Do steps 1 to 3 once, before the
+first deploy:
+
+1. In Cloudflare Zero Trust, under Networks, Tunnels, create a cloudflared tunnel named `hestia`.
+   Copy only the token from the install screen.
+2. Paste it into `/srv/hestia/.env` as `CLOUDFLARE_TUNNEL_TOKEN=<token>` by editing the file. Do not
+   put it on a command line, where it would reach shell history and the process list.
+3. Add the route. The dashboard calls it a published application (older dashboards say public
+   hostname): `hestia.aberrance.app` to the service `http://caddy:8080`. Point it at Caddy, never at
+   a backend service: Caddy's refusals and its client-address rule only apply there. Check that the
+   proxied DNS record for `hestia` exists; if the dashboard did not create it, add a proxied CNAME
+   `hestia` to `<tunnel-id>.cfargotunnel.com`.
+4. Deploy (see "First-time setup" and "Ongoing deploys").
+5. Verify:
+   - `hestia-compose ps cloudflared` shows healthy, and `hestia-compose logs --tail 50 cloudflared`
+     shows registered connections.
+   - `curl -fsS https://hestia.aberrance.app/api/health` from any machine succeeds.
+   - The browser console shows no CSP violation, including while a list syncs between two devices
+     (that is the WebSocket through the tunnel).
+   - `hestia-compose logs hestia-service` shows the visitor's public address as `remoteAddress`,
+     not a `172.16.238.x` address.
+
+### Before you merge
+
+Merging to `main` deploys. The token and the new `HESTIA_ORIGIN` must already be in
+`/srv/hestia/.env`; without them the deploy stops at its first Compose call and nothing restarts.
+
+### After an origin change
+
+GoTrue reads its URLs only when it is recreated, and a deploy never recreates `auth`. After the
+first deploy on a new origin, run `hestia-compose up -d --wait` once so `auth` takes it.
+
+### Rotating the token
+
+Refresh the token in the dashboard, edit `CLOUDFLARE_TUNNEL_TOKEN` in `/srv/hestia/.env`, then run
+`hestia-compose up -d --wait cloudflared`.
+
 ## First-time setup
 
-Run from a checkout of `main`, on the host. The real `.env` lives outside the checkout, at
-`/srv/hestia/.env`, because the deploy runner wipes its checkout on every run.
+Run from a checkout of `main`, on the host, after steps 1 to 3 of "Cloudflare Tunnel". The real
+`.env` lives outside the checkout, at `/srv/hestia/.env`, because the deploy runner wipes its
+checkout on every run.
 
 ```sh
 sudo install -d -m 700 -o "$USER" /srv/hestia
 sudo install -d -m 755 /mnt/backup/hestia
-HESTIA_ORIGIN=https://<machine>.<tailnet>.ts.net HESTIA_OWNER_EMAIL=<owner email> \
-  BACKUP_DIR=/mnt/backup/hestia scripts/generate-secrets.sh
+HESTIA_OWNER_EMAIL=<owner email> BACKUP_DIR=/mnt/backup/hestia scripts/generate-secrets.sh
+# Now edit /srv/hestia/.env and paste CLOUDFLARE_TUNNEL_TOKEN=<token> (Cloudflare Tunnel, step 2).
 
 alias hestia-compose='docker compose --env-file /srv/hestia/.env -f docker/docker-compose.yml'
 hestia-compose build
 hestia-compose up -d --wait
-curl -fsS http://127.0.0.1:8080/api/health
-
-sudo tailscale funnel --bg http://127.0.0.1:8080
+hestia-compose exec -T caddy wget -q -O - http://127.0.0.1:8080/api/health
 ```
 
 Notes:
 
+- The origin is already `.env.example`'s value, so `generate-secrets.sh` needs only the owner email
+  and the backup directory. It warns about each value still missing.
 - `generate-secrets.sh` writes `/srv/hestia/.env` from `.env.example` with every secret generated,
   and **refuses to overwrite an existing `.env`** — regenerating secrets on a live install signs
   everyone out and breaks the database login.
@@ -184,8 +240,14 @@ of the first few fail:
 1. Records the images currently tagged `current` as the rollback target.
 2. Builds `hestia-service:<sha>` and `hestia-caddy:<sha>` (the PWA is built into the Caddy image).
    A failed build changes nothing.
-3. Starts any Supabase service (`db`, `auth`, `realtime`, `kong`, `backup`) that isn't already
-   running, without recreating any that are.
+3. Prepares every container and the `hestia` network without starting or recreating any container
+   (`up --no-start --no-recreate --no-build`, with the new tag). On a normal deploy this changes
+   nothing. When the network's configuration has changed, Compose recreates the network here, which
+   stops every container: the supporting services come back later in this step, and
+   `hestia-service` and `caddy` come back at step 7 (see "The first deploy on the tunnel ingress"
+   below). Then starts any supporting service (`db`, `auth`, `realtime`, `kong`, `backup`,
+   `cloudflared`) that isn't already running, without recreating any that are. A bad tunnel token
+   fails this step with nothing restarted.
 4. Takes a backup with `hestia-compose exec -T backup /backup.sh`. **A failed backup aborts the
    deploy** — nothing is migrated or restarted.
 5. Applies pending migrations with `supabase migration up` against the Compose database. The CLI
@@ -194,16 +256,41 @@ of the first few fail:
 6. Re-applies the `hestia_service` login from `.env` (`docker/db/hestia-service-login.sql`) —
    idempotent, and picks up a rotated password.
 7. Tags the new images `current` and recreates `hestia-service` and `caddy` on them.
-8. Polls `GET http://127.0.0.1:8080/api/health` for 60 seconds. If it never succeeds, the script
-   tags the **previous** images `current` again, recreates both containers on them, and exits
-   non-zero (automatic rollback).
+8. Polls `GET /api/health` for 60 seconds, from inside the caddy container (no host port exists).
+   If it never succeeds, the script tags the **previous** images `current` again, recreates both
+   containers on them, and exits non-zero (automatic rollback).
 
-Nothing is restarted before the backup and migrations succeed, and re-running a deploy of the same
-commit is harmless. The five newest SHA-tagged images of each kind are kept.
+Nothing is restarted before the backup and migrations succeed, with one exception: a changed
+network, which step 3 recreates. Re-running a deploy of the same commit is harmless. The five
+newest SHA-tagged images of each kind are kept.
 
-A deploy never recreates `db`, `auth`, `realtime`, `kong`, or `backup`. After changing their
-configuration or image tag, take a backup by hand and apply the change with
+A deploy never recreates `db`, `auth`, `realtime`, `kong`, `backup`, or `cloudflared`. After
+changing their configuration or image tag, take a backup by hand and apply the change with
 `hestia-compose up -d --wait`.
+
+### The first deploy on the tunnel ingress
+
+The tunnel ingress removed the network's pinned gateway, which changes the `hestia` network's
+configuration, so the first deploy of it recreates the network. In the deploy log, step 3 prints
+`Network hestia Removing`, `Network hestia Removed`, `Network hestia Creating` and
+`Network hestia Created`. Recreating the network stops every container; the supporting services
+restart in step 3 (before the backup), and `hestia-service` and `caddy` restart at step 7. The site
+is down from the recreate until the health gate passes, about a minute. Later deploys print only
+`Running` lines in the prepare step and stop nothing.
+
+If the deploy stops after the recreate, `hestia-service` and `caddy` stay stopped until a deploy
+succeeds:
+
+- `the Supabase services, the backup or the tunnel are not healthy; nothing restarted`: read
+  `hestia-compose logs --tail 50 cloudflared`, fix `/srv/hestia/.env` (usually the token), and
+  re-run the Deploy run from the Actions tab.
+- `could not prepare the containers and the hestia network`, or Compose reporting
+  `has active endpoints` or `is not connected to the network`: the recreate was left half done.
+  Run `hestia-compose down` (named volumes and the backup directory are kept; never add `-v`),
+  then re-run the Deploy run.
+
+Until that deploy has run, do not run a `hestia-compose up` that names only some services from a
+checkout of the new code; it would leave the recreate half done.
 
 Compose also does not recreate a running service when only a bind-mounted file changed, and
 `docker/kong.yml` is bind-mounted. After merging a `docker/kong.yml` change, take a backup by hand
@@ -308,7 +395,7 @@ This replaces the **live** database with a dump; the site is down while it runs.
 4. Manually create `supabase_realtime_admin` again (same reason as the restore test), load the
    dump the same way, and confirm 0 errors.
 5. `hestia-compose up -d --wait` to bring the rest of the stack up, then
-   `curl -fsS http://127.0.0.1:8080/api/health` to confirm.
+   `hestia-compose exec -T caddy wget -q -O - http://127.0.0.1:8080/api/health` to confirm.
 
 The full command sequence:
 
@@ -333,7 +420,7 @@ gunzip -c "$DUMP" |
 grep -c ERROR restore-errors.log    # expect 0
 
 hestia-compose up -d --wait
-curl -fsS http://127.0.0.1:8080/api/health
+hestia-compose exec -T caddy wget -q -O - http://127.0.0.1:8080/api/health
 ```
 
 Only `db` runs while the dump loads: GoTrue and Realtime keep their own migration state inside the
@@ -342,9 +429,10 @@ them re-initialize against the wrong state.
 
 ## Troubleshooting
 
-- **Health check:** `GET http://127.0.0.1:8080/api/health` (through Caddy) returns service status
-  plus a database connectivity check. This is the URL both `scripts/deploy.sh`'s health gate and
-  the first-start verification use. `GET /api/health/deep` is owner-only (gated on
+- **Health check:** `hestia-compose exec -T caddy wget -q -O - http://127.0.0.1:8080/api/health`
+  (through Caddy, from inside its container) returns service status plus a database connectivity
+  check. Both `scripts/deploy.sh`'s health gate and the first-start verification use it. From any
+  machine the same endpoint is `https://hestia.aberrance.app/api/health`. `GET /api/health/deep` is owner-only (gated on
   `HESTIA_OWNER_EMAIL`) and backs Settings → About → System health in the app, for deeper
   diagnosis (job freshness, recent error fingerprints, backup age, Flipp skip rates).
 - **Failed deploy / automatic rollback:** if the new images don't pass the health check within 60
@@ -362,16 +450,29 @@ them re-initialize against the wrong state.
 - **Regenerating secrets:** never run `generate-secrets.sh` against a live install's `.env` path —
   it refuses to overwrite an existing file for exactly this reason: regenerating secrets signs
   everyone out and breaks the `hestia_service` database login.
-- **Pinned names:** the machine name and tailnet name must never change after they're chosen —
-  see "Pinned names" above. There is no remediation for a rename short of every installed PWA and
+- **Pinned names:** the hostname `hestia` and the zone `aberrance.app` must never change — see
+  "Pinned names" above. There is no remediation for a rename short of every installed PWA and
   push subscription being re-created from scratch.
+- **The site is unreachable:** run `hestia-compose ps cloudflared` and
+  `hestia-compose logs --tail 50 cloudflared`. Check that the token in `/srv/hestia/.env` is
+  current, that the route targets `http://caddy:8080`, and that the proxied DNS record for `hestia`
+  exists.
+- **Every request logs a `172.16.238.x` address:** Caddy is not taking the client from
+  `CF-Connecting-IP`. Check that `HESTIA_TRUSTED_PROXIES` holds the Compose subnet and that the
+  route points at `caddy:8080`, not at a backend service.
+- **A network recreate left half done:** the deploy stops with
+  `could not prepare the containers and the hestia network`, or Compose reports
+  `has active endpoints` or `is not connected to the network`. This is usually an `up` that named
+  only some services meeting a changed network. Run `hestia-compose down`, which keeps the named
+  volumes and the backup directory (never add `-v`), then re-run the Deploy run; its prepare step
+  recreates the network and brings every service back.
 - **Migrations are forward-only:** rolling back `hestia-service`/`caddy` images (manual or
   automatic) never rolls back the database schema. A migration that needs undoing requires a new
   forward migration or a full restore from backup.
 - **Another Compose project already on this host:** the stack pins its Compose network to
-  `172.16.238.0/24` and Caddy to `127.0.0.1:8080`. A different Compose project on the same host
-  that holds either one must be stopped before the first deploy; otherwise `scripts/deploy.sh`
-  stops at the Supabase health gate with "the Supabase services are not healthy; nothing
+  `172.16.238.0/24`. A different Compose project on the same host that holds that subnet must be
+  stopped before the first deploy; otherwise `scripts/deploy.sh` stops at the supporting-services
+  health gate with "the Supabase services, the backup or the tunnel are not healthy; nothing
   restarted", and whatever is already running keeps serving.
 - **Docs-only changes don't deploy:** `deploy.yml` skips the deploy step when nothing outside
   `docs/` and `.planning/` changed since the running revision (see "Ongoing deploys").
