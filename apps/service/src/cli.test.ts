@@ -14,7 +14,7 @@ function io() {
   };
 }
 
-const ORIGIN = 'https://hestia.tail1234.ts.net';
+const ORIGIN = 'https://hestia.aberrance.app';
 
 describe('hestia-admin', () => {
   it('prints a recovery link that lands on the set-new-password screen', async () => {
