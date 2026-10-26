@@ -120,7 +120,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, `VITE_MAGIC_LINK_ENABLED`
 - Injected as Docker build args in `docker/caddy.Dockerfile`; changing them requires a rebuild
 - Dev and preview proxies read `HESTIA_DEV_API` (default `http://127.0.0.1:3000`) and `HESTIA_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
-- The production env file lives outside the checkout at `/srv/hearth/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
+- The production env file lives outside the checkout at `/srv/hestia/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
 - `scripts/generate-secrets.sh` writes that file once and refuses to overwrite it.
 - `pnpm-workspace.yaml` (workspace graph), root `package.json`, `tsconfig.base.json` (shared TypeScript options) with per-package `tsconfig.json` in `apps/service`, `apps/web`, `packages/*`, and `e2e`
 - `apps/service/tsup.config.ts` (service bundle), `apps/web/vite.config.ts` (Vite, React, Tailwind, and PWA plugins), `apps/service/vitest*.config.ts`, `e2e/playwright.config.ts`
@@ -138,7 +138,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Single Linux host running the Compose stack in `docker/docker-compose.yml`
 - Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel (`sudo tailscale funnel --bg http://127.0.0.1:8080`), origin `https://<machine>.<tailnet>.ts.net`
 - A second disk mounted at `BACKUP_DIR`
-- Self-hosted GitHub Actions runner with labels `self-hosted, hearth`, running as a user in the `docker` group (`.github/workflows/deploy.yml`)
+- Self-hosted GitHub Actions runner with labels `self-hosted, hestia`, running as a user in the `docker` group (`.github/workflows/deploy.yml`)
 
 ## Container Images
 
@@ -148,8 +148,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 | `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` | Supabase GoTrue auth server |
 | `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` | Supabase Realtime (WebSocket change feed) |
 | `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` | API gateway for GoTrue and Realtime |
-| `hearth-service` | `hearth-service:${HESTIA_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
-| `caddy` | `hearth-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
+| `hestia-service` | `hestia-service:${HESTIA_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
+| `caddy` | `hestia-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
 | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` | Daily dump at `0 2 * * *`; keeps 14 days, 8 weeks, 6 months |
 
 ## Database
@@ -164,7 +164,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - `.github/workflows/ci.yml` - seven jobs, each with a timeout: `lint` (lint and format check), `typecheck`, `test-unit` (harness tests, the non-web workspaces' tests, then web `test:coverage` with thresholds), `test-integration` (Supabase CLI start, then `test:coverage`, and a step that fails when `apps/service/src/db/types.ts` differs from `pnpm db:types`), `test-e2e` (Playwright, pull requests and `main`), `build`, and `hygiene` (`pnpm knip`, `node scripts/check-knip-baseline.mjs`, `pnpm jscpd`, `node scripts/audit-prod.mjs`, `node scripts/check-repo-hygiene.mjs` and `node scripts/check-migrations-append-only.mjs`, each as its own step); all on GitHub-hosted runners
 - `.github/actions/setup/action.yml` - composite action every job runs after checkout: `pnpm/action-setup@v6`, `actions/setup-node@v7` (Node from `.nvmrc`, pnpm store cached), `pnpm install --frozen-lockfile`
 - `.github/workflows/sweep.yml` - workflow `Sweep`: the date and time-zone test matrix on pushes to `main` that change more than `docs/` and `.planning/`, nightly (with the day-dependent cell), and on demand; it never gates a merge or a deploy
-- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hearth`; decides through `scripts/deploy-gate.sh` (compares with the running revision), then executes `scripts/deploy.sh`
+- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hestia`; decides through `scripts/deploy-gate.sh` (compares with the running revision), then executes `scripts/deploy.sh`
 - Actions: `actions/checkout@v7`, `pnpm/action-setup@v6`, `actions/setup-node@v7`, `supabase/setup-cli@v3`, `docker/login-action@v4`, `actions/upload-artifact@v7`
 - `scripts/ci-prepull-images.sh` - pre-pulls the Compose and Dockerfile images for the E2E job
 
@@ -436,10 +436,10 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 ## Entry Points
 
 - Location: `apps/service/src/main.ts`
-- Triggers: `node dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hestia/service dev` runs `tsx watch src/main.ts`.
+- Triggers: `node dist/main.js` in the `hestia-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hestia/service dev` runs `tsx watch src/main.ts`.
 - Responsibilities: Parse env (`apps/service/src/env.ts`), build the pool, GoTrue, Flipp, recipe, and push clients, call `buildApp`, start the scheduler, handle SIGTERM and SIGINT, listen on the configured host and port.
 - Location: `apps/service/src/cli.ts`, built to `apps/service/dist/cli.js`. The hand-written POSIX shell wrapper `apps/service/bin/hearth-admin` resolves its own path and runs `node dist/cli.js`.
-- Triggers: `docker compose exec hearth-service hearth-admin reset-password <email>`.
+- Triggers: `docker compose exec hestia-service hearth-admin reset-password <email>`.
 - Responsibilities: Creates a one-time GoTrue recovery link through the admin API. The only CLI command is `reset-password`.
 - Location: `apps/web/src/main.tsx`
 - Triggers: Browser load of the PWA.
@@ -552,7 +552,7 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 
 This section is hand-maintained and sits outside the `GSD:*` managed blocks, so GSD regeneration leaves it alone.
 
-`pnpm test:e2e` builds the `hearth-service` and `hearth-caddy` images with Docker. In the cloud sandbox, build containers reach the network through a TLS-intercepting proxy whose CA they do not trust, so corepack's pnpm download fails with `SELF_SIGNED_CERT_IN_CHAIN` (`pnpm fetch` exits 1 in both Dockerfiles). Apply this workaround before running, and revert it afterwards. It is local-only: never commit it, and never disable TLS verification.
+`pnpm test:e2e` builds the `hestia-service` and `hestia-caddy` images with Docker. In the cloud sandbox, build containers reach the network through a TLS-intercepting proxy whose CA they do not trust, so corepack's pnpm download fails with `SELF_SIGNED_CERT_IN_CHAIN` (`pnpm fetch` exits 1 in both Dockerfiles). Apply this workaround before running, and revert it afterwards. It is local-only: never commit it, and never disable TLS verification.
 
 1. `cp /root/.ccr/ca-bundle.crt docker/ca.crt`
 2. In `docker/service.Dockerfile` (the `source` stage) and `docker/caddy.Dockerfile` (the `build` stage), add these two lines directly after the `FROM node:...` line. Do not add them to the final runtime stage.

@@ -16,7 +16,7 @@ export const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
  * runs on one machine never share one. `HESTIA_E2E_RUN_ID` names a run explicitly, which is how a
  * reused stack is found again.
  */
-const STATE_ROOT = process.env['HESTIA_E2E_STATE_DIR'] ?? join(tmpdir(), 'hearth-e2e');
+const STATE_ROOT = process.env['HESTIA_E2E_STATE_DIR'] ?? join(tmpdir(), 'hestia-e2e');
 
 if (
   process.env['HESTIA_E2E_REUSE_STACK'] === '1' &&

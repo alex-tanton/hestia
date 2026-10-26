@@ -184,7 +184,7 @@ controlled, not inherited from the machine.
     binaries placed first on `PATH` and fixture `docker/` folders. It checks that each
     `public.ecr.aws/supabase` image is pulled from its `ghcr.io/supabase` mirror first and tagged
     with its ECR name, that a failed mirror pull falls back to ECR within each attempt, that Docker
-    Hub images are pulled directly, that a present image is skipped, that the hearth-built and
+    Hub images are pulled directly, that a present image is skipped, that the hestia-built and
     backup images are never pulled, that an unsafe image name is refused before any pull, and that
     six failed attempts end in an `::error::` annotation, with the delays scaled by
     `CI_PREPULL_DELAY_SCALE`. One case reads the real `docker/` files. Nothing pulls an image or
@@ -221,7 +221,7 @@ controlled, not inherited from the machine.
     threshold, path and format settings and the `jscpd` script in `package.json` keeps
     `--fail-on-empty`.
   - `scripts/deploy-gate.test.mjs` copies the real `scripts/deploy-gate.sh` into a temporary git
-    repository with a stub `docker` that answers `image inspect hearth-service:current` with a
+    repository with a stub `docker` that answers `image inspect hestia-service:current` with a
     revision label. It checks the rules: a commit older than the running revision, a change confined
     to `docs/` and `.planning/`, and a commit already running at attempt 1 (or unset) print
     `deploy=false`; attempt 2 or later of a running commit (a deliberate re-run of the Deploy run),
@@ -415,7 +415,7 @@ accounts of its own outside either seed, since signing up is the journey under t
 **Per-run isolation:** each invocation of `pnpm test:e2e` is a "run" with its own six-hex-digit id
 (`HESTIA_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
 `e2e/support/env.ts`. Everything the run touches is namespaced by that id: the Compose project
-(`hearth-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
+(`hestia-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
 up`, on the first free `/24` between `172.16.240.0/24` and `172.16.254.0/24` — Docker's atomic
 "refuse an overlapping subnet" check means two runs starting together can't collide), the image
 tag (`e2e-<id>`) for the two images the run builds, a state directory under the OS temp dir holding
@@ -433,7 +433,7 @@ own instant) so the deal-fetching code reads the checked-in captures instead of 
 variables are unset in every real deployment. Recipe import similarly mounts
 `e2e/fixtures/recipes` read-only and sets `HESTIA_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
 swapped for a fixture-reading function that never opens a socket. Journey 4 pastes one of three
-fixture URLs under the never-resolved domain `fixtures.hearth-e2e.test`. Web Push gets the same
+fixture URLs under the never-resolved domain `fixtures.hestia-e2e.test`. Web Push gets the same
 treatment: `HESTIA_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
 through `/api/test/push`, and the browser's `PushManager` is stubbed before the app loads so no
 real push service is ever contacted.
@@ -456,7 +456,7 @@ Needs Docker, the Supabase CLI, and `psql` on the path. For iterating on a singl
 paying for a full stack bring-up/teardown each time:
 
 ```sh
-# first run: note the run id it prints ("run <id>, project hearth-e2e-<id>: ...")
+# first run: note the run id it prints ("run <id>, project hestia-e2e-<id>: ...")
 HESTIA_E2E_REUSE_STACK=1 pnpm test:e2e
 
 # subsequent runs: reuse that stack, point Playwright at one spec file

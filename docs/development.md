@@ -78,7 +78,7 @@ pnpm --filter @hestia/service dev
 | `LOG_LEVEL`, `HOST`, `PORT` | Pino level and the listen address |
 
 The generated API document is at `GET /api/openapi.json`. The owner CLI is a bin in the service
-image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hearth-service
+image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hestia-service
 hearth-admin reset-password <email>`); locally it runs from the built bundle with `GOTRUE_URL`,
 `SERVICE_ROLE_KEY`, and `HESTIA_ORIGIN` set:
 
@@ -107,13 +107,13 @@ than the five seed users, so it cannot add them to a stack that real people use.
 [Seed data](testing.md#seed-data) for what the seed contains.
 
 To seed a Compose stack instead (development only, never production), point it at Caddy and at
-the `db` container's address on the Compose network (`hearth-compose` is the alias defined in
+the `db` container's address on the Compose network (`hestia-compose` is the alias defined in
 [First-time setup](deployment.md#first-time-setup)):
 
 ```sh
-set -a; . /srv/hearth/.env; set +a
+set -a; . /srv/hestia/.env; set +a
 DB_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
-  "$(hearth-compose ps --quiet db)")
+  "$(hestia-compose ps --quiet db)")
 HESTIA_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
   HESTIA_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
   HESTIA_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \

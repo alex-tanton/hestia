@@ -117,3 +117,4 @@ i/lf	index line-ending column of `git ls-files --eol` output quoted in CONTRIBUT
 .env	the real configuration file at /srv/hestia/.env, never committed (only .env.example is tracked)
 hestia-service:3000	compose service name and port (docker/Caddyfile:50), not a script
 hestia-service:current	Docker image reference of the running service image that deploy-gate.sh inspects, not a path
+172.16.238.0/24	IPv4 CIDR of the stack network pinned in docker/docker-compose.yml, not a path

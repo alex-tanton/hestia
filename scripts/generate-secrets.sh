@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Writes a fresh .env from .env.example with every secret generated.
 #
-#   scripts/generate-secrets.sh [output-path]      (default: $HESTIA_ENV_FILE or /srv/hearth/.env)
+#   scripts/generate-secrets.sh [output-path]      (default: $HESTIA_ENV_FILE or /srv/hestia/.env)
 #
 # HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR are copied from the environment when set,
 # otherwise left as .env.example's placeholders for the owner to fill in. Refuses to overwrite an
@@ -10,7 +10,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-out="${1:-${HESTIA_ENV_FILE:-/srv/hearth/.env}}"
+out="${1:-${HESTIA_ENV_FILE:-/srv/hestia/.env}}"
 
 if [[ -e "$out" ]]; then
   echo "generate-secrets: $out already exists; not overwriting it." >&2

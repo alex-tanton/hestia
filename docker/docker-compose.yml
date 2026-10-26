@@ -5,10 +5,10 @@
 # `supabase start`, so a production dump restores into local development unchanged.
 #
 # Run from the repository root, with the host's .env (which lives outside the checkout):
-#   docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml up -d
+#   docker compose --env-file /srv/hestia/.env -f docker/docker-compose.yml up -d
 # scripts/deploy.sh is the normal way to build and restart; see docs/deployment.md.
 
-name: hearth
+name: hestia
 
 x-logging: &logging
   driver: json-file
@@ -21,7 +21,7 @@ services:
     image: public.ecr.aws/supabase/postgres:17.6.1.167
     restart: unless-stopped
     logging: *logging
-    networks: [hearth]
+    networks: [hestia]
     command:
       - postgres
       - -c
@@ -63,7 +63,7 @@ services:
     image: public.ecr.aws/supabase/gotrue:v2.196.0
     restart: unless-stopped
     logging: *logging
-    networks: [hearth]
+    networks: [hestia]
     depends_on:
       db:
         condition: service_healthy
@@ -107,7 +107,7 @@ services:
     restart: unless-stopped
     logging: *logging
     networks:
-      hearth:
+      hestia:
         # Realtime takes the tenant id from the first label of the Host header Kong sends, and
         # the self-hosted tenant it seeds is "realtime-dev".
         aliases: [realtime-dev.supabase-realtime]
@@ -146,7 +146,7 @@ services:
     image: kong/kong:3.9.3
     restart: unless-stopped
     logging: *logging
-    networks: [hearth]
+    networks: [hestia]
     depends_on:
       auth:
         condition: service_healthy
@@ -180,8 +180,8 @@ services:
       timeout: 5s
       retries: 5
 
-  hearth-service:
-    image: hearth-service:${HESTIA_TAG:-current}
+  hestia-service:
+    image: hestia-service:${HESTIA_TAG:-current}
     build:
       context: ..
       dockerfile: docker/service.Dockerfile
@@ -189,7 +189,7 @@ services:
         HESTIA_REVISION: ${HESTIA_TAG:-dev}
     restart: unless-stopped
     logging: *logging
-    networks: [hearth]
+    networks: [hestia]
     depends_on:
       db:
         condition: service_healthy
@@ -224,7 +224,7 @@ services:
       start_period: 10s
 
   caddy:
-    image: hearth-caddy:${HESTIA_TAG:-current}
+    image: hestia-caddy:${HESTIA_TAG:-current}
     build:
       context: ..
       dockerfile: docker/caddy.Dockerfile
@@ -235,9 +235,9 @@ services:
         VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
     restart: unless-stopped
     logging: *logging
-    networks: [hearth]
+    networks: [hestia]
     depends_on:
-      hearth-service:
+      hestia-service:
         condition: service_started
       kong:
         condition: service_started
@@ -259,7 +259,7 @@ services:
     image: prodrigestivill/postgres-backup-local:17-debian-d257e5d
     restart: unless-stopped
     logging: *logging
-    networks: [hearth]
+    networks: [hestia]
     depends_on:
       db:
         condition: service_healthy
@@ -287,8 +287,8 @@ services:
       retries: 3
 
 networks:
-  hearth:
-    name: hearth
+  hestia:
+    name: hestia
     ipam:
       config:
         - subnet: *subnet

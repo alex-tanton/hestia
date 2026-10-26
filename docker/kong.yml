@@ -81,7 +81,7 @@ services:
             - anon
 
   # The session checks setSession and the URL-fragment sign-in make. PUT /user (a password or
-  # email change) is not here: only hearth-service makes it, directly on auth:9999.
+  # email change) is not here: only hestia-service makes it, directly on auth:9999.
   - name: auth-v1-user
     url: http://auth:9999/user
     routes:
@@ -146,7 +146,7 @@ services:
             - admin
 
   # Anything else under /auth/v1 (signup, recover, settings, admin, jwks, the rest of GoTrue's
-  # surface) is refused here, before any key check, whoever asks. hearth-service reaches GoTrue
+  # surface) is refused here, before any key check, whoever asks. hestia-service reaches GoTrue
   # directly on auth:9999 and never through Kong.
   - name: auth-v1-denied
     url: http://auth:9999/

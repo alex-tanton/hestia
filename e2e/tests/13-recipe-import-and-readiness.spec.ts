@@ -25,7 +25,7 @@ import { SEED } from '../support/env.ts';
  * so neither is ever added to the list.
  */
 
-const FIXTURE_ORIGIN = 'https://fixtures.hearth-e2e.test';
+const FIXTURE_ORIGIN = 'https://fixtures.hestia-e2e.test';
 
 interface OnSaleIngredient {
   itemName: string;

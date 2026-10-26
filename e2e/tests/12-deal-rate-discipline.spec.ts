@@ -8,7 +8,7 @@ import { SEED } from '../support/env.ts';
  * Rate discipline is observable in logs: one refresh per active postal code, flyer items only for
  * favorited merchants, serialized, backed off on failure.
  *
- * E2E never calls Flipp live: the Compose overlay points hearth-service at the checked-in raw
+ * E2E never calls Flipp live: the Compose overlay points hestia-service at the checked-in raw
  * captures instead of `backflipp.wishabi.com` (`e2e/docker-compose.e2e.yml`,
  * `HESTIA_FLIPP_FIXTURE_DIR`), so every "flipp request" log line this run has printed came from the
  * fixture transport.

@@ -26,7 +26,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
-    runs-on: [self-hosted, hearth]
+    runs-on: [self-hosted, hestia]
     timeout-minutes: 60
     steps:
       # Full history, because the gate compares the commit with the running revision, which can be

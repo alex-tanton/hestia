@@ -14,8 +14,8 @@ box.
 
 ## Compose services
 
-`docker/docker-compose.yml` defines seven services. The two built images, `hearth-service` and
-`hearth-caddy`, are tagged `<sha>` by each deploy and run through their `current` tags.
+`docker/docker-compose.yml` defines seven services. The two built images, `hestia-service` and
+`hestia-caddy`, are tagged `<sha>` by each deploy and run through their `current` tags.
 
 | Service | Image | Role |
 | --- | --- | --- |
@@ -23,11 +23,11 @@ box.
 | `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | GoTrue, handling sign-in and account management. |
 | `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | Pushes live updates to connected clients. |
 | `kong` | `kong/kong:3.9.3` | The gateway that routes external requests to `auth` and `realtime` only; nothing else is exposed through it. |
-| `hearth-service` | `hearth-service:<sha>` | The backend API and background jobs (built from `apps/service`). |
-| `caddy` | `hearth-caddy:<sha>` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
+| `hestia-service` | `hestia-service:<sha>` | The backend API and background jobs (built from `apps/service`). |
+| `caddy` | `hestia-caddy:<sha>` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
 | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | Runs the nightly database backup and keeps a rotation of older backups. |
 
-Only `caddy` publishes a port, on `127.0.0.1:8080`. All services share the `hearth` network, and
+Only `caddy` publishes a port, on `127.0.0.1:8080`. All services share the `hestia` network, and
 Postgres data lives in the `db-data` and `db-config` volumes.
 
 ## System requirements
@@ -44,7 +44,7 @@ Postgres data lives in the `db-data` and `db-config` volumes.
   If it's a laptop, disable sleep-on-lid-close and, where practical, leave it plugged in — its
   battery serves as a UPS.
 - **Second physical disk:** required, for backups. `BACKUP_DIR` must point at a directory on it
-  (for example `/mnt/backup/hearth`), separate from the disk holding the Docker data root and the
+  (for example `/mnt/backup/hestia`), separate from the disk holding the Docker data root and the
   Postgres volume. This is the only copy of the data: there is no off-site or cloud backup copy.
 
 ## Dependencies
@@ -58,8 +58,8 @@ Install on the host before first start:
 - **Tailscale**, logged in to the tailnet, with **Funnel allowed for this machine in the tailnet
   policy**. `tailscaled` runs on the host, not in a container.
 - **For automatic deploys:** a GitHub Actions **self-hosted runner** registered to this
-  repository, labeled `self-hosted` and `hearth` (the deploy workflow targets
-  `runs-on: [self-hosted, hearth]`), running as a user in the **`docker` group**. This runner must
+  repository, labeled `self-hosted` and `hestia` (the deploy workflow targets
+  `runs-on: [self-hosted, hestia]`), running as a user in the **`docker` group**. This runner must
   run only `.github/workflows/deploy.yml` — never pull-request jobs, since those would execute
   untrusted code on the production box.
 
@@ -72,7 +72,7 @@ Install on the host before first start:
 > migration path for an origin change.
 
 The owner fills in the machine and tailnet names once, in the table below, and sets
-`HESTIA_ORIGIN` in `/srv/hearth/.env` to the same origin. Keep the two in sync.
+`HESTIA_ORIGIN` in `/srv/hestia/.env` to the same origin. Keep the two in sync.
 
 | Name    | Value                                |
 | ------- | ------------------------------------ |
@@ -86,9 +86,9 @@ Two services exist purely to route and protect traffic, configured by files in `
 
 - **Caddy** (`docker/Caddyfile`) is the stack's only published port. It terminates the plain-HTTP
   side of Funnel, applies security headers (CSP, HSTS, etc.) to every response, serves the built
-  PWA with SPA fallback, reverse-proxies `/api/*` to `hearth-service` and `/auth/v1/*` /
+  PWA with SPA fallback, reverse-proxies `/api/*` to `hestia-service` and `/auth/v1/*` /
   `/realtime/v1/*` to Kong, and refuses direct `POST /auth/v1/signup*` and `PUT /auth/v1/user*`
-  calls with a 403 so those paths can only be reached through `hearth-service`.
+  calls with a 403 so those paths can only be reached through `hestia-service`.
 - **Kong** (`docker/kong.yml`, started by `docker/kong-entrypoint.sh`) is a minimal declarative API
   gateway in front of GoTrue and Realtime only — there are deliberately no `rest`, `storage`,
   `functions`, or `analytics` routes. It key-authenticates callers as `anon` or `service_role` and
@@ -115,7 +115,7 @@ by hand.
 | `HESTIA_ORIGIN` | The pinned public origin, `https://<machine>.<tailnet>.ts.net`. Baked into every installed PWA and push subscription; must never change. |
 | `HESTIA_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
 | `HESTIA_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
-| `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hearth-service`. |
+| `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hestia-service`. |
 | `HESTIA_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
 | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
 | `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
@@ -135,17 +135,17 @@ startup.
 ## First-time setup
 
 Run from a checkout of `main`, on the host. The real `.env` lives outside the checkout, at
-`/srv/hearth/.env`, because the deploy runner wipes its checkout on every run.
+`/srv/hestia/.env`, because the deploy runner wipes its checkout on every run.
 
 ```sh
-sudo install -d -m 700 -o "$USER" /srv/hearth
-sudo install -d -m 755 /mnt/backup/hearth
+sudo install -d -m 700 -o "$USER" /srv/hestia
+sudo install -d -m 755 /mnt/backup/hestia
 HESTIA_ORIGIN=https://<machine>.<tailnet>.ts.net HESTIA_OWNER_EMAIL=<owner email> \
-  BACKUP_DIR=/mnt/backup/hearth scripts/generate-secrets.sh
+  BACKUP_DIR=/mnt/backup/hestia scripts/generate-secrets.sh
 
-alias hearth-compose='docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml'
-hearth-compose build
-hearth-compose up -d --wait
+alias hestia-compose='docker compose --env-file /srv/hestia/.env -f docker/docker-compose.yml'
+hestia-compose build
+hestia-compose up -d --wait
 curl -fsS http://127.0.0.1:8080/api/health
 
 sudo tailscale funnel --bg http://127.0.0.1:8080
@@ -153,19 +153,19 @@ sudo tailscale funnel --bg http://127.0.0.1:8080
 
 Notes:
 
-- `generate-secrets.sh` writes `/srv/hearth/.env` from `.env.example` with every secret generated,
+- `generate-secrets.sh` writes `/srv/hestia/.env` from `.env.example` with every secret generated,
   and **refuses to overwrite an existing `.env`** — regenerating secrets on a live install signs
   everyone out and breaks the database login.
 - `scripts/deploy.sh` also works as the first start: it builds, starts the stack, and migrates in
   one step.
-- All commands below assume the `hearth-compose` alias above, run from the repository root.
+- All commands below assume the `hestia-compose` alias above, run from the repository root.
 
 ## Ongoing deploys
 
 A merge to `main` whose CI passed triggers `scripts/deploy.sh` on the self-hosted runner
 (`.github/workflows/deploy.yml`, which watches the `CI` workflow's `workflow_run` and re-checks
 that it was a push to `main` before deploying). Its `changes` step runs `scripts/deploy-gate.sh`
-against the revision label of the running `hearth-service:current` image, and the deploy runs only
+against the revision label of the running `hestia-service:current` image, and the deploy runs only
 when that gate says so: it **deploys when something outside `docs/` and `.planning/` changed**
 since the running revision (the whole range, not only the tip commit, so a code change whose deploy
 never ran still ships behind a later docs-only commit), **skips a commit already running** (a `CI`
@@ -182,18 +182,18 @@ no token on the host. A deploy can also be run by hand from a checkout.
 of the first few fail:
 
 1. Records the images currently tagged `current` as the rollback target.
-2. Builds `hearth-service:<sha>` and `hearth-caddy:<sha>` (the PWA is built into the Caddy image).
+2. Builds `hestia-service:<sha>` and `hestia-caddy:<sha>` (the PWA is built into the Caddy image).
    A failed build changes nothing.
 3. Starts any Supabase service (`db`, `auth`, `realtime`, `kong`, `backup`) that isn't already
    running, without recreating any that are.
-4. Takes a backup with `hearth-compose exec -T backup /backup.sh`. **A failed backup aborts the
+4. Takes a backup with `hestia-compose exec -T backup /backup.sh`. **A failed backup aborts the
    deploy** — nothing is migrated or restarted.
 5. Applies pending migrations with `supabase migration up` against the Compose database. The CLI
    gets the database password in `PGPASSWORD`, set for that one command and never on its command
    line. **A failed migration aborts the deploy**; the backup just taken is the restore point.
 6. Re-applies the `hestia_service` login from `.env` (`docker/db/hestia-service-login.sql`) —
    idempotent, and picks up a rotated password.
-7. Tags the new images `current` and recreates `hearth-service` and `caddy` on them.
+7. Tags the new images `current` and recreates `hestia-service` and `caddy` on them.
 8. Polls `GET http://127.0.0.1:8080/api/health` for 60 seconds. If it never succeeds, the script
    tags the **previous** images `current` again, recreates both containers on them, and exits
    non-zero (automatic rollback).
@@ -203,11 +203,11 @@ commit is harmless. The five newest SHA-tagged images of each kind are kept.
 
 A deploy never recreates `db`, `auth`, `realtime`, `kong`, or `backup`. After changing their
 configuration or image tag, take a backup by hand and apply the change with
-`hearth-compose up -d --wait`.
+`hestia-compose up -d --wait`.
 
 Compose also does not recreate a running service when only a bind-mounted file changed, and
 `docker/kong.yml` is bind-mounted. After merging a `docker/kong.yml` change, take a backup by hand
-and run `hearth-compose up -d --force-recreate kong` on the host. Sign-ins can fail for a few
+and run `hestia-compose up -d --force-recreate kong` on the host. Sign-ins can fail for a few
 seconds while Kong restarts. To roll back a Kong change, revert it, let the deploy finish and run
 the same command again.
 
@@ -216,10 +216,10 @@ the same command again.
 To roll back by hand to an older build (beyond the deploy's own automatic rollback):
 
 ```sh
-docker image ls 'hearth-*'
-docker tag hearth-service:<sha> hearth-service:current
-docker tag hearth-caddy:<sha> hearth-caddy:current
-hearth-compose up -d --no-deps hearth-service caddy
+docker image ls 'hestia-*'
+docker tag hestia-service:<sha> hestia-service:current
+docker tag hestia-caddy:<sha> hestia-caddy:current
+hestia-compose up -d --no-deps hestia-service caddy
 ```
 
 Migrations are forward-only, so rolling back images never rolls back the schema.
@@ -234,7 +234,7 @@ link alongside it). Every deploy takes one before migrating.
 To take a backup right now:
 
 ```sh
-hearth-compose exec -T backup /backup.sh
+hestia-compose exec -T backup /backup.sh
 ```
 
 ## Restore
@@ -246,13 +246,13 @@ There is no off-site or cloud backup copy, so a correct restore procedure is the
 An untested backup is an assumption. The test restores the newest dump into a **throwaway**
 container of the same pinned Postgres image, leaving production untouched:
 
-1. Load `/srv/hearth/.env` and locate `$BACKUP_DIR/last/postgres-latest.sql.gz`.
+1. Load `/srv/hestia/.env` and locate `$BACKUP_DIR/last/postgres-latest.sql.gz`.
 2. Start a detached `public.ecr.aws/supabase/postgres:17.6.1.167` container named
-   `hearth-restore`, and wait for its init process and for `pg_isready`.
+   `hestia-restore`, and wait for its init process and for `pg_isready`.
 3. Because `pg_dump` does not include roles: apply the `hestia_service` role migration
    (`supabase/migrations/20260919060000_hestia_service_role.sql`) and manually create
    `supabase_realtime_admin` (it's created by Realtime at runtime, not by the Postgres image).
-4. Load the dump with `gunzip -c "$DUMP" | docker exec -i hearth-restore psql ...`, capturing
+4. Load the dump with `gunzip -c "$DUMP" | docker exec -i hestia-restore psql ...`, capturing
    errors to a log file, and confirm the error count is 0.
 5. Sanity-check the restored state: `hestia_service`'s role attributes, that `auth`/`public`/
    `realtime`/`supabase_migrations` schemas exist, a user count, and the applied migration list.
@@ -261,78 +261,78 @@ container of the same pinned Postgres image, leaving production untouched:
 The full command sequence, run from the repository root:
 
 ```sh
-set -a; . /srv/hearth/.env; set +a
+set -a; . /srv/hestia/.env; set +a
 DUMP="$BACKUP_DIR/last/postgres-latest.sql.gz"
 
-docker run --detach --name hearth-restore -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+docker run --detach --name hestia-restore -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
   public.ecr.aws/supabase/postgres:17.6.1.167 \
   postgres -c config_file=/etc/postgresql/postgresql.conf
-until docker logs hearth-restore 2>&1 | grep -q "PostgreSQL init process complete"; do sleep 1; done
-until docker exec hearth-restore pg_isready -U postgres -h localhost -q; do sleep 1; done
+until docker logs hestia-restore 2>&1 | grep -q "PostgreSQL init process complete"; do sleep 1; done
+until docker exec hestia-restore pg_isready -U postgres -h localhost -q; do sleep 1; done
 
 # Roles are not in the dump: hestia_service comes from its migration, and
 # supabase_realtime_admin (created by Realtime, not the image) is created here.
-docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
+docker exec -i hestia-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
   < supabase/migrations/20260919060000_hestia_service_role.sql
-docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+docker exec -i hestia-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
 create role supabase_realtime_admin noinherit nologin noreplication;
 grant anon, authenticated, service_role to supabase_realtime_admin;
 SQL
 
 gunzip -c "$DUMP" |
-  docker exec -i hearth-restore psql -U supabase_admin -d postgres -q -o /dev/null \
+  docker exec -i hestia-restore psql -U supabase_admin -d postgres -q -o /dev/null \
   2> restore-errors.log
 grep -c ERROR restore-errors.log    # expect 0
 
-docker exec hearth-restore psql -U supabase_admin -d postgres -c "
+docker exec hestia-restore psql -U supabase_admin -d postgres -c "
   select rolname, rolinherit, rolcanlogin from pg_roles where rolname = 'hestia_service';
   select nspname from pg_namespace
     where nspname in ('auth', 'public', 'realtime', 'supabase_migrations');
   select count(*) as users from auth.users;
   select version from supabase_migrations.schema_migrations order by version;"
 
-docker rm -f hearth-restore && rm restore-errors.log
+docker rm -f hestia-restore && rm restore-errors.log
 ```
 
 ### Restore production
 
 This replaces the **live** database with a dump; the site is down while it runs.
 
-1. Load `/srv/hearth/.env` and choose the dump to restore (for example
+1. Load `/srv/hestia/.env` and choose the dump to restore (for example
    `$BACKUP_DIR/daily/postgres-<yyyymmdd>.sql.gz`).
-2. `hearth-compose stop`, then `hearth-compose rm --force db`, then remove the `hearth_db-data`
+2. `hestia-compose stop`, then `hestia-compose rm --force db`, then remove the `hestia_db-data`
    volume — this destroys the current database.
-3. `hearth-compose up -d --wait db` to get a **fresh** database: the image creates the Supabase
+3. `hestia-compose up -d --wait db` to get a **fresh** database: the image creates the Supabase
    roles, and the init scripts recreate `hestia_service` from its migration and give it its login
    from `.env`.
 4. Manually create `supabase_realtime_admin` again (same reason as the restore test), load the
    dump the same way, and confirm 0 errors.
-5. `hearth-compose up -d --wait` to bring the rest of the stack up, then
+5. `hestia-compose up -d --wait` to bring the rest of the stack up, then
    `curl -fsS http://127.0.0.1:8080/api/health` to confirm.
 
 The full command sequence:
 
 ```sh
-set -a; . /srv/hearth/.env; set +a
+set -a; . /srv/hestia/.env; set +a
 DUMP="$BACKUP_DIR/daily/postgres-<yyyymmdd>.sql.gz"    # the dump to restore
 
-hearth-compose stop
-hearth-compose rm --force db
-docker volume rm hearth_db-data
+hestia-compose stop
+hestia-compose rm --force db
+docker volume rm hestia_db-data
 
 # A fresh database: the image creates the Supabase roles, and the init scripts recreate
 # hestia_service from its migration and give it its login from .env.
-hearth-compose up -d --wait db
-hearth-compose exec -T db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+hestia-compose up -d --wait db
+hestia-compose exec -T db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
 create role supabase_realtime_admin noinherit nologin noreplication;
 grant anon, authenticated, service_role to supabase_realtime_admin;
 SQL
 gunzip -c "$DUMP" |
-  hearth-compose exec -T db psql -U supabase_admin -d postgres -q -o /dev/null \
+  hestia-compose exec -T db psql -U supabase_admin -d postgres -q -o /dev/null \
   2> restore-errors.log
 grep -c ERROR restore-errors.log    # expect 0
 
-hearth-compose up -d --wait
+hestia-compose up -d --wait
 curl -fsS http://127.0.0.1:8080/api/health
 ```
 
@@ -349,9 +349,9 @@ them re-initialize against the wrong state.
   diagnosis (job freshness, recent error fingerprints, backup age, Flipp skip rates).
 - **Failed deploy / automatic rollback:** if the new images don't pass the health check within 60
   seconds, `scripts/deploy.sh` re-tags the previously running images `current`, recreates
-  `hearth-service` and `caddy` on them, and exits non-zero. If that rollback itself fails to
+  `hestia-service` and `caddy` on them, and exits non-zero. If that rollback itself fails to
   become healthy, the script still exits non-zero and leaves the previous images running —
-  check `hearth-compose logs hearth-service caddy` for the cause. When a deploy fails after both
+  check `hestia-compose logs hestia-service caddy` for the cause. When a deploy fails after both
   images were already tagged `current` but before the containers came up healthy (or a first deploy
   had nothing to roll back to), retrying requires the deliberate path because the commit is already
   running: re-run the Deploy run from the Actions tab (attempt 2 or later redeploys the commit
@@ -365,8 +365,13 @@ them re-initialize against the wrong state.
 - **Pinned names:** the machine name and tailnet name must never change after they're chosen —
   see "Pinned names" above. There is no remediation for a rename short of every installed PWA and
   push subscription being re-created from scratch.
-- **Migrations are forward-only:** rolling back `hearth-service`/`caddy` images (manual or
+- **Migrations are forward-only:** rolling back `hestia-service`/`caddy` images (manual or
   automatic) never rolls back the database schema. A migration that needs undoing requires a new
   forward migration or a full restore from backup.
+- **Another Compose project already on this host:** the stack pins its Compose network to
+  `172.16.238.0/24` and Caddy to `127.0.0.1:8080`. A different Compose project on the same host
+  that holds either one must be stopped before the first deploy; otherwise `scripts/deploy.sh`
+  stops at the Supabase health gate with "the Supabase services are not healthy; nothing
+  restarted", and whatever is already running keeps serving.
 - **Docs-only changes don't deploy:** `deploy.yml` skips the deploy step when nothing outside
   `docs/` and `.planning/` changed since the running revision (see "Ongoing deploys").

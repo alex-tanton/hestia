@@ -1,7 +1,7 @@
 /*
  * Tests for `scripts/deploy-gate.sh`: which commits the deploy workflow ships. Every case builds a
  * throwaway git repository, copies the real script into it, and runs it with a stub `docker` that
- * answers `image inspect hearth-service:current` with the running revision label (or fails, as when
+ * answers `image inspect hestia-service:current` with the running revision label (or fails, as when
  * no image exists). Nothing reaches a real Docker daemon, the network or the host's repository.
  * The cases pin the deploy rules (a commit equal to or older than the running revision is skipped,
  * a change confined to docs/ and .planning/ is skipped, anything else deploys, including an unknown
@@ -136,7 +136,7 @@ function assertDecision(run, decision, reason) {
   assert.match(run.stderr, /^deploy-gate: running revision .+: .+\n$/);
   if (reason !== undefined) assert.match(run.stderr, reason);
   for (const call of run.dockerCalls) {
-    assert.match(call, /^image inspect .* hearth-service:current$/);
+    assert.match(call, /^image inspect .* hestia-service:current$/);
   }
   assert.equal(run.dockerCalls.length, 1, run.dockerCalls.join('\n'));
 }

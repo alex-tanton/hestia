@@ -141,7 +141,7 @@ test.describe('notifications — meal reminder with the push double (light)', ()
     page,
     request,
   }) => {
-    const endpoint = `https://push.hearth-e2e.test/device/${randomBytes(6).toString('hex')}`;
+    const endpoint = `https://push.hestia-e2e.test/device/${randomBytes(6).toString('hex')}`;
     await fakeBrowserPush(page, endpoint);
 
     await signIn(page, SEED.alex.email);

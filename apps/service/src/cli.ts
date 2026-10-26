@@ -7,7 +7,7 @@ import { createGoTrueAdmin, type GoTrueAdmin } from './privileged/gotrue-admin.j
 /**
  * hearth-admin, the owner CLI:
  *
- *   docker compose exec hearth-service hearth-admin reset-password <email>
+ *   docker compose exec hestia-service hearth-admin reset-password <email>
  *
  * Prints a one-time recovery link that opens the PWA's set-new-password screen. One of the
  * sanctioned service-role uses.

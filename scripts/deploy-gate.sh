@@ -15,7 +15,7 @@
 #
 # Called by the `changes` step of .github/workflows/deploy.yml, with the checkout at fetch-depth 0
 # (the comparison needs history). The decision compares HEAD with the revision of the image that is
-# running, `hearth-service:current`, whose `org.opencontainers.image.revision` label deploy.sh sets
+# running, `hestia-service:current`, whose `org.opencontainers.image.revision` label deploy.sh sets
 # to the first 12 hex digits of the deployed SHA:
 #
 #   - Comparing with the running revision, not with HEAD~1, means a code deploy that never ran
@@ -37,7 +37,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-image="hearth-service:current"
+image="hestia-service:current"
 # Spelled out rather than a-f / 0-9 ranges: ranges can match uppercase in some locales.
 hex='0123456789abcdef'
 

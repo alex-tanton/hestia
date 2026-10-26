@@ -22,8 +22,8 @@ export function runNames(runId: string): RunNames {
     throw new Error(`HESTIA_E2E_RUN_ID must be 1-16 lowercase letters or digits (got '${runId}')`);
   }
   return {
-    project: `hearth-e2e-${runId}`,
-    network: `hearth-e2e-${runId}`,
+    project: `hestia-e2e-${runId}`,
+    network: `hestia-e2e-${runId}`,
     imageTag: `e2e-${runId}`,
   };
 }

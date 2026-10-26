@@ -1,6 +1,6 @@
 # E2E overlay for docker/docker-compose.yml.
 #
-#   docker compose -p hearth-e2e-<run> --env-file <generated .env> \
+#   docker compose -p hestia-e2e-<run> --env-file <generated .env> \
 #     -f docker/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --wait
 #
 # e2e/setup/stack.ts runs that for `pnpm test:e2e`. The suite exercises the production stack — the
@@ -19,10 +19,10 @@
 #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
 #     public origin an https one; E2E is plain HTTP on the loopback, so HESTIA_HOST — the only
 #     thing that entrypoint derives — is given directly
-#   * hearth-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
+#   * hestia-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
 #     info rather than warn so the rate discipline the deal journeys exercise is readable in
 #     `docker compose logs`
-#   * hearth-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
+#   * hestia-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
 #     for real: `fetchRecipePage`'s private/loopback/link-local refusal would just as correctly
 #     refuse a fixture server reachable only on this network, so journey 4 (a recipe imports from
 #     a URL with JSON-LD) swaps the fetch step itself rather than trying to make a reachable
@@ -36,7 +36,7 @@ services:
     ports:
       - 127.0.0.1:${HESTIA_E2E_DB_PORT:?}:5432
 
-  hearth-service:
+  hestia-service:
     # Relative to docker/, not to this file: Compose resolves every file's relative paths against
     # the first -f file's directory, which is docker/docker-compose.yml (`compose.ts`).
     volumes:
@@ -72,10 +72,10 @@ services:
       - 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}:8080
 
 networks:
-  # The base file's network is named `hearth` with its own ipam, which would pin a fixed name and
+  # The base file's network is named `hestia` with its own ipam, which would pin a fixed name and
   # subnet. The run creates this network itself (e2e/setup/stack.ts), so that two runs' subnets
   # cannot overlap silently, and Compose uses it as declared rather than creating one.
-  hearth:
+  hestia:
     name: ${HESTIA_E2E_NETWORK:?}
     external: true
     ipam: !reset null

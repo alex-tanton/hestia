@@ -9,7 +9,7 @@ RUN corepack enable
 WORKDIR /repo
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
     pnpm fetch --frozen-lockfile --store-dir /pnpm/store
 
 COPY . .
@@ -26,7 +26,7 @@ ENV VITE_SUPABASE_ANON_KEY=$ANON_KEY
 # the private key is only ever read by the service, which signs each push with it.
 ARG VAPID_PUBLIC_KEY
 ENV VITE_VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
-RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/web... \
  && pnpm --filter @hestia/web build
 

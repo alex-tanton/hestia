@@ -44,5 +44,5 @@ export function hearthAdmin(args: readonly string[]): {
   stdout: string;
   stderr: string;
 } {
-  return compose(['exec', '-T', 'hearth-service', 'hearth-admin', ...args]);
+  return compose(['exec', '-T', 'hestia-service', 'hearth-admin', ...args]);
 }

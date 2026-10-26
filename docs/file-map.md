@@ -114,7 +114,7 @@ defines the full production stack:
 | `auth` | GoTrue, handling sign-in and account management. |
 | `realtime` | Pushes live updates to connected clients. |
 | `kong` | The gateway that routes external requests to `auth` and `realtime` only — nothing else is exposed through it. |
-| `hearth-service` | The backend API and background jobs (built from `apps/service`). |
+| `hestia-service` | The backend API and background jobs (built from `apps/service`). |
 | `caddy` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
 | `backup` | Runs the nightly database backup and keeps a rotation of older backups. |
 
@@ -168,7 +168,7 @@ shopping list.
 | `audit-prod.test.mjs` | Harness test for the audit script, run on saved audit reports and a stub `pnpm`. Run by `pnpm test:harness`. |
 | `audit-allowlist.json` | The advisories the audit script accepts, each with an id, an expiry day and a reason. Empty today. |
 | `jscpd-config.test.mjs` | Harness test for the duplicate-code check: runs jscpd with the settings in `.jscpd.json` on fixture trees. Run by `pnpm test:harness`. |
-| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hearth-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
+| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hestia-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
 | `deploy-gate.test.mjs` | Harness test for the deploy gate, run on temporary git repositories with a stub `docker`. Run by `pnpm test:harness`. |
 | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
 | `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |

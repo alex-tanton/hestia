@@ -34,7 +34,7 @@ const REALTIME = 'realtime:v1.0.0';
 const SUPABASE = [POSTGRES, GOTRUE, REALTIME];
 const HUB = ['caddy:1.0.0-alpine', 'docker/dockerfile:1', 'kong/kong:1.0.0', 'node:1.0.0-slim'];
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-prepull-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-prepull-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -97,12 +97,12 @@ function fixture(extraComposeLines = '') {
     image: ${ECR}${REALTIME}
   kong:
     image: kong/kong:1.0.0
-  hearth-service:
-    image: hearth-service:\${HESTIA_TAG:-current}
+  hestia-service:
+    image: hestia-service:\${HESTIA_TAG:-current}
     build:
       context: ..
   caddy:
-    image: hearth-caddy:\${HESTIA_TAG:-current}
+    image: hestia-caddy:\${HESTIA_TAG:-current}
     build:
       context: ..
   backup:
@@ -216,11 +216,11 @@ describe('ci-prepull-images.sh: a clean run', () => {
     for (const arg of ghcrArgs) assert.ok(arg.startsWith(GHCR), arg);
   });
 
-  it('never pulls the hearth-built images, the backup image or a build stage', () => {
+  it('never pulls the hestia-built images, the backup image or a build stage', () => {
     assert.equal(result.status, 0, output(result));
     assert.ok(result.calls.length > 0, 'no stub was called');
     for (const arg of result.calls.flatMap((call) => call.args)) {
-      assert.ok(!arg.startsWith('hearth-'), arg);
+      assert.ok(!arg.startsWith('hestia-'), arg);
       assert.ok(!arg.startsWith('prodrigestivill/'), arg);
       assert.notEqual(arg, 'source');
     }

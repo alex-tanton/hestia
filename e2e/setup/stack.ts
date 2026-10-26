@@ -34,7 +34,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
 
 /** Stack services in start order. `backup` is left out: nothing in the suite reads a backup. */
 const DATA_SERVICES = ['db', 'auth', 'realtime', 'kong'];
-const APP_SERVICES = ['hearth-service', 'caddy'];
+const APP_SERVICES = ['hestia-service', 'caddy'];
 
 const isReuse = process.env['HESTIA_E2E_REUSE_STACK'] === '1';
 
@@ -84,7 +84,7 @@ function reserveSubnet(): Subnet {
       '--gateway',
       candidate.gateway,
       '--label',
-      `hearth.e2e.run=${RUN_ID}`,
+      `hestia.e2e.run=${RUN_ID}`,
       NETWORK,
     ]);
     if (result.status === 0) return candidate;
@@ -177,6 +177,6 @@ export function stopStack(): void {
   // the two images it built go by their run-specific tags. Each removal is scoped to this run's
   // name, never a pattern; a failure means there was nothing left to remove.
   runCommand('docker', ['network', 'rm', NETWORK]);
-  runCommand('docker', ['image', 'rm', `hearth-service:${IMAGE_TAG}`, `hearth-caddy:${IMAGE_TAG}`]);
+  runCommand('docker', ['image', 'rm', `hestia-service:${IMAGE_TAG}`, `hestia-caddy:${IMAGE_TAG}`]);
   rmSync(STATE_DIR, { recursive: true, force: true });
 }

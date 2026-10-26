@@ -17,7 +17,7 @@ A change that mixes both kinds goes through a pull request.
 A passing `CI` push run on `main` triggers the Deploy workflow
 ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)), which asks
 [`scripts/deploy-gate.sh`](scripts/deploy-gate.sh) whether to deploy. The gate compares the commit
-with the revision the running `hearth-service` image was built from:
+with the revision the running `hestia-service` image was built from:
 
 - It deploys when anything outside `docs/` and `.planning/` changed since that revision, over the
   whole range and not only the tip commit. A code change whose deploy never ran therefore still
@@ -32,7 +32,7 @@ with the revision the running `hearth-service` image was built from:
 - A newer Deploy run replaces a pending one; the gate still deploys every change since the running
   revision.
 
-The deploy job runs on a self-hosted runner labelled `hearth`. Until such a runner is registered, a
+The deploy job runs on a self-hosted runner labelled `hestia`. Until such a runner is registered, a
 Deploy run waits in the queue and deploys nothing.
 
 ## What CI checks

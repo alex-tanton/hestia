@@ -28,7 +28,7 @@
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 	}
 
-	# Only hearth-service may call these GoTrue endpoints (it reaches auth:9999 directly), so
+	# Only hestia-service may call these GoTrue endpoints (it reaches auth:9999 directly), so
 	# the common-password check and password re-entry cannot be skipped. The path matcher
 	# compares the percent-decoded path with duplicate slashes merged, case-insensitively, so
 	# encoded and doubled-slash spellings match too.
@@ -47,7 +47,7 @@
 		respond @refused_signup 403
 		respond @refused_user 403
 
-		reverse_proxy /api/* hearth-service:3000 {
+		reverse_proxy /api/* hestia-service:3000 {
 			# Downstream sees exactly one address: the client Caddy resolved above.
 			header_up X-Forwarded-For {client_ip}
 		}
