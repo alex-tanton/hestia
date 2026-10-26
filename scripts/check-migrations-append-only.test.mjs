@@ -276,3 +276,79 @@ describe('check-migrations-append-only: a base it cannot use exits 2', () => {
     assert.match(run.stderr, /unknown flag --fix/);
   });
 });
+
+const RENAMED = 'supabase/migrations/20260102000000_renamed.sql';
+
+/** The git blob id of `path` at `revision`. */
+function blobOf(repo, revision, path) {
+  return git(repo, 'rev-parse', `${revision}:${path}`);
+}
+
+/** An exemption entry pinned to the blobs the repository really holds before and after. */
+function pinnedEntry(repo, base, fromPath, toPath, reason = 'fixture change') {
+  return {
+    fromPath,
+    toPath,
+    fromBlob: blobOf(repo, base, fromPath),
+    toBlob: blobOf(repo, 'HEAD', toPath),
+    reason,
+  };
+}
+
+let exemptionFiles = 0;
+
+/** Writes an exemptions file under `scratch` and returns its path. */
+function exemptionsFile(entries) {
+  exemptionFiles += 1;
+  const file = join(scratch, `exemptions-${String(exemptionFiles)}.json`);
+  writeFileSync(file, JSON.stringify(entries));
+  return file;
+}
+
+describe('check-migrations-append-only: content-pinned exemptions', () => {
+  it('passes an exempted rename and an exempted edit pinned to both blobs, and says so', () => {
+    const { repo, base } = repoWith((dir) => {
+      git(dir, 'mv', SECOND, RENAMED);
+      write(dir, RENAMED, 'create table b (id int);\n');
+      write(dir, FIRST, 'create table a (id int);\n');
+    });
+    const file = exemptionsFile([
+      pinnedEntry(repo, base, FIRST, FIRST, 'edit fixture'),
+      pinnedEntry(repo, base, SECOND, RENAMED, 'rename fixture'),
+    ]);
+    const run = check(repo, '--base', base, '--exemptions', file);
+    assert.equal(run.status, 0, run.stderr);
+    const exempt = run.stdout.split('\n').filter((line) => line.startsWith('exempt: '));
+    assert.equal(exempt.length, 2);
+    assert.ok(exempt.includes(`exempt: ${FIRST} -> ${FIRST}: edit fixture`));
+    assert.ok(exempt.includes(`exempt: ${SECOND} -> ${RENAMED}: rename fixture`));
+    assert.match(run.stdout, /^migrations: 0 added, nothing else changed, 2 exempt$/m);
+  });
+
+  it('fails an edit whose head blob is not the pinned toBlob', () => {
+    const { repo, base } = repoWith((dir) => write(dir, FIRST, 'create table a (id int);\n'));
+    const file = exemptionsFile([
+      { ...pinnedEntry(repo, base, FIRST, FIRST), toBlob: blobOf(repo, 'HEAD', SECOND) },
+    ]);
+    const run = check(repo, '--base', base, '--exemptions', file);
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /^M supabase\/migrations\/20260101000000_a\.sql: /m);
+    assert.doesNotMatch(run.stdout, /exempt:/);
+  });
+
+  it('fails once the merge base no longer holds fromBlob, so an entry expires after it lands', () => {
+    const { repo, base } = repoWith(NO_CHANGE);
+    git(repo, 'switch', '-q', 'main');
+    write(repo, FIRST, 'create table a (id int);\n');
+    const landed = commitAll(repo, 'the pinned edit lands on main');
+    git(repo, 'switch', '-q', 'feature');
+    git(repo, 'merge', '-q', '--no-edit', 'main');
+    write(repo, FIRST, 'create table a (id int, note text);\n');
+    commitAll(repo, 'edit the file again');
+    const file = exemptionsFile([pinnedEntry(repo, base, FIRST, FIRST)]);
+    assert.notEqual(blobOf(repo, landed, FIRST), blobOf(repo, base, FIRST));
+    const run = check(repo, '--base', landed, '--exemptions', file);
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /^M supabase\/migrations\/20260101000000_a\.sql: /m);
+  });
+});
