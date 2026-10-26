@@ -1,0 +1,119 @@
+tests/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in tests/
+fixtures/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in fixtures/
+support/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in support/
+setup/	subfolder of e2e/ named in the e2e table, scoped by the section heading; several tracked directories end in setup/
+.env	the real configuration file at /srv/hearth/.env, never committed (only .env.example is tracked)
+.mjs	the bare file extension, named in prose to say the test/ files are Node ES modules
+dist/cli.js	build output of tsup (apps/service/dist), gitignored and never tracked
+America/New_York	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+America/Chicago	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+America/Los_Angeles	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Asia/Tokyo	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Etc/UTC	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Pacific/Kiritimati	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+Pacific/Pago_Pago	IANA time-zone id (the pinned zones of the sweep and the seed), not a path
+:America/New_York	POSIX leading-colon spelling of an IANA time-zone id, quoted as an accepted TZ value
+.test.ts	bare file suffix in prose, naming the convention for co-located test files
+money.ts	bare name in prose; the sentence names its directory (apps/service/src/deals, apps/web/src/lib), several tracked files carry the name
+money.test.ts	bare name in prose; the sentence names its directory, several tracked files carry the name
+occurrence.ts	bare name in prose next to its test in packages/recurrence/src; several tracked files carry the name
+app.ts	bare name in prose naming the service entry of apps/service/src; several tracked files carry the name
+bills.ts	bare name in prose; several tracked files carry the name (routes, services, web hooks)
+db.ts	bare name in prose; several tracked files carry the name
+index.ts	bare name in prose for a package barrel; every package has one
+vitest.config.ts	bare name in prose; every workspace has one
+ghcr.io/supabase	container registry namespace, not a path
+public.ecr.aws/supabase	container registry namespace, not a path
+public.ecr.aws/supabase/postgres:17.6.1.167	container image reference; the tag equals the image in docker/docker-compose.yml
+supabase/setup-cli@v3	GitHub Action reference used by .github/workflows/ci.yml, not a path
+virtual:pwa-register/react	build-time virtual module of vite-plugin-pwa, not a file
+import('../privileged/…')	syntax example of a dynamic import, with an ellipsis for the file
+**/*.test.ts,**/*.test.tsx,**/*.spec.ts	comma-joined ignore globs of the jscpd command, not a path
+components/icons	named in a negation: the doc says no such directory exists in the web app
+Dialog.tsx	named in a negation: the doc says there is no general-purpose Dialog.tsx, only the alert-dialog wrapper
+lg:pl-56	Tailwind utility class, not a script (the colon makes it look like one)
+../App.tsx	relative import in an example; apps/web/src/App.tsx exists and apps/web/src/test/harness.tsx imports it
+.js	bare file extension in a naming rule
+.only	bare Vitest modifier named in a rule about focused tests
+.planning/cleanup/logs/	gitignored raw logs directory (.gitignore)
+.planning/research/.cache/	gitignored research cache (.gitignore)
+.skip	bare Vitest modifier named in a rule about skipped tests
+.test.mjs	bare file suffix in a naming rule
+.ts	bare file extension in a naming rule
+.tsx	bare file extension in a naming rule
+actions/checkout@v7	GitHub Action reference, not a path; used in .github/workflows/ci.yml
+actions/setup-node@v7	GitHub Action reference, not a path; used in .github/actions/setup/action.yml
+actions/upload-artifact@v7	GitHub Action reference, not a path; used in .github/workflows/ci.yml
+api/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+application/problem+json	media type, not a path
+apps/*/src/**/*.test.ts(x)	glob pattern describing test file placement, not a path
+apps/service/dist/	build output directory, gitignored
+apps/service/dist/cli.js	build output (tsup), gitignored
+apps/web/dist/	build output directory, gitignored
+auth.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+auth/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+bills/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+blob-report/	generated Playwright output, gitignored
+chores.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+chores/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+client.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+common-passwords.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+coverage/	generated coverage output, gitignored
+data/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+deals.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+deals/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+dev-dist/	generated PWA dev output, gitignored
+docker/login-action@v4	GitHub Action reference, not a path; used in .github/workflows/ci.yml
+e2e/playwright-report/	generated Playwright report, gitignored
+env.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+errands.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+flipp/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+functions.sql	short name for supabase/migrations/20260919070200_functions.sql, the only migration with that suffix
+hearth-service:3000	compose service name and port (docker/Caddyfile:50), not a script
+households.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+invites.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+kong/kong	container image repository name (docker/docker-compose.yml), not a path
+kong/kong:3.9.3	container image reference (docker/docker-compose.yml:146), not a path
+lists.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+lists/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+lists/deals	client route path in apps/web/src/routes.tsx, not a file
+lists/flyers	client route path in apps/web/src/routes.tsx, not a file
+match-overrides.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+meal-plan.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+meals/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+membership.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+notifications.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+packages/*/dist/	build output glob, gitignored
+pantry.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+password.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+playwright-report/	generated Playwright report, gitignored
+pnpm/action-setup@v6	GitHub Action reference, not a path; used in .github/actions/setup/action.yml
+problem.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+prodrigestivill/postgres-backup-local	container image repository name (docker/docker-compose.yml:259), not a path
+prodrigestivill/postgres-backup-local:17-debian-d257e5d	container image reference (docker/docker-compose.yml:259), not a path
+public.ecr.aws/supabase/gotrue:v2.196.0	container image reference (docker/docker-compose.yml:63), not a path
+public.ecr.aws/supabase/realtime:v2.130.0	container image reference (docker/docker-compose.yml:106), not a path
+push-double.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+push/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+recipes.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+src/	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+supabase/.branches/	local Supabase CLI state, gitignored
+supabase/.temp/	local Supabase CLI state, gitignored
+system.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+test-results/	generated Playwright output, gitignored
+tsconfig.json	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+types.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+users.ts	bare name scoped by its sentence or tree; several tracked files or directories share it (checker: ambiguous)
+origin/main	git remote ref, not a path
+.claude/skills/	skill directories the generated skills block says may be added; none exists yet
+.agents/skills/	skill directory the generated skills block says may be added; none exists yet
+.cursor/skills/	skill directory the generated skills block says may be added; none exists yet
+.github/skills/	skill directory the generated skills block says may be added; none exists yet
+.codex/skills/	skill directory the generated skills block says may be added; none exists yet
+SKILL.md	index file name a skill directory would carry; no skill exists yet
+!docker/ca.crt	dockerignore pattern in the hand-maintained cloud-sandbox workaround; the file is created locally and never committed
+hearth-service:current	Docker image reference of the running service image that deploy-gate.sh inspects, not a path
+i/lf	index line-ending column of `git ls-files --eol` output quoted in CONTRIBUTING.md, not a path
+.env	the real configuration file at /srv/hestia/.env, never committed (only .env.example is tracked)
+hestia-service:3000	compose service name and port (docker/Caddyfile:50), not a script
+hestia-service:current	Docker image reference of the running service image that deploy-gate.sh inspects, not a path
