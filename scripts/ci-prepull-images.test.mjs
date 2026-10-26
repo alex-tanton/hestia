@@ -227,6 +227,18 @@ describe('ci-prepull-images.sh: a clean run', () => {
   });
 });
 
+describe('ci-prepull-images.sh: the tunnel connector', () => {
+  it('never pulls the tunnel connector, which E2E never starts', () => {
+    const root = fixture('  cloudflared:\n    image: cloudflare/cloudflared:1.0.0\n');
+    const result = prepull({ cwd: root });
+    assert.equal(result.status, 0, output(result));
+    assert.ok(result.calls.length > 0, 'no stub was called');
+    for (const arg of result.calls.flatMap((call) => call.args)) {
+      assert.ok(!arg.startsWith('cloudflare/'), arg);
+    }
+  });
+});
+
 describe('ci-prepull-images.sh: fallbacks and retries', () => {
   it('falls back to public.ecr.aws when the ghcr.io pull fails', () => {
     const ecr = `${ECR}${GOTRUE}`;

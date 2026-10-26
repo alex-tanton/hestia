@@ -1,10 +1,14 @@
 /*
  * Tests for `scripts/deploy.sh`: where the database password goes when the script applies
- * migrations. A command line is public to every local user (the process list) and to `set -x` and
- * CI logs, so the password must reach the Supabase CLI through its environment and appear in no
- * argument. The real script runs to the end against stub `docker`, `supabase` and `curl` binaries
- * placed first on PATH, with a fake env file holding made-up passwords; nothing starts a container,
- * opens a connection or reads the host's env file. Run by `pnpm test` through `test:harness`.
+ * migrations, and the shape of the deploy itself. A command line is public to every local user (the
+ * process list) and to `set -x` and CI logs, so the password must reach the Supabase CLI through its
+ * environment and appear in no argument. The deploy must also prepare the whole project before it
+ * starts the supporting services, check health from inside the caddy container (nothing publishes
+ * a host port) and start the tunnel connector with the supporting services. The real script runs to
+ * the end against stub `docker` and `supabase` binaries placed first on PATH, with a fake env file
+ * holding made-up passwords; a host HTTP client stub stays linked only so the test can prove it is
+ * never called. Nothing starts a container, opens a connection or reads the host's env file. Run by
+ * `pnpm test` through `test:harness`.
  */
 
 import assert from 'node:assert/strict';
@@ -35,8 +39,9 @@ after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
 
-// One stub, linked under three names. It records its arguments and the PGPASSWORD it was given,
-// then answers only what the script reads back: image ids, the db container and its address.
+// One stub, linked under three names. It records its arguments, the PGPASSWORD and the HESTIA_TAG
+// it was given, then answers only what the script reads back: image ids, the db container and its
+// address.
 const STUB = `#!/usr/bin/env bash
 name="$(basename "$0")"
 {
@@ -44,6 +49,7 @@ name="$(basename "$0")"
   printf '\\t%s' "$@"
   printf '\\n'
   printf 'ENV\\t%s\\tPGPASSWORD=%s\\n' "$name" "\${PGPASSWORD-<unset>}"
+  printf 'TAG\\t%s\\t%s\\n' "$name" "\${HESTIA_TAG-<unset>}"
 } >>"$STUB_LOG"
 if [[ "$name" == docker ]]; then
   case "$*" in
@@ -102,7 +108,9 @@ function deploy(password) {
       const [, name, value] = line.split('\t');
       return { name, value };
     });
-  return { status: run.status, stdout: run.stdout, stderr: run.stderr, calls, environments };
+  // One TAG line follows every CALL line, so tags[i] belongs to calls[i].
+  const tags = lines.filter((line) => line.startsWith('TAG\t')).map((line) => line.split('\t')[2]);
+  return { status: run.status, stdout: run.stdout, stderr: run.stderr, calls, environments, tags };
 }
 
 function migrationCall(result) {
@@ -176,5 +184,66 @@ describe('deploy.sh: a password with URL-reserved characters', () => {
     for (const arg of args) {
       assert.ok(!arg.includes(RESERVED_PASSWORD), 'the password is in the arguments');
     }
+  });
+});
+
+describe('deploy.sh: the health gate and the tunnel', () => {
+  let result;
+  let docker;
+  const argsOf = (call) => call.args.join(' ');
+  const indexOfCall = (predicate) => docker.findIndex(predicate);
+  before(() => {
+    result = deploy(POSTGRES_PASSWORD);
+    docker = result.calls.filter((call) => call.name === 'docker');
+  });
+
+  it('prepares every container and the network before the supporting services start', () => {
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    const prepare = result.calls
+      .map((call, index) => ({ call, index }))
+      .filter(
+        ({ call }) =>
+          call.name === 'docker' &&
+          argsOf(call).endsWith(' up --no-start --no-recreate --no-build'),
+      );
+    assert.equal(prepare.length, 1, 'expected exactly one whole-project prepare call');
+    const [{ index }] = prepare;
+    assert.equal(result.tags[index], DEPLOY_SHA.slice(0, 12));
+    const build = result.calls.findIndex(
+      (call) => call.name === 'docker' && call.args.includes('build'),
+    );
+    const start = result.calls.findIndex(
+      (call) =>
+        call.name === 'docker' &&
+        argsOf(call).includes('up --detach --wait --no-recreate --no-build'),
+    );
+    assert.ok(build !== -1 && build < index, 'the prepare call does not follow the build');
+    assert.ok(start !== -1 && index < start, 'the prepare call does not precede the start');
+  });
+
+  it('checks /api/health inside the caddy container, never through a host port', () => {
+    const check = docker.find((call) => {
+      const wanted = ['compose', 'exec', '-T', 'caddy', 'wget'];
+      return wanted.every((arg) => call.args.includes(arg));
+    });
+    assert.ok(check, `no in-container health check was logged:\n${docker.map(argsOf).join('\n')}`);
+    assert.equal(check.args.at(-1), 'http://127.0.0.1:8080/api/health');
+    const hostClient = result.calls.filter((call) => call.name === 'curl');
+    assert.equal(hostClient.length, 0, 'the host HTTP client was called');
+  });
+
+  it('starts cloudflared with the supporting services before anything is restarted', () => {
+    const start = indexOfCall((call) => argsOf(call).includes('up --detach --wait --no-recreate'));
+    assert.notEqual(start, -1, 'no supporting-services start was logged');
+    const named = docker[start]?.args ?? [];
+    for (const service of ['db', 'auth', 'realtime', 'kong', 'backup', 'cloudflared']) {
+      assert.ok(named.includes(service), `${service} is not in the supporting-services start`);
+    }
+    const backup = indexOfCall((call) => argsOf(call).endsWith('exec -T backup /backup.sh'));
+    const restart = indexOfCall((call) =>
+      argsOf(call).endsWith('up --detach --no-deps --no-build hestia-service caddy'),
+    );
+    assert.ok(backup > start, 'the backup does not follow the supporting-services start');
+    assert.ok(restart > start, 'the restart does not follow the supporting-services start');
   });
 });

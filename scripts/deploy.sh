@@ -7,17 +7,19 @@
 #   HESTIA_ENV_FILE     the host's .env (default /srv/hestia/.env, outside any checkout)
 #   HESTIA_DEPLOY_SHA   the commit being deployed (default: git HEAD)
 #
-# Steps: build both images tagged with the commit SHA; back up the database; apply pending
-# migrations; restart hestia-service and caddy on the new images; require GET /api/health
-# through Caddy within 60 seconds, else roll both back to the images that were running.
-# A failed build, backup, or migration aborts before anything is restarted. Safe to re-run.
+# Steps: build both images tagged with the commit SHA; prepare every container and the network
+# without starting anything (a changed network is recreated here, which briefly stops the whole
+# stack); start the supporting services and the tunnel; back up the database; apply pending
+# migrations; restart hestia-service and caddy on the new images; require GET /api/health from
+# inside the caddy container within 60 seconds, else roll both back to the images that were running.
+# A failed build, tunnel, backup, or migration aborts before anything is restarted, except that a
+# changed network stops containers earlier, in the prepare step. Safe to re-run.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="${HESTIA_ENV_FILE:-/srv/hestia/.env}"
 sha="${HESTIA_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
 new_tag="${sha:0:12}"
-health_url="http://127.0.0.1:8080/api/health"
 health_timeout_seconds=60
 images=(hestia-service hestia-caddy)
 # Old SHA-tagged images kept per image, for manual rollback beyond the automatic one.
@@ -38,10 +40,13 @@ revision_of() {
     "$1" 2>/dev/null || true
 }
 
+# No service publishes a host port, so the check runs inside the caddy container. Busybox wget
+# fails on a 5xx and on a refused connection, and `exec` fails while the container is being
+# recreated; all three read as "not yet".
 healthy_within() {
   local deadline=$((SECONDS + $1))
   while ((SECONDS < deadline)); do
-    if curl --silent --fail --max-time 5 --output /dev/null "$health_url"; then
+    if compose exec -T caddy wget -q -T 5 -O /dev/null http://127.0.0.1:8080/api/health; then
       return 0
     fi
     sleep 2
@@ -76,10 +81,24 @@ fi
 log "building hestia-service:$new_tag and hestia-caddy:$new_tag"
 HESTIA_TAG="$new_tag" compose build hestia-service caddy || fail "build failed; nothing restarted"
 
-# The Supabase services and backup must be running for the backup and migrations. Only
-# missing containers are started: a deploy never recreates the database.
-compose up --detach --wait --no-recreate --no-build db auth realtime kong backup ||
-  fail "the Supabase services are not healthy; nothing restarted"
+# Compose recreates the hestia network when its configuration changes, and that needs every
+# container off the network. An `up` that names only some services stops those, cannot remove a
+# network that hestia-service and caddy still hold ("has active endpoints"), and leaves the data
+# services stopped. Preparing the whole project without starting anything lets Compose stop all
+# the containers, recreate the network and reconnect them; the next steps start them again. On an
+# unchanged network this only creates missing containers and touches nothing running. HESTIA_TAG
+# names the images just built, because a first deploy has no :current images to create
+# containers from.
+log "preparing the containers and the hestia network"
+HESTIA_TAG="$new_tag" compose up --no-start --no-recreate --no-build ||
+  fail "could not prepare the containers and the hestia network"
+
+# The Supabase services, backup and the tunnel connector must be running for the backup and
+# migrations. Only missing containers are started: a deploy never recreates the database or the
+# connector. The tunnel is part of this fail-early start, so a bad or revoked tunnel token fails
+# the deploy before anything is backed up, migrated or restarted.
+compose up --detach --wait --no-recreate --no-build db auth realtime kong backup cloudflared ||
+  fail "the Supabase services, the backup or the tunnel are not healthy; nothing restarted"
 
 # 3. Backup, immediately before migrations.
 log "backing up the database"
