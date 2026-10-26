@@ -1,4 +1,4 @@
-# Hearth cloud environment
+# Hestia cloud environment
 
 Setup for a Claude Code cloud session that executes GSD Phase 2.
 
@@ -8,7 +8,7 @@ Setup for a Claude Code cloud session that executes GSD Phase 2.
 - Node 24.21.0, pnpm 10.34.5, Supabase CLI 2.117.0 (binary only), `psql`, `gh`, git.
 - GSD tooling `@opengsd/gsd-core@1.16.0`, installed user-level (`--claude --global`), so
   `/gsd-execute-phase` and the gsd-executor/gsd-verifier agents exist.
-- The repo checkout with a writable parent directory (worktrees go in `../hearth-*`).
+- The repo checkout with a writable parent directory (worktrees go in `../hestia-*`).
 
 `.planning/environment/cloud-setup.sh` installs all of this and runs
 `pnpm install --frozen-lockfile`. Images that ship another Node ahead of `/usr/local/bin` on
@@ -20,7 +20,7 @@ prints `v24.21.0` in the session.
 
 | Variable                          | Required | Value                                         |
 | --------------------------------- | -------- | --------------------------------------------- |
-| `GH_TOKEN`                        | see note | Fine-grained PAT on `alex-tanton/hearth`      |
+| `GH_TOKEN`                        | see note | Fine-grained PAT on `alex-tanton/hestia`      |
 | `GIT_USER_NAME`                   | no       | Defaults to `Alex Tanton`                     |
 | `GIT_USER_EMAIL`                  | no       | Defaults to `alex.c.tanton@gmail.com`         |
 | `CI`                              | yes      | `true`                                        |
@@ -29,7 +29,7 @@ prints `v24.21.0` in the session.
 
 `GH_TOKEN`: a Claude Code cloud session already injects a proxy-managed GitHub credential, so
 `gh` works without a token of your own (`gh auth status` reports that token as invalid, but API
-calls succeed). Set your own fine-grained PAT only if `gh api repos/alex-tanton/hearth` fails;
+calls succeed). Set your own fine-grained PAT only if `gh api repos/alex-tanton/hestia` fails;
 it needs Contents RW, Pull requests RW, Actions R, Metadata R. `cloud-check.sh` and the plans
 test GitHub access with that `gh api` call, never with `gh auth status`.
 

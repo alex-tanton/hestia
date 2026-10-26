@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only environment verification for the Hearth cloud session.
+# Read-only environment verification for the Hestia cloud session.
 # Run: bash .planning/environment/cloud-check.sh   (exit code non-zero if a required check fails)
 set -u
 
@@ -38,17 +38,17 @@ fi
 # gh must reach the API. A cloud session's proxy-managed GH_TOKEN makes `gh auth status` report an
 # invalid token even though API calls work, so probe the API instead.
 if command -v gh >/dev/null 2>&1; then
-  v="$(gh api repos/alex-tanton/hearth --jq .full_name 2>/dev/null || true)"
-  if [ "$v" = "alex-tanton/hearth" ]; then
-    pass "gh reaches the GitHub API (repos/alex-tanton/hearth)"
+  v="$(gh api repos/alex-tanton/hestia --jq .full_name 2>/dev/null || true)"
+  if [ "$v" = "alex-tanton/hestia" ]; then
+    pass "gh reaches the GitHub API (repos/alex-tanton/hestia)"
   else
-    bad "gh cannot read repos/alex-tanton/hearth (no GitHub access; see CLOUD-ENVIRONMENT.md)"
+    bad "gh cannot read repos/alex-tanton/hestia (no GitHub access; see CLOUD-ENVIRONMENT.md)"
   fi
 else
   bad "gh missing"
 fi
 
-if probe="$(mktemp -d "$repo_root/../.hearth-write-check.XXXXXX" 2>/dev/null)" && rmdir "$probe"; then
+if probe="$(mktemp -d "$repo_root/../.hestia-write-check.XXXXXX" 2>/dev/null)" && rmdir "$probe"; then
   pass "parent directory writable ($(cd "$repo_root/.." && pwd))"
 else
   bad "cannot create sibling worktree directories next to the repo"

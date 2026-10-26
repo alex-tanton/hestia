@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Hearth cloud-session setup script.
+# Hestia cloud-session setup script.
 #
 # Purpose: prepare a fresh Ubuntu 22.04/24.04 container (run as root, no Docker) so a Claude Code
-# cloud session can execute the GSD Phase 2 plans for the Hearth repo.
+# cloud session can execute the GSD Phase 2 plans for the Hestia repo.
 # Use: paste this file into the cloud environment's "setup script" field, or run
 #   bash .planning/environment/cloud-setup.sh
 # from a checkout. Idempotent: every step is skipped when already satisfied.
@@ -63,7 +63,7 @@ link_node_bins() {
   done
 }
 link_node_bins node npm npx corepack
-path_line='export PATH="/opt/node-v24/bin:$PATH" # hearth: Node 24 first'
+path_line='export PATH="/opt/node-v24/bin:$PATH" # hestia: Node 24 first'
 touch "${HOME}/.bashrc"
 grep -qxF "$path_line" "${HOME}/.bashrc" || printf '%s\n' "$path_line" >> "${HOME}/.bashrc"
 export PATH="/opt/node-v24/bin:$PATH"
@@ -117,7 +117,7 @@ log "git identity"
 git config --global user.name "$GIT_USER_NAME"
 git config --global user.email "$GIT_USER_EMAIL"
 
-# 8. repo dependencies (only when run from inside the Hearth checkout)
+# 8. repo dependencies (only when run from inside the Hestia checkout)
 if root="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -f "$root/package.json" ] \
   && grep -q '"name": *"hestia"' "$root/package.json"; then
   if [ "${SKIP_PNPM_INSTALL:-0}" != "1" ]; then
@@ -130,7 +130,7 @@ if root="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -f "$root/package.js
   fi
   check="$root/.planning/environment/cloud-check.sh"
 else
-  log "not inside the hearth checkout; skipping pnpm install"
+  log "not inside the hestia checkout; skipping pnpm install"
   check=""
 fi
 
