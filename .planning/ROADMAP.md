@@ -99,14 +99,14 @@ Plans:
 4. CSP (`connect-src wss://hestia.aberrance.app`), CORS, and cookie policies are configured for `https://hestia.aberrance.app`.
 5. Base origin across all services points to `https://hestia.aberrance.app`.
 
-**Plans:** 1/5 plans executed
+**Plans:** 2/5 plans executed
 
 Plans:
 **Wave 1**
 - [x] 09-01-PLAN.md — Caddy takes the client from `CF-Connecting-IP` behind the trusted Compose subnet with no published port (tracer proven by E2E spec 20); pinned `cloudflared` with a required token, excluded from E2E; new origin and token in `.env.example` and `generate-secrets.sh`; static ingress test
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 09-02-PLAN.md — `deploy.sh` prepares the whole stack first so the one-time network recreate completes (proven on a disposable stack), health gate inside the caddy container and `cloudflared` in the fail-early start; CI pre-pull skips the tunnel image; Caddy entrypoint refuses an empty trust list, with a harness test and a real-image CSP probe
+- [x] 09-02-PLAN.md — `deploy.sh` prepares the whole stack first so the one-time network recreate completes (proven on a disposable stack), health gate inside the caddy container and `cloudflared` in the fail-early start; CI pre-pull skips the tunnel image; Caddy entrypoint refuses an empty trust list, with a harness test and a real-image CSP probe
 - [ ] 09-03-PLAN.md — Test fixtures and the `env.ts` comment move to `https://hestia.aberrance.app` (literal-only sweep)
 
 **Wave 3** *(blocked on Wave 2 completion)*

@@ -4,18 +4,18 @@ milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
 current_phase: 09
 current_phase_name: Domain & Network Migration (Cloudflare Tunnel & Ingress)
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-10-26T17:54:45.325Z"
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-10-26T18:01:47.629Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 09 execution started
-state_head: a8952d7a1b50b872e508fae97f5effd458ed0d11
+state_head: 4bf571cc9c0830b5bd6c3b63ed3a85eacfbaa853
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 16
-  completed_plans: 12
+  completed_plans: 13
   percent: 40
 current_milestone: v2.0
 ---
@@ -33,7 +33,7 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
 Phase: 09 (Domain & Network Migration (Cloudflare Tunnel & Ingress)) — EXECUTING
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 5
 Phases: 2 of 5 complete (Phases 7–11)
 Status: Ready to execute
@@ -55,8 +55,8 @@ Plan Phase 9 with /gsd-plan-phase 9.
 
 ## Session
 
-**Last session:** 2026-10-26T17:54:45.225Z
-**Stopped at:** Completed 09-01-PLAN.md
+**Last session:** 2026-10-26T18:01:47.555Z
+**Stopped at:** Completed 09-02-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -75,6 +75,7 @@ Plan Phase 9 with /gsd-plan-phase 9.
 | Phase 08 P06 | 10 min | 2 tasks | 7 files |
 | Phase 08 P07 | 24 min | 3 tasks | 5 files |
 | Phase 09 P01 | 12 min | 3 tasks | 9 files |
+| Phase 09 P02 | 5 min | 2 tasks | 7 files |
 
 ## Decisions
 
@@ -98,3 +99,5 @@ Plan Phase 9 with /gsd-plan-phase 9.
 - [Phase 09]: 09-01: the hestia network pins only its subnet (no gateway); the first deploy recreates the network, handled by 09-02 and the 09-04 runbook
 - [Phase 09]: 09-01: member-removal E2E journey renumbered to 21 so it stays last; spec 20 is the ingress client-IP and CSP spec
 - [Phase 09]: 09-01: commits use scope docker or service because commitlint's scope list is closed; Supabase images pulled by identical digest from Docker Hub when ECR hit its data limit in the sandbox
+- [Phase 09]: 09-02: deploy.sh prepares the whole project (up --no-start --no-recreate --no-build with HESTIA_TAG) before the subset start so the hestia network recreate completes; health gate runs wget inside the caddy container; cloudflared is in the fail-early start
+- [Phase 09]: 09-02: caddy-entrypoint.sh exits 1 on an unset or empty HESTIA_TRUSTED_PROXIES and names https://hestia.aberrance.app; commit scope docker for Compose, deploy and entrypoint work
