@@ -26,7 +26,7 @@ import { after, describe, it } from 'node:test';
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const CHECKER = join(REPO_ROOT, 'scripts', 'check-migrations-append-only.mjs');
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-migrations-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-migrations-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -54,7 +54,7 @@ function git(repo, ...args) {
     'git',
     [
       '-c',
-      'user.name=hearth-test',
+      'user.name=hestia-test',
       '-c',
       'user.email=test@example.invalid',
       '-c',

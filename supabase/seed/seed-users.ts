@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { recomputeReadinessForHousehold } from './compute-readiness.js';
 
-const SEED_PASSWORD = 'hearth-seed-pass-2026';
+const SEED_PASSWORD = 'hestia-seed-pass-2026';
 
 const USERS = [
   { email: 'alex@example.com', displayName: 'Alex Rivera', timezone: 'America/New_York' },

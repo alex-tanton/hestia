@@ -32,7 +32,7 @@ enabled = true
 port = 54323
 api_url = "http://127.0.0.1"
 
-# Hearth sends no email while magic link is disabled.
+# Hestia sends no email while magic link is disabled.
 [local_smtp]
 enabled = false
 

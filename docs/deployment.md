@@ -1,4 +1,4 @@
-# Deploying Hearth
+# Deploying Hestia
 
 ## Overview
 
@@ -7,7 +7,7 @@ Compose. The box is reached over the internet only through Tailscale Funnel, whi
 on the host and forwards plain HTTP to Caddy; Caddy is the only container that publishes a port
 (`127.0.0.1:8080`), and it is the only way in — there is no port forwarded on the router and no
 DNS record to manage. Caddy serves the built PWA directly and reverse-proxies `/api/*` to the
-Hearth service and `/auth/v1/*` / `/realtime/v1/*` to Kong, which fronts GoTrue (auth) and
+Hestia service and `/auth/v1/*` / `/realtime/v1/*` to Kong, which fronts GoTrue (auth) and
 Realtime. A nightly backup container dumps Postgres to a second physical disk. Deploys are
 triggered by a passing CI run on `main` and run on a self-hosted GitHub Actions runner on the same
 box.
@@ -118,7 +118,7 @@ by hand.
 | `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hestia-service`. |
 | `HESTIA_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
 | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
-| `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
+| `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hestia service connects to Postgres as. |
 | `JWT_SECRET` | GoTrue's HS256 JWT signing secret. |
 | `ANON_KEY` | The anon API key, signed with `JWT_SECRET`. Used as the `apikey` header on GoTrue/Kong calls. |
 | `SERVICE_ROLE_KEY` | The service-role API key, signed with `JWT_SECRET`. Used only for sanctioned service-role operations. |

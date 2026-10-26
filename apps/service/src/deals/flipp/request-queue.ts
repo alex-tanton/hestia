@@ -82,7 +82,7 @@ export const fetchGet: HttpGet = async (url, headers) => {
 };
 
 export function buildUserAgent(origin: string): string {
-  return `Hearth/1.0 (self-hosted household admin; +${origin})`;
+  return `Hestia/1.0 (self-hosted household admin; +${origin})`;
 }
 
 /**

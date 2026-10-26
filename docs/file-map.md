@@ -1,6 +1,6 @@
 # File Map
 
-What every top-level folder and key file in the Hearth repository is for. Not an implementation
+What every top-level folder and key file in the Hestia repository is for. Not an implementation
 reference — for behavior, architecture, and design decisions, see the specs in `docs/`.
 
 ## 1. Repository layout
@@ -17,7 +17,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
 | `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, the gate scripts (the knip baseline, repository hygiene, migration append-only and production audit checks) and the deploy gate that decides whether a commit is deployed, with harness tests for the scripts that have one. |
 | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
-| `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
+| `docs/` | The specifications and reference documents that describe what Hestia is and how it behaves. |
 | `.github/` | Continuous integration and deployment automation (GitHub Actions: `ci.yml`, `sweep.yml` and `deploy.yml`), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
 | `README.md` | The entry point, with an overview, prerequisites, a quickstart, the architecture summary with the repository layout, and the documentation index. |
@@ -88,7 +88,7 @@ These are small, standalone libraries used by more than one part of the system, 
 
 ## 5. supabase/
 
-Hearth self-hosts Supabase, which bundles several open-source pieces behind one configuration:
+Hestia self-hosts Supabase, which bundles several open-source pieces behind one configuration:
 
 - **Postgres** is the database that stores all household data.
 - **GoTrue** is the authentication service — it handles signup, sign-in, password resets, and issuing the tokens that prove who a user is.
@@ -181,14 +181,14 @@ shopping list.
 | `testing.md` | How unit, integration, frontend, and end-to-end tests are structured, how to add more of each, and how to test the running app by hand. |
 | `development.md` | Local setup, dev servers and commands, running the API against a local Supabase stack, database and seed commands, commit hooks, scripts, and the checks to run before pushing. |
 | `deployment.md` | The production deployment runbook: system requirements, Compose services, environment variables and secrets, first-time setup, deploys and rollback, backups and restore, and troubleshooting. |
-| `use-cases.md` | Hearth's product requirements, restated as use cases: who does what, under what conditions, with what result. |
+| `use-cases.md` | Hestia's product requirements, restated as use cases: who does what, under what conditions, with what result. |
 | `architecture.md` | The system's shape — request authorization and the RLS isolation pattern, data model, API surface, background jobs, realtime sync, offline writes, and the notification pipeline. |
-| `branding.md` | Hearth's name, voice, and visual identity — color, type, spacing, icons, motion, and copy rules. |
-| `design.md` | Hearth's design decisions — navigation, state handling, empty states, and accessibility commitments. |
+| `branding.md` | Hestia's name, voice, and visual identity — color, type, spacing, icons, motion, and copy rules. |
+| `design.md` | Hestia's design decisions — navigation, state handling, empty states, and accessibility commitments. |
 
 ## 10. Root configuration files
 
-| Tool/file | What it is | Why Hearth uses it |
+| Tool/file | What it is | Why Hestia uses it |
 | --- | --- | --- |
 | pnpm, `pnpm-workspace.yaml` | pnpm is the package manager that installs JavaScript/TypeScript dependencies. A "workspace" lets one repository (a "monorepo") hold several installable projects — here, the apps and packages — that can depend on each other directly. | Lets `apps/web` and `apps/service` share `packages/shared`, `packages/recurrence`, and `packages/matching` without publishing them anywhere, and keeps every dependency version pinned exactly in one lockfile. |
 | TypeScript, `tsconfig.base.json` | TypeScript adds type-checking to JavaScript, catching a category of bugs before the code ever runs. The base config holds the strict settings every workspace inherits. | Keeps the whole codebase held to the same strict standard, with no workspace quietly opting out. |

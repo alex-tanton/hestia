@@ -14,7 +14,7 @@ describe('recipeFixtureFetch', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hearth-recipe-fixtures-'));
+    dir = mkdtempSync(join(tmpdir(), 'hestia-recipe-fixtures-'));
     writeFileSync(join(dir, 'a.html'), '<html>fixture a</html>', 'utf8');
   });
 

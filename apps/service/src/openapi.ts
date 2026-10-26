@@ -69,7 +69,7 @@ export function buildOpenApiDocument(list: readonly Endpoint[] = endpoints): Jso
   }
   return {
     openapi: '3.1.0',
-    info: { title: 'Hearth API', version: '1' },
+    info: { title: 'Hestia API', version: '1' },
     security: [{ bearer: [] }],
     components: {
       securitySchemes: { bearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },

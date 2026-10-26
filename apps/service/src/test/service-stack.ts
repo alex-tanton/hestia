@@ -30,7 +30,7 @@ export interface StackConfig {
   serviceDatabaseUrl: string;
 }
 
-const SERVICE_PASSWORD = process.env['HESTIA_TEST_SERVICE_PASSWORD'] ?? 'hearth';
+const SERVICE_PASSWORD = process.env['HESTIA_TEST_SERVICE_PASSWORD'] ?? 'hestia';
 
 function supabaseStatus(): Record<string, string> {
   const output = execFileSync('supabase', ['status', '--output', 'env'], {

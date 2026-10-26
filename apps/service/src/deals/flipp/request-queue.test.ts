@@ -38,7 +38,7 @@ function queueWith(statuses: (number | 'throw')[], options: Record<string, unkno
   const fake = transport(statuses);
   const queue = new FlippRequestQueue({
     get: fake.get,
-    userAgent: buildUserAgent('https://hearth.example.ts.net'),
+    userAgent: buildUserAgent('https://hestia.example.ts.net'),
     ...options,
   });
   return { ...fake, queue };
@@ -64,7 +64,7 @@ describe('the serialized request queue', () => {
         starts.push(clock);
         return Promise.resolve({ status: 200, json: () => Promise.resolve({}) });
       },
-      userAgent: buildUserAgent('https://hearth.example.ts.net'),
+      userAgent: buildUserAgent('https://hestia.example.ts.net'),
       now: () => clock,
       sleep: (ms) => {
         clock += !wokeEarly && ms > 1 ? ms - 1 : ms;
@@ -101,7 +101,7 @@ describe('the serialized request queue', () => {
     await result;
 
     expect(calls[0]?.headers['User-Agent']).toBe(
-      'Hearth/1.0 (self-hosted household admin; +https://hearth.example.ts.net)',
+      'Hestia/1.0 (self-hosted household admin; +https://hestia.example.ts.net)',
     );
   });
 

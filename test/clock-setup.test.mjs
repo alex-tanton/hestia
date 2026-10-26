@@ -403,7 +403,7 @@ describe('clock-setup: the default pin, overrides and restoration', () => {
 const SHARED_GLOBAL_FILE = `
 import { describe, expect, it } from 'vitest';
 
-const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
+const position = (globalThis.__hestiaFilePosition = (globalThis.__hestiaFilePosition ?? 0) + 1);
 // Padding keeps the unit files larger than the integration file, which Vitest then runs last.
 // ${'x'.repeat(4000)}
 
@@ -428,7 +428,7 @@ describe(\`file at position \${position}\`, () => {
 const SHARED_GLOBAL_INTEGRATION_FILE = `
 import { describe, expect, it } from 'vitest';
 
-const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
+const position = (globalThis.__hestiaFilePosition = (globalThis.__hestiaFilePosition ?? 0) + 1);
 
 describe(\`integration file at position \${position}\`, () => {
   it('is left on the native Date, not on a pin an earlier file installed', () => {

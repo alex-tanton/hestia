@@ -1,4 +1,4 @@
-name: Set up Hearth
+name: Set up Hestia
 description: Installs pnpm and Node from .nvmrc with the pnpm store cached, then installs dependencies from the lockfile.
 
 # Callers run actions/checkout first: a local action is read from the checked-out workspace, so it

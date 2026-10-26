@@ -17,7 +17,7 @@ import { currentInstant } from './zone-dates.js';
 /** Helpers for unit tests that drive the app with inject() and no database or GoTrue. */
 
 export const TEST_JWT_SECRET = 'unit-test-secret-at-least-32-characters-long';
-export const TEST_ORIGIN = 'https://hearth.test.ts.net';
+export const TEST_ORIGIN = 'https://hestia.test.ts.net';
 export const TEST_OWNER_EMAIL = 'Owner@Example.com';
 
 /** An HS256 token signed the way GoTrue signs one. */

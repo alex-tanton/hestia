@@ -1,6 +1,6 @@
-# Hearth production stack.
+# Hestia production stack.
 #
-# The Supabase services are the subset of Supabase's official self-hosting compose that Hearth
+# The Supabase services are the subset of Supabase's official self-hosting compose that Hestia
 # uses. db, auth, and realtime are pinned to the same images the pinned Supabase CLI runs for
 # `supabase start`, so a production dump restores into local development unchanged.
 #

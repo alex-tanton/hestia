@@ -17,7 +17,7 @@ import { after, describe, it } from 'node:test';
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const HYGIENE = join(REPO_ROOT, 'scripts', 'check-repo-hygiene.mjs');
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-hygiene-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-hygiene-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -33,7 +33,7 @@ function childEnvironment() {
   return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' };
 }
 
-const GIT_IDENTITY = ['-c', 'user.name=hearth-test', '-c', 'user.email=test@example.invalid'];
+const GIT_IDENTITY = ['-c', 'user.name=hestia-test', '-c', 'user.email=test@example.invalid'];
 
 function git(repo, args, input) {
   const run = spawnSync(

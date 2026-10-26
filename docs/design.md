@@ -1,4 +1,4 @@
-# Hearth — Design Reference
+# Hestia — Design Reference
 
 Color, type, spacing, icon, motion, and voice tokens are in `docs/branding.md`. Tokens are
 referenced here by name (the accent color token, the section color).

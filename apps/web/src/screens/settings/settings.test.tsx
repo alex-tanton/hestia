@@ -153,7 +153,7 @@ describe('Settings', () => {
           status: 201,
           body: {
             invite: inviteFixture,
-            link: 'https://hearth.example.ts.net/join#token=abcdefghijklmnopqrstuvwxyz012345678',
+            link: 'https://hestia.example.ts.net/join#token=abcdefghijklmnopqrstuvwxyz012345678',
             code: '9XKR4TZ2',
           },
         }),

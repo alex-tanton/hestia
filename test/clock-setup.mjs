@@ -48,7 +48,7 @@ const DEFAULT_TEST_NOW = '2026-10-14T12:00:00.000Z';
 // with `isolate: false` runs the setup files once per test file in the same global): the pin
 // remembers the class it replaced, so a second load builds one pin over the native class instead
 // of a second pin over the first. A clock a test left installed inherits the marker from the pin.
-const NATIVE = Symbol.for('hearth.nativeDate');
+const NATIVE = Symbol.for('hestia.nativeDate');
 const NativeDate = globalThis.Date[NATIVE] ?? globalThis.Date;
 
 function pinnedInstant() {

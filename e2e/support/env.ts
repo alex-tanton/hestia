@@ -92,7 +92,7 @@ function distinctFreePort(avoid: string): string {
 }
 
 /** The password every seed user signs in with. */
-export const SEED_PASSWORD = 'hearth-seed-pass-2026';
+export const SEED_PASSWORD = 'hestia-seed-pass-2026';
 
 /** The seed users and households. */
 export const SEED = {

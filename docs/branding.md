@@ -1,10 +1,10 @@
-# Hearth — Branding
+# Hestia — Branding
 
 Navigation, screen states, empty states, and accessibility patterns: see `docs/design.md`.
 
 ## 1. Name and voice
 
-The product is **Hearth** — a household admin tool (shopping lists and deals, meals, bills,
+The product is **Hestia** — a household admin tool (shopping lists and deals, meals, bills,
 chores). The name is deliberately not matched by the visual style: the brand direction is "a
 well-organized kitchen" — bright, uncluttered, fast to find things in — rather than
 cozy-rustic literalism.

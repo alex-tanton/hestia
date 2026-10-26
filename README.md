@@ -1,4 +1,4 @@
-# Hearth
+# Hestia
 
 A self-hosted household-admin PWA: grocery deals and shopping lists, meal planning, bills, and
 chores for one household (or a few), running on a single home server. The specifications in
@@ -31,7 +31,7 @@ under [Commands](docs/development.md#commands).
 
 ## Architecture
 
-Hearth is a pnpm monorepo: a Fastify API service and a React PWA, over a self-hosted Supabase stack
+Hestia is a pnpm monorepo: a Fastify API service and a React PWA, over a self-hosted Supabase stack
 (Postgres, GoTrue, Realtime, and Kong) behind Caddy as a single origin. The service is the only HTTP
 path to application data, and it runs every request in a Postgres transaction as the caller, so
 row-level security isolates households. Zod schemas in `packages/shared` define the contract for both

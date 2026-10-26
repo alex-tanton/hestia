@@ -13,7 +13,7 @@ import { BASE_URL, SEED } from '../support/env.ts';
  * subject, because no other test depends on Morgan's password.
  */
 
-const NEW_PASSWORD = 'hearth-reset-pass-2026';
+const NEW_PASSWORD = 'hestia-reset-pass-2026';
 
 test('the forgot-password screen points at the server owner', async ({ page }) => {
   await page.goto('/sign-in');

@@ -1,4 +1,4 @@
-# Hearth — Use Cases
+# Hestia — Use Cases
 
 ## Actors
 
@@ -48,7 +48,7 @@
   1. The admin creates an invite. The service generates an opaque random token (for a shareable link) and an 8-character code drawn from the Crockford Base32 alphabet (no I, L, O, or U).
   2. Both credentials are stored only as SHA-256 hashes, in lowercase hex.
   3. `expires_at` is set to exactly 7 days after `created_at`.
-  4. The admin shares the link or the code with the invitee by any out-of-band means (Hearth never emails it).
+  4. The admin shares the link or the code with the invitee by any out-of-band means (Hestia never emails it).
   5. The admin can view the list of outstanding invites for the household at any time, and can revoke one — revocation takes effect immediately for both the link and the code.
 - **Alternate/exception flows:**
   - **Non-admin attempts to create an invite:** refused.
@@ -383,7 +383,7 @@
   - **"Still using this?" prompt:** shown when usage has not been confirmed for 60 days, clocked from `last_used_confirmed_at`, or from `created_at` if usage has never been confirmed.
     - **"Still using":** sets `last_used_confirmed_at` to now, resetting the clock.
     - **"Stop tracking":** archives the bill.
-  - Usage is self-reported only; Hearth has no way to detect actual usage.
+  - Usage is self-reported only; Hestia has no way to detect actual usage.
 - **Postconditions:** the subscriptions total and per-row figures reflect current recurrence data; `last_used_confirmed_at` is updated if the user confirmed usage.
 
 ### Use case: Receive and act on a bill reminder
@@ -527,7 +527,7 @@
   2. A notification whose `send_after` falls inside the window has `send_after` moved to the end of the window — delivered when the window opens, never dropped.
   3. Batching and the outbox key still apply during this shift, so a night's list activity arrives as one morning notification per list.
   4. Every addition to a batch re-applies the window, so the batch's send time always reflects its latest addition, and a batch is never split across two windows.
-  5. There is no urgent-override tier — nothing Hearth sends warrants waking someone.
+  5. There is no urgent-override tier — nothing Hestia sends warrants waking someone.
 - **Alternate/exception flows:**
   - **Quiet hours changed after a notification was already written:** the change applies only to notifications written after the change; already-written rows keep their original send time.
 - **Postconditions:** no notification is delivered inside the recipient's quiet-hours window; it is deferred to the window's end instead.

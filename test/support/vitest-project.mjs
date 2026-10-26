@@ -23,7 +23,7 @@ const VITEST_BIN = join(REPO_ROOT, 'packages', 'shared', 'node_modules', 'vitest
  * `message`) plus the exit status and the combined output.
  */
 export function runVitestProject({ files, env = {}, testConfig = {} }) {
-  const directory = mkdtempSync(join(tmpdir(), 'hearth-clock-'));
+  const directory = mkdtempSync(join(tmpdir(), 'hestia-clock-'));
   try {
     for (const [name, source] of Object.entries(files)) {
       const path = join(directory, name);

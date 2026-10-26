@@ -501,7 +501,7 @@ its own.
 
 ### Users and households
 
-Every seed user has the password `hearth-seed-pass-2026`.
+Every seed user has the password `hestia-seed-pass-2026`.
 
 | Name | Email | Timezone |
 | --- | --- | --- |
@@ -668,7 +668,7 @@ A walkthrough for clicking through the real app locally, outside the test suites
 ```sh
 supabase start                                                      # Postgres, GoTrue, Realtime, Kong, Studio
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
-  -c "alter role hestia_service with login password 'hearth'"
+  -c "alter role hestia_service with login password 'hestia'"
 pnpm db:seed                                                         # creates the 5 seed users + seed.sql rows
 ```
 
@@ -680,7 +680,7 @@ users, so it's safe only against a fresh local stack.
 
 ```sh
 eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
-export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
+export DATABASE_URL=postgresql://hestia_service:hestia@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
 export HESTIA_ORIGIN=http://127.0.0.1:5173
 export HESTIA_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner

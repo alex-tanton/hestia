@@ -28,7 +28,7 @@ import { after, describe, it } from 'node:test';
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const GATE = join(REPO_ROOT, 'scripts', 'deploy-gate.sh');
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-gate-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-gate-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -62,7 +62,7 @@ function gitEnvironment() {
 function git(cwd, ...args) {
   const run = spawnSync(
     'git',
-    ['-c', 'user.name=hearth-test', '-c', 'user.email=test@example.invalid', ...args],
+    ['-c', 'user.name=hestia-test', '-c', 'user.email=test@example.invalid', ...args],
     { cwd, encoding: 'utf8', env: gitEnvironment() },
   );
   assert.equal(run.status, 0, `git ${args.join(' ')}: ${run.stderr}`);

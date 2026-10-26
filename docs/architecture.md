@@ -2,7 +2,7 @@
 
 ## Overview
 
-Hearth is a monorepo: a Fastify API service (`apps/service`), a React PWA (`apps/web`), and a
+Hestia is a monorepo: a Fastify API service (`apps/service`), a React PWA (`apps/web`), and a
 self-hosted Supabase stack — Postgres, GoTrue (auth), Realtime, and Kong (the gateway in front of
 GoTrue and Realtime) — all reachable through Caddy as a single origin. The service is the only
 HTTP path to application data; there is no PostgREST. Caddy also serves the built PWA as static

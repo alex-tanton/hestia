@@ -14,7 +14,7 @@ function io() {
   };
 }
 
-const ORIGIN = 'https://hearth.tail1234.ts.net';
+const ORIGIN = 'https://hestia.tail1234.ts.net';
 
 describe('hestia-admin', () => {
   it('prints a recovery link that lands on the set-new-password screen', async () => {
@@ -144,7 +144,7 @@ describe('hestia-admin, invoked directly as a script', () => {
       process.argv = [originalArgv[0] ?? 'node', cliPath, 'reset-password', 'alex@example.com'];
       process.env['GOTRUE_URL'] = gotrueUrl;
       process.env['SERVICE_ROLE_KEY'] = 'test-service-role-key';
-      process.env['HESTIA_ORIGIN'] = 'https://hearth.example.test';
+      process.env['HESTIA_ORIGIN'] = 'https://hestia.example.test';
       process.exitCode = undefined;
 
       await import(/* @vite-ignore */ `./cli.ts?invoked-directly=${String(++importCount)}`);

@@ -53,10 +53,10 @@ database from the migrations. The commands:
 
 ```sh
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
-  -c "alter role hestia_service with login password 'hearth'"
+  -c "alter role hestia_service with login password 'hestia'"
 
 eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
-export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
+export DATABASE_URL=postgresql://hestia_service:hestia@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://auth:9999 in production
 export HESTIA_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
 export HESTIA_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
@@ -100,7 +100,7 @@ The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABL
 | `pnpm test:integration` | RLS, database and route tests; isolation is in [testing.md](testing.md#integration-tests) |
 
 Run `pnpm db:types` after every new migration and commit the result. `pnpm db:seed` needs `psql`
-on the path. It creates the five seed users (password `hearth-seed-pass-2026`) and prints the
+on the path. It creates the five seed users (password `hestia-seed-pass-2026`) and prints the
 outstanding Oak Street invite's code and link token. It runs once per database: run
 `supabase db reset` before seeding again. It refuses a database or GoTrue that has any user other
 than the five seed users, so it cannot add them to a stack that real people use. See

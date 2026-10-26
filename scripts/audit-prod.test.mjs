@@ -19,7 +19,7 @@ const TODAY = '2026-10-22';
 const BRACES_ID = 'GHSA-vfj7-8cjw-p6xm';
 const BRACES_PATH = 'apps__service>kysely-codegen>micromatch>braces';
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-audit-prod-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-audit-prod-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });

@@ -14,7 +14,7 @@ import { after, describe, it } from 'node:test';
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const SWEEP = join(REPO_ROOT, 'scripts', 'test-sweep.mjs');
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-sweep-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-sweep-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });

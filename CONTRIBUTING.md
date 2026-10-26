@@ -92,7 +92,7 @@ whoever last changed the workflow's cron line, so keep Actions notifications on.
 Name branches `{type}/{topic}` and create each one in its own worktree:
 
 ```sh
-git worktree add ../hearth-{topic} -b {type}/{topic}
+git worktree add ../hestia-{topic} -b {type}/{topic}
 ```
 
 Run `pnpm install` inside each new worktree. That installs the Husky hooks there; without it no hook

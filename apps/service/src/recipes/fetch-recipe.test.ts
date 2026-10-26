@@ -115,7 +115,7 @@ describe('requestWithLimits', () => {
     const page = await requestWithLimits(url, {
       address: '127.0.0.1',
       family: 4,
-      userAgent: 'Hearth/1.0 (+https://hearth.test)',
+      userAgent: 'Hestia/1.0 (+https://hestia.test)',
     });
     expect(page.status).toBe(200);
     expect(page.body).toBe('<html>hi</html>');
@@ -131,9 +131,9 @@ describe('requestWithLimits', () => {
     await requestWithLimits(url, {
       address: '127.0.0.1',
       family: 4,
-      userAgent: 'Hearth/1.0 (self-hosted household admin; +https://hearth.test)',
+      userAgent: 'Hestia/1.0 (self-hosted household admin; +https://hestia.test)',
     });
-    expect(seen).toBe('Hearth/1.0 (self-hosted household admin; +https://hearth.test)');
+    expect(seen).toBe('Hestia/1.0 (self-hosted household admin; +https://hestia.test)');
   });
 
   it('rejects a non-200 status', async () => {

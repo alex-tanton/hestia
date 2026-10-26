@@ -18,7 +18,7 @@ const JSCPD = join(REPO_ROOT, 'node_modules', '.bin', 'jscpd');
 const CONFIG = JSON.parse(readFileSync(join(REPO_ROOT, '.jscpd.json'), 'utf8'));
 const PACKAGE = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8'));
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-jscpd-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-jscpd-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });

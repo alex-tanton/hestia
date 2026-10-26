@@ -30,7 +30,7 @@ const SERVICE_PASSWORD = 'svc-sentinel-7d41b09e';
 const RESERVED_PASSWORD = 'p@ss/w:rd#1?x%y';
 const DEPLOY_SHA = '0123456789abcdef0123456789abcdef01234567';
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-deploy-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-deploy-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });

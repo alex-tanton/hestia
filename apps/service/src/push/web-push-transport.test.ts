@@ -13,7 +13,7 @@ const SUBSCRIPTION = { id: 'sub-1', endpoint: ENDPOINT, keys: KEYS };
 
 function vapid() {
   const keys = webPush.generateVAPIDKeys();
-  return { subject: 'https://hearth.example.ts.net', ...keys };
+  return { subject: 'https://hestia.example.ts.net', ...keys };
 }
 
 afterEach(() => {
@@ -65,7 +65,7 @@ describe('createWebPushTransport', () => {
   it('refuses a malformed VAPID private key at construction, so startup fails rather than the first send', () => {
     expect(() =>
       createWebPushTransport({
-        subject: 'https://hearth.example.ts.net',
+        subject: 'https://hestia.example.ts.net',
         publicKey: 'not-a-key',
         privateKey: 'not-a-key',
       }),
