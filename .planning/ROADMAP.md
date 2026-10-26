@@ -99,6 +99,22 @@ Plans:
 4. CSP (`connect-src wss://hestia.aberrance.app`), CORS, and cookie policies are configured for `https://hestia.aberrance.app`.
 5. Base origin across all services points to `https://hestia.aberrance.app`.
 
+**Plans:** 5 plans
+
+Plans:
+**Wave 1**
+- [ ] 09-01-PLAN.md — Caddy takes the client from `CF-Connecting-IP` behind the trusted Compose subnet with no published port (tracer proven by E2E spec 20); pinned `cloudflared` with a required token, excluded from E2E; new origin and token in `.env.example` and `generate-secrets.sh`; static ingress test
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 09-02-PLAN.md — `deploy.sh` health gate inside the caddy container and `cloudflared` in the fail-early start; CI pre-pull skips the tunnel image; Caddy entrypoint refuses an empty trust list, with a harness test and a real-image CSP probe
+- [ ] 09-03-PLAN.md — Test fixtures and the `env.ts` comment move to `https://hestia.aberrance.app` (literal-only sweep)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 09-04-PLAN.md — `docs/deployment.md` Cloudflare Tunnel runbook and pinned origin; file map, testing, development, architecture and CLAUDE.md aligned; owner checklist
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 09-05-PLAN.md — Retired-ingress guard in the hygiene gate; every CI check, integration and the full E2E suite green
+
 ---
 
 ### Phase 10: Magic Links & Transactional Email
