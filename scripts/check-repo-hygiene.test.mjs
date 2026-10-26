@@ -393,3 +393,91 @@ describe('check-repo-hygiene: legacy name', () => {
     assert.deepEqual(run.stderr.trim().split('\n'), ['legacy name in dirty.txt']);
   });
 });
+
+/* The retired ingress's terms, spelled out for the same reason as the old name above. */
+const RETIRED = Object.freeze({
+  product: 'tailscale',
+  network: 'tailnet',
+  feature: 'funnel',
+  suffix: 'ts.net',
+});
+const RECURRENCE_FILE = 'packages/recurrence/src/occurrence.ts';
+const RECURRENCE_QUOTE = ` * Both monthly and yearly recurrence ${RETIRED.feature} through here — a year is just 12 months — which is`;
+
+/** Stages each `[path, content]` pair in a new repository and runs the guard on it. */
+function hygieneOnFiles(files) {
+  const repo = newRepo();
+  for (const [path, content] of files) stage(repo, path, content);
+  return hygiene(repo);
+}
+
+function problemLines(run) {
+  return run.stderr.trim().split('\n');
+}
+
+describe('check-repo-hygiene: retired ingress terms', () => {
+  it('fails on a staged file that names a retired ingress term, in any case, and names the file', () => {
+    const run = hygieneOnFiles([
+      ['src/product.ts', 'const a = "Tailscale";\n'],
+      ['src/network.ts', `const a = "${RETIRED.network.toUpperCase()}";\n`],
+      ['src/feature.ts', `// the ${RETIRED.feature} feature\n`],
+      ['src/suffix.ts', `const a = "https://host.${RETIRED.suffix}/";\n`],
+      ['src/clean.ts', 'const a = 1;\n'],
+    ]);
+    assert.equal(run.status, 1);
+    assert.deepEqual(
+      problemLines(run).map((line) => line.replace('retired ingress term in ', '')),
+      ['src/feature.ts', 'src/network.ts', 'src/product.ts', 'src/suffix.ts'],
+    );
+    assert.equal(problemLines(run).length, 4);
+    assert.match(run.stdout, /^repo-hygiene: 4 problems$/m);
+  });
+
+  it('fails on a tracked path that contains a retired ingress term', () => {
+    const run = hygieneOnFiles([[`docs/${RETIRED.feature}-notes.md`, 'clean text\n']]);
+    assert.equal(run.status, 1);
+    assert.deepEqual(problemLines(run), [
+      `retired ingress term in file name: docs/${RETIRED.feature}-notes.md`,
+    ]);
+    assert.match(run.stdout, /^repo-hygiene: 1 problems$/m);
+  });
+
+  it("passes when the terms appear only under .planning/ or in the guard's own files", () => {
+    const text = `names ${RETIRED.product}\n`;
+    const run = hygieneOnFiles(
+      [
+        '.planning/milestones/v1.0/x.md',
+        '.planning/phases/09-x/notes.md',
+        'scripts/check-repo-hygiene.mjs',
+        'scripts/check-repo-hygiene.test.mjs',
+      ].map((path) => [path, text]),
+    );
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(run.stdout, /^repo-hygiene: clean \(4 files, 0 scripts\)$/m);
+  });
+
+  it("allows the recurrence comment's exact quote but no other use in that file", () => {
+    const pinned = hygieneOnFiles([[RECURRENCE_FILE, `${RECURRENCE_QUOTE}\n`]]);
+    assert.equal(pinned.status, 0, pinned.stderr);
+    const extra = hygieneOnFiles([
+      [RECURRENCE_FILE, `${RECURRENCE_QUOTE}\n// a ${RETIRED.feature} elsewhere\n`],
+    ]);
+    assert.equal(extra.status, 1);
+    assert.deepEqual(problemLines(extra), [`retired ingress term in ${RECURRENCE_FILE}:2`]);
+  });
+
+  it('does not extend a pinned quote or an allowlist entry to another path', () => {
+    const run = hygieneOnFiles([
+      ['packages/recurrence/src/other.ts', `${RECURRENCE_QUOTE}\n`],
+      ['.planningx/notes.md', `names ${RETIRED.network}\n`],
+      ['scripts/check-repo-hygiene.mjs.bak', `names ${RETIRED.product}\n`],
+    ]);
+    assert.equal(run.status, 1);
+    assert.deepEqual(problemLines(run), [
+      'retired ingress term in .planningx/notes.md',
+      'retired ingress term in packages/recurrence/src/other.ts',
+      'retired ingress term in scripts/check-repo-hygiene.mjs.bak',
+    ]);
+    assert.match(run.stdout, /^repo-hygiene: 3 problems$/m);
+  });
+});

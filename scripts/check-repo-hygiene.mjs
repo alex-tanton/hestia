@@ -1,6 +1,6 @@
 /*
  * Repository hygiene gate: reads the git index (what a commit would contain, never the working
- * tree a checkout may have rewritten) and fails on four kinds of drift that review misses.
+ * tree a checkout may have rewritten) and fails on five kinds of drift that review misses.
  *
  *   node scripts/check-repo-hygiene.mjs [--repo DIR]
  *
@@ -16,6 +16,11 @@
  *    path (binary files are not judged). `LEGACY_NAME_ALLOWLIST` and `LEGACY_NAME_QUOTES` are the
  *    only places text may carry the former name: the allowlist exempts whole paths, and the quotes
  *    exempt exact substrings of the four planning state files, which are scanned line by line.
+ * 5. The retired ingress, by any of `RETIRED_INGRESS_TERMS`, in any case, in the content of a
+ *    tracked text file or in a tracked path (binary files are not judged). Both checks 4 and 5 are
+ *    one term rule (`{ label, terms, allowlist, quotes }`). For check 5 the allowlist is
+ *    `RETIRED_INGRESS_ALLOWLIST` and the one pinned quote is in `RETIRED_INGRESS_QUOTES`; the
+ *    message is `retired ingress term in <path>`, `... in <path>:<line>` or `... in file name: <path>`.
  *
  * Exit codes: 0 clean; 1 problems found; 2 the check could not run (not a git work tree, a failing
  * git call, bad usage), which is never treated as a pass.
@@ -82,6 +87,50 @@ const LEGACY_NAME_QUOTES = Object.freeze({
     'file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md',
   ]),
 });
+
+/**
+ * The retired ingress, as lowercase fixed strings matched in any case: the product's name, its
+ * private-network term, its public-forwarding feature and its hosts' DNS suffix. The suffix is what
+ * a copied hostname or URL would carry.
+ */
+const RETIRED_INGRESS_TERMS = Object.freeze(['tailscale', 'tailnet', 'funnel', 'ts.net']);
+
+/**
+ * Whole paths that may name the retired ingress, with the same prefix-or-exact meaning as
+ * `LEGACY_NAME_ALLOWLIST`. Keep it at these three entries: adding one needs the owner's review.
+ */
+const RETIRED_INGRESS_ALLOWLIST = Object.freeze([
+  // The planning records and the v1.0 archive under it are history and must be able to quote it.
+  '.planning/',
+  // This script and its test hold the terms, so they must spell them.
+  'scripts/check-repo-hygiene.mjs',
+  'scripts/check-repo-hygiene.test.mjs',
+]);
+
+/**
+ * The one use that is not the retired ingress: an English verb in a recurrence comment. The file is
+ * scanned line by line and only this exact, case-sensitive substring is removed before the terms
+ * are tested, so any other use of the word in the file still fails.
+ */
+const RETIRED_INGRESS_QUOTES = Object.freeze({
+  'packages/recurrence/src/occurrence.ts': Object.freeze(['funnel through here']),
+});
+
+/** The two term rules the gate applies, in report order. */
+const TERM_RULES = Object.freeze([
+  {
+    label: 'legacy name',
+    terms: Object.freeze([LEGACY_NAME]),
+    allowlist: LEGACY_NAME_ALLOWLIST,
+    quotes: LEGACY_NAME_QUOTES,
+  },
+  {
+    label: 'retired ingress term',
+    terms: RETIRED_INGRESS_TERMS,
+    allowlist: RETIRED_INGRESS_ALLOWLIST,
+    quotes: RETIRED_INGRESS_QUOTES,
+  },
+]);
 
 const USAGE = `usage: node scripts/check-repo-hygiene.mjs [--repo DIR]
   --repo DIR   the repository to check (default: this checkout)`;
@@ -171,24 +220,36 @@ function eolEntries(repo) {
   });
 }
 
-function isLegacyNameAllowlisted(path) {
-  return LEGACY_NAME_ALLOWLIST.some((entry) =>
+function isAllowlisted(rule, path) {
+  return rule.allowlist.some((entry) =>
     entry.endsWith('/') ? path.startsWith(entry) : path === entry,
   );
 }
 
-function mentionsLegacyName(text) {
-  return text.toLowerCase().includes(LEGACY_NAME);
+function mentionsTerm(terms, text) {
+  const lower = text.toLowerCase();
+  return terms.some((term) => lower.includes(term));
 }
 
 /**
- * Paths whose index copy is a text file containing the former name in any case. `git grep` exits 1
+ * Paths whose index copy is a text file containing any of the terms in any case. `git grep` exits 1
  * when nothing matches, so status 0 and 1 are both answers; any other status is a failure.
  */
-function legacyNameHits(repo) {
+function termHits(repo, terms) {
   const run = spawnSync(
     'git',
-    ['-C', repo, 'grep', '--cached', '-I', '-l', '-i', '-z', '-F', '-e', LEGACY_NAME],
+    [
+      '-C',
+      repo,
+      'grep',
+      '--cached',
+      '-I',
+      '-l',
+      '-i',
+      '-z',
+      '-F',
+      ...terms.flatMap((t) => ['-e', t]),
+    ],
     { maxBuffer: MAX_BUFFER },
   );
   if (run.error !== undefined) {
@@ -203,16 +264,39 @@ function legacyNameHits(repo) {
   return records(run.stdout);
 }
 
-/** The 1-based numbers of the lines that carry the former name outside the file's pinned quotes. */
-function linesOutsideQuotes(repo, sha, quotes) {
+/** The 1-based numbers of the lines that carry a term outside the file's pinned quotes. */
+function linesOutsideQuotes(repo, sha, terms, quotes) {
   const lines = git(repo, ['cat-file', 'blob', sha]).toString('utf8').split('\n');
   const numbers = [];
   lines.forEach((line, index) => {
     let rest = line;
     for (const quote of quotes) rest = rest.split(quote).join(' ');
-    if (mentionsLegacyName(rest)) numbers.push(index + 1);
+    if (mentionsTerm(terms, rest)) numbers.push(index + 1);
   });
   return numbers;
+}
+
+/** The problems one term rule finds in the index: by content, by pinned-quote line and by path. */
+function termProblems(repo, entries, rule) {
+  const problems = [];
+  const shaByPath = new Map(entries.map((entry) => [entry.path, entry.sha]));
+  for (const path of termHits(repo, rule.terms)) {
+    if (isAllowlisted(rule, path)) continue;
+    const sha = shaByPath.get(path);
+    if (Object.hasOwn(rule.quotes, path) && sha !== undefined) {
+      for (const line of linesOutsideQuotes(repo, sha, rule.terms, rule.quotes[path])) {
+        problems.push({ path, text: `${rule.label} in ${path}:${String(line)}` });
+      }
+    } else {
+      problems.push({ path, text: `${rule.label} in ${path}` });
+    }
+  }
+  for (const { path } of entries) {
+    if (!isAllowlisted(rule, path) && mentionsTerm(rule.terms, path)) {
+      problems.push({ path, text: `${rule.label} in file name: ${path}` });
+    }
+  }
+  return problems;
 }
 
 function main() {
@@ -252,23 +336,7 @@ function main() {
       }
     }
 
-    const shaByPath = new Map(entries.map((entry) => [entry.path, entry.sha]));
-    for (const path of legacyNameHits(repo)) {
-      if (isLegacyNameAllowlisted(path)) continue;
-      const sha = shaByPath.get(path);
-      if (Object.hasOwn(LEGACY_NAME_QUOTES, path) && sha !== undefined) {
-        for (const line of linesOutsideQuotes(repo, sha, LEGACY_NAME_QUOTES[path])) {
-          problems.push({ path, text: `legacy name in ${path}:${String(line)}` });
-        }
-      } else {
-        problems.push({ path, text: `legacy name in ${path}` });
-      }
-    }
-    for (const { path } of entries) {
-      if (!isLegacyNameAllowlisted(path) && mentionsLegacyName(path)) {
-        problems.push({ path, text: `legacy name in file name: ${path}` });
-      }
-    }
+    for (const rule of TERM_RULES) problems.push(...termProblems(repo, entries, rule));
   } catch (error) {
     console.error(
       `check-repo-hygiene: cannot check ${repo}: ${error instanceof Error ? error.message : String(error)}`,
