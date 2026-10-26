@@ -1,0 +1,16 @@
+[
+  {
+    "fromPath": "supabase/migrations/20260919060000_hearth_service_role.sql",
+    "toPath": "supabase/migrations/20260919060000_hestia_service_role.sql",
+    "fromBlob": "d331585a3c92a71a42bc16c7755f5ae187be4ef0",
+    "toBlob": "356bd66774044f36c84c54822910843375d100fd",
+    "reason": "v2.0 rebrand (D-05): the service login role is renamed to hestia_service; no database is kept (D-04)"
+  },
+  {
+    "fromPath": "supabase/migrations/20260919070000_schema.sql",
+    "toPath": "supabase/migrations/20260919070000_schema.sql",
+    "fromBlob": "8f5c5cdc1249203c9410c5f86f148b77c044452b",
+    "toBlob": "120a54f98911b2b7f4bb68d6017733404df11675",
+    "reason": "v2.0 rebrand (D-05): product name in the header comment only"
+  }
+]

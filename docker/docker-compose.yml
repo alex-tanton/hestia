@@ -38,7 +38,7 @@ services:
       PGDATABASE: postgres
       POSTGRES_DB: postgres
       JWT_EXP: 3600
-      # Read by docker/db/hearth-service-login.sql, at initialization and on every deploy.
+      # Read by docker/db/hestia-service-login.sql, at initialization and on every deploy.
       HEARTH_SERVICE_DB_PASSWORD: ${HEARTH_SERVICE_DB_PASSWORD:?set in .env}
     volumes:
       # init-scripts run as postgres, migrations as supabase_admin, each set in name order after
@@ -47,9 +47,9 @@ services:
       - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
       - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
       # The role migration itself, so a fresh database (first start, or a restore target) has
-      # hearth_service before the service first connects. Re-applying it later is a no-op.
-      - ../supabase/migrations/20260919060000_hearth_service_role.sql:/docker-entrypoint-initdb.d/migrations/99-z1-hearth-service-role.sql:ro
-      - ./db/hearth-service-login.sql:/docker-entrypoint-initdb.d/migrations/99-z2-hearth-service-login.sql:ro
+      # hestia_service before the service first connects. Re-applying it later is a no-op.
+      - ../supabase/migrations/20260919060000_hestia_service_role.sql:/docker-entrypoint-initdb.d/migrations/99-z1-hestia-service-role.sql:ro
+      - ./db/hestia-service-login.sql:/docker-entrypoint-initdb.d/migrations/99-z2-hestia-service-login.sql:ro
       - db-data:/var/lib/postgresql/data
       # The image keeps its pgsodium root key here; it must outlive the container.
       - db-config:/etc/postgresql-custom
@@ -196,7 +196,7 @@ services:
       auth:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://hearth_service:${HEARTH_SERVICE_DB_PASSWORD}@db:5432/postgres
+      DATABASE_URL: postgresql://hestia_service:${HEARTH_SERVICE_DB_PASSWORD}@db:5432/postgres
       HEARTH_TRUSTED_PROXIES: *subnet
       LOG_LEVEL: info
       HEARTH_ORIGIN: ${HEARTH_ORIGIN}

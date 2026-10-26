@@ -36,8 +36,8 @@ a cross-household leak is still refused at the database. The service's own valid
 business rules (derived recurrence, deal repricing, notification batching) that RLS cannot express,
 not for household isolation itself.
 
-The service connects to Postgres as a dedicated login role, `hearth_service`
-(`supabase/migrations/20260919060000_hearth_service_role.sql`). That role is `NOLOGIN` in the
+The service connects to Postgres as a dedicated login role, `hestia_service`
+(`supabase/migrations/20260919060000_hestia_service_role.sql`). That role is `NOLOGIN` in the
 migration — its password is supplied separately by the deploy environment — and `NOINHERIT`, with
 membership in `anon`, `authenticated`, and `service_role` and no privileges of its own. Until a
 transaction explicitly switches role, it holds none of those three roles' rights, so a code path

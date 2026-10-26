@@ -118,7 +118,7 @@ by hand.
 | `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hearth-service`. |
 | `HEARTH_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
 | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
-| `HEARTH_SERVICE_DB_PASSWORD` | Password for `hearth_service`, the login role the Hearth service connects to Postgres as. |
+| `HEARTH_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
 | `JWT_SECRET` | GoTrue's HS256 JWT signing secret. |
 | `ANON_KEY` | The anon API key, signed with `JWT_SECRET`. Used as the `apikey` header on GoTrue/Kong calls. |
 | `SERVICE_ROLE_KEY` | The service-role API key, signed with `JWT_SECRET`. Used only for sanctioned service-role operations. |
@@ -191,7 +191,7 @@ of the first few fail:
 5. Applies pending migrations with `supabase migration up` against the Compose database. The CLI
    gets the database password in `PGPASSWORD`, set for that one command and never on its command
    line. **A failed migration aborts the deploy**; the backup just taken is the restore point.
-6. Re-applies the `hearth_service` login from `.env` (`docker/db/hearth-service-login.sql`) —
+6. Re-applies the `hestia_service` login from `.env` (`docker/db/hestia-service-login.sql`) —
    idempotent, and picks up a rotated password.
 7. Tags the new images `current` and recreates `hearth-service` and `caddy` on them.
 8. Polls `GET http://127.0.0.1:8080/api/health` for 60 seconds. If it never succeeds, the script
@@ -249,12 +249,12 @@ container of the same pinned Postgres image, leaving production untouched:
 1. Load `/srv/hearth/.env` and locate `$BACKUP_DIR/last/postgres-latest.sql.gz`.
 2. Start a detached `public.ecr.aws/supabase/postgres:17.6.1.167` container named
    `hearth-restore`, and wait for its init process and for `pg_isready`.
-3. Because `pg_dump` does not include roles: apply the `hearth_service` role migration
-   (`supabase/migrations/20260919060000_hearth_service_role.sql`) and manually create
+3. Because `pg_dump` does not include roles: apply the `hestia_service` role migration
+   (`supabase/migrations/20260919060000_hestia_service_role.sql`) and manually create
    `supabase_realtime_admin` (it's created by Realtime at runtime, not by the Postgres image).
 4. Load the dump with `gunzip -c "$DUMP" | docker exec -i hearth-restore psql ...`, capturing
    errors to a log file, and confirm the error count is 0.
-5. Sanity-check the restored state: `hearth_service`'s role attributes, that `auth`/`public`/
+5. Sanity-check the restored state: `hestia_service`'s role attributes, that `auth`/`public`/
    `realtime`/`supabase_migrations` schemas exist, a user count, and the applied migration list.
 6. Remove the throwaway container and the error log.
 
@@ -270,10 +270,10 @@ docker run --detach --name hearth-restore -e POSTGRES_PASSWORD="$POSTGRES_PASSWO
 until docker logs hearth-restore 2>&1 | grep -q "PostgreSQL init process complete"; do sleep 1; done
 until docker exec hearth-restore pg_isready -U postgres -h localhost -q; do sleep 1; done
 
-# Roles are not in the dump: hearth_service comes from its migration, and
+# Roles are not in the dump: hestia_service comes from its migration, and
 # supabase_realtime_admin (created by Realtime, not the image) is created here.
 docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
-  < supabase/migrations/20260919060000_hearth_service_role.sql
+  < supabase/migrations/20260919060000_hestia_service_role.sql
 docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
 create role supabase_realtime_admin noinherit nologin noreplication;
 grant anon, authenticated, service_role to supabase_realtime_admin;
@@ -285,7 +285,7 @@ gunzip -c "$DUMP" |
 grep -c ERROR restore-errors.log    # expect 0
 
 docker exec hearth-restore psql -U supabase_admin -d postgres -c "
-  select rolname, rolinherit, rolcanlogin from pg_roles where rolname = 'hearth_service';
+  select rolname, rolinherit, rolcanlogin from pg_roles where rolname = 'hestia_service';
   select nspname from pg_namespace
     where nspname in ('auth', 'public', 'realtime', 'supabase_migrations');
   select count(*) as users from auth.users;
@@ -303,7 +303,7 @@ This replaces the **live** database with a dump; the site is down while it runs.
 2. `hearth-compose stop`, then `hearth-compose rm --force db`, then remove the `hearth_db-data`
    volume — this destroys the current database.
 3. `hearth-compose up -d --wait db` to get a **fresh** database: the image creates the Supabase
-   roles, and the init scripts recreate `hearth_service` from its migration and give it its login
+   roles, and the init scripts recreate `hestia_service` from its migration and give it its login
    from `.env`.
 4. Manually create `supabase_realtime_admin` again (same reason as the restore test), load the
    dump the same way, and confirm 0 errors.
@@ -321,7 +321,7 @@ hearth-compose rm --force db
 docker volume rm hearth_db-data
 
 # A fresh database: the image creates the Supabase roles, and the init scripts recreate
-# hearth_service from its migration and give it its login from .env.
+# hestia_service from its migration and give it its login from .env.
 hearth-compose up -d --wait db
 hearth-compose exec -T db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
 create role supabase_realtime_admin noinherit nologin noreplication;
@@ -361,7 +361,7 @@ them re-initialize against the wrong state.
   merely `unhealthy`. Restart it by hand with `docker compose restart <service>`.
 - **Regenerating secrets:** never run `generate-secrets.sh` against a live install's `.env` path —
   it refuses to overwrite an existing file for exactly this reason: regenerating secrets signs
-  everyone out and breaks the `hearth_service` database login.
+  everyone out and breaks the `hestia_service` database login.
 - **Pinned names:** the machine name and tailnet name must never change after they're chosen —
   see "Pinned names" above. There is no remediation for a rename short of every installed PWA and
   push subscription being re-created from scratch.

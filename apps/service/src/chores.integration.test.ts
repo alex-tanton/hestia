@@ -14,7 +14,7 @@ import { currentInstant } from './test/zone-dates.js';
 
 /*
  * Chores, completions, rotation, and undo, against real Postgres. Every request goes through
- * withUserDb as hearth_service, so RLS decides every isolation assertion.
+ * withUserDb as hestia_service, so RLS decides every isolation assertion.
  */
 
 registerStackHooks();

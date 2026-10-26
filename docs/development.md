@@ -43,15 +43,15 @@ integration tests together, so it needs `supabase start` running too.
 ## Running the service locally
 
 `supabase start` runs Postgres, GoTrue, Realtime, Kong, and Studio locally and applies
-`supabase/migrations/`. The migrations create `hearth_service` without a login; give it one, then
+`supabase/migrations/`. The migrations create `hestia_service` without a login; give it one, then
 point the service at the local database and at GoTrue through Kong:
 
 ```sh
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
-  -c "alter role hearth_service with login password 'hearth'"
+  -c "alter role hestia_service with login password 'hearth'"
 
 eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
-export DATABASE_URL=postgresql://hearth_service:hearth@127.0.0.1:54322/postgres
+export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://auth:9999 in production
 export HEARTH_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
 export HEARTH_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
@@ -61,7 +61,7 @@ pnpm --filter @hearth/service dev
 
 | Variable | Used for |
 | --- | --- |
-| `DATABASE_URL` | The `hearth_service` login; every request runs through `withUserDb` |
+| `DATABASE_URL` | The `hestia_service` login; every request runs through `withUserDb` |
 | `GOTRUE_URL` | Signup, password change, and the admin calls |
 | `JWT_SECRET` | Verifying access tokens (HS256; local sessions are ES256 via its JWKS) |
 | `ANON_KEY` | The `apikey` header on GoTrue calls |

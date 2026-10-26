@@ -131,7 +131,7 @@ export function startStack(): void {
   const env = readStackEnv();
   const dbUrl = databaseUrl(env);
 
-  // The Compose database applies only the hearth_service role migration on first start; the rest
+  // The Compose database applies only the hestia_service role migration on first start; the rest
   // arrive the way a deploy applies them (scripts/deploy.sh, step 4).
   step('applying migrations');
   runChecked('supabase', [

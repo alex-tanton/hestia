@@ -5,7 +5,7 @@ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
  * Notification preferences and push subscriptions through the service against `supabase start`:
- * real GoTrue, real Postgres as hearth_service, every request through withUserDb.
+ * real GoTrue, real Postgres as hestia_service, every request through withUserDb.
  */
 
 const PUSH_ENDPOINT = 'https://push.example.com/send/alpha';

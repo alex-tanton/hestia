@@ -280,7 +280,7 @@ without regenerated types, or a hand edit of the generated file, fails CI.
 2. **Service/route-level tests** (most other `*.integration.test.ts` files, e.g.
    `bills.integration.test.ts`, `chores.integration.test.ts`) use
    `apps/service/src/test/service-stack.ts`'s `startStack()`. This builds the real Fastify app
-   wired to the real `supabase start` Postgres (as `hearth_service`) and real GoTrue through Kong,
+   wired to the real `supabase start` Postgres (as `hestia_service`) and real GoTrue through Kong,
    and tests call it with `app.inject()` the way a real HTTP request would arrive. Requests here
    **commit for real** — there is no rollback — so isolation instead comes from every test creating
    its own users, households, and postal codes with randomized or counter-based unique values
@@ -665,7 +665,7 @@ A walkthrough for clicking through the real app locally, outside the test suites
 ```sh
 supabase start                                                      # Postgres, GoTrue, Realtime, Kong, Studio
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
-  -c "alter role hearth_service with login password 'hearth'"
+  -c "alter role hestia_service with login password 'hearth'"
 pnpm db:seed                                                         # creates the 5 seed users + seed.sql rows
 ```
 
@@ -677,7 +677,7 @@ users, so it's safe only against a fresh local stack.
 
 ```sh
 eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
-export DATABASE_URL=postgresql://hearth_service:hearth@127.0.0.1:54322/postgres
+export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
 export HEARTH_ORIGIN=http://127.0.0.1:5173
 export HEARTH_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner

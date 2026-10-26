@@ -16,7 +16,7 @@ import { expectStatus } from './test/stack-hooks.js';
 
 /*
  * Recipe readiness against `supabase start` (the 12+2 readiness table is this test's own oracle).
- * Real Postgres as hearth_service, every request through withUserDb, so RLS and the real
+ * Real Postgres as hestia_service, every request through withUserDb, so RLS and the real
  * `@hearth/matching` decide every bucket. This file reproduces the seed data (pantry,
  * favorite-store deals, the twelve Oak Street recipes and two Rivera Family recipes, the "cheese"
  * override) through the real API and asserts the table's own numbers exactly, one recipe at a time.

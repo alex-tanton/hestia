@@ -161,12 +161,12 @@ describe('system_health', () => {
     }));
 });
 
-describe('hearth_service', () => {
+describe('hestia_service', () => {
   it('is a NOINHERIT role that is a member of exactly the three API roles', () =>
     withTestDb(async (db) => {
       const role = await db.admin.query(
         `select rolinherit, rolsuper, rolcreaterole, rolcreatedb, rolbypassrls
-         from pg_roles where rolname = 'hearth_service'`,
+         from pg_roles where rolname = 'hestia_service'`,
       );
       expect(role).toEqual([
         {
@@ -180,34 +180,34 @@ describe('hearth_service', () => {
       const memberships = await db.admin.query<{ rolname: string }>(
         `select r.rolname from pg_auth_members m
          join pg_roles r on r.oid = m.roleid
-         where m.member = 'hearth_service'::regrole order by 1`,
+         where m.member = 'hestia_service'::regrole order by 1`,
       );
       expect(memberships.map((m) => m.rolname)).toEqual(['anon', 'authenticated', 'service_role']);
     }));
 
   it('has no privileges of its own, and can switch into each API role', () =>
     withTestDb(async (db) => {
-      // The local postgres role cannot SET ROLE hearth_service, so this reads the catalog rather
+      // The local postgres role cannot SET ROLE hestia_service, so this reads the catalog rather
       // than impersonating it. NOINHERIT means these checks see only what it holds directly.
       const held = await db.admin.query<{ name: string }>(
         `select c.relname as name from pg_class c
          where c.relnamespace = 'public'::regnamespace and c.relkind = 'r'
-           and (has_table_privilege('hearth_service', c.oid, 'select')
-             or has_table_privilege('hearth_service', c.oid, 'insert')
-             or has_table_privilege('hearth_service', c.oid, 'update')
-             or has_table_privilege('hearth_service', c.oid, 'delete'))`,
+           and (has_table_privilege('hestia_service', c.oid, 'select')
+             or has_table_privilege('hestia_service', c.oid, 'insert')
+             or has_table_privilege('hestia_service', c.oid, 'update')
+             or has_table_privilege('hestia_service', c.oid, 'delete'))`,
       );
       expect(held).toEqual([]);
       const functions = await db.admin.query<{ name: string }>(
         `select p.proname as name from pg_proc p
          where p.pronamespace = 'public'::regnamespace
-           and has_function_privilege('hearth_service', p.oid, 'execute')`,
+           and has_function_privilege('hestia_service', p.oid, 'execute')`,
       );
       expect(functions).toEqual([]);
       const switchable = await db.admin.query(
-        `select pg_has_role('hearth_service', 'anon', 'set') as anon,
-                pg_has_role('hearth_service', 'authenticated', 'set') as authenticated,
-                pg_has_role('hearth_service', 'service_role', 'set') as service_role`,
+        `select pg_has_role('hestia_service', 'anon', 'set') as anon,
+                pg_has_role('hestia_service', 'authenticated', 'set') as authenticated,
+                pg_has_role('hestia_service', 'service_role', 'set') as service_role`,
       );
       expect(switchable).toEqual([{ anon: true, authenticated: true, service_role: true }]);
     }));

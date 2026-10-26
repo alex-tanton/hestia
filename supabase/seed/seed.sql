@@ -7,7 +7,7 @@
 -- to seed again. Pillar data (deals, lists, pantry, recipes, meal plan, bills, chores, errands)
 -- is added by the phase that builds each pillar, in the marked sections below.
 
-select pg_catalog.set_config('hearth.seed_invite_token', :'invite_token', false);
+select pg_catalog.set_config('hestia.seed_invite_token', :'invite_token', false);
 
 begin;
 
@@ -182,7 +182,7 @@ begin
   values
     -- Outstanding, created 2 days ago.
     (oak_street,
-      public.sha256_hex(pg_catalog.current_setting('hearth.seed_invite_token')),
+      public.sha256_hex(pg_catalog.current_setting('hestia.seed_invite_token')),
       public.sha256_hex('K7M2Q9XA'), alex,
       now() - interval '2 days', now() - interval '2 days' + interval '168 hours', null),
     -- Expired: created 9 days ago, so it lapsed 2 days ago.

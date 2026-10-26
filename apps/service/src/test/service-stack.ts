@@ -17,7 +17,7 @@ import { FakeDealSource } from './fixture-deal-source.js';
 import { TEST_DATABASE_URL } from './integration-db.js';
 
 /**
- * The real service wired to the `supabase start` stack: Postgres as hearth_service and GoTrue
+ * The real service wired to the `supabase start` stack: Postgres as hestia_service and GoTrue
  * through Kong. Unlike the rolled-back database tests, requests here commit, so every test makes
  * its own users and households. Keys come from `supabase status` unless set in the environment.
  */
@@ -59,7 +59,7 @@ export function stackConfig(): StackConfig {
     return value;
   };
   const dbUrl = new URL(TEST_DATABASE_URL);
-  dbUrl.username = 'hearth_service';
+  dbUrl.username = 'hestia_service';
   dbUrl.password = SERVICE_PASSWORD;
   cached = {
     // Kong's port under `supabase start` (supabase/config.toml, [api].port).
@@ -74,10 +74,10 @@ export function stackConfig(): StackConfig {
 
 export const adminPool = new pg.Pool({ connectionString: TEST_DATABASE_URL, max: 2 });
 
-/** The migrations create hearth_service without a login; give it the test password. */
+/** The migrations create hestia_service without a login; give it the test password. */
 export async function enableServiceLogin(): Promise<void> {
   await adminPool.query(
-    `alter role hearth_service with login password ${pg.escapeLiteral(SERVICE_PASSWORD)}`,
+    `alter role hestia_service with login password ${pg.escapeLiteral(SERVICE_PASSWORD)}`,
   );
 }
 

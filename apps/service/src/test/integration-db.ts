@@ -40,7 +40,7 @@ export interface TestDb {
   as: (user: TestUser) => Actor;
   anon: Actor;
   /**
-   * Switches through each role in turn (for example hearth_service, then authenticated), with
+   * Switches through each role in turn (for example hestia_service, then authenticated), with
    * optional claims, to check what a role may switch into and hold.
    */
   asRoles: (roles: string[], claims?: Row) => Actor;

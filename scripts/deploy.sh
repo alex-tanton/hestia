@@ -98,11 +98,11 @@ PGPASSWORD="$(env_value POSTGRES_PASSWORD)" supabase migration up --workdir "$re
   --db-url "postgresql://postgres@${db_ip}:5432/postgres?sslmode=disable" ||
   fail "migration failed; nothing restarted (the backup above is the restore point)"
 
-# hearth_service's LOGIN and password come from .env, not a migration; re-applying them is
+# hestia_service's LOGIN and password come from .env, not a migration; re-applying them is
 # idempotent and picks up a rotated password.
 compose exec -T db psql --username supabase_admin --dbname postgres --quiet \
-  --set ON_ERROR_STOP=1 --file - <docker/db/hearth-service-login.sql ||
-  fail "setting the hearth_service login failed; nothing restarted"
+  --set ON_ERROR_STOP=1 --file - <docker/db/hestia-service-login.sql ||
+  fail "setting the hestia_service login failed; nothing restarted"
 
 # 5. Restart on the new images, gated on health.
 log "restarting hearth-service and caddy on $new_tag"

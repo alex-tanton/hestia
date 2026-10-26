@@ -4,7 +4,7 @@ import type { Database } from '../db.js';
 /**
  * The only way a request handler reaches the database.
  *
- * The pool connects as hearth_service, which is NOINHERIT and holds no rights of its own. Each
+ * The pool connects as hestia_service, which is NOINHERIT and holds no rights of its own. Each
  * call opens a transaction that switches to `authenticated` and installs the verified claims,
  * both transaction-local, so auth.uid() is the caller, every RLS policy applies, and nothing
  * survives into the next request that reuses the connection. `fn` gets a Kysely bound to that

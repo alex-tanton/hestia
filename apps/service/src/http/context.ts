@@ -14,7 +14,7 @@ import { markHouseholdActive } from '../services/households.js';
 
 export interface AppDependencies {
   pingDatabase: () => Promise<void>;
-  /** The hearth_service pool. Handlers reach it only through withUserDb. */
+  /** The hestia_service pool. Handlers reach it only through withUserDb. */
   db: Kysely<Database>;
   verifyToken: TokenVerifier;
   gotrue: Pick<GoTrueClient, 'signup' | 'verifyPassword' | 'updatePassword'>;
