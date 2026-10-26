@@ -4,18 +4,18 @@ milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
 current_phase: 8
 current_phase_name: Full Rebrand to Hestia
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-10-26T03:41:43.840Z"
+stopped_at: Completed 08-04-PLAN.md
+last_updated: "2026-10-26T03:49:22.508Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 08 execution started
-state_head: e127ee178a7d94d20d66df55a6ac5e23b4193e2a
+state_head: cadcdd5df297b42dd18424d589fa11f2e77fa750
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
   percent: 20
 current_milestone: v2.0
 ---
@@ -33,7 +33,7 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
 Phase: 8 (Full Rebrand to Hestia)
-Current Plan: 4
+Current Plan: 5
 Total Plans in Phase: 7
 Phases: 1 of 5 complete (Phases 7–11)
 Status: Ready to execute
@@ -55,8 +55,8 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 
 ## Session
 
-**Last session:** 2026-10-26T03:41:43.801Z
-**Stopped at:** Completed 08-03-PLAN.md
+**Last session:** 2026-10-26T03:49:22.470Z
+**Stopped at:** Completed 08-04-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -70,6 +70,7 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 | Phase 08 P01 | 15 min | 2 tasks | 32 files |
 | Phase 08 P02 | 7 min | 2 tasks | 216 files |
 | Phase 08 P03 | 7 min | 2 tasks | 73 files |
+| Phase 08 P04 | 7 min | 3 tasks | 41 files |
 
 ## Decisions
 
@@ -82,3 +83,4 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 - [Phase 08]: 08-02: the phase docs-claims checker copy finds the root workspace by directory and its allowlist keeps both old and new product names allowed; the 08-07 legacy-name guard rejects old names in docs
 - [Phase 08]: 08-03: hard cutover to HESTIA_*; no fallback read of any pre-rebrand name anywhere (D-01)
 - [Phase 08]: 08-03: Compose project/network hestia, service hestia-service, runner label hestia; /srv/hestia host path
+- [Phase 08]: 08-04: no alias for the old CLI name and no migration of the old IndexedDB key or notification message type (D-07, D-08); manifest description, start_url, icons unchanged (D-10)

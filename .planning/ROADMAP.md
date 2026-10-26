@@ -63,7 +63,7 @@ Plans:
 5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
 
-**Plans:** 3/7 plans executed
+**Plans:** 4/7 plans executed
 
 Plans:
 **Wave 1**
@@ -76,7 +76,7 @@ Plans:
 - [x] 08-03-PLAN.md — Hard-cut every environment variable to `HESTIA_*`; rename the Compose project, network, service, images, host paths, E2E names, Supabase project id and runner label
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 08-04-PLAN.md — Hestia in the PWA copy, title and manifest (build-checked), `hestia-admin` as a clean break, renamed browser keys
+- [x] 08-04-PLAN.md — Hestia in the PWA copy, title and manifest (build-checked), `hestia-admin` as a clean break, renamed browser keys
 
 **Wave 5** *(blocked on Wave 4 completion)*
 - [ ] 08-05-PLAN.md — Catch-all sweep of the remaining references in every live file outside `.planning/`, one commit, full unit suite green
