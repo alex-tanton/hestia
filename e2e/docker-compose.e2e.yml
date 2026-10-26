@@ -18,7 +18,13 @@
 #     assertions reach it from the host
 #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
 #     public origin an https one; E2E is plain HTTP on the loopback, so HESTIA_HOST — the only
-#     thing that entrypoint derives — is given directly
+#     thing that entrypoint derives — is given directly, and HESTIA_TRUSTED_PROXIES is set to the
+#     run's own subnet
+#   * the client address: there is no Cloudflare edge in front of the loopback stack. Playwright
+#     reaches Caddy through the published port, so Caddy's peer is the run network's gateway,
+#     inside the trusted subnet, and with no CF-Connecting-IP header that address is the client.
+#     It is the one per-IP bucket the whole suite shares. Spec 20 sends the header itself to
+#     exercise the production rule
 #   * hestia-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
 #     info rather than warn so the rate discipline the deal journeys exercise is readable in
 #     `docker compose logs`
@@ -67,8 +73,8 @@ services:
     command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
     environment:
       HESTIA_HOST: 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}
-      HESTIA_HOST_GATEWAY: ${HESTIA_E2E_GATEWAY:?}
-    ports: !override
+      HESTIA_TRUSTED_PROXIES: ${HESTIA_E2E_SUBNET:?}
+    ports:
       - 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}:8080
 
 networks:

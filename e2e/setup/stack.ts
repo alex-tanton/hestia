@@ -47,7 +47,7 @@ function writeEnvFile(): void {
   mkdirSync(BACKUP_DIR, { recursive: true });
   rmSync(ENV_FILE, { force: true });
   runChecked('bash', [join(REPO_ROOT, 'scripts', 'generate-secrets.sh'), ENV_FILE], {
-    // Plain HTTP on the loopback: there is no Funnel in front of the E2E stack, and every link
+    // Plain HTTP on the loopback: there is no Cloudflare edge in front of the E2E stack, and every link
     // the stack prints — an invite, the owner's reset link — has to be one the browser can open.
     HESTIA_ORIGIN: BASE_URL,
     // Alex is the development owner, so Alex sees System health.
@@ -100,7 +100,6 @@ function appendRunEnv(subnet: Subnet): void {
     `HESTIA_E2E_DB_PORT=${String(DB_PORT)}`,
     `HESTIA_E2E_NETWORK=${NETWORK}`,
     `HESTIA_E2E_SUBNET=${subnet.subnet}`,
-    `HESTIA_E2E_GATEWAY=${subnet.gateway}`,
   ];
   appendFileSync(ENV_FILE, `${lines.join('\n')}\n`);
 }

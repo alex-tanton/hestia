@@ -1,19 +1,19 @@
 # Hestia ingress.
-# Tailscale Funnel terminates TLS on the host and forwards plain HTTP to 127.0.0.1:8080.
+# Cloudflare's edge terminates TLS for the public origin; the cloudflared container on the Compose
+# network forwards plain HTTP to caddy:8080. Nothing publishes a host port.
 {
 	auto_https off
 	admin off
 	servers {
-		# Funnel's forwarded address is the client only if the hop that delivered it is trusted.
-		# Funnel dials 127.0.0.1:8080 on the host; Docker's port publishing hands that
-		# connection to Caddy from the Compose network's gateway, so that address is the one
-		# Caddy actually sees for it. The loopback entries cover Funnel if Caddy ever runs on
-		# the host network. Nothing else on the Compose network is trusted.
-		trusted_proxies static 127.0.0.1/32 ::1/128 {$HESTIA_HOST_GATEWAY}/32
-		# Take the right-most untrusted address, so a client cannot pick its own IP by sending
-		# an X-Forwarded-For that Funnel then appends to.
+		# Only the Compose subnet may name the client: it is where cloudflared connects from in
+		# production and the run's own subnet in E2E. A request from any other peer is identified
+		# by its connection address.
+		trusted_proxies static {$HESTIA_TRUSTED_PROXIES}
+		# Parse the header right to left, so an address a client prepends is never the one chosen.
 		trusted_proxies_strict
-		client_ip_headers X-Forwarded-For
+		# Only Cloudflare's header is read, never X-Forwarded-For, so a request without it cannot
+		# choose its own address.
+		client_ip_headers CF-Connecting-IP
 	}
 }
 

@@ -241,14 +241,12 @@ services:
         condition: service_started
       kong:
         condition: service_started
-    # Tailscale Funnel on the host forwards here; nothing else is published.
-    ports:
-      - 127.0.0.1:8080:8080
+    # Nothing is published: cloudflared reaches caddy:8080 over the hestia network.
     environment:
       HESTIA_ORIGIN: ${HESTIA_ORIGIN}
-      # Funnel's connection to the published port reaches Caddy from this address; see the
-      # Caddyfile's trusted_proxies.
-      HESTIA_HOST_GATEWAY: &gateway 172.16.238.1
+      # The only range allowed to name the client: the Compose subnet, which is where cloudflared
+      # connects from; see the Caddyfile's trusted_proxies.
+      HESTIA_TRUSTED_PROXIES: *subnet
     healthcheck:
       test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:8080/index.html]
       interval: 30s
@@ -292,7 +290,6 @@ networks:
     ipam:
       config:
         - subnet: *subnet
-          gateway: *gateway
 
 volumes:
   db-data:
