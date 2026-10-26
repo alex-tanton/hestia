@@ -351,4 +351,113 @@ describe('check-migrations-append-only: content-pinned exemptions', () => {
     assert.equal(run.status, 1);
     assert.match(run.stderr, /^M supabase\/migrations\/20260101000000_a\.sql: /m);
   });
+
+  it('fails an exempted edit committed together with an unrelated edit, naming only the unrelated file', () => {
+    const { repo, base } = repoWith((dir) => {
+      write(dir, FIRST, 'create table a (id int);\n');
+      write(dir, SECOND, 'create table b (id int);\n');
+    });
+    const file = exemptionsFile([pinnedEntry(repo, base, FIRST, FIRST)]);
+    const run = check(repo, '--base', base, '--exemptions', file);
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /^M supabase\/migrations\/20260102000000_b\.sql: /m);
+    assert.doesNotMatch(run.stderr, /20260101000000_a/);
+    assert.match(run.stdout, /^migrations: 1 problems$/m);
+  });
+
+  it('fails a rename to a target the entry does not name', () => {
+    const { repo, base } = repoWith((dir) => {
+      git(dir, 'mv', SECOND, RENAMED);
+      write(dir, RENAMED, 'create table b (id int);\n');
+    });
+    const file = exemptionsFile([
+      {
+        ...pinnedEntry(repo, base, SECOND, RENAMED),
+        toPath: 'supabase/migrations/20260102000000_other.sql',
+      },
+    ]);
+    const run = check(repo, '--base', base, '--exemptions', file);
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /^D supabase\/migrations\/20260102000000_b\.sql: /m);
+    assert.doesNotMatch(run.stdout, /exempt:/);
+  });
+
+  it('treats a missing exemptions file as no exemptions', () => {
+    const { repo, base } = repoWith((dir) => write(dir, FIRST, 'create table a (id int);\n'));
+    const run = check(
+      repo,
+      '--base',
+      base,
+      '--exemptions',
+      join(scratch, 'no-such-exemptions.json'),
+    );
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /^M supabase\/migrations\/20260101000000_a\.sql: /m);
+  });
+
+  it('reads scripts/migration-exemptions.json inside --repo by default', () => {
+    const { repo, base } = repoWith((dir) => write(dir, FIRST, 'create table a (id int);\n'));
+    write(
+      repo,
+      'scripts/migration-exemptions.json',
+      JSON.stringify([pinnedEntry(repo, base, FIRST, FIRST)]),
+    );
+    const run = check(repo, '--base', base);
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.stdout.split('\n').filter((line) => line.startsWith('exempt: ')).length, 1);
+    assert.match(run.stdout, /^migrations: 0 added, nothing else changed, 1 exempt$/m);
+  });
+
+  it('exits 2 on an exemptions file that is not JSON', () => {
+    const { repo, base } = repoWith((dir) => write(dir, FIRST, 'create table a (id int);\n'));
+    exemptionFiles += 1;
+    const file = join(scratch, `exemptions-${String(exemptionFiles)}.json`);
+    writeFileSync(file, '[{ not json');
+    const run = check(repo, '--base', base, '--exemptions', file);
+    assert.equal(run.status, 2);
+    assert.match(run.stderr, /^check-migrations-append-only: /);
+  });
+
+  it('exits 2 on an entry with a path outside supabase/migrations or a blob that is not 40 hex digits', () => {
+    const { repo, base } = repoWith((dir) => write(dir, FIRST, 'create table a (id int);\n'));
+    const good = pinnedEntry(repo, base, FIRST, FIRST);
+    const withoutReason = { ...good };
+    delete withoutReason.reason;
+    const bad = {
+      'a ../ path': { ...good, fromPath: 'supabase/migrations/../../etc/hosts.sql' },
+      'a path outside the directory': { ...good, toPath: 'scripts/20260101000000_a.sql' },
+      'a path without the .sql suffix': { ...good, fromPath: 'supabase/migrations/readme.md' },
+      'a backslash in a path': { ...good, toPath: 'supabase/migrations\\20260101000000_a.sql' },
+      'a 39-digit blob': { ...good, fromBlob: good.fromBlob.slice(1) },
+      'an uppercase blob': { ...good, toBlob: good.toBlob.toUpperCase() },
+      'an empty reason': { ...good, reason: ' ' },
+      'a missing key': withoutReason,
+      'an extra key': { ...good, note: 'not part of the contract' },
+    };
+    for (const [name, entry] of Object.entries(bad)) {
+      const run = check(repo, '--base', base, '--exemptions', exemptionsFile([entry]));
+      assert.equal(run.status, 2, `${name}: expected exit 2, got ${String(run.status)}`);
+      assert.match(run.stderr, /^check-migrations-append-only: /, name);
+      assert.doesNotMatch(run.stdout, /exempt:/, name);
+    }
+    const notAnArray = check(repo, '--base', base, '--exemptions', exemptionsFile(good));
+    assert.equal(notAnArray.status, 2, 'an object instead of an array');
+  });
+
+  it('prints the unchanged summary when no entry applies', () => {
+    const { repo, base } = repoWith((dir) =>
+      write(dir, 'supabase/migrations/20260103000000_c.sql', 'create table c ();\n'),
+    );
+    const inert = {
+      fromPath: FIRST,
+      toPath: FIRST,
+      fromBlob: blobOf(repo, base, FIRST),
+      toBlob: blobOf(repo, base, SECOND),
+      reason: 'fixture change',
+    };
+    const run = check(repo, '--base', base, '--exemptions', exemptionsFile([inert]));
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(run.stdout, /^migrations: 1 added, nothing else changed$/m);
+    assert.doesNotMatch(run.stdout, /exempt/);
+  });
 });
