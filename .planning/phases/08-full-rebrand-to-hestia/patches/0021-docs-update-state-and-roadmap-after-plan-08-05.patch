@@ -1,0 +1,109 @@
+From b63f6a1e3be964431b6acbc5d368fb31d31ec6e9 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:55:25 +0000
+Subject: [PATCH 21/31] docs: update state and roadmap after plan 08-05
+
+---
+ .planning/ROADMAP.md |  4 ++--
+ .planning/STATE.md   | 19 +++++++++++--------
+ .planning/state.json |  2 +-
+ 3 files changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/.planning/ROADMAP.md b/.planning/ROADMAP.md
+index 08b3ee1..4981c8c 100644
+--- a/.planning/ROADMAP.md
++++ b/.planning/ROADMAP.md
+@@ -63,7 +63,7 @@ Plans:
+ 5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
+ 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
+ 
+-**Plans:** 4/7 plans executed
++**Plans:** 5/7 plans executed
+ 
+ Plans:
+ **Wave 1**
+@@ -79,7 +79,7 @@ Plans:
+ - [x] 08-04-PLAN.md — Hestia in the PWA copy, title and manifest (build-checked), `hestia-admin` as a clean break, renamed browser keys
+ 
+ **Wave 5** *(blocked on Wave 4 completion)*
+-- [ ] 08-05-PLAN.md — Catch-all sweep of the remaining references in every live file outside `.planning/`, one commit, full unit suite green
++- [x] 08-05-PLAN.md — Catch-all sweep of the remaining references in every live file outside `.planning/`, one commit, full unit suite green
+ - [ ] 08-06-PLAN.md — Planning text aligned with the decisions (BRAND-02 to BRAND-05), cloud tooling renamed, owner checklist with PR notes and owner-visible choices
+ 
+ **Wave 6** *(blocked on Wave 5 completion)*
+diff --git a/.planning/STATE.md b/.planning/STATE.md
+index e108fef..0e71041 100644
+--- a/.planning/STATE.md
++++ b/.planning/STATE.md
+@@ -4,18 +4,18 @@ milestone: v2.0
+ milestone_name: Hestia — Domain Migration and Rebrand
+ current_phase: 8
+ current_phase_name: Full Rebrand to Hestia
+-current_plan: 5
++current_plan: 6
+ status: executing
+-stopped_at: Completed 08-04-PLAN.md
+-last_updated: "2026-10-26T03:49:22.508Z"
++stopped_at: Completed 08-05-PLAN.md
++last_updated: "2026-10-26T03:55:21.542Z"
+ last_activity: 2026-10-26
+ last_activity_desc: Phase 08 execution started
+-state_head: cadcdd5df297b42dd18424d589fa11f2e77fa750
++state_head: 6fe2b5a8da05aa532dc7cc1701abc5025304c341
+ progress:
+   total_phases: 5
+   completed_phases: 1
+   total_plans: 11
+-  completed_plans: 8
++  completed_plans: 9
+   percent: 20
+ current_milestone: v2.0
+ ---
+@@ -33,7 +33,7 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
+ 
+ Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
+ Phase: 8 (Full Rebrand to Hestia)
+-Current Plan: 5
++Current Plan: 6
+ Total Plans in Phase: 7
+ Phases: 1 of 5 complete (Phases 7–11)
+ Status: Ready to execute
+@@ -55,8 +55,8 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ 
+ ## Session
+ 
+-**Last session:** 2026-10-26T03:49:22.470Z
+-**Stopped at:** Completed 08-04-PLAN.md
++**Last session:** 2026-10-26T03:55:17.072Z
++**Stopped at:** Completed 08-05-PLAN.md
+ **Resume file:** None
+ 
+ ## Performance Metrics
+@@ -71,6 +71,7 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ | Phase 08 P02 | 7 min | 2 tasks | 216 files |
+ | Phase 08 P03 | 7 min | 2 tasks | 73 files |
+ | Phase 08 P04 | 7 min | 3 tasks | 41 files |
++| Phase 08 P05 | 8 min | 1 tasks | 52 files |
+ 
+ ## Decisions
+ 
+@@ -84,3 +85,5 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ - [Phase 08]: 08-03: hard cutover to HESTIA_*; no fallback read of any pre-rebrand name anywhere (D-01)
+ - [Phase 08]: 08-03: Compose project/network hestia, service hestia-service, runner label hestia; /srv/hestia host path
+ - [Phase 08]: 08-04: no alias for the old CLI name and no migration of the old IndexedDB key or notification message type (D-07, D-08); manifest description, start_url, icons unchanged (D-10)
++- [Phase 08]: The outbound User-Agent and the OpenAPI title follow the product name; the dev seed, reset and test database passwords moved with their readers in one commit (08-05)
++- [Phase 08]: The live-file sweep leaves .planning/, the lockfile, the exemptions file and supabase/migrations untouched, so the former name remains there until 08-06 and 08-07 (08-05)
+diff --git a/.planning/state.json b/.planning/state.json
+index 8ee1405..859850e 100644
+--- a/.planning/state.json
++++ b/.planning/state.json
+@@ -34,5 +34,5 @@
+     "label": "Advance to the next step",
+     "reason": "Phase 8 of 5 · 20% · executing"
+   },
+-  "updated_at": "2026-10-26T03:49:21.814Z"
++  "updated_at": "2026-10-26T03:55:16.350Z"
+ }
+-- 
+2.43.0
+

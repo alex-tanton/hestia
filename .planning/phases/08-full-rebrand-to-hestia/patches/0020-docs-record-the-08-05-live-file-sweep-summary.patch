@@ -1,0 +1,182 @@
+From 6fe2b5a8da05aa532dc7cc1701abc5025304c341 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:54:59 +0000
+Subject: [PATCH 20/31] docs: record the 08-05 live-file sweep summary
+
+---
+ .../08-05-SUMMARY.md                          | 163 ++++++++++++++++++
+ 1 file changed, 163 insertions(+)
+ create mode 100644 .planning/phases/08-full-rebrand-to-hestia/08-05-SUMMARY.md
+
+diff --git a/.planning/phases/08-full-rebrand-to-hestia/08-05-SUMMARY.md b/.planning/phases/08-full-rebrand-to-hestia/08-05-SUMMARY.md
+new file mode 100644
+index 0000000..626a2f5
+--- /dev/null
++++ b/.planning/phases/08-full-rebrand-to-hestia/08-05-SUMMARY.md
+@@ -0,0 +1,163 @@
++---
++phase: 08-full-rebrand-to-hestia
++plan: 05
++subsystem: infra
++tags: [rebrand, sweep, user-agent, openapi, dev-passwords, docs]
++
++requires:
++  - phase: 08-full-rebrand-to-hestia
++    provides: 08-01 to 08-04 renamed roles, packages, environment, infrastructure, PWA, CLI and browser keys
++provides:
++  - no tracked file outside .planning/ and scripts/migration-exemptions.json contains the former name in any case, and no tracked path outside .planning/ does
++  - outbound User-Agent is Hestia/1.0 (self-hosted household admin; +<origin>) and the OpenAPI title is Hestia API
++  - dev seed password hestia-seed-pass-2026 and reset password hestia-reset-pass-2026 moved together with their readers; the test database password default moved with its docs
++  - docs, README, CONTRIBUTING, CLAUDE.md, comments, fixtures, test origins, temp prefixes, git identities and clock symbols all say Hestia
++affects: [08-06, 08-07]
++
++plan_head_before: 33cc913072cef217174e0837d8c4316bebe44b2a
++plan_head_after: f130a9555b6c9b0d2d1012b94b2eec1036b3243e
++
++actuals:
++  tokens: 12400
++  tasks: 1
++  commits: 1
++
++tech-stack:
++  added: []
++  patterns:
++    - "One scripted catch-all substitution (three case forms) after every residual line was sorted into the six planned categories"
++
++key-files:
++  created: []
++  modified:
++    - apps/service/src/deals/flipp/request-queue.ts
++    - apps/service/src/openapi.ts
++    - supabase/seed/seed-users.ts
++    - e2e/support/env.ts
++    - apps/service/src/test/service-stack.ts
++    - docs/branding.md
++    - README.md
++    - .claude/CLAUDE.md
++    - test/clock-setup.mjs
++
++key-decisions:
++  - "The outbound User-Agent and the OpenAPI title follow the product name (RESEARCH open question 5); the User-Agent change is visible to Flipp and recipe sites and belongs in the PR body notes that 08-06 writes"
++  - "The dev-only literals (seed password, reset password, test database password default) are renamed together with every reader in one commit (RESEARCH open question 6); neither new password is in the common-password list"
++  - "The sweep leaves .planning/, the lockfile, the migration exemptions file and supabase/migrations untouched; the former name remains in those places by design until 08-06 and 08-07"
++
++requirements-completed: [BRAND-01, BRAND-06]
++
++coverage:
++  - id: D1
++    description: "No live file or path outside .planning/ and the exemptions file carries the former name; residual went from 93 lines in 52 files to 0"
++    requirement: "BRAND-01"
++    verification:
++      - kind: other
++        ref: "git grep -I -q -i (former name) -- . ':!.planning' ':!scripts/migration-exemptions.json' exits 1; git ls-files outside .planning/ matched against the name exits 1"
++        status: pass
++    human_judgment: false
++  - id: D2
++    description: "User-Agent, OpenAPI title, seed password in both readers, setup action name, branding title and name statement, README title are the new form"
++    requirement: "BRAND-01"
++    verification:
++      - kind: other
++        ref: "the plan's literal grep -qF/-qxF checks all pass; neither new password in packages/shared/src/data/common-passwords.ts"
++        status: pass
++    human_judgment: false
++  - id: D3
++    description: "Pinned migrations untouched and the gate still reports 2 exempt"
++    requirement: "BRAND-06"
++    verification:
++      - kind: other
++        ref: "HEAD blobs 356bd66... and 120a54f... unchanged; check-migrations-append-only --base origin/main prints 'migrations: 0 added, nothing else changed, 2 exempt'"
++        status: pass
++    human_judgment: false
++  - id: D4
++    description: "Typecheck, lint, format, harness and workspace tests pass after the sweep"
++    requirement: "BRAND-06"
++    verification:
++      - kind: unit
++        ref: "pnpm test: harness 403 passed; matching 156, shared 172, recurrence 77, service 760, web 729"
++        status: pass
++    human_judgment: false
++
++duration: 8min
++completed: 2026-10-26
++status: complete
++---
++
++# Phase 8 Plan 05: Live-File Sweep Summary
++
++**One catch-all substitution moved the last 93 old-name lines in 52 live files to Hestia (User-Agent, OpenAPI title, dev passwords with their readers, test origins and scaffolding, clock symbols, every doc sentence), leaving zero residual outside `.planning/` with typecheck, lint, format and every unit and harness test green.**
++
++## Performance
++
++- **Duration:** about 8 min (start about 03:46Z, sweep committed 03:53:57Z)
++- **Tasks:** 1 (tracer)
++- **Files:** 52 changed, 93 insertions and 93 deletions (the new name is the same length as the old one, so no line wrapped)
++
++## Accomplishments
++
++- Residual list printed first and sorted by hand. 93 lines (the plan measured 100 before 08-04 finished): 37 display name in prose, comments, titles and the two User-Agent strings; 20 example and test origins; 14 dev passwords (seed, reset, test database default and the docs that quote them); 18 test scaffolding (temp prefixes, git identities, the knip banner, the scrub fixture, the `/nonexistent/...` path); 3 clock symbols; 1 worktree path convention. No line fit none of them, so nothing was held back.
++- Ran the plan's CATCH-ALL class once: `git grep -z -I -l -i` over the selector (excludes `.planning`, the lockfile, `scripts/migration-exemptions.json`, `supabase/migrations`) piped to `sed -i` for the three case forms. Residual 93 to 0.
++- Read the whole added diff before committing. Writers and readers moved together: `buildUserAgent` and its assertion in `request-queue.test.ts`; `SEED_PASSWORD` in `supabase/seed/seed-users.ts` and `e2e/support/env.ts`, plus the onboarding tests and two docs; the test database default in `service-stack.ts` with `docs/development.md` and `docs/testing.md`.
++- `scripts/migration-exemptions.json`, `supabase/migrations/` and `.planning/` are absent from the commit.
++
++## Verification Output
++
++- Residual: `git grep` exit 1 (want 1); path check exit 1 (want 1).
++- Pins: HEAD blobs `356bd66774044f36c84c54822910843375d100fd` and `120a54f98911b2b7f4bb68d6017733404df11675`; gate printed `migrations: 0 added, nothing else changed, 2 exempt`.
++- Common-password list does not contain either new dev password (grep exit 1, want 1).
++- `pnpm typecheck`, `pnpm lint`, `pnpm format:check` exit 0 (typecheck also ran in the pre-commit hook).
++- `pnpm test` exit 0. Harness `node --test`: 403 passed, 0 failed. Workspaces (`pnpm -r test`): matching 156, shared 172, recurrence 77, service 760 (56 files), web 729 (57 files).
++- docs-claims (phase copy) `checked=1351 misses=0`; `doc-links: files=11 links=35 broken=0`; `repo-hygiene: clean (1030 files, 14 scripts)`.
++- Extra gates: `pnpm knip` exit 0, `knip-baseline: 28 rows match`, `pnpm jscpd` exit 0 ("Found 67 clones", same count as 08-03).
++- Acceptance: exactly one commit with the subject below in `d544a3b..HEAD`; its stat lists no `.planning/`, `supabase/migrations/` or exemptions path; `git grep -c -i hestia -- docs/branding.md` reports 2.
++
++## Task Commits
++
++1. **Task 1 (tracer): finish the live-file sweep** - `f130a95` `chore: finish the rename to Hestia in code, tests and docs`
++
++**Plan metadata:** committed after this file (docs: complete plan).
++
++## Deviations from Plan
++
++None - plan executed exactly as written.
++
++Notes, none of which changed code:
++
++- The residual was 93 lines in 52 files, not the planner's 100 in 53; the earlier plans in this phase had already moved some lines. All 93 fit the six categories.
++- The plan's verify chain was run in segments (same commands, same order) so each gate reported its own exit status. `pnpm -s test` is silent for Vitest, so `pnpm -r test` was re-run non-silent to read the totals.
++- Tracer gate: the verify was run end to end once before expansion; there is only one task and no `gate="blocking-human"`, so no checkpoint was needed.
++
++## Issues Encountered
++
++- Not run in this plan: the E2E image build and Playwright suite, the integration suite, and the web build (owned by 08-07). The renamed seed and reset passwords, the test database default and the User-Agent are therefore proven by unit tests, greps and typecheck, not by a run against the Supabase stack or the E2E containers. The seed password pair (`supabase/seed/seed-users.ts` and `e2e/support/env.ts`) is verified identical by grep.
++- The `.planning/` files and the exemptions file still contain the former name by design; 08-06 hand-edits the planning text and 08-07 adds the guard.
++- `.planning/milestone.lock` stays untracked as instructed.
++
++## Known Stubs
++
++None.
++
++## Threat Flags
++
++None. T-08-18 is mitigated: the selector excluded `.planning/`, the exemptions file and `supabase/migrations/`, both migration blobs and the gate summary were re-checked, and the commit stat lists none of them. T-08-19 (User-Agent) is accepted: it carries only the product name and the unchanged origin. T-08-21 is mitigated by docs-claims (0 misses) and the link checker (0 broken).
++
++## User Setup Required
++
++For the PR body notes in 08-06: the outbound User-Agent changes to `Hestia/1.0 (self-hosted household admin; +<origin>)`; the dev seed and reset passwords and the test database default are renamed, so any local database set up with the old defaults needs its seed users reset or the `hestia_service` password changed.
++
++## Next Phase Readiness
++
++Ready for 08-06 (planning text, cloud tooling and owner checklist, all under `.planning/`) and then 08-07 (the guard and CI). Zero old-name lines remain outside `.planning/` and the exemptions file.
++
++## Self-Check: PASSED
++
++- Commit `f130a95` is an ancestor of HEAD
++- Key files exist on disk and carry the new form (User-Agent, OpenAPI title, both `SEED_PASSWORD` lines, `docs/branding.md` title and statement, README title)
++- Acceptance criteria re-run after the commit: subject count 1, forbidden paths absent from the commit stat, branding mention count 2
++
++---
++*Phase: 08-full-rebrand-to-hestia*
++*Completed: 2026-10-26*
+-- 
+2.43.0
+

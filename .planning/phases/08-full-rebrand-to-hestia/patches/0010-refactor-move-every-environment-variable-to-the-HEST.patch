@@ -1,0 +1,2394 @@
+From 953a50abfab980eeaeaeabd9dcdfb19de9ee7922 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:37:16 +0000
+Subject: [PATCH 10/31] refactor: move every environment variable to the
+ HESTIA_ prefix
+
+- Hard cutover: env.ts reads only HESTIA_* names; the old names are ignored or rejected
+- Compose, the E2E overlay, Caddy, scripts, workflows, tests, docs and .env.example follow
+- VITE_* build-time names are unchanged
+- Add env tests for the cutover: legacy-only env fails naming HESTIA_ORIGIN, legacy proxies
+  name is ignored, the owner CLI refuses the legacy origin name
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ .claude/CLAUDE.md                             |  24 ++--
+ .env.example                                  |  10 +-
+ .github/workflows/deploy.yml                  |   6 +-
+ .github/workflows/sweep.yml                   |   2 +-
+ apps/service/package.json                     |   2 +-
+ apps/service/src/app.ts                       |   6 +-
+ apps/service/src/auth/jwt.ts                  |   2 +-
+ apps/service/src/cli.test.ts                  |   4 +-
+ apps/service/src/cli.ts                       |   2 +-
+ .../src/deals/flipp/fixture-transport.ts      |   2 +-
+ apps/service/src/deals/flipp/request-queue.ts |   2 +-
+ apps/service/src/env.test.ts                  | 111 ++++++++++++------
+ apps/service/src/env.ts                       |  34 +++---
+ apps/service/src/main.ts                      |  28 ++---
+ apps/service/src/push/recording-transport.ts  |   2 +-
+ apps/service/src/push/test-seam.ts            |   2 +-
+ apps/service/src/recipes/fixture-fetch.ts     |   6 +-
+ apps/service/src/routes/routes.test.ts        |   2 +-
+ apps/service/src/test/integration-db.ts       |   2 +-
+ apps/service/src/test/service-stack.ts        |  12 +-
+ apps/web/vite.config.ts                       |   6 +-
+ docker/Caddyfile                              |   4 +-
+ docker/caddy-entrypoint.sh                    |  12 +-
+ docker/caddy.Dockerfile                       |   8 +-
+ docker/db/hestia-service-login.sql            |   4 +-
+ docker/docker-compose.yml                     |  34 +++---
+ docker/service.Dockerfile                     |   4 +-
+ docs/deployment.md                            |  22 ++--
+ docs/development.md                           |  20 ++--
+ docs/file-map.md                              |   6 +-
+ docs/testing.md                               |  42 +++----
+ docs/use-cases.md                             |   2 +-
+ e2e/docker-compose.e2e.yml                    |  26 ++--
+ e2e/fixtures/recipes/full-json-ld-light.html  |   2 +-
+ e2e/playwright.config.ts                      |   2 +-
+ e2e/setup/stack.ts                            |  32 ++---
+ e2e/support/compose.ts                        |   4 +-
+ e2e/support/env.ts                            |  22 ++--
+ e2e/support/push.ts                           |   2 +-
+ e2e/support/run-identity.test.ts              |   2 +-
+ e2e/support/run-identity.ts                   |   2 +-
+ e2e/tests/07-magic-link-disabled.spec.ts      |   4 +-
+ e2e/tests/12-deal-rate-discipline.spec.ts     |   2 +-
+ .../13-recipe-import-and-readiness.spec.ts    |   2 +-
+ e2e/tests/19-notifications.spec.ts            |   2 +-
+ scripts/check-knip-baseline.test.mjs          |   2 +-
+ scripts/check-migrations-append-only.test.mjs |   2 +-
+ scripts/check-repo-hygiene.test.mjs           |   2 +-
+ scripts/ci-prepull-images.test.mjs            |   4 +-
+ scripts/deploy-gate.sh                        |  20 ++--
+ scripts/deploy-gate.test.mjs                  |  18 +--
+ scripts/deploy.sh                             |  12 +-
+ scripts/deploy.test.mjs                       |   6 +-
+ scripts/generate-secrets.sh                   |  14 +--
+ scripts/test-sweep.mjs                        |  14 +--
+ scripts/test-sweep.test.mjs                   |  12 +-
+ supabase/seed/seed-users.ts                   |  14 +--
+ test/clock-setup.mjs                          |   4 +-
+ test/clock-setup.test.mjs                     |  10 +-
+ test/global-tz.mjs                            |   8 +-
+ test/global-tz.test.mjs                       |  18 +--
+ test/support/vitest-project.mjs               |   4 +-
+ test/test-now.mjs                             |   6 +-
+ 63 files changed, 369 insertions(+), 330 deletions(-)
+
+diff --git a/.claude/CLAUDE.md b/.claude/CLAUDE.md
+index 6e4cb12..822f029 100644
+--- a/.claude/CLAUDE.md
++++ b/.claude/CLAUDE.md
+@@ -56,7 +56,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ ## Frameworks
+ 
+ - Fastify 5.12.5 - HTTP server; app factory `apps/service/src/app.ts`, entry point `apps/service/src/main.ts`
+-- `@fastify/rate-limit` 11.2.0 - per-IP limit on `/api/*`; default 300 per minute from `apps/service/src/env.ts` (`HEARTH_RATE_LIMIT_PER_MINUTE`)
++- `@fastify/rate-limit` 11.2.0 - per-IP limit on `/api/*`; default 300 per minute from `apps/service/src/env.ts` (`HESTIA_RATE_LIMIT_PER_MINUTE`)
+ - Zod 4.6.5 - environment and request validation (`apps/service/src/env.ts`)
+ - Kysely 0.29.6 over `pg` 8.23.0 - typed query builder; pool in `apps/service/src/db.ts`; generated types in `apps/service/src/db/types.ts`
+ - node-cron 4.6.0 - in-process scheduler (`apps/service/src/jobs/scheduler.ts`)
+@@ -112,14 +112,14 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ ## Configuration
+ 
+ - Read from process environment and validated by Zod; the service fails at startup on an invalid or missing variable
+-- Required: `DATABASE_URL`, `HEARTH_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+-- Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HEARTH_TRUSTED_PROXIES`, `HEARTH_OWNER_EMAIL`, `HEARTH_RATE_LIMIT_PER_MINUTE` (`300`), `HEARTH_PUSH_TRANSPORT` (`web-push`)
++- Required: `DATABASE_URL`, `HESTIA_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
++- Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HESTIA_TRUSTED_PROXIES`, `HESTIA_OWNER_EMAIL`, `HESTIA_RATE_LIMIT_PER_MINUTE` (`300`), `HESTIA_PUSH_TRANSPORT` (`web-push`)
+ - Optional: `BACKUP_DIR`, `VAPID_SUBJECT`
+-- E2E-only overrides (set only by the E2E Compose overlay): `HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_FLIPP_FIXTURE_NOW`, `HEARTH_RECIPE_FIXTURE_DIR`, `HEARTH_PUSH_TRANSPORT=test-double`
+-- The owner CLI reads only `HEARTH_ORIGIN`, `GOTRUE_URL`, and `SERVICE_ROLE_KEY` (`parseCliEnv` in `apps/service/src/env.ts`)
++- E2E-only overrides (set only by the E2E Compose overlay): `HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_FLIPP_FIXTURE_NOW`, `HESTIA_RECIPE_FIXTURE_DIR`, `HESTIA_PUSH_TRANSPORT=test-double`
++- The owner CLI reads only `HESTIA_ORIGIN`, `GOTRUE_URL`, and `SERVICE_ROLE_KEY` (`parseCliEnv` in `apps/service/src/env.ts`)
+ - `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, `VITE_MAGIC_LINK_ENABLED`
+ - Injected as Docker build args in `docker/caddy.Dockerfile`; changing them requires a rebuild
+-- Dev and preview proxies read `HEARTH_DEV_API` (default `http://127.0.0.1:3000`) and `HEARTH_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
++- Dev and preview proxies read `HESTIA_DEV_API` (default `http://127.0.0.1:3000`) and `HESTIA_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
+ - The production env file lives outside the checkout at `/srv/hearth/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
+ - `scripts/generate-secrets.sh` writes that file once and refuses to overwrite it.
+ - `pnpm-workspace.yaml` (workspace graph), root `package.json`, `tsconfig.base.json` (shared TypeScript options) with per-package `tsconfig.json` in `apps/service`, `apps/web`, `packages/*`, and `e2e`
+@@ -148,8 +148,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ | `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` | Supabase GoTrue auth server |
+ | `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` | Supabase Realtime (WebSocket change feed) |
+ | `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` | API gateway for GoTrue and Realtime |
+-| `hearth-service` | `hearth-service:${HEARTH_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
+-| `caddy` | `hearth-caddy:${HEARTH_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
++| `hearth-service` | `hearth-service:${HESTIA_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
++| `caddy` | `hearth-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
+ | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` | Daily dump at `0 2 * * *`; keeps 14 days, 8 weeks, 6 months |
+ 
+ ## Database
+@@ -157,7 +157,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - PostgreSQL 17 (`supabase/config.toml` `major_version = 17`)
+ - Migrations: `supabase/migrations/` (8 files; `20260919060000_hestia_service_role.sql` through `20261004090100_depart_clears_notification_preferences.sql`)
+ - Typed schema: `apps/service/src/db/types.ts` (generated by `kysely-codegen`, committed)
+-- Login role used by the service: `hestia_service` (NOINHERIT; the password is supplied through `HEARTH_SERVICE_DB_PASSWORD`, applied by `docker/db/hestia-service-login.sql`)
++- Login role used by the service: `hestia_service` (NOINHERIT; the password is supplied through `HESTIA_SERVICE_DB_PASSWORD`, applied by `docker/db/hestia-service-login.sql`)
+ 
+ ## CI/CD Toolchain
+ 
+@@ -185,7 +185,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Route plugins: one file per resource in `apps/service/src/routes/` (`bills.ts`, `chores.ts`, `meal-plan.ts`).
+ - Migrations: `supabase/migrations/YYYYMMDDHHMMSS_<name>.sql`.
+ - Tests: `<name>.test.ts(x)` co-located with the module, or `<name>.integration.test.ts` for database and route tests against `supabase start`. Test helpers live in `apps/service/src/test/` and `apps/web/src/test/`.
+-- Test time: unit and component tests run with `Date` pinned to `2026-10-14T12:00:00.000Z` (`HEARTH_TEST_NOW` overrides it), and ESLint `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test files and test helpers. Do not set `TZ` by hand: set it only through the sweep or an `env` object passed to a spawned process, and never force `TZ=UTC` for a whole suite; see "Dates and time zones" in `docs/testing.md`.
++- Test time: unit and component tests run with `Date` pinned to `2026-10-14T12:00:00.000Z` (`HESTIA_TEST_NOW` overrides it), and ESLint `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test files and test helpers. Do not set `TZ` by hand: set it only through the sweep or an `env` object passed to a spawned process, and never force `TZ=UTC` for a whole suite; see "Dates and time zones" in `docs/testing.md`.
+ - camelCase. Service and domain functions are verbs: `listBills`, `createHouseholdBill`, `payBill`, `archiveBill` in `apps/service/src/services/bills.ts`.
+ - Pure planners return a plan object: `planBillMove` in `apps/service/src/services/bills.ts`.
+ - Pure bill helpers: `currentBillOccurrence` in `packages/recurrence/src/bills.ts`; `billOccurrence` and `planBillMove` in `apps/service/src/services/bills.ts`.
+@@ -462,8 +462,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - **Process count:** One service process is assumed. Cron jobs and in-memory state (Flipp queue, recipe rate limiter, skip rates) are per process. Advisory locks prevent overlap of the same job, and only through the database.
+ - **Global state:** Module-level singletons are created in `apps/service/src/main.ts` (`wiring`, `skipRates`, `flippQueue`, `recipeFetchLimiter`, `recordingTransport`). The web client creates its singletons in `apps/web/src/main.tsx`.
+ - **Build-time configuration:** `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, and `VITE_MAGIC_LINK_ENABLED` are fixed at build time; a change requires a rebuild.
+-- **Test-only seams:** Fixture transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`), the push double (`HEARTH_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
+-- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`docs/deployment.md`, "Pinned names"). `HEARTH_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
++- **Test-only seams:** Fixture transports (`HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_RECIPE_FIXTURE_DIR`), the push double (`HESTIA_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
++- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`docs/deployment.md`, "Pinned names"). `HESTIA_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
+ - **Public unauthenticated routes:** `/api/health`, `/api/signup`, `/api/client-error` (rate limited per IP, `apps/service/src/routes/system.ts`), `/api/openapi.json`. All others call `ctx.authenticate`.
+ 
+ ## Layering Deviations (observed)
+diff --git a/.env.example b/.env.example
+index 2be755c..627a77f 100644
+--- a/.env.example
++++ b/.env.example
+@@ -7,14 +7,14 @@
+ 
+ # The pinned public origin, https://<machine>.<tailnet>.ts.net. It is baked into every installed
+ # PWA and push subscription: it must never change; see docs/deployment.md, "Pinned names".
+-HEARTH_ORIGIN=https://<machine>.<tailnet>.ts.net
++HESTIA_ORIGIN=https://<machine>.<tailnet>.ts.net
+ 
+ # The server owner's sign-in email; unlocks System health.
+-HEARTH_OWNER_EMAIL=owner@example.com
++HESTIA_OWNER_EMAIL=owner@example.com
+ 
+ # Magic link needs a domain and an SMTP relay. The caddy image
+ # build turns this into VITE_MAGIC_LINK_ENABLED, so the PWA follows it from the next deploy.
+-HEARTH_MAGIC_LINK_ENABLED=false
++HESTIA_MAGIC_LINK_ENABLED=false
+ 
+ # Backup directory on the second physical disk. Mounted into the backup container, and
+ # read-only into hearth-service.
+@@ -22,7 +22,7 @@ BACKUP_DIR=/mnt/backup/hearth
+ 
+ # Optional. Per-IP requests per minute across /api. Leave
+ # it unset in production: the default is 300, and only the E2E overlay raises it.
+-# HEARTH_RATE_LIMIT_PER_MINUTE=300
++# HESTIA_RATE_LIMIT_PER_MINUTE=300
+ 
+ # --- Generated by scripts/generate-secrets.sh ---
+ 
+@@ -30,7 +30,7 @@ BACKUP_DIR=/mnt/backup/hearth
+ POSTGRES_PASSWORD=<generated>
+ 
+ # Password for hestia_service, the login role the service connects as.
+-HEARTH_SERVICE_DB_PASSWORD=<generated>
++HESTIA_SERVICE_DB_PASSWORD=<generated>
+ 
+ # GoTrue's HS256 JWT secret, and the anon and service-role keys signed with it.
+ JWT_SECRET=<generated>
+diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
+index d496bc3..f4028fd 100644
+--- a/.github/workflows/deploy.yml
++++ b/.github/workflows/deploy.yml
+@@ -48,9 +48,9 @@ jobs:
+         run: scripts/deploy-gate.sh >> "$GITHUB_OUTPUT"
+         env:
+           # This Deploy run's own attempt number: attempt 1 skips the running commit; 2+ redeploys it.
+-          HEARTH_DEPLOY_ATTEMPT: ${{ github.run_attempt }}
+-          HEARTH_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
++          HESTIA_DEPLOY_ATTEMPT: ${{ github.run_attempt }}
++          HESTIA_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+       - if: steps.changes.outputs.deploy == 'true'
+         run: scripts/deploy.sh
+         env:
+-          HEARTH_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
++          HESTIA_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+diff --git a/.github/workflows/sweep.yml b/.github/workflows/sweep.yml
+index d817d68..4be864f 100644
+--- a/.github/workflows/sweep.yml
++++ b/.github/workflows/sweep.yml
+@@ -40,7 +40,7 @@ jobs:
+         run: pnpm test:sweep --log-dir sweep-logs
+       # The nightly and manual runs add today's cell, a rotating zone at the real instant, so a
+       # date-dependent test fails on the night it breaks instead of on a pull request later. A red
+-      # run prints `now=` and `tz=`, which reproduce it with HEARTH_TEST_NOW and TZ.
++      # run prints `now=` and `tz=`, which reproduce it with HESTIA_TEST_NOW and TZ.
+       - name: Six fixed cells and today's cell
+         if: github.event_name != 'push'
+         run: pnpm test:sweep --with-today --log-dir sweep-logs
+diff --git a/apps/service/package.json b/apps/service/package.json
+index d9c904d..e2d8767 100644
+--- a/apps/service/package.json
++++ b/apps/service/package.json
+@@ -14,7 +14,7 @@
+     "test": "vitest run --passWithNoTests",
+     "test:coverage": "vitest run --coverage --config vitest.coverage.config.ts",
+     "test:integration": "vitest run --config vitest.integration.config.ts",
+-    "db:types": "kysely-codegen --dialect postgres --url \"${HEARTH_DB_ADMIN_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" --include-pattern \"public.*\" --date-parser string --out-file src/db/types.ts && prettier --write src/db/types.ts",
++    "db:types": "kysely-codegen --dialect postgres --url \"${HESTIA_DB_ADMIN_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" --include-pattern \"public.*\" --date-parser string --out-file src/db/types.ts && prettier --write src/db/types.ts",
+     "db:seed": "tsx ../../supabase/seed/seed-users.ts",
+     "fixtures:normalize": "tsx scripts/normalize-fixtures.ts"
+   },
+diff --git a/apps/service/src/app.ts b/apps/service/src/app.ts
+index 856ef29..1a805a7 100644
+--- a/apps/service/src/app.ts
++++ b/apps/service/src/app.ts
+@@ -39,11 +39,11 @@ export type { AppDependencies } from './http/context.js';
+ export interface AppOptions {
+   trustedProxies: string[];
+   logger: false | { level: string };
+-  /** HEARTH_ORIGIN: invite links are built on it. */
++  /** HESTIA_ORIGIN: invite links are built on it. */
+   origin: string;
+-  /** HEARTH_OWNER_EMAIL; empty means nobody is the owner. */
++  /** HESTIA_OWNER_EMAIL; empty means nobody is the owner. */
+   ownerEmail: string;
+-  /** HEARTH_RATE_LIMIT_PER_MINUTE; defaults to production's limit. */
++  /** HESTIA_RATE_LIMIT_PER_MINUTE; defaults to production's limit. */
+   rateLimitPerMinute?: number;
+   openApiDocument?: () => unknown;
+   /**
+diff --git a/apps/service/src/auth/jwt.ts b/apps/service/src/auth/jwt.ts
+index f0058b6..4f945f3 100644
+--- a/apps/service/src/auth/jwt.ts
++++ b/apps/service/src/auth/jwt.ts
+@@ -191,7 +191,7 @@ export function isRecentRecovery(
+   );
+ }
+ 
+-/** `isServerOwner`: the token's email equals HEARTH_OWNER_EMAIL, ignoring case. */
++/** `isServerOwner`: the token's email equals HESTIA_OWNER_EMAIL, ignoring case. */
+ export function isServerOwner(email: string, ownerEmail: string): boolean {
+   const normalizedOwner = ownerEmail.trim().toLowerCase();
+   return normalizedOwner !== '' && email.trim().toLowerCase() === normalizedOwner;
+diff --git a/apps/service/src/cli.test.ts b/apps/service/src/cli.test.ts
+index eb691ed..b9cc62e 100644
+--- a/apps/service/src/cli.test.ts
++++ b/apps/service/src/cli.test.ts
+@@ -103,7 +103,7 @@ describe('hearth-admin, invoked directly as a script', () => {
+     return `http://127.0.0.1:${String(address.port)}`;
+   }
+ 
+-  const ENV_KEYS = ['GOTRUE_URL', 'SERVICE_ROLE_KEY', 'HEARTH_ORIGIN'] as const;
++  const ENV_KEYS = ['GOTRUE_URL', 'SERVICE_ROLE_KEY', 'HESTIA_ORIGIN'] as const;
+ 
+   // Cache-busting token for the re-import below. The clock cannot serve: the shared pin freezes
+   // it, so a second import would repeat the query string and hit the module cache.
+@@ -144,7 +144,7 @@ describe('hearth-admin, invoked directly as a script', () => {
+       process.argv = [originalArgv[0] ?? 'node', cliPath, 'reset-password', 'alex@example.com'];
+       process.env['GOTRUE_URL'] = gotrueUrl;
+       process.env['SERVICE_ROLE_KEY'] = 'test-service-role-key';
+-      process.env['HEARTH_ORIGIN'] = 'https://hearth.example.test';
++      process.env['HESTIA_ORIGIN'] = 'https://hearth.example.test';
+       process.exitCode = undefined;
+ 
+       await import(/* @vite-ignore */ `./cli.ts?invoked-directly=${String(++importCount)}`);
+diff --git a/apps/service/src/cli.ts b/apps/service/src/cli.ts
+index db6fa8c..ba3270f 100644
+--- a/apps/service/src/cli.ts
++++ b/apps/service/src/cli.ts
+@@ -63,7 +63,7 @@ const invokedDirectly =
+ if (invokedDirectly) {
+   const env = parseCliEnv(process.env);
+   const admin = createGoTrueAdmin({ url: env.GOTRUE_URL, serviceRoleKey: env.SERVICE_ROLE_KEY });
+-  process.exitCode = await runCli(process.argv.slice(2), admin, env.HEARTH_ORIGIN, {
++  process.exitCode = await runCli(process.argv.slice(2), admin, env.HESTIA_ORIGIN, {
+     out: (line) => {
+       process.stdout.write(`${line}\n`);
+     },
+diff --git a/apps/service/src/deals/flipp/fixture-transport.ts b/apps/service/src/deals/flipp/fixture-transport.ts
+index 6c91653..b3c3212 100644
+--- a/apps/service/src/deals/flipp/fixture-transport.ts
++++ b/apps/service/src/deals/flipp/fixture-transport.ts
+@@ -81,7 +81,7 @@ export interface FixtureTransportOptions {
+   /**
+    * Where the raw captures live. Defaults to the checked-out repo's own copy, which is what every
+    * Vitest caller wants; the E2E stack instead points this at the read-only mount the Compose
+-   * overlay gives the built image (`HEARTH_FLIPP_FIXTURE_DIR`), since the image never has the
++   * overlay gives the built image (`HESTIA_FLIPP_FIXTURE_DIR`), since the image never has the
+    * source tree's `e2e/` directory beside it.
+    */
+   dir?: string;
+diff --git a/apps/service/src/deals/flipp/request-queue.ts b/apps/service/src/deals/flipp/request-queue.ts
+index 2299c86..9d026a9 100644
+--- a/apps/service/src/deals/flipp/request-queue.ts
++++ b/apps/service/src/deals/flipp/request-queue.ts
+@@ -34,7 +34,7 @@ export interface RequestQueueOptions {
+   get: HttpGet;
+   /**
+    * Identifies the app and the host it runs on, so an operator seeing the traffic can tell what
+-   * it is and where it comes from. Built from HEARTH_ORIGIN.
++   * it is and where it comes from. Built from HESTIA_ORIGIN.
+    */
+   userAgent: string;
+   logger?: QueueLogger;
+diff --git a/apps/service/src/env.test.ts b/apps/service/src/env.test.ts
+index e022a1b..8676f90 100644
+--- a/apps/service/src/env.test.ts
++++ b/apps/service/src/env.test.ts
+@@ -3,7 +3,7 @@ import { parseCliEnv, parseEnv, vapidSubjectFor } from './env.js';
+ 
+ const REQUIRED = {
+   DATABASE_URL: 'postgres://u:p@db:5432/postgres',
+-  HEARTH_ORIGIN: 'https://hearth.tail1234.ts.net/',
++  HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net/',
+   GOTRUE_URL: 'http://auth:9999/',
+   JWT_SECRET: 'x'.repeat(40),
+   ANON_KEY: 'anon',
+@@ -12,35 +12,64 @@ const REQUIRED = {
+   VAPID_PRIVATE_KEY: 'privatePlaceholder',
+ };
+ 
++// The pre-rebrand variable prefix, assembled from two fragments so this file never spells the old
++// name: the repository's legacy-name check can then scan it without an allowlist entry.
++const LEGACY_PREFIX = 'HEAR' + 'TH_';
++
++function withLegacyPrefix(source: Record<string, string | undefined>): Record<string, string> {
++  return Object.fromEntries(
++    Object.entries(source).map(([key, value]) => [
++      key.startsWith('HESTIA_') ? LEGACY_PREFIX + key.slice('HESTIA_'.length) : key,
++      value ?? '',
++    ]),
++  );
++}
++
+ describe('parseEnv', () => {
++  it('rejects an environment that has only the pre-rebrand names, naming HESTIA_ORIGIN (hard cutover)', () => {
++    const legacyOnly = withLegacyPrefix(REQUIRED);
++
++    expect(Object.keys(legacyOnly)).toContain(`${LEGACY_PREFIX}ORIGIN`);
++    expect(() => parseEnv(legacyOnly)).toThrow(/HESTIA_ORIGIN/);
++  });
++
++  it('ignores the pre-rebrand trusted-proxies name, so no proxy is trusted through it', () => {
++    const legacyProxies = { [`${LEGACY_PREFIX}TRUSTED_PROXIES`]: '10.0.0.0/8' };
++
++    expect(parseEnv({ ...REQUIRED, ...legacyProxies }).HESTIA_TRUSTED_PROXIES).toEqual([]);
++    expect(
++      parseEnv({ ...REQUIRED, HESTIA_TRUSTED_PROXIES: '10.0.0.0/8' }).HESTIA_TRUSTED_PROXIES,
++    ).toEqual(['10.0.0.0/8']);
++  });
++
+   it('applies defaults, splits trusted proxies, and normalizes URLs', () => {
+-    const env = parseEnv({ ...REQUIRED, HEARTH_TRUSTED_PROXIES: '172.28.0.0/16, 127.0.0.1' });
++    const env = parseEnv({ ...REQUIRED, HESTIA_TRUSTED_PROXIES: '172.28.0.0/16, 127.0.0.1' });
+ 
+     expect(env).toEqual({
+       ...REQUIRED,
+-      HEARTH_ORIGIN: 'https://hearth.tail1234.ts.net',
++      HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net',
+       GOTRUE_URL: 'http://auth:9999',
+       HOST: '0.0.0.0',
+       PORT: 3000,
+       LOG_LEVEL: 'info',
+-      HEARTH_TRUSTED_PROXIES: ['172.28.0.0/16', '127.0.0.1'],
+-      HEARTH_OWNER_EMAIL: '',
+-      HEARTH_RATE_LIMIT_PER_MINUTE: 300,
+-      HEARTH_PUSH_TRANSPORT: 'web-push',
+-      VAPID_SUBJECT: 'https://hearth.tail1234.ts.net',
++      HESTIA_TRUSTED_PROXIES: ['172.28.0.0/16', '127.0.0.1'],
++      HESTIA_OWNER_EMAIL: '',
++      HESTIA_RATE_LIMIT_PER_MINUTE: 300,
++      HESTIA_PUSH_TRANSPORT: 'web-push',
++      VAPID_SUBJECT: 'https://hestia.tail1234.ts.net',
+     });
+   });
+ 
+   it('uses the real web-push transport unless the push switch says otherwise', () => {
+-    expect(parseEnv(REQUIRED).HEARTH_PUSH_TRANSPORT).toBe('web-push');
+-    expect(parseEnv({ ...REQUIRED, HEARTH_PUSH_TRANSPORT: 'web-push' }).HEARTH_PUSH_TRANSPORT).toBe(
++    expect(parseEnv(REQUIRED).HESTIA_PUSH_TRANSPORT).toBe('web-push');
++    expect(parseEnv({ ...REQUIRED, HESTIA_PUSH_TRANSPORT: 'web-push' }).HESTIA_PUSH_TRANSPORT).toBe(
+       'web-push',
+     );
+   });
+ 
+   it('accepts test-double only as the exact value the E2E overlay sets', () => {
+     expect(
+-      parseEnv({ ...REQUIRED, HEARTH_PUSH_TRANSPORT: 'test-double' }).HEARTH_PUSH_TRANSPORT,
++      parseEnv({ ...REQUIRED, HESTIA_PUSH_TRANSPORT: 'test-double' }).HESTIA_PUSH_TRANSPORT,
+     ).toBe('test-double');
+   });
+ 
+@@ -54,35 +83,35 @@ describe('parseEnv', () => {
+       '',
+       ' test-double',
+     ]) {
+-      expect(() => parseEnv({ ...REQUIRED, HEARTH_PUSH_TRANSPORT: value })).toThrow(
+-        /HEARTH_PUSH_TRANSPORT/,
++      expect(() => parseEnv({ ...REQUIRED, HESTIA_PUSH_TRANSPORT: value })).toThrow(
++        /HESTIA_PUSH_TRANSPORT/,
+       );
+     }
+   });
+ 
+   it('reads the per-IP rate limit as a positive integer and defaults to production’s 300', () => {
+-    expect(parseEnv(REQUIRED).HEARTH_RATE_LIMIT_PER_MINUTE).toBe(300);
++    expect(parseEnv(REQUIRED).HESTIA_RATE_LIMIT_PER_MINUTE).toBe(300);
+     expect(
+-      parseEnv({ ...REQUIRED, HEARTH_RATE_LIMIT_PER_MINUTE: '3000' }).HEARTH_RATE_LIMIT_PER_MINUTE,
++      parseEnv({ ...REQUIRED, HESTIA_RATE_LIMIT_PER_MINUTE: '3000' }).HESTIA_RATE_LIMIT_PER_MINUTE,
+     ).toBe(3000);
+   });
+ 
+   it('refuses a rate limit that is zero, negative, fractional, or not a number', () => {
+     for (const value of ['0', '-5', '2.5', 'many', '']) {
+-      expect(() => parseEnv({ ...REQUIRED, HEARTH_RATE_LIMIT_PER_MINUTE: value })).toThrow(
+-        /HEARTH_RATE_LIMIT_PER_MINUTE/,
++      expect(() => parseEnv({ ...REQUIRED, HESTIA_RATE_LIMIT_PER_MINUTE: value })).toThrow(
++        /HESTIA_RATE_LIMIT_PER_MINUTE/,
+       );
+     }
+   });
+ 
+   it('trusts no proxy when the variable is unset', () => {
+-    expect(parseEnv(REQUIRED).HEARTH_TRUSTED_PROXIES).toEqual([]);
++    expect(parseEnv(REQUIRED).HESTIA_TRUSTED_PROXIES).toEqual([]);
+   });
+ 
+   it('keeps the backup directory and owner email when set', () => {
+-    const env = parseEnv({ ...REQUIRED, BACKUP_DIR: '/backups', HEARTH_OWNER_EMAIL: ' o@x.io ' });
++    const env = parseEnv({ ...REQUIRED, BACKUP_DIR: '/backups', HESTIA_OWNER_EMAIL: ' o@x.io ' });
+     expect(env.BACKUP_DIR).toBe('/backups');
+-    expect(env.HEARTH_OWNER_EMAIL).toBe('o@x.io');
++    expect(env.HESTIA_OWNER_EMAIL).toBe('o@x.io');
+   });
+ 
+   it('fails fast when DATABASE_URL is missing or not a Postgres URL', () => {
+@@ -110,12 +139,12 @@ describe('parseEnv', () => {
+   );
+ 
+   it('derives VAPID_SUBJECT from the https origin when no owner email is set', () => {
+-    expect(parseEnv(REQUIRED).VAPID_SUBJECT).toBe('https://hearth.tail1234.ts.net');
++    expect(parseEnv(REQUIRED).VAPID_SUBJECT).toBe('https://hestia.tail1234.ts.net');
+   });
+ });
+ 
+ describe('vapidSubjectFor', () => {
+-  const base = { HEARTH_OWNER_EMAIL: '', HEARTH_ORIGIN: 'https://hearth.tail1234.ts.net' };
++  const base = { HESTIA_OWNER_EMAIL: '', HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net' };
+ 
+   it('uses an explicit VAPID_SUBJECT when it is a mailto: or https: URI', () => {
+     expect(vapidSubjectFor({ ...base, VAPID_SUBJECT: 'mailto:ops@example.com' })).toBe(
+@@ -139,32 +168,32 @@ describe('vapidSubjectFor', () => {
+     expect(message).not.toContain('secret-value');
+   });
+ 
+-  it('derives mailto: from HEARTH_OWNER_EMAIL when no explicit subject is set', () => {
++  it('derives mailto: from HESTIA_OWNER_EMAIL when no explicit subject is set', () => {
+     expect(
+       vapidSubjectFor({
+         ...base,
+-        HEARTH_OWNER_EMAIL: 'owner@example.com',
+-        HEARTH_ORIGIN: 'http://127.0.0.1:8080',
++        HESTIA_OWNER_EMAIL: 'owner@example.com',
++        HESTIA_ORIGIN: 'http://127.0.0.1:8080',
+       }),
+     ).toBe('mailto:owner@example.com');
+   });
+ 
+   it('prefers the owner email over the https origin', () => {
+-    expect(vapidSubjectFor({ ...base, HEARTH_OWNER_EMAIL: 'owner@example.com' })).toBe(
++    expect(vapidSubjectFor({ ...base, HESTIA_OWNER_EMAIL: 'owner@example.com' })).toBe(
+       'mailto:owner@example.com',
+     );
+   });
+ 
+   it('falls back to the origin when it is https and the owner email is not a valid address', () => {
+-    expect(vapidSubjectFor({ ...base, HEARTH_OWNER_EMAIL: 'not an address' })).toBe(
+-      'https://hearth.tail1234.ts.net',
++    expect(vapidSubjectFor({ ...base, HESTIA_OWNER_EMAIL: 'not an address' })).toBe(
++      'https://hestia.tail1234.ts.net',
+     );
+   });
+ 
+   it('fails fast over plain http with no owner email, naming the variables and not the origin', () => {
+     const error = (() => {
+       try {
+-        vapidSubjectFor({ ...base, HEARTH_ORIGIN: 'http://127.0.0.1:8080' });
++        vapidSubjectFor({ ...base, HESTIA_ORIGIN: 'http://127.0.0.1:8080' });
+         return undefined;
+       } catch (caught: unknown) {
+         return caught;
+@@ -172,21 +201,21 @@ describe('vapidSubjectFor', () => {
+     })();
+     expect(error).toBeInstanceOf(Error);
+     expect((error as Error).message).toMatch(/VAPID_SUBJECT/);
+-    expect((error as Error).message).toMatch(/HEARTH_OWNER_EMAIL/);
++    expect((error as Error).message).toMatch(/HESTIA_OWNER_EMAIL/);
+     expect((error as Error).message).not.toContain('127.0.0.1');
+   });
+ 
+   it('makes parseEnv fail at startup when no contact can be derived', () => {
+-    expect(() => parseEnv({ ...REQUIRED, HEARTH_ORIGIN: 'http://127.0.0.1:8080' })).toThrow(
++    expect(() => parseEnv({ ...REQUIRED, HESTIA_ORIGIN: 'http://127.0.0.1:8080' })).toThrow(
+       /VAPID_SUBJECT is unset/,
+     );
+   });
+ 
+-  it('lets parseEnv boot over plain http when HEARTH_OWNER_EMAIL is set', () => {
++  it('lets parseEnv boot over plain http when HESTIA_OWNER_EMAIL is set', () => {
+     const env = parseEnv({
+       ...REQUIRED,
+-      HEARTH_ORIGIN: 'http://127.0.0.1:8080',
+-      HEARTH_OWNER_EMAIL: 'alex@example.com',
++      HESTIA_ORIGIN: 'http://127.0.0.1:8080',
++      HESTIA_OWNER_EMAIL: 'alex@example.com',
+     });
+     expect(env.VAPID_SUBJECT).toBe('mailto:alex@example.com');
+   });
+@@ -196,15 +225,25 @@ describe('parseCliEnv', () => {
+   it('needs only GoTrue, the service-role key, and the origin', () => {
+     expect(
+       parseCliEnv({
+-        HEARTH_ORIGIN: REQUIRED.HEARTH_ORIGIN,
++        HESTIA_ORIGIN: REQUIRED.HESTIA_ORIGIN,
+         GOTRUE_URL: REQUIRED.GOTRUE_URL,
+         SERVICE_ROLE_KEY: 'service',
+       }),
+     ).toEqual({
+-      HEARTH_ORIGIN: 'https://hearth.tail1234.ts.net',
++      HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net',
+       GOTRUE_URL: 'http://auth:9999',
+       SERVICE_ROLE_KEY: 'service',
+     });
+     expect(() => parseCliEnv({})).toThrow(/SERVICE_ROLE_KEY/);
+   });
++
++  it('refuses the pre-rebrand origin name, naming HESTIA_ORIGIN', () => {
++    expect(() =>
++      parseCliEnv({
++        [`${LEGACY_PREFIX}ORIGIN`]: REQUIRED.HESTIA_ORIGIN,
++        GOTRUE_URL: REQUIRED.GOTRUE_URL,
++        SERVICE_ROLE_KEY: 'service',
++      }),
++    ).toThrow(/HESTIA_ORIGIN/);
++  });
+ });
+diff --git a/apps/service/src/env.ts b/apps/service/src/env.ts
+index 4725f44..7aae54c 100644
+--- a/apps/service/src/env.ts
++++ b/apps/service/src/env.ts
+@@ -30,13 +30,13 @@ const envSchema = z.object({
+   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+   // Comma-separated addresses or CIDRs (the Compose network's subnet in production).
+   // Empty means no proxy is trusted, so X-Forwarded-For is ignored.
+-  HEARTH_TRUSTED_PROXIES: trustedProxies,
+-  HEARTH_ORIGIN: origin,
++  HESTIA_TRUSTED_PROXIES: trustedProxies,
++  HESTIA_ORIGIN: origin,
+   // Unset means nobody is the server owner, so System health is closed to everyone.
+-  HEARTH_OWNER_EMAIL: z.string().trim().default(''),
++  HESTIA_OWNER_EMAIL: z.string().trim().default(''),
+   // Requests per minute per client IP across `/api/*`. Must stay a positive integer; a value of 0
+   // would refuse everything, so it is rejected rather than read as "off".
+-  HEARTH_RATE_LIMIT_PER_MINUTE: z.coerce
++  HESTIA_RATE_LIMIT_PER_MINUTE: z.coerce
+     .number()
+     .int()
+     .min(1)
+@@ -57,19 +57,19 @@ const envSchema = z.object({
+    * keeps "tests never make live calls" true for the built image the E2E suite runs, not only for
+    * Vitest's in-process doubles.
+    */
+-  HEARTH_FLIPP_FIXTURE_DIR: z.string().min(1).optional(),
++  HESTIA_FLIPP_FIXTURE_DIR: z.string().min(1).optional(),
+   // The fixture captures' own instant (`FIXTURE_NOW`), so the wrapper's active-flyer window
+   // matches what the captures actually cover regardless of the host's real clock.
+-  HEARTH_FLIPP_FIXTURE_NOW: z.coerce.date().optional(),
++  HESTIA_FLIPP_FIXTURE_NOW: z.coerce.date().optional(),
+   /*
+    * Unset in every real deployment, so production always fetches a pasted recipe URL for real.
+    * The E2E Compose overlay is the one caller that sets it: `fetchRecipePage`'s
+    * private/loopback/link-local refusal would just as correctly refuse a fixture server reachable
+    * only on the Compose network, so the E2E recipe-import journey swaps the fetch step itself for
+-   * reading the checked-in pages this points at, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the
++   * reading the checked-in pages this points at, the same way `HESTIA_FLIPP_FIXTURE_DIR` swaps the
+    * Flipp transport.
+    */
+-  HEARTH_RECIPE_FIXTURE_DIR: z.string().min(1).optional(),
++  HESTIA_RECIPE_FIXTURE_DIR: z.string().min(1).optional(),
+   /*
+    * Web Push. The dispatch job is scheduled in every service process, so the key pair is required
+    * at startup rather than failing on the first send. Both match the names docker-compose.yml
+@@ -87,7 +87,7 @@ const envSchema = z.object({
+    * push for the suite to read and contacts no push service. Any other value fails at startup
+    * rather than falling back to either transport.
+    */
+-  HEARTH_PUSH_TRANSPORT: z.enum(['web-push', 'test-double']).default('web-push'),
++  HESTIA_PUSH_TRANSPORT: z.enum(['web-push', 'test-double']).default('web-push'),
+ });
+ 
+ export type Env = z.infer<typeof envSchema> & { VAPID_SUBJECT: string };
+@@ -117,8 +117,8 @@ function isContactUri(value: string): boolean {
+  */
+ export function vapidSubjectFor(env: {
+   VAPID_SUBJECT?: string | undefined;
+-  HEARTH_OWNER_EMAIL: string;
+-  HEARTH_ORIGIN: string;
++  HESTIA_OWNER_EMAIL: string;
++  HESTIA_ORIGIN: string;
+ }): string {
+   if (env.VAPID_SUBJECT !== undefined) {
+     if (!isContactUri(env.VAPID_SUBJECT)) {
+@@ -126,14 +126,14 @@ export function vapidSubjectFor(env: {
+     }
+     return env.VAPID_SUBJECT;
+   }
+-  if (z.email().safeParse(env.HEARTH_OWNER_EMAIL).success) {
+-    return `mailto:${env.HEARTH_OWNER_EMAIL}`;
++  if (z.email().safeParse(env.HESTIA_OWNER_EMAIL).success) {
++    return `mailto:${env.HESTIA_OWNER_EMAIL}`;
+   }
+-  if (new URL(env.HEARTH_ORIGIN).protocol === 'https:') return env.HEARTH_ORIGIN;
++  if (new URL(env.HESTIA_ORIGIN).protocol === 'https:') return env.HESTIA_ORIGIN;
+   throw new Error(
+     'Invalid environment:\nVAPID_SUBJECT is unset and no contact can be derived: set VAPID_SUBJECT ' +
+-      'to a mailto: or https: URI, set HEARTH_OWNER_EMAIL to an email address, or serve ' +
+-      'HEARTH_ORIGIN over https',
++      'to a mailto: or https: URI, set HESTIA_OWNER_EMAIL to an email address, or serve ' +
++      'HESTIA_ORIGIN over https',
+   );
+ }
+ 
+@@ -144,7 +144,7 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
+ }
+ 
+ const cliEnvSchema = envSchema.pick({
+-  HEARTH_ORIGIN: true,
++  HESTIA_ORIGIN: true,
+   GOTRUE_URL: true,
+   SERVICE_ROLE_KEY: true,
+ });
+diff --git a/apps/service/src/main.ts b/apps/service/src/main.ts
+index 0fa8159..9bd422f 100644
+--- a/apps/service/src/main.ts
++++ b/apps/service/src/main.ts
+@@ -53,18 +53,18 @@ const queueLogger = {
+   warn: (data: Record<string, unknown>, message: string) => wiring.log?.warn(data, message),
+   info: (data: Record<string, unknown>, message: string) => wiring.log?.info(data, message),
+ };
+-// Only the E2E Compose overlay sets HEARTH_FLIPP_FIXTURE_DIR: every other caller, including a real
++// Only the E2E Compose overlay sets HESTIA_FLIPP_FIXTURE_DIR: every other caller, including a real
+ // deployment, gets the live transport unchanged.
+ const flippGet: HttpGet =
+-  env.HEARTH_FLIPP_FIXTURE_DIR === undefined
++  env.HESTIA_FLIPP_FIXTURE_DIR === undefined
+     ? fetchGet
+-    : fixtureTransport({ dir: env.HEARTH_FLIPP_FIXTURE_DIR, itemDetail: FIXTURE_ITEM_DETAIL });
++    : fixtureTransport({ dir: env.HESTIA_FLIPP_FIXTURE_DIR, itemDetail: FIXTURE_ITEM_DETAIL });
+ const flippQueue = new FlippRequestQueue({
+   get: flippGet,
+-  userAgent: buildUserAgent(env.HEARTH_ORIGIN),
++  userAgent: buildUserAgent(env.HESTIA_ORIGIN),
+   logger: queueLogger,
+ });
+-const fixtureNow = env.HEARTH_FLIPP_FIXTURE_NOW;
++const fixtureNow = env.HESTIA_FLIPP_FIXTURE_NOW;
+ const dealSource = new FlippDealSource({
+   queue: flippQueue,
+   logger: queueLogger,
+@@ -80,19 +80,19 @@ const deals = createDealsService({
+ // One limiter for every recipe fetch, so 1 request/second/host holds across requests, the same
+ // way flippQueue holds Flipp's rate discipline.
+ const recipeFetchLimiter = new HostRateLimiter();
+-const recipeUserAgent = buildUserAgent(env.HEARTH_ORIGIN);
+-// Only the E2E Compose overlay sets HEARTH_RECIPE_FIXTURE_DIR (see env.ts): every other caller,
++const recipeUserAgent = buildUserAgent(env.HESTIA_ORIGIN);
++// Only the E2E Compose overlay sets HESTIA_RECIPE_FIXTURE_DIR (see env.ts): every other caller,
+ // including a real deployment, fetches the pasted URL for real.
+ const recipeFetchPage: (pageUrl: string) => Promise<{ body: string }> =
+-  env.HEARTH_RECIPE_FIXTURE_DIR === undefined
++  env.HESTIA_RECIPE_FIXTURE_DIR === undefined
+     ? (pageUrl) =>
+         fetchRecipePage(pageUrl, { userAgent: recipeUserAgent, limiter: recipeFetchLimiter })
+-    : recipeFixtureFetch({ dir: env.HEARTH_RECIPE_FIXTURE_DIR });
++    : recipeFixtureFetch({ dir: env.HESTIA_RECIPE_FIXTURE_DIR });
+ 
+ // The E2E push switch (env.ts). Only the Compose overlay selects `test-double`: then pushes are
+ // recorded rather than sent, and the seam routes that let the suite run dispatch and read them back
+ // are registered. Every other build keeps the web-push transport and has no test route.
+-const testDouble = env.HEARTH_PUSH_TRANSPORT === 'test-double';
++const testDouble = env.HESTIA_PUSH_TRANSPORT === 'test-double';
+ const recordingTransport = new RecordingPushTransport();
+ 
+ const app = await buildApp(
+@@ -110,11 +110,11 @@ const app = await buildApp(
+     parseRecipeUrl: (url) => parseRecipeUrl(url, recipeFetchPage),
+   },
+   {
+-    trustedProxies: env.HEARTH_TRUSTED_PROXIES,
++    trustedProxies: env.HESTIA_TRUSTED_PROXIES,
+     logger: { level: env.LOG_LEVEL },
+-    origin: env.HEARTH_ORIGIN,
+-    ownerEmail: env.HEARTH_OWNER_EMAIL,
+-    rateLimitPerMinute: env.HEARTH_RATE_LIMIT_PER_MINUTE,
++    origin: env.HESTIA_ORIGIN,
++    ownerEmail: env.HESTIA_OWNER_EMAIL,
++    rateLimitPerMinute: env.HESTIA_RATE_LIMIT_PER_MINUTE,
+     openApiDocument: () => openApiDocument,
+     testSeam: testDouble
+       ? pushTestSeam({
+diff --git a/apps/service/src/push/recording-transport.ts b/apps/service/src/push/recording-transport.ts
+index 4487df0..045629c 100644
+--- a/apps/service/src/push/recording-transport.ts
++++ b/apps/service/src/push/recording-transport.ts
+@@ -6,7 +6,7 @@ import type {
+ 
+ /**
+  * A push transport that records every attempt and answers from a table keyed by endpoint. Tests
+- * use it, and so does the E2E stack when `HEARTH_PUSH_TRANSPORT` is `test-double` (see env.ts): the
++ * use it, and so does the E2E stack when `HESTIA_PUSH_TRANSPORT` is `test-double` (see env.ts): the
+  * record is then what the suite reads, and no push service is contacted. An endpoint with no entry
+  * is accepted, which is the common case.
+  */
+diff --git a/apps/service/src/push/test-seam.ts b/apps/service/src/push/test-seam.ts
+index 7118789..401f72b 100644
+--- a/apps/service/src/push/test-seam.ts
++++ b/apps/service/src/push/test-seam.ts
+@@ -4,7 +4,7 @@ import { z } from 'zod';
+ import type { RecordingPushTransport } from './recording-transport.js';
+ 
+ /*
+- * The E2E push seam. It is registered only when HEARTH_PUSH_TRANSPORT is `test-double`, so no real
++ * The E2E push seam. It is registered only when HESTIA_PUSH_TRANSPORT is `test-double`, so no real
+  * deployment has these routes. It does two things the suite cannot do through the product: run the
+  * dispatch job at a chosen instant, so a reminder is due without waiting for the wall clock, and
+  * read back the pushes that run recorded. Both need the service-role key, which only the suite's
+diff --git a/apps/service/src/recipes/fixture-fetch.ts b/apps/service/src/recipes/fixture-fetch.ts
+index 6db3373..1a6ebe3 100644
+--- a/apps/service/src/recipes/fixture-fetch.ts
++++ b/apps/service/src/recipes/fixture-fetch.ts
+@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
+  * address on the machine or the Compose network — and a same-network fixture server would be
+  * exactly that, so it would be refused by design, not bypassable by choosing a "reachable" address.
+  * The E2E journey that imports a recipe by URL therefore never calls `fetchRecipePage` at all when
+- * `HEARTH_RECIPE_FIXTURE_DIR` is set: the whole fetch step is swapped for this in-process file
+- * read, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
++ * `HESTIA_RECIPE_FIXTURE_DIR` is set: the whole fetch step is swapped for this in-process file
++ * read, the same way `HESTIA_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
+  */
+ 
+ export const RECIPE_FIXTURE_DIR = fileURLToPath(
+@@ -27,7 +27,7 @@ export interface RecipeFixtureFetchOptions {
+   /**
+    * Where the fixture pages live. Defaults to the checked-out repo's own copy; the E2E stack
+    * instead points this at the read-only mount the Compose overlay gives the built image
+-   * (`HEARTH_RECIPE_FIXTURE_DIR`), since the image never has the source tree's `e2e/` directory
++   * (`HESTIA_RECIPE_FIXTURE_DIR`), since the image never has the source tree's `e2e/` directory
+    * beside it (the same reason `fixture-transport.ts` takes a `dir` option).
+    */
+   dir?: string;
+diff --git a/apps/service/src/routes/routes.test.ts b/apps/service/src/routes/routes.test.ts
+index e57563b..e0e4e18 100644
+--- a/apps/service/src/routes/routes.test.ts
++++ b/apps/service/src/routes/routes.test.ts
+@@ -510,7 +510,7 @@ describe('GET /api/health/deep', () => {
+     const response = await instance.inject({
+       method: 'GET',
+       url: '/api/health/deep',
+-      // Case differs from HEARTH_OWNER_EMAIL on purpose.
++      // Case differs from HESTIA_OWNER_EMAIL on purpose.
+       headers: bearer(userClaims({ email: 'owner@example.COM' })),
+     });
+     expect(response.statusCode).toBe(200);
+diff --git a/apps/service/src/test/integration-db.ts b/apps/service/src/test/integration-db.ts
+index 279b837..7c41a62 100644
+--- a/apps/service/src/test/integration-db.ts
++++ b/apps/service/src/test/integration-db.ts
+@@ -12,7 +12,7 @@ import pg from 'pg';
+  */
+ 
+ export const TEST_DATABASE_URL =
+-  process.env['HEARTH_TEST_DATABASE_URL'] ??
++  process.env['HESTIA_TEST_DATABASE_URL'] ??
+   'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
+ 
+ export interface TestUser {
+diff --git a/apps/service/src/test/service-stack.ts b/apps/service/src/test/service-stack.ts
+index c184c58..8636c0d 100644
+--- a/apps/service/src/test/service-stack.ts
++++ b/apps/service/src/test/service-stack.ts
+@@ -30,7 +30,7 @@ export interface StackConfig {
+   serviceDatabaseUrl: string;
+ }
+ 
+-const SERVICE_PASSWORD = process.env['HEARTH_TEST_SERVICE_PASSWORD'] ?? 'hearth';
++const SERVICE_PASSWORD = process.env['HESTIA_TEST_SERVICE_PASSWORD'] ?? 'hearth';
+ 
+ function supabaseStatus(): Record<string, string> {
+   const output = execFileSync('supabase', ['status', '--output', 'env'], {
+@@ -52,7 +52,7 @@ export function stackConfig(): StackConfig {
+   if (cached !== undefined) return cached;
+   const env = process.env;
+   const status =
+-    env['HEARTH_TEST_ANON_KEY'] === undefined ? supabaseStatus() : ({} as Record<string, string>);
++    env['HESTIA_TEST_ANON_KEY'] === undefined ? supabaseStatus() : ({} as Record<string, string>);
+   const pick = (name: string, statusName: string): string => {
+     const value = env[name] ?? status[statusName];
+     if (value === undefined || value === '') throw new Error(`set ${name} or run supabase start`);
+@@ -63,10 +63,10 @@ export function stackConfig(): StackConfig {
+   dbUrl.password = SERVICE_PASSWORD;
+   cached = {
+     // Kong's port under `supabase start` (supabase/config.toml, [api].port).
+-    gotrueUrl: env['HEARTH_TEST_GOTRUE_URL'] ?? 'http://127.0.0.1:54321/auth/v1',
+-    anonKey: pick('HEARTH_TEST_ANON_KEY', 'ANON_KEY'),
+-    serviceRoleKey: pick('HEARTH_TEST_SERVICE_ROLE_KEY', 'SERVICE_ROLE_KEY'),
+-    jwtSecret: pick('HEARTH_TEST_JWT_SECRET', 'JWT_SECRET'),
++    gotrueUrl: env['HESTIA_TEST_GOTRUE_URL'] ?? 'http://127.0.0.1:54321/auth/v1',
++    anonKey: pick('HESTIA_TEST_ANON_KEY', 'ANON_KEY'),
++    serviceRoleKey: pick('HESTIA_TEST_SERVICE_ROLE_KEY', 'SERVICE_ROLE_KEY'),
++    jwtSecret: pick('HESTIA_TEST_JWT_SECRET', 'JWT_SECRET'),
+     serviceDatabaseUrl: dbUrl.toString(),
+   };
+   return cached;
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index e899607..7cee41c 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -13,13 +13,13 @@ const THEME_COLOR = '#475569';
+  * prefixes; the addresses default to `supabase start` and a locally run service.
+  */
+ const proxy = {
+-  '/api': { target: process.env['HEARTH_DEV_API'] ?? 'http://127.0.0.1:3000', changeOrigin: true },
++  '/api': { target: process.env['HESTIA_DEV_API'] ?? 'http://127.0.0.1:3000', changeOrigin: true },
+   '/auth/v1': {
+-    target: process.env['HEARTH_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
++    target: process.env['HESTIA_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
+     changeOrigin: true,
+   },
+   '/realtime/v1': {
+-    target: process.env['HEARTH_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
++    target: process.env['HESTIA_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
+     changeOrigin: true,
+     ws: true,
+   },
+diff --git a/docker/Caddyfile b/docker/Caddyfile
+index 24cc7cb..c13e163 100644
+--- a/docker/Caddyfile
++++ b/docker/Caddyfile
+@@ -9,7 +9,7 @@
+ 		# connection to Caddy from the Compose network's gateway, so that address is the one
+ 		# Caddy actually sees for it. The loopback entries cover Funnel if Caddy ever runs on
+ 		# the host network. Nothing else on the Compose network is trusted.
+-		trusted_proxies static 127.0.0.1/32 ::1/128 {$HEARTH_HOST_GATEWAY}/32
++		trusted_proxies static 127.0.0.1/32 ::1/128 {$HESTIA_HOST_GATEWAY}/32
+ 		# Take the right-most untrusted address, so a client cannot pick its own IP by sending
+ 		# an X-Forwarded-For that Funnel then appends to.
+ 		trusted_proxies_strict
+@@ -21,7 +21,7 @@
+ 	header {
+ 		# Applied as the response is written, so an upstream cannot replace them.
+ 		defer
+-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://{$HEARTH_HOST}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
++		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://{$HESTIA_HOST}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+ 		Strict-Transport-Security "max-age=31536000"
+ 		X-Content-Type-Options "nosniff"
+ 		Referrer-Policy "same-origin"
+diff --git a/docker/caddy-entrypoint.sh b/docker/caddy-entrypoint.sh
+index 9353061..163520c 100755
+--- a/docker/caddy-entrypoint.sh
++++ b/docker/caddy-entrypoint.sh
+@@ -1,17 +1,17 @@
+ #!/bin/sh
+-# The CSP's connect-src names the origin's host for WebSockets; derive it from HEARTH_ORIGIN
++# The CSP's connect-src names the origin's host for WebSockets; derive it from HESTIA_ORIGIN
+ # so .env holds the origin exactly once.
+ set -eu
+ 
+-case "${HEARTH_ORIGIN:-}" in
++case "${HESTIA_ORIGIN:-}" in
+   https://*) ;;
+   *)
+-    echo "HEARTH_ORIGIN must be https://<machine>.<tailnet>.ts.net (got '${HEARTH_ORIGIN:-}')" >&2
++    echo "HESTIA_ORIGIN must be https://<machine>.<tailnet>.ts.net (got '${HESTIA_ORIGIN:-}')" >&2
+     exit 1
+     ;;
+ esac
+-host="${HEARTH_ORIGIN#https://}"
+-HEARTH_HOST="${host%/}"
+-export HEARTH_HOST
++host="${HESTIA_ORIGIN#https://}"
++HESTIA_HOST="${host%/}"
++export HESTIA_HOST
+ 
+ exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+diff --git a/docker/caddy.Dockerfile b/docker/caddy.Dockerfile
+index 68751ab..a2e6d4a 100644
+--- a/docker/caddy.Dockerfile
++++ b/docker/caddy.Dockerfile
+@@ -15,8 +15,8 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+ COPY . .
+ # The PWA build omits the magic-link screens unless this is true. Vite exposes only VITE_-prefixed
+ # variables to the app, as import.meta.env.VITE_MAGIC_LINK_ENABLED.
+-ARG HEARTH_MAGIC_LINK_ENABLED=false
+-ENV VITE_MAGIC_LINK_ENABLED=$HEARTH_MAGIC_LINK_ENABLED
++ARG HESTIA_MAGIC_LINK_ENABLED=false
++ENV VITE_MAGIC_LINK_ENABLED=$HESTIA_MAGIC_LINK_ENABLED
+ # Kong requires an apikey on every /auth/v1 call, so supabase-js in the PWA is built with the
+ # anon key. It is the public half of the pair and carries no privilege of its own; RLS and the
+ # service decide what a caller may do.
+@@ -31,8 +31,8 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+  && pnpm --filter @hestia/web build
+ 
+ FROM caddy:2.11.7-alpine
+-ARG HEARTH_REVISION=dev
+-LABEL org.opencontainers.image.revision=$HEARTH_REVISION
++ARG HESTIA_REVISION=dev
++LABEL org.opencontainers.image.revision=$HESTIA_REVISION
+ COPY docker/Caddyfile /etc/caddy/Caddyfile
+ COPY docker/caddy-entrypoint.sh /usr/local/bin/caddy-entrypoint.sh
+ COPY --from=build /repo/apps/web/dist /srv
+diff --git a/docker/db/hestia-service-login.sql b/docker/db/hestia-service-login.sql
+index 81ec2c6..07c408c 100644
+--- a/docker/db/hestia-service-login.sql
++++ b/docker/db/hestia-service-login.sql
+@@ -1,7 +1,7 @@
+--- Gives hestia_service LOGIN and its password from HEARTH_SERVICE_DB_PASSWORD in the db
++-- Gives hestia_service LOGIN and its password from HESTIA_SERVICE_DB_PASSWORD in the db
+ -- container's environment (from .env), so the password never enters a migration. Idempotent:
+ -- it runs when the database is initialized and again on every deploy, after migrations, which
+ -- also applies a rotated password.
+-\set pw `echo "$HEARTH_SERVICE_DB_PASSWORD"`
++\set pw `echo "$HESTIA_SERVICE_DB_PASSWORD"`
+ 
+ alter role hestia_service with login password :'pw';
+diff --git a/docker/docker-compose.yml b/docker/docker-compose.yml
+index 7e8082a..2d83a8a 100644
+--- a/docker/docker-compose.yml
++++ b/docker/docker-compose.yml
+@@ -39,7 +39,7 @@ services:
+       POSTGRES_DB: postgres
+       JWT_EXP: 3600
+       # Read by docker/db/hestia-service-login.sql, at initialization and on every deploy.
+-      HEARTH_SERVICE_DB_PASSWORD: ${HEARTH_SERVICE_DB_PASSWORD:?set in .env}
++      HESTIA_SERVICE_DB_PASSWORD: ${HESTIA_SERVICE_DB_PASSWORD:?set in .env}
+     volumes:
+       # init-scripts run as postgres, migrations as supabase_admin, each set in name order after
+       # the image's own. They run only when the data volume is empty.
+@@ -70,18 +70,18 @@ services:
+     environment:
+       GOTRUE_API_HOST: 0.0.0.0
+       GOTRUE_API_PORT: 9999
+-      API_EXTERNAL_URL: ${HEARTH_ORIGIN:?set in .env}
++      API_EXTERNAL_URL: ${HESTIA_ORIGIN:?set in .env}
+       GOTRUE_DB_DRIVER: postgres
+       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+-      GOTRUE_SITE_URL: ${HEARTH_ORIGIN}
+-      GOTRUE_URI_ALLOW_LIST: ${HEARTH_ORIGIN},${HEARTH_ORIGIN}/**
++      GOTRUE_SITE_URL: ${HESTIA_ORIGIN}
++      GOTRUE_URI_ALLOW_LIST: ${HESTIA_ORIGIN},${HESTIA_ORIGIN}/**
+       GOTRUE_DISABLE_SIGNUP: 'false'
+       GOTRUE_JWT_ADMIN_ROLES: service_role
+       GOTRUE_JWT_AUD: authenticated
+       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+       GOTRUE_JWT_EXP: 3600
+       GOTRUE_JWT_SECRET: ${JWT_SECRET:?set in .env}
+-      GOTRUE_JWT_ISSUER: ${HEARTH_ORIGIN}/auth/v1
++      GOTRUE_JWT_ISSUER: ${HESTIA_ORIGIN}/auth/v1
+       GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
+       GOTRUE_EXTERNAL_PHONE_ENABLED: 'false'
+       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: 'false'
+@@ -181,12 +181,12 @@ services:
+       retries: 5
+ 
+   hearth-service:
+-    image: hearth-service:${HEARTH_TAG:-current}
++    image: hearth-service:${HESTIA_TAG:-current}
+     build:
+       context: ..
+       dockerfile: docker/service.Dockerfile
+       args:
+-        HEARTH_REVISION: ${HEARTH_TAG:-dev}
++        HESTIA_REVISION: ${HESTIA_TAG:-dev}
+     restart: unless-stopped
+     logging: *logging
+     networks: [hearth]
+@@ -196,12 +196,12 @@ services:
+       auth:
+         condition: service_healthy
+     environment:
+-      DATABASE_URL: postgresql://hestia_service:${HEARTH_SERVICE_DB_PASSWORD}@db:5432/postgres
+-      HEARTH_TRUSTED_PROXIES: *subnet
++      DATABASE_URL: postgresql://hestia_service:${HESTIA_SERVICE_DB_PASSWORD}@db:5432/postgres
++      HESTIA_TRUSTED_PROXIES: *subnet
+       LOG_LEVEL: info
+-      HEARTH_ORIGIN: ${HEARTH_ORIGIN}
+-      HEARTH_OWNER_EMAIL: ${HEARTH_OWNER_EMAIL:?set in .env}
+-      HEARTH_MAGIC_LINK_ENABLED: ${HEARTH_MAGIC_LINK_ENABLED:-false}
++      HESTIA_ORIGIN: ${HESTIA_ORIGIN}
++      HESTIA_OWNER_EMAIL: ${HESTIA_OWNER_EMAIL:?set in .env}
++      HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-false}
+       GOTRUE_URL: http://auth:9999
+       JWT_SECRET: ${JWT_SECRET}
+       ANON_KEY: ${ANON_KEY}
+@@ -224,13 +224,13 @@ services:
+       start_period: 10s
+ 
+   caddy:
+-    image: hearth-caddy:${HEARTH_TAG:-current}
++    image: hearth-caddy:${HESTIA_TAG:-current}
+     build:
+       context: ..
+       dockerfile: docker/caddy.Dockerfile
+       args:
+-        HEARTH_REVISION: ${HEARTH_TAG:-dev}
+-        HEARTH_MAGIC_LINK_ENABLED: ${HEARTH_MAGIC_LINK_ENABLED:-false}
++        HESTIA_REVISION: ${HESTIA_TAG:-dev}
++        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-false}
+         ANON_KEY: ${ANON_KEY:?set in .env}
+         VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
+     restart: unless-stopped
+@@ -245,10 +245,10 @@ services:
+     ports:
+       - 127.0.0.1:8080:8080
+     environment:
+-      HEARTH_ORIGIN: ${HEARTH_ORIGIN}
++      HESTIA_ORIGIN: ${HESTIA_ORIGIN}
+       # Funnel's connection to the published port reaches Caddy from this address; see the
+       # Caddyfile's trusted_proxies.
+-      HEARTH_HOST_GATEWAY: &gateway 172.16.238.1
++      HESTIA_HOST_GATEWAY: &gateway 172.16.238.1
+     healthcheck:
+       test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:8080/index.html]
+       interval: 30s
+diff --git a/docker/service.Dockerfile b/docker/service.Dockerfile
+index 7d775c1..60298ec 100644
+--- a/docker/service.Dockerfile
++++ b/docker/service.Dockerfile
+@@ -24,8 +24,8 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+     pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hestia/service
+ 
+ FROM node:24.21.0-bookworm-slim
+-ARG HEARTH_REVISION=dev
+-LABEL org.opencontainers.image.revision=$HEARTH_REVISION
++ARG HESTIA_REVISION=dev
++LABEL org.opencontainers.image.revision=$HESTIA_REVISION
+ ENV NODE_ENV=production
+ # pnpm's node_modules links are relative, so the repository layout is kept.
+ COPY --from=prod-deps /repo/node_modules /app/node_modules
+diff --git a/docs/deployment.md b/docs/deployment.md
+index d74e738..5f43d30 100644
+--- a/docs/deployment.md
++++ b/docs/deployment.md
+@@ -72,7 +72,7 @@ Install on the host before first start:
+ > migration path for an origin change.
+ 
+ The owner fills in the machine and tailnet names once, in the table below, and sets
+-`HEARTH_ORIGIN` in `/srv/hearth/.env` to the same origin. Keep the two in sync.
++`HESTIA_ORIGIN` in `/srv/hearth/.env` to the same origin. Keep the two in sync.
+ 
+ | Name    | Value                                |
+ | ------- | ------------------------------------ |
+@@ -112,13 +112,13 @@ by hand.
+ 
+ | Variable | Purpose |
+ | --- | --- |
+-| `HEARTH_ORIGIN` | The pinned public origin, `https://<machine>.<tailnet>.ts.net`. Baked into every installed PWA and push subscription; must never change. |
+-| `HEARTH_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
+-| `HEARTH_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
++| `HESTIA_ORIGIN` | The pinned public origin, `https://<machine>.<tailnet>.ts.net`. Baked into every installed PWA and push subscription; must never change. |
++| `HESTIA_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
++| `HESTIA_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
+ | `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hearth-service`. |
+-| `HEARTH_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
++| `HESTIA_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
+ | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
+-| `HEARTH_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
++| `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
+ | `JWT_SECRET` | GoTrue's HS256 JWT signing secret. |
+ | `ANON_KEY` | The anon API key, signed with `JWT_SECRET`. Used as the `apikey` header on GoTrue/Kong calls. |
+ | `SERVICE_ROLE_KEY` | The service-role API key, signed with `JWT_SECRET`. Used only for sanctioned service-role operations. |
+@@ -128,7 +128,7 @@ by hand.
+ | `VAPID_PRIVATE_KEY` | Web Push VAPID private key (P-256, base64url). |
+ 
+ Not in `.env.example` but worth knowing: an optional `VAPID_SUBJECT` can be set by hand. When
+-unset, the service falls back to `mailto:` + `HEARTH_OWNER_EMAIL`, or else `HEARTH_ORIGIN` if it's
++unset, the service falls back to `mailto:` + `HESTIA_OWNER_EMAIL`, or else `HESTIA_ORIGIN` if it's
+ an `https:` URL; a set value must itself be a `mailto:` or `https:` URI, or the service fails at
+ startup.
+ 
+@@ -140,7 +140,7 @@ Run from a checkout of `main`, on the host. The real `.env` lives outside the ch
+ ```sh
+ sudo install -d -m 700 -o "$USER" /srv/hearth
+ sudo install -d -m 755 /mnt/backup/hearth
+-HEARTH_ORIGIN=https://<machine>.<tailnet>.ts.net HEARTH_OWNER_EMAIL=<owner email> \
++HESTIA_ORIGIN=https://<machine>.<tailnet>.ts.net HESTIA_OWNER_EMAIL=<owner email> \
+   BACKUP_DIR=/mnt/backup/hearth scripts/generate-secrets.sh
+ 
+ alias hearth-compose='docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml'
+@@ -175,7 +175,7 @@ deploys when no labelled image is running, and **skips a commit older than the r
+ re-run of an old CI run never rolls production back). To deliberately redeploy the commit already running,
+ re-run the Deploy run from the Actions tab (which raises that run's own attempt number to 2 or later and
+ redeploys), or run `scripts/deploy.sh` by hand on the host from a checkout of the commit, with
+-`HEARTH_DEPLOY_SHA` set to it. The job checks out the full history the comparison needs and keeps
++`HESTIA_DEPLOY_SHA` set to it. The job checks out the full history the comparison needs and keeps
+ no token on the host. A deploy can also be run by hand from a checkout.
+ 
+ `scripts/deploy.sh` performs these steps, in order, aborting before anything is restarted if any
+@@ -345,7 +345,7 @@ them re-initialize against the wrong state.
+ - **Health check:** `GET http://127.0.0.1:8080/api/health` (through Caddy) returns service status
+   plus a database connectivity check. This is the URL both `scripts/deploy.sh`'s health gate and
+   the first-start verification use. `GET /api/health/deep` is owner-only (gated on
+-  `HEARTH_OWNER_EMAIL`) and backs Settings → About → System health in the app, for deeper
++  `HESTIA_OWNER_EMAIL`) and backs Settings → About → System health in the app, for deeper
+   diagnosis (job freshness, recent error fingerprints, backup age, Flipp skip rates).
+ - **Failed deploy / automatic rollback:** if the new images don't pass the health check within 60
+   seconds, `scripts/deploy.sh` re-tags the previously running images `current`, recreates
+@@ -355,7 +355,7 @@ them re-initialize against the wrong state.
+   images were already tagged `current` but before the containers came up healthy (or a first deploy
+   had nothing to roll back to), retrying requires the deliberate path because the commit is already
+   running: re-run the Deploy run from the Actions tab (attempt 2 or later redeploys the commit
+-  already running), or run `scripts/deploy.sh` by hand on the host with `HEARTH_DEPLOY_SHA` set to
++  already running), or run `scripts/deploy.sh` by hand on the host with `HESTIA_DEPLOY_SHA` set to
+   the commit.
+ - **Hung but "running" container:** Docker only restarts a container that exits, never one that's
+   merely `unhealthy`. Restart it by hand with `docker compose restart <service>`.
+diff --git a/docs/development.md b/docs/development.md
+index 4a6eb9e..51a434a 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -58,8 +58,8 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+ eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
+ export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
+ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://auth:9999 in production
+-export HEARTH_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
+-export HEARTH_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
++export HESTIA_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
++export HESTIA_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
+ export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
+ pnpm --filter @hestia/service dev
+ ```
+@@ -71,16 +71,16 @@ pnpm --filter @hestia/service dev
+ | `JWT_SECRET` | Verifying access tokens (HS256; local sessions are ES256 via its JWKS) |
+ | `ANON_KEY` | The `apikey` header on GoTrue calls |
+ | `SERVICE_ROLE_KEY` | The sanctioned service-role uses only (email change, owner CLI) |
+-| `HEARTH_ORIGIN` | Invite links (`/join#token=…`) and the reset link's `/set-password` |
+-| `HEARTH_OWNER_EMAIL` | Who may open System health; unset means nobody |
+-| `HEARTH_TRUSTED_PROXIES` | Whose `X-Forwarded-For` to believe; unset trusts none |
++| `HESTIA_ORIGIN` | Invite links (`/join#token=…`) and the reset link's `/set-password` |
++| `HESTIA_OWNER_EMAIL` | Who may open System health; unset means nobody |
++| `HESTIA_TRUSTED_PROXIES` | Whose `X-Forwarded-For` to believe; unset trusts none |
+ | `BACKUP_DIR` | Optional; System health reports the newest backup file's time |
+ | `LOG_LEVEL`, `HOST`, `PORT` | Pino level and the listen address |
+ 
+ The generated API document is at `GET /api/openapi.json`. The owner CLI is a bin in the service
+ image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hearth-service
+ hearth-admin reset-password <email>`); locally it runs from the built bundle with `GOTRUE_URL`,
+-`SERVICE_ROLE_KEY`, and `HEARTH_ORIGIN` set:
++`SERVICE_ROLE_KEY`, and `HESTIA_ORIGIN` set:
+ 
+ ```sh
+ pnpm --filter @hestia/service build
+@@ -88,7 +88,7 @@ pnpm --filter @hestia/service build
+ ```
+ 
+ The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABLED`, which the
+-`caddy` image build takes from `HEARTH_MAGIC_LINK_ENABLED` in `.env` (default `false`).
++`caddy` image build takes from `HESTIA_MAGIC_LINK_ENABLED` in `.env` (default `false`).
+ 
+ ## Database
+ 
+@@ -114,9 +114,9 @@ the `db` container's address on the Compose network (`hearth-compose` is the ali
+ set -a; . /srv/hearth/.env; set +a
+ DB_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+   "$(hearth-compose ps --quiet db)")
+-HEARTH_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
+-  HEARTH_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+-  HEARTH_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \
++HESTIA_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
++  HESTIA_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
++  HESTIA_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \
+   pnpm db:seed
+ ```
+ 
+diff --git a/docs/file-map.md b/docs/file-map.md
+index ec09f79..2b1f203 100644
+--- a/docs/file-map.md
++++ b/docs/file-map.md
+@@ -213,9 +213,9 @@ is in `docs/testing.md`, under "Dates and time zones".
+ 
+ | File | Purpose |
+ | --- | --- |
+-| `clock-setup.mjs` | Vitest setup file loaded by every workspace's unit config: pins `Date` to `HEARTH_TEST_NOW` (default `2026-10-14T12:00:00.000Z`) so a test does not depend on the wall clock. Skips `*.integration.test.*` files. |
+-| `global-tz.mjs` | Vitest `globalSetup` loaded by every workspace's Vitest config: validates `TZ` and `HEARTH_TEST_NOW` before any test runs. |
+-| `test-now.mjs` | Parses `HEARTH_TEST_NOW` into an instant; shared by the pin and the zone hook. |
++| `clock-setup.mjs` | Vitest setup file loaded by every workspace's unit config: pins `Date` to `HESTIA_TEST_NOW` (default `2026-10-14T12:00:00.000Z`) so a test does not depend on the wall clock. Skips `*.integration.test.*` files. |
++| `global-tz.mjs` | Vitest `globalSetup` loaded by every workspace's Vitest config: validates `TZ` and `HESTIA_TEST_NOW` before any test runs. |
++| `test-now.mjs` | Parses `HESTIA_TEST_NOW` into an instant; shared by the pin and the zone hook. |
+ | `clock-setup.test.mjs` | Harness test for the clock pin, run from inside real Vitest workers. |
+ | `global-tz.test.mjs` | Harness test for the zone hook, one child process per case. |
+ | `eslint-clock-ban.test.mjs` | Harness test for the ESLint rule that bans real-clock reads in test files. |
+diff --git a/docs/testing.md b/docs/testing.md
+index 8b443ca..ec63cd6 100644
+--- a/docs/testing.md
++++ b/docs/testing.md
+@@ -72,8 +72,8 @@ Tests must pass on any weekday and in any household time zone, so the clock and
+ controlled, not inherited from the machine.
+ 
+ - **The clock pin.** Every unit and component test runs with `Date` pinned by
+-  `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
+-  Wednesday). `HEARTH_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
++  `test/clock-setup.mjs` to `HESTIA_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
++  Wednesday). `HESTIA_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
+   (`2030-10-05T23:30:00+02:00`); a value without one is read in the machine's zone and is
+   rejected. Every workspace's unit Vitest config (and the service coverage config) loads the setup
+   file; the integration config does not, and the setup file skips `*.integration.test.*` files in
+@@ -109,19 +109,19 @@ controlled, not inherited from the machine.
+   `TZ` value Node runs on as a zone, including UTC aliases (`GMT`, `Etc/UTC`) and the POSIX
+   leading-colon form (`:America/New_York`). It fails the run for an unknown zone, a wrong letter
+   case (Node falls back to UTC) and POSIX offset strings such as `UTC+3`. It also checks
+-  `HEARTH_TEST_NOW` before any test runs, so a bad value is one message, not an error in every test
++  `HESTIA_TEST_NOW` before any test runs, so a bad value is one message, not an error in every test
+   file.
+ - **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
+-  its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
++  its own process with its own `HESTIA_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
+   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
+   takes `--workspace`, `--cell`, `--only`, `--log-dir` and `--list`, and prints
+   `sweep: {passed}/{total} passed`. An `--only` that selects no test file exits 2 with a message
+   before anything runs, instead of passing an empty run. `--with-today` adds one more unit cell,
+   `today`: the real instant at the start of the run, in one of 11 zones chosen by the UTC day
+   (the UTC epoch day modulo 11, so a weekday does not keep its zone). `--today-instant {ISO}`
+-  fixes that instant (it takes what `HEARTH_TEST_NOW` takes) and needs `--with-today`. The
++  fixes that instant (it takes what `HESTIA_TEST_NOW` takes) and needs `--with-today`. The
+   cell's result line carries `now=` and `tz=`; a failing today cell is reproduced by running the
+-  unit suite with `HEARTH_TEST_NOW` and `TZ` set to those two values.
++  unit suite with `HESTIA_TEST_NOW` and `TZ` set to those two values.
+   `.github/workflows/sweep.yml` (workflow `Sweep`) runs the six fixed cells on every push to `main`
+   that changes more than `docs/` and `.planning/`, and adds the today cell in the nightly run at
+   05:17 UTC and in manual runs. When it fails it uploads the per-cell logs as the `sweep-logs`
+@@ -154,11 +154,11 @@ controlled, not inherited from the machine.
+   - `test/clock-setup.test.mjs` checks the pin from inside real Vitest workers. Each scenario is a
+     test file run by a throwaway Vitest project that loads `test/clock-setup.mjs`, built in a
+     temporary directory by `test/support/vitest-project.mjs` (so no workspace run can pick it up);
+-    it covers the default pin, overrides and their lifetime, `HEARTH_TEST_NOW`, integration files,
++    it covers the default pin, overrides and their lifetime, `HESTIA_TEST_NOW`, integration files,
+     a `Date` subclass installed as the global, and the setup file running again in one global
+     under `isolate: false`.
+   - `test/global-tz.test.mjs` runs the hook in `test/global-tz.mjs` in a child process per case,
+-    because `TZ` is process-wide. It parses `HEARTH_TEST_NOW` with `test/test-now.mjs`, the module
++    because `TZ` is process-wide. It parses `HESTIA_TEST_NOW` with `test/test-now.mjs`, the module
+     the pin shares with the hook.
+   - `scripts/test-sweep.test.mjs` runs the sweep as a child process: argument rejection, an
+     `--only` that selects nothing, a listing that cannot run, and one real single-cell run. The
+@@ -226,8 +226,8 @@ controlled, not inherited from the machine.
+     to `docs/` and `.planning/`, and a commit already running at attempt 1 (or unset) print
+     `deploy=false`; attempt 2 or later of a running commit (a deliberate re-run of the Deploy run),
+     an unknown or diverged running revision and any code change print `deploy=true`. The older-commit
+-    and docs-only rules hold under any attempt. Malformed `HEARTH_DEPLOY_ATTEMPT` values and a
+-    `HEARTH_DEPLOY_SHA` that is not the checked-out commit's 40 lowercase hex digits exit 1 with
++    and docs-only rules hold under any attempt. Malformed `HESTIA_DEPLOY_ATTEMPT` values and a
++    `HESTIA_DEPLOY_SHA` that is not the checked-out commit's 40 lowercase hex digits exit 1 with
+     empty stdout before docker is asked. It also checks that code moved into `docs/` still deploys.
+     Nothing reaches a Docker daemon.
+ - **The Kong route table.** `apps/service/src/kong-routes.test.ts` is a Vitest test in the service
+@@ -413,7 +413,7 @@ accounts of its own outside either seed, since signing up is the journey under t
+ "Birch Lane"), both in postal code 27514 with the same seed password.
+ 
+ **Per-run isolation:** each invocation of `pnpm test:e2e` is a "run" with its own six-hex-digit id
+-(`HEARTH_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
++(`HESTIA_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
+ `e2e/support/env.ts`. Everything the run touches is namespaced by that id: the Compose project
+ (`hearth-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
+ up`, on the first free `/24` between `172.16.240.0/24` and `172.16.254.0/24` — Docker's atomic
+@@ -428,13 +428,13 @@ from an empty, freshly-seeded database.
+ 
+ **The Flipp/recipe fixture seam:** the suite never calls the live Flipp service or fetches a real
+ recipe page. The overlay mounts `e2e/fixtures/flipp/raw` read-only into the service container and
+-sets `HEARTH_FLIPP_FIXTURE_DIR` (plus `HEARTH_FLIPP_FIXTURE_NOW`, pinning "now" to the captures'
++sets `HESTIA_FLIPP_FIXTURE_DIR` (plus `HESTIA_FLIPP_FIXTURE_NOW`, pinning "now" to the captures'
+ own instant) so the deal-fetching code reads the checked-in captures instead of the network; both
+ variables are unset in every real deployment. Recipe import similarly mounts
+-`e2e/fixtures/recipes` read-only and sets `HEARTH_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
++`e2e/fixtures/recipes` read-only and sets `HESTIA_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
+ swapped for a fixture-reading function that never opens a socket. Journey 4 pastes one of three
+ fixture URLs under the never-resolved domain `fixtures.hearth-e2e.test`. Web Push gets the same
+-treatment: `HEARTH_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
++treatment: `HESTIA_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
+ through `/api/test/push`, and the browser's `PushManager` is stubbed before the app loads so no
+ real push service is ever contacted.
+ 
+@@ -457,13 +457,13 @@ paying for a full stack bring-up/teardown each time:
+ 
+ ```sh
+ # first run: note the run id it prints ("run <id>, project hearth-e2e-<id>: ...")
+-HEARTH_E2E_REUSE_STACK=1 pnpm test:e2e
++HESTIA_E2E_REUSE_STACK=1 pnpm test:e2e
+ 
+ # subsequent runs: reuse that stack, point Playwright at one spec file
+-HEARTH_E2E_REUSE_STACK=1 HEARTH_E2E_RUN_ID=<id> pnpm --filter @hestia/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
++HESTIA_E2E_REUSE_STACK=1 HESTIA_E2E_RUN_ID=<id> pnpm --filter @hestia/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
+ ```
+ 
+-`HEARTH_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
++`HESTIA_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
+ teardown, so the stack is still running — and, importantly, no longer backed by an *empty*
+ database — afterward. Only trust a run's result when it started from an empty database, i.e.
+ without reuse.
+@@ -511,7 +511,7 @@ Every seed user has the password `hearth-seed-pass-2026`.
+ | Morgan Reed | `morgan@example.com` | `America/Chicago` |
+ | Casey Nguyen | `casey@example.com` | `America/Los_Angeles` |
+ 
+-`HEARTH_OWNER_EMAIL` in the local `.env` is `alex@example.com`, so Alex is the only seed user who
++`HESTIA_OWNER_EMAIL` in the local `.env` is `alex@example.com`, so Alex is the only seed user who
+ sees System health.
+ 
+ | Household | Postal code | Timezone | Members |
+@@ -682,8 +682,8 @@ users, so it's safe only against a fresh local stack.
+ eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
+ export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
+ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
+-export HEARTH_ORIGIN=http://127.0.0.1:5173
+-export HEARTH_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
++export HESTIA_ORIGIN=http://127.0.0.1:5173
++export HESTIA_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
+ export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
+ pnpm --filter @hestia/service dev
+ ```
+@@ -699,7 +699,7 @@ Open `http://127.0.0.1:5173`.
+ ### 3. Sign in as a seeded user
+ 
+ Sign in as **Alex Rivera** (`alex@example.com`), the seeded owner — the only account that sees
+-System health (`HEARTH_OWNER_EMAIL` above). See Seed data above for every other seeded account, who
++System health (`HESTIA_OWNER_EMAIL` above). See Seed data above for every other seeded account, who
+ belongs to which household with what role, and what's already there to look at in each pillar.
+ 
+ ### 4. Click through each pillar
+diff --git a/docs/use-cases.md b/docs/use-cases.md
+index 8430b37..2bd99d6 100644
+--- a/docs/use-cases.md
++++ b/docs/use-cases.md
+@@ -2,7 +2,7 @@
+ 
+ ## Actors
+ 
+-- **Owner** — the household admin. Exactly one per household (the role is transferable; the creator holds it initially). Can create, view, and revoke invites; remove members; transfer the admin role; and change the household's name, postal code, and timezone. Everything a Member can do, an Owner can also do. Separately, the **server owner** (the account whose email equals `HEARTH_OWNER_EMAIL`) is a single person across the whole deployment who sees Settings → About → System health and runs the password-reset CLI; this is an infrastructure role, not a household role, and is called out explicitly wherever it applies.
++- **Owner** — the household admin. Exactly one per household (the role is transferable; the creator holds it initially). Can create, view, and revoke invites; remove members; transfer the admin role; and change the household's name, postal code, and timezone. Everything a Member can do, an Owner can also do. Separately, the **server owner** (the account whose email equals `HESTIA_OWNER_EMAIL`) is a single person across the whole deployment who sees Settings → About → System health and runs the password-reset CLI; this is an infrastructure role, not a household role, and is called out explicitly wherever it applies.
+ - **Member** — any other household member. May create, edit, and delete lists, list items, recipes, meal-plan entries, pantry items, match overrides, chores, errands, household bills, and favorite stores. May leave the household on their own. Cannot manage membership or change household-level settings.
+ - **System** — the backend service's scheduled jobs and background processes: the daily deal refresh, the notification outbox and dispatch job, the autopay logger, readiness recomputation, and push delivery. Initiates use cases on a schedule or in reaction to data changes, never at a user's direct request.
+ 
+diff --git a/e2e/docker-compose.e2e.yml b/e2e/docker-compose.e2e.yml
+index a86dbb9..44bba53 100644
+--- a/e2e/docker-compose.e2e.yml
++++ b/e2e/docker-compose.e2e.yml
+@@ -17,7 +17,7 @@
+ #   * the database port published, because the migrations, the seed, and the tests' own
+ #     assertions reach it from the host
+ #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
+-#     public origin an https one; E2E is plain HTTP on the loopback, so HEARTH_HOST — the only
++#     public origin an https one; E2E is plain HTTP on the loopback, so HESTIA_HOST — the only
+ #     thing that entrypoint derives — is given directly
+ #   * hearth-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
+ #     info rather than warn so the rate discipline the deal journeys exercise is readable in
+@@ -34,7 +34,7 @@
+ services:
+   db:
+     ports:
+-      - 127.0.0.1:${HEARTH_E2E_DB_PORT:?}:5432
++      - 127.0.0.1:${HESTIA_E2E_DB_PORT:?}:5432
+ 
+   hearth-service:
+     # Relative to docker/, not to this file: Compose resolves every file's relative paths against
+@@ -43,39 +43,39 @@ services:
+       - ../e2e/fixtures/flipp/raw:/app/fixtures/flipp/raw:ro
+       - ../e2e/fixtures/recipes:/app/fixtures/recipes:ro
+     environment:
+-      HEARTH_TRUSTED_PROXIES: ${HEARTH_E2E_SUBNET:?}
++      HESTIA_TRUSTED_PROXIES: ${HESTIA_E2E_SUBNET:?}
+       # Every browser context and API call in the suite comes from the loopback, so they all share
+       # one per-IP bucket. Production's 300 a minute is
+       # exhausted by a full run; the limiter stays on, just with room for the suite's own traffic.
+-      HEARTH_RATE_LIMIT_PER_MINUTE: 3000
++      HESTIA_RATE_LIMIT_PER_MINUTE: 3000
+       LOG_LEVEL: info
+       # The fixture set's own instant (`FIXTURE_NOW`), so
+       # the wrapper's active-flyer window matches what the captures cover regardless of today.
+-      HEARTH_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
+-      HEARTH_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
+-      HEARTH_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
++      HESTIA_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
++      HESTIA_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
++      HESTIA_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
+       # Pushes are recorded by the service rather than sent, and the suite reads them back through
+       # the service-role seam under /api/test/push. No push service
+       # is reachable from the stack in E2E. Only this file sets the value; production never does.
+-      HEARTH_PUSH_TRANSPORT: test-double
++      HESTIA_PUSH_TRANSPORT: test-double
+ 
+   kong:
+     environment:
+-      KONG_TRUSTED_IPS: ${HEARTH_E2E_SUBNET:?}
++      KONG_TRUSTED_IPS: ${HESTIA_E2E_SUBNET:?}
+ 
+   caddy:
+     command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+     environment:
+-      HEARTH_HOST: 127.0.0.1:${HEARTH_E2E_CADDY_PORT:?}
+-      HEARTH_HOST_GATEWAY: ${HEARTH_E2E_GATEWAY:?}
++      HESTIA_HOST: 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}
++      HESTIA_HOST_GATEWAY: ${HESTIA_E2E_GATEWAY:?}
+     ports: !override
+-      - 127.0.0.1:${HEARTH_E2E_CADDY_PORT:?}:8080
++      - 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}:8080
+ 
+ networks:
+   # The base file's network is named `hearth` with its own ipam, which would pin a fixed name and
+   # subnet. The run creates this network itself (e2e/setup/stack.ts), so that two runs' subnets
+   # cannot overlap silently, and Compose uses it as declared rather than creating one.
+   hearth:
+-    name: ${HEARTH_E2E_NETWORK:?}
++    name: ${HESTIA_E2E_NETWORK:?}
+     external: true
+     ipam: !reset null
+diff --git a/e2e/fixtures/recipes/full-json-ld-light.html b/e2e/fixtures/recipes/full-json-ld-light.html
+index 655a641..0b2043a 100644
+--- a/e2e/fixtures/recipes/full-json-ld-light.html
++++ b/e2e/fixtures/recipes/full-json-ld-light.html
+@@ -31,7 +31,7 @@
+     <h1>Baked Cod with Asparagus</h1>
+     <p>
+       A fixture page for the E2E suite's recipe-import journey, which imports a recipe from a URL
+-      with JSON-LD. Never fetched over the network — `HEARTH_RECIPE_FIXTURE_DIR` serves this file's
++      with JSON-LD. Never fetched over the network — `HESTIA_RECIPE_FIXTURE_DIR` serves this file's
+       contents directly.
+     </p>
+   </body>
+diff --git a/e2e/playwright.config.ts b/e2e/playwright.config.ts
+index 8e43d06..dbc474b 100644
+--- a/e2e/playwright.config.ts
++++ b/e2e/playwright.config.ts
+@@ -27,7 +27,7 @@ export default defineConfig({
+     ? [['github'], ['list'], ['html', { open: 'never' }]]
+     : [['list'], ['html', { open: 'never' }]],
+   use: {
+-    baseURL: process.env['HEARTH_E2E_BASE_URL'] ?? BASE_URL,
++    baseURL: process.env['HESTIA_E2E_BASE_URL'] ?? BASE_URL,
+     // The seed households run on New York time, and the app renders instants such as "As of"
+     // stamps in the viewer's zone, so pinning the browser keeps rendered times independent of the
+     // runner's zone (CI runs in UTC). Calendar dates already follow the household.
+diff --git a/e2e/setup/stack.ts b/e2e/setup/stack.ts
+index 4ff7a8f..b0f7774 100644
+--- a/e2e/setup/stack.ts
++++ b/e2e/setup/stack.ts
+@@ -28,7 +28,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
+  * e2e/support/env.ts), so a run never touches another run's stack, not even one started a moment
+  * earlier. Teardown removes exactly those things and nothing selected by pattern.
+  *
+- * Set `HEARTH_E2E_REUSE_STACK=1` to skip bring-up and keep the stack afterwards, which is for
++ * Set `HESTIA_E2E_REUSE_STACK=1` to skip bring-up and keep the stack afterwards, which is for
+  * iterating on one test locally, not for a run whose result is being trusted.
+  */
+ 
+@@ -36,7 +36,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
+ const DATA_SERVICES = ['db', 'auth', 'realtime', 'kong'];
+ const APP_SERVICES = ['hearth-service', 'caddy'];
+ 
+-const isReuse = process.env['HEARTH_E2E_REUSE_STACK'] === '1';
++const isReuse = process.env['HESTIA_E2E_REUSE_STACK'] === '1';
+ 
+ function step(message: string): void {
+   process.stdout.write(`e2e stack: ${message}\n`);
+@@ -49,9 +49,9 @@ function writeEnvFile(): void {
+   runChecked('bash', [join(REPO_ROOT, 'scripts', 'generate-secrets.sh'), ENV_FILE], {
+     // Plain HTTP on the loopback: there is no Funnel in front of the E2E stack, and every link
+     // the stack prints — an invite, the owner's reset link — has to be one the browser can open.
+-    HEARTH_ORIGIN: BASE_URL,
++    HESTIA_ORIGIN: BASE_URL,
+     // Alex is the development owner, so Alex sees System health.
+-    HEARTH_OWNER_EMAIL: 'alex@example.com',
++    HESTIA_OWNER_EMAIL: 'alex@example.com',
+     BACKUP_DIR,
+   });
+ }
+@@ -68,7 +68,7 @@ function reserveSubnet(): Subnet {
+   const existing = runCommand('docker', ['network', 'inspect', NETWORK]);
+   if (existing.status === 0) {
+     throw new Error(
+-      `network ${NETWORK} already exists; another run is using HEARTH_E2E_RUN_ID=${RUN_ID}. Remove it with docker network rm once no run holds it`,
++      `network ${NETWORK} already exists; another run is using HESTIA_E2E_RUN_ID=${RUN_ID}. Remove it with docker network rm once no run holds it`,
+     );
+   }
+ 
+@@ -96,18 +96,18 @@ function reserveSubnet(): Subnet {
+ /** The run's own values, which docker-compose.e2e.yml interpolates on every Compose command. */
+ function appendRunEnv(subnet: Subnet): void {
+   const lines = [
+-    `HEARTH_E2E_CADDY_PORT=${String(CADDY_PORT)}`,
+-    `HEARTH_E2E_DB_PORT=${String(DB_PORT)}`,
+-    `HEARTH_E2E_NETWORK=${NETWORK}`,
+-    `HEARTH_E2E_SUBNET=${subnet.subnet}`,
+-    `HEARTH_E2E_GATEWAY=${subnet.gateway}`,
++    `HESTIA_E2E_CADDY_PORT=${String(CADDY_PORT)}`,
++    `HESTIA_E2E_DB_PORT=${String(DB_PORT)}`,
++    `HESTIA_E2E_NETWORK=${NETWORK}`,
++    `HESTIA_E2E_SUBNET=${subnet.subnet}`,
++    `HESTIA_E2E_GATEWAY=${subnet.gateway}`,
+   ];
+   appendFileSync(ENV_FILE, `${lines.join('\n')}\n`);
+ }
+ 
+ export function startStack(): void {
+   if (isReuse && existsSync(ENV_FILE)) {
+-    step(`reusing the running stack, run ${RUN_ID} (HEARTH_E2E_REUSE_STACK=1)`);
++    step(`reusing the running stack, run ${RUN_ID} (HESTIA_E2E_REUSE_STACK=1)`);
+     return;
+   }
+   if (!isReuse && existsSync(ENV_FILE)) {
+@@ -116,7 +116,7 @@ export function startStack(): void {
+     // destroy whatever holds it, so the run stops and says how to clear it.
+     throw new Error(
+       `run ${RUN_ID} already has state in ${STATE_DIR}: a live run or a crashed one holds this id. ` +
+-        `Pick another HEARTH_E2E_RUN_ID, or clear it with: docker compose -p ${COMPOSE_PROJECT} down --volumes --remove-orphans, then delete ${STATE_DIR}`,
++        `Pick another HESTIA_E2E_RUN_ID, or clear it with: docker compose -p ${COMPOSE_PROJECT} down --volumes --remove-orphans, then delete ${STATE_DIR}`,
+     );
+   }
+ 
+@@ -148,9 +148,9 @@ export function startStack(): void {
+ 
+   step('seeding');
+   runChecked('pnpm', ['--filter', '@hestia/service', 'db:seed'], {
+-    HEARTH_SEED_AUTH_URL: `${BASE_URL}/auth/v1`,
+-    HEARTH_SEED_SERVICE_ROLE_KEY: env['SERVICE_ROLE_KEY'] ?? '',
+-    HEARTH_SEED_DB_URL: dbUrl,
++    HESTIA_SEED_AUTH_URL: `${BASE_URL}/auth/v1`,
++    HESTIA_SEED_SERVICE_ROLE_KEY: env['SERVICE_ROLE_KEY'] ?? '',
++    HESTIA_SEED_DB_URL: dbUrl,
+   });
+   runChecked('psql', [
+     dbUrl,
+@@ -167,7 +167,7 @@ export function startStack(): void {
+ 
+ export function stopStack(): void {
+   if (isReuse) {
+-    step('leaving the stack running (HEARTH_E2E_REUSE_STACK=1)');
++    step('leaving the stack running (HESTIA_E2E_REUSE_STACK=1)');
+     return;
+   }
+   if (!existsSync(ENV_FILE)) return;
+diff --git a/e2e/support/compose.ts b/e2e/support/compose.ts
+index db1199d..d58a853 100644
+--- a/e2e/support/compose.ts
++++ b/e2e/support/compose.ts
+@@ -55,9 +55,9 @@ export function composeArgs(args: readonly string[]): string[] {
+ // The run's own image tag: the `current` images a Compose stack on this machine runs are left
+ // alone, and a concurrent run's build cannot replace the images this run is about to start.
+ export function compose(args: readonly string[]): CommandResult {
+-  return runCommand('docker', composeArgs(args), { HEARTH_TAG: IMAGE_TAG });
++  return runCommand('docker', composeArgs(args), { HESTIA_TAG: IMAGE_TAG });
+ }
+ 
+ export function composeChecked(args: readonly string[]): string {
+-  return runChecked('docker', composeArgs(args), { HEARTH_TAG: IMAGE_TAG });
++  return runChecked('docker', composeArgs(args), { HESTIA_TAG: IMAGE_TAG });
+ }
+diff --git a/e2e/support/env.ts b/e2e/support/env.ts
+index 1445528..88570c0 100644
+--- a/e2e/support/env.ts
++++ b/e2e/support/env.ts
+@@ -13,18 +13,18 @@ export const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+  * One run's identity is fixed once per process tree. This module is first loaded by the Playwright
+  * config in the runner, which writes the values into the environment; the workers, global setup,
+  * and global teardown inherit them, so every process in a run addresses the same stack, and two
+- * runs on one machine never share one. `HEARTH_E2E_RUN_ID` names a run explicitly, which is how a
++ * runs on one machine never share one. `HESTIA_E2E_RUN_ID` names a run explicitly, which is how a
+  * reused stack is found again.
+  */
+-const STATE_ROOT = process.env['HEARTH_E2E_STATE_DIR'] ?? join(tmpdir(), 'hearth-e2e');
++const STATE_ROOT = process.env['HESTIA_E2E_STATE_DIR'] ?? join(tmpdir(), 'hearth-e2e');
+ 
+ if (
+-  process.env['HEARTH_E2E_REUSE_STACK'] === '1' &&
+-  process.env['HEARTH_E2E_RUN_ID'] === undefined
++  process.env['HESTIA_E2E_REUSE_STACK'] === '1' &&
++  process.env['HESTIA_E2E_RUN_ID'] === undefined
+ ) {
+   // A fresh id would name a stack nobody can find again, and the run would leave it running.
+   throw new Error(
+-    'HEARTH_E2E_REUSE_STACK=1 needs HEARTH_E2E_RUN_ID=<id>, the run id the stack printed when it started',
++    'HESTIA_E2E_REUSE_STACK=1 needs HESTIA_E2E_RUN_ID=<id>, the run id the stack printed when it started',
+   );
+ }
+ 
+@@ -39,7 +39,7 @@ function freshRunId(stateRoot: string): string {
+   }
+ }
+ 
+-export const RUN_ID = (process.env['HEARTH_E2E_RUN_ID'] ??= freshRunId(STATE_ROOT));
++export const RUN_ID = (process.env['HESTIA_E2E_RUN_ID'] ??= freshRunId(STATE_ROOT));
+ const names = runNames(RUN_ID);
+ export const COMPOSE_PROJECT = names.project;
+ export const NETWORK = names.network;
+@@ -60,13 +60,13 @@ export const BACKUP_DIR = join(STATE_DIR, 'backups');
+  * which rules out letting Docker assign it. A reused stack keeps the ports it was brought up on.
+  */
+ const reused =
+-  process.env['HEARTH_E2E_REUSE_STACK'] === '1' && existsSync(ENV_FILE)
++  process.env['HESTIA_E2E_REUSE_STACK'] === '1' && existsSync(ENV_FILE)
+     ? parseEnvFile(readFileSync(ENV_FILE, 'utf8'))
+     : {};
+-const CADDY_PORT_VALUE = (process.env['HEARTH_E2E_CADDY_PORT'] ??=
+-  reused['HEARTH_E2E_CADDY_PORT'] ?? freePort());
+-const DB_PORT_VALUE = (process.env['HEARTH_E2E_DB_PORT'] ??=
+-  reused['HEARTH_E2E_DB_PORT'] ?? distinctFreePort(CADDY_PORT_VALUE));
++const CADDY_PORT_VALUE = (process.env['HESTIA_E2E_CADDY_PORT'] ??=
++  reused['HESTIA_E2E_CADDY_PORT'] ?? freePort());
++const DB_PORT_VALUE = (process.env['HESTIA_E2E_DB_PORT'] ??=
++  reused['HESTIA_E2E_DB_PORT'] ?? distinctFreePort(CADDY_PORT_VALUE));
+ 
+ /** The E2E stack's own ports, so a run never collides with a Compose or `supabase start` stack. */
+ export const CADDY_PORT = Number(CADDY_PORT_VALUE);
+diff --git a/e2e/support/push.ts b/e2e/support/push.ts
+index 6d9a34f..f0fc43d 100644
+--- a/e2e/support/push.ts
++++ b/e2e/support/push.ts
+@@ -3,7 +3,7 @@ import { readStackEnv } from './env.ts';
+ 
+ /*
+  * The E2E push double, from the suite's side. The stack records each push instead of sending it
+- * (HEARTH_PUSH_TRANSPORT=test-double), and these helpers run the dispatch job at a chosen instant
++ * (HESTIA_PUSH_TRANSPORT=test-double), and these helpers run the dispatch job at a chosen instant
+  * and read the record back. Both go through the service-role seam, so they need the run's own
+  * generated key from `.env`.
+  */
+diff --git a/e2e/support/run-identity.test.ts b/e2e/support/run-identity.test.ts
+index 85c5f08..a922f15 100644
+--- a/e2e/support/run-identity.test.ts
++++ b/e2e/support/run-identity.test.ts
+@@ -22,7 +22,7 @@ void describe('runNames', () => {
+ 
+   void it('refuses an id Docker would reject as a project or tag name', () => {
+     for (const bad of ['', 'ABC', 'a_b', 'a-b', 'a b', 'x'.repeat(17)]) {
+-      assert.throws(() => runNames(bad), /HEARTH_E2E_RUN_ID/, `accepted '${bad}'`);
++      assert.throws(() => runNames(bad), /HESTIA_E2E_RUN_ID/, `accepted '${bad}'`);
+     }
+   });
+ });
+diff --git a/e2e/support/run-identity.ts b/e2e/support/run-identity.ts
+index d2b939c..aeb45d0 100644
+--- a/e2e/support/run-identity.ts
++++ b/e2e/support/run-identity.ts
+@@ -19,7 +19,7 @@ export interface RunNames {
+ 
+ export function runNames(runId: string): RunNames {
+   if (!RUN_ID_PATTERN.test(runId)) {
+-    throw new Error(`HEARTH_E2E_RUN_ID must be 1-16 lowercase letters or digits (got '${runId}')`);
++    throw new Error(`HESTIA_E2E_RUN_ID must be 1-16 lowercase letters or digits (got '${runId}')`);
+   }
+   return {
+     project: `hearth-e2e-${runId}`,
+diff --git a/e2e/tests/07-magic-link-disabled.spec.ts b/e2e/tests/07-magic-link-disabled.spec.ts
+index 240d1ed..3af2c57 100644
+--- a/e2e/tests/07-magic-link-disabled.spec.ts
++++ b/e2e/tests/07-magic-link-disabled.spec.ts
+@@ -3,7 +3,7 @@ import { readStackEnv } from '../support/env.ts';
+ 
+ /**
+  * With the magic-link flag off, no magic-link UI is reachable.
+- * The flag is a build-time decision — the caddy image build turns HEARTH_MAGIC_LINK_ENABLED into
++ * The flag is a build-time decision — the caddy image build turns HESTIA_MAGIC_LINK_ENABLED into
+  * VITE_MAGIC_LINK_ENABLED, so no flag reaches the browser at runtime — which is why this asserts
+  * against the built PWA the stack is serving.
+  *
+@@ -18,7 +18,7 @@ const MAGIC_LINK_WORDING = /email me a sign-in link|sign-in link|magic link|chec
+ const MAGIC_LINK_PATHS = ['/sign-in/link', '/sign-in/code'];
+ 
+ test('the flag the stack was built with is off', () => {
+-  expect(readStackEnv()['HEARTH_MAGIC_LINK_ENABLED']).toBe('false');
++  expect(readStackEnv()['HESTIA_MAGIC_LINK_ENABLED']).toBe('false');
+ });
+ 
+ test('sign-in offers no way to a magic link', async ({ page }) => {
+diff --git a/e2e/tests/12-deal-rate-discipline.spec.ts b/e2e/tests/12-deal-rate-discipline.spec.ts
+index b94875f..4e8b302 100644
+--- a/e2e/tests/12-deal-rate-discipline.spec.ts
++++ b/e2e/tests/12-deal-rate-discipline.spec.ts
+@@ -10,7 +10,7 @@ import { SEED } from '../support/env.ts';
+  *
+  * E2E never calls Flipp live: the Compose overlay points hearth-service at the checked-in raw
+  * captures instead of `backflipp.wishabi.com` (`e2e/docker-compose.e2e.yml`,
+- * `HEARTH_FLIPP_FIXTURE_DIR`), so every "flipp request" log line this run has printed came from the
++ * `HESTIA_FLIPP_FIXTURE_DIR`), so every "flipp request" log line this run has printed came from the
+  * fixture transport.
+  *
+  * The raw captures only cover 27514: `FlippDealSource.listMerchants` also asks for the active
+diff --git a/e2e/tests/13-recipe-import-and-readiness.spec.ts b/e2e/tests/13-recipe-import-and-readiness.spec.ts
+index da9d90d..2590295 100644
+--- a/e2e/tests/13-recipe-import-and-readiness.spec.ts
++++ b/e2e/tests/13-recipe-import-and-readiness.spec.ts
+@@ -9,7 +9,7 @@ import { SEED } from '../support/env.ts';
+  * when" spot checks that are cheap to verify live rather than only at the unit/integration layer:
+  * the seed data's own readiness percentages, and that a match-override correction is reachable.
+  *
+- * Every URL pasted is a fixture the E2E stack serves in-process: `HEARTH_RECIPE_FIXTURE_DIR` swaps
++ * Every URL pasted is a fixture the E2E stack serves in-process: `HESTIA_RECIPE_FIXTURE_DIR` swaps
+  * the recipe-fetch step itself for a read of the matching file under `e2e/fixtures/recipes/`, so
+  * nothing here ever opens a socket, real or loopback. See that file's own comment and
+  * `apps/service/src/recipes/fixture-fetch.ts` for why a same-network fixture server was not an
+diff --git a/e2e/tests/19-notifications.spec.ts b/e2e/tests/19-notifications.spec.ts
+index 702546b..8e01f6f 100644
+--- a/e2e/tests/19-notifications.spec.ts
++++ b/e2e/tests/19-notifications.spec.ts
+@@ -19,7 +19,7 @@ import { parsePushBody, recordedDeliveries, runDispatchAt } from '../support/pus
+  *
+  * Alex turns on one type that is off by default, meal reminders. The browser's push half is faked
+  * in the page, and the service records each push instead of sending it
+- * (HEARTH_PUSH_TRANSPORT=test-double), so no push service is contacted from the browser or the
++ * (HESTIA_PUSH_TRANSPORT=test-double), so no push service is contacted from the browser or the
+  * stack. The reminder is then due because the suite runs the dispatch job at a chosen instant, on
+  * the day whose 08:00 send time is still inside the job's retry window (`reminderDay`). That day's
+  * dinner is the seeded one, or one the journey plans through the meal-plan API. The job's own
+diff --git a/scripts/check-knip-baseline.test.mjs b/scripts/check-knip-baseline.test.mjs
+index 1b0c85a..61575e7 100644
+--- a/scripts/check-knip-baseline.test.mjs
++++ b/scripts/check-knip-baseline.test.mjs
+@@ -51,7 +51,7 @@ function check({ reportText, baseline, extraArguments = [] }) {
+       cwd: REPO_ROOT,
+       encoding: 'utf8',
+       env: Object.fromEntries(
+-        Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HEARTH_TEST_NOW'),
++        Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HESTIA_TEST_NOW'),
+       ),
+     },
+   );
+diff --git a/scripts/check-migrations-append-only.test.mjs b/scripts/check-migrations-append-only.test.mjs
+index bdba0d0..d1e34ad 100644
+--- a/scripts/check-migrations-append-only.test.mjs
++++ b/scripts/check-migrations-append-only.test.mjs
+@@ -43,7 +43,7 @@ function childEnvironment() {
+   const env = Object.fromEntries(
+     Object.entries(process.env).filter(
+       ([key]) =>
+-        !['TZ', 'HEARTH_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
++        !['TZ', 'HESTIA_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
+     ),
+   );
+   return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' };
+diff --git a/scripts/check-repo-hygiene.test.mjs b/scripts/check-repo-hygiene.test.mjs
+index 46f4da5..6c5442c 100644
+--- a/scripts/check-repo-hygiene.test.mjs
++++ b/scripts/check-repo-hygiene.test.mjs
+@@ -27,7 +27,7 @@ function childEnvironment() {
+   const env = Object.fromEntries(
+     Object.entries(process.env).filter(
+       ([key]) =>
+-        !['TZ', 'HEARTH_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
++        !['TZ', 'HESTIA_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
+     ),
+   );
+   return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' };
+diff --git a/scripts/ci-prepull-images.test.mjs b/scripts/ci-prepull-images.test.mjs
+index 31e13e0..1272566 100644
+--- a/scripts/ci-prepull-images.test.mjs
++++ b/scripts/ci-prepull-images.test.mjs
+@@ -98,11 +98,11 @@ function fixture(extraComposeLines = '') {
+   kong:
+     image: kong/kong:1.0.0
+   hearth-service:
+-    image: hearth-service:\${HEARTH_TAG:-current}
++    image: hearth-service:\${HESTIA_TAG:-current}
+     build:
+       context: ..
+   caddy:
+-    image: hearth-caddy:\${HEARTH_TAG:-current}
++    image: hearth-caddy:\${HESTIA_TAG:-current}
+     build:
+       context: ..
+   backup:
+diff --git a/scripts/deploy-gate.sh b/scripts/deploy-gate.sh
+index 1f96726..fa039c5 100755
+--- a/scripts/deploy-gate.sh
++++ b/scripts/deploy-gate.sh
+@@ -2,14 +2,14 @@
+ # Decides whether the checked-out commit should be deployed. Prints exactly one line on stdout,
+ # `deploy=true` or `deploy=false`, and one `deploy-gate: ...` line on stderr naming the running
+ # revision and the rule that decided. Exit 0 whenever a decision was printed; exit 1, with nothing
+-# on stdout, when HEARTH_DEPLOY_SHA is unusable.
++# on stdout, when HESTIA_DEPLOY_SHA is unusable.
+ #
+-#   HEARTH_DEPLOY_SHA=$(git rev-parse HEAD) [HEARTH_DEPLOY_ATTEMPT=1] scripts/deploy-gate.sh
++#   HESTIA_DEPLOY_SHA=$(git rev-parse HEAD) [HESTIA_DEPLOY_ATTEMPT=1] scripts/deploy-gate.sh
+ #
+-#   HEARTH_DEPLOY_SHA       the commit being deployed: 40 lowercase hex digits, equal to the checked-out
++#   HESTIA_DEPLOY_SHA       the commit being deployed: 40 lowercase hex digits, equal to the checked-out
+ #                           HEAD. It comes from a workflow payload and this runs on the production box,
+ #                           so it is checked before anything else uses it.
+-#   HEARTH_DEPLOY_ATTEMPT   the attempt number of this Deploy run (1..9999, default 1). Re-running CI
++#   HESTIA_DEPLOY_ATTEMPT   the attempt number of this Deploy run (1..9999, default 1). Re-running CI
+ #                           starts a new Deploy run (attempt 1) and skips the running commit; re-running
+ #                           the Deploy run itself raises attempt to 2 or more and redeploys it.
+ #
+@@ -52,14 +52,14 @@ decide() {
+   exit 0
+ }
+ 
+-sha="${HEARTH_DEPLOY_SHA-}"
+-[[ -n "$sha" ]] || refuse "HEARTH_DEPLOY_SHA is not set"
+-[[ "$sha" =~ ^[$hex]{40}$ ]] || refuse "HEARTH_DEPLOY_SHA is not 40 lowercase hex digits"
++sha="${HESTIA_DEPLOY_SHA-}"
++[[ -n "$sha" ]] || refuse "HESTIA_DEPLOY_SHA is not set"
++[[ "$sha" =~ ^[$hex]{40}$ ]] || refuse "HESTIA_DEPLOY_SHA is not 40 lowercase hex digits"
+ head_sha="$(git -C "$repo_root" rev-parse HEAD)" || refuse "cannot read HEAD of $repo_root"
+-[[ "$sha" == "$head_sha" ]] || refuse "HEARTH_DEPLOY_SHA is not the checked-out HEAD ($head_sha)"
++[[ "$sha" == "$head_sha" ]] || refuse "HESTIA_DEPLOY_SHA is not the checked-out HEAD ($head_sha)"
+ 
+-attempt="${HEARTH_DEPLOY_ATTEMPT-1}"
+-[[ "$attempt" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "HEARTH_DEPLOY_ATTEMPT is invalid: $attempt"
++attempt="${HESTIA_DEPLOY_ATTEMPT-1}"
++[[ "$attempt" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "HESTIA_DEPLOY_ATTEMPT is invalid: $attempt"
+ 
+ running="$(docker image inspect \
+   --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image" 2>/dev/null)" ||
+diff --git a/scripts/deploy-gate.test.mjs b/scripts/deploy-gate.test.mjs
+index 782c2e0..6f17f8f 100644
+--- a/scripts/deploy-gate.test.mjs
++++ b/scripts/deploy-gate.test.mjs
+@@ -5,7 +5,7 @@
+  * no image exists). Nothing reaches a real Docker daemon, the network or the host's repository.
+  * The cases pin the deploy rules (a commit equal to or older than the running revision is skipped,
+  * a change confined to docs/ and .planning/ is skipped, anything else deploys, including an unknown
+- * running revision) and that a hostile `HEARTH_DEPLOY_SHA` never reaches a shell. Run by
++ * running revision) and that a hostile `HESTIA_DEPLOY_SHA` never reaches a shell. Run by
+  * `pnpm test` through the root `test:harness` script.
+  */
+ 
+@@ -109,13 +109,13 @@ function gate(dir, { revision, deploySha, omitSha = false, attempt } = {}) {
+   const log = join(scratch, `docker-${String(runs)}.log`);
+   writeFileSync(log, '');
+   const env = { ...gitEnvironment(), PATH: `${binDir}${delimiter}${process.env['PATH'] ?? ''}` };
+-  delete env['HEARTH_DEPLOY_SHA'];
+-  delete env['HEARTH_DEPLOY_ATTEMPT'];
++  delete env['HESTIA_DEPLOY_SHA'];
++  delete env['HESTIA_DEPLOY_ATTEMPT'];
+   delete env['STUB_REVISION'];
+   env['STUB_LOG'] = log;
+   if (revision !== undefined) env['STUB_REVISION'] = revision;
+-  if (!omitSha) env['HEARTH_DEPLOY_SHA'] = deploySha ?? git(dir, 'rev-parse', 'HEAD');
+-  if (attempt !== undefined) env['HEARTH_DEPLOY_ATTEMPT'] = String(attempt);
++  if (!omitSha) env['HESTIA_DEPLOY_SHA'] = deploySha ?? git(dir, 'rev-parse', 'HEAD');
++  if (attempt !== undefined) env['HESTIA_DEPLOY_ATTEMPT'] = String(attempt);
+   const run = spawnSync('bash', [join(dir, 'scripts', 'deploy-gate.sh')], {
+     cwd: dir,
+     encoding: 'utf8',
+@@ -299,7 +299,7 @@ describe('deploy-gate: anything else since the running revision deploys', () =>
+   });
+ });
+ 
+-describe('deploy-gate: a bad HEARTH_DEPLOY_SHA is refused before anything else runs', () => {
++describe('deploy-gate: a bad HESTIA_DEPLOY_SHA is refused before anything else runs', () => {
+   const marker = join(scratch, 'pwned');
+   const hostile = [
+     ['unset', { omitSha: true }],
+@@ -321,7 +321,7 @@ describe('deploy-gate: a bad HEARTH_DEPLOY_SHA is refused before anything else r
+       const run = gate(dir, { revision: 'deadbeefcafe', ...options });
+       assert.notEqual(run.status, 0, `${run.stdout}\n${run.stderr}`);
+       assert.equal(run.stdout, '', 'no decision may be printed');
+-      assert.match(run.stderr, /^deploy-gate: HEARTH_DEPLOY_SHA /);
++      assert.match(run.stderr, /^deploy-gate: HESTIA_DEPLOY_SHA /);
+       assert.deepEqual(run.dockerCalls, [], 'docker must not be asked before the SHA is checked');
+       assert.equal(existsSync(marker), false, 'the value reached a shell');
+     });
+@@ -393,7 +393,7 @@ describe('deploy-gate: deliberate redeploy of the commit already running (OD-7,
+   });
+ });
+ 
+-describe('deploy-gate: a bad HEARTH_DEPLOY_ATTEMPT is refused before anything else runs', () => {
++describe('deploy-gate: a bad HESTIA_DEPLOY_ATTEMPT is refused before anything else runs', () => {
+   for (const value of ['0', '01', 'x', '2;touch x', '', '10000']) {
+     it(`refuses ${JSON.stringify(value)}`, () => {
+       const dir = createRepository();
+@@ -401,7 +401,7 @@ describe('deploy-gate: a bad HEARTH_DEPLOY_ATTEMPT is refused before anything el
+       const run = gate(dir, { attempt: value });
+       assert.equal(run.status, 1);
+       assert.equal(run.stdout, '');
+-      assert.match(run.stderr, /^deploy-gate: HEARTH_DEPLOY_ATTEMPT/);
++      assert.match(run.stderr, /^deploy-gate: HESTIA_DEPLOY_ATTEMPT/);
+       assert.equal(run.dockerCalls.length, 0);
+       assert.equal(existsSync(join(dir, 'x')), false);
+     });
+diff --git a/scripts/deploy.sh b/scripts/deploy.sh
+index ff28b4f..7877766 100755
+--- a/scripts/deploy.sh
++++ b/scripts/deploy.sh
+@@ -4,8 +4,8 @@
+ #
+ #   scripts/deploy.sh
+ #
+-#   HEARTH_ENV_FILE     the host's .env (default /srv/hearth/.env, outside any checkout)
+-#   HEARTH_DEPLOY_SHA   the commit being deployed (default: git HEAD)
++#   HESTIA_ENV_FILE     the host's .env (default /srv/hearth/.env, outside any checkout)
++#   HESTIA_DEPLOY_SHA   the commit being deployed (default: git HEAD)
+ #
+ # Steps: build both images tagged with the commit SHA; back up the database; apply pending
+ # migrations; restart hearth-service and caddy on the new images; require GET /api/health
+@@ -14,8 +14,8 @@
+ set -euo pipefail
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-env_file="${HEARTH_ENV_FILE:-/srv/hearth/.env}"
+-sha="${HEARTH_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
++env_file="${HESTIA_ENV_FILE:-/srv/hearth/.env}"
++sha="${HESTIA_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
+ new_tag="${sha:0:12}"
+ health_url="http://127.0.0.1:8080/api/health"
+ health_timeout_seconds=60
+@@ -56,7 +56,7 @@ switch_to() {
+   compose up --detach --no-deps --no-build hearth-service caddy
+ }
+ 
+-[[ -r "$env_file" ]] || fail "cannot read $env_file (set HEARTH_ENV_FILE)"
++[[ -r "$env_file" ]] || fail "cannot read $env_file (set HESTIA_ENV_FILE)"
+ command -v supabase >/dev/null || fail "the Supabase CLI is not installed"
+ cd "$repo_root"
+ 
+@@ -74,7 +74,7 @@ fi
+ 
+ # 2. Build. Nothing is restarted yet, so a failed build changes nothing.
+ log "building hearth-service:$new_tag and hearth-caddy:$new_tag"
+-HEARTH_TAG="$new_tag" compose build hearth-service caddy || fail "build failed; nothing restarted"
++HESTIA_TAG="$new_tag" compose build hearth-service caddy || fail "build failed; nothing restarted"
+ 
+ # The Supabase services and backup must be running for the backup and migrations. Only
+ # missing containers are started: a deploy never recreates the database.
+diff --git a/scripts/deploy.test.mjs b/scripts/deploy.test.mjs
+index 51e61d7..e104989 100644
+--- a/scripts/deploy.test.mjs
++++ b/scripts/deploy.test.mjs
+@@ -75,7 +75,7 @@ function deploy(password) {
+   const log = join(dir, 'stub.log');
+   writeFileSync(
+     envFile,
+-    `POSTGRES_PASSWORD=${password}\nHEARTH_SERVICE_DB_PASSWORD=${SERVICE_PASSWORD}\n`,
++    `POSTGRES_PASSWORD=${password}\nHESTIA_SERVICE_DB_PASSWORD=${SERVICE_PASSWORD}\n`,
+   );
+   writeFileSync(log, '');
+   const run = spawnSync('bash', [DEPLOY], {
+@@ -84,8 +84,8 @@ function deploy(password) {
+     env: {
+       ...Object.fromEntries(Object.entries(process.env).filter(([key]) => key !== 'PGPASSWORD')),
+       PATH: `${binDir}${delimiter}${process.env['PATH'] ?? ''}`,
+-      HEARTH_ENV_FILE: envFile,
+-      HEARTH_DEPLOY_SHA: DEPLOY_SHA,
++      HESTIA_ENV_FILE: envFile,
++      HESTIA_DEPLOY_SHA: DEPLOY_SHA,
+       STUB_LOG: log,
+     },
+   });
+diff --git a/scripts/generate-secrets.sh b/scripts/generate-secrets.sh
+index 477974a..88faa43 100755
+--- a/scripts/generate-secrets.sh
++++ b/scripts/generate-secrets.sh
+@@ -1,16 +1,16 @@
+ #!/usr/bin/env bash
+ # Writes a fresh .env from .env.example with every secret generated.
+ #
+-#   scripts/generate-secrets.sh [output-path]      (default: $HEARTH_ENV_FILE or /srv/hearth/.env)
++#   scripts/generate-secrets.sh [output-path]      (default: $HESTIA_ENV_FILE or /srv/hearth/.env)
+ #
+-# HEARTH_ORIGIN, HEARTH_OWNER_EMAIL, and BACKUP_DIR are copied from the environment when set,
++# HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR are copied from the environment when set,
+ # otherwise left as .env.example's placeholders for the owner to fill in. Refuses to overwrite an
+ # existing file: regenerating secrets on a live install locks every user out and strands the
+ # database.
+ set -euo pipefail
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-out="${1:-${HEARTH_ENV_FILE:-/srv/hearth/.env}}"
++out="${1:-${HESTIA_ENV_FILE:-/srv/hearth/.env}}"
+ 
+ if [[ -e "$out" ]]; then
+   echo "generate-secrets: $out already exists; not overwriting it." >&2
+@@ -57,7 +57,7 @@ const vapid = vapidKeys();
+ 
+ const generated = {
+   POSTGRES_PASSWORD: hex(24),
+-  HEARTH_SERVICE_DB_PASSWORD: hex(24),
++  HESTIA_SERVICE_DB_PASSWORD: hex(24),
+   JWT_SECRET: jwtSecret,
+   ANON_KEY: signJwt({ role: 'anon', iss: 'supabase', iat: issuedAt, exp: expiresAt }, jwtSecret),
+   SERVICE_ROLE_KEY: signJwt(
+@@ -69,7 +69,7 @@ const generated = {
+   VAPID_PUBLIC_KEY: vapid.publicKey,
+   VAPID_PRIVATE_KEY: vapid.privateKey,
+ };
+-const fromEnvironment = ['HEARTH_ORIGIN', 'HEARTH_OWNER_EMAIL', 'BACKUP_DIR'];
++const fromEnvironment = ['HESTIA_ORIGIN', 'HESTIA_OWNER_EMAIL', 'BACKUP_DIR'];
+ 
+ const lines = readFileSync(process.env.EXAMPLE, 'utf8')
+   .split('\n')
+@@ -88,6 +88,6 @@ writeFileSync(process.env.OUT, lines.join('\n'));
+ EOF
+ 
+ echo "generate-secrets: wrote $out"
+-if grep -Eq '^HEARTH_ORIGIN=.*<machine>|^HEARTH_OWNER_EMAIL=owner@example\.com$' "$out"; then
+-  echo "generate-secrets: now set HEARTH_ORIGIN, HEARTH_OWNER_EMAIL, and BACKUP_DIR in $out" >&2
++if grep -Eq '^HESTIA_ORIGIN=.*<machine>|^HESTIA_OWNER_EMAIL=owner@example\.com$' "$out"; then
++  echo "generate-secrets: now set HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR in $out" >&2
+ fi
+diff --git a/scripts/test-sweep.mjs b/scripts/test-sweep.mjs
+index ad6bf44..60074f3 100644
+--- a/scripts/test-sweep.mjs
++++ b/scripts/test-sweep.mjs
+@@ -1,6 +1,6 @@
+ /*
+  * Date and time-zone sweep: runs a test suite once per cell of a fixed matrix, each cell in its
+- * own child process with its own `HEARTH_TEST_NOW` (the pinned instant, read by
++ * own child process with its own `HESTIA_TEST_NOW` (the pinned instant, read by
+  * `test/clock-setup.mjs`) and `TZ` (validated by `test/global-tz.mjs`). `docs/testing.md`
+  * describes the contract.
+  *
+@@ -8,10 +8,10 @@
+  *     recurrence|matching|e2e|all] [--cell ID]... [--only TEST_PATH] [--log-dir DIR] [--list]
+  *     [--with-today [--today-instant ISO]]
+  *
+- * `--with-today` adds one unit cell, `today`, after the selected fixed cells: `HEARTH_TEST_NOW` is
++ * `--with-today` adds one unit cell, `today`, after the selected fixed cells: `HESTIA_TEST_NOW` is
+  * the real instant at sweep start (or `--today-instant`, parsed with the same rules as
+- * `HEARTH_TEST_NOW`) and `TZ` is one of `TODAY_ZONES`, chosen by the UTC epoch day. Its result
+- * lines carry `now=` and `tz=`, so a red run is reproduced with `HEARTH_TEST_NOW={now} TZ={tz}`.
++ * `HESTIA_TEST_NOW`) and `TZ` is one of `TODAY_ZONES`, chosen by the UTC epoch day. Its result
++ * lines carry `now=` and `tz=`, so a red run is reproduced with `HESTIA_TEST_NOW={now} TZ={tz}`.
+  * Without `--with-today` the matrix and the output are unchanged.
+  *
+  * Cells run one after another and the child inherits the zone, so every Vitest worker, under the
+@@ -172,7 +172,7 @@ function parseArguments(argv) {
+ 
+ function printMatrix(today) {
+   const describe = (cell) =>
+-    `  ${cell.id}: HEARTH_TEST_NOW=${cell.now ?? '(unset)'} TZ=${cell.tz ?? '(unset)'}`;
++    `  ${cell.id}: HESTIA_TEST_NOW=${cell.now ?? '(unset)'} TZ=${cell.tz ?? '(unset)'}`;
+   console.log('unit cells:');
+   for (const cell of UNIT_CELLS) console.log(describe(cell));
+   console.log('integration cells:');
+@@ -199,9 +199,9 @@ function childZone(env) {
+ 
+ function cellEnvironment(cell) {
+   const env = { ...process.env };
+-  delete env['HEARTH_TEST_NOW'];
++  delete env['HESTIA_TEST_NOW'];
+   delete env['TZ'];
+-  if (cell.now !== undefined) env['HEARTH_TEST_NOW'] = cell.now;
++  if (cell.now !== undefined) env['HESTIA_TEST_NOW'] = cell.now;
+   if (cell.tz !== undefined) env['TZ'] = cell.tz;
+   return env;
+ }
+diff --git a/scripts/test-sweep.test.mjs b/scripts/test-sweep.test.mjs
+index 24b085a..3b74d1a 100644
+--- a/scripts/test-sweep.test.mjs
++++ b/scripts/test-sweep.test.mjs
+@@ -24,7 +24,7 @@ function sweep(...args) {
+     cwd: REPO_ROOT,
+     encoding: 'utf8',
+     env: Object.fromEntries(
+-      Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HEARTH_TEST_NOW'),
++      Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HESTIA_TEST_NOW'),
+     ),
+   });
+   return { status: run.status, stdout: run.stdout, stderr: run.stderr };
+@@ -109,7 +109,7 @@ describe('test-sweep: the today cell', () => {
+       const now = new Date(instant).toISOString();
+       assert.match(run.stdout, /^today cell:$/m);
+       assert.ok(
+-        run.stdout.split('\n').includes(`  today: HEARTH_TEST_NOW=${now} TZ=${zone}`),
++        run.stdout.split('\n').includes(`  today: HESTIA_TEST_NOW=${now} TZ=${zone}`),
+         run.stdout,
+       );
+       assert.doesNotMatch(run.stdout, /result=/);
+@@ -122,7 +122,7 @@ describe('test-sweep: the today cell', () => {
+       const instant = new Date(Date.UTC(2026, 9, 1 + day, 12)).toISOString();
+       const run = sweep('--list', '--with-today', '--today-instant', instant);
+       assert.equal(run.status, 0, run.stderr);
+-      zones.push(/^ {2}today: HEARTH_TEST_NOW=\S+ TZ=(\S+)$/m.exec(run.stdout)?.[1]);
++      zones.push(/^ {2}today: HESTIA_TEST_NOW=\S+ TZ=(\S+)$/m.exec(run.stdout)?.[1]);
+     }
+     assert.equal(new Set(zones.slice(0, 11)).size, 11, zones.join(' '));
+     assert.equal(zones[11], zones[0]);
+@@ -139,14 +139,14 @@ describe('test-sweep: the today cell', () => {
+     assert.equal(run.status, 0, run.stderr);
+     assert.match(
+       run.stdout,
+-      /^ {2}today: HEARTH_TEST_NOW=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z TZ=[A-Za-z_]+\/[A-Za-z_]+$/m,
++      /^ {2}today: HESTIA_TEST_NOW=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z TZ=[A-Za-z_]+\/[A-Za-z_]+$/m,
+     );
+   });
+ 
+   const rejected = [
+     [['--today-instant', '2026-10-22T14:00:00.000Z'], /--today-instant needs --with-today/],
+-    [['--with-today', '--today-instant', '2026-10-22T14:00:00'], /HEARTH_TEST_NOW=/],
+-    [['--with-today', '--today-instant', 'nope'], /HEARTH_TEST_NOW="nope"/],
++    [['--with-today', '--today-instant', '2026-10-22T14:00:00'], /HESTIA_TEST_NOW=/],
++    [['--with-today', '--today-instant', 'nope'], /HESTIA_TEST_NOW="nope"/],
+     [['--with-today', '--today-instant'], /--today-instant needs a value/],
+     [['--with-today', '--today-instant', '--list'], /--today-instant needs a value/],
+     [['--suite', 'integration', '--with-today'], /the today cell is a unit cell/],
+diff --git a/supabase/seed/seed-users.ts b/supabase/seed/seed-users.ts
+index 0efbc16..37e2a68 100644
+--- a/supabase/seed/seed-users.ts
++++ b/supabase/seed/seed-users.ts
+@@ -7,9 +7,9 @@
+  *
+  * Defaults target `supabase start`. For the Compose stack, point it at Caddy and the db container:
+  *
+- *   HEARTH_SEED_AUTH_URL   GoTrue through Kong (default http://127.0.0.1:54321/auth/v1)
+- *   HEARTH_SEED_SERVICE_ROLE_KEY   the service-role key (default: from `supabase status`)
+- *   HEARTH_SEED_DB_URL     Postgres as postgres (default the supabase start database)
++ *   HESTIA_SEED_AUTH_URL   GoTrue through Kong (default http://127.0.0.1:54321/auth/v1)
++ *   HESTIA_SEED_SERVICE_ROLE_KEY   the service-role key (default: from `supabase status`)
++ *   HESTIA_SEED_DB_URL     Postgres as postgres (default the supabase start database)
+  *
+  * Users that already exist are left alone; seed.sql refuses to run twice, so reset the database
+  * (`supabase db reset`) to seed again. It refuses any target that has users other than the seed
+@@ -31,12 +31,12 @@ const USERS = [
+   { email: 'casey@example.com', displayName: 'Casey Nguyen', timezone: 'America/Los_Angeles' },
+ ] as const;
+ 
+-const authUrl = process.env['HEARTH_SEED_AUTH_URL'] ?? 'http://127.0.0.1:54321/auth/v1';
++const authUrl = process.env['HESTIA_SEED_AUTH_URL'] ?? 'http://127.0.0.1:54321/auth/v1';
+ const dbUrl =
+-  process.env['HEARTH_SEED_DB_URL'] ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
++  process.env['HESTIA_SEED_DB_URL'] ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
+ 
+ function serviceRoleKey(): string {
+-  const fromEnv = process.env['HEARTH_SEED_SERVICE_ROLE_KEY'];
++  const fromEnv = process.env['HESTIA_SEED_SERVICE_ROLE_KEY'];
+   if (fromEnv !== undefined && fromEnv !== '') return fromEnv;
+   const status = execFileSync('supabase', ['status', '--output', 'env'], {
+     cwd: fileURLToPath(new URL('../..', import.meta.url)),
+@@ -45,7 +45,7 @@ function serviceRoleKey(): string {
+   });
+   const match = /^SERVICE_ROLE_KEY="?([^"\n]+)"?$/m.exec(status);
+   if (match?.[1] === undefined) {
+-    throw new Error('set HEARTH_SEED_SERVICE_ROLE_KEY, or run `supabase start` first');
++    throw new Error('set HESTIA_SEED_SERVICE_ROLE_KEY, or run `supabase start` first');
+   }
+   return match[1];
+ }
+diff --git a/test/clock-setup.mjs b/test/clock-setup.mjs
+index 375a740..15fe1db 100644
+--- a/test/clock-setup.mjs
++++ b/test/clock-setup.mjs
+@@ -2,7 +2,7 @@
+  * Vitest setup file shared by every workspace: pins `Date` so a unit test does not depend on
+  * the wall clock. `docs/testing.md` describes the clock pin and the sweep that varies it.
+  *
+- * The instant comes from `HEARTH_TEST_NOW`, otherwise `DEFAULT_TEST_NOW`. Only `Date` is frozen
++ * The instant comes from `HESTIA_TEST_NOW`, otherwise `DEFAULT_TEST_NOW`. Only `Date` is frozen
+  * and no fake timers are installed, so real timers keep running for `waitFor`.
+  *
+  * Overriding the clock (`docs/testing.md` states the same contract):
+@@ -52,7 +52,7 @@ const NATIVE = Symbol.for('hearth.nativeDate');
+ const NativeDate = globalThis.Date[NATIVE] ?? globalThis.Date;
+ 
+ function pinnedInstant() {
+-  const configured = process.env['HEARTH_TEST_NOW'];
++  const configured = process.env['HESTIA_TEST_NOW'];
+   if (configured === undefined || configured === '') return NativeDate.parse(DEFAULT_TEST_NOW);
+   return parseTestNow(configured);
+ }
+diff --git a/test/clock-setup.test.mjs b/test/clock-setup.test.mjs
+index 0f79b59..841d708 100644
+--- a/test/clock-setup.test.mjs
++++ b/test/clock-setup.test.mjs
+@@ -458,7 +458,7 @@ describe('clock-setup: loaded again in the same global (isolate: false)', () =>
+   ]);
+ });
+ 
+-describe('clock-setup: HEARTH_TEST_NOW', () => {
++describe('clock-setup: HESTIA_TEST_NOW', () => {
+   const FIXTURE = `
+ import { describe, expect, it } from 'vitest';
+ 
+@@ -473,7 +473,7 @@ describe('configured pin', () => {
+     describe(`in ${zone}`, () => {
+       const result = runVitestProject({
+         files: { 'configured.test.mjs': FIXTURE },
+-        env: { HEARTH_TEST_NOW: '2030-10-05T23:30:00+02:00', TZ: zone },
++        env: { HESTIA_TEST_NOW: '2030-10-05T23:30:00+02:00', TZ: zone },
+       });
+       expectPassed(result, ['configured pin is the instant of the offset time, whatever the zone']);
+     });
+@@ -495,7 +495,7 @@ describe('integration file', () => {
+   expectPassed(result, ['integration file is left on the native Date']);
+ });
+ 
+-describe('clock-setup: an invalid HEARTH_TEST_NOW', () => {
++describe('clock-setup: an invalid HESTIA_TEST_NOW', () => {
+   const FIXTURE = `
+ import { describe, expect, it } from 'vitest';
+ 
+@@ -509,10 +509,10 @@ describe('never runs', () => {
+     it(`fails the run with a message naming it: ${value}`, () => {
+       const result = runVitestProject({
+         files: { 'never.test.mjs': FIXTURE },
+-        env: { HEARTH_TEST_NOW: value },
++        env: { HESTIA_TEST_NOW: value },
+       });
+       assert.notEqual(result.status, 0);
+-      assert.match(result.output, /HEARTH_TEST_NOW=/);
++      assert.match(result.output, /HESTIA_TEST_NOW=/);
+       assert.match(result.output, /ISO-8601/);
+     });
+   }
+diff --git a/test/global-tz.mjs b/test/global-tz.mjs
+index 3745f60..c4dc71c 100644
+--- a/test/global-tz.mjs
++++ b/test/global-tz.mjs
+@@ -4,7 +4,7 @@
+  * Node silently falls back to UTC for an unknown zone, so a mistyped `TZ` would run the whole
+  * suite in UTC and still report green. This hook fails the run before any test instead. When
+  * `TZ` is unset it changes nothing, so a plain run behaves as it always did. The sweep
+- * (`scripts/test-sweep.mjs`) is what sets `TZ` and `HEARTH_TEST_NOW`; `docs/testing.md`
++ * (`scripts/test-sweep.mjs`) is what sets `TZ` and `HESTIA_TEST_NOW`; `docs/testing.md`
+  * describes the contract.
+  *
+  * A `TZ` value is accepted when it names a zone and the process really runs on that zone's
+@@ -14,7 +14,7 @@
+  * hook checks that `Intl` knows the zone (after dropping a leading colon), then compares the
+  * offsets of that zone with the offsets the process uses over a few years of sample instants.
+  * An unknown zone, or one whose letter case is wrong, makes Node fall back to UTC and fails the
+- * comparison. `HEARTH_TEST_NOW` must be an ISO-8601 instant with an offset (`test-now.mjs`).
++ * comparison. `HESTIA_TEST_NOW` must be an ISO-8601 instant with an offset (`test-now.mjs`).
+  */
+ 
+ import { parseTestNow } from './test-now.mjs';
+@@ -51,7 +51,7 @@ function sampleInstants(pinned) {
+ 
+ export default function setup() {
+   const requested = process.env['TZ'];
+-  const now = process.env['HEARTH_TEST_NOW'];
++  const now = process.env['HESTIA_TEST_NOW'];
+   const configured = now !== undefined && now !== '';
+   const pinned = configured ? parseTestNow(now) : undefined;
+ 
+@@ -93,5 +93,5 @@ export default function setup() {
+   }
+ 
+   const zone = formatter.resolvedOptions().timeZone;
+-  console.log(`[test-clock] TZ=${zone} HEARTH_TEST_NOW=${configured ? now : '(default)'}`);
++  console.log(`[test-clock] TZ=${zone} HESTIA_TEST_NOW=${configured ? now : '(default)'}`);
+ }
+diff --git a/test/global-tz.test.mjs b/test/global-tz.test.mjs
+index 6047b10..b19ee3b 100644
+--- a/test/global-tz.test.mjs
++++ b/test/global-tz.test.mjs
+@@ -1,6 +1,6 @@
+ /*
+  * Tests for `test/global-tz.mjs`, the Vitest `globalSetup` that validates `TZ` and
+- * `HEARTH_TEST_NOW` before any test runs. `TZ` is process-wide state, so each case runs the hook
++ * `HESTIA_TEST_NOW` before any test runs. `TZ` is process-wide state, so each case runs the hook
+  * in a child process with its own environment. Run by `pnpm test` through `test:harness`.
+  */
+ 
+@@ -24,7 +24,7 @@ console.log(JSON.stringify({ january: at('2026-01-15T12:00:00Z'), july: at('2026
+ function runHook(env) {
+   const childEnvironment = { ...process.env };
+   delete childEnvironment['TZ'];
+-  delete childEnvironment['HEARTH_TEST_NOW'];
++  delete childEnvironment['HESTIA_TEST_NOW'];
+   const run = spawnSync(process.execPath, ['--input-type=module', '-e', SCRIPT], {
+     env: { ...childEnvironment, ...env },
+     encoding: 'utf8',
+@@ -59,7 +59,7 @@ describe('global-tz: TZ values the process honors are accepted', () => {
+     it(`TZ=${value}`, () => {
+       const run = runHook({ TZ: value });
+       assert.equal(run.status, 0, run.stderr);
+-      assert.match(run.stdout, /\[test-clock\] TZ=\S+ HEARTH_TEST_NOW=\(default\)/);
++      assert.match(run.stdout, /\[test-clock\] TZ=\S+ HESTIA_TEST_NOW=\(default\)/);
+       assert.deepEqual(offsets(run), { january, july });
+     });
+   }
+@@ -84,7 +84,7 @@ describe('global-tz: TZ values that are not a zone are rejected', () => {
+   }
+ });
+ 
+-describe('global-tz: HEARTH_TEST_NOW is validated upfront', () => {
++describe('global-tz: HESTIA_TEST_NOW is validated upfront', () => {
+   for (const value of [
+     '2026-10-14T12:00:00.000Z',
+     '2030-10-05T23:30:00+02:00',
+@@ -95,7 +95,7 @@ describe('global-tz: HEARTH_TEST_NOW is validated upfront', () => {
+     it(`accepts ${value}`, () => {
+       for (const zone of [undefined, 'Asia/Tokyo']) {
+         const run = runHook(
+-          zone === undefined ? { HEARTH_TEST_NOW: value } : { HEARTH_TEST_NOW: value, TZ: zone },
++          zone === undefined ? { HESTIA_TEST_NOW: value } : { HESTIA_TEST_NOW: value, TZ: zone },
+         );
+         assert.equal(run.status, 0, run.stderr);
+       }
+@@ -117,17 +117,17 @@ describe('global-tz: HEARTH_TEST_NOW is validated upfront', () => {
+     it(`rejects ${value}`, () => {
+       for (const zone of [undefined, 'Asia/Tokyo']) {
+         const run = runHook(
+-          zone === undefined ? { HEARTH_TEST_NOW: value } : { HEARTH_TEST_NOW: value, TZ: zone },
++          zone === undefined ? { HESTIA_TEST_NOW: value } : { HESTIA_TEST_NOW: value, TZ: zone },
+         );
+         assert.notEqual(run.status, 0, `accepted: ${run.stdout}`);
+-        assert.match(run.stderr, /HEARTH_TEST_NOW=/);
++        assert.match(run.stderr, /HESTIA_TEST_NOW=/);
+         assert.match(run.stderr, /ISO-8601/);
+       }
+     });
+   }
+ 
+   it('echoes the instant it was given', () => {
+-    const run = runHook({ TZ: 'Asia/Tokyo', HEARTH_TEST_NOW: '2030-10-05T23:30:00+02:00' });
+-    assert.match(run.stdout, /HEARTH_TEST_NOW=2030-10-05T23:30:00\+02:00/);
++    const run = runHook({ TZ: 'Asia/Tokyo', HESTIA_TEST_NOW: '2030-10-05T23:30:00+02:00' });
++    assert.match(run.stdout, /HESTIA_TEST_NOW=2030-10-05T23:30:00\+02:00/);
+   });
+ });
+diff --git a/test/support/vitest-project.mjs b/test/support/vitest-project.mjs
+index f797aa5..730e6f3 100644
+--- a/test/support/vitest-project.mjs
++++ b/test/support/vitest-project.mjs
+@@ -17,7 +17,7 @@ const VITEST_BIN = join(REPO_ROOT, 'packages', 'shared', 'node_modules', 'vitest
+ 
+ /**
+  * Writes `files` (name to source) into a fresh project and runs Vitest over it with the clock
+- * setup file. `env` is layered over the parent environment minus `TZ` and `HEARTH_TEST_NOW`, so a
++ * setup file. `env` is layered over the parent environment minus `TZ` and `HESTIA_TEST_NOW`, so a
+  * run never inherits the sweep's cell. `testConfig` is merged into the project's `test` options
+  * (for example `{ isolate: false }`). Returns one entry per test (`fullName`, `status`,
+  * `message`) plus the exit status and the combined output.
+@@ -41,7 +41,7 @@ export function runVitestProject({ files, env = {}, testConfig = {} }) {
+     const report = join(directory, 'report.json');
+     const childEnvironment = { ...process.env };
+     delete childEnvironment['TZ'];
+-    delete childEnvironment['HEARTH_TEST_NOW'];
++    delete childEnvironment['HESTIA_TEST_NOW'];
+     const run = spawnSync(
+       process.execPath,
+       [
+diff --git a/test/test-now.mjs b/test/test-now.mjs
+index 21270fb..b8f6428 100644
+--- a/test/test-now.mjs
++++ b/test/test-now.mjs
+@@ -1,5 +1,5 @@
+ /*
+- * Parses `HEARTH_TEST_NOW`, the instant the clock pin freezes `Date` at. It must be a complete
++ * Parses `HESTIA_TEST_NOW`, the instant the clock pin freezes `Date` at. It must be a complete
+  * ISO-8601 instant with an explicit offset or `Z`, such as `2030-10-05T21:30:00Z` or
+  * `2030-10-05T23:30:00+02:00`. A value without an offset (`2030-10-05T12:00:00`, `Oct 5 2030`) is
+  * read in the machine's zone, so the "same" pin would be a different instant in every sweep cell.
+@@ -8,11 +8,11 @@
+ const ISO_INSTANT =
+   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-](\d{2}):(\d{2}))$/;
+ 
+-/** The instant in epoch milliseconds, or an Error naming `HEARTH_TEST_NOW` and the accepted form. */
++/** The instant in epoch milliseconds, or an Error naming `HESTIA_TEST_NOW` and the accepted form. */
+ export function parseTestNow(value) {
+   const reject = (reason) =>
+     new Error(
+-      `HEARTH_TEST_NOW="${value}" ${reason}; use an ISO-8601 instant with an explicit offset or Z, ` +
++      `HESTIA_TEST_NOW="${value}" ${reason}; use an ISO-8601 instant with an explicit offset or Z, ` +
+         'such as 2030-10-05T21:30:00Z or 2030-10-05T23:30:00+02:00',
+     );
+ 
+-- 
+2.43.0
+

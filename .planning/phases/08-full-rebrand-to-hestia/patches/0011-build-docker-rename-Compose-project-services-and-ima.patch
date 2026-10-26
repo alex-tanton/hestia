@@ -1,0 +1,1333 @@
+From 441ecd4865e9b0172ce74a676c469ab97e847392 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:38:48 +0000
+Subject: [PATCH 11/31] build(docker): rename Compose project, services and
+ images to hestia
+
+- Compose project and network hestia, app service hestia-service, images hestia-service and
+  hestia-caddy, BuildKit cache id hestia-pnpm-store, E2E projects hestia-e2e-<id>
+- Host paths /srv/hestia and /mnt/backup/hestia, Supabase project_id hestia, deploy runner label
+  hestia
+- Document the fresh-host setup and the Compose network and port collision in deployment.md
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ .claude/CLAUDE.md                             |  16 +--
+ .env.example                                  |   8 +-
+ .github/workflows/deploy.yml                  |   2 +-
+ .../08-docs-claims-allow.tsv                  |   1 +
+ CONTRIBUTING.md                               |   4 +-
+ apps/service/bin/hearth-admin                 |   2 +-
+ apps/service/src/cli.ts                       |   2 +-
+ .../service/src/recipes/fixture-fetch.test.ts |   8 +-
+ docker/Caddyfile                              |   4 +-
+ docker/caddy.Dockerfile                       |   4 +-
+ docker/docker-compose.yml                     |  30 ++---
+ docker/kong.yml                               |   4 +-
+ docker/service.Dockerfile                     |  10 +-
+ docs/deployment.md                            | 123 +++++++++---------
+ docs/development.md                           |   8 +-
+ docs/file-map.md                              |   4 +-
+ docs/testing.md                               |  10 +-
+ e2e/docker-compose.e2e.yml                    |  12 +-
+ e2e/setup/stack.ts                            |   6 +-
+ e2e/support/db.ts                             |   2 +-
+ e2e/support/env.ts                            |   2 +-
+ e2e/support/logs.ts                           |   4 +-
+ e2e/support/run-identity.test.ts              |   4 +-
+ e2e/support/run-identity.ts                   |   4 +-
+ .../08-caddy-refuses-gotrue-endpoints.spec.ts |   2 +-
+ e2e/tests/12-deal-rate-discipline.spec.ts     |   2 +-
+ .../13-recipe-import-and-readiness.spec.ts    |   2 +-
+ e2e/tests/19-notifications.spec.ts            |   2 +-
+ scripts/ci-prepull-images.sh                  |   4 +-
+ scripts/ci-prepull-images.test.mjs            |  12 +-
+ scripts/deploy-gate.sh                        |   4 +-
+ scripts/deploy-gate.test.mjs                  |   4 +-
+ scripts/deploy.sh                             |  32 ++---
+ scripts/generate-secrets.sh                   |   4 +-
+ supabase/config.toml                          |   2 +-
+ 35 files changed, 175 insertions(+), 169 deletions(-)
+
+diff --git a/.claude/CLAUDE.md b/.claude/CLAUDE.md
+index 822f029..ea37b91 100644
+--- a/.claude/CLAUDE.md
++++ b/.claude/CLAUDE.md
+@@ -120,7 +120,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, `VITE_MAGIC_LINK_ENABLED`
+ - Injected as Docker build args in `docker/caddy.Dockerfile`; changing them requires a rebuild
+ - Dev and preview proxies read `HESTIA_DEV_API` (default `http://127.0.0.1:3000`) and `HESTIA_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
+-- The production env file lives outside the checkout at `/srv/hearth/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
++- The production env file lives outside the checkout at `/srv/hestia/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
+ - `scripts/generate-secrets.sh` writes that file once and refuses to overwrite it.
+ - `pnpm-workspace.yaml` (workspace graph), root `package.json`, `tsconfig.base.json` (shared TypeScript options) with per-package `tsconfig.json` in `apps/service`, `apps/web`, `packages/*`, and `e2e`
+ - `apps/service/tsup.config.ts` (service bundle), `apps/web/vite.config.ts` (Vite, React, Tailwind, and PWA plugins), `apps/service/vitest*.config.ts`, `e2e/playwright.config.ts`
+@@ -138,7 +138,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Single Linux host running the Compose stack in `docker/docker-compose.yml`
+ - Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel (`sudo tailscale funnel --bg http://127.0.0.1:8080`), origin `https://<machine>.<tailnet>.ts.net`
+ - A second disk mounted at `BACKUP_DIR`
+-- Self-hosted GitHub Actions runner with labels `self-hosted, hearth`, running as a user in the `docker` group (`.github/workflows/deploy.yml`)
++- Self-hosted GitHub Actions runner with labels `self-hosted, hestia`, running as a user in the `docker` group (`.github/workflows/deploy.yml`)
+ 
+ ## Container Images
+ 
+@@ -148,8 +148,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ | `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` | Supabase GoTrue auth server |
+ | `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` | Supabase Realtime (WebSocket change feed) |
+ | `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` | API gateway for GoTrue and Realtime |
+-| `hearth-service` | `hearth-service:${HESTIA_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
+-| `caddy` | `hearth-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
++| `hestia-service` | `hestia-service:${HESTIA_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
++| `caddy` | `hestia-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
+ | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` | Daily dump at `0 2 * * *`; keeps 14 days, 8 weeks, 6 months |
+ 
+ ## Database
+@@ -164,7 +164,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - `.github/workflows/ci.yml` - seven jobs, each with a timeout: `lint` (lint and format check), `typecheck`, `test-unit` (harness tests, the non-web workspaces' tests, then web `test:coverage` with thresholds), `test-integration` (Supabase CLI start, then `test:coverage`, and a step that fails when `apps/service/src/db/types.ts` differs from `pnpm db:types`), `test-e2e` (Playwright, pull requests and `main`), `build`, and `hygiene` (`pnpm knip`, `node scripts/check-knip-baseline.mjs`, `pnpm jscpd`, `node scripts/audit-prod.mjs`, `node scripts/check-repo-hygiene.mjs` and `node scripts/check-migrations-append-only.mjs`, each as its own step); all on GitHub-hosted runners
+ - `.github/actions/setup/action.yml` - composite action every job runs after checkout: `pnpm/action-setup@v6`, `actions/setup-node@v7` (Node from `.nvmrc`, pnpm store cached), `pnpm install --frozen-lockfile`
+ - `.github/workflows/sweep.yml` - workflow `Sweep`: the date and time-zone test matrix on pushes to `main` that change more than `docs/` and `.planning/`, nightly (with the day-dependent cell), and on demand; it never gates a merge or a deploy
+-- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hearth`; decides through `scripts/deploy-gate.sh` (compares with the running revision), then executes `scripts/deploy.sh`
++- `.github/workflows/deploy.yml` - triggered by `workflow_run` after a successful push-triggered CI run on `main`; runs on the self-hosted runner labelled `self-hosted, hestia`; decides through `scripts/deploy-gate.sh` (compares with the running revision), then executes `scripts/deploy.sh`
+ - Actions: `actions/checkout@v7`, `pnpm/action-setup@v6`, `actions/setup-node@v7`, `supabase/setup-cli@v3`, `docker/login-action@v4`, `actions/upload-artifact@v7`
+ - `scripts/ci-prepull-images.sh` - pre-pulls the Compose and Dockerfile images for the E2E job
+ 
+@@ -436,10 +436,10 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ ## Entry Points
+ 
+ - Location: `apps/service/src/main.ts`
+-- Triggers: `node dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hestia/service dev` runs `tsx watch src/main.ts`.
++- Triggers: `node dist/main.js` in the `hestia-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hestia/service dev` runs `tsx watch src/main.ts`.
+ - Responsibilities: Parse env (`apps/service/src/env.ts`), build the pool, GoTrue, Flipp, recipe, and push clients, call `buildApp`, start the scheduler, handle SIGTERM and SIGINT, listen on the configured host and port.
+ - Location: `apps/service/src/cli.ts`, built to `apps/service/dist/cli.js`. The hand-written POSIX shell wrapper `apps/service/bin/hearth-admin` resolves its own path and runs `node dist/cli.js`.
+-- Triggers: `docker compose exec hearth-service hearth-admin reset-password <email>`.
++- Triggers: `docker compose exec hestia-service hearth-admin reset-password <email>`.
+ - Responsibilities: Creates a one-time GoTrue recovery link through the admin API. The only CLI command is `reset-password`.
+ - Location: `apps/web/src/main.tsx`
+ - Triggers: Browser load of the PWA.
+@@ -552,7 +552,7 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly
+ 
+ This section is hand-maintained and sits outside the `GSD:*` managed blocks, so GSD regeneration leaves it alone.
+ 
+-`pnpm test:e2e` builds the `hearth-service` and `hearth-caddy` images with Docker. In the cloud sandbox, build containers reach the network through a TLS-intercepting proxy whose CA they do not trust, so corepack's pnpm download fails with `SELF_SIGNED_CERT_IN_CHAIN` (`pnpm fetch` exits 1 in both Dockerfiles). Apply this workaround before running, and revert it afterwards. It is local-only: never commit it, and never disable TLS verification.
++`pnpm test:e2e` builds the `hestia-service` and `hestia-caddy` images with Docker. In the cloud sandbox, build containers reach the network through a TLS-intercepting proxy whose CA they do not trust, so corepack's pnpm download fails with `SELF_SIGNED_CERT_IN_CHAIN` (`pnpm fetch` exits 1 in both Dockerfiles). Apply this workaround before running, and revert it afterwards. It is local-only: never commit it, and never disable TLS verification.
+ 
+ 1. `cp /root/.ccr/ca-bundle.crt docker/ca.crt`
+ 2. In `docker/service.Dockerfile` (the `source` stage) and `docker/caddy.Dockerfile` (the `build` stage), add these two lines directly after the `FROM node:...` line. Do not add them to the final runtime stage.
+diff --git a/.env.example b/.env.example
+index 627a77f..61674e1 100644
+--- a/.env.example
++++ b/.env.example
+@@ -1,8 +1,8 @@
+ # Hearth host configuration. Never commit the real file.
+ #
+-# The real .env lives OUTSIDE the repository checkout, at /srv/hearth/.env by default, because
++# The real .env lives OUTSIDE the repository checkout, at /srv/hestia/.env by default, because
+ # the deploy runner's checkout is wiped on every run. Create it with:
+-#   scripts/generate-secrets.sh            # writes /srv/hearth/.env, refuses to overwrite
++#   scripts/generate-secrets.sh            # writes /srv/hestia/.env, refuses to overwrite
+ # then fill in the three non-secret values below.
+ 
+ # The pinned public origin, https://<machine>.<tailnet>.ts.net. It is baked into every installed
+@@ -17,8 +17,8 @@ HESTIA_OWNER_EMAIL=owner@example.com
+ HESTIA_MAGIC_LINK_ENABLED=false
+ 
+ # Backup directory on the second physical disk. Mounted into the backup container, and
+-# read-only into hearth-service.
+-BACKUP_DIR=/mnt/backup/hearth
++# read-only into hestia-service.
++BACKUP_DIR=/mnt/backup/hestia
+ 
+ # Optional. Per-IP requests per minute across /api. Leave
+ # it unset in production: the default is 300, and only the E2E overlay raises it.
+diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
+index f4028fd..ccb8b7b 100644
+--- a/.github/workflows/deploy.yml
++++ b/.github/workflows/deploy.yml
+@@ -26,7 +26,7 @@ jobs:
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main'
+-    runs-on: [self-hosted, hearth]
++    runs-on: [self-hosted, hestia]
+     timeout-minutes: 60
+     steps:
+       # Full history, because the gate compares the commit with the running revision, which can be
+diff --git a/.planning/phases/08-full-rebrand-to-hestia/08-docs-claims-allow.tsv b/.planning/phases/08-full-rebrand-to-hestia/08-docs-claims-allow.tsv
+index 8168d88..6741626 100644
+--- a/.planning/phases/08-full-rebrand-to-hestia/08-docs-claims-allow.tsv
++++ b/.planning/phases/08-full-rebrand-to-hestia/08-docs-claims-allow.tsv
+@@ -117,3 +117,4 @@ i/lf	index line-ending column of `git ls-files --eol` output quoted in CONTRIBUT
+ .env	the real configuration file at /srv/hestia/.env, never committed (only .env.example is tracked)
+ hestia-service:3000	compose service name and port (docker/Caddyfile:50), not a script
+ hestia-service:current	Docker image reference of the running service image that deploy-gate.sh inspects, not a path
++172.16.238.0/24	IPv4 CIDR of the stack network pinned in docker/docker-compose.yml, not a path
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 118c77f..0668bc7 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -17,7 +17,7 @@ A change that mixes both kinds goes through a pull request.
+ A passing `CI` push run on `main` triggers the Deploy workflow
+ ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)), which asks
+ [`scripts/deploy-gate.sh`](scripts/deploy-gate.sh) whether to deploy. The gate compares the commit
+-with the revision the running `hearth-service` image was built from:
++with the revision the running `hestia-service` image was built from:
+ 
+ - It deploys when anything outside `docs/` and `.planning/` changed since that revision, over the
+   whole range and not only the tip commit. A code change whose deploy never ran therefore still
+@@ -32,7 +32,7 @@ with the revision the running `hearth-service` image was built from:
+ - A newer Deploy run replaces a pending one; the gate still deploys every change since the running
+   revision.
+ 
+-The deploy job runs on a self-hosted runner labelled `hearth`. Until such a runner is registered, a
++The deploy job runs on a self-hosted runner labelled `hestia`. Until such a runner is registered, a
+ Deploy run waits in the queue and deploys nothing.
+ 
+ ## What CI checks
+diff --git a/apps/service/bin/hearth-admin b/apps/service/bin/hearth-admin
+index 05cd0f2..7f0896d 100755
+--- a/apps/service/bin/hearth-admin
++++ b/apps/service/bin/hearth-admin
+@@ -1,5 +1,5 @@
+ #!/bin/sh
+-# The owner CLI: docker compose exec hearth-service hearth-admin reset-password <email>
++# The owner CLI: docker compose exec hestia-service hearth-admin reset-password <email>
+ # The image links this script onto the PATH, so resolve the link to find the bundle beside it.
+ here=$(dirname "$(readlink -f "$0")")
+ exec node "$here/../dist/cli.js" "$@"
+diff --git a/apps/service/src/cli.ts b/apps/service/src/cli.ts
+index ba3270f..20c91ba 100644
+--- a/apps/service/src/cli.ts
++++ b/apps/service/src/cli.ts
+@@ -7,7 +7,7 @@ import { createGoTrueAdmin, type GoTrueAdmin } from './privileged/gotrue-admin.j
+ /**
+  * hearth-admin, the owner CLI:
+  *
+- *   docker compose exec hearth-service hearth-admin reset-password <email>
++ *   docker compose exec hestia-service hearth-admin reset-password <email>
+  *
+  * Prints a one-time recovery link that opens the PWA's set-new-password screen. One of the
+  * sanctioned service-role uses.
+diff --git a/apps/service/src/recipes/fixture-fetch.test.ts b/apps/service/src/recipes/fixture-fetch.test.ts
+index 1190cfa..66c9f11 100644
+--- a/apps/service/src/recipes/fixture-fetch.test.ts
++++ b/apps/service/src/recipes/fixture-fetch.test.ts
+@@ -24,20 +24,20 @@ describe('recipeFixtureFetch', () => {
+ 
+   it('serves the mapped file for a known path', async () => {
+     const fetchPage = recipeFixtureFetch({ dir, pages: { '/recipes/a': 'a.html' } });
+-    const page = await fetchPage('https://fixtures.hearth-e2e.test/recipes/a');
++    const page = await fetchPage('https://fixtures.hestia-e2e.test/recipes/a');
+     expect(page.body).toBe('<html>fixture a</html>');
+   });
+ 
+   it('rejects a path with no mapped fixture, rather than guessing at one', async () => {
+     const fetchPage = recipeFixtureFetch({ dir, pages: { '/recipes/a': 'a.html' } });
+-    await expect(fetchPage('https://fixtures.hearth-e2e.test/recipes/unknown')).rejects.toThrow(
+-      'No recipe fixture for https://fixtures.hearth-e2e.test/recipes/unknown',
++    await expect(fetchPage('https://fixtures.hestia-e2e.test/recipes/unknown')).rejects.toThrow(
++      'No recipe fixture for https://fixtures.hestia-e2e.test/recipes/unknown',
+     );
+   });
+ 
+   it('works whether or not the configured directory has a trailing slash', async () => {
+     const withSlash = recipeFixtureFetch({ dir: `${dir}/`, pages: { '/recipes/a': 'a.html' } });
+-    const page = await withSlash('https://fixtures.hearth-e2e.test/recipes/a');
++    const page = await withSlash('https://fixtures.hestia-e2e.test/recipes/a');
+     expect(page.body).toBe('<html>fixture a</html>');
+   });
+ });
+diff --git a/docker/Caddyfile b/docker/Caddyfile
+index c13e163..e588fea 100644
+--- a/docker/Caddyfile
++++ b/docker/Caddyfile
+@@ -28,7 +28,7 @@
+ 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+ 	}
+ 
+-	# Only hearth-service may call these GoTrue endpoints (it reaches auth:9999 directly), so
++	# Only hestia-service may call these GoTrue endpoints (it reaches auth:9999 directly), so
+ 	# the common-password check and password re-entry cannot be skipped. The path matcher
+ 	# compares the percent-decoded path with duplicate slashes merged, case-insensitively, so
+ 	# encoded and doubled-slash spellings match too.
+@@ -47,7 +47,7 @@
+ 		respond @refused_signup 403
+ 		respond @refused_user 403
+ 
+-		reverse_proxy /api/* hearth-service:3000 {
++		reverse_proxy /api/* hestia-service:3000 {
+ 			# Downstream sees exactly one address: the client Caddy resolved above.
+ 			header_up X-Forwarded-For {client_ip}
+ 		}
+diff --git a/docker/caddy.Dockerfile b/docker/caddy.Dockerfile
+index a2e6d4a..f5447e5 100644
+--- a/docker/caddy.Dockerfile
++++ b/docker/caddy.Dockerfile
+@@ -9,7 +9,7 @@ RUN corepack enable
+ WORKDIR /repo
+ 
+ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+-RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
++RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
+     pnpm fetch --frozen-lockfile --store-dir /pnpm/store
+ 
+ COPY . .
+@@ -26,7 +26,7 @@ ENV VITE_SUPABASE_ANON_KEY=$ANON_KEY
+ # the private key is only ever read by the service, which signs each push with it.
+ ARG VAPID_PUBLIC_KEY
+ ENV VITE_VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
+-RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
++RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
+     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/web... \
+  && pnpm --filter @hestia/web build
+ 
+diff --git a/docker/docker-compose.yml b/docker/docker-compose.yml
+index 2d83a8a..ded33e6 100644
+--- a/docker/docker-compose.yml
++++ b/docker/docker-compose.yml
+@@ -5,10 +5,10 @@
+ # `supabase start`, so a production dump restores into local development unchanged.
+ #
+ # Run from the repository root, with the host's .env (which lives outside the checkout):
+-#   docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml up -d
++#   docker compose --env-file /srv/hestia/.env -f docker/docker-compose.yml up -d
+ # scripts/deploy.sh is the normal way to build and restart; see docs/deployment.md.
+ 
+-name: hearth
++name: hestia
+ 
+ x-logging: &logging
+   driver: json-file
+@@ -21,7 +21,7 @@ services:
+     image: public.ecr.aws/supabase/postgres:17.6.1.167
+     restart: unless-stopped
+     logging: *logging
+-    networks: [hearth]
++    networks: [hestia]
+     command:
+       - postgres
+       - -c
+@@ -63,7 +63,7 @@ services:
+     image: public.ecr.aws/supabase/gotrue:v2.196.0
+     restart: unless-stopped
+     logging: *logging
+-    networks: [hearth]
++    networks: [hestia]
+     depends_on:
+       db:
+         condition: service_healthy
+@@ -107,7 +107,7 @@ services:
+     restart: unless-stopped
+     logging: *logging
+     networks:
+-      hearth:
++      hestia:
+         # Realtime takes the tenant id from the first label of the Host header Kong sends, and
+         # the self-hosted tenant it seeds is "realtime-dev".
+         aliases: [realtime-dev.supabase-realtime]
+@@ -146,7 +146,7 @@ services:
+     image: kong/kong:3.9.3
+     restart: unless-stopped
+     logging: *logging
+-    networks: [hearth]
++    networks: [hestia]
+     depends_on:
+       auth:
+         condition: service_healthy
+@@ -180,8 +180,8 @@ services:
+       timeout: 5s
+       retries: 5
+ 
+-  hearth-service:
+-    image: hearth-service:${HESTIA_TAG:-current}
++  hestia-service:
++    image: hestia-service:${HESTIA_TAG:-current}
+     build:
+       context: ..
+       dockerfile: docker/service.Dockerfile
+@@ -189,7 +189,7 @@ services:
+         HESTIA_REVISION: ${HESTIA_TAG:-dev}
+     restart: unless-stopped
+     logging: *logging
+-    networks: [hearth]
++    networks: [hestia]
+     depends_on:
+       db:
+         condition: service_healthy
+@@ -224,7 +224,7 @@ services:
+       start_period: 10s
+ 
+   caddy:
+-    image: hearth-caddy:${HESTIA_TAG:-current}
++    image: hestia-caddy:${HESTIA_TAG:-current}
+     build:
+       context: ..
+       dockerfile: docker/caddy.Dockerfile
+@@ -235,9 +235,9 @@ services:
+         VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
+     restart: unless-stopped
+     logging: *logging
+-    networks: [hearth]
++    networks: [hestia]
+     depends_on:
+-      hearth-service:
++      hestia-service:
+         condition: service_started
+       kong:
+         condition: service_started
+@@ -259,7 +259,7 @@ services:
+     image: prodrigestivill/postgres-backup-local:17-debian-d257e5d
+     restart: unless-stopped
+     logging: *logging
+-    networks: [hearth]
++    networks: [hestia]
+     depends_on:
+       db:
+         condition: service_healthy
+@@ -287,8 +287,8 @@ services:
+       retries: 3
+ 
+ networks:
+-  hearth:
+-    name: hearth
++  hestia:
++    name: hestia
+     ipam:
+       config:
+         - subnet: *subnet
+diff --git a/docker/kong.yml b/docker/kong.yml
+index 06a3e3e..313793d 100644
+--- a/docker/kong.yml
++++ b/docker/kong.yml
+@@ -81,7 +81,7 @@ services:
+             - anon
+ 
+   # The session checks setSession and the URL-fragment sign-in make. PUT /user (a password or
+-  # email change) is not here: only hearth-service makes it, directly on auth:9999.
++  # email change) is not here: only hestia-service makes it, directly on auth:9999.
+   - name: auth-v1-user
+     url: http://auth:9999/user
+     routes:
+@@ -146,7 +146,7 @@ services:
+             - admin
+ 
+   # Anything else under /auth/v1 (signup, recover, settings, admin, jwks, the rest of GoTrue's
+-  # surface) is refused here, before any key check, whoever asks. hearth-service reaches GoTrue
++  # surface) is refused here, before any key check, whoever asks. hestia-service reaches GoTrue
+   # directly on auth:9999 and never through Kong.
+   - name: auth-v1-denied
+     url: http://auth:9999/
+diff --git a/docker/service.Dockerfile b/docker/service.Dockerfile
+index 60298ec..b6efbdf 100644
+--- a/docker/service.Dockerfile
++++ b/docker/service.Dockerfile
+@@ -1,5 +1,5 @@
+ # syntax=docker/dockerfile:1
+-# hearth-service: the Fastify API, job runner, and hearth-admin CLI. Built from the repository
++# hestia-service: the Fastify API, job runner, and hearth-admin CLI. Built from the repository
+ # root (see docker-compose.yml); tagged with the commit SHA by scripts/deploy.sh.
+ 
+ FROM node:24.21.0-bookworm-slim AS source
+@@ -8,19 +8,19 @@ RUN corepack enable
+ WORKDIR /repo
+ # Dependencies are fetched from the lockfile alone, so a source-only change reuses this layer.
+ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+-RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
++RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
+     pnpm fetch --frozen-lockfile --store-dir /pnpm/store
+ COPY . .
+ 
+ FROM source AS build
+-RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
++RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
+     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/service... \
+  && pnpm --filter @hestia/service build
+ 
+ # Workspace packages are bundled into dist by tsup, so the runtime needs only the service's
+ # own production dependencies.
+ FROM source AS prod-deps
+-RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
++RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
+     pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hestia/service
+ 
+ FROM node:24.21.0-bookworm-slim
+@@ -32,7 +32,7 @@ COPY --from=prod-deps /repo/node_modules /app/node_modules
+ COPY --from=prod-deps /repo/apps/service/node_modules /app/apps/service/node_modules
+ COPY --from=build /repo/apps/service/package.json /app/apps/service/package.json
+ COPY --from=build /repo/apps/service/dist /app/apps/service/dist
+-# The owner CLI on the PATH, so `docker compose exec hearth-service hearth-admin ...` works.
++# The owner CLI on the PATH, so `docker compose exec hestia-service hearth-admin ...` works.
+ COPY --from=build --chmod=755 /repo/apps/service/bin/hearth-admin /app/apps/service/bin/hearth-admin
+ RUN ln -s /app/apps/service/bin/hearth-admin /usr/local/bin/hearth-admin
+ WORKDIR /app/apps/service
+diff --git a/docs/deployment.md b/docs/deployment.md
+index 5f43d30..202b6ef 100644
+--- a/docs/deployment.md
++++ b/docs/deployment.md
+@@ -14,8 +14,8 @@ box.
+ 
+ ## Compose services
+ 
+-`docker/docker-compose.yml` defines seven services. The two built images, `hearth-service` and
+-`hearth-caddy`, are tagged `<sha>` by each deploy and run through their `current` tags.
++`docker/docker-compose.yml` defines seven services. The two built images, `hestia-service` and
++`hestia-caddy`, are tagged `<sha>` by each deploy and run through their `current` tags.
+ 
+ | Service | Image | Role |
+ | --- | --- | --- |
+@@ -23,11 +23,11 @@ box.
+ | `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | GoTrue, handling sign-in and account management. |
+ | `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | Pushes live updates to connected clients. |
+ | `kong` | `kong/kong:3.9.3` | The gateway that routes external requests to `auth` and `realtime` only; nothing else is exposed through it. |
+-| `hearth-service` | `hearth-service:<sha>` | The backend API and background jobs (built from `apps/service`). |
+-| `caddy` | `hearth-caddy:<sha>` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
++| `hestia-service` | `hestia-service:<sha>` | The backend API and background jobs (built from `apps/service`). |
++| `caddy` | `hestia-caddy:<sha>` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
+ | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | Runs the nightly database backup and keeps a rotation of older backups. |
+ 
+-Only `caddy` publishes a port, on `127.0.0.1:8080`. All services share the `hearth` network, and
++Only `caddy` publishes a port, on `127.0.0.1:8080`. All services share the `hestia` network, and
+ Postgres data lives in the `db-data` and `db-config` volumes.
+ 
+ ## System requirements
+@@ -44,7 +44,7 @@ Postgres data lives in the `db-data` and `db-config` volumes.
+   If it's a laptop, disable sleep-on-lid-close and, where practical, leave it plugged in — its
+   battery serves as a UPS.
+ - **Second physical disk:** required, for backups. `BACKUP_DIR` must point at a directory on it
+-  (for example `/mnt/backup/hearth`), separate from the disk holding the Docker data root and the
++  (for example `/mnt/backup/hestia`), separate from the disk holding the Docker data root and the
+   Postgres volume. This is the only copy of the data: there is no off-site or cloud backup copy.
+ 
+ ## Dependencies
+@@ -58,8 +58,8 @@ Install on the host before first start:
+ - **Tailscale**, logged in to the tailnet, with **Funnel allowed for this machine in the tailnet
+   policy**. `tailscaled` runs on the host, not in a container.
+ - **For automatic deploys:** a GitHub Actions **self-hosted runner** registered to this
+-  repository, labeled `self-hosted` and `hearth` (the deploy workflow targets
+-  `runs-on: [self-hosted, hearth]`), running as a user in the **`docker` group**. This runner must
++  repository, labeled `self-hosted` and `hestia` (the deploy workflow targets
++  `runs-on: [self-hosted, hestia]`), running as a user in the **`docker` group**. This runner must
+   run only `.github/workflows/deploy.yml` — never pull-request jobs, since those would execute
+   untrusted code on the production box.
+ 
+@@ -72,7 +72,7 @@ Install on the host before first start:
+ > migration path for an origin change.
+ 
+ The owner fills in the machine and tailnet names once, in the table below, and sets
+-`HESTIA_ORIGIN` in `/srv/hearth/.env` to the same origin. Keep the two in sync.
++`HESTIA_ORIGIN` in `/srv/hestia/.env` to the same origin. Keep the two in sync.
+ 
+ | Name    | Value                                |
+ | ------- | ------------------------------------ |
+@@ -86,9 +86,9 @@ Two services exist purely to route and protect traffic, configured by files in `
+ 
+ - **Caddy** (`docker/Caddyfile`) is the stack's only published port. It terminates the plain-HTTP
+   side of Funnel, applies security headers (CSP, HSTS, etc.) to every response, serves the built
+-  PWA with SPA fallback, reverse-proxies `/api/*` to `hearth-service` and `/auth/v1/*` /
++  PWA with SPA fallback, reverse-proxies `/api/*` to `hestia-service` and `/auth/v1/*` /
+   `/realtime/v1/*` to Kong, and refuses direct `POST /auth/v1/signup*` and `PUT /auth/v1/user*`
+-  calls with a 403 so those paths can only be reached through `hearth-service`.
++  calls with a 403 so those paths can only be reached through `hestia-service`.
+ - **Kong** (`docker/kong.yml`, started by `docker/kong-entrypoint.sh`) is a minimal declarative API
+   gateway in front of GoTrue and Realtime only — there are deliberately no `rest`, `storage`,
+   `functions`, or `analytics` routes. It key-authenticates callers as `anon` or `service_role` and
+@@ -115,7 +115,7 @@ by hand.
+ | `HESTIA_ORIGIN` | The pinned public origin, `https://<machine>.<tailnet>.ts.net`. Baked into every installed PWA and push subscription; must never change. |
+ | `HESTIA_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
+ | `HESTIA_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
+-| `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hearth-service`. |
++| `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hestia-service`. |
+ | `HESTIA_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
+ | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
+ | `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
+@@ -135,17 +135,17 @@ startup.
+ ## First-time setup
+ 
+ Run from a checkout of `main`, on the host. The real `.env` lives outside the checkout, at
+-`/srv/hearth/.env`, because the deploy runner wipes its checkout on every run.
++`/srv/hestia/.env`, because the deploy runner wipes its checkout on every run.
+ 
+ ```sh
+-sudo install -d -m 700 -o "$USER" /srv/hearth
+-sudo install -d -m 755 /mnt/backup/hearth
++sudo install -d -m 700 -o "$USER" /srv/hestia
++sudo install -d -m 755 /mnt/backup/hestia
+ HESTIA_ORIGIN=https://<machine>.<tailnet>.ts.net HESTIA_OWNER_EMAIL=<owner email> \
+-  BACKUP_DIR=/mnt/backup/hearth scripts/generate-secrets.sh
++  BACKUP_DIR=/mnt/backup/hestia scripts/generate-secrets.sh
+ 
+-alias hearth-compose='docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml'
+-hearth-compose build
+-hearth-compose up -d --wait
++alias hestia-compose='docker compose --env-file /srv/hestia/.env -f docker/docker-compose.yml'
++hestia-compose build
++hestia-compose up -d --wait
+ curl -fsS http://127.0.0.1:8080/api/health
+ 
+ sudo tailscale funnel --bg http://127.0.0.1:8080
+@@ -153,19 +153,19 @@ sudo tailscale funnel --bg http://127.0.0.1:8080
+ 
+ Notes:
+ 
+-- `generate-secrets.sh` writes `/srv/hearth/.env` from `.env.example` with every secret generated,
++- `generate-secrets.sh` writes `/srv/hestia/.env` from `.env.example` with every secret generated,
+   and **refuses to overwrite an existing `.env`** — regenerating secrets on a live install signs
+   everyone out and breaks the database login.
+ - `scripts/deploy.sh` also works as the first start: it builds, starts the stack, and migrates in
+   one step.
+-- All commands below assume the `hearth-compose` alias above, run from the repository root.
++- All commands below assume the `hestia-compose` alias above, run from the repository root.
+ 
+ ## Ongoing deploys
+ 
+ A merge to `main` whose CI passed triggers `scripts/deploy.sh` on the self-hosted runner
+ (`.github/workflows/deploy.yml`, which watches the `CI` workflow's `workflow_run` and re-checks
+ that it was a push to `main` before deploying). Its `changes` step runs `scripts/deploy-gate.sh`
+-against the revision label of the running `hearth-service:current` image, and the deploy runs only
++against the revision label of the running `hestia-service:current` image, and the deploy runs only
+ when that gate says so: it **deploys when something outside `docs/` and `.planning/` changed**
+ since the running revision (the whole range, not only the tip commit, so a code change whose deploy
+ never ran still ships behind a later docs-only commit), **skips a commit already running** (a `CI`
+@@ -182,18 +182,18 @@ no token on the host. A deploy can also be run by hand from a checkout.
+ of the first few fail:
+ 
+ 1. Records the images currently tagged `current` as the rollback target.
+-2. Builds `hearth-service:<sha>` and `hearth-caddy:<sha>` (the PWA is built into the Caddy image).
++2. Builds `hestia-service:<sha>` and `hestia-caddy:<sha>` (the PWA is built into the Caddy image).
+    A failed build changes nothing.
+ 3. Starts any Supabase service (`db`, `auth`, `realtime`, `kong`, `backup`) that isn't already
+    running, without recreating any that are.
+-4. Takes a backup with `hearth-compose exec -T backup /backup.sh`. **A failed backup aborts the
++4. Takes a backup with `hestia-compose exec -T backup /backup.sh`. **A failed backup aborts the
+    deploy** — nothing is migrated or restarted.
+ 5. Applies pending migrations with `supabase migration up` against the Compose database. The CLI
+    gets the database password in `PGPASSWORD`, set for that one command and never on its command
+    line. **A failed migration aborts the deploy**; the backup just taken is the restore point.
+ 6. Re-applies the `hestia_service` login from `.env` (`docker/db/hestia-service-login.sql`) —
+    idempotent, and picks up a rotated password.
+-7. Tags the new images `current` and recreates `hearth-service` and `caddy` on them.
++7. Tags the new images `current` and recreates `hestia-service` and `caddy` on them.
+ 8. Polls `GET http://127.0.0.1:8080/api/health` for 60 seconds. If it never succeeds, the script
+    tags the **previous** images `current` again, recreates both containers on them, and exits
+    non-zero (automatic rollback).
+@@ -203,11 +203,11 @@ commit is harmless. The five newest SHA-tagged images of each kind are kept.
+ 
+ A deploy never recreates `db`, `auth`, `realtime`, `kong`, or `backup`. After changing their
+ configuration or image tag, take a backup by hand and apply the change with
+-`hearth-compose up -d --wait`.
++`hestia-compose up -d --wait`.
+ 
+ Compose also does not recreate a running service when only a bind-mounted file changed, and
+ `docker/kong.yml` is bind-mounted. After merging a `docker/kong.yml` change, take a backup by hand
+-and run `hearth-compose up -d --force-recreate kong` on the host. Sign-ins can fail for a few
++and run `hestia-compose up -d --force-recreate kong` on the host. Sign-ins can fail for a few
+ seconds while Kong restarts. To roll back a Kong change, revert it, let the deploy finish and run
+ the same command again.
+ 
+@@ -216,10 +216,10 @@ the same command again.
+ To roll back by hand to an older build (beyond the deploy's own automatic rollback):
+ 
+ ```sh
+-docker image ls 'hearth-*'
+-docker tag hearth-service:<sha> hearth-service:current
+-docker tag hearth-caddy:<sha> hearth-caddy:current
+-hearth-compose up -d --no-deps hearth-service caddy
++docker image ls 'hestia-*'
++docker tag hestia-service:<sha> hestia-service:current
++docker tag hestia-caddy:<sha> hestia-caddy:current
++hestia-compose up -d --no-deps hestia-service caddy
+ ```
+ 
+ Migrations are forward-only, so rolling back images never rolls back the schema.
+@@ -234,7 +234,7 @@ link alongside it). Every deploy takes one before migrating.
+ To take a backup right now:
+ 
+ ```sh
+-hearth-compose exec -T backup /backup.sh
++hestia-compose exec -T backup /backup.sh
+ ```
+ 
+ ## Restore
+@@ -246,13 +246,13 @@ There is no off-site or cloud backup copy, so a correct restore procedure is the
+ An untested backup is an assumption. The test restores the newest dump into a **throwaway**
+ container of the same pinned Postgres image, leaving production untouched:
+ 
+-1. Load `/srv/hearth/.env` and locate `$BACKUP_DIR/last/postgres-latest.sql.gz`.
++1. Load `/srv/hestia/.env` and locate `$BACKUP_DIR/last/postgres-latest.sql.gz`.
+ 2. Start a detached `public.ecr.aws/supabase/postgres:17.6.1.167` container named
+-   `hearth-restore`, and wait for its init process and for `pg_isready`.
++   `hestia-restore`, and wait for its init process and for `pg_isready`.
+ 3. Because `pg_dump` does not include roles: apply the `hestia_service` role migration
+    (`supabase/migrations/20260919060000_hestia_service_role.sql`) and manually create
+    `supabase_realtime_admin` (it's created by Realtime at runtime, not by the Postgres image).
+-4. Load the dump with `gunzip -c "$DUMP" | docker exec -i hearth-restore psql ...`, capturing
++4. Load the dump with `gunzip -c "$DUMP" | docker exec -i hestia-restore psql ...`, capturing
+    errors to a log file, and confirm the error count is 0.
+ 5. Sanity-check the restored state: `hestia_service`'s role attributes, that `auth`/`public`/
+    `realtime`/`supabase_migrations` schemas exist, a user count, and the applied migration list.
+@@ -261,78 +261,78 @@ container of the same pinned Postgres image, leaving production untouched:
+ The full command sequence, run from the repository root:
+ 
+ ```sh
+-set -a; . /srv/hearth/.env; set +a
++set -a; . /srv/hestia/.env; set +a
+ DUMP="$BACKUP_DIR/last/postgres-latest.sql.gz"
+ 
+-docker run --detach --name hearth-restore -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
++docker run --detach --name hestia-restore -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+   public.ecr.aws/supabase/postgres:17.6.1.167 \
+   postgres -c config_file=/etc/postgresql/postgresql.conf
+-until docker logs hearth-restore 2>&1 | grep -q "PostgreSQL init process complete"; do sleep 1; done
+-until docker exec hearth-restore pg_isready -U postgres -h localhost -q; do sleep 1; done
++until docker logs hestia-restore 2>&1 | grep -q "PostgreSQL init process complete"; do sleep 1; done
++until docker exec hestia-restore pg_isready -U postgres -h localhost -q; do sleep 1; done
+ 
+ # Roles are not in the dump: hestia_service comes from its migration, and
+ # supabase_realtime_admin (created by Realtime, not the image) is created here.
+-docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
++docker exec -i hestia-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
+   < supabase/migrations/20260919060000_hestia_service_role.sql
+-docker exec -i hearth-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
++docker exec -i hestia-restore psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+ create role supabase_realtime_admin noinherit nologin noreplication;
+ grant anon, authenticated, service_role to supabase_realtime_admin;
+ SQL
+ 
+ gunzip -c "$DUMP" |
+-  docker exec -i hearth-restore psql -U supabase_admin -d postgres -q -o /dev/null \
++  docker exec -i hestia-restore psql -U supabase_admin -d postgres -q -o /dev/null \
+   2> restore-errors.log
+ grep -c ERROR restore-errors.log    # expect 0
+ 
+-docker exec hearth-restore psql -U supabase_admin -d postgres -c "
++docker exec hestia-restore psql -U supabase_admin -d postgres -c "
+   select rolname, rolinherit, rolcanlogin from pg_roles where rolname = 'hestia_service';
+   select nspname from pg_namespace
+     where nspname in ('auth', 'public', 'realtime', 'supabase_migrations');
+   select count(*) as users from auth.users;
+   select version from supabase_migrations.schema_migrations order by version;"
+ 
+-docker rm -f hearth-restore && rm restore-errors.log
++docker rm -f hestia-restore && rm restore-errors.log
+ ```
+ 
+ ### Restore production
+ 
+ This replaces the **live** database with a dump; the site is down while it runs.
+ 
+-1. Load `/srv/hearth/.env` and choose the dump to restore (for example
++1. Load `/srv/hestia/.env` and choose the dump to restore (for example
+    `$BACKUP_DIR/daily/postgres-<yyyymmdd>.sql.gz`).
+-2. `hearth-compose stop`, then `hearth-compose rm --force db`, then remove the `hearth_db-data`
++2. `hestia-compose stop`, then `hestia-compose rm --force db`, then remove the `hestia_db-data`
+    volume — this destroys the current database.
+-3. `hearth-compose up -d --wait db` to get a **fresh** database: the image creates the Supabase
++3. `hestia-compose up -d --wait db` to get a **fresh** database: the image creates the Supabase
+    roles, and the init scripts recreate `hestia_service` from its migration and give it its login
+    from `.env`.
+ 4. Manually create `supabase_realtime_admin` again (same reason as the restore test), load the
+    dump the same way, and confirm 0 errors.
+-5. `hearth-compose up -d --wait` to bring the rest of the stack up, then
++5. `hestia-compose up -d --wait` to bring the rest of the stack up, then
+    `curl -fsS http://127.0.0.1:8080/api/health` to confirm.
+ 
+ The full command sequence:
+ 
+ ```sh
+-set -a; . /srv/hearth/.env; set +a
++set -a; . /srv/hestia/.env; set +a
+ DUMP="$BACKUP_DIR/daily/postgres-<yyyymmdd>.sql.gz"    # the dump to restore
+ 
+-hearth-compose stop
+-hearth-compose rm --force db
+-docker volume rm hearth_db-data
++hestia-compose stop
++hestia-compose rm --force db
++docker volume rm hestia_db-data
+ 
+ # A fresh database: the image creates the Supabase roles, and the init scripts recreate
+ # hestia_service from its migration and give it its login from .env.
+-hearth-compose up -d --wait db
+-hearth-compose exec -T db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
++hestia-compose up -d --wait db
++hestia-compose exec -T db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+ create role supabase_realtime_admin noinherit nologin noreplication;
+ grant anon, authenticated, service_role to supabase_realtime_admin;
+ SQL
+ gunzip -c "$DUMP" |
+-  hearth-compose exec -T db psql -U supabase_admin -d postgres -q -o /dev/null \
++  hestia-compose exec -T db psql -U supabase_admin -d postgres -q -o /dev/null \
+   2> restore-errors.log
+ grep -c ERROR restore-errors.log    # expect 0
+ 
+-hearth-compose up -d --wait
++hestia-compose up -d --wait
+ curl -fsS http://127.0.0.1:8080/api/health
+ ```
+ 
+@@ -349,9 +349,9 @@ them re-initialize against the wrong state.
+   diagnosis (job freshness, recent error fingerprints, backup age, Flipp skip rates).
+ - **Failed deploy / automatic rollback:** if the new images don't pass the health check within 60
+   seconds, `scripts/deploy.sh` re-tags the previously running images `current`, recreates
+-  `hearth-service` and `caddy` on them, and exits non-zero. If that rollback itself fails to
++  `hestia-service` and `caddy` on them, and exits non-zero. If that rollback itself fails to
+   become healthy, the script still exits non-zero and leaves the previous images running —
+-  check `hearth-compose logs hearth-service caddy` for the cause. When a deploy fails after both
++  check `hestia-compose logs hestia-service caddy` for the cause. When a deploy fails after both
+   images were already tagged `current` but before the containers came up healthy (or a first deploy
+   had nothing to roll back to), retrying requires the deliberate path because the commit is already
+   running: re-run the Deploy run from the Actions tab (attempt 2 or later redeploys the commit
+@@ -365,8 +365,13 @@ them re-initialize against the wrong state.
+ - **Pinned names:** the machine name and tailnet name must never change after they're chosen —
+   see "Pinned names" above. There is no remediation for a rename short of every installed PWA and
+   push subscription being re-created from scratch.
+-- **Migrations are forward-only:** rolling back `hearth-service`/`caddy` images (manual or
++- **Migrations are forward-only:** rolling back `hestia-service`/`caddy` images (manual or
+   automatic) never rolls back the database schema. A migration that needs undoing requires a new
+   forward migration or a full restore from backup.
++- **Another Compose project already on this host:** the stack pins its Compose network to
++  `172.16.238.0/24` and Caddy to `127.0.0.1:8080`. A different Compose project on the same host
++  that holds either one must be stopped before the first deploy; otherwise `scripts/deploy.sh`
++  stops at the Supabase health gate with "the Supabase services are not healthy; nothing
++  restarted", and whatever is already running keeps serving.
+ - **Docs-only changes don't deploy:** `deploy.yml` skips the deploy step when nothing outside
+   `docs/` and `.planning/` changed since the running revision (see "Ongoing deploys").
+diff --git a/docs/development.md b/docs/development.md
+index 51a434a..58931b2 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -78,7 +78,7 @@ pnpm --filter @hestia/service dev
+ | `LOG_LEVEL`, `HOST`, `PORT` | Pino level and the listen address |
+ 
+ The generated API document is at `GET /api/openapi.json`. The owner CLI is a bin in the service
+-image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hearth-service
++image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hestia-service
+ hearth-admin reset-password <email>`); locally it runs from the built bundle with `GOTRUE_URL`,
+ `SERVICE_ROLE_KEY`, and `HESTIA_ORIGIN` set:
+ 
+@@ -107,13 +107,13 @@ than the five seed users, so it cannot add them to a stack that real people use.
+ [Seed data](testing.md#seed-data) for what the seed contains.
+ 
+ To seed a Compose stack instead (development only, never production), point it at Caddy and at
+-the `db` container's address on the Compose network (`hearth-compose` is the alias defined in
++the `db` container's address on the Compose network (`hestia-compose` is the alias defined in
+ [First-time setup](deployment.md#first-time-setup)):
+ 
+ ```sh
+-set -a; . /srv/hearth/.env; set +a
++set -a; . /srv/hestia/.env; set +a
+ DB_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+-  "$(hearth-compose ps --quiet db)")
++  "$(hestia-compose ps --quiet db)")
+ HESTIA_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
+   HESTIA_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+   HESTIA_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \
+diff --git a/docs/file-map.md b/docs/file-map.md
+index 2b1f203..6fde7cc 100644
+--- a/docs/file-map.md
++++ b/docs/file-map.md
+@@ -114,7 +114,7 @@ defines the full production stack:
+ | `auth` | GoTrue, handling sign-in and account management. |
+ | `realtime` | Pushes live updates to connected clients. |
+ | `kong` | The gateway that routes external requests to `auth` and `realtime` only — nothing else is exposed through it. |
+-| `hearth-service` | The backend API and background jobs (built from `apps/service`). |
++| `hestia-service` | The backend API and background jobs (built from `apps/service`). |
+ | `caddy` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
+ | `backup` | Runs the nightly database backup and keeps a rotation of older backups. |
+ 
+@@ -168,7 +168,7 @@ shopping list.
+ | `audit-prod.test.mjs` | Harness test for the audit script, run on saved audit reports and a stub `pnpm`. Run by `pnpm test:harness`. |
+ | `audit-allowlist.json` | The advisories the audit script accepts, each with an id, an expiry day and a reason. Empty today. |
+ | `jscpd-config.test.mjs` | Harness test for the duplicate-code check: runs jscpd with the settings in `.jscpd.json` on fixture trees. Run by `pnpm test:harness`. |
+-| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hearth-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
++| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hestia-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
+ | `deploy-gate.test.mjs` | Harness test for the deploy gate, run on temporary git repositories with a stub `docker`. Run by `pnpm test:harness`. |
+ | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
+ | `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |
+diff --git a/docs/testing.md b/docs/testing.md
+index ec63cd6..379efc3 100644
+--- a/docs/testing.md
++++ b/docs/testing.md
+@@ -184,7 +184,7 @@ controlled, not inherited from the machine.
+     binaries placed first on `PATH` and fixture `docker/` folders. It checks that each
+     `public.ecr.aws/supabase` image is pulled from its `ghcr.io/supabase` mirror first and tagged
+     with its ECR name, that a failed mirror pull falls back to ECR within each attempt, that Docker
+-    Hub images are pulled directly, that a present image is skipped, that the hearth-built and
++    Hub images are pulled directly, that a present image is skipped, that the hestia-built and
+     backup images are never pulled, that an unsafe image name is refused before any pull, and that
+     six failed attempts end in an `::error::` annotation, with the delays scaled by
+     `CI_PREPULL_DELAY_SCALE`. One case reads the real `docker/` files. Nothing pulls an image or
+@@ -221,7 +221,7 @@ controlled, not inherited from the machine.
+     threshold, path and format settings and the `jscpd` script in `package.json` keeps
+     `--fail-on-empty`.
+   - `scripts/deploy-gate.test.mjs` copies the real `scripts/deploy-gate.sh` into a temporary git
+-    repository with a stub `docker` that answers `image inspect hearth-service:current` with a
++    repository with a stub `docker` that answers `image inspect hestia-service:current` with a
+     revision label. It checks the rules: a commit older than the running revision, a change confined
+     to `docs/` and `.planning/`, and a commit already running at attempt 1 (or unset) print
+     `deploy=false`; attempt 2 or later of a running commit (a deliberate re-run of the Deploy run),
+@@ -415,7 +415,7 @@ accounts of its own outside either seed, since signing up is the journey under t
+ **Per-run isolation:** each invocation of `pnpm test:e2e` is a "run" with its own six-hex-digit id
+ (`HESTIA_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
+ `e2e/support/env.ts`. Everything the run touches is namespaced by that id: the Compose project
+-(`hearth-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
++(`hestia-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
+ up`, on the first free `/24` between `172.16.240.0/24` and `172.16.254.0/24` — Docker's atomic
+ "refuse an overlapping subnet" check means two runs starting together can't collide), the image
+ tag (`e2e-<id>`) for the two images the run builds, a state directory under the OS temp dir holding
+@@ -433,7 +433,7 @@ own instant) so the deal-fetching code reads the checked-in captures instead of
+ variables are unset in every real deployment. Recipe import similarly mounts
+ `e2e/fixtures/recipes` read-only and sets `HESTIA_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
+ swapped for a fixture-reading function that never opens a socket. Journey 4 pastes one of three
+-fixture URLs under the never-resolved domain `fixtures.hearth-e2e.test`. Web Push gets the same
++fixture URLs under the never-resolved domain `fixtures.hestia-e2e.test`. Web Push gets the same
+ treatment: `HESTIA_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
+ through `/api/test/push`, and the browser's `PushManager` is stubbed before the app loads so no
+ real push service is ever contacted.
+@@ -456,7 +456,7 @@ Needs Docker, the Supabase CLI, and `psql` on the path. For iterating on a singl
+ paying for a full stack bring-up/teardown each time:
+ 
+ ```sh
+-# first run: note the run id it prints ("run <id>, project hearth-e2e-<id>: ...")
++# first run: note the run id it prints ("run <id>, project hestia-e2e-<id>: ...")
+ HESTIA_E2E_REUSE_STACK=1 pnpm test:e2e
+ 
+ # subsequent runs: reuse that stack, point Playwright at one spec file
+diff --git a/e2e/docker-compose.e2e.yml b/e2e/docker-compose.e2e.yml
+index 44bba53..22e7a33 100644
+--- a/e2e/docker-compose.e2e.yml
++++ b/e2e/docker-compose.e2e.yml
+@@ -1,6 +1,6 @@
+ # E2E overlay for docker/docker-compose.yml.
+ #
+-#   docker compose -p hearth-e2e-<run> --env-file <generated .env> \
++#   docker compose -p hestia-e2e-<run> --env-file <generated .env> \
+ #     -f docker/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --wait
+ #
+ # e2e/setup/stack.ts runs that for `pnpm test:e2e`. The suite exercises the production stack — the
+@@ -19,10 +19,10 @@
+ #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
+ #     public origin an https one; E2E is plain HTTP on the loopback, so HESTIA_HOST — the only
+ #     thing that entrypoint derives — is given directly
+-#   * hearth-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
++#   * hestia-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
+ #     info rather than warn so the rate discipline the deal journeys exercise is readable in
+ #     `docker compose logs`
+-#   * hearth-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
++#   * hestia-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
+ #     for real: `fetchRecipePage`'s private/loopback/link-local refusal would just as correctly
+ #     refuse a fixture server reachable only on this network, so journey 4 (a recipe imports from
+ #     a URL with JSON-LD) swaps the fetch step itself rather than trying to make a reachable
+@@ -36,7 +36,7 @@ services:
+     ports:
+       - 127.0.0.1:${HESTIA_E2E_DB_PORT:?}:5432
+ 
+-  hearth-service:
++  hestia-service:
+     # Relative to docker/, not to this file: Compose resolves every file's relative paths against
+     # the first -f file's directory, which is docker/docker-compose.yml (`compose.ts`).
+     volumes:
+@@ -72,10 +72,10 @@ services:
+       - 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}:8080
+ 
+ networks:
+-  # The base file's network is named `hearth` with its own ipam, which would pin a fixed name and
++  # The base file's network is named `hestia` with its own ipam, which would pin a fixed name and
+   # subnet. The run creates this network itself (e2e/setup/stack.ts), so that two runs' subnets
+   # cannot overlap silently, and Compose uses it as declared rather than creating one.
+-  hearth:
++  hestia:
+     name: ${HESTIA_E2E_NETWORK:?}
+     external: true
+     ipam: !reset null
+diff --git a/e2e/setup/stack.ts b/e2e/setup/stack.ts
+index b0f7774..3a1d174 100644
+--- a/e2e/setup/stack.ts
++++ b/e2e/setup/stack.ts
+@@ -34,7 +34,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
+ 
+ /** Stack services in start order. `backup` is left out: nothing in the suite reads a backup. */
+ const DATA_SERVICES = ['db', 'auth', 'realtime', 'kong'];
+-const APP_SERVICES = ['hearth-service', 'caddy'];
++const APP_SERVICES = ['hestia-service', 'caddy'];
+ 
+ const isReuse = process.env['HESTIA_E2E_REUSE_STACK'] === '1';
+ 
+@@ -84,7 +84,7 @@ function reserveSubnet(): Subnet {
+       '--gateway',
+       candidate.gateway,
+       '--label',
+-      `hearth.e2e.run=${RUN_ID}`,
++      `hestia.e2e.run=${RUN_ID}`,
+       NETWORK,
+     ]);
+     if (result.status === 0) return candidate;
+@@ -177,6 +177,6 @@ export function stopStack(): void {
+   // the two images it built go by their run-specific tags. Each removal is scoped to this run's
+   // name, never a pattern; a failure means there was nothing left to remove.
+   runCommand('docker', ['network', 'rm', NETWORK]);
+-  runCommand('docker', ['image', 'rm', `hearth-service:${IMAGE_TAG}`, `hearth-caddy:${IMAGE_TAG}`]);
++  runCommand('docker', ['image', 'rm', `hestia-service:${IMAGE_TAG}`, `hestia-caddy:${IMAGE_TAG}`]);
+   rmSync(STATE_DIR, { recursive: true, force: true });
+ }
+diff --git a/e2e/support/db.ts b/e2e/support/db.ts
+index 1728c36..a3ef211 100644
+--- a/e2e/support/db.ts
++++ b/e2e/support/db.ts
+@@ -44,5 +44,5 @@ export function hearthAdmin(args: readonly string[]): {
+   stdout: string;
+   stderr: string;
+ } {
+-  return compose(['exec', '-T', 'hearth-service', 'hearth-admin', ...args]);
++  return compose(['exec', '-T', 'hestia-service', 'hearth-admin', ...args]);
+ }
+diff --git a/e2e/support/env.ts b/e2e/support/env.ts
+index 88570c0..713e2f5 100644
+--- a/e2e/support/env.ts
++++ b/e2e/support/env.ts
+@@ -16,7 +16,7 @@ export const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+  * runs on one machine never share one. `HESTIA_E2E_RUN_ID` names a run explicitly, which is how a
+  * reused stack is found again.
+  */
+-const STATE_ROOT = process.env['HESTIA_E2E_STATE_DIR'] ?? join(tmpdir(), 'hearth-e2e');
++const STATE_ROOT = process.env['HESTIA_E2E_STATE_DIR'] ?? join(tmpdir(), 'hestia-e2e');
+ 
+ if (
+   process.env['HESTIA_E2E_REUSE_STACK'] === '1' &&
+diff --git a/e2e/support/logs.ts b/e2e/support/logs.ts
+index c749c59..353134b 100644
+--- a/e2e/support/logs.ts
++++ b/e2e/support/logs.ts
+@@ -3,7 +3,7 @@ import { composeChecked } from './compose.ts';
+ /**
+  * The service's own structured log, read back out of the running container. Pino writes one JSON
+  * object per line;
+- * `--no-log-prefix` is what keeps Compose from gluing a `hearth-service-1  |` tag onto the front of
++ * `--no-log-prefix` is what keeps Compose from gluing a `hestia-service-1  |` tag onto the front of
+  * each one, which would otherwise stop it parsing as JSON.
+  */
+ export interface ServiceLogLine {
+@@ -14,7 +14,7 @@ export interface ServiceLogLine {
+ 
+ /** Every line the service has logged since the container started, oldest first. */
+ export function serviceLogLines(): ServiceLogLine[] {
+-  const output = composeChecked(['logs', '--no-color', '--no-log-prefix', 'hearth-service']);
++  const output = composeChecked(['logs', '--no-color', '--no-log-prefix', 'hestia-service']);
+   const lines: ServiceLogLine[] = [];
+   for (const line of output.split('\n')) {
+     if (line.trim() === '') continue;
+diff --git a/e2e/support/run-identity.test.ts b/e2e/support/run-identity.test.ts
+index a922f15..cfed8f4 100644
+--- a/e2e/support/run-identity.test.ts
++++ b/e2e/support/run-identity.test.ts
+@@ -6,8 +6,8 @@ import { SUBNET_CANDIDATES, parseEnvFile, runNames } from './run-identity.ts';
+ void describe('runNames', () => {
+   void it('derives the project, network, and image tag from the run id', () => {
+     assert.deepEqual(runNames('3f9a1c'), {
+-      project: 'hearth-e2e-3f9a1c',
+-      network: 'hearth-e2e-3f9a1c',
++      project: 'hestia-e2e-3f9a1c',
++      network: 'hestia-e2e-3f9a1c',
+       imageTag: 'e2e-3f9a1c',
+     });
+   });
+diff --git a/e2e/support/run-identity.ts b/e2e/support/run-identity.ts
+index aeb45d0..8706db4 100644
+--- a/e2e/support/run-identity.ts
++++ b/e2e/support/run-identity.ts
+@@ -22,8 +22,8 @@ export function runNames(runId: string): RunNames {
+     throw new Error(`HESTIA_E2E_RUN_ID must be 1-16 lowercase letters or digits (got '${runId}')`);
+   }
+   return {
+-    project: `hearth-e2e-${runId}`,
+-    network: `hearth-e2e-${runId}`,
++    project: `hestia-e2e-${runId}`,
++    network: `hestia-e2e-${runId}`,
+     imageTag: `e2e-${runId}`,
+   };
+ }
+diff --git a/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts b/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts
+index 856325d..fdda8eb 100644
+--- a/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts
++++ b/e2e/tests/08-caddy-refuses-gotrue-endpoints.spec.ts
+@@ -8,7 +8,7 @@ import { SEED, readStackEnv } from '../support/env.ts';
+  * `POST /auth/v1/signup` and `PUT /auth/v1/user` are refused, including percent-encoded and
+  * doubled-slash variants of the paths.
+  *
+- * Only hearth-service may call those two endpoints, which it does on the Compose network, so the
++ * Only hestia-service may call those two endpoints, which it does on the Compose network, so the
+  * common-password check at signup and the password re-entry for a password or email change cannot
+  * be skipped by calling GoTrue directly. Caddy's matcher is method-restricted and runs after path
+  * normalization — percent-decoding, merged duplicate slashes, resolved dot segments,
+diff --git a/e2e/tests/12-deal-rate-discipline.spec.ts b/e2e/tests/12-deal-rate-discipline.spec.ts
+index 4e8b302..cfcd680 100644
+--- a/e2e/tests/12-deal-rate-discipline.spec.ts
++++ b/e2e/tests/12-deal-rate-discipline.spec.ts
+@@ -8,7 +8,7 @@ import { SEED } from '../support/env.ts';
+  * Rate discipline is observable in logs: one refresh per active postal code, flyer items only for
+  * favorited merchants, serialized, backed off on failure.
+  *
+- * E2E never calls Flipp live: the Compose overlay points hearth-service at the checked-in raw
++ * E2E never calls Flipp live: the Compose overlay points hestia-service at the checked-in raw
+  * captures instead of `backflipp.wishabi.com` (`e2e/docker-compose.e2e.yml`,
+  * `HESTIA_FLIPP_FIXTURE_DIR`), so every "flipp request" log line this run has printed came from the
+  * fixture transport.
+diff --git a/e2e/tests/13-recipe-import-and-readiness.spec.ts b/e2e/tests/13-recipe-import-and-readiness.spec.ts
+index 2590295..8bb7183 100644
+--- a/e2e/tests/13-recipe-import-and-readiness.spec.ts
++++ b/e2e/tests/13-recipe-import-and-readiness.spec.ts
+@@ -25,7 +25,7 @@ import { SEED } from '../support/env.ts';
+  * so neither is ever added to the list.
+  */
+ 
+-const FIXTURE_ORIGIN = 'https://fixtures.hearth-e2e.test';
++const FIXTURE_ORIGIN = 'https://fixtures.hestia-e2e.test';
+ 
+ interface OnSaleIngredient {
+   itemName: string;
+diff --git a/e2e/tests/19-notifications.spec.ts b/e2e/tests/19-notifications.spec.ts
+index 8e01f6f..7970b96 100644
+--- a/e2e/tests/19-notifications.spec.ts
++++ b/e2e/tests/19-notifications.spec.ts
+@@ -141,7 +141,7 @@ test.describe('notifications — meal reminder with the push double (light)', ()
+     page,
+     request,
+   }) => {
+-    const endpoint = `https://push.hearth-e2e.test/device/${randomBytes(6).toString('hex')}`;
++    const endpoint = `https://push.hestia-e2e.test/device/${randomBytes(6).toString('hex')}`;
+     await fakeBrowserPush(page, endpoint);
+ 
+     await signIn(page, SEED.alex.email);
+diff --git a/scripts/ci-prepull-images.sh b/scripts/ci-prepull-images.sh
+index 06e09b6..a1e54db 100755
+--- a/scripts/ci-prepull-images.sh
++++ b/scripts/ci-prepull-images.sh
+@@ -7,7 +7,7 @@
+ # Run from the repository root. The image list is read from docker/docker-compose.yml and
+ # docker/*.Dockerfile (the BuildKit `# syntax=` frontend included, because BuildKit pulls it during
+ # `--build`), so a Dependabot bump needs no edit here. Images already present are skipped, and the
+-# hearth-built images, the backup image and build-stage names are never pulled.
++# hestia-built images, the backup image and build-stage names are never pulled.
+ #
+ # The three Supabase images (public.ecr.aws/supabase/{name}:{tag}) are also published on
+ # ghcr.io/supabase by the same publisher with the same manifest digests (checked 2026-10-20). They
+@@ -33,7 +33,7 @@ fi
+ list=$(
+   {
+     sed -nE 's/^[[:space:]]*image:[[:space:]]*//p' docker/docker-compose.yml |
+-      { grep -vE '^hearth-|^prodrigestivill/' || true; }
++      { grep -vE '^hestia-|^prodrigestivill/' || true; }
+     sed -nE 's/^FROM[[:space:]]+(--[^[:space:]]+[[:space:]]+)*([^[:space:]]+).*/\2/p' docker/*.Dockerfile |
+       { grep -E '[:/]' || true; }
+     grep -h '^# syntax=' docker/*.Dockerfile | sed 's/^# syntax=//' || true
+diff --git a/scripts/ci-prepull-images.test.mjs b/scripts/ci-prepull-images.test.mjs
+index 1272566..8ecdf7f 100644
+--- a/scripts/ci-prepull-images.test.mjs
++++ b/scripts/ci-prepull-images.test.mjs
+@@ -34,7 +34,7 @@ const REALTIME = 'realtime:v1.0.0';
+ const SUPABASE = [POSTGRES, GOTRUE, REALTIME];
+ const HUB = ['caddy:1.0.0-alpine', 'docker/dockerfile:1', 'kong/kong:1.0.0', 'node:1.0.0-slim'];
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-prepull-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-prepull-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+@@ -97,12 +97,12 @@ function fixture(extraComposeLines = '') {
+     image: ${ECR}${REALTIME}
+   kong:
+     image: kong/kong:1.0.0
+-  hearth-service:
+-    image: hearth-service:\${HESTIA_TAG:-current}
++  hestia-service:
++    image: hestia-service:\${HESTIA_TAG:-current}
+     build:
+       context: ..
+   caddy:
+-    image: hearth-caddy:\${HESTIA_TAG:-current}
++    image: hestia-caddy:\${HESTIA_TAG:-current}
+     build:
+       context: ..
+   backup:
+@@ -216,11 +216,11 @@ describe('ci-prepull-images.sh: a clean run', () => {
+     for (const arg of ghcrArgs) assert.ok(arg.startsWith(GHCR), arg);
+   });
+ 
+-  it('never pulls the hearth-built images, the backup image or a build stage', () => {
++  it('never pulls the hestia-built images, the backup image or a build stage', () => {
+     assert.equal(result.status, 0, output(result));
+     assert.ok(result.calls.length > 0, 'no stub was called');
+     for (const arg of result.calls.flatMap((call) => call.args)) {
+-      assert.ok(!arg.startsWith('hearth-'), arg);
++      assert.ok(!arg.startsWith('hestia-'), arg);
+       assert.ok(!arg.startsWith('prodrigestivill/'), arg);
+       assert.notEqual(arg, 'source');
+     }
+diff --git a/scripts/deploy-gate.sh b/scripts/deploy-gate.sh
+index fa039c5..16db7ff 100755
+--- a/scripts/deploy-gate.sh
++++ b/scripts/deploy-gate.sh
+@@ -15,7 +15,7 @@
+ #
+ # Called by the `changes` step of .github/workflows/deploy.yml, with the checkout at fetch-depth 0
+ # (the comparison needs history). The decision compares HEAD with the revision of the image that is
+-# running, `hearth-service:current`, whose `org.opencontainers.image.revision` label deploy.sh sets
++# running, `hestia-service:current`, whose `org.opencontainers.image.revision` label deploy.sh sets
+ # to the first 12 hex digits of the deployed SHA:
+ #
+ #   - Comparing with the running revision, not with HEAD~1, means a code deploy that never ran
+@@ -37,7 +37,7 @@
+ set -euo pipefail
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-image="hearth-service:current"
++image="hestia-service:current"
+ # Spelled out rather than a-f / 0-9 ranges: ranges can match uppercase in some locales.
+ hex='0123456789abcdef'
+ 
+diff --git a/scripts/deploy-gate.test.mjs b/scripts/deploy-gate.test.mjs
+index 6f17f8f..86fa56a 100644
+--- a/scripts/deploy-gate.test.mjs
++++ b/scripts/deploy-gate.test.mjs
+@@ -1,7 +1,7 @@
+ /*
+  * Tests for `scripts/deploy-gate.sh`: which commits the deploy workflow ships. Every case builds a
+  * throwaway git repository, copies the real script into it, and runs it with a stub `docker` that
+- * answers `image inspect hearth-service:current` with the running revision label (or fails, as when
++ * answers `image inspect hestia-service:current` with the running revision label (or fails, as when
+  * no image exists). Nothing reaches a real Docker daemon, the network or the host's repository.
+  * The cases pin the deploy rules (a commit equal to or older than the running revision is skipped,
+  * a change confined to docs/ and .planning/ is skipped, anything else deploys, including an unknown
+@@ -136,7 +136,7 @@ function assertDecision(run, decision, reason) {
+   assert.match(run.stderr, /^deploy-gate: running revision .+: .+\n$/);
+   if (reason !== undefined) assert.match(run.stderr, reason);
+   for (const call of run.dockerCalls) {
+-    assert.match(call, /^image inspect .* hearth-service:current$/);
++    assert.match(call, /^image inspect .* hestia-service:current$/);
+   }
+   assert.equal(run.dockerCalls.length, 1, run.dockerCalls.join('\n'));
+ }
+diff --git a/scripts/deploy.sh b/scripts/deploy.sh
+index 7877766..e9c29ca 100755
+--- a/scripts/deploy.sh
++++ b/scripts/deploy.sh
+@@ -4,22 +4,22 @@
+ #
+ #   scripts/deploy.sh
+ #
+-#   HESTIA_ENV_FILE     the host's .env (default /srv/hearth/.env, outside any checkout)
++#   HESTIA_ENV_FILE     the host's .env (default /srv/hestia/.env, outside any checkout)
+ #   HESTIA_DEPLOY_SHA   the commit being deployed (default: git HEAD)
+ #
+ # Steps: build both images tagged with the commit SHA; back up the database; apply pending
+-# migrations; restart hearth-service and caddy on the new images; require GET /api/health
++# migrations; restart hestia-service and caddy on the new images; require GET /api/health
+ # through Caddy within 60 seconds, else roll both back to the images that were running.
+ # A failed build, backup, or migration aborts before anything is restarted. Safe to re-run.
+ set -euo pipefail
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-env_file="${HESTIA_ENV_FILE:-/srv/hearth/.env}"
++env_file="${HESTIA_ENV_FILE:-/srv/hestia/.env}"
+ sha="${HESTIA_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
+ new_tag="${sha:0:12}"
+ health_url="http://127.0.0.1:8080/api/health"
+ health_timeout_seconds=60
+-images=(hearth-service hearth-caddy)
++images=(hestia-service hestia-caddy)
+ # Old SHA-tagged images kept per image, for manual rollback beyond the automatic one.
+ keep_tags=5
+ 
+@@ -51,9 +51,9 @@ healthy_within() {
+ 
+ # Points :current at the given images and recreates the two containers on them.
+ switch_to() {
+-  docker tag "$1" hearth-service:current
+-  docker tag "$2" hearth-caddy:current
+-  compose up --detach --no-deps --no-build hearth-service caddy
++  docker tag "$1" hestia-service:current
++  docker tag "$2" hestia-caddy:current
++  compose up --detach --no-deps --no-build hestia-service caddy
+ }
+ 
+ [[ -r "$env_file" ]] || fail "cannot read $env_file (set HESTIA_ENV_FILE)"
+@@ -63,18 +63,18 @@ cd "$repo_root"
+ log "deploying $new_tag"
+ 
+ # 1. Record what is running now; it is the rollback target.
+-prev_service="$(image_id hearth-service:current)"
+-prev_caddy="$(image_id hearth-caddy:current)"
++prev_service="$(image_id hestia-service:current)"
++prev_caddy="$(image_id hestia-caddy:current)"
+ if [[ -n "$prev_service" && -n "$prev_caddy" ]]; then
+-  log "previous: hearth-service $(revision_of hearth-service:current)," \
+-    "hearth-caddy $(revision_of hearth-caddy:current)"
++  log "previous: hestia-service $(revision_of hestia-service:current)," \
++    "hestia-caddy $(revision_of hestia-caddy:current)"
+ else
+   log "previous: none (first deploy; there is nothing to roll back to)"
+ fi
+ 
+ # 2. Build. Nothing is restarted yet, so a failed build changes nothing.
+-log "building hearth-service:$new_tag and hearth-caddy:$new_tag"
+-HESTIA_TAG="$new_tag" compose build hearth-service caddy || fail "build failed; nothing restarted"
++log "building hestia-service:$new_tag and hestia-caddy:$new_tag"
++HESTIA_TAG="$new_tag" compose build hestia-service caddy || fail "build failed; nothing restarted"
+ 
+ # The Supabase services and backup must be running for the backup and migrations. Only
+ # missing containers are started: a deploy never recreates the database.
+@@ -105,13 +105,13 @@ compose exec -T db psql --username supabase_admin --dbname postgres --quiet \
+   fail "setting the hestia_service login failed; nothing restarted"
+ 
+ # 5. Restart on the new images, gated on health.
+-log "restarting hearth-service and caddy on $new_tag"
+-switch_to "hearth-service:$new_tag" "hearth-caddy:$new_tag"
++log "restarting hestia-service and caddy on $new_tag"
++switch_to "hestia-service:$new_tag" "hestia-caddy:$new_tag"
+ if healthy_within "$health_timeout_seconds"; then
+   log "healthy; deployed $new_tag"
+ else
+   log "GET /api/health did not succeed within ${health_timeout_seconds}s"
+-  compose logs --tail 30 hearth-service caddy || true
++  compose logs --tail 30 hestia-service caddy || true
+   if [[ -z "$prev_service" || -z "$prev_caddy" ]]; then
+     fail "$new_tag is unhealthy and there is no previous image to roll back to"
+   fi
+diff --git a/scripts/generate-secrets.sh b/scripts/generate-secrets.sh
+index 88faa43..8d92299 100755
+--- a/scripts/generate-secrets.sh
++++ b/scripts/generate-secrets.sh
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env bash
+ # Writes a fresh .env from .env.example with every secret generated.
+ #
+-#   scripts/generate-secrets.sh [output-path]      (default: $HESTIA_ENV_FILE or /srv/hearth/.env)
++#   scripts/generate-secrets.sh [output-path]      (default: $HESTIA_ENV_FILE or /srv/hestia/.env)
+ #
+ # HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR are copied from the environment when set,
+ # otherwise left as .env.example's placeholders for the owner to fill in. Refuses to overwrite an
+@@ -10,7 +10,7 @@
+ set -euo pipefail
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-out="${1:-${HESTIA_ENV_FILE:-/srv/hearth/.env}}"
++out="${1:-${HESTIA_ENV_FILE:-/srv/hestia/.env}}"
+ 
+ if [[ -e "$out" ]]; then
+   echo "generate-secrets: $out already exists; not overwriting it." >&2
+diff --git a/supabase/config.toml b/supabase/config.toml
+index 1b42d6a..1b0726d 100644
+--- a/supabase/config.toml
++++ b/supabase/config.toml
+@@ -2,7 +2,7 @@
+ # Postgres, GoTrue, Realtime, Kong, and Studio.
+ # Production runs docker/docker-compose.yml instead, on the same Postgres, GoTrue, and Realtime
+ # images. Reference: https://supabase.com/docs/guides/local-development/cli/config
+-project_id = "hearth"
++project_id = "hestia"
+ 
+ [api]
+ # No PostgREST: the service is the only HTTP path to the data. Kong still serves auth and
+-- 
+2.43.0
+

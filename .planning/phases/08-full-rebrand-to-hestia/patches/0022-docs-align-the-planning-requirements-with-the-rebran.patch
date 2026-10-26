@@ -1,0 +1,79 @@
+From e68f0f44af31cc63cc9081fda7f2ca8d45fe69b2 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:56:44 +0000
+Subject: [PATCH 22/31] docs: align the planning requirements with the rebrand
+ decisions
+
+- BRAND-02 text matches D-10: the manifest description names no brand
+- BRAND-03 names the executable and bin entry, with no alias or shim
+- BRAND-04 lists @hestia/seed; BRAND-05 is a hard cutover
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ .planning/PROJECT.md      |  6 +++---
+ .planning/REQUIREMENTS.md | 12 ++++++------
+ .planning/ROADMAP.md      |  4 ++--
+ 3 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/.planning/PROJECT.md b/.planning/PROJECT.md
+index a3ff12c..b5c5fe3 100644
+--- a/.planning/PROJECT.md
++++ b/.planning/PROJECT.md
+@@ -49,10 +49,10 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
+ - **DOC-01**: Restructure `README.md` into a clean, concise overview, abstracting deep development, deployment, and testing details into dedicated guides in `docs/`.
+ - **DOC-02**: Create `docs/development.md`, `docs/deployment.md`, and `docs/testing.md` preserving all technical runbook knowledge.
+ - **BRAND-01**: Rebrand user-facing PWA app name to "Hestia" (page titles, HTML metadata, app shell header, onboarding copy, and install banner).
+-- **BRAND-02**: Update PWA manifest with `name: "Hestia"`, `short_name: "Hestia"`, updated description, and matching theme/background tokens.
++- **BRAND-02**: Update PWA manifest with `name: "Hestia"` and `short_name: "Hestia"`; the manifest description names no brand and stays as it is.
+ - **BRAND-03**: Rename service administrative CLI from `hearth-admin` to `hestia-admin` and update binary references.
+-- **BRAND-04**: Migrate workspace package namespaces from `@hearth/*` to `@hestia/*` across `package.json` files and internal imports.
+-- **BRAND-05**: Transition environment variables, Docker service names, and container configurations from `HEARTH_*` to `HESTIA_*` with backwards-compatibility fallbacks where appropriate.
++- **BRAND-04**: Migrate workspace package namespaces from `@hearth/*` to `@hestia/*` (seven packages, including `@hestia/seed`) across `package.json` files and internal imports.
++- **BRAND-05**: Transition environment variables, Docker service names, and container configurations from `HEARTH_*` to `HESTIA_*` as a hard cutover: the old names are not read.
+ - **BRAND-06**: Update all unit, component, integration, and E2E test suites to pass under the Hestia brand name.
+ - **NET-01**: Decommission Tailscale Funnel dependencies, CLI instructions, and host-network proxy configurations.
+ - **NET-02**: Provide Cloudflare Tunnel (`cloudflared`) Docker Compose service configuration connecting `hestia.aberrance.app` to Caddy with zero exposed host ports.
+diff --git a/.planning/REQUIREMENTS.md b/.planning/REQUIREMENTS.md
+index 84cb558..6c65666 100644
+--- a/.planning/REQUIREMENTS.md
++++ b/.planning/REQUIREMENTS.md
+@@ -30,14 +30,14 @@ Milestone v2.0 migrates the application to the custom domain `hestia.aberrance.a
+ 
+ - [ ] **BRAND-01**: Update all user-facing PWA UI text, page titles (`<title>Hestia</title>` and `${page} · Hestia`), shell headers, onboarding copy, and install prompts to "Hestia".
+   - *Acceptance Criteria*: No visible user-facing copy refers to Hearth; browser tab title, home screen install prompt, and shell navigation display Hestia.
+-- [ ] **BRAND-02**: Update PWA web app manifest (`apps/web/vite.config.ts`, `apps/web/index.html`) with `name: "Hestia"`, `short_name: "Hestia"`, and updated description.
++- [ ] **BRAND-02**: Update PWA web app manifest (`apps/web/vite.config.ts`, `apps/web/index.html`) with `name: "Hestia"` and `short_name: "Hestia"`; the manifest description names no brand and stays as it is.
+   - *Acceptance Criteria*: Manifest generated during build reflects `Hestia`; browser installation inspects as "Hestia".
+-- [ ] **BRAND-03**: Rename administrative CLI executable and package scripts from `hearth-admin` to `hestia-admin` in `apps/service`.
+-  - *Acceptance Criteria*: `hestia-admin` runs administrative tasks; old `hearth-admin` command either aliases or is cleanly migrated.
+-- [ ] **BRAND-04**: Migrate workspace package scopes and names from `@hearth/*` to `@hestia/*` (`@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, `@hestia/e2e`).
++- [ ] **BRAND-03**: Rename the administrative CLI executable and its `bin` entry from `hearth-admin` to `hestia-admin` in `apps/service`.
++  - *Acceptance Criteria*: `hestia-admin` runs administrative tasks; the old command is removed with no alias or shim (D-07).
++- [ ] **BRAND-04**: Migrate workspace package scopes and names from `@hearth/*` to `@hestia/*` (`@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, `@hestia/e2e`, `@hestia/seed`).
+   - *Acceptance Criteria*: Monorepo dependencies resolve cleanly via pnpm; typecheck, lint, and build pass across all workspaces.
+-- [ ] **BRAND-05**: Update environment variable prefixes, Docker Compose service names, and container configurations from `HEARTH_*` to `HESTIA_*` (`HESTIA_HOST`, `HESTIA_ORIGIN`, `HESTIA_MAGIC_LINK_ENABLED`, etc.), providing fallback compatibility where needed.
+-  - *Acceptance Criteria*: `.env.example`, `docker/docker-compose.yml`, and `apps/service/src/env.ts` accept and document `HESTIA_*` variables.
++- [ ] **BRAND-05**: Update environment variable prefixes, Docker Compose service names, and container configurations from `HEARTH_*` to `HESTIA_*` (`HESTIA_HOST`, `HESTIA_ORIGIN`, `HESTIA_MAGIC_LINK_ENABLED`, etc.), as a hard cutover: there are no fallback reads of the old names.
++  - *Acceptance Criteria*: `.env.example`, `docker/docker-compose.yml`, and `apps/service/src/env.ts` accept and document `HESTIA_*` variables; a service started with only the old names fails validation at startup (D-01, D-02).
+ - [ ] **BRAND-06**: Update unit, component, integration, and E2E test suites to validate against the Hestia brand and new package names without test regressions.
+   - *Acceptance Criteria*: `pnpm test` and `pnpm test:integration` pass with 100% green status.
+ 
+diff --git a/.planning/ROADMAP.md b/.planning/ROADMAP.md
+index 4981c8c..d0d224a 100644
+--- a/.planning/ROADMAP.md
++++ b/.planning/ROADMAP.md
+@@ -59,8 +59,8 @@ Plans:
+ 1. PWA UI titles, shell header, onboarding copy, and home screen install banners display "Hestia".
+ 2. Web App Manifest generates with `name: "Hestia"` and `short_name: "Hestia"`.
+ 3. Administrative CLI command is `hestia-admin` in `apps/service`.
+-4. Monorepo packages are renamed to `@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, and `@hestia/e2e`.
+-5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
++4. Monorepo packages are renamed to `@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, `@hestia/e2e`, and `@hestia/seed`.
++5. Environment variables and Docker Compose services support `HESTIA_*` configuration (hard cutover; the old names are not read).
+ 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
+ 
+ **Plans:** 5/7 plans executed
+-- 
+2.43.0
+

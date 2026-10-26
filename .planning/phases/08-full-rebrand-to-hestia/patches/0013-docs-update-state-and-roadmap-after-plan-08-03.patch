@@ -1,0 +1,109 @@
+From 99f365787e4b11e16284e243e1ff56291e890a56 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:41:51 +0000
+Subject: [PATCH 13/31] docs: update state and roadmap after plan 08-03
+
+---
+ .planning/ROADMAP.md |  4 ++--
+ .planning/STATE.md   | 19 +++++++++++--------
+ .planning/state.json |  2 +-
+ 3 files changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/.planning/ROADMAP.md b/.planning/ROADMAP.md
+index 3401b70..275a80e 100644
+--- a/.planning/ROADMAP.md
++++ b/.planning/ROADMAP.md
+@@ -63,7 +63,7 @@ Plans:
+ 5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
+ 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
+ 
+-**Plans:** 2/7 plans executed
++**Plans:** 3/7 plans executed
+ 
+ Plans:
+ **Wave 1**
+@@ -73,7 +73,7 @@ Plans:
+ - [x] 08-02-PLAN.md — Rename the workspace packages to `@hestia/*` (seven, with `@hestia/seed`), regenerate the lockfile with pnpm, prove typecheck, builds and every repository gate
+ 
+ **Wave 3** *(blocked on Wave 2 completion)*
+-- [ ] 08-03-PLAN.md — Hard-cut every environment variable to `HESTIA_*`; rename the Compose project, network, service, images, host paths, E2E names, Supabase project id and runner label
++- [x] 08-03-PLAN.md — Hard-cut every environment variable to `HESTIA_*`; rename the Compose project, network, service, images, host paths, E2E names, Supabase project id and runner label
+ 
+ **Wave 4** *(blocked on Wave 3 completion)*
+ - [ ] 08-04-PLAN.md — Hestia in the PWA copy, title and manifest (build-checked), `hestia-admin` as a clean break, renamed browser keys
+diff --git a/.planning/STATE.md b/.planning/STATE.md
+index cd8a99f..9b96fab 100644
+--- a/.planning/STATE.md
++++ b/.planning/STATE.md
+@@ -4,18 +4,18 @@ milestone: v2.0
+ milestone_name: Hestia — Domain Migration and Rebrand
+ current_phase: 8
+ current_phase_name: Full Rebrand to Hestia
+-current_plan: 3
++current_plan: 4
+ status: executing
+-stopped_at: Completed 08-02-PLAN.md
+-last_updated: "2026-10-26T03:33:57.283Z"
++stopped_at: Completed 08-03-PLAN.md
++last_updated: "2026-10-26T03:41:43.840Z"
+ last_activity: 2026-10-26
+ last_activity_desc: Phase 08 execution started
+-state_head: fa1f43d5d44c221837afb581d2f61c7bf004f853
++state_head: e127ee178a7d94d20d66df55a6ac5e23b4193e2a
+ progress:
+   total_phases: 5
+   completed_phases: 1
+   total_plans: 11
+-  completed_plans: 6
++  completed_plans: 7
+   percent: 20
+ current_milestone: v2.0
+ ---
+@@ -33,7 +33,7 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
+ 
+ Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
+ Phase: 8 (Full Rebrand to Hestia)
+-Current Plan: 3
++Current Plan: 4
+ Total Plans in Phase: 7
+ Phases: 1 of 5 complete (Phases 7–11)
+ Status: Ready to execute
+@@ -55,8 +55,8 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ 
+ ## Session
+ 
+-**Last session:** 2026-10-26T03:33:57.248Z
+-**Stopped at:** Completed 08-02-PLAN.md
++**Last session:** 2026-10-26T03:41:43.801Z
++**Stopped at:** Completed 08-03-PLAN.md
+ **Resume file:** None
+ 
+ ## Performance Metrics
+@@ -69,6 +69,7 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ | Phase 07 P04 | 8 min | 2 tasks | 3 files |
+ | Phase 08 P01 | 15 min | 2 tasks | 32 files |
+ | Phase 08 P02 | 7 min | 2 tasks | 216 files |
++| Phase 08 P03 | 7 min | 2 tasks | 73 files |
+ 
+ ## Decisions
+ 
+@@ -79,3 +80,5 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ - [Phase 08]: 08-01: the login role is renamed by editing the two applied migrations in place; scripts/migration-exemptions.json pins each edit to the exact base and head blobs so the append-only gate admits only those edits and expires on its own once they are on main
+ - [Phase 08]: 08-01: exemption entry paths must be flat .sql names under supabase/migrations/ and reasons single-line, stricter than the plan contract, to keep entry data from reaching git or the CI log unvalidated
+ - [Phase 08]: 08-02: the phase docs-claims checker copy finds the root workspace by directory and its allowlist keeps both old and new product names allowed; the 08-07 legacy-name guard rejects old names in docs
++- [Phase 08]: 08-03: hard cutover to HESTIA_*; no fallback read of any pre-rebrand name anywhere (D-01)
++- [Phase 08]: 08-03: Compose project/network hestia, service hestia-service, runner label hestia; /srv/hestia host path
+diff --git a/.planning/state.json b/.planning/state.json
+index 0e62e64..5c766bd 100644
+--- a/.planning/state.json
++++ b/.planning/state.json
+@@ -34,5 +34,5 @@
+     "label": "Advance to the next step",
+     "reason": "Phase 8 of 5 · 20% · executing"
+   },
+-  "updated_at": "2026-10-26T03:33:56.637Z"
++  "updated_at": "2026-10-26T03:41:42.982Z"
+ }
+-- 
+2.43.0
+

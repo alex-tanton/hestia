@@ -1,0 +1,135 @@
+From 7b1cebe2dd4f2e47424fd328d8b5988f12f2cee1 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:26:01 +0000
+Subject: [PATCH 06/31] docs: update state and roadmap after plan 08-01
+
+---
+ .planning/ROADMAP.md |  4 ++--
+ .planning/STATE.md   | 40 +++++++++++++++++++++++-----------------
+ .planning/state.json |  2 +-
+ 3 files changed, 26 insertions(+), 20 deletions(-)
+
+diff --git a/.planning/ROADMAP.md b/.planning/ROADMAP.md
+index 577bd31..155e702 100644
+--- a/.planning/ROADMAP.md
++++ b/.planning/ROADMAP.md
+@@ -63,11 +63,11 @@ Plans:
+ 5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
+ 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
+ 
+-**Plans:** 7 plans
++**Plans:** 1/7 plans executed
+ 
+ Plans:
+ **Wave 1**
+-- [ ] 08-01-PLAN.md — Rename the login role to `hestia_service` by editing the two applied migrations in place, admitted by a content-pinned, self-expiring exemption in the append-only gate
++- [x] 08-01-PLAN.md — Rename the login role to `hestia_service` by editing the two applied migrations in place, admitted by a content-pinned, self-expiring exemption in the append-only gate
+ 
+ **Wave 2** *(blocked on Wave 1 completion)*
+ - [ ] 08-02-PLAN.md — Rename the workspace packages to `@hestia/*` (seven, with `@hestia/seed`), regenerate the lockfile with pnpm, prove typecheck, builds and every repository gate
+diff --git a/.planning/STATE.md b/.planning/STATE.md
+index ca5ad0e..fe6944b 100644
+--- a/.planning/STATE.md
++++ b/.planning/STATE.md
+@@ -2,21 +2,22 @@
+ gsd_state_version: "1.0"
+ milestone: v2.0
+ milestone_name: Hestia — Domain Migration and Rebrand
++current_phase: 8
++current_phase_name: Full Rebrand to Hestia
++current_plan: 2
+ status: executing
+-stopped_at: Phase 8 context gathered
+-last_updated: "2026-10-26T03:14:33.180Z"
+-last_activity: 2026-10-25
+-last_activity_desc: Phase 07 complete, transitioned to Phase 8
+-state_head: 1b33ccd5e172cf2000661592e1b462b83be0be56
++stopped_at: Completed 08-01-PLAN.md
++last_updated: "2026-10-26T03:25:56.984Z"
++last_activity: 2026-10-26
++last_activity_desc: Phase 08 execution started
++state_head: c2851cb78d4fcb857caf2f1dea4feb544896ea1d
+ progress:
+   total_phases: 5
+   completed_phases: 1
+   total_plans: 11
+-  completed_plans: 4
++  completed_plans: 5
+   percent: 20
+ current_milestone: v2.0
+-current_phase_name: full-rebrand-to-hestia
+-current_phase: 8
+ ---
+ 
+ # Project State
+@@ -26,17 +27,19 @@ current_phase: 8
+ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md) (updated 2026-10-25)
+ 
+ **Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
+-**Current focus:** Phase 07 — Planning Cleanup & Documentation Restructure
++**Current focus:** Phase 08 — Full Rebrand to Hestia
+ 
+ ## Current Position
+ 
+ Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
+-Phases: 0 of 5 complete (Phases 7–11)
+-Plans: 4 of 4 complete (07-01, 07-02, 07-03, 07-04 done)
++Phase: 8 (Full Rebrand to Hestia)
++Current Plan: 2
++Total Plans in Phase: 7
++Phases: 1 of 5 complete (Phases 7–11)
+ Status: Ready to execute
+-Last activity: 2026-10-25 — Phase 07 complete, transitioned to Phase 8
++Last activity: 2026-10-26 — Phase 08 execution started
+ 
+-Progress: [██░░░░░░░░] 20% of Phase 07 plans
++Progress: [██░░░░░░░░] 20% of milestone plans
+ 
+ ## Milestone Roadmap
+ 
+@@ -48,13 +51,13 @@ Progress: [██░░░░░░░░] 20% of Phase 07 plans
+ 
+ ## Next Action
+ 
+-Verify and complete Phase 07 (all four plans have summaries), then plan Phase 08.
++Execute Phase 08 plan 08-02 (package rename to `@hestia/*`).
+ 
+ ## Session
+ 
+-**Last session:** 2026-10-25T22:01:06.326Z
+-**Stopped at:** Phase 8 context gathered
+-**Resume file:** .planning/phases/08-full-rebrand-to-hestia/08-CONTEXT.md
++**Last session:** 2026-10-26T03:25:56.948Z
++**Stopped at:** Completed 08-01-PLAN.md
++**Resume file:** None
+ 
+ ## Performance Metrics
+ 
+@@ -64,6 +67,7 @@ Verify and complete Phase 07 (all four plans have summaries), then plan Phase 08
+ | Phase 07 P02 | 9min | 3 tasks | 7 files |
+ | Phase 07 P03 | 8min | 3 tasks | 4 files |
+ | Phase 07 P04 | 8 min | 2 tasks | 3 files |
++| Phase 08 P01 | 15 min | 2 tasks | 32 files |
+ 
+ ## Decisions
+ 
+@@ -71,3 +75,5 @@ Verify and complete Phase 07 (all four plans have summaries), then plan Phase 08
+ - [Phase 07]: 07-02: DOC-02 left open in REQUIREMENTS.md; this plan delivers only the docs/deployment.md part, development.md and testing.md merge and README links follow in 07-03 and 07-04
+ - [Phase 07]: 07-03: DOC-02 left open; development.md, the testing.md E2E merge and CONTRIBUTING links are done, the README cut and its links follow in 07-04
+ - [Phase 07]: README keeps intro, Prerequisites and Layout verbatim and links every docs file; Prerequisites heading kept for docs/development.md anchor
++- [Phase 08]: 08-01: the login role is renamed by editing the two applied migrations in place; scripts/migration-exemptions.json pins each edit to the exact base and head blobs so the append-only gate admits only those edits and expires on its own once they are on main
++- [Phase 08]: 08-01: exemption entry paths must be flat .sql names under supabase/migrations/ and reasons single-line, stricter than the plan contract, to keep entry data from reaching git or the CI log unvalidated
+diff --git a/.planning/state.json b/.planning/state.json
+index d165d6b..c0ab25b 100644
+--- a/.planning/state.json
++++ b/.planning/state.json
+@@ -34,5 +34,5 @@
+     "label": "Advance to the next step",
+     "reason": "Phase 8 of 5 · 20% · executing"
+   },
+-  "updated_at": "2026-10-26T03:14:33.203Z"
++  "updated_at": "2026-10-26T03:25:56.325Z"
+ }
+-- 
+2.43.0
+

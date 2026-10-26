@@ -1,0 +1,3346 @@
+From d9cb4a7ac3612899840d52fd95f0a0288fb1888d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:27:40 +0000
+Subject: [PATCH 07/31] build: rename the workspace packages to the @hestia
+ scope
+
+- rename the seven workspace packages and the root package to @hestia/* and hestia
+- regenerate pnpm-lock.yaml with pnpm 10.34.5 (six importer keys, no resolution change)
+- keep the service bundle inlining workspace code (noExternal on the new scope)
+- point the cloud setup script at the renamed root package and e2e filter
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ .claude/CLAUDE.md                             | 46 +++++++++----------
+ .github/workflows/ci.yml                      |  8 ++--
+ .planning/environment/cloud-setup.sh          |  4 +-
+ README.md                                     |  4 +-
+ apps/service/package.json                     |  8 ++--
+ apps/service/src/api.integration.test.ts      |  2 +-
+ apps/service/src/app.ts                       |  2 +-
+ apps/service/src/bills.integration.test.ts    |  2 +-
+ apps/service/src/chores.integration.test.ts   |  2 +-
+ apps/service/src/chores/chores.ts             |  8 ++--
+ apps/service/src/chores/errands.ts            |  2 +-
+ apps/service/src/chores/occurrence.ts         |  2 +-
+ apps/service/src/deals.integration.test.ts    |  2 +-
+ apps/service/src/errands.integration.test.ts  |  2 +-
+ apps/service/src/http/context.ts              |  2 +-
+ .../src/jobs/dispatch-notifications.ts        |  2 +-
+ apps/service/src/jobs/log-autopay.ts          |  2 +-
+ apps/service/src/jobs/scheduler.ts            |  2 +-
+ apps/service/src/lists.integration.test.ts    |  2 +-
+ .../src/match-overrides.integration.test.ts   |  4 +-
+ .../service/src/meal-plan.integration.test.ts |  2 +-
+ ...notification-producers.integration.test.ts |  2 +-
+ .../src/notifications.integration.test.ts     |  2 +-
+ apps/service/src/notifications/copy.test.ts   |  2 +-
+ apps/service/src/notifications/copy.ts        |  2 +-
+ apps/service/src/notifications/planners.ts    |  2 +-
+ apps/service/src/openapi.ts                   |  2 +-
+ .../src/privileged/notification-outbox.ts     |  2 +-
+ .../src/privileged/scheduled-reminders.ts     |  4 +-
+ apps/service/src/problem.ts                   |  2 +-
+ .../service/src/readiness.integration.test.ts |  4 +-
+ apps/service/src/realtime.integration.test.ts |  2 +-
+ apps/service/src/recipes.integration.test.ts  |  6 +--
+ apps/service/src/recipes/parse-recipe-url.ts  |  2 +-
+ apps/service/src/routes/auth.ts               |  4 +-
+ apps/service/src/routes/bills.ts              |  2 +-
+ apps/service/src/routes/chores.ts             |  2 +-
+ apps/service/src/routes/deals.ts              |  2 +-
+ apps/service/src/routes/errands.ts            |  2 +-
+ apps/service/src/routes/health.ts             |  2 +-
+ apps/service/src/routes/households.ts         |  2 +-
+ apps/service/src/routes/lists.ts              |  2 +-
+ apps/service/src/routes/match-overrides.ts    |  2 +-
+ apps/service/src/routes/meal-plan.ts          |  2 +-
+ apps/service/src/routes/recipes.ts            |  2 +-
+ apps/service/src/routes/routes.test.ts        |  2 +-
+ apps/service/src/routes/system.ts             |  2 +-
+ apps/service/src/routes/users.ts              |  4 +-
+ apps/service/src/services/add-to-list.ts      |  4 +-
+ apps/service/src/services/bills.ts            |  4 +-
+ apps/service/src/services/deals/deals.ts      |  4 +-
+ .../src/services/deals/favorite-stores.ts     |  2 +-
+ .../service/src/services/deals/filter.test.ts |  2 +-
+ apps/service/src/services/deals/filter.ts     |  2 +-
+ apps/service/src/services/deals/storage.ts    |  4 +-
+ apps/service/src/services/errors.ts           |  2 +-
+ apps/service/src/services/households.ts       |  2 +-
+ apps/service/src/services/invites.ts          |  2 +-
+ apps/service/src/services/lists.ts            |  4 +-
+ apps/service/src/services/match-overrides.ts  |  6 +--
+ .../src/services/matching-candidates.ts       | 10 ++--
+ apps/service/src/services/meal-plan.ts        |  2 +-
+ apps/service/src/services/membership.ts       |  2 +-
+ .../src/services/normalized-name.test.ts      |  4 +-
+ .../src/services/notifications.test.ts        |  2 +-
+ apps/service/src/services/notifications.ts    |  2 +-
+ apps/service/src/services/pantry.ts           |  4 +-
+ apps/service/src/services/readiness.ts        |  4 +-
+ apps/service/src/services/recipes.ts          |  6 +--
+ apps/service/src/services/repricing.ts        |  2 +-
+ apps/service/src/services/skip-rates.ts       |  2 +-
+ apps/service/src/services/subscriptions.ts    |  2 +-
+ apps/service/src/services/subtotals.ts        |  2 +-
+ apps/service/src/services/suggestions.test.ts |  2 +-
+ apps/service/src/services/suggestions.ts      |  2 +-
+ apps/service/src/services/users.ts            |  2 +-
+ apps/service/src/test/service-stack.ts        |  2 +-
+ apps/service/tsup.config.ts                   |  2 +-
+ apps/web/package.json                         |  6 +--
+ apps/web/src/App.test.tsx                     |  2 +-
+ apps/web/src/components/bills/BillForm.tsx    |  2 +-
+ apps/web/src/components/bills/BillRow.tsx     |  2 +-
+ .../src/components/bills/PaymentEditSheet.tsx |  2 +-
+ .../src/components/bills/PaymentHistory.tsx   |  2 +-
+ .../src/components/bills/SubscriptionRow.tsx  |  2 +-
+ apps/web/src/components/bills/bills-copy.ts   |  2 +-
+ .../src/components/chores/ChoreListRow.tsx    |  2 +-
+ .../components/chores/CompletionHistory.tsx   |  2 +-
+ .../components/chores/RecurrenceFields.tsx    |  4 +-
+ .../src/components/chores/RotationEditor.tsx  |  2 +-
+ apps/web/src/components/chores/chore-copy.ts  |  2 +-
+ .../chores/household-date-fallback.tsx        |  2 +-
+ .../components/chores/use-chore-completion.ts |  2 +-
+ apps/web/src/components/errands/ErrandRow.tsx |  2 +-
+ .../src/components/errands/ErrandSheet.tsx    |  2 +-
+ apps/web/src/components/lists/ItemPrice.tsx   |  2 +-
+ apps/web/src/components/lists/ItemSheet.tsx   |  2 +-
+ .../src/components/lists/ShoppingListRow.tsx  |  2 +-
+ .../src/components/lists/StoreGroupHeader.tsx |  2 +-
+ .../src/components/meals/IngredientEditor.tsx |  2 +-
+ .../src/components/meals/IngredientRow.tsx    |  2 +-
+ .../src/components/meals/MealSlotEntry.tsx    |  2 +-
+ .../components/meals/PlaceOnPlannerSheet.tsx  |  2 +-
+ apps/web/src/components/meals/PlannerDay.tsx  |  2 +-
+ .../components/meals/ReadinessBreakdown.tsx   |  2 +-
+ .../components/meals/meal-components.test.tsx |  2 +-
+ apps/web/src/components/meals/meal-copy.ts    |  2 +-
+ apps/web/src/components/meals/recipe-sort.ts  |  2 +-
+ apps/web/src/lib/api/bills-hooks.ts           |  2 +-
+ apps/web/src/lib/api/chore-hooks.ts           |  2 +-
+ apps/web/src/lib/api/client.test.ts           |  2 +-
+ apps/web/src/lib/api/client.ts                |  2 +-
+ apps/web/src/lib/api/deals.ts                 |  2 +-
+ apps/web/src/lib/api/hooks.ts                 |  2 +-
+ apps/web/src/lib/api/list-hooks.ts            |  2 +-
+ apps/web/src/lib/api/meal-hooks.ts            |  2 +-
+ apps/web/src/lib/api/notification-hooks.ts    |  2 +-
+ apps/web/src/lib/api/problem.ts               |  2 +-
+ apps/web/src/lib/auth/auth-client.ts          |  2 +-
+ apps/web/src/lib/bills/recurrence-preview.ts  |  6 +--
+ apps/web/src/lib/error-reporting.ts           |  2 +-
+ apps/web/src/lib/format.ts                    |  2 +-
+ apps/web/src/lib/money.ts                     |  2 +-
+ .../lib/offline/chore-errand-writes.test.ts   |  2 +-
+ .../src/lib/offline/chore-errand-writes.ts    |  4 +-
+ apps/web/src/lib/offline/list-cache.ts        |  2 +-
+ apps/web/src/lib/offline/write-queue.ts       |  2 +-
+ apps/web/src/lib/password.test.ts             |  8 ++--
+ apps/web/src/lib/password.ts                  |  2 +-
+ apps/web/src/lib/push/notification-target.ts  |  2 +-
+ apps/web/src/lib/realtime/realtime.test.tsx   |  2 +-
+ apps/web/src/lib/use-timezone-sync.ts         |  2 +-
+ apps/web/src/screens/DashboardRoute.tsx       |  2 +-
+ .../src/screens/bills/BillDetailScreen.tsx    |  2 +-
+ .../src/screens/bills/BillsIndexScreen.tsx    |  2 +-
+ .../src/screens/bills/SubscriptionsScreen.tsx |  2 +-
+ .../screens/bills/household-timezone.test.tsx |  2 +-
+ .../src/screens/chores/ChoreFormScreen.tsx    |  2 +-
+ .../src/screens/chores/ErrandsListScreen.tsx  |  2 +-
+ apps/web/src/screens/chores/chores.test.tsx   |  2 +-
+ .../chores/household-timezone.test.tsx        |  2 +-
+ apps/web/src/screens/deals/AddToList.tsx      |  2 +-
+ apps/web/src/screens/deals/DealCard.tsx       |  2 +-
+ apps/web/src/screens/deals/DealFreshness.tsx  |  2 +-
+ apps/web/src/screens/deals/DealResults.tsx    |  2 +-
+ .../src/screens/deals/DealSearchScreen.tsx    |  2 +-
+ apps/web/src/screens/deals/FavoriteStores.tsx |  2 +-
+ .../src/screens/deals/FlyerItemsScreen.tsx    |  2 +-
+ apps/web/src/screens/deals/FlyersScreen.tsx   |  2 +-
+ apps/web/src/screens/deals/deal-copy.ts       |  2 +-
+ .../src/screens/household-timezone.test.tsx   |  2 +-
+ .../src/screens/lists/ListDetailScreen.tsx    |  2 +-
+ apps/web/src/screens/lists/ListNameSheet.tsx  |  2 +-
+ .../src/screens/lists/ListsIndexScreen.tsx    |  2 +-
+ apps/web/src/screens/lists/PantryScreen.tsx   |  2 +-
+ apps/web/src/screens/meals/PlannerScreen.tsx  |  2 +-
+ .../src/screens/meals/RecipeDetailScreen.tsx  |  2 +-
+ apps/web/src/screens/meals/RecipeForm.tsx     |  2 +-
+ .../src/screens/meals/RecipeLibraryScreen.tsx |  2 +-
+ .../screens/meals/household-timezone.test.tsx |  2 +-
+ apps/web/src/screens/meals/planner.test.tsx   |  2 +-
+ .../src/screens/meals/recipe-detail.test.tsx  |  2 +-
+ .../onboarding/CreateHouseholdStep.tsx        |  2 +-
+ .../src/screens/onboarding/SignUpScreen.tsx   |  2 +-
+ .../screens/onboarding/onboarding.test.tsx    |  2 +-
+ .../src/screens/settings/AccountSection.tsx   |  2 +-
+ .../screens/settings/DeleteHouseholdPanel.tsx |  2 +-
+ .../src/screens/settings/DepartureScreen.tsx  |  2 +-
+ .../src/screens/settings/HouseholdCard.tsx    |  2 +-
+ .../settings/HouseholdSettingsSection.tsx     |  2 +-
+ .../screens/settings/HouseholdsSection.tsx    |  2 +-
+ .../src/screens/settings/InvitesSection.tsx   |  2 +-
+ .../screens/settings/NotificationTypeRows.tsx |  2 +-
+ .../screens/settings/NotificationTypes.tsx    |  2 +-
+ .../screens/settings/NotificationsSection.tsx |  2 +-
+ .../src/screens/settings/ReassignmentList.tsx |  2 +-
+ .../screens/settings/SystemHealthScreen.tsx   |  2 +-
+ .../settings/account/ChangeEmailForm.tsx      |  2 +-
+ .../settings/account/DisplayNameForm.tsx      |  2 +-
+ .../src/screens/settings/departure.test.tsx   |  2 +-
+ .../src/screens/settings/notification-copy.ts |  2 +-
+ .../src/screens/settings/settings.test.tsx    |  2 +-
+ apps/web/src/test/bills-fixtures.ts           |  2 +-
+ apps/web/src/test/chore-fixtures.ts           |  2 +-
+ apps/web/src/test/deal-fixtures.ts            |  2 +-
+ apps/web/src/test/fixtures.ts                 |  2 +-
+ apps/web/src/test/harness.tsx                 |  2 +-
+ apps/web/src/test/list-fixtures.ts            |  2 +-
+ apps/web/src/test/meal-fixtures.ts            |  2 +-
+ apps/web/vite.config.ts                       |  2 +-
+ docker/caddy.Dockerfile                       |  4 +-
+ docker/service.Dockerfile                     |  6 +--
+ docs/development.md                           | 10 ++--
+ docs/testing.md                               | 20 ++++----
+ docs/use-cases.md                             |  2 +-
+ e2e/fixtures/e2e-seed.sql                     |  2 +-
+ e2e/package.json                              |  2 +-
+ e2e/setup/stack.ts                            |  2 +-
+ package.json                                  | 10 ++--
+ packages/matching/package.json                |  2 +-
+ packages/recurrence/package.json              |  2 +-
+ packages/shared/package.json                  |  2 +-
+ packages/shared/src/api/auth.ts               |  2 +-
+ packages/shared/src/api/matching.ts           |  2 +-
+ packages/shared/src/api/schemas.test.ts       |  2 +-
+ packages/shared/src/common-passwords.ts       |  2 +-
+ packages/shared/src/password.ts               |  2 +-
+ pnpm-lock.yaml                                | 12 ++---
+ scripts/test-sweep.mjs                        |  6 +--
+ scripts/test-sweep.test.mjs                   |  2 +-
+ supabase/seed/compute-readiness.ts            |  4 +-
+ supabase/seed/package.json                    |  4 +-
+ supabase/seed/seed.sql                        |  4 +-
+ test/clock-setup.mjs                          |  2 +-
+ 214 files changed, 309 insertions(+), 309 deletions(-)
+
+diff --git a/.claude/CLAUDE.md b/.claude/CLAUDE.md
+index 76e7818..6e4cb12 100644
+--- a/.claude/CLAUDE.md
++++ b/.claude/CLAUDE.md
+@@ -45,13 +45,13 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ 
+ | Package | Path | Role |
+ |---------|------|------|
+-| `@hearth/service` | `apps/service` | Fastify HTTP API, job scheduler, owner CLI |
+-| `@hearth/web` | `apps/web` | React PWA (Vite) |
+-| `@hearth/shared` | `packages/shared` | Shared Zod request and response schemas, problem and error types, scrubbing, password rules |
+-| `@hearth/matching` | `packages/matching` | Ingredient and item fuzzy matching |
+-| `@hearth/recurrence` | `packages/recurrence` | Bill and chore recurrence logic |
+-| `@hearth/e2e` | `e2e` | Playwright end-to-end suite |
+-| `@hearth/seed` | `supabase/seed` | Seed-user, seed-SQL, and pantry-readiness tooling |
++| `@hestia/service` | `apps/service` | Fastify HTTP API, job scheduler, owner CLI |
++| `@hestia/web` | `apps/web` | React PWA (Vite) |
++| `@hestia/shared` | `packages/shared` | Shared Zod request and response schemas, problem and error types, scrubbing, password rules |
++| `@hestia/matching` | `packages/matching` | Ingredient and item fuzzy matching |
++| `@hestia/recurrence` | `packages/recurrence` | Bill and chore recurrence logic |
++| `@hestia/e2e` | `e2e` | Playwright end-to-end suite |
++| `@hestia/seed` | `supabase/seed` | Seed-user, seed-SQL, and pantry-readiness tooling |
+ 
+ ## Frameworks
+ 
+@@ -73,10 +73,10 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Vite 8.3.0 with `@vitejs/plugin-react` 6.1.1 - dev server and bundler (`apps/web/vite.config.ts`)
+ - `vite-plugin-pwa` 1.3.0 - `injectManifest` strategy; the service worker is authored in `apps/web/src/sw.ts`; `registerType: 'prompt'`. Workbox 7.4.1 packages (`workbox-precaching`, `workbox-routing`, `workbox-strategies`, `workbox-expiration`, `workbox-cacheable-response`, `workbox-window`) are direct devDependencies of `apps/web`
+ - `@supabase/supabase-js` 2.116.0 - browser auth and Realtime client, loaded with a dynamic `import()` (`apps/web/src/lib/auth/auth-client.ts`)
+-- `@hearth/shared` (`packages/shared`) - Zod 4.6.5 request and response schemas
+-- `@hearth/recurrence` (`packages/recurrence`) - `@date-fns/tz` 1.5.0 and date-fns 4.4.0
+-- `@hearth/matching` (`packages/matching`) - fastest-levenshtein 1.0.16
+-- `@hearth/seed` (`supabase/seed`) - `@hearth/matching` and `pg` 8.23.0
++- `@hestia/shared` (`packages/shared`) - Zod 4.6.5 request and response schemas
++- `@hestia/recurrence` (`packages/recurrence`) - `@date-fns/tz` 1.5.0 and date-fns 4.4.0
++- `@hestia/matching` (`packages/matching`) - fastest-levenshtein 1.0.16
++- `@hestia/seed` (`supabase/seed`) - `@hestia/matching` and `pg` 8.23.0
+ - tsup 8.5.1 - bundles the service to `apps/service/dist/` (`apps/service/tsup.config.ts`); `apps/service/src/write-openapi.ts` runs after it in `build`
+ - tsx 4.23.13 - runs TypeScript directly for `dev`, the seed tooling, and fixture scripts
+ - Vitest 5.0.1 - unit and integration tests in every workspace (`apps/service/vitest.config.ts`, `vitest.integration.config.ts`, `vitest.coverage.config.ts`; `apps/web/vite.config.ts` test block). Every unit config (and the service coverage config) loads `test/clock-setup.mjs` as a setup file, which pins `Date`, and `test/global-tz.mjs` as `globalSetup`, which validates `TZ`; the integration config loads only `global-tz.mjs`. `pnpm test:sweep` and `pnpm test:sweep:integration` (`scripts/test-sweep.mjs`) run the suites across a fixed date and time-zone matrix; see `docs/testing.md`
+@@ -134,7 +134,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Supabase CLI 2.117.0 for `supabase start` and `supabase db reset` (CI pins the same version)
+ - `psql` on PATH for `pnpm db:seed`
+ - Docker with the Compose plugin for the full stack and the E2E overlay `e2e/docker-compose.e2e.yml`
+-- Playwright Chromium: `pnpm --filter @hearth/e2e exec playwright install --with-deps chromium`
++- Playwright Chromium: `pnpm --filter @hestia/e2e exec playwright install --with-deps chromium`
+ - Single Linux host running the Compose stack in `docker/docker-compose.yml`
+ - Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel (`sudo tailscale funnel --bg http://127.0.0.1:8080`), origin `https://<machine>.<tailnet>.ts.net`
+ - A second disk mounted at `BACKUP_DIR`
+@@ -226,16 +226,16 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ 
+ ## Import Organization
+ 
+-- Third-party packages first (`@tanstack/...`, `@testing-library/...`, `react`, `react-router`, `fastify`, `vitest`), then workspace packages (`@hearth/shared`), then relative imports, parent directories before siblings.
++- Third-party packages first (`@tanstack/...`, `@testing-library/...`, `react`, `react-router`, `fastify`, `vitest`), then workspace packages (`@hestia/shared`), then relative imports, parent directories before siblings.
+ - This order is a convention, not enforced by ESLint. No import-order rule is configured.
+-- None. Cross-package imports use the `@hearth/*` workspace names (`pnpm-workspace.yaml`). Within an app, imports are relative.
+-- Each package exports from `packages/*/src/index.ts`. `packages/shared/src/index.ts` is a pure re-export barrel that re-exports the `api/*` modules; consumers import from `@hearth/shared`.
++- None. Cross-package imports use the `@hestia/*` workspace names (`pnpm-workspace.yaml`). Within an app, imports are relative.
++- Each package exports from `packages/*/src/index.ts`. `packages/shared/src/index.ts` is a pure re-export barrel that re-exports the `api/*` modules; consumers import from `@hestia/shared`.
+ - `apps/service/src/jobs/index.ts` is also a barrel. Inside an app, prefer the defining file over a barrel.
+ 
+ ## Error Handling
+ 
+ - Errors are RFC 9457 problem details (`type`, `title`, `status`, `detail`), never bare strings. `problem(status, detail?)` builds the body and `fail(status, detail?)` throws a `ProblemError`. Both are in `apps/service/src/problem.ts`.
+-- The global error handler in `apps/service/src/app.ts` sends a `ProblemError` unchanged. For 5xx responses it logs the error with `scrubErrorName` and `scrubErrorText` (from `@hearth/shared`) applied to the name and message, not the raw values.
++- The global error handler in `apps/service/src/app.ts` sends a `ProblemError` unchanged. For 5xx responses it logs the error with `scrubErrorName` and `scrubErrorText` (from `@hestia/shared`) applied to the name and message, not the raw values.
+ - Validate at the route boundary with `parse(schema, value)` from `apps/service/src/http/context.ts`. It throws a 400 `fail` with detail `"<path>: <message>"`.
+ - Database errors map by SQLSTATE in the `DATABASE_PROBLEMS` table in `apps/service/src/problem.ts` (for example `42501` to 403, `23505` to 409, `HR001` to 410). Add new membership or constraint messages there, not in route code. `problemFromDatabaseError` performs the lookup.
+ - Route handlers stay thin: authenticate, `parse`, call a service function inside `ctx.inHousehold(...)` or `ctx.asUser(...)`, then return or `reply.code(201).send(...)`. Route files call `parse(` about 119 times across `apps/service/src/routes/`.
+@@ -345,17 +345,17 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Purpose: Render routes and interactions.
+ - Location: `apps/web/src/screens/`, `apps/web/src/pillars/`, `apps/web/src/components/`
+ - Contains: `*Screen.tsx`, `*Route.tsx` wrappers, feature components, primitives under `apps/web/src/components/ui/`, shell under `apps/web/src/components/shell/`.
+-- Depends on: `apps/web/src/lib/` hooks, `@hearth/shared`, `@hearth/recurrence` (due-date display).
++- Depends on: `apps/web/src/lib/` hooks, `@hestia/shared`, `@hestia/recurrence` (due-date display).
+ - Used by: `apps/web/src/routes.tsx`.
+ - Purpose: Talk to the API and Supabase, manage cache, offline writes, and realtime.
+ - Location: `apps/web/src/lib/api/`, `apps/web/src/lib/auth/`, `apps/web/src/lib/offline/`, `apps/web/src/lib/realtime/`, `apps/web/src/lib/push/`
+ - Contains: `client.ts` (fetch wrapper, one refresh retry, problem parsing), `api-context.tsx` (providers and `useApi`, `useAuthState`), `keys.ts` (household-scoped query keys), `*-hooks.ts` (TanStack Query hooks), `write-queue.ts` and `chore-errand-writes.ts` (queued mutations), `persist.ts` (IndexedDB persistence), `supabase-realtime.ts` (realtime port).
+-- Depends on: `@hearth/shared`, `@supabase/supabase-js` (lazy-loaded), TanStack Query.
++- Depends on: `@hestia/shared`, `@supabase/supabase-js` (lazy-loaded), TanStack Query.
+ - Used by: screens and `apps/web/src/main.tsx`.
+ - Purpose: Map HTTP to domain calls.
+ - Location: `apps/service/src/routes/`
+ - Contains: One `FastifyPluginAsync<{ ctx: RouteContext }>` per resource (`auth.ts`, `users.ts`, `households.ts`, `lists.ts`, `bills.ts`, `chores.ts`, `errands.ts`, `meal-plan.ts`, `recipes.ts`, `deals.ts`, `match-overrides.ts`, `system.ts`, `health.ts`).
+-- Depends on: `apps/service/src/http/context.ts`, domain modules, `@hearth/shared`.
++- Depends on: `apps/service/src/http/context.ts`, domain modules, `@hestia/shared`.
+ - Used by: `apps/service/src/app.ts`, which registers each plugin.
+ - Purpose: Authentication, input validation helper, and the only sanctioned path to the database for handlers.
+ - Location: `apps/service/src/http/context.ts`, `apps/service/src/db/user-db.ts`, `apps/service/src/db.ts`
+@@ -364,7 +364,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Purpose: Business rules and the queries that implement them.
+ - Location: `apps/service/src/services/` (flat, plus `services/deals/`), and two sibling domain folders: `apps/service/src/chores/` (chores, errands, occurrence logic) and `apps/service/src/notifications/` (copy and planners).
+ - Contains: functions such as `listBills(db, householdId, userId)`, `createHouseholdBill`, `payBill`, `repriceExpiredItems`, `recomputeReadinessForHousehold`, `createMatchOverride`, `markHouseholdActive`. Each takes a Kysely handle already bound to the caller's transaction.
+-- Depends on: `@hearth/recurrence`, `@hearth/matching`, `@hearth/shared`, the generated DB types.
++- Depends on: `@hestia/recurrence`, `@hestia/matching`, `@hestia/shared`, the generated DB types.
+ - Used by: route plugins and scheduled jobs (through the scheduler's injected functions).
+ - Purpose: Run every request as the caller.
+ - Location: `apps/service/src/db.ts`, `apps/service/src/db/user-db.ts`, `apps/service/src/db/types.ts`
+@@ -385,7 +385,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Location: `apps/service/src/gotrue/` (GoTrue HTTP client), `apps/service/src/auth/jwt.ts` (token verification: HS256 with `JWT_SECRET`; ES256 only for keys GoTrue publishes at its JWKS endpoint), `apps/service/src/deals/flipp/` (Flipp HTTP through one rate-limited queue, fixture transport for E2E), `apps/service/src/deals/price/` (price parsing), `apps/service/src/recipes/` (recipe fetch, JSON-LD, host rate limiter, private-address guard), `apps/service/src/push/` (Web Push transport, recording transport, E2E test seam).
+ - Used by: `apps/service/src/main.ts`, which injects them into `buildApp` and the scheduler.
+ - Purpose: One contract and one set of rules for both sides of the API.
+-- Location: `packages/shared/src/` (Zod request/response schemas in `api/`, problem details, scrubbing, password rules; subpath export `@hearth/shared/common-passwords`), `packages/recurrence/src/` (bill and chore occurrence and rotation), `packages/matching/src/` (ingredient normalization, similarity, matcher).
++- Location: `packages/shared/src/` (Zod request/response schemas in `api/`, problem details, scrubbing, password rules; subpath export `@hestia/shared/common-passwords`), `packages/recurrence/src/` (bill and chore occurrence and rotation), `packages/matching/src/` (ingredient normalization, similarity, matcher).
+ - Depends on: Zod, date-fns and `@date-fns/tz` (recurrence), `fastest-levenshtein` (matching). No I/O.
+ - Used by: `apps/web`, `apps/service`, and `supabase/seed` (matching).
+ 
+@@ -422,7 +422,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ - Pattern: `export const billRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, { ctx }) => { app.get(...) }`
+ - Purpose: One definition for request validation, response parsing on the client, and OpenAPI.
+ - Examples: `packages/shared/src/api/bills.ts`, `packages/shared/src/api/lists.ts`, `apps/service/src/openapi.ts`
+-- Pattern: Schema exported from `@hearth/shared`, used by `parse(...)` on the server and by `api.request({ schema })` on the client.
++- Pattern: Schema exported from `@hestia/shared`, used by `parse(...)` on the server and by `api.request({ schema })` on the client.
+ - Purpose: Give jobs and routes only the privilege they need.
+ - Examples: `apps/service/src/jobs/types.ts` (`JobDatabase`, `DispatchOutbox`), `apps/service/src/privileged/job-database.ts`
+ - Pattern: Dependency injection from `main.ts` into `createScheduler({ database, dispatch, refresh })` and `buildApp(deps, options)`.
+@@ -436,7 +436,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
+ ## Entry Points
+ 
+ - Location: `apps/service/src/main.ts`
+-- Triggers: `node dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hearth/service dev` runs `tsx watch src/main.ts`.
++- Triggers: `node dist/main.js` in the `hearth-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hestia/service dev` runs `tsx watch src/main.ts`.
+ - Responsibilities: Parse env (`apps/service/src/env.ts`), build the pool, GoTrue, Flipp, recipe, and push clients, call `buildApp`, start the scheduler, handle SIGTERM and SIGINT, listen on the configured host and port.
+ - Location: `apps/service/src/cli.ts`, built to `apps/service/dist/cli.js`. The hand-written POSIX shell wrapper `apps/service/bin/hearth-admin` resolves its own path and runs `node dist/cli.js`.
+ - Triggers: `docker compose exec hearth-service hearth-admin reset-password <email>`.
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index e650baf..0eeca50 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -53,8 +53,8 @@ jobs:
+       # Web runs once, with coverage, so its thresholds in apps/web/vite.config.ts gate every pull
+       # request. The sweep (sweep.yml) keeps web's plain `test` script, so coverage is not paid for
+       # in every time zone.
+-      - run: pnpm -r --filter '!@hearth/web' test
+-      - run: pnpm --filter @hearth/web test:coverage
++      - run: pnpm -r --filter '!@hestia/web' test
++      - run: pnpm --filter @hestia/web test:coverage
+ 
+   test-integration:
+     runs-on: ubuntu-latest
+@@ -79,7 +79,7 @@ jobs:
+       # Runs unit and integration tests together with coverage, enforcing
+       # apps/service/vitest.coverage.config.ts's thresholds, rather than a separate job that would
+       # pay for its own `supabase start`.
+-      - run: pnpm --filter @hearth/service test:coverage
++      - run: pnpm --filter @hestia/service test:coverage
+ 
+   test-e2e:
+     # E2E is the slow job: pull requests and main only, not every branch push. Most of the time
+@@ -103,7 +103,7 @@ jobs:
+       - uses: supabase/setup-cli@v3
+         with:
+           version: 2.117.0
+-      - run: pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
++      - run: pnpm --filter @hestia/e2e exec playwright install --with-deps chromium
+       # GHCR pulls run as this run's own read-only token instead of anonymously. The images are
+       # public, so anonymous pulls work too: a failed login must not fail the job before the
+       # script's public.ecr.aws fallback can run.
+diff --git a/.planning/environment/cloud-setup.sh b/.planning/environment/cloud-setup.sh
+index e7c3edd..18278ac 100755
+--- a/.planning/environment/cloud-setup.sh
++++ b/.planning/environment/cloud-setup.sh
+@@ -119,14 +119,14 @@ git config --global user.email "$GIT_USER_EMAIL"
+ 
+ # 8. repo dependencies (only when run from inside the Hearth checkout)
+ if root="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -f "$root/package.json" ] \
+-  && grep -q '"name": *"hearth"' "$root/package.json"; then
++  && grep -q '"name": *"hestia"' "$root/package.json"; then
+   if [ "${SKIP_PNPM_INSTALL:-0}" != "1" ]; then
+     log "pnpm install --frozen-lockfile in $root"
+     (cd "$root" && pnpm install --frozen-lockfile)
+   fi
+   if [ "${INSTALL_PLAYWRIGHT:-0}" = "1" ]; then
+     log "playwright chromium"
+-    (cd "$root" && pnpm --filter @hearth/e2e exec playwright install --with-deps chromium)
++    (cd "$root" && pnpm --filter @hestia/e2e exec playwright install --with-deps chromium)
+   fi
+   check="$root/.planning/environment/cloud-check.sh"
+ else
+diff --git a/README.md b/README.md
+index cb273dd..d997e8b 100644
+--- a/README.md
++++ b/README.md
+@@ -16,8 +16,8 @@ chores for one household (or a few), running on a single home server. The specif
+ 
+ ```sh
+ pnpm install
+-pnpm --filter @hearth/web dev        # PWA dev server
+-pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
++pnpm --filter @hestia/web dev        # PWA dev server
++pnpm --filter @hestia/service dev    # API (needs DATABASE_URL)
+ pnpm lint
+ pnpm format:check
+ pnpm typecheck
+diff --git a/apps/service/package.json b/apps/service/package.json
+index 59f00bb..d9c904d 100644
+--- a/apps/service/package.json
++++ b/apps/service/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "@hearth/service",
++  "name": "@hestia/service",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+@@ -20,9 +20,9 @@
+   },
+   "dependencies": {
+     "@fastify/rate-limit": "11.2.0",
+-    "@hearth/matching": "workspace:*",
+-    "@hearth/recurrence": "workspace:*",
+-    "@hearth/shared": "workspace:*",
++    "@hestia/matching": "workspace:*",
++    "@hestia/recurrence": "workspace:*",
++    "@hestia/shared": "workspace:*",
+     "cheerio": "1.2.0",
+     "fastify": "5.12.6",
+     "kysely": "0.29.6",
+diff --git a/apps/service/src/api.integration.test.ts b/apps/service/src/api.integration.test.ts
+index 1b7c885..c379bd4 100644
+--- a/apps/service/src/api.integration.test.ts
++++ b/apps/service/src/api.integration.test.ts
+@@ -9,7 +9,7 @@ import type {
+   Invite,
+   Member,
+   ProfileResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { runCli } from './cli.js';
+ import type { Database } from './db.js';
+ import { withUserDb } from './db/user-db.js';
+diff --git a/apps/service/src/app.ts b/apps/service/src/app.ts
+index 6ce4286..856ef29 100644
+--- a/apps/service/src/app.ts
++++ b/apps/service/src/app.ts
+@@ -5,7 +5,7 @@ import Fastify, {
+   type FastifyPluginCallback,
+   type FastifyRequest,
+ } from 'fastify';
+-import { scrubErrorName, scrubErrorText } from '@hearth/shared';
++import { scrubErrorName, scrubErrorText } from '@hestia/shared';
+ import { DEFAULT_RATE_LIMIT_PER_MINUTE } from './env.js';
+ import { GoTrueError } from './gotrue/http.js';
+ import { createRouteContext, type AppDependencies } from './http/context.js';
+diff --git a/apps/service/src/bills.integration.test.ts b/apps/service/src/bills.integration.test.ts
+index ab1ab88..4cc6e1f 100644
+--- a/apps/service/src/bills.integration.test.ts
++++ b/apps/service/src/bills.integration.test.ts
+@@ -5,7 +5,7 @@ import type {
+   BillPayment,
+   Household,
+   SubscriptionsResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import {
+   adminPool,
+   as,
+diff --git a/apps/service/src/chores.integration.test.ts b/apps/service/src/chores.integration.test.ts
+index ffb4e78..f9a078c 100644
+--- a/apps/service/src/chores.integration.test.ts
++++ b/apps/service/src/chores.integration.test.ts
+@@ -1,6 +1,6 @@
+ import { randomUUID } from 'node:crypto';
+ import { describe, expect, it } from 'vitest';
+-import type { Chore, ChoreDetail, Household } from '@hearth/shared';
++import type { Chore, ChoreDetail, Household } from '@hestia/shared';
+ import {
+   adminPool,
+   as,
+diff --git a/apps/service/src/chores/chores.ts b/apps/service/src/chores/chores.ts
+index 3f1838a..6976447 100644
+--- a/apps/service/src/chores/chores.ts
++++ b/apps/service/src/chores/chores.ts
+@@ -5,7 +5,7 @@ import {
+   rebaseRotationOnEdit,
+   type CalendarDate,
+   type Recurrence,
+-} from '@hearth/recurrence';
++} from '@hestia/recurrence';
+ import {
+   rotationDuplicateMessage,
+   type Chore,
+@@ -14,7 +14,7 @@ import {
+   type CompleteChoreRequest,
+   type CreateChoreRequest,
+   type UpdateChoreRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { choreRotationCopy, type DroppedCopyReport } from '../notifications/copy.js';
+ import { fail } from '../problem.js';
+@@ -218,7 +218,7 @@ async function resolveRotationUpdate(
+ }
+ 
+ /**
+- * Backstop for `rotationOrderSchema` in `@hearth/shared`, which the route already applied. The
++ * Backstop for `rotationOrderSchema` in `@hestia/shared`, which the route already applied. The
+  * column is a plain `uuid[]` and would store a repeated member without complaint, so the service
+  * refuses it here too rather than trusting that every caller goes through the route. Checked before
+  * any database read so a bad order never reaches the rotation math.
+@@ -357,7 +357,7 @@ async function enqueueChoreRotation(
+  * `userId`.
+  *
+  * `occurrence_date`: see the PATCH-sized comment on `completeChoreRequestSchema` in
+- * `@hearth/shared` for the decision this unit makes. In short: the server always computes its own
++ * `@hestia/shared` for the decision this unit makes. In short: the server always computes its own
+  * answer, `occurrenceToComplete`, from the current rotation/recurrence state; a caller that
+  * supplies one must name that exact same date and gets a validation error otherwise, never a silent
+  * substitution. There is no other value a correct completion can close — the rule is exhaustive (it
+diff --git a/apps/service/src/chores/errands.ts b/apps/service/src/chores/errands.ts
+index ef79701..98ce765 100644
+--- a/apps/service/src/chores/errands.ts
++++ b/apps/service/src/chores/errands.ts
+@@ -1,5 +1,5 @@
+ import { sql, type Kysely } from 'kysely';
+-import type { CreateErrandRequest, Errand, UpdateErrandRequest } from '@hearth/shared';
++import type { CreateErrandRequest, Errand, UpdateErrandRequest } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ import { markHouseholdActive } from '../services/households.js';
+diff --git a/apps/service/src/chores/occurrence.ts b/apps/service/src/chores/occurrence.ts
+index 9347daf..99e6d71 100644
+--- a/apps/service/src/chores/occurrence.ts
++++ b/apps/service/src/chores/occurrence.ts
+@@ -7,7 +7,7 @@ import {
+   occurrenceToComplete,
+   type CalendarDate,
+   type Recurrence,
+-} from '@hearth/recurrence';
++} from '@hestia/recurrence';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ 
+diff --git a/apps/service/src/deals.integration.test.ts b/apps/service/src/deals.integration.test.ts
+index aae1a52..dec4f16 100644
+--- a/apps/service/src/deals.integration.test.ts
++++ b/apps/service/src/deals.integration.test.ts
+@@ -6,7 +6,7 @@ import type {
+   FlyerItemsResponse,
+   FlyersResponse,
+   MerchantsResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { createDealsService, type DealsService } from './services/deals/deals.js';
+ import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
+ import {
+diff --git a/apps/service/src/errands.integration.test.ts b/apps/service/src/errands.integration.test.ts
+index d443720..1655aa5 100644
+--- a/apps/service/src/errands.integration.test.ts
++++ b/apps/service/src/errands.integration.test.ts
+@@ -1,6 +1,6 @@
+ import { randomUUID } from 'node:crypto';
+ import { describe, expect, it } from 'vitest';
+-import type { Errand, Household } from '@hearth/shared';
++import type { Errand, Household } from '@hestia/shared';
+ import {
+   as,
+   signUp,
+diff --git a/apps/service/src/http/context.ts b/apps/service/src/http/context.ts
+index 25d99c2..395302f 100644
+--- a/apps/service/src/http/context.ts
++++ b/apps/service/src/http/context.ts
+@@ -1,7 +1,7 @@
+ import type { FastifyRequest } from 'fastify';
+ import type { Kysely } from 'kysely';
+ import type { z } from 'zod';
+-import type { MerchantSkipRate, ParseRecipeResponse } from '@hearth/shared';
++import type { MerchantSkipRate, ParseRecipeResponse } from '@hestia/shared';
+ import { isServerOwner, TokenError, type TokenVerifier, type VerifiedUser } from '../auth/jwt.js';
+ import type { Database } from '../db.js';
+ import { withUserDb } from '../db/user-db.js';
+diff --git a/apps/service/src/jobs/dispatch-notifications.ts b/apps/service/src/jobs/dispatch-notifications.ts
+index 3ba99cc..d7327be 100644
+--- a/apps/service/src/jobs/dispatch-notifications.ts
++++ b/apps/service/src/jobs/dispatch-notifications.ts
+@@ -1,4 +1,4 @@
+-import { notificationCopySchema, scrubErrorText, type NotificationType } from '@hearth/shared';
++import { notificationCopySchema, scrubErrorText, type NotificationType } from '@hestia/shared';
+ import { z } from 'zod';
+ import type { DroppedCopy } from '../notifications/copy.js';
+ import type { JobLogger } from './types.js';
+diff --git a/apps/service/src/jobs/log-autopay.ts b/apps/service/src/jobs/log-autopay.ts
+index cad4d22..bbc48a1 100644
+--- a/apps/service/src/jobs/log-autopay.ts
++++ b/apps/service/src/jobs/log-autopay.ts
+@@ -6,7 +6,7 @@ import {
+   type CalendarDate,
+   type Recurrence,
+   type RecurrenceUnit,
+-} from '@hearth/recurrence';
++} from '@hestia/recurrence';
+ import type { Database } from '../db.js';
+ import type { JobDatabase, JobLogger } from './types.js';
+ 
+diff --git a/apps/service/src/jobs/scheduler.ts b/apps/service/src/jobs/scheduler.ts
+index ac0e1bf..e884df9 100644
+--- a/apps/service/src/jobs/scheduler.ts
++++ b/apps/service/src/jobs/scheduler.ts
+@@ -1,5 +1,5 @@
+ import cron, { type ScheduledTask } from 'node-cron';
+-import { scrubErrorText } from '@hearth/shared';
++import { scrubErrorText } from '@hestia/shared';
+ import { withJobLock } from './advisory-lock.js';
+ import {
+   runDispatchNotifications,
+diff --git a/apps/service/src/lists.integration.test.ts b/apps/service/src/lists.integration.test.ts
+index 6a66d04..52587ce 100644
+--- a/apps/service/src/lists.integration.test.ts
++++ b/apps/service/src/lists.integration.test.ts
+@@ -6,7 +6,7 @@ import type {
+   PantryItem,
+   ShoppingList,
+   ShoppingListDetail,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import {
+   adminPool,
+   as,
+diff --git a/apps/service/src/match-overrides.integration.test.ts b/apps/service/src/match-overrides.integration.test.ts
+index 0578e65..8669a8d 100644
+--- a/apps/service/src/match-overrides.integration.test.ts
++++ b/apps/service/src/match-overrides.integration.test.ts
+@@ -1,6 +1,6 @@
+ import type { LightMyRequestResponse } from 'fastify';
+ import { describe, expect, it } from 'vitest';
+-import type { MatchOverride } from '@hearth/shared';
++import type { MatchOverride } from '@hestia/shared';
+ import { adminPool, as, household, signUp, type HouseholdFixture } from './test/service-stack.js';
+ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
+ 
+@@ -22,7 +22,7 @@ async function createOverride(
+ }
+ 
+ describe('POST /households/:id/match-overrides', () => {
+-  it('normalizes both names through @hearth/matching before storing them', async () => {
++  it('normalizes both names through @hestia/matching before storing them', async () => {
+     const home = await household(app);
+     const response = await createOverride(home, {
+       ingredientName: 'Cheese!',
+diff --git a/apps/service/src/meal-plan.integration.test.ts b/apps/service/src/meal-plan.integration.test.ts
+index 858e56f..31e7712 100644
+--- a/apps/service/src/meal-plan.integration.test.ts
++++ b/apps/service/src/meal-plan.integration.test.ts
+@@ -8,7 +8,7 @@ import type {
+   RecipeDetail,
+   ShoppingListDetail,
+   SuggestionsResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { adminPool, as, household, type HouseholdFixture } from './test/service-stack.js';
+ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
+ import { currentInstant } from './test/zone-dates.js';
+diff --git a/apps/service/src/notification-producers.integration.test.ts b/apps/service/src/notification-producers.integration.test.ts
+index 19b6dba..cf45106 100644
+--- a/apps/service/src/notification-producers.integration.test.ts
++++ b/apps/service/src/notification-producers.integration.test.ts
+@@ -1,7 +1,7 @@
+ import { randomUUID } from 'node:crypto';
+ import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
+ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+-import type { Household, NotificationType, ShoppingListDetail } from '@hearth/shared';
++import type { Household, NotificationType, ShoppingListDetail } from '@hestia/shared';
+ import { createDatabase, type DatabaseHandle } from './db.js';
+ import { runDispatchNotifications } from './jobs/dispatch-notifications.js';
+ import type { JobDatabase, JobLogger } from './jobs/types.js';
+diff --git a/apps/service/src/notifications.integration.test.ts b/apps/service/src/notifications.integration.test.ts
+index 9eed11d..0e6979d 100644
+--- a/apps/service/src/notifications.integration.test.ts
++++ b/apps/service/src/notifications.integration.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest';
+-import type { Household, NotificationPreferencesResponse } from '@hearth/shared';
++import type { Household, NotificationPreferencesResponse } from '@hestia/shared';
+ import { adminPool, as, signUp, uniqueName, type SignedUpUser } from './test/service-stack.js';
+ import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
+ 
+diff --git a/apps/service/src/notifications/copy.test.ts b/apps/service/src/notifications/copy.test.ts
+index ed7dab3..e412a78 100644
+--- a/apps/service/src/notifications/copy.test.ts
++++ b/apps/service/src/notifications/copy.test.ts
+@@ -1,4 +1,4 @@
+-import { notificationCopySchema } from '@hearth/shared';
++import { notificationCopySchema } from '@hestia/shared';
+ import { describe, expect, it } from 'vitest';
+ import {
+   billReminderCopy,
+diff --git a/apps/service/src/notifications/copy.ts b/apps/service/src/notifications/copy.ts
+index 152a19b..ef21cf9 100644
+--- a/apps/service/src/notifications/copy.ts
++++ b/apps/service/src/notifications/copy.ts
+@@ -2,7 +2,7 @@ import {
+   notificationCopySchema,
+   type NotificationCopy,
+   type NotificationType,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ 
+ /*
+  * Notification copy. Every producer builds its title and body here and validates them against the
+diff --git a/apps/service/src/notifications/planners.ts b/apps/service/src/notifications/planners.ts
+index 39e3dad..7d7bb3c 100644
+--- a/apps/service/src/notifications/planners.ts
++++ b/apps/service/src/notifications/planners.ts
+@@ -1,4 +1,4 @@
+-import type { CalendarDate, Recurrence } from '@hearth/recurrence';
++import type { CalendarDate, Recurrence } from '@hestia/recurrence';
+ import { isValidOccurrence } from '../chores/occurrence.js';
+ 
+ /*
+diff --git a/apps/service/src/openapi.ts b/apps/service/src/openapi.ts
+index 136b577..a82648e 100644
+--- a/apps/service/src/openapi.ts
++++ b/apps/service/src/openapi.ts
+@@ -1,6 +1,6 @@
+ import { readFileSync } from 'node:fs';
+ import { z } from 'zod';
+-import { endpoints, problemDetailsSchema, type Endpoint } from '@hearth/shared';
++import { endpoints, problemDetailsSchema, type Endpoint } from '@hestia/shared';
+ 
+ /**
+  * The OpenAPI 3.1 document, generated from the shared Zod schemas. `pnpm build` writes it to
+diff --git a/apps/service/src/privileged/notification-outbox.ts b/apps/service/src/privileged/notification-outbox.ts
+index 77da470..5565bab 100644
+--- a/apps/service/src/privileged/notification-outbox.ts
++++ b/apps/service/src/privileged/notification-outbox.ts
+@@ -1,5 +1,5 @@
+ import { sql } from 'kysely';
+-import { pushKeysSchema, type NotificationType } from '@hearth/shared';
++import { pushKeysSchema, type NotificationType } from '@hestia/shared';
+ import type {
+   ClaimOutcome,
+   DispatchOutbox,
+diff --git a/apps/service/src/privileged/scheduled-reminders.ts b/apps/service/src/privileged/scheduled-reminders.ts
+index 1339e83..99bf847 100644
+--- a/apps/service/src/privileged/scheduled-reminders.ts
++++ b/apps/service/src/privileged/scheduled-reminders.ts
+@@ -1,6 +1,6 @@
+ import { sql, type Kysely } from 'kysely';
+-import type { CalendarDate, Recurrence } from '@hearth/recurrence';
+-import type { NotificationCopy, NotificationType } from '@hearth/shared';
++import type { CalendarDate, Recurrence } from '@hestia/recurrence';
++import type { NotificationCopy, NotificationType } from '@hestia/shared';
+ import { deriveChoreState } from '../chores/occurrence.js';
+ import type { Database } from '../db.js';
+ import {
+diff --git a/apps/service/src/problem.ts b/apps/service/src/problem.ts
+index 11608e0..9358a52 100644
+--- a/apps/service/src/problem.ts
++++ b/apps/service/src/problem.ts
+@@ -1,5 +1,5 @@
+ import { STATUS_CODES } from 'node:http';
+-import { PROBLEM_CONTENT_TYPE, type ProblemDetails } from '@hearth/shared';
++import { PROBLEM_CONTENT_TYPE, type ProblemDetails } from '@hestia/shared';
+ import type { GoTrueError } from './gotrue/http.js';
+ import type { RecipeFetchError, RecipeFetchErrorCode } from './recipes/fetch-recipe.js';
+ 
+diff --git a/apps/service/src/readiness.integration.test.ts b/apps/service/src/readiness.integration.test.ts
+index b39fd98..2b43735 100644
+--- a/apps/service/src/readiness.integration.test.ts
++++ b/apps/service/src/readiness.integration.test.ts
+@@ -1,7 +1,7 @@
+ import { randomUUID } from 'node:crypto';
+ import type { FastifyInstance } from 'fastify';
+ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+-import type { MatchOverride, PantryItem, RecipeDetail } from '@hearth/shared';
++import type { MatchOverride, PantryItem, RecipeDetail } from '@hestia/shared';
+ import { withServiceRoleDb } from './privileged/service-role-db.js';
+ import { recomputeReadinessForHousehold } from './services/readiness.js';
+ import {
+@@ -17,7 +17,7 @@ import { expectStatus } from './test/stack-hooks.js';
+ /*
+  * Recipe readiness against `supabase start` (the 12+2 readiness table is this test's own oracle).
+  * Real Postgres as hestia_service, every request through withUserDb, so RLS and the real
+- * `@hearth/matching` decide every bucket. This file reproduces the seed data (pantry,
++ * `@hestia/matching` decide every bucket. This file reproduces the seed data (pantry,
+  * favorite-store deals, the twelve Oak Street recipes and two Rivera Family recipes, the "cheese"
+  * override) through the real API and asserts the table's own numbers exactly, one recipe at a time.
+  */
+diff --git a/apps/service/src/realtime.integration.test.ts b/apps/service/src/realtime.integration.test.ts
+index c07fb2d..6373f36 100644
+--- a/apps/service/src/realtime.integration.test.ts
++++ b/apps/service/src/realtime.integration.test.ts
+@@ -1,6 +1,6 @@
+ import type { FastifyInstance } from 'fastify';
+ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+-import type { Household, ShoppingListDetail } from '@hearth/shared';
++import type { Household, ShoppingListDetail } from '@hestia/shared';
+ import {
+   as,
+   signUp,
+diff --git a/apps/service/src/recipes.integration.test.ts b/apps/service/src/recipes.integration.test.ts
+index b53e770..89ea15f 100644
+--- a/apps/service/src/recipes.integration.test.ts
++++ b/apps/service/src/recipes.integration.test.ts
+@@ -1,7 +1,7 @@
+ import type { FastifyInstance } from 'fastify';
+ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+-import { normalize } from '@hearth/matching';
+-import type { ParseRecipeResponse, Recipe, RecipeDetail } from '@hearth/shared';
++import { normalize } from '@hestia/matching';
++import type { ParseRecipeResponse, Recipe, RecipeDetail } from '@hestia/shared';
+ import { RecipeFetchError } from './recipes/fetch-recipe.js';
+ import {
+   adminPool,
+@@ -82,7 +82,7 @@ describe('recipe CRUD', () => {
+     expect(recipe.householdId).toBe(home.household.id);
+     expect(recipe.ingredients).toHaveLength(3);
+     expect(recipe.ingredients.every((ingredient) => ingredient.rawText === null)).toBe(true);
+-    // normalized_name is computed from item_name by @hearth/matching on save.
++    // normalized_name is computed from item_name by @hestia/matching on save.
+     expect(recipe.ingredients.map((ingredient) => ingredient.normalizedName)).toEqual(
+       ['lentils', 'coconut milk', 'onion'].map(normalize),
+     );
+diff --git a/apps/service/src/recipes/parse-recipe-url.ts b/apps/service/src/recipes/parse-recipe-url.ts
+index 560c047..2a18220 100644
+--- a/apps/service/src/recipes/parse-recipe-url.ts
++++ b/apps/service/src/recipes/parse-recipe-url.ts
+@@ -1,4 +1,4 @@
+-import type { ParseRecipeResponse } from '@hearth/shared';
++import type { ParseRecipeResponse } from '@hestia/shared';
+ import { parseIngredientLine } from './ingredient-parser.js';
+ import { extractRecipeJsonLd } from './json-ld.js';
+ 
+diff --git a/apps/service/src/routes/auth.ts b/apps/service/src/routes/auth.ts
+index dbcf2ef..b661db8 100644
+--- a/apps/service/src/routes/auth.ts
++++ b/apps/service/src/routes/auth.ts
+@@ -1,6 +1,6 @@
+ import type { FastifyPluginAsync } from 'fastify';
+-import { signupRequestSchema } from '@hearth/shared';
+-import { newPasswordSchema } from '@hearth/shared/common-passwords';
++import { signupRequestSchema } from '@hestia/shared';
++import { newPasswordSchema } from '@hestia/shared/common-passwords';
+ import { parse, type RouteContext } from '../http/context.js';
+ 
+ /** The wire schema with the common-password list applied, which is the full policy. */
+diff --git a/apps/service/src/routes/bills.ts b/apps/service/src/routes/bills.ts
+index dc60eba..2ea605c 100644
+--- a/apps/service/src/routes/bills.ts
++++ b/apps/service/src/routes/bills.ts
+@@ -8,7 +8,7 @@ import {
+   payBillRequestSchema,
+   updateBillPaymentRequestSchema,
+   updateBillRequestSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { parse, type RouteContext } from '../http/context.js';
+ import {
+   archiveBill,
+diff --git a/apps/service/src/routes/chores.ts b/apps/service/src/routes/chores.ts
+index ab85b3f..c76b1cd 100644
+--- a/apps/service/src/routes/chores.ts
++++ b/apps/service/src/routes/chores.ts
+@@ -7,7 +7,7 @@ import {
+   createChoreRequestSchema,
+   householdIdParamsSchema,
+   updateChoreRequestSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import {
+   completeChore,
+   createChore,
+diff --git a/apps/service/src/routes/deals.ts b/apps/service/src/routes/deals.ts
+index 129d46a..798584e 100644
+--- a/apps/service/src/routes/deals.ts
++++ b/apps/service/src/routes/deals.ts
+@@ -8,7 +8,7 @@ import {
+   flyerParamsSchema,
+   flyersQuerySchema,
+   householdIdParamsSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { VerifiedUser } from '../auth/jwt.js';
+ import type { Database } from '../db.js';
+ import { withUserDb } from '../db/user-db.js';
+diff --git a/apps/service/src/routes/errands.ts b/apps/service/src/routes/errands.ts
+index 80b0e76..f2910ab 100644
+--- a/apps/service/src/routes/errands.ts
++++ b/apps/service/src/routes/errands.ts
+@@ -4,7 +4,7 @@ import {
+   errandIdParamsSchema,
+   householdIdParamsSchema,
+   updateErrandRequestSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import {
+   createErrand,
+   deleteErrand,
+diff --git a/apps/service/src/routes/health.ts b/apps/service/src/routes/health.ts
+index 5ee55e6..7179627 100644
+--- a/apps/service/src/routes/health.ts
++++ b/apps/service/src/routes/health.ts
+@@ -1,5 +1,5 @@
+ import type { FastifyPluginAsync } from 'fastify';
+-import { scrubErrorName, scrubErrorText } from '@hearth/shared';
++import { scrubErrorName, scrubErrorText } from '@hestia/shared';
+ import { PROBLEM_CONTENT_TYPE, problem } from '../problem.js';
+ 
+ export interface HealthRouteOptions {
+diff --git a/apps/service/src/routes/households.ts b/apps/service/src/routes/households.ts
+index 04555e8..8d34326 100644
+--- a/apps/service/src/routes/households.ts
++++ b/apps/service/src/routes/households.ts
+@@ -8,7 +8,7 @@ import {
+   memberParamsSchema,
+   transferAdminRequestSchema,
+   updateHouseholdRequestSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { parse, type RouteContext } from '../http/context.js';
+ import {
+   createHousehold,
+diff --git a/apps/service/src/routes/lists.ts b/apps/service/src/routes/lists.ts
+index f0637ff..09a68ab 100644
+--- a/apps/service/src/routes/lists.ts
++++ b/apps/service/src/routes/lists.ts
+@@ -12,7 +12,7 @@ import {
+   updateListItemRequestSchema,
+   updateListRequestSchema,
+   updatePantryItemRequestSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { parse, type RouteContext } from '../http/context.js';
+ import {
+   addBoughtToPantry,
+diff --git a/apps/service/src/routes/match-overrides.ts b/apps/service/src/routes/match-overrides.ts
+index 9e424c1..f82de85 100644
+--- a/apps/service/src/routes/match-overrides.ts
++++ b/apps/service/src/routes/match-overrides.ts
+@@ -3,7 +3,7 @@ import {
+   createMatchOverrideRequestSchema,
+   householdIdParamsSchema,
+   matchOverrideParamsSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { parse, type RouteContext } from '../http/context.js';
+ import { createMatchOverride, deleteMatchOverride } from '../services/match-overrides.js';
+ 
+diff --git a/apps/service/src/routes/meal-plan.ts b/apps/service/src/routes/meal-plan.ts
+index 3c1183c..a616a41 100644
+--- a/apps/service/src/routes/meal-plan.ts
++++ b/apps/service/src/routes/meal-plan.ts
+@@ -7,7 +7,7 @@ import {
+   mealPlanEntryIdParamsSchema,
+   mealPlanQuerySchema,
+   weekAddToListRequestSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { parse, type RouteContext } from '../http/context.js';
+ import { addMissingIngredientsToList } from '../services/add-to-list.js';
+ import {
+diff --git a/apps/service/src/routes/recipes.ts b/apps/service/src/routes/recipes.ts
+index b14fa8b..462c344 100644
+--- a/apps/service/src/routes/recipes.ts
++++ b/apps/service/src/routes/recipes.ts
+@@ -8,7 +8,7 @@ import {
+   recipeIdParamsSchema,
+   recipesQuerySchema,
+   updateRecipeRequestSchema,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { parse, type RouteContext } from '../http/context.js';
+ import { addMissingIngredientsToList } from '../services/add-to-list.js';
+ import {
+diff --git a/apps/service/src/routes/routes.test.ts b/apps/service/src/routes/routes.test.ts
+index 9534475..e57563b 100644
+--- a/apps/service/src/routes/routes.test.ts
++++ b/apps/service/src/routes/routes.test.ts
+@@ -1,6 +1,6 @@
+ import type { FastifyInstance } from 'fastify';
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+-import { endpoints } from '@hearth/shared';
++import { endpoints } from '@hestia/shared';
+ import type { AppDependencies } from '../app.js';
+ import { GoTrueError } from '../gotrue/http.js';
+ import type { ErrorRecord } from '../services/errors.js';
+diff --git a/apps/service/src/routes/system.ts b/apps/service/src/routes/system.ts
+index 08a7198..d17c7fd 100644
+--- a/apps/service/src/routes/system.ts
++++ b/apps/service/src/routes/system.ts
+@@ -1,5 +1,5 @@
+ import type { FastifyPluginAsync } from 'fastify';
+-import { clientErrorRequestSchema, type DeepHealthResponse } from '@hearth/shared';
++import { clientErrorRequestSchema, type DeepHealthResponse } from '@hestia/shared';
+ import { parse, type RouteContext } from '../http/context.js';
+ import { fail } from '../problem.js';
+ import { buildErrorRecord } from '../services/errors.js';
+diff --git a/apps/service/src/routes/users.ts b/apps/service/src/routes/users.ts
+index 0b44198..8e5b923 100644
+--- a/apps/service/src/routes/users.ts
++++ b/apps/service/src/routes/users.ts
+@@ -7,8 +7,8 @@ import {
+   setActiveHouseholdRequestSchema,
+   updateNotificationPreferenceRequestSchema,
+   updateProfileRequestSchema,
+-} from '@hearth/shared';
+-import { newPasswordSchema } from '@hearth/shared/common-passwords';
++} from '@hestia/shared';
++import { newPasswordSchema } from '@hestia/shared/common-passwords';
+ import { isRecentRecovery } from '../auth/jwt.js';
+ import { parse, type RouteContext } from '../http/context.js';
+ import { fail } from '../problem.js';
+diff --git a/apps/service/src/services/add-to-list.ts b/apps/service/src/services/add-to-list.ts
+index de4cec3..af25078 100644
+--- a/apps/service/src/services/add-to-list.ts
++++ b/apps/service/src/services/add-to-list.ts
+@@ -1,6 +1,6 @@
+ import { sql, type Kysely } from 'kysely';
+-import { matchIngredient } from '@hearth/matching';
+-import type { ShoppingListDetail } from '@hearth/shared';
++import { matchIngredient } from '@hestia/matching';
++import type { ShoppingListDetail } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { aggregateIngredients, type IngredientContribution } from './list-aggregation.js';
+ import { detailOf, refreshed, requireList } from './lists.js';
+diff --git a/apps/service/src/services/bills.ts b/apps/service/src/services/bills.ts
+index 3e4e924..d364fa4 100644
+--- a/apps/service/src/services/bills.ts
++++ b/apps/service/src/services/bills.ts
+@@ -1,5 +1,5 @@
+ import { sql, type Kysely } from 'kysely';
+-import { currentBillOccurrence, type CalendarDate, type Recurrence } from '@hearth/recurrence';
++import { currentBillOccurrence, type CalendarDate, type Recurrence } from '@hestia/recurrence';
+ import type {
+   Bill,
+   BillDetail,
+@@ -9,7 +9,7 @@ import type {
+   PayBillRequest,
+   UpdateBillPaymentRequest,
+   UpdateBillRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ import { markHouseholdActive } from './households.js';
+diff --git a/apps/service/src/services/deals/deals.ts b/apps/service/src/services/deals/deals.ts
+index 21bf072..d0927cf 100644
+--- a/apps/service/src/services/deals/deals.ts
++++ b/apps/service/src/services/deals/deals.ts
+@@ -1,5 +1,5 @@
+ import type { Kysely } from 'kysely';
+-import { normalize } from '@hearth/matching';
++import { normalize } from '@hestia/matching';
+ import type {
+   Deal,
+   DealSearchQuery,
+@@ -9,7 +9,7 @@ import type {
+   FlyersQuery,
+   FlyersResponse,
+   MerchantsResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { Database } from '../../db.js';
+ import type {
+   DealSource,
+diff --git a/apps/service/src/services/deals/favorite-stores.ts b/apps/service/src/services/deals/favorite-stores.ts
+index c914bd0..1552b81 100644
+--- a/apps/service/src/services/deals/favorite-stores.ts
++++ b/apps/service/src/services/deals/favorite-stores.ts
+@@ -1,5 +1,5 @@
+ import type { Kysely } from 'kysely';
+-import type { AddFavoriteStoreRequest, FavoriteStore } from '@hearth/shared';
++import type { AddFavoriteStoreRequest, FavoriteStore } from '@hestia/shared';
+ import type { Database } from '../../db.js';
+ import { fail } from '../../problem.js';
+ 
+diff --git a/apps/service/src/services/deals/filter.test.ts b/apps/service/src/services/deals/filter.test.ts
+index 47cecb5..6c403bb 100644
+--- a/apps/service/src/services/deals/filter.test.ts
++++ b/apps/service/src/services/deals/filter.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest';
+-import type { Deal } from '@hearth/shared';
++import type { Deal } from '@hestia/shared';
+ import { filterDeals, paginate, selectDeals, sortDeals } from './filter.js';
+ 
+ /** Deal search and browse, paginated at 50 per page. */
+diff --git a/apps/service/src/services/deals/filter.ts b/apps/service/src/services/deals/filter.ts
+index 0369ff5..f7c89d9 100644
+--- a/apps/service/src/services/deals/filter.ts
++++ b/apps/service/src/services/deals/filter.ts
+@@ -1,4 +1,4 @@
+-import { DEAL_PAGE_SIZE, type Deal, type DealSort } from '@hearth/shared';
++import { DEAL_PAGE_SIZE, type Deal, type DealSort } from '@hestia/shared';
+ 
+ /**
+  * Deal filtering, sorting, and pagination (50 per page). Pure, over deals already read from `deal`,
+diff --git a/apps/service/src/services/deals/storage.ts b/apps/service/src/services/deals/storage.ts
+index 1c5ebce..d3ca657 100644
+--- a/apps/service/src/services/deals/storage.ts
++++ b/apps/service/src/services/deals/storage.ts
+@@ -1,6 +1,6 @@
+ import { sql, type Kysely } from 'kysely';
+-import { normalize } from '@hearth/matching';
+-import type { Deal } from '@hearth/shared';
++import { normalize } from '@hestia/matching';
++import type { Deal } from '@hestia/shared';
+ import type { Database } from '../../db.js';
+ import type { NormalizedDeal } from '../../deals/deal-source.js';
+ import { fromCents, toCents } from '../money.js';
+diff --git a/apps/service/src/services/errors.ts b/apps/service/src/services/errors.ts
+index a95beb2..a3922c2 100644
+--- a/apps/service/src/services/errors.ts
++++ b/apps/service/src/services/errors.ts
+@@ -1,6 +1,6 @@
+ import { createHash } from 'node:crypto';
+ import { sql, type Kysely } from 'kysely';
+-import { SCRUBBED_MESSAGE_MAX_LENGTH, scrubErrorReport } from '@hearth/shared';
++import { SCRUBBED_MESSAGE_MAX_LENGTH, scrubErrorReport } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ 
+ export type ErrorSource = 'service' | 'web';
+diff --git a/apps/service/src/services/households.ts b/apps/service/src/services/households.ts
+index bd9fd78..8598e74 100644
+--- a/apps/service/src/services/households.ts
++++ b/apps/service/src/services/households.ts
+@@ -5,7 +5,7 @@ import type {
+   HouseholdRole,
+   Member,
+   UpdateHouseholdRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ 
+diff --git a/apps/service/src/services/invites.ts b/apps/service/src/services/invites.ts
+index 76d05cd..1acd2e3 100644
+--- a/apps/service/src/services/invites.ts
++++ b/apps/service/src/services/invites.ts
+@@ -1,6 +1,6 @@
+ import { createHash, randomBytes, randomInt } from 'node:crypto';
+ import type { Kysely } from 'kysely';
+-import type { CreatedInvite, Invite } from '@hearth/shared';
++import type { CreatedInvite, Invite } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ import { requireAdmin } from './households.js';
+diff --git a/apps/service/src/services/lists.ts b/apps/service/src/services/lists.ts
+index 9096063..51a5218 100644
+--- a/apps/service/src/services/lists.ts
++++ b/apps/service/src/services/lists.ts
+@@ -1,5 +1,5 @@
+ import { sql, type Kysely, type Selectable } from 'kysely';
+-import { normalize } from '@hearth/matching';
++import { normalize } from '@hestia/matching';
+ import type {
+   CreateListItemRequest,
+   ListItem,
+@@ -8,7 +8,7 @@ import type {
+   ShoppingListDetail,
+   StoreGroup,
+   UpdateListItemRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ import { markHouseholdActive } from './households.js';
+diff --git a/apps/service/src/services/match-overrides.ts b/apps/service/src/services/match-overrides.ts
+index a74423e..fbd40a9 100644
+--- a/apps/service/src/services/match-overrides.ts
++++ b/apps/service/src/services/match-overrides.ts
+@@ -1,6 +1,6 @@
+ import type { Kysely } from 'kysely';
+-import { normalize } from '@hearth/matching';
+-import type { CreateMatchOverrideRequest, MatchOverride } from '@hearth/shared';
++import { normalize } from '@hestia/matching';
++import type { CreateMatchOverrideRequest, MatchOverride } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ import { markHouseholdActive } from './households.js';
+@@ -86,7 +86,7 @@ export async function deleteMatchOverride(db: Kysely<Database>, id: string): Pro
+   await recomputeReadinessForHousehold(db, existing.household_id);
+ }
+ 
+-/** The household's overrides, in the API's own shape (not `@hearth/matching`'s pared-down one). */
++/** The household's overrides, in the API's own shape (not `@hestia/matching`'s pared-down one). */
+ export async function listMatchOverrides(
+   db: Kysely<Database>,
+   householdId: string,
+diff --git a/apps/service/src/services/matching-candidates.ts b/apps/service/src/services/matching-candidates.ts
+index ecc15f5..1c9000c 100644
+--- a/apps/service/src/services/matching-candidates.ts
++++ b/apps/service/src/services/matching-candidates.ts
+@@ -1,12 +1,12 @@
+ import { sql, type Kysely, type Selectable } from 'kysely';
+-import type { MatchCandidate, MatchOverride } from '@hearth/matching';
++import type { MatchCandidate, MatchOverride } from '@hestia/matching';
+ import type { Database } from '../db.js';
+ import { favoriteMerchantIds } from './deals/favorite-stores.js';
+ 
+ /**
+  * The shared candidate-building step behind readiness and "Add missing to list". Both features
+  * match a household's recipe ingredients against the same two candidate pools — its pantry and its
+- * favorite-merchant deals — so this is built once and handed to `@hearth/matching`'s pure
++ * favorite-merchant deals — so this is built once and handed to `@hestia/matching`'s pure
+  * `matchIngredient`, rather than re-implemented per caller.
+  */
+ 
+@@ -20,7 +20,7 @@ export interface HouseholdMatchContext {
+    * (`dealMatch ??= ...`), so pre-sorting the deals by ascending price makes "first match" and
+    * "lowest-price match" the same thing. That is what encodes "When several favorite-merchant
+    * deals match, the one with the lowest unit price is used" without duplicating any matching logic
+-   * here or in `@hearth/matching` — a lower-price deal is simply seen, and therefore kept, before a
++   * here or in `@hestia/matching` — a lower-price deal is simply seen, and therefore kept, before a
+    * higher-priced one.
+    */
+   candidates: MatchCandidate[];
+@@ -34,7 +34,7 @@ const EMPTY_CONTEXT: HouseholdMatchContext = {
+   pantryById: new Map(),
+ };
+ 
+-/** The household's pantry and current favorite-merchant deals, as `@hearth/matching` candidates. */
++/** The household's pantry and current favorite-merchant deals, as `@hestia/matching` candidates. */
+ export async function buildMatchCandidates(
+   db: Kysely<Database>,
+   householdId: string,
+@@ -89,7 +89,7 @@ export async function buildMatchCandidates(
+   return { candidates, dealsById, pantryById };
+ }
+ 
+-/** The household's match overrides, in `@hearth/matching`'s `MatchOverride` shape. */
++/** The household's match overrides, in `@hestia/matching`'s `MatchOverride` shape. */
+ export async function listMatchOverridesFor(
+   db: Kysely<Database>,
+   householdId: string,
+diff --git a/apps/service/src/services/meal-plan.ts b/apps/service/src/services/meal-plan.ts
+index bc4a36a..1078431 100644
+--- a/apps/service/src/services/meal-plan.ts
++++ b/apps/service/src/services/meal-plan.ts
+@@ -3,7 +3,7 @@ import type {
+   CreateMealPlanEntryRequest,
+   MealPlanEntry,
+   MealPlanWeekResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ import { markHouseholdActive } from './households.js';
+diff --git a/apps/service/src/services/membership.ts b/apps/service/src/services/membership.ts
+index fe35ea5..b7d7c33 100644
+--- a/apps/service/src/services/membership.ts
++++ b/apps/service/src/services/membership.ts
+@@ -1,5 +1,5 @@
+ import { sql, type Kysely } from 'kysely';
+-import type { DeparturePreview, DepartResult } from '@hearth/shared';
++import type { DeparturePreview, DepartResult } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ 
+ /*
+diff --git a/apps/service/src/services/normalized-name.test.ts b/apps/service/src/services/normalized-name.test.ts
+index f0b4a05..b9d5386 100644
+--- a/apps/service/src/services/normalized-name.test.ts
++++ b/apps/service/src/services/normalized-name.test.ts
+@@ -1,8 +1,8 @@
+ import { describe, expect, it } from 'vitest';
+-import { normalize } from '@hearth/matching';
++import { normalize } from '@hestia/matching';
+ 
+ /*
+- * The service does not normalize names itself: `@hearth/matching` owns the pipeline and its
++ * The service does not normalize names itself: `@hestia/matching` owns the pipeline and its
+  * maintained descriptor and brand lists, and the list and pantry services call it on save. The
+  * pipeline's own cases live in that package's tests.
+  *
+diff --git a/apps/service/src/services/notifications.test.ts b/apps/service/src/services/notifications.test.ts
+index 2fe2dcd..39654b1 100644
+--- a/apps/service/src/services/notifications.test.ts
++++ b/apps/service/src/services/notifications.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest';
+-import type { NotificationType } from '@hearth/shared';
++import type { NotificationType } from '@hestia/shared';
+ import { effectivePreferences, notificationDefaults } from './notifications.js';
+ 
+ const HOUSEHOLD_A = '3f2b8c1e-9a4d-4e6f-8b1a-2c3d4e5f6a7b';
+diff --git a/apps/service/src/services/notifications.ts b/apps/service/src/services/notifications.ts
+index ff2848b..b1f0650 100644
+--- a/apps/service/src/services/notifications.ts
++++ b/apps/service/src/services/notifications.ts
+@@ -7,7 +7,7 @@ import {
+   type NotificationType,
+   type PushSubscriptionRequest,
+   type UpdateNotificationPreferenceRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ 
+diff --git a/apps/service/src/services/pantry.ts b/apps/service/src/services/pantry.ts
+index d4f3cc2..43df352 100644
+--- a/apps/service/src/services/pantry.ts
++++ b/apps/service/src/services/pantry.ts
+@@ -1,6 +1,6 @@
+ import type { Kysely } from 'kysely';
+-import { normalize } from '@hearth/matching';
+-import type { CreatePantryItemRequest, PantryItem, UpdatePantryItemRequest } from '@hearth/shared';
++import { normalize } from '@hestia/matching';
++import type { CreatePantryItemRequest, PantryItem, UpdatePantryItemRequest } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { markHouseholdActive } from './households.js';
+ import { fail } from '../problem.js';
+diff --git a/apps/service/src/services/readiness.ts b/apps/service/src/services/readiness.ts
+index 313ed72..42804df 100644
+--- a/apps/service/src/services/readiness.ts
++++ b/apps/service/src/services/readiness.ts
+@@ -1,6 +1,6 @@
+ import type { Kysely } from 'kysely';
+-import { matchIngredient, type MatchOverride } from '@hearth/matching';
+-import type { ReadinessBreakdownEntry } from '@hearth/shared';
++import { matchIngredient, type MatchOverride } from '@hestia/matching';
++import type { ReadinessBreakdownEntry } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import {
+   buildMatchCandidates,
+diff --git a/apps/service/src/services/recipes.ts b/apps/service/src/services/recipes.ts
+index 478fbb5..82ebb7f 100644
+--- a/apps/service/src/services/recipes.ts
++++ b/apps/service/src/services/recipes.ts
+@@ -1,5 +1,5 @@
+ import type { Kysely, Selectable } from 'kysely';
+-import { normalize } from '@hearth/matching';
++import { normalize } from '@hestia/matching';
+ import type {
+   CreateRecipeRequest,
+   IngredientInput,
+@@ -10,8 +10,8 @@ import type {
+   RecipeListResponse,
+   RecipeReadiness,
+   UpdateRecipeRequest,
+-} from '@hearth/shared';
+-import { RECIPE_PAGE_SIZE } from '@hearth/shared';
++} from '@hestia/shared';
++import { RECIPE_PAGE_SIZE } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ import { paginate } from './deals/filter.js';
+diff --git a/apps/service/src/services/repricing.ts b/apps/service/src/services/repricing.ts
+index 2f77df7..674d1bb 100644
+--- a/apps/service/src/services/repricing.ts
++++ b/apps/service/src/services/repricing.ts
+@@ -1,5 +1,5 @@
+ import { sql, type Kysely } from 'kysely';
+-import type { PriceUnit } from '@hearth/shared';
++import type { PriceUnit } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { toCents } from './money.js';
+ 
+diff --git a/apps/service/src/services/skip-rates.ts b/apps/service/src/services/skip-rates.ts
+index a7eb576..737d213 100644
+--- a/apps/service/src/services/skip-rates.ts
++++ b/apps/service/src/services/skip-rates.ts
+@@ -1,4 +1,4 @@
+-import type { MerchantSkipRate } from '@hearth/shared';
++import type { MerchantSkipRate } from '@hestia/shared';
+ 
+ /**
+  * Per-merchant skip rates from the most recent deal refresh. In memory: a restart forgets them
+diff --git a/apps/service/src/services/subscriptions.ts b/apps/service/src/services/subscriptions.ts
+index 8f8412c..a3c8c50 100644
+--- a/apps/service/src/services/subscriptions.ts
++++ b/apps/service/src/services/subscriptions.ts
+@@ -1,5 +1,5 @@
+ import { sql, type Kysely } from 'kysely';
+-import type { RecurrenceUnit, Subscription, SubscriptionsResponse } from '@hearth/shared';
++import type { RecurrenceUnit, Subscription, SubscriptionsResponse } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { toCents } from './money.js';
+ 
+diff --git a/apps/service/src/services/subtotals.ts b/apps/service/src/services/subtotals.ts
+index 7413411..6fd9679 100644
+--- a/apps/service/src/services/subtotals.ts
++++ b/apps/service/src/services/subtotals.ts
+@@ -1,4 +1,4 @@
+-import type { PriceUnit } from '@hearth/shared';
++import type { PriceUnit } from '@hestia/shared';
+ import { multiplyCents } from './money.js';
+ 
+ /**
+diff --git a/apps/service/src/services/suggestions.test.ts b/apps/service/src/services/suggestions.test.ts
+index a1948d2..32109e7 100644
+--- a/apps/service/src/services/suggestions.test.ts
++++ b/apps/service/src/services/suggestions.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest';
+-import type { Suggestion } from '@hearth/shared';
++import type { Suggestion } from '@hestia/shared';
+ import { rankByReadiness } from './suggestions.js';
+ 
+ function suggestion(title: string, readinessPercent: number): Suggestion {
+diff --git a/apps/service/src/services/suggestions.ts b/apps/service/src/services/suggestions.ts
+index 9ff966a..e012086 100644
+--- a/apps/service/src/services/suggestions.ts
++++ b/apps/service/src/services/suggestions.ts
+@@ -1,5 +1,5 @@
+ import { sql, type Kysely } from 'kysely';
+-import type { Suggestion, SuggestionsResponse } from '@hearth/shared';
++import type { Suggestion, SuggestionsResponse } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ 
+ /**
+diff --git a/apps/service/src/services/users.ts b/apps/service/src/services/users.ts
+index f603560..6b1e8dc 100644
+--- a/apps/service/src/services/users.ts
++++ b/apps/service/src/services/users.ts
+@@ -1,5 +1,5 @@
+ import type { Kysely } from 'kysely';
+-import type { ProfileResponse, UpdateProfileRequest } from '@hearth/shared';
++import type { ProfileResponse, UpdateProfileRequest } from '@hestia/shared';
+ import type { Database } from '../db.js';
+ import { fail } from '../problem.js';
+ 
+diff --git a/apps/service/src/test/service-stack.ts b/apps/service/src/test/service-stack.ts
+index 1c09d40..c184c58 100644
+--- a/apps/service/src/test/service-stack.ts
++++ b/apps/service/src/test/service-stack.ts
+@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
+ import { randomUUID } from 'node:crypto';
+ import { fileURLToPath } from 'node:url';
+ import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
+-import type { Household } from '@hearth/shared';
++import type { Household } from '@hestia/shared';
+ import pg from 'pg';
+ import { buildApp, type AppDependencies } from '../app.js';
+ import { createTokenVerifier } from '../auth/jwt.js';
+diff --git a/apps/service/tsup.config.ts b/apps/service/tsup.config.ts
+index f434f27..bbf8930 100644
+--- a/apps/service/tsup.config.ts
++++ b/apps/service/tsup.config.ts
+@@ -10,5 +10,5 @@ export default defineConfig({
+   sourcemap: true,
+   // Workspace packages export TypeScript source, so they are bundled in;
+   // npm dependencies stay external and are installed in the image.
+-  noExternal: [/^@hearth\//],
++  noExternal: [/^@hestia\//],
+ });
+diff --git a/apps/web/package.json b/apps/web/package.json
+index 8f14ead..3d14c44 100644
+--- a/apps/web/package.json
++++ b/apps/web/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "@hearth/web",
++  "name": "@hestia/web",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+@@ -13,8 +13,8 @@
+     "icons": "node scripts/generate-icons.mjs"
+   },
+   "dependencies": {
+-    "@hearth/recurrence": "workspace:*",
+-    "@hearth/shared": "workspace:*",
++    "@hestia/recurrence": "workspace:*",
++    "@hestia/shared": "workspace:*",
+     "@supabase/supabase-js": "2.116.0",
+     "@tanstack/query-async-storage-persister": "5.103.1",
+     "@tanstack/react-query": "5.103.1",
+diff --git a/apps/web/src/App.test.tsx b/apps/web/src/App.test.tsx
+index cbba3a4..0340376 100644
+--- a/apps/web/src/App.test.tsx
++++ b/apps/web/src/App.test.tsx
+@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
+ import type { ReactElement } from 'react';
+ import userEvent from '@testing-library/user-event';
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+-import type { ProfileResponse } from '@hearth/shared';
++import type { ProfileResponse } from '@hestia/shared';
+ import { useProfile, useSwitchHousehold } from './lib/api/hooks.ts';
+ import { queryKeys } from './lib/api/keys.ts';
+ import {
+diff --git a/apps/web/src/components/bills/BillForm.tsx b/apps/web/src/components/bills/BillForm.tsx
+index 648777f..ac6b21a 100644
+--- a/apps/web/src/components/bills/BillForm.tsx
++++ b/apps/web/src/components/bills/BillForm.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type ReactElement, type SyntheticEvent } from 'react';
+-import type { Bill, BillVisibility, RecurrenceUnit } from '@hearth/shared';
++import type { Bill, BillVisibility, RecurrenceUnit } from '@hestia/shared';
+ import { recurrencePreviewSentence } from '../../lib/bills/recurrence-preview.ts';
+ import { formatPriceInput, parsePriceInput } from '../../lib/price-input.ts';
+ import { useFieldErrors } from '../../lib/use-field-errors.ts';
+diff --git a/apps/web/src/components/bills/BillRow.tsx b/apps/web/src/components/bills/BillRow.tsx
+index 0a371fe..f11c647 100644
+--- a/apps/web/src/components/bills/BillRow.tsx
++++ b/apps/web/src/components/bills/BillRow.tsx
+@@ -1,7 +1,7 @@
+ import { SkipForward } from 'lucide-react';
+ import type { ReactElement } from 'react';
+ import { Link } from 'react-router';
+-import type { Bill } from '@hearth/shared';
++import type { Bill } from '@hestia/shared';
+ import { formatCalendarDate, formatCents } from '../../lib/format.ts';
+ import { Badge } from '../ui/Badge.tsx';
+ import { Button } from '../ui/Button.tsx';
+diff --git a/apps/web/src/components/bills/PaymentEditSheet.tsx b/apps/web/src/components/bills/PaymentEditSheet.tsx
+index bb514bc..efe0f02 100644
+--- a/apps/web/src/components/bills/PaymentEditSheet.tsx
++++ b/apps/web/src/components/bills/PaymentEditSheet.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type ReactElement, type SyntheticEvent } from 'react';
+-import type { BillPayment } from '@hearth/shared';
++import type { BillPayment } from '@hestia/shared';
+ import { formatPriceInput, parsePriceInput } from '../../lib/price-input.ts';
+ import { useFieldErrors } from '../../lib/use-field-errors.ts';
+ import { Button } from '../ui/Button.tsx';
+diff --git a/apps/web/src/components/bills/PaymentHistory.tsx b/apps/web/src/components/bills/PaymentHistory.tsx
+index e61d136..78f331e 100644
+--- a/apps/web/src/components/bills/PaymentHistory.tsx
++++ b/apps/web/src/components/bills/PaymentHistory.tsx
+@@ -1,6 +1,6 @@
+ import { Pencil, Trash2 } from 'lucide-react';
+ import type { ReactElement } from 'react';
+-import type { BillPayment } from '@hearth/shared';
++import type { BillPayment } from '@hestia/shared';
+ import { formatCalendarDate, formatCents } from '../../lib/format.ts';
+ import { Badge } from '../ui/Badge.tsx';
+ import { OverflowMenu, type OverflowMenuItem } from '../ui/OverflowMenu.tsx';
+diff --git a/apps/web/src/components/bills/SubscriptionRow.tsx b/apps/web/src/components/bills/SubscriptionRow.tsx
+index 9f4848b..57fce19 100644
+--- a/apps/web/src/components/bills/SubscriptionRow.tsx
++++ b/apps/web/src/components/bills/SubscriptionRow.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import type { Subscription } from '@hearth/shared';
++import type { Subscription } from '@hestia/shared';
+ import { formatCents } from '../../lib/format.ts';
+ import { Badge } from '../ui/Badge.tsx';
+ import { Button } from '../ui/Button.tsx';
+diff --git a/apps/web/src/components/bills/bills-copy.ts b/apps/web/src/components/bills/bills-copy.ts
+index b38e2ef..ee3276e 100644
+--- a/apps/web/src/components/bills/bills-copy.ts
++++ b/apps/web/src/components/bills/bills-copy.ts
+@@ -1,4 +1,4 @@
+-import type { Bill } from '@hearth/shared';
++import type { Bill } from '@hestia/shared';
+ import { formatCalendarDate } from '../../lib/format.ts';
+ 
+ /**
+diff --git a/apps/web/src/components/chores/ChoreListRow.tsx b/apps/web/src/components/chores/ChoreListRow.tsx
+index 70280c2..0d654a8 100644
+--- a/apps/web/src/components/chores/ChoreListRow.tsx
++++ b/apps/web/src/components/chores/ChoreListRow.tsx
+@@ -1,6 +1,6 @@
+ import type { ReactElement } from 'react';
+ import { Link } from 'react-router';
+-import type { Chore, Member } from '@hearth/shared';
++import type { Chore, Member } from '@hestia/shared';
+ import { calendarDateOfInstant } from '../../lib/household-date.ts';
+ import { PENDING_CLASSES, PendingMark } from '../lists/PendingMark.tsx';
+ import { Badge } from '../ui/Badge.tsx';
+diff --git a/apps/web/src/components/chores/CompletionHistory.tsx b/apps/web/src/components/chores/CompletionHistory.tsx
+index 330c5f6..be4ce5c 100644
+--- a/apps/web/src/components/chores/CompletionHistory.tsx
++++ b/apps/web/src/components/chores/CompletionHistory.tsx
+@@ -1,6 +1,6 @@
+ import { Trash2 } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+-import type { ChoreCompletion, Member } from '@hearth/shared';
++import type { ChoreCompletion, Member } from '@hestia/shared';
+ import { formatCalendarDate } from '../../lib/format.ts';
+ import { calendarDateOfInstant } from '../../lib/household-date.ts';
+ import { ConfirmDialog } from '../ui/ConfirmDialog.tsx';
+diff --git a/apps/web/src/components/chores/RecurrenceFields.tsx b/apps/web/src/components/chores/RecurrenceFields.tsx
+index 9ad67f1..e07d0c8 100644
+--- a/apps/web/src/components/chores/RecurrenceFields.tsx
++++ b/apps/web/src/components/chores/RecurrenceFields.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import { previewOccurrences, type RecurrenceUnit } from '@hearth/recurrence';
++import { previewOccurrences, type RecurrenceUnit } from '@hestia/recurrence';
+ import { formatCalendarDate } from '../../lib/format.ts';
+ import { TextField } from '../ui/Field.tsx';
+ import { Select } from '../ui/Select.tsx';
+@@ -28,7 +28,7 @@ export interface RecurrenceFieldsProps {
+ /**
+  * The chore sheet's recurrence editor: unit, interval, and anchor date, with a plain-language
+  * preview of the next three occurrence dates that updates as the fields change. Reuses
+- * `@hearth/recurrence`'s own `previewOccurrences`, the same function behind both the bill and
++ * `@hestia/recurrence`'s own `previewOccurrences`, the same function behind both the bill and
+  * chore sheets (`packages/recurrence/src/occurrence.ts`), so the preview can never
+  * drift from the anchored-recurrence rules the server applies.
+  */
+diff --git a/apps/web/src/components/chores/RotationEditor.tsx b/apps/web/src/components/chores/RotationEditor.tsx
+index bd3a8a5..a4dc4a5 100644
+--- a/apps/web/src/components/chores/RotationEditor.tsx
++++ b/apps/web/src/components/chores/RotationEditor.tsx
+@@ -1,6 +1,6 @@
+ import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
+ import { useEffect, useRef, useState, type DragEvent, type ReactElement } from 'react';
+-import type { Member } from '@hearth/shared';
++import type { Member } from '@hestia/shared';
+ import { ROTATION_EMPTY_COPY } from './chore-copy.ts';
+ import { Button } from '../ui/Button.tsx';
+ import { Select } from '../ui/Select.tsx';
+diff --git a/apps/web/src/components/chores/chore-copy.ts b/apps/web/src/components/chores/chore-copy.ts
+index 36aebb7..ad27da6 100644
+--- a/apps/web/src/components/chores/chore-copy.ts
++++ b/apps/web/src/components/chores/chore-copy.ts
+@@ -1,4 +1,4 @@
+-import type { Chore, Member, RecurrenceUnit } from '@hearth/shared';
++import type { Chore, Member, RecurrenceUnit } from '@hestia/shared';
+ import { addDays, weekStart } from '../../lib/household-date.ts';
+ 
+ /*
+diff --git a/apps/web/src/components/chores/household-date-fallback.tsx b/apps/web/src/components/chores/household-date-fallback.tsx
+index 53fe39f..bac4023 100644
+--- a/apps/web/src/components/chores/household-date-fallback.tsx
++++ b/apps/web/src/components/chores/household-date-fallback.tsx
+@@ -1,6 +1,6 @@
+ import type { UseQueryResult } from '@tanstack/react-query';
+ import type { ReactElement } from 'react';
+-import type { Household } from '@hearth/shared';
++import type { Household } from '@hestia/shared';
+ import { ErrorState, OfflineState } from '../states/StateBlocks.tsx';
+ import { SkeletonRows } from '../ui/Skeleton.tsx';
+ 
+diff --git a/apps/web/src/components/chores/use-chore-completion.ts b/apps/web/src/components/chores/use-chore-completion.ts
+index 2f23d26..b86c55b 100644
+--- a/apps/web/src/components/chores/use-chore-completion.ts
++++ b/apps/web/src/components/chores/use-chore-completion.ts
+@@ -1,6 +1,6 @@
+ import { onlineManager, useQueryClient } from '@tanstack/react-query';
+ import { persistQueryClientSave } from '@tanstack/react-query-persist-client';
+-import type { Chore, Member } from '@hearth/shared';
++import type { Chore, Member } from '@hestia/shared';
+ import { useDeleteChoreCompletion } from '../../lib/api/chore-hooks.ts';
+ import { useHousehold } from '../../lib/api/hooks.ts';
+ import { useFlushPersister } from '../../lib/api/api-context.tsx';
+diff --git a/apps/web/src/components/errands/ErrandRow.tsx b/apps/web/src/components/errands/ErrandRow.tsx
+index 94bf5bc..336af9c 100644
+--- a/apps/web/src/components/errands/ErrandRow.tsx
++++ b/apps/web/src/components/errands/ErrandRow.tsx
+@@ -1,5 +1,5 @@
+ import { useId, type ReactElement } from 'react';
+-import type { Errand, Member } from '@hearth/shared';
++import type { Errand, Member } from '@hestia/shared';
+ import { calendarDateOfInstant } from '../../lib/household-date.ts';
+ import { formatDueIn, formatOverdue, formatRelativeAgo, memberName } from '../chores/chore-copy.ts';
+ import { PENDING_CLASSES, PendingMark } from '../lists/PendingMark.tsx';
+diff --git a/apps/web/src/components/errands/ErrandSheet.tsx b/apps/web/src/components/errands/ErrandSheet.tsx
+index 2ccd5f3..96ce8c5 100644
+--- a/apps/web/src/components/errands/ErrandSheet.tsx
++++ b/apps/web/src/components/errands/ErrandSheet.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type ReactElement } from 'react';
+-import type { Errand, Member } from '@hearth/shared';
++import type { Errand, Member } from '@hestia/shared';
+ import { UNASSIGNED_LABEL } from '../chores/chore-copy.ts';
+ import { useCreateErrand, useUpdateErrand } from '../../lib/api/chore-hooks.ts';
+ import { userMessage } from '../../lib/api/problem.ts';
+diff --git a/apps/web/src/components/lists/ItemPrice.tsx b/apps/web/src/components/lists/ItemPrice.tsx
+index ddbf80f..579e4fb 100644
+--- a/apps/web/src/components/lists/ItemPrice.tsx
++++ b/apps/web/src/components/lists/ItemPrice.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import type { ListItem } from '@hearth/shared';
++import type { ListItem } from '@hestia/shared';
+ import { formatCents, formatPrice, speakPrice } from '../../lib/format.ts';
+ import { Badge } from '../ui/Badge.tsx';
+ 
+diff --git a/apps/web/src/components/lists/ItemSheet.tsx b/apps/web/src/components/lists/ItemSheet.tsx
+index ad33631..2d0310c 100644
+--- a/apps/web/src/components/lists/ItemSheet.tsx
++++ b/apps/web/src/components/lists/ItemSheet.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type ReactElement, type SyntheticEvent } from 'react';
+-import { itemNameSchema, type ListItem, type PriceUnit } from '@hearth/shared';
++import { itemNameSchema, type ListItem, type PriceUnit } from '@hestia/shared';
+ import { formatPriceInput, parsePriceInput, parseQuantityInput } from '../../lib/price-input.ts';
+ import { useFieldErrors } from '../../lib/use-field-errors.ts';
+ import { firstIssue } from '../../lib/validation.ts';
+diff --git a/apps/web/src/components/lists/ShoppingListRow.tsx b/apps/web/src/components/lists/ShoppingListRow.tsx
+index bc2ff91..997fe59 100644
+--- a/apps/web/src/components/lists/ShoppingListRow.tsx
++++ b/apps/web/src/components/lists/ShoppingListRow.tsx
+@@ -1,6 +1,6 @@
+ import { PenLine, Store, Tag, UtensilsCrossed, type LucideIcon } from 'lucide-react';
+ import type { ReactElement } from 'react';
+-import type { ListItem, ListItemSource } from '@hearth/shared';
++import type { ListItem, ListItemSource } from '@hestia/shared';
+ import { cn } from '../../lib/cn.ts';
+ import { Badge } from '../ui/Badge.tsx';
+ import { Checkbox } from '../ui/Checkbox.tsx';
+diff --git a/apps/web/src/components/lists/StoreGroupHeader.tsx b/apps/web/src/components/lists/StoreGroupHeader.tsx
+index 2280ab3..e60a86c 100644
+--- a/apps/web/src/components/lists/StoreGroupHeader.tsx
++++ b/apps/web/src/components/lists/StoreGroupHeader.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import type { StoreGroup } from '@hearth/shared';
++import type { StoreGroup } from '@hestia/shared';
+ import { formatCents, pluralize } from '../../lib/format.ts';
+ import { PENDING_SUBTOTAL_LABEL, PendingMark } from './PendingMark.tsx';
+ 
+diff --git a/apps/web/src/components/meals/IngredientEditor.tsx b/apps/web/src/components/meals/IngredientEditor.tsx
+index 338c1aa..9727591 100644
+--- a/apps/web/src/components/meals/IngredientEditor.tsx
++++ b/apps/web/src/components/meals/IngredientEditor.tsx
+@@ -1,6 +1,6 @@
+ import { Plus, Trash2 } from 'lucide-react';
+ import type { ReactElement } from 'react';
+-import type { IngredientInput, ParsedIngredient, RecipeIngredient } from '@hearth/shared';
++import type { IngredientInput, ParsedIngredient, RecipeIngredient } from '@hestia/shared';
+ import { Button } from '../ui/Button.tsx';
+ import { TextField } from '../ui/Field.tsx';
+ 
+diff --git a/apps/web/src/components/meals/IngredientRow.tsx b/apps/web/src/components/meals/IngredientRow.tsx
+index aeec8f9..d43f89f 100644
+--- a/apps/web/src/components/meals/IngredientRow.tsx
++++ b/apps/web/src/components/meals/IngredientRow.tsx
+@@ -1,6 +1,6 @@
+ import { Package, ShoppingBasket, Tag, X, type LucideIcon } from 'lucide-react';
+ import { useEffect, useRef, useState, type ReactElement } from 'react';
+-import type { MatchOverride, ReadinessBreakdownEntry, RecipeIngredient } from '@hearth/shared';
++import type { MatchOverride, ReadinessBreakdownEntry, RecipeIngredient } from '@hestia/shared';
+ import { useCreateMatchOverride, useDeleteMatchOverride } from '../../lib/api/meal-hooks.ts';
+ import { userMessage } from '../../lib/api/problem.ts';
+ import { Badge } from '../ui/Badge.tsx';
+diff --git a/apps/web/src/components/meals/MealSlotEntry.tsx b/apps/web/src/components/meals/MealSlotEntry.tsx
+index fbe81c2..cd70a3c 100644
+--- a/apps/web/src/components/meals/MealSlotEntry.tsx
++++ b/apps/web/src/components/meals/MealSlotEntry.tsx
+@@ -1,7 +1,7 @@
+ import { Trash2 } from 'lucide-react';
+ import type { ReactElement } from 'react';
+ import { Link } from 'react-router';
+-import type { MealPlanEntry } from '@hearth/shared';
++import type { MealPlanEntry } from '@hestia/shared';
+ import { OverflowMenu } from '../ui/OverflowMenu.tsx';
+ import { DELETED_RECIPE_NOTE } from './meal-copy.ts';
+ 
+diff --git a/apps/web/src/components/meals/PlaceOnPlannerSheet.tsx b/apps/web/src/components/meals/PlaceOnPlannerSheet.tsx
+index 92871e6..2e1f100 100644
+--- a/apps/web/src/components/meals/PlaceOnPlannerSheet.tsx
++++ b/apps/web/src/components/meals/PlaceOnPlannerSheet.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type ReactElement } from 'react';
+-import type { MealType } from '@hearth/shared';
++import type { MealType } from '@hestia/shared';
+ import { useCreateMealPlanEntry } from '../../lib/api/meal-hooks.ts';
+ import { userMessage } from '../../lib/api/problem.ts';
+ import { todayInTimezone } from '../../lib/household-date.ts';
+diff --git a/apps/web/src/components/meals/PlannerDay.tsx b/apps/web/src/components/meals/PlannerDay.tsx
+index 8ac1ef2..c20fac0 100644
+--- a/apps/web/src/components/meals/PlannerDay.tsx
++++ b/apps/web/src/components/meals/PlannerDay.tsx
+@@ -1,6 +1,6 @@
+ import { Plus } from 'lucide-react';
+ import type { ReactElement } from 'react';
+-import type { MealPlanEntry, MealType } from '@hearth/shared';
++import type { MealPlanEntry, MealType } from '@hestia/shared';
+ import { Button } from '../ui/Button.tsx';
+ import { mealTypeLabel } from './meal-copy.ts';
+ import { MealSlotEntry } from './MealSlotEntry.tsx';
+diff --git a/apps/web/src/components/meals/ReadinessBreakdown.tsx b/apps/web/src/components/meals/ReadinessBreakdown.tsx
+index afe60fe..69a42e1 100644
+--- a/apps/web/src/components/meals/ReadinessBreakdown.tsx
++++ b/apps/web/src/components/meals/ReadinessBreakdown.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import type { MatchOverride, RecipeDetail } from '@hearth/shared';
++import type { MatchOverride, RecipeDetail } from '@hestia/shared';
+ import { IngredientRow } from './IngredientRow.tsx';
+ import { readinessSentence } from './meal-copy.ts';
+ import { ReadinessRing } from './RecipeCard.tsx';
+diff --git a/apps/web/src/components/meals/meal-components.test.tsx b/apps/web/src/components/meals/meal-components.test.tsx
+index 7f37bfc..c05fa1e 100644
+--- a/apps/web/src/components/meals/meal-components.test.tsx
++++ b/apps/web/src/components/meals/meal-components.test.tsx
+@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
+ import { useState, type ReactElement } from 'react';
+ import { MemoryRouter } from 'react-router';
+ import { describe, expect, it, vi } from 'vitest';
+-import type { MealPlanEntry } from '@hearth/shared';
++import type { MealPlanEntry } from '@hestia/shared';
+ import {
+   blankIngredient,
+   IngredientEditor,
+diff --git a/apps/web/src/components/meals/meal-copy.ts b/apps/web/src/components/meals/meal-copy.ts
+index 4dd5558..385e2ff 100644
+--- a/apps/web/src/components/meals/meal-copy.ts
++++ b/apps/web/src/components/meals/meal-copy.ts
+@@ -1,4 +1,4 @@
+-import type { Recipe, ReadinessBucket } from '@hearth/shared';
++import type { Recipe, ReadinessBucket } from '@hestia/shared';
+ 
+ /**
+  * The words readiness and the week planner are shown and announced with. Copy lives here, rather
+diff --git a/apps/web/src/components/meals/recipe-sort.ts b/apps/web/src/components/meals/recipe-sort.ts
+index 74d225a..0b90474 100644
+--- a/apps/web/src/components/meals/recipe-sort.ts
++++ b/apps/web/src/components/meals/recipe-sort.ts
+@@ -1,4 +1,4 @@
+-import type { Recipe, Suggestion } from '@hearth/shared';
++import type { Recipe, Suggestion } from '@hestia/shared';
+ 
+ /**
+  * `GET /households/:id/recipes` carries no readiness (`recipeSchema` has no readiness field,
+diff --git a/apps/web/src/lib/api/bills-hooks.ts b/apps/web/src/lib/api/bills-hooks.ts
+index 3b1492b..d7c89c9 100644
+--- a/apps/web/src/lib/api/bills-hooks.ts
++++ b/apps/web/src/lib/api/bills-hooks.ts
+@@ -19,7 +19,7 @@ import {
+   type SubscriptionsResponse,
+   type UpdateBillPaymentRequest,
+   type UpdateBillRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { useApi } from './api-context.tsx';
+ import { queryKeys } from './keys.ts';
+ 
+diff --git a/apps/web/src/lib/api/chore-hooks.ts b/apps/web/src/lib/api/chore-hooks.ts
+index 261d9f9..ce71dde 100644
+--- a/apps/web/src/lib/api/chore-hooks.ts
++++ b/apps/web/src/lib/api/chore-hooks.ts
+@@ -17,7 +17,7 @@ import {
+   type Errand,
+   type UpdateChoreRequest,
+   type UpdateErrandRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { useApi } from './api-context.tsx';
+ import { queryKeys } from './keys.ts';
+ 
+diff --git a/apps/web/src/lib/api/client.test.ts b/apps/web/src/lib/api/client.test.ts
+index ffccbfc..1977552 100644
+--- a/apps/web/src/lib/api/client.test.ts
++++ b/apps/web/src/lib/api/client.test.ts
+@@ -1,6 +1,6 @@
+ import { describe, expect, it, vi } from 'vitest';
+ import { z } from 'zod';
+-import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
++import { PROBLEM_CONTENT_TYPE } from '@hestia/shared';
+ import { createApiClient, type AuthPort } from './client.ts';
+ import { ApiError } from './problem.ts';
+ 
+diff --git a/apps/web/src/lib/api/client.ts b/apps/web/src/lib/api/client.ts
+index 08d2ac6..2456a93 100644
+--- a/apps/web/src/lib/api/client.ts
++++ b/apps/web/src/lib/api/client.ts
+@@ -1,5 +1,5 @@
+ import type { z } from 'zod';
+-import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
++import { PROBLEM_CONTENT_TYPE } from '@hestia/shared';
+ import { ApiError, parseProblem } from './problem.ts';
+ 
+ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+diff --git a/apps/web/src/lib/api/deals.ts b/apps/web/src/lib/api/deals.ts
+index 73ecd7b..b756768 100644
+--- a/apps/web/src/lib/api/deals.ts
++++ b/apps/web/src/lib/api/deals.ts
+@@ -20,7 +20,7 @@ import {
+   type FlyersResponse,
+   type MerchantsResponse,
+   type ShoppingList,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { useApi, useAuthClient } from './api-context.tsx';
+ import { HOUSEHOLD_SCOPE } from './keys.ts';
+ 
+diff --git a/apps/web/src/lib/api/hooks.ts b/apps/web/src/lib/api/hooks.ts
+index f2b449e..901ad41 100644
+--- a/apps/web/src/lib/api/hooks.ts
++++ b/apps/web/src/lib/api/hooks.ts
+@@ -28,7 +28,7 @@ import {
+   type ProfileResponse,
+   type UpdateHouseholdRequest,
+   type UpdateProfileRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { useApi } from './api-context.tsx';
+ import { HOUSEHOLD_SCOPE, queryKeys } from './keys.ts';
+ 
+diff --git a/apps/web/src/lib/api/list-hooks.ts b/apps/web/src/lib/api/list-hooks.ts
+index 6a52877..52d17c2 100644
+--- a/apps/web/src/lib/api/list-hooks.ts
++++ b/apps/web/src/lib/api/list-hooks.ts
+@@ -15,7 +15,7 @@ import {
+   type ShoppingList,
+   type ShoppingListDetail,
+   type UpdatePantryItemRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import {
+   listWriteMutationKey,
+   listWriteScope,
+diff --git a/apps/web/src/lib/api/meal-hooks.ts b/apps/web/src/lib/api/meal-hooks.ts
+index 650d9f5..ad400a0 100644
+--- a/apps/web/src/lib/api/meal-hooks.ts
++++ b/apps/web/src/lib/api/meal-hooks.ts
+@@ -27,7 +27,7 @@ import {
+   type ShoppingListDetail,
+   type SuggestionsResponse,
+   type UpdateRecipeRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { useApi, useFlushPersister } from './api-context.tsx';
+ import { HOUSEHOLD_SCOPE, queryKeys } from './keys.ts';
+ 
+diff --git a/apps/web/src/lib/api/notification-hooks.ts b/apps/web/src/lib/api/notification-hooks.ts
+index 91a1702..d62b1e6 100644
+--- a/apps/web/src/lib/api/notification-hooks.ts
++++ b/apps/web/src/lib/api/notification-hooks.ts
+@@ -11,7 +11,7 @@ import {
+   type NotificationPreference,
+   type NotificationPreferencesResponse,
+   type UpdateNotificationPreferenceRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { useApi } from './api-context.tsx';
+ import { queryKeys } from './keys.ts';
+ 
+diff --git a/apps/web/src/lib/api/problem.ts b/apps/web/src/lib/api/problem.ts
+index 6d326cd..435e3da 100644
+--- a/apps/web/src/lib/api/problem.ts
++++ b/apps/web/src/lib/api/problem.ts
+@@ -1,4 +1,4 @@
+-import { problemDetailsSchema, type ProblemDetails } from '@hearth/shared';
++import { problemDetailsSchema, type ProblemDetails } from '@hestia/shared';
+ 
+ /**
+  * A failed API call. `problem` carries the RFC 9457 body when the service sent one; `isOffline`
+diff --git a/apps/web/src/lib/auth/auth-client.ts b/apps/web/src/lib/auth/auth-client.ts
+index 1e05e72..b1d8e55 100644
+--- a/apps/web/src/lib/auth/auth-client.ts
++++ b/apps/web/src/lib/auth/auth-client.ts
+@@ -1,5 +1,5 @@
+ import type { createClient } from '@supabase/supabase-js';
+-import { sessionResponseSchema, type SignupRequest } from '@hearth/shared';
++import { sessionResponseSchema, type SignupRequest } from '@hestia/shared';
+ import { ApiError, parseProblem } from '../api/problem.ts';
+ import type { AuthPort } from '../api/client.ts';
+ 
+diff --git a/apps/web/src/lib/bills/recurrence-preview.ts b/apps/web/src/lib/bills/recurrence-preview.ts
+index 97e3957..1eee771 100644
+--- a/apps/web/src/lib/bills/recurrence-preview.ts
++++ b/apps/web/src/lib/bills/recurrence-preview.ts
+@@ -1,5 +1,5 @@
+-import { previewOccurrences, type Recurrence } from '@hearth/recurrence';
+-import type { RecurrenceUnit } from '@hearth/shared';
++import { previewOccurrences, type Recurrence } from '@hestia/recurrence';
++import type { RecurrenceUnit } from '@hestia/shared';
+ import { formatCalendarDate, formatList } from '../format.ts';
+ 
+ /**
+@@ -8,7 +8,7 @@ import { formatCalendarDate, formatList } from '../format.ts';
+  * dates, since anchored recurrence is easy to misunderstand. There is no server round trip for
+  * this (the Bills API has no preview endpoint) — it
+  * uses the same anchored-recurrence package the service itself computes occurrences with
+- * (`@hearth/recurrence`), so the preview can never disagree with what the bill actually does once
++ * (`@hestia/recurrence`), so the preview can never disagree with what the bill actually does once
+  * saved.
+  */
+ export interface RecurrenceDraft {
+diff --git a/apps/web/src/lib/error-reporting.ts b/apps/web/src/lib/error-reporting.ts
+index bf9979b..e4d77da 100644
+--- a/apps/web/src/lib/error-reporting.ts
++++ b/apps/web/src/lib/error-reporting.ts
+@@ -1,4 +1,4 @@
+-import { scrubErrorReport } from '@hearth/shared';
++import { scrubErrorReport } from '@hestia/shared';
+ 
+ /**
+  * Unexpected errors are reported to `POST /api/client-error` after passing through the shared
+diff --git a/apps/web/src/lib/format.ts b/apps/web/src/lib/format.ts
+index 861a8ec..9da277c 100644
+--- a/apps/web/src/lib/format.ts
++++ b/apps/web/src/lib/format.ts
+@@ -1,4 +1,4 @@
+-import type { PriceUnit } from '@hearth/shared';
++import type { PriceUnit } from '@hestia/shared';
+ 
+ /**
+  * US formatting through `Intl` rather than hand-built strings, so a future locale is a change of
+diff --git a/apps/web/src/lib/money.ts b/apps/web/src/lib/money.ts
+index c066fb3..6778985 100644
+--- a/apps/web/src/lib/money.ts
++++ b/apps/web/src/lib/money.ts
+@@ -1,4 +1,4 @@
+-import type { PriceUnit } from '@hearth/shared';
++import type { PriceUnit } from '@hestia/shared';
+ 
+ /**
+  * Money crosses the API as an integer number of cents and is only ever *formatted* here.
+diff --git a/apps/web/src/lib/offline/chore-errand-writes.test.ts b/apps/web/src/lib/offline/chore-errand-writes.test.ts
+index aee7952..97926c7 100644
+--- a/apps/web/src/lib/offline/chore-errand-writes.test.ts
++++ b/apps/web/src/lib/offline/chore-errand-writes.test.ts
+@@ -5,7 +5,7 @@ import {
+ } from '@tanstack/react-query-persist-client';
+ import { waitFor } from '@testing-library/react';
+ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+-import type { Chore } from '@hearth/shared';
++import type { Chore } from '@hestia/shared';
+ import { OFFLINE_ACTION_REASON } from '../../components/chores/chore-copy.ts';
+ import {
+   TAKE_OUT_TRASH_ID,
+diff --git a/apps/web/src/lib/offline/chore-errand-writes.ts b/apps/web/src/lib/offline/chore-errand-writes.ts
+index 3c139c4..a157415 100644
+--- a/apps/web/src/lib/offline/chore-errand-writes.ts
++++ b/apps/web/src/lib/offline/chore-errand-writes.ts
+@@ -1,12 +1,12 @@
+ import { useMutationState, type MutationKey, type QueryClient } from '@tanstack/react-query';
+-import { occurrenceToComplete, type Recurrence } from '@hearth/recurrence';
++import { occurrenceToComplete, type Recurrence } from '@hestia/recurrence';
+ import {
+   choreDetailSchema,
+   errandSchema,
+   type Chore,
+   type ChoreDetail,
+   type Errand,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { ApiClient } from '../api/client.ts';
+ import { queryKeys } from '../api/keys.ts';
+ import { todayInTimezone } from '../household-date.ts';
+diff --git a/apps/web/src/lib/offline/list-cache.ts b/apps/web/src/lib/offline/list-cache.ts
+index bc64e4b..2a5a033 100644
+--- a/apps/web/src/lib/offline/list-cache.ts
++++ b/apps/web/src/lib/offline/list-cache.ts
+@@ -3,7 +3,7 @@ import type {
+   ShoppingListDetail,
+   StoreGroup,
+   UpdateListItemRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ 
+ /*
+  * Optimistic edits to a cached list. Every offline-queueable write is applied at once and rolled
+diff --git a/apps/web/src/lib/offline/write-queue.ts b/apps/web/src/lib/offline/write-queue.ts
+index 54acd3c..0f07caf 100644
+--- a/apps/web/src/lib/offline/write-queue.ts
++++ b/apps/web/src/lib/offline/write-queue.ts
+@@ -5,7 +5,7 @@ import {
+   type ListItem,
+   type ShoppingListDetail,
+   type UpdateListItemRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import type { ApiClient } from '../api/client.ts';
+ import { queryKeys } from '../api/keys.ts';
+ import { ApiError } from '../api/problem.ts';
+diff --git a/apps/web/src/lib/password.test.ts b/apps/web/src/lib/password.test.ts
+index 1a04001..2660be8 100644
+--- a/apps/web/src/lib/password.test.ts
++++ b/apps/web/src/lib/password.test.ts
+@@ -1,7 +1,7 @@
+ import { readFileSync } from 'node:fs';
+ import { dirname, join, resolve } from 'node:path';
+ import { describe, expect, it } from 'vitest';
+-import { COMMON_PASSWORD_MESSAGE } from '@hearth/shared';
++import { COMMON_PASSWORD_MESSAGE } from '@hestia/shared';
+ import { validateNewPassword } from './password.ts';
+ 
+ describe('validateNewPassword', () => {
+@@ -30,9 +30,9 @@ const PATTERNS = [
+ ];
+ 
+ function resolveSpecifier(specifier: string, fromFile: string): string | undefined {
+-  if (specifier === '@hearth/shared') return join(SHARED, 'index.ts');
+-  if (specifier.startsWith('@hearth/shared/')) {
+-    return join(SHARED, `${specifier.slice('@hearth/shared/'.length)}.ts`);
++  if (specifier === '@hestia/shared') return join(SHARED, 'index.ts');
++  if (specifier.startsWith('@hestia/shared/')) {
++    return join(SHARED, `${specifier.slice('@hestia/shared/'.length)}.ts`);
+   }
+   if (!specifier.startsWith('.')) return undefined; // node_modules: not our graph
+   // Shared compiles for NodeNext and so writes `.js`; the file next to it is the `.ts`.
+diff --git a/apps/web/src/lib/password.ts b/apps/web/src/lib/password.ts
+index e9e518d..b50b9c0 100644
+--- a/apps/web/src/lib/password.ts
++++ b/apps/web/src/lib/password.ts
+@@ -1,4 +1,4 @@
+-import { newPasswordSchema } from '@hearth/shared/common-passwords';
++import { newPasswordSchema } from '@hestia/shared/common-passwords';
+ 
+ /** The rule is shown up front, not only after a failure. */
+ export const PASSWORD_HINT = 'At least 8 characters';
+diff --git a/apps/web/src/lib/push/notification-target.ts b/apps/web/src/lib/push/notification-target.ts
+index 5292b67..dd76e8e 100644
+--- a/apps/web/src/lib/push/notification-target.ts
++++ b/apps/web/src/lib/push/notification-target.ts
+@@ -1,6 +1,6 @@
+ import { useCallback, useEffect, useRef } from 'react';
+ import { useLocation, useNavigate } from 'react-router';
+-import type { ProfileResponse } from '@hearth/shared';
++import type { ProfileResponse } from '@hestia/shared';
+ import { useSwitchHousehold } from '../api/hooks.ts';
+ import { HOUSEHOLD_PARAM, parseClickMessage } from './push-message.ts';
+ 
+diff --git a/apps/web/src/lib/realtime/realtime.test.tsx b/apps/web/src/lib/realtime/realtime.test.tsx
+index 53db363..2e97226 100644
+--- a/apps/web/src/lib/realtime/realtime.test.tsx
++++ b/apps/web/src/lib/realtime/realtime.test.tsx
+@@ -1,6 +1,6 @@
+ import { act, screen, waitFor, within } from '@testing-library/react';
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+-import type { ShoppingListDetail } from '@hearth/shared';
++import type { ShoppingListDetail } from '@hestia/shared';
+ import { ListDetailScreen } from '../../screens/lists/ListDetailScreen.tsx';
+ import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
+ import {
+diff --git a/apps/web/src/lib/use-timezone-sync.ts b/apps/web/src/lib/use-timezone-sync.ts
+index 71a055b..8db378e 100644
+--- a/apps/web/src/lib/use-timezone-sync.ts
++++ b/apps/web/src/lib/use-timezone-sync.ts
+@@ -1,5 +1,5 @@
+ import { useEffect, useRef } from 'react';
+-import type { ProfileResponse } from '@hearth/shared';
++import type { ProfileResponse } from '@hestia/shared';
+ import { useUpdateProfile } from './api/hooks.ts';
+ 
+ /** The browser's current timezone. */
+diff --git a/apps/web/src/screens/DashboardRoute.tsx b/apps/web/src/screens/DashboardRoute.tsx
+index 01a578f..cc861d1 100644
+--- a/apps/web/src/screens/DashboardRoute.tsx
++++ b/apps/web/src/screens/DashboardRoute.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import type { Bill, Chore, MealPlanEntry, MealType, ShoppingList } from '@hearth/shared';
++import type { Bill, Chore, MealPlanEntry, MealType, ShoppingList } from '@hestia/shared';
+ import { mealTypeLabel } from '../components/meals/meal-copy.ts';
+ import type { DashboardCardState } from '../components/dashboard/DashboardCard.tsx';
+ import { DASHBOARD_EMPTY_COPY } from '../components/dashboard/DashboardCards.tsx';
+diff --git a/apps/web/src/screens/bills/BillDetailScreen.tsx b/apps/web/src/screens/bills/BillDetailScreen.tsx
+index a567b8c..ca3fc6c 100644
+--- a/apps/web/src/screens/bills/BillDetailScreen.tsx
++++ b/apps/web/src/screens/bills/BillDetailScreen.tsx
+@@ -1,7 +1,7 @@
+ import { Archive, Pencil, Trash2 } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { BillPayment } from '@hearth/shared';
++import type { BillPayment } from '@hestia/shared';
+ import { BillForm, type BillDraft } from '../../components/bills/BillForm.tsx';
+ import {
+   OFFLINE_ACTION_REASON,
+diff --git a/apps/web/src/screens/bills/BillsIndexScreen.tsx b/apps/web/src/screens/bills/BillsIndexScreen.tsx
+index e436b03..096dbca 100644
+--- a/apps/web/src/screens/bills/BillsIndexScreen.tsx
++++ b/apps/web/src/screens/bills/BillsIndexScreen.tsx
+@@ -1,6 +1,6 @@
+ import { Receipt } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+-import type { Bill, BillVisibility } from '@hearth/shared';
++import type { Bill, BillVisibility } from '@hestia/shared';
+ import { BillForm, type BillDraft } from '../../components/bills/BillForm.tsx';
+ import { BillRow } from '../../components/bills/BillRow.tsx';
+ import {
+diff --git a/apps/web/src/screens/bills/SubscriptionsScreen.tsx b/apps/web/src/screens/bills/SubscriptionsScreen.tsx
+index c875dc8..f734c4d 100644
+--- a/apps/web/src/screens/bills/SubscriptionsScreen.tsx
++++ b/apps/web/src/screens/bills/SubscriptionsScreen.tsx
+@@ -1,6 +1,6 @@
+ import { CreditCard } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+-import type { Subscription } from '@hearth/shared';
++import type { Subscription } from '@hestia/shared';
+ import { SubscriptionRow } from '../../components/bills/SubscriptionRow.tsx';
+ import {
+   OFFLINE_ACTION_REASON,
+diff --git a/apps/web/src/screens/bills/household-timezone.test.tsx b/apps/web/src/screens/bills/household-timezone.test.tsx
+index 7ab9639..4391f16 100644
+--- a/apps/web/src/screens/bills/household-timezone.test.tsx
++++ b/apps/web/src/screens/bills/household-timezone.test.tsx
+@@ -1,6 +1,6 @@
+ import { configure, screen, waitFor, within } from '@testing-library/react';
+ import { describe, expect, it, vi } from 'vitest';
+-import type { Bill } from '@hearth/shared';
++import type { Bill } from '@hestia/shared';
+ import { registerHouseholdClock } from '../../test/browser.ts';
+ import { billFixture } from '../../test/bills-fixtures.ts';
+ import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
+diff --git a/apps/web/src/screens/chores/ChoreFormScreen.tsx b/apps/web/src/screens/chores/ChoreFormScreen.tsx
+index 529d0fb..808043f 100644
+--- a/apps/web/src/screens/chores/ChoreFormScreen.tsx
++++ b/apps/web/src/screens/chores/ChoreFormScreen.tsx
+@@ -1,7 +1,7 @@
+ import { Trash2 } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { ChoreAssignment, ChoreDetail, Member } from '@hearth/shared';
++import type { ChoreAssignment, ChoreDetail, Member } from '@hestia/shared';
+ import {
+   RecurrenceFields,
+   type RecurrenceValue,
+diff --git a/apps/web/src/screens/chores/ErrandsListScreen.tsx b/apps/web/src/screens/chores/ErrandsListScreen.tsx
+index 8948a01..836740d 100644
+--- a/apps/web/src/screens/chores/ErrandsListScreen.tsx
++++ b/apps/web/src/screens/chores/ErrandsListScreen.tsx
+@@ -1,6 +1,6 @@
+ import { ListChecks, Plus } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+-import type { Errand } from '@hearth/shared';
++import type { Errand } from '@hestia/shared';
+ import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
+ import { ErrandRow } from '../../components/errands/ErrandRow.tsx';
+ import { ErrandSheet } from '../../components/errands/ErrandSheet.tsx';
+diff --git a/apps/web/src/screens/chores/chores.test.tsx b/apps/web/src/screens/chores/chores.test.tsx
+index 897c080..24a46ae 100644
+--- a/apps/web/src/screens/chores/chores.test.tsx
++++ b/apps/web/src/screens/chores/chores.test.tsx
+@@ -2,7 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
+ import { act, configure, screen, waitFor, within } from '@testing-library/react';
+ import userEvent, { type UserEvent } from '@testing-library/user-event';
+ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+-import type { Chore, ChoreDetail } from '@hearth/shared';
++import type { Chore, ChoreDetail } from '@hestia/shared';
+ import {
+   BANNED_GAMIFICATION_WORDS,
+   CHORES_EMPTY_COPY,
+diff --git a/apps/web/src/screens/chores/household-timezone.test.tsx b/apps/web/src/screens/chores/household-timezone.test.tsx
+index 3b16318..cf081df 100644
+--- a/apps/web/src/screens/chores/household-timezone.test.tsx
++++ b/apps/web/src/screens/chores/household-timezone.test.tsx
+@@ -1,7 +1,7 @@
+ import { onlineManager } from '@tanstack/react-query';
+ import { configure, screen, within } from '@testing-library/react';
+ import { describe, expect, it, vi } from 'vitest';
+-import type { Errand } from '@hearth/shared';
++import type { Errand } from '@hestia/shared';
+ import { registerHouseholdClock } from '../../test/browser.ts';
+ import {
+   OAK_STREET_ID,
+diff --git a/apps/web/src/screens/deals/AddToList.tsx b/apps/web/src/screens/deals/AddToList.tsx
+index b35c40c..eb2a6ec 100644
+--- a/apps/web/src/screens/deals/AddToList.tsx
++++ b/apps/web/src/screens/deals/AddToList.tsx
+@@ -1,7 +1,7 @@
+ import { Plus } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { Deal } from '@hearth/shared';
++import type { Deal } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { ErrorState } from '../../components/states/StateBlocks.tsx';
+ import { ListRow } from '../../components/ui/ListRow.tsx';
+diff --git a/apps/web/src/screens/deals/DealCard.tsx b/apps/web/src/screens/deals/DealCard.tsx
+index c4633da..404e26a 100644
+--- a/apps/web/src/screens/deals/DealCard.tsx
++++ b/apps/web/src/screens/deals/DealCard.tsx
+@@ -1,5 +1,5 @@
+ import { useId, type ReactElement } from 'react';
+-import type { Deal } from '@hearth/shared';
++import type { Deal } from '@hestia/shared';
+ import { Badge } from '../../components/ui/Badge.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { formatUnitPrice } from '../../lib/money.ts';
+diff --git a/apps/web/src/screens/deals/DealFreshness.tsx b/apps/web/src/screens/deals/DealFreshness.tsx
+index ef7d43c..16cf4f7 100644
+--- a/apps/web/src/screens/deals/DealFreshness.tsx
++++ b/apps/web/src/screens/deals/DealFreshness.tsx
+@@ -1,6 +1,6 @@
+ import { Clock, RefreshCw, RotateCw } from 'lucide-react';
+ import type { ReactElement } from 'react';
+-import type { Freshness } from '@hearth/shared';
++import type { Freshness } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { formatDateTime } from '../../lib/format.ts';
+ 
+diff --git a/apps/web/src/screens/deals/DealResults.tsx b/apps/web/src/screens/deals/DealResults.tsx
+index 96c7ec3..51d17eb 100644
+--- a/apps/web/src/screens/deals/DealResults.tsx
++++ b/apps/web/src/screens/deals/DealResults.tsx
+@@ -1,7 +1,7 @@
+ import { Tag } from 'lucide-react';
+ import { useCallback, type ReactElement } from 'react';
+ import type { UseQueryResult } from '@tanstack/react-query';
+-import type { Deal, Freshness } from '@hearth/shared';
++import type { Deal, Freshness } from '@hestia/shared';
+ import { EmptyState, ErrorState } from '../../components/states/StateBlocks.tsx';
+ import { Skeleton } from '../../components/ui/Skeleton.tsx';
+ import { useDelayedVisible } from '../../lib/use-delayed-visible.ts';
+diff --git a/apps/web/src/screens/deals/DealSearchScreen.tsx b/apps/web/src/screens/deals/DealSearchScreen.tsx
+index 51c0c09..f991e5f 100644
+--- a/apps/web/src/screens/deals/DealSearchScreen.tsx
++++ b/apps/web/src/screens/deals/DealSearchScreen.tsx
+@@ -1,7 +1,7 @@
+ import { Search } from 'lucide-react';
+ import { useMemo, useState, type ReactElement, type SyntheticEvent } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { DealScope, DealSort } from '@hearth/shared';
++import type { DealScope, DealSort } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { TextField } from '../../components/ui/Field.tsx';
+diff --git a/apps/web/src/screens/deals/FavoriteStores.tsx b/apps/web/src/screens/deals/FavoriteStores.tsx
+index f87d062..2a6727a 100644
+--- a/apps/web/src/screens/deals/FavoriteStores.tsx
++++ b/apps/web/src/screens/deals/FavoriteStores.tsx
+@@ -1,7 +1,7 @@
+ import { Store } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { Merchant } from '@hearth/shared';
++import type { Merchant } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { Checkbox } from '../../components/ui/Checkbox.tsx';
+diff --git a/apps/web/src/screens/deals/FlyerItemsScreen.tsx b/apps/web/src/screens/deals/FlyerItemsScreen.tsx
+index 3210b49..57ff49f 100644
+--- a/apps/web/src/screens/deals/FlyerItemsScreen.tsx
++++ b/apps/web/src/screens/deals/FlyerItemsScreen.tsx
+@@ -1,6 +1,6 @@
+ import { useMemo, useState, type ReactElement } from 'react';
+ import { useLocation, useNavigate, useParams } from 'react-router';
+-import type { DealSort } from '@hearth/shared';
++import type { DealSort } from '@hestia/shared';
+ import { OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { Select } from '../../components/ui/Select.tsx';
+ import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';
+diff --git a/apps/web/src/screens/deals/FlyersScreen.tsx b/apps/web/src/screens/deals/FlyersScreen.tsx
+index 423f079..19481f6 100644
+--- a/apps/web/src/screens/deals/FlyersScreen.tsx
++++ b/apps/web/src/screens/deals/FlyersScreen.tsx
+@@ -1,7 +1,7 @@
+ import { Newspaper } from 'lucide-react';
+ import { useCallback, useState, type ReactElement } from 'react';
+ import { Link, useNavigate } from 'react-router';
+-import type { DealScope, Flyer } from '@hearth/shared';
++import type { DealScope, Flyer } from '@hestia/shared';
+ import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { SegmentedControl } from '../../components/ui/SegmentedControl.tsx';
+diff --git a/apps/web/src/screens/deals/deal-copy.ts b/apps/web/src/screens/deals/deal-copy.ts
+index f99f151..4d7f66c 100644
+--- a/apps/web/src/screens/deals/deal-copy.ts
++++ b/apps/web/src/screens/deals/deal-copy.ts
+@@ -1,4 +1,4 @@
+-import type { ConditionalReason, Deal } from '@hearth/shared';
++import type { ConditionalReason, Deal } from '@hestia/shared';
+ import { formatCalendarDate } from '../../lib/format.ts';
+ import { formatUnitPrice, speakUnitPrice } from '../../lib/money.ts';
+ 
+diff --git a/apps/web/src/screens/household-timezone.test.tsx b/apps/web/src/screens/household-timezone.test.tsx
+index 59e596d..ea6a425 100644
+--- a/apps/web/src/screens/household-timezone.test.tsx
++++ b/apps/web/src/screens/household-timezone.test.tsx
+@@ -1,6 +1,6 @@
+ import { configure, screen, waitFor, within } from '@testing-library/react';
+ import { describe, expect, it, vi } from 'vitest';
+-import type { MealPlanEntry } from '@hearth/shared';
++import type { MealPlanEntry } from '@hestia/shared';
+ import { registerHouseholdClock } from '../test/browser.ts';
+ import { billFixture } from '../test/bills-fixtures.ts';
+ import {
+diff --git a/apps/web/src/screens/lists/ListDetailScreen.tsx b/apps/web/src/screens/lists/ListDetailScreen.tsx
+index 04c2dc0..82805e9 100644
+--- a/apps/web/src/screens/lists/ListDetailScreen.tsx
++++ b/apps/web/src/screens/lists/ListDetailScreen.tsx
+@@ -1,6 +1,6 @@
+ import { ChevronDown, ChevronRight, Pencil, ShoppingCart, Trash2 } from 'lucide-react';
+ import { useId, useState, type ReactElement } from 'react';
+-import type { ListItem, ListItemStatus, ShoppingListDetail, StoreGroup } from '@hearth/shared';
++import type { ListItem, ListItemStatus, ShoppingListDetail, StoreGroup } from '@hestia/shared';
+ import { ItemSheet, type ItemDraft, type StoreChoice } from '../../components/lists/ItemSheet.tsx';
+ import { ShoppingListRow } from '../../components/lists/ShoppingListRow.tsx';
+ import { StoreGroupHeader } from '../../components/lists/StoreGroupHeader.tsx';
+diff --git a/apps/web/src/screens/lists/ListNameSheet.tsx b/apps/web/src/screens/lists/ListNameSheet.tsx
+index 3a31fa1..7c089ab 100644
+--- a/apps/web/src/screens/lists/ListNameSheet.tsx
++++ b/apps/web/src/screens/lists/ListNameSheet.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type ReactElement, type SyntheticEvent } from 'react';
+-import { listNameSchema, type ShoppingList, type ShoppingListDetail } from '@hearth/shared';
++import { listNameSchema, type ShoppingList, type ShoppingListDetail } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { TextField } from '../../components/ui/Field.tsx';
+ import { FormMessage } from '../../components/ui/FormMessage.tsx';
+diff --git a/apps/web/src/screens/lists/ListsIndexScreen.tsx b/apps/web/src/screens/lists/ListsIndexScreen.tsx
+index 2a63ada..1afd7f5 100644
+--- a/apps/web/src/screens/lists/ListsIndexScreen.tsx
++++ b/apps/web/src/screens/lists/ListsIndexScreen.tsx
+@@ -1,7 +1,7 @@
+ import { Archive, ArchiveRestore, Pencil, ShoppingCart, Trash2 } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+ import { Link, useNavigate } from 'react-router';
+-import type { ShoppingList } from '@hearth/shared';
++import type { ShoppingList } from '@hestia/shared';
+ import { ErrorState, EmptyState, OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { StaleNotice } from '../../components/states/StaleNotice.tsx';
+ import { Button } from '../../components/ui/Button.tsx';
+diff --git a/apps/web/src/screens/lists/PantryScreen.tsx b/apps/web/src/screens/lists/PantryScreen.tsx
+index f55c2c7..7cb8525 100644
+--- a/apps/web/src/screens/lists/PantryScreen.tsx
++++ b/apps/web/src/screens/lists/PantryScreen.tsx
+@@ -1,6 +1,6 @@
+ import { Package, Pencil, Trash2 } from 'lucide-react';
+ import { useState, type ReactElement, type SyntheticEvent } from 'react';
+-import { itemNameSchema, type PantryItem } from '@hearth/shared';
++import { itemNameSchema, type PantryItem } from '@hestia/shared';
+ import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { StaleNotice } from '../../components/states/StaleNotice.tsx';
+ import { Button } from '../../components/ui/Button.tsx';
+diff --git a/apps/web/src/screens/meals/PlannerScreen.tsx b/apps/web/src/screens/meals/PlannerScreen.tsx
+index 2dc437a..89a3b24 100644
+--- a/apps/web/src/screens/meals/PlannerScreen.tsx
++++ b/apps/web/src/screens/meals/PlannerScreen.tsx
+@@ -1,6 +1,6 @@
+ import { ChevronLeft, ChevronRight } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+-import type { MealPlanEntry, MealType } from '@hearth/shared';
++import type { MealPlanEntry, MealType } from '@hestia/shared';
+ import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
+ import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
+ import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';
+diff --git a/apps/web/src/screens/meals/RecipeDetailScreen.tsx b/apps/web/src/screens/meals/RecipeDetailScreen.tsx
+index f6dbd5d..191ebcf 100644
+--- a/apps/web/src/screens/meals/RecipeDetailScreen.tsx
++++ b/apps/web/src/screens/meals/RecipeDetailScreen.tsx
+@@ -1,7 +1,7 @@
+ import { CalendarPlus, Pencil, Trash2 } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { RecipeDetail } from '@hearth/shared';
++import type { RecipeDetail } from '@hestia/shared';
+ import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
+ import { PlaceOnPlannerSheet } from '../../components/meals/PlaceOnPlannerSheet.tsx';
+ import { ReadinessBreakdown } from '../../components/meals/ReadinessBreakdown.tsx';
+diff --git a/apps/web/src/screens/meals/RecipeForm.tsx b/apps/web/src/screens/meals/RecipeForm.tsx
+index 070ab77..cf9fc94 100644
+--- a/apps/web/src/screens/meals/RecipeForm.tsx
++++ b/apps/web/src/screens/meals/RecipeForm.tsx
+@@ -1,5 +1,5 @@
+ import { useEffect, useRef, useState, type ReactElement } from 'react';
+-import type { RecipeDetail } from '@hearth/shared';
++import type { RecipeDetail } from '@hestia/shared';
+ import {
+   blankIngredient,
+   fromParsedIngredient,
+diff --git a/apps/web/src/screens/meals/RecipeLibraryScreen.tsx b/apps/web/src/screens/meals/RecipeLibraryScreen.tsx
+index 27ab799..4d94d17 100644
+--- a/apps/web/src/screens/meals/RecipeLibraryScreen.tsx
++++ b/apps/web/src/screens/meals/RecipeLibraryScreen.tsx
+@@ -1,6 +1,6 @@
+ import { UtensilsCrossed } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+-import type { RecipeDetail } from '@hearth/shared';
++import type { RecipeDetail } from '@hestia/shared';
+ import { RecipeCard } from '../../components/meals/RecipeCard.tsx';
+ import {
+   RECIPE_LIBRARY_EMPTY_COPY,
+diff --git a/apps/web/src/screens/meals/household-timezone.test.tsx b/apps/web/src/screens/meals/household-timezone.test.tsx
+index 83927a9..1cd1a8f 100644
+--- a/apps/web/src/screens/meals/household-timezone.test.tsx
++++ b/apps/web/src/screens/meals/household-timezone.test.tsx
+@@ -2,7 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
+ import { configure, screen, within } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+-import type { MealPlanEntry } from '@hearth/shared';
++import type { MealPlanEntry } from '@hestia/shared';
+ import { stubCoarsePointer } from '../../test/browser.ts';
+ import { ALEX_ID, OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
+ import { queryKeys } from '../../lib/api/keys.ts';
+diff --git a/apps/web/src/screens/meals/planner.test.tsx b/apps/web/src/screens/meals/planner.test.tsx
+index c69dc1d..7b95af0 100644
+--- a/apps/web/src/screens/meals/planner.test.tsx
++++ b/apps/web/src/screens/meals/planner.test.tsx
+@@ -1,7 +1,7 @@
+ import { screen, waitFor, within } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { describe, expect, it, vi } from 'vitest';
+-import type { MealPlanEntry, MealPlanWeekResponse } from '@hearth/shared';
++import type { MealPlanEntry, MealPlanWeekResponse } from '@hestia/shared';
+ import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
+ import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
+ import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
+diff --git a/apps/web/src/screens/meals/recipe-detail.test.tsx b/apps/web/src/screens/meals/recipe-detail.test.tsx
+index de72320..343b9df 100644
+--- a/apps/web/src/screens/meals/recipe-detail.test.tsx
++++ b/apps/web/src/screens/meals/recipe-detail.test.tsx
+@@ -1,7 +1,7 @@
+ import { screen, waitFor, within } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { describe, expect, it, vi } from 'vitest';
+-import type { RecipeDetail } from '@hearth/shared';
++import type { RecipeDetail } from '@hestia/shared';
+ import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
+ import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
+ import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
+diff --git a/apps/web/src/screens/onboarding/CreateHouseholdStep.tsx b/apps/web/src/screens/onboarding/CreateHouseholdStep.tsx
+index 1b0761a..6aec0e0 100644
+--- a/apps/web/src/screens/onboarding/CreateHouseholdStep.tsx
++++ b/apps/web/src/screens/onboarding/CreateHouseholdStep.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type SyntheticEvent, type ReactElement } from 'react';
+-import { householdNameSchema, postalCodeSchema } from '@hearth/shared';
++import { householdNameSchema, postalCodeSchema } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { TextField } from '../../components/ui/Field.tsx';
+ import { FormMessage } from '../../components/ui/FormMessage.tsx';
+diff --git a/apps/web/src/screens/onboarding/SignUpScreen.tsx b/apps/web/src/screens/onboarding/SignUpScreen.tsx
+index d4332be..d0272a4 100644
+--- a/apps/web/src/screens/onboarding/SignUpScreen.tsx
++++ b/apps/web/src/screens/onboarding/SignUpScreen.tsx
+@@ -1,6 +1,6 @@
+ import { useState, type SyntheticEvent, type ReactElement } from 'react';
+ import { Link, useNavigate } from 'react-router';
+-import { displayNameSchema, emailSchema } from '@hearth/shared';
++import { displayNameSchema, emailSchema } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { TextField } from '../../components/ui/Field.tsx';
+ import { FormMessage } from '../../components/ui/FormMessage.tsx';
+diff --git a/apps/web/src/screens/onboarding/onboarding.test.tsx b/apps/web/src/screens/onboarding/onboarding.test.tsx
+index 8c42433..bc0149f 100644
+--- a/apps/web/src/screens/onboarding/onboarding.test.tsx
++++ b/apps/web/src/screens/onboarding/onboarding.test.tsx
+@@ -1,7 +1,7 @@
+ import { screen, waitFor } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+-import { COMMON_PASSWORD_MESSAGE } from '@hearth/shared';
++import { COMMON_PASSWORD_MESSAGE } from '@hestia/shared';
+ import { createAuthStub, problemBody, renderScreen, stubFetch } from '../../test/harness.tsx';
+ import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
+ import { merchantsResponse } from '../../test/deal-fixtures.ts';
+diff --git a/apps/web/src/screens/settings/AccountSection.tsx b/apps/web/src/screens/settings/AccountSection.tsx
+index d19337a..41e0f8c 100644
+--- a/apps/web/src/screens/settings/AccountSection.tsx
++++ b/apps/web/src/screens/settings/AccountSection.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import type { ProfileResponse } from '@hearth/shared';
++import type { ProfileResponse } from '@hestia/shared';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { formatTimezone } from '../../lib/format.ts';
+ import { ReadOnlyValue, SettingsSection } from './SettingsSection.tsx';
+diff --git a/apps/web/src/screens/settings/DeleteHouseholdPanel.tsx b/apps/web/src/screens/settings/DeleteHouseholdPanel.tsx
+index ca6f71b..fdabebc 100644
+--- a/apps/web/src/screens/settings/DeleteHouseholdPanel.tsx
++++ b/apps/web/src/screens/settings/DeleteHouseholdPanel.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type ReactElement } from 'react';
+-import type { DeparturePreview } from '@hearth/shared';
++import type { DeparturePreview } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
+diff --git a/apps/web/src/screens/settings/DepartureScreen.tsx b/apps/web/src/screens/settings/DepartureScreen.tsx
+index 4f24efe..193814f 100644
+--- a/apps/web/src/screens/settings/DepartureScreen.tsx
++++ b/apps/web/src/screens/settings/DepartureScreen.tsx
+@@ -1,6 +1,6 @@
+ import { useState, type ReactElement } from 'react';
+ import { useNavigate, useParams } from 'react-router';
+-import type { DeparturePreview, Member } from '@hearth/shared';
++import type { DeparturePreview, Member } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { FormMessage } from '../../components/ui/FormMessage.tsx';
+diff --git a/apps/web/src/screens/settings/HouseholdCard.tsx b/apps/web/src/screens/settings/HouseholdCard.tsx
+index 376236f..bd663ee 100644
+--- a/apps/web/src/screens/settings/HouseholdCard.tsx
++++ b/apps/web/src/screens/settings/HouseholdCard.tsx
+@@ -1,7 +1,7 @@
+ import { LogOut } from 'lucide-react';
+ import type { ReactElement } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { Membership } from '@hearth/shared';
++import type { Membership } from '@hestia/shared';
+ import { Badge } from '../../components/ui/Badge.tsx';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+diff --git a/apps/web/src/screens/settings/HouseholdSettingsSection.tsx b/apps/web/src/screens/settings/HouseholdSettingsSection.tsx
+index dfca717..5a59b8a 100644
+--- a/apps/web/src/screens/settings/HouseholdSettingsSection.tsx
++++ b/apps/web/src/screens/settings/HouseholdSettingsSection.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type SyntheticEvent, type ReactElement } from 'react';
+-import { householdNameSchema, postalCodeSchema, type Household } from '@hearth/shared';
++import { householdNameSchema, postalCodeSchema, type Household } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { ErrorState } from '../../components/states/StateBlocks.tsx';
+diff --git a/apps/web/src/screens/settings/HouseholdsSection.tsx b/apps/web/src/screens/settings/HouseholdsSection.tsx
+index 909160f..98e9666 100644
+--- a/apps/web/src/screens/settings/HouseholdsSection.tsx
++++ b/apps/web/src/screens/settings/HouseholdsSection.tsx
+@@ -1,7 +1,7 @@
+ import { Plus } from 'lucide-react';
+ import type { ReactElement } from 'react';
+ import { useNavigate } from 'react-router';
+-import type { ProfileResponse } from '@hearth/shared';
++import type { ProfileResponse } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
+ import { useOnlineStatus } from '../../lib/use-online-status.ts';
+diff --git a/apps/web/src/screens/settings/InvitesSection.tsx b/apps/web/src/screens/settings/InvitesSection.tsx
+index 8619000..b8c7761 100644
+--- a/apps/web/src/screens/settings/InvitesSection.tsx
++++ b/apps/web/src/screens/settings/InvitesSection.tsx
+@@ -1,6 +1,6 @@
+ import { Ticket } from 'lucide-react';
+ import { useState, type ReactElement } from 'react';
+-import type { CreatedInvite } from '@hearth/shared';
++import type { CreatedInvite } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { CopyButton } from '../../components/ui/CopyButton.tsx';
+diff --git a/apps/web/src/screens/settings/NotificationTypeRows.tsx b/apps/web/src/screens/settings/NotificationTypeRows.tsx
+index 57a897d..279d343 100644
+--- a/apps/web/src/screens/settings/NotificationTypeRows.tsx
++++ b/apps/web/src/screens/settings/NotificationTypeRows.tsx
+@@ -4,7 +4,7 @@ import {
+   householdNotificationType,
+   type NotificationPreference,
+   type ProfileResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { Checkbox } from '../../components/ui/Checkbox.tsx';
+ import { EmptyState } from '../../components/states/StateBlocks.tsx';
+ import { IOS_INSTALL_MESSAGE } from '../onboarding/InstallStep.tsx';
+diff --git a/apps/web/src/screens/settings/NotificationTypes.tsx b/apps/web/src/screens/settings/NotificationTypes.tsx
+index 9fffdb1..824f089 100644
+--- a/apps/web/src/screens/settings/NotificationTypes.tsx
++++ b/apps/web/src/screens/settings/NotificationTypes.tsx
+@@ -4,7 +4,7 @@ import {
+   type NotificationPreference,
+   type ProfileResponse,
+   type UpdateNotificationPreferenceRequest,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+ import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
+ import {
+diff --git a/apps/web/src/screens/settings/NotificationsSection.tsx b/apps/web/src/screens/settings/NotificationsSection.tsx
+index ea1da09..90fd4a0 100644
+--- a/apps/web/src/screens/settings/NotificationsSection.tsx
++++ b/apps/web/src/screens/settings/NotificationsSection.tsx
+@@ -1,5 +1,5 @@
+ import { useId, useState, type SyntheticEvent, type ReactElement } from 'react';
+-import { quietHoursSchema, type ProfileResponse } from '@hearth/shared';
++import { quietHoursSchema, type ProfileResponse } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { Checkbox } from '../../components/ui/Checkbox.tsx';
+diff --git a/apps/web/src/screens/settings/ReassignmentList.tsx b/apps/web/src/screens/settings/ReassignmentList.tsx
+index f2b3ce5..a48b215 100644
+--- a/apps/web/src/screens/settings/ReassignmentList.tsx
++++ b/apps/web/src/screens/settings/ReassignmentList.tsx
+@@ -1,5 +1,5 @@
+ import type { ReactElement } from 'react';
+-import type { DeparturePreview, Member } from '@hearth/shared';
++import type { DeparturePreview, Member } from '@hestia/shared';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { Select } from '../../components/ui/Select.tsx';
+ 
+diff --git a/apps/web/src/screens/settings/SystemHealthScreen.tsx b/apps/web/src/screens/settings/SystemHealthScreen.tsx
+index 00aec7c..8a40bc7 100644
+--- a/apps/web/src/screens/settings/SystemHealthScreen.tsx
++++ b/apps/web/src/screens/settings/SystemHealthScreen.tsx
+@@ -1,7 +1,7 @@
+ import { RotateCw } from 'lucide-react';
+ import type { ReactElement } from 'react';
+ import { Navigate } from 'react-router';
+-import type { DeepHealthResponse } from '@hearth/shared';
++import type { DeepHealthResponse } from '@hestia/shared';
+ import { Button } from '../../components/ui/Button.tsx';
+ import { Card } from '../../components/ui/Card.tsx';
+ import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+diff --git a/apps/web/src/screens/settings/account/ChangeEmailForm.tsx b/apps/web/src/screens/settings/account/ChangeEmailForm.tsx
+index 3d92dd8..c11a2ae 100644
+--- a/apps/web/src/screens/settings/account/ChangeEmailForm.tsx
++++ b/apps/web/src/screens/settings/account/ChangeEmailForm.tsx
+@@ -1,5 +1,5 @@
+ import { useEffect, useRef, useState, type SyntheticEvent, type ReactElement } from 'react';
+-import { emailSchema } from '@hearth/shared';
++import { emailSchema } from '@hestia/shared';
+ import { Button } from '../../../components/ui/Button.tsx';
+ import { TextField } from '../../../components/ui/Field.tsx';
+ import { FormMessage } from '../../../components/ui/FormMessage.tsx';
+diff --git a/apps/web/src/screens/settings/account/DisplayNameForm.tsx b/apps/web/src/screens/settings/account/DisplayNameForm.tsx
+index bca6de5..28440b8 100644
+--- a/apps/web/src/screens/settings/account/DisplayNameForm.tsx
++++ b/apps/web/src/screens/settings/account/DisplayNameForm.tsx
+@@ -1,5 +1,5 @@
+ import { useState, type SyntheticEvent, type ReactElement } from 'react';
+-import { displayNameSchema } from '@hearth/shared';
++import { displayNameSchema } from '@hestia/shared';
+ import { Button } from '../../../components/ui/Button.tsx';
+ import { TextField } from '../../../components/ui/Field.tsx';
+ import { FormMessage } from '../../../components/ui/FormMessage.tsx';
+diff --git a/apps/web/src/screens/settings/departure.test.tsx b/apps/web/src/screens/settings/departure.test.tsx
+index 0fb940e..38d8e35 100644
+--- a/apps/web/src/screens/settings/departure.test.tsx
++++ b/apps/web/src/screens/settings/departure.test.tsx
+@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import type { ReactElement } from 'react';
+ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+-import type { DeparturePreview } from '@hearth/shared';
++import type { DeparturePreview } from '@hestia/shared';
+ import {
+   createFetchStub,
+   renderScreen,
+diff --git a/apps/web/src/screens/settings/notification-copy.ts b/apps/web/src/screens/settings/notification-copy.ts
+index 38e107e..272037d 100644
+--- a/apps/web/src/screens/settings/notification-copy.ts
++++ b/apps/web/src/screens/settings/notification-copy.ts
+@@ -1,4 +1,4 @@
+-import type { NotificationType } from '@hearth/shared';
++import type { NotificationType } from '@hestia/shared';
+ 
+ /*
+  * Copy for Settings › Notifications. Each type
+diff --git a/apps/web/src/screens/settings/settings.test.tsx b/apps/web/src/screens/settings/settings.test.tsx
+index a59ba8a..ae2863e 100644
+--- a/apps/web/src/screens/settings/settings.test.tsx
++++ b/apps/web/src/screens/settings/settings.test.tsx
+@@ -1,7 +1,7 @@
+ import { screen, waitFor, within } from '@testing-library/react';
+ import userEvent from '@testing-library/user-event';
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+-import type { ProfileResponse } from '@hearth/shared';
++import type { ProfileResponse } from '@hestia/shared';
+ import {
+   createFetchStub,
+   problemBody,
+diff --git a/apps/web/src/test/bills-fixtures.ts b/apps/web/src/test/bills-fixtures.ts
+index 63646a5..53586f5 100644
+--- a/apps/web/src/test/bills-fixtures.ts
++++ b/apps/web/src/test/bills-fixtures.ts
+@@ -4,7 +4,7 @@ import type {
+   BillPayment,
+   Subscription,
+   SubscriptionsResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { ALEX_ID, JORDAN_ID, SAM_ID } from './fixtures.ts';
+ 
+ /** Realistic bill fixtures from the seed data, so tests read like the real app. */
+diff --git a/apps/web/src/test/chore-fixtures.ts b/apps/web/src/test/chore-fixtures.ts
+index 975657c..1b5b154 100644
+--- a/apps/web/src/test/chore-fixtures.ts
++++ b/apps/web/src/test/chore-fixtures.ts
+@@ -1,4 +1,4 @@
+-import type { Chore, ChoreCompletion, ChoreDetail, Errand } from '@hearth/shared';
++import type { Chore, ChoreCompletion, ChoreDetail, Errand } from '@hestia/shared';
+ import { addDays } from '../lib/household-date.ts';
+ import { ALEX_ID, JORDAN_ID, OAK_STREET_ID, SAM_ID } from './fixtures.ts';
+ 
+diff --git a/apps/web/src/test/deal-fixtures.ts b/apps/web/src/test/deal-fixtures.ts
+index 58c7522..a03527e 100644
+--- a/apps/web/src/test/deal-fixtures.ts
++++ b/apps/web/src/test/deal-fixtures.ts
+@@ -7,7 +7,7 @@ import type {
+   Merchant,
+   MerchantsResponse,
+   ShoppingList,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { OAK_STREET_ID, ALEX_ID, oakStreetFixture, profileFixture } from './fixtures.ts';
+ import type { StubHandler } from './harness.tsx';
+ 
+diff --git a/apps/web/src/test/fixtures.ts b/apps/web/src/test/fixtures.ts
+index 6b51a4e..414224d 100644
+--- a/apps/web/src/test/fixtures.ts
++++ b/apps/web/src/test/fixtures.ts
+@@ -5,7 +5,7 @@ import type {
+   Invite,
+   Member,
+   ProfileResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ 
+ /** The seed data's households and people, so tests read like the real app. */
+ export const ALEX_ID = '11111111-1111-4111-8111-111111111111';
+diff --git a/apps/web/src/test/harness.tsx b/apps/web/src/test/harness.tsx
+index 12ec3fc..69105c3 100644
+--- a/apps/web/src/test/harness.tsx
++++ b/apps/web/src/test/harness.tsx
+@@ -9,7 +9,7 @@ import {
+   type RouteObject,
+ } from 'react-router';
+ import { vi } from 'vitest';
+-import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
++import { PROBLEM_CONTENT_TYPE } from '@hestia/shared';
+ import { AppProviders } from '../App.tsx';
+ import { ToastProvider } from '../components/ui/Toast.tsx';
+ import { SectionProvider } from '../lib/section-context.tsx';
+diff --git a/apps/web/src/test/list-fixtures.ts b/apps/web/src/test/list-fixtures.ts
+index f163b99..2d39867 100644
+--- a/apps/web/src/test/list-fixtures.ts
++++ b/apps/web/src/test/list-fixtures.ts
+@@ -1,4 +1,4 @@
+-import type { ListItem, PantryItem, ShoppingList, ShoppingListDetail } from '@hearth/shared';
++import type { ListItem, PantryItem, ShoppingList, ShoppingListDetail } from '@hestia/shared';
+ import { ALEX_ID, OAK_STREET_ID, SAM_ID } from './fixtures.ts';
+ 
+ /*
+diff --git a/apps/web/src/test/meal-fixtures.ts b/apps/web/src/test/meal-fixtures.ts
+index e40f86a..bdfd5b1 100644
+--- a/apps/web/src/test/meal-fixtures.ts
++++ b/apps/web/src/test/meal-fixtures.ts
+@@ -5,7 +5,7 @@ import type {
+   RecipeListResponse,
+   Suggestion,
+   SuggestionsResponse,
+-} from '@hearth/shared';
++} from '@hestia/shared';
+ import { ALEX_ID, OAK_STREET_ID } from './fixtures.ts';
+ 
+ /*
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index fda84d2..e899607 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -82,7 +82,7 @@ export default defineConfig({
+       // Measured on 2026-10-23 at d0c587c: 85.38% statements, 81.83% branches, 78.59% functions and
+       // 86.96% lines. Each threshold is the measured value rounded down, minus one point, so
+       // ordinary drift passes and a real drop fails. CI's test-unit job runs
+-      // `pnpm --filter @hearth/web test:coverage` on every pull request and push to main, so these
++      // `pnpm --filter @hestia/web test:coverage` on every pull request and push to main, so these
+       // numbers gate every merge.
+       thresholds: { statements: 84, branches: 80, functions: 77, lines: 85 },
+     },
+diff --git a/docker/caddy.Dockerfile b/docker/caddy.Dockerfile
+index d1cea90..68751ab 100644
+--- a/docker/caddy.Dockerfile
++++ b/docker/caddy.Dockerfile
+@@ -27,8 +27,8 @@ ENV VITE_SUPABASE_ANON_KEY=$ANON_KEY
+ ARG VAPID_PUBLIC_KEY
+ ENV VITE_VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
+ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+-    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/web... \
+- && pnpm --filter @hearth/web build
++    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/web... \
++ && pnpm --filter @hestia/web build
+ 
+ FROM caddy:2.11.7-alpine
+ ARG HEARTH_REVISION=dev
+diff --git a/docker/service.Dockerfile b/docker/service.Dockerfile
+index eb1a582..7d775c1 100644
+--- a/docker/service.Dockerfile
++++ b/docker/service.Dockerfile
+@@ -14,14 +14,14 @@ COPY . .
+ 
+ FROM source AS build
+ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+-    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hearth/service... \
+- && pnpm --filter @hearth/service build
++    pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/service... \
++ && pnpm --filter @hestia/service build
+ 
+ # Workspace packages are bundled into dist by tsup, so the runtime needs only the service's
+ # own production dependencies.
+ FROM source AS prod-deps
+ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
+-    pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hearth/service
++    pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hestia/service
+ 
+ FROM node:24.21.0-bookworm-slim
+ ARG HEARTH_REVISION=dev
+diff --git a/docs/development.md b/docs/development.md
+index 6f02bf7..4a6eb9e 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -14,8 +14,8 @@ in [deployment.md](deployment.md).
+ 
+ ```sh
+ pnpm install
+-pnpm --filter @hearth/web dev        # PWA dev server
+-pnpm --filter @hearth/service dev    # API (needs DATABASE_URL)
++pnpm --filter @hestia/web dev        # PWA dev server
++pnpm --filter @hestia/service dev    # API (needs DATABASE_URL)
+ ```
+ 
+ The API needs `DATABASE_URL` and the rest of its environment; see
+@@ -35,7 +35,7 @@ The API needs `DATABASE_URL` and the rest of its environment; see
+ | `pnpm build` | Production builds of web and service |
+ | `pnpm knip` | Report of unused files, exports and dependencies |
+ 
+-`pnpm --filter @hearth/service test:coverage` reports the service's coverage over its unit and
++`pnpm --filter @hestia/service test:coverage` reports the service's coverage over its unit and
+ integration tests together, so it needs `supabase start` running too.
+ 
+ [testing.md](testing.md) describes each suite.
+@@ -61,7 +61,7 @@ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://aut
+ export HEARTH_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
+ export HEARTH_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
+ export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
+-pnpm --filter @hearth/service dev
++pnpm --filter @hestia/service dev
+ ```
+ 
+ | Variable | Used for |
+@@ -83,7 +83,7 @@ hearth-admin reset-password <email>`); locally it runs from the built bundle wit
+ `SERVICE_ROLE_KEY`, and `HEARTH_ORIGIN` set:
+ 
+ ```sh
+-pnpm --filter @hearth/service build
++pnpm --filter @hestia/service build
+ ./apps/service/bin/hearth-admin reset-password you@example.com
+ ```
+ 
+diff --git a/docs/testing.md b/docs/testing.md
+index dc4ed69..8b443ca 100644
+--- a/docs/testing.md
++++ b/docs/testing.md
+@@ -52,9 +52,9 @@ count as unit tests: nothing touches a socket or a real database.
+ ```sh
+ pnpm test                              # the harness tests, then every workspace's unit + component tests
+ pnpm test:harness                      # only the thirteen harness tests
+-pnpm --filter @hearth/recurrence test  # one workspace
+-pnpm --filter @hearth/matching test
+-pnpm --filter @hearth/service test     # excludes *.integration.test.ts (vitest.config.ts)
++pnpm --filter @hestia/recurrence test  # one workspace
++pnpm --filter @hestia/matching test
++pnpm --filter @hestia/service test     # excludes *.integration.test.ts (vitest.config.ts)
+ ```
+ 
+ **Adding one:** put `<name>.test.ts` next to the module it tests, in the same package. A minimal
+@@ -368,7 +368,7 @@ arbitrary mix.
+ **Running them:**
+ 
+ ```sh
+-pnpm --filter @hearth/web test
++pnpm --filter @hestia/web test
+ ```
+ 
+ ## End-to-end tests
+@@ -442,7 +442,7 @@ real push service is ever contacted.
+ 
+ ```sh
+ # once: install the browser
+-pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
++pnpm --filter @hestia/e2e exec playwright install --with-deps chromium
+ 
+ # the whole suite: builds and starts the Compose stack from an empty database,
+ # migrates, seeds, runs every journey, tears the stack down
+@@ -460,7 +460,7 @@ paying for a full stack bring-up/teardown each time:
+ HEARTH_E2E_REUSE_STACK=1 pnpm test:e2e
+ 
+ # subsequent runs: reuse that stack, point Playwright at one spec file
+-HEARTH_E2E_REUSE_STACK=1 HEARTH_E2E_RUN_ID=<id> pnpm --filter @hearth/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
++HEARTH_E2E_REUSE_STACK=1 HEARTH_E2E_RUN_ID=<id> pnpm --filter @hestia/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
+ ```
+ 
+ `HEARTH_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
+@@ -685,13 +685,13 @@ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
+ export HEARTH_ORIGIN=http://127.0.0.1:5173
+ export HEARTH_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
+ export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
+-pnpm --filter @hearth/service dev
++pnpm --filter @hestia/service dev
+ ```
+ 
+ In a second terminal:
+ 
+ ```sh
+-pnpm --filter @hearth/web dev
++pnpm --filter @hestia/web dev
+ ```
+ 
+ Open `http://127.0.0.1:5173`.
+@@ -777,7 +777,7 @@ pnpm db:seed              # re-seed from scratch
+   `thresholds: { statements: 95, branches: 83, functions: 96, lines: 97 }`, each a few points under
+   the suite's actual measured coverage (96.65% / 85.78% / 98.07% / 98.56% as of the coverage unit
+   that added it) rather than the exact number, so ordinary churn doesn't fail CI on noise.
+-  `pnpm --filter @hearth/service test:coverage` reports coverage across its unit *and* integration
++  `pnpm --filter @hestia/service test:coverage` reports coverage across its unit *and* integration
+   tests together (a unit-only number would understate what's exercised through the integration
+   suite). It needs `supabase start` running, so CI's `test-integration` job runs it in place of a
+   plain `pnpm test:integration` (the same job already pays for `supabase start`), enforcing the
+@@ -786,7 +786,7 @@ pnpm db:seed              # re-seed from scratch
+ - **`apps/web`** has a `test:coverage` script (`vitest run --coverage --passWithNoTests`) and a
+   coverage configuration in `vite.config.ts`: `thresholds: { statements: 84, branches: 80,
+   functions: 77, lines: 85 }`, each the measured value (85.38% / 81.83% / 78.59% / 86.96%) rounded
+-  down, minus one point. CI's `test-unit` job runs `pnpm --filter @hearth/web test:coverage` on
++  down, minus one point. CI's `test-unit` job runs `pnpm --filter @hestia/web test:coverage` on
+   every pull request and push to main, so a drop below a threshold fails CI. The `test` script of
+   the workspace still has no `--coverage`, so `pnpm test` and the sweep stay plain and pay nothing
+   for it. The E2E journeys are what stand in for coverage of the running UI.
+diff --git a/docs/use-cases.md b/docs/use-cases.md
+index 64e359d..8430b37 100644
+--- a/docs/use-cases.md
++++ b/docs/use-cases.md
+@@ -278,7 +278,7 @@
+ - **Main flow:**
+   1. The user corrects the match from the recipe's breakdown.
+   2. The client sends the ingredient's and target's plain names to `POST /households/:id/match-overrides` (not pre-normalized strings) along with the target kind (deal or pantry) and a decision (force match or force no-match).
+-  3. The service normalizes both names itself through `@hearth/matching`.
++  3. The service normalizes both names itself through `@hestia/matching`.
+   4. A force match puts the ingredient in the target's bucket whenever a target with that normalized name exists; a force no-match prevents that pair from matching.
+   5. The override applies to every recipe in the household and stays in effect until a member removes it.
+ - **Alternate/exception flows:**
+diff --git a/e2e/fixtures/e2e-seed.sql b/e2e/fixtures/e2e-seed.sql
+index b8befab..bf0d7b5 100644
+--- a/e2e/fixtures/e2e-seed.sql
++++ b/e2e/fixtures/e2e-seed.sql
+@@ -58,7 +58,7 @@ begin
+   -- `deal_query_cache` rows are "saffron" and "chicken", neither a favorited-merchant deal a
+   -- journey can add to a list. A row per theme, already warm, is what lets the journey's search be
+   -- a cache hit rather than a live Flipp call the suite must never make: each
+-  -- `normalized_query` is exactly what `@hearth/matching` normalizes the raw item name to, which is
++  -- `normalized_query` is exactly what `@hestia/matching` normalizes the raw item name to, which is
+   -- also what the journey types into the search box.
+   -- -------------------------------------------------------------------------------------------
+ 
+diff --git a/e2e/package.json b/e2e/package.json
+index 6ea0f26..5cb933b 100644
+--- a/e2e/package.json
++++ b/e2e/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "@hearth/e2e",
++  "name": "@hestia/e2e",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+diff --git a/e2e/setup/stack.ts b/e2e/setup/stack.ts
+index 4338bdc..4ff7a8f 100644
+--- a/e2e/setup/stack.ts
++++ b/e2e/setup/stack.ts
+@@ -147,7 +147,7 @@ export function startStack(): void {
+   composeChecked(['up', '--detach', '--wait', '--build', ...APP_SERVICES]);
+ 
+   step('seeding');
+-  runChecked('pnpm', ['--filter', '@hearth/service', 'db:seed'], {
++  runChecked('pnpm', ['--filter', '@hestia/service', 'db:seed'], {
+     HEARTH_SEED_AUTH_URL: `${BASE_URL}/auth/v1`,
+     HEARTH_SEED_SERVICE_ROLE_KEY: env['SERVICE_ROLE_KEY'] ?? '',
+     HEARTH_SEED_DB_URL: dbUrl,
+diff --git a/package.json b/package.json
+index f26abd2..9907739 100644
+--- a/package.json
++++ b/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "hearth",
++  "name": "hestia",
+   "private": true,
+   "type": "module",
+   "packageManager": "pnpm@10.34.5",
+@@ -17,10 +17,10 @@
+     "test:integration": "pnpm -r --if-present test:integration",
+     "test:sweep": "node scripts/test-sweep.mjs",
+     "test:sweep:integration": "node scripts/test-sweep.mjs --suite integration",
+-    "db:types": "pnpm --filter @hearth/service db:types",
+-    "db:seed": "pnpm --filter @hearth/service db:seed",
+-    "fixtures:normalize": "pnpm --filter @hearth/service fixtures:normalize",
+-    "test:e2e": "pnpm --filter @hearth/e2e test:e2e",
++    "db:types": "pnpm --filter @hestia/service db:types",
++    "db:seed": "pnpm --filter @hestia/service db:seed",
++    "fixtures:normalize": "pnpm --filter @hestia/service fixtures:normalize",
++    "test:e2e": "pnpm --filter @hestia/e2e test:e2e",
+     "build": "pnpm -r --if-present build",
+     "jscpd": "jscpd --fail-on-empty",
+     "knip": "knip",
+diff --git a/packages/matching/package.json b/packages/matching/package.json
+index f020e3c..0ec7d8f 100644
+--- a/packages/matching/package.json
++++ b/packages/matching/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "@hearth/matching",
++  "name": "@hestia/matching",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+diff --git a/packages/recurrence/package.json b/packages/recurrence/package.json
+index 86a586c..2d41f96 100644
+--- a/packages/recurrence/package.json
++++ b/packages/recurrence/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "@hearth/recurrence",
++  "name": "@hestia/recurrence",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+diff --git a/packages/shared/package.json b/packages/shared/package.json
+index 6174fc2..90ff647 100644
+--- a/packages/shared/package.json
++++ b/packages/shared/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "@hearth/shared",
++  "name": "@hestia/shared",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+diff --git a/packages/shared/src/api/auth.ts b/packages/shared/src/api/auth.ts
+index 809fc1b..69c31f2 100644
+--- a/packages/shared/src/api/auth.ts
++++ b/packages/shared/src/api/auth.ts
+@@ -6,7 +6,7 @@ import { emailSchema, timezoneSchema } from './common.js';
+  * POST /api/signup. A blank display name becomes the part of the email before the @.
+  *
+  * The password carries the shape rules only; the route composes the common-password rule in from
+- * `@hearth/shared/common-passwords`, which is what keeps the list out of the PWA's app shell.
++ * `@hestia/shared/common-passwords`, which is what keeps the list out of the PWA's app shell.
+  */
+ export const signupRequestSchema = z.object({
+   email: emailSchema,
+diff --git a/packages/shared/src/api/matching.ts b/packages/shared/src/api/matching.ts
+index 37f9d0c..62137a5 100644
+--- a/packages/shared/src/api/matching.ts
++++ b/packages/shared/src/api/matching.ts
+@@ -24,7 +24,7 @@ export type MatchOverride = z.infer<typeof matchOverrideSchema>;
+ /**
+  * POST /api/households/:id/match-overrides. Names, not pre-normalized strings — like every other
+  * `normalized_name` in the system (a manual item's `normalized_name` is computed from its name by
+- * `@hearth/matching`), the service normalizes both sides itself rather than trusting a
++ * `@hestia/matching`), the service normalizes both sides itself rather than trusting a
+  * client-supplied normalized form. The recipe breakdown a correction is made from already shows
+  * the ingredient's and the target's plain names.
+  */
+diff --git a/packages/shared/src/api/schemas.test.ts b/packages/shared/src/api/schemas.test.ts
+index f10b501..7237882 100644
+--- a/packages/shared/src/api/schemas.test.ts
++++ b/packages/shared/src/api/schemas.test.ts
+@@ -27,7 +27,7 @@ describe('request schemas', () => {
+       displayName: 'Alex',
+       timezone: 'America/New_York',
+     });
+-    // The list lives behind `@hearth/shared/common-passwords`, which the route composes in
++    // The list lives behind `@hestia/shared/common-passwords`, which the route composes in
+     // (`routes.test.ts` covers the refusal); the wire schema only checks length and bytes.
+     expect(
+       signupRequestSchema.safeParse({ email: 'alex@example.com', password: 'short' }).success,
+diff --git a/packages/shared/src/common-passwords.ts b/packages/shared/src/common-passwords.ts
+index f4143bc..fa3b866 100644
+--- a/packages/shared/src/common-passwords.ts
++++ b/packages/shared/src/common-passwords.ts
+@@ -8,7 +8,7 @@ import { COMMON_PASSWORD_MESSAGE, passwordShapeSchema } from './password.js';
+  * The list is 99 KB of text, so it is imported only where a password is actually being set: the
+  * service's signup and change-password routes, and the PWA's sign-up, set-password, and
+  * change-password screens. Everything else — including every request schema that merely mentions
+- * a password — stays on `@hearth/shared`, which never reaches this module, so the app shell never
++ * a password — stays on `@hestia/shared`, which never reaches this module, so the app shell never
+  * carries the list. Both sides check it synchronously; only the module boundary moved.
+  */
+ 
+diff --git a/packages/shared/src/password.ts b/packages/shared/src/password.ts
+index 8d5e4af..6138ff7 100644
+--- a/packages/shared/src/password.ts
++++ b/packages/shared/src/password.ts
+@@ -14,7 +14,7 @@ export const COMMON_PASSWORD_MESSAGE = 'That password is too common. Choose anot
+  *
+  * The other half is the 10,000-entry common-password list, which is 99 KB of text. Every request
+  * schema that mentions a password is reachable from this package's entry point, so keeping the
+- * list here would drag it into the PWA's app shell, which has a budget to keep. It lives behind the `@hearth/shared/common-passwords` subpath
++ * list here would drag it into the PWA's app shell, which has a budget to keep. It lives behind the `@hestia/shared/common-passwords` subpath
+  * instead, whose `newPasswordSchema` is this schema plus the list: the service validates with
+  * that one, and the PWA reaches it only from the two screens that set a password.
+  */
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 1ec32ff..c4a583f 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -72,13 +72,13 @@ importers:
+       '@fastify/rate-limit':
+         specifier: 11.2.0
+         version: 11.2.0
+-      '@hearth/matching':
++      '@hestia/matching':
+         specifier: workspace:*
+         version: link:../../packages/matching
+-      '@hearth/recurrence':
++      '@hestia/recurrence':
+         specifier: workspace:*
+         version: link:../../packages/recurrence
+-      '@hearth/shared':
++      '@hestia/shared':
+         specifier: workspace:*
+         version: link:../../packages/shared
+       cheerio:
+@@ -136,10 +136,10 @@ importers:
+ 
+   apps/web:
+     dependencies:
+-      '@hearth/recurrence':
++      '@hestia/recurrence':
+         specifier: workspace:*
+         version: link:../../packages/recurrence
+-      '@hearth/shared':
++      '@hestia/shared':
+         specifier: workspace:*
+         version: link:../../packages/shared
+       '@supabase/supabase-js':
+@@ -308,7 +308,7 @@ importers:
+ 
+   supabase/seed:
+     dependencies:
+-      '@hearth/matching':
++      '@hestia/matching':
+         specifier: workspace:*
+         version: link:../../packages/matching
+       pg:
+diff --git a/scripts/test-sweep.mjs b/scripts/test-sweep.mjs
+index 505a915..ad6bf44 100644
+--- a/scripts/test-sweep.mjs
++++ b/scripts/test-sweep.mjs
+@@ -209,7 +209,7 @@ function cellEnvironment(cell) {
+ function commandFor(suite, workspace, only) {
+   const script = suite === 'integration' ? 'test:integration' : 'test';
+   const filter = only === undefined ? '' : ` ${only}`;
+-  return `pnpm --filter @hearth/${workspace} ${script}${filter}`;
++  return `pnpm --filter @hestia/${workspace} ${script}${filter}`;
+ }
+ 
+ /**
+@@ -222,7 +222,7 @@ function selectedTestFiles(suite, workspace, only) {
+   const env = cellEnvironment({ now: undefined, tz: undefined });
+   const list = spawnSync(
+     'pnpm',
+-    ['--filter', `@hearth/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
++    ['--filter', `@hestia/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
+     { cwd: REPO_ROOT, env, encoding: 'utf8' },
+   );
+   if (list.error !== undefined || list.status !== 0) {
+@@ -288,7 +288,7 @@ function main() {
+       selectedTestFiles(options.suite, single, options.only).length === 0
+     ) {
+       console.error(
+-        `test-sweep: --only ${options.only} matches no test file in @hearth/${single} ` +
++        `test-sweep: --only ${options.only} matches no test file in @hestia/${single} ` +
+           `(${options.suite} suite); a sweep that runs nothing is not a pass`,
+       );
+       return 2;
+diff --git a/scripts/test-sweep.test.mjs b/scripts/test-sweep.test.mjs
+index 1e0bb52..24b085a 100644
+--- a/scripts/test-sweep.test.mjs
++++ b/scripts/test-sweep.test.mjs
+@@ -203,7 +203,7 @@ describe('test-sweep: an --only that selects no test fails the sweep', () => {
+     );
+     assert.notEqual(run.status, 0, `passed: ${run.stdout}`);
+     assert.match(run.stderr, /--only nonexistent\/foo\.test\.ts matches no test file/);
+-    assert.match(run.stderr, /@hearth\/shared/);
++    assert.match(run.stderr, /@hestia\/shared/);
+     assert.doesNotMatch(run.stdout, /result=PASS|sweep: 1\/1 passed/);
+   });
+ 
+diff --git a/supabase/seed/compute-readiness.ts b/supabase/seed/compute-readiness.ts
+index 4e34ea4..145e464 100644
+--- a/supabase/seed/compute-readiness.ts
++++ b/supabase/seed/compute-readiness.ts
+@@ -1,5 +1,5 @@
+ import type { Pool, PoolClient } from 'pg';
+-import { matchIngredient, type MatchCandidate, type MatchOverride } from '@hearth/matching';
++import { matchIngredient, type MatchCandidate, type MatchOverride } from '@hestia/matching';
+ 
+ /**
+  * Recipe readiness for the seed data (the 12+2 readiness table is the test oracle, and readiness
+@@ -12,7 +12,7 @@ import { matchIngredient, type MatchCandidate, type MatchOverride } from '@heart
+  * them: they are built on the service's Kysely `Database` type and `db.ts`, and pulling that whole
+  * module graph into this plain-`pg` seed script (which has none of the service's other
+  * dependencies, and connects as `postgres`, not through `withUserDb`) is a much larger undertaking
+- * than this one seed step justifies. `@hearth/matching` — the pure matcher this logic calls — is
++ * than this one seed step justifies. `@hestia/matching` — the pure matcher this logic calls — is
+  * a real, unchanged import from its own workspace package, not duplicated: only the SQL that
+  * builds its candidates and the bucket/percent bookkeeping around it lives here, kept in lockstep
+  * with the two service files' logic by construction (same queries, same rounding, same bucket
+diff --git a/supabase/seed/package.json b/supabase/seed/package.json
+index 8e357c9..406e889 100644
+--- a/supabase/seed/package.json
++++ b/supabase/seed/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "@hearth/seed",
++  "name": "@hestia/seed",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+@@ -7,7 +7,7 @@
+     "typecheck": "tsc --noEmit"
+   },
+   "dependencies": {
+-    "@hearth/matching": "workspace:*",
++    "@hestia/matching": "workspace:*",
+     "pg": "8.23.0"
+   },
+   "devDependencies": {
+diff --git a/supabase/seed/seed.sql b/supabase/seed/seed.sql
+index b94c9c5..2415096 100644
+--- a/supabase/seed/seed.sql
++++ b/supabase/seed/seed.sql
+@@ -203,7 +203,7 @@ begin
+   -- Every current row is a real 27514 item, quoted from the committed normalized fixtures in
+   -- `e2e/fixtures/flipp/normalized/`, down to its `external_id`, `flyer_id`, and `display_price`.
+   -- Money is `numeric(10, 2)` here and integer cents everywhere above it. `normalized_name` is
+-  -- what `@hearth/matching` produces from the raw name, because that is the key repricing and
++  -- what `@hestia/matching` produces from the raw name, because that is the key repricing and
+   -- readiness match on.
+   --
+   -- Validity is relative to the seed run, not the capture: the current rows span this week and
+@@ -587,7 +587,7 @@ begin
+ 
+   -- -------------------------------------------------------------------------------------------
+   -- Recipes: 12 for Oak Street, 2 for Rivera Family.
+-  -- `normalized_name` is `@hearth/matching`'s `normalize()` run once offline and pasted here, the
++  -- `normalized_name` is `@hestia/matching`'s `normalize()` run once offline and pasted here, the
+   -- same way the deal and pantry rows above do it — there is no SQL implementation to call.
+   -- Readiness, match overrides, and the meal plan are a later unit's seed rows: this unit's job is
+   -- the recipe library alone, unscored (recipe_readiness is derived data the matching unit writes).
+diff --git a/test/clock-setup.mjs b/test/clock-setup.mjs
+index 2996368..375a740 100644
+--- a/test/clock-setup.mjs
++++ b/test/clock-setup.mjs
+@@ -21,7 +21,7 @@
+  *   its adjustment is applied twice.
+  *
+  * The pin is a `Date` of its own rather than `vi.setSystemTime`. Vitest's mock leaves
+- * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hearth/recurrence`)
++ * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hestia/recurrence`)
+  * lists those methods when it loads in order to override them: loaded under that mock, its
+  * `TZDate` answers in the machine's zone, which is wrong in every negative-offset zone. This pin
+  * is in place before any test module is imported, so it has to look like `Date` to such code and
+-- 
+2.43.0
+

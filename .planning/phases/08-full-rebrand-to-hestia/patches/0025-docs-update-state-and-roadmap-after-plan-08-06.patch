@@ -1,0 +1,133 @@
+From ae5944adf88e592ab80569d6de6315a8ba1e161a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:59:43 +0000
+Subject: [PATCH 25/31] docs: update state and roadmap after plan 08-06
+
+---
+ .planning/REQUIREMENTS.md |  8 ++++----
+ .planning/ROADMAP.md      |  4 ++--
+ .planning/STATE.md        | 20 ++++++++++++--------
+ .planning/state.json      |  2 +-
+ 4 files changed, 19 insertions(+), 15 deletions(-)
+
+diff --git a/.planning/REQUIREMENTS.md b/.planning/REQUIREMENTS.md
+index 6c65666..7eb9303 100644
+--- a/.planning/REQUIREMENTS.md
++++ b/.planning/REQUIREMENTS.md
+@@ -30,13 +30,13 @@ Milestone v2.0 migrates the application to the custom domain `hestia.aberrance.a
+ 
+ - [ ] **BRAND-01**: Update all user-facing PWA UI text, page titles (`<title>Hestia</title>` and `${page} · Hestia`), shell headers, onboarding copy, and install prompts to "Hestia".
+   - *Acceptance Criteria*: No visible user-facing copy refers to Hearth; browser tab title, home screen install prompt, and shell navigation display Hestia.
+-- [ ] **BRAND-02**: Update PWA web app manifest (`apps/web/vite.config.ts`, `apps/web/index.html`) with `name: "Hestia"` and `short_name: "Hestia"`; the manifest description names no brand and stays as it is.
++- [x] **BRAND-02**: Update PWA web app manifest (`apps/web/vite.config.ts`, `apps/web/index.html`) with `name: "Hestia"` and `short_name: "Hestia"`; the manifest description names no brand and stays as it is.
+   - *Acceptance Criteria*: Manifest generated during build reflects `Hestia`; browser installation inspects as "Hestia".
+-- [ ] **BRAND-03**: Rename the administrative CLI executable and its `bin` entry from `hearth-admin` to `hestia-admin` in `apps/service`.
++- [x] **BRAND-03**: Rename the administrative CLI executable and its `bin` entry from `hearth-admin` to `hestia-admin` in `apps/service`.
+   - *Acceptance Criteria*: `hestia-admin` runs administrative tasks; the old command is removed with no alias or shim (D-07).
+-- [ ] **BRAND-04**: Migrate workspace package scopes and names from `@hearth/*` to `@hestia/*` (`@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, `@hestia/e2e`, `@hestia/seed`).
++- [x] **BRAND-04**: Migrate workspace package scopes and names from `@hearth/*` to `@hestia/*` (`@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, `@hestia/e2e`, `@hestia/seed`).
+   - *Acceptance Criteria*: Monorepo dependencies resolve cleanly via pnpm; typecheck, lint, and build pass across all workspaces.
+-- [ ] **BRAND-05**: Update environment variable prefixes, Docker Compose service names, and container configurations from `HEARTH_*` to `HESTIA_*` (`HESTIA_HOST`, `HESTIA_ORIGIN`, `HESTIA_MAGIC_LINK_ENABLED`, etc.), as a hard cutover: there are no fallback reads of the old names.
++- [x] **BRAND-05**: Update environment variable prefixes, Docker Compose service names, and container configurations from `HEARTH_*` to `HESTIA_*` (`HESTIA_HOST`, `HESTIA_ORIGIN`, `HESTIA_MAGIC_LINK_ENABLED`, etc.), as a hard cutover: there are no fallback reads of the old names.
+   - *Acceptance Criteria*: `.env.example`, `docker/docker-compose.yml`, and `apps/service/src/env.ts` accept and document `HESTIA_*` variables; a service started with only the old names fails validation at startup (D-01, D-02).
+ - [ ] **BRAND-06**: Update unit, component, integration, and E2E test suites to validate against the Hestia brand and new package names without test regressions.
+   - *Acceptance Criteria*: `pnpm test` and `pnpm test:integration` pass with 100% green status.
+diff --git a/.planning/ROADMAP.md b/.planning/ROADMAP.md
+index d0d224a..eca47e7 100644
+--- a/.planning/ROADMAP.md
++++ b/.planning/ROADMAP.md
+@@ -63,7 +63,7 @@ Plans:
+ 5. Environment variables and Docker Compose services support `HESTIA_*` configuration (hard cutover; the old names are not read).
+ 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
+ 
+-**Plans:** 5/7 plans executed
++**Plans:** 6/7 plans executed
+ 
+ Plans:
+ **Wave 1**
+@@ -80,7 +80,7 @@ Plans:
+ 
+ **Wave 5** *(blocked on Wave 4 completion)*
+ - [x] 08-05-PLAN.md — Catch-all sweep of the remaining references in every live file outside `.planning/`, one commit, full unit suite green
+-- [ ] 08-06-PLAN.md — Planning text aligned with the decisions (BRAND-02 to BRAND-05), cloud tooling renamed, owner checklist with PR notes and owner-visible choices
++- [x] 08-06-PLAN.md — Planning text aligned with the decisions (BRAND-02 to BRAND-05), cloud tooling renamed, owner checklist with PR notes and owner-visible choices
+ 
+ **Wave 6** *(blocked on Wave 5 completion)*
+ - [ ] 08-07-PLAN.md — Legacy-name guard in the hygiene gate; every CI check, `pnpm test:integration`, the integration coverage suite and the E2E suite green under the new brand
+diff --git a/.planning/STATE.md b/.planning/STATE.md
+index 0e71041..9b68be9 100644
+--- a/.planning/STATE.md
++++ b/.planning/STATE.md
+@@ -4,18 +4,18 @@ milestone: v2.0
+ milestone_name: Hestia — Domain Migration and Rebrand
+ current_phase: 8
+ current_phase_name: Full Rebrand to Hestia
+-current_plan: 6
++current_plan: 7
+ status: executing
+-stopped_at: Completed 08-05-PLAN.md
+-last_updated: "2026-10-26T03:55:21.542Z"
++stopped_at: Completed 08-06-PLAN.md
++last_updated: "2026-10-26T03:59:24.322Z"
+ last_activity: 2026-10-26
+ last_activity_desc: Phase 08 execution started
+-state_head: 6fe2b5a8da05aa532dc7cc1701abc5025304c341
++state_head: 5a7457dbeadfd0c4be52dc2b88e83b6e4ce89448
+ progress:
+   total_phases: 5
+   completed_phases: 1
+   total_plans: 11
+-  completed_plans: 9
++  completed_plans: 10
+   percent: 20
+ current_milestone: v2.0
+ ---
+@@ -33,7 +33,7 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
+ 
+ Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
+ Phase: 8 (Full Rebrand to Hestia)
+-Current Plan: 6
++Current Plan: 7
+ Total Plans in Phase: 7
+ Phases: 1 of 5 complete (Phases 7–11)
+ Status: Ready to execute
+@@ -55,8 +55,8 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ 
+ ## Session
+ 
+-**Last session:** 2026-10-26T03:55:17.072Z
+-**Stopped at:** Completed 08-05-PLAN.md
++**Last session:** 2026-10-26T03:59:24.284Z
++**Stopped at:** Completed 08-06-PLAN.md
+ **Resume file:** None
+ 
+ ## Performance Metrics
+@@ -72,6 +72,7 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ | Phase 08 P03 | 7 min | 2 tasks | 73 files |
+ | Phase 08 P04 | 7 min | 3 tasks | 41 files |
+ | Phase 08 P05 | 8 min | 1 tasks | 52 files |
++| Phase 08 P06 | 10 min | 2 tasks | 7 files |
+ 
+ ## Decisions
+ 
+@@ -87,3 +88,6 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+ - [Phase 08]: 08-04: no alias for the old CLI name and no migration of the old IndexedDB key or notification message type (D-07, D-08); manifest description, start_url, icons unchanged (D-10)
+ - [Phase 08]: The outbound User-Agent and the OpenAPI title follow the product name; the dev seed, reset and test database passwords moved with their readers in one commit (08-05)
+ - [Phase 08]: The live-file sweep leaves .planning/, the lockfile, the exemptions file and supabase/migrations untouched, so the former name remains there until 08-06 and 08-07 (08-05)
++- [Phase 08]: BRAND-02 text aligned with D-10: manifest and meta descriptions name no brand and stay as they are (orchestrator choice, owner-visible in 08-OWNER-CHECKLIST.md, overrule by changing both descriptions and restoring the requirement clause) — D-10 locks only name and short_name; the owner was unavailable
++- [Phase 08]: Guard allowlist prefixes .planning/phases/ and .planning/research/ are the planner's reading of D-13, recorded as an owner-visible choice in 08-OWNER-CHECKLIST.md — D-13 lists only the v1.0 archive; overrule by dropping a prefix from LEGACY_NAME_ALLOWLIST
++- [Phase 08]: CLI requirement is a clean break (no alias or shim, D-07) and the environment requirement is a hard cutover with no fallback reads (D-01, D-02); cloud-session probe targets alex-tanton/hestia and fails until the repository is renamed after merge — Requirement text must describe what 08-03 and 08-04 delivered
+diff --git a/.planning/state.json b/.planning/state.json
+index 859850e..dcbc9dd 100644
+--- a/.planning/state.json
++++ b/.planning/state.json
+@@ -34,5 +34,5 @@
+     "label": "Advance to the next step",
+     "reason": "Phase 8 of 5 · 20% · executing"
+   },
+-  "updated_at": "2026-10-26T03:55:16.350Z"
++  "updated_at": "2026-10-26T03:59:10.596Z"
+ }
+-- 
+2.43.0
+

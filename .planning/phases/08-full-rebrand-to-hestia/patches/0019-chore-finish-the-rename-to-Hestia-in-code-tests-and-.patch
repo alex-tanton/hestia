@@ -1,0 +1,1040 @@
+From f130a9555b6c9b0d2d1012b94b2eec1036b3243e Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:53:57 +0000
+Subject: [PATCH 19/31] chore: finish the rename to Hestia in code, tests and
+ docs
+
+- Catch-all substitution over every live file outside .planning/, the
+  lockfile, the migration exemptions and supabase/migrations
+- Outbound User-Agent is now Hestia/1.0 (self-hosted household admin; +origin)
+- OpenAPI title is Hestia API
+- Dev seed and reset passwords move with their readers (seed users, E2E
+  env, onboarding tests, docs); so does the test database password default
+- Test origins, temp-directory prefixes, git identities and clock symbols
+  use the new name; docs and comments name the product Hestia
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ .claude/CLAUDE.md                                  |  4 ++--
+ .env.example                                       |  2 +-
+ .github/actions/setup/action.yml                   |  2 +-
+ CONTRIBUTING.md                                    |  2 +-
+ README.md                                          |  4 ++--
+ apps/service/src/cli.test.ts                       |  4 ++--
+ .../src/deals/flipp/flipp-deal-source.test.ts      | 10 +++++-----
+ .../service/src/deals/flipp/normalized-fixtures.ts |  2 +-
+ apps/service/src/deals/flipp/request-queue.test.ts |  6 +++---
+ apps/service/src/deals/flipp/request-queue.ts      |  2 +-
+ apps/service/src/openapi.ts                        |  2 +-
+ apps/service/src/push/web-push-transport.test.ts   |  4 ++--
+ apps/service/src/recipes/fetch-recipe.test.ts      |  6 +++---
+ apps/service/src/recipes/fixture-fetch.test.ts     |  2 +-
+ apps/service/src/services/backups.test.ts          |  4 ++--
+ apps/service/src/services/invites.test.ts          |  4 ++--
+ apps/service/src/test/fake-app.ts                  |  2 +-
+ apps/service/src/test/fixture-deal-source.ts       |  2 +-
+ apps/service/src/test/service-stack.ts             |  2 +-
+ .../web/src/screens/onboarding/onboarding.test.tsx |  8 ++++----
+ apps/web/src/screens/settings/settings.test.tsx    |  2 +-
+ docker/Caddyfile                                   |  2 +-
+ docker/db/roles.sql                                |  2 +-
+ docker/docker-compose.yml                          |  4 ++--
+ docs/architecture.md                               |  2 +-
+ docs/branding.md                                   |  4 ++--
+ docs/deployment.md                                 |  6 +++---
+ docs/design.md                                     |  2 +-
+ docs/development.md                                |  6 +++---
+ docs/file-map.md                                   | 14 +++++++-------
+ docs/testing.md                                    |  6 +++---
+ docs/use-cases.md                                  |  8 ++++----
+ e2e/fixtures/recipes/full-json-ld-dark.html        |  2 +-
+ e2e/fixtures/recipes/full-json-ld-light.html       |  2 +-
+ e2e/support/env.ts                                 |  2 +-
+ e2e/tests/06-owner-reset-password.spec.ts          |  2 +-
+ packages/shared/src/problem.test.ts                |  2 +-
+ packages/shared/src/scrub.test.ts                  |  6 +++---
+ scripts/audit-prod.test.mjs                        |  2 +-
+ scripts/check-knip-baseline.mjs                    |  2 +-
+ scripts/check-knip-baseline.test.mjs               |  4 ++--
+ scripts/check-migrations-append-only.test.mjs      |  4 ++--
+ scripts/check-repo-hygiene.test.mjs                |  4 ++--
+ scripts/deploy-gate.test.mjs                       |  4 ++--
+ scripts/deploy.test.mjs                            |  2 +-
+ scripts/jscpd-config.test.mjs                      |  2 +-
+ scripts/test-sweep.test.mjs                        |  2 +-
+ supabase/config.toml                               |  2 +-
+ supabase/seed/seed-users.ts                        |  2 +-
+ test/clock-setup.mjs                               |  2 +-
+ test/clock-setup.test.mjs                          |  4 ++--
+ test/support/vitest-project.mjs                    |  2 +-
+ 52 files changed, 93 insertions(+), 93 deletions(-)
+
+diff --git a/.claude/CLAUDE.md b/.claude/CLAUDE.md
+index 4bbd04d..983be9a 100644
+--- a/.claude/CLAUDE.md
++++ b/.claude/CLAUDE.md
+@@ -2,9 +2,9 @@
+ 
+ ## Project
+ 
+-**Hearth — Cleanup and Hardening**
++**Hestia — Cleanup and Hardening**
+ 
+-Hearth is a household-management PWA (shopping lists, chores, bills, meals/recipes, deals, notifications) for a single household, built as a React + Vite PWA and a Fastify service over Postgres/Supabase with RLS as the isolation boundary. The application was built largely with an LLM. This milestone is a cleanup pass: remove dead code, generated and leftover files, and redundancy, and make the repo, CI, and code healthier and more robust before the owner does a manual review.
++Hestia is a household-management PWA (shopping lists, chores, bills, meals/recipes, deals, notifications) for a single household, built as a React + Vite PWA and a Fastify service over Postgres/Supabase with RLS as the isolation boundary. The application was built largely with an LLM. This milestone is a cleanup pass: remove dead code, generated and leftover files, and redundancy, and make the repo, CI, and code healthier and more robust before the owner does a manual review.
+ 
+ **Core Value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
+ 
+diff --git a/.env.example b/.env.example
+index 61674e1..d8bec90 100644
+--- a/.env.example
++++ b/.env.example
+@@ -1,4 +1,4 @@
+-# Hearth host configuration. Never commit the real file.
++# Hestia host configuration. Never commit the real file.
+ #
+ # The real .env lives OUTSIDE the repository checkout, at /srv/hestia/.env by default, because
+ # the deploy runner's checkout is wiped on every run. Create it with:
+diff --git a/.github/actions/setup/action.yml b/.github/actions/setup/action.yml
+index 8797c7b..0defb12 100644
+--- a/.github/actions/setup/action.yml
++++ b/.github/actions/setup/action.yml
+@@ -1,4 +1,4 @@
+-name: Set up Hearth
++name: Set up Hestia
+ description: Installs pnpm and Node from .nvmrc with the pnpm store cached, then installs dependencies from the lockfile.
+ 
+ # Callers run actions/checkout first: a local action is read from the checked-out workspace, so it
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 0668bc7..4ce6bba 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -92,7 +92,7 @@ whoever last changed the workflow's cron line, so keep Actions notifications on.
+ Name branches `{type}/{topic}` and create each one in its own worktree:
+ 
+ ```sh
+-git worktree add ../hearth-{topic} -b {type}/{topic}
++git worktree add ../hestia-{topic} -b {type}/{topic}
+ ```
+ 
+ Run `pnpm install` inside each new worktree. That installs the Husky hooks there; without it no hook
+diff --git a/README.md b/README.md
+index 844525b..c03485e 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-# Hearth
++# Hestia
+ 
+ A self-hosted household-admin PWA: grocery deals and shopping lists, meal planning, bills, and
+ chores for one household (or a few), running on a single home server. The specifications in
+@@ -31,7 +31,7 @@ under [Commands](docs/development.md#commands).
+ 
+ ## Architecture
+ 
+-Hearth is a pnpm monorepo: a Fastify API service and a React PWA, over a self-hosted Supabase stack
++Hestia is a pnpm monorepo: a Fastify API service and a React PWA, over a self-hosted Supabase stack
+ (Postgres, GoTrue, Realtime, and Kong) behind Caddy as a single origin. The service is the only HTTP
+ path to application data, and it runs every request in a Postgres transaction as the caller, so
+ row-level security isolates households. Zod schemas in `packages/shared` define the contract for both
+diff --git a/apps/service/src/cli.test.ts b/apps/service/src/cli.test.ts
+index 06f3bbf..7bcf962 100644
+--- a/apps/service/src/cli.test.ts
++++ b/apps/service/src/cli.test.ts
+@@ -14,7 +14,7 @@ function io() {
+   };
+ }
+ 
+-const ORIGIN = 'https://hearth.tail1234.ts.net';
++const ORIGIN = 'https://hestia.tail1234.ts.net';
+ 
+ describe('hestia-admin', () => {
+   it('prints a recovery link that lands on the set-new-password screen', async () => {
+@@ -144,7 +144,7 @@ describe('hestia-admin, invoked directly as a script', () => {
+       process.argv = [originalArgv[0] ?? 'node', cliPath, 'reset-password', 'alex@example.com'];
+       process.env['GOTRUE_URL'] = gotrueUrl;
+       process.env['SERVICE_ROLE_KEY'] = 'test-service-role-key';
+-      process.env['HESTIA_ORIGIN'] = 'https://hearth.example.test';
++      process.env['HESTIA_ORIGIN'] = 'https://hestia.example.test';
+       process.exitCode = undefined;
+ 
+       await import(/* @vite-ignore */ `./cli.ts?invoked-directly=${String(++importCount)}`);
+diff --git a/apps/service/src/deals/flipp/flipp-deal-source.test.ts b/apps/service/src/deals/flipp/flipp-deal-source.test.ts
+index bdf1f01..b6ee64d 100644
+--- a/apps/service/src/deals/flipp/flipp-deal-source.test.ts
++++ b/apps/service/src/deals/flipp/flipp-deal-source.test.ts
+@@ -27,7 +27,7 @@ function sourceWith(get: HttpGet = fixtureTransport(), logger?: QueueLogger) {
+   const source = new FlippDealSource({
+     queue: new FlippRequestQueue({
+       get: recording,
+-      userAgent: buildUserAgent('https://hearth.example.ts.net'),
++      userAgent: buildUserAgent('https://hestia.example.ts.net'),
+       minGapMs: 0,
+       attempts: 1,
+       ...(logger === undefined ? {} : { logger }),
+@@ -249,7 +249,7 @@ describe('listFlyerItems', () => {
+     const source = new FlippDealSource({
+       queue: new FlippRequestQueue({
+         get: failing,
+-        userAgent: buildUserAgent('https://hearth.example.ts.net'),
++        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+         minGapMs: 0,
+         attempts: 1,
+         failureThreshold: 1,
+@@ -331,7 +331,7 @@ describe('in-flight coalescing', () => {
+     const source = new FlippDealSource({
+       queue: new FlippRequestQueue({
+         get,
+-        userAgent: buildUserAgent('https://hearth.example.ts.net'),
++        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+         minGapMs: 0,
+         attempts: 1,
+       }),
+@@ -358,7 +358,7 @@ describe('in-flight coalescing', () => {
+     const source = new FlippDealSource({
+       queue: new FlippRequestQueue({
+         get,
+-        userAgent: buildUserAgent('https://hearth.example.ts.net'),
++        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+         minGapMs: 0,
+         attempts: 1,
+       }),
+@@ -386,7 +386,7 @@ describe('in-flight coalescing', () => {
+     const source = new FlippDealSource({
+       queue: new FlippRequestQueue({
+         get,
+-        userAgent: buildUserAgent('https://hearth.example.ts.net'),
++        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+         minGapMs: 0,
+         attempts: 1,
+       }),
+diff --git a/apps/service/src/deals/flipp/normalized-fixtures.ts b/apps/service/src/deals/flipp/normalized-fixtures.ts
+index 8f77883..cbecbfe 100644
+--- a/apps/service/src/deals/flipp/normalized-fixtures.ts
++++ b/apps/service/src/deals/flipp/normalized-fixtures.ts
+@@ -26,7 +26,7 @@ export async function buildNormalizedFixtures(): Promise<NormalizedFixtures> {
+     // No gap and no backoff: the transport is the recorded fixtures, not the network.
+     queue: new FlippRequestQueue({
+       get: fixtureTransport(),
+-      userAgent: buildUserAgent('https://hearth.invalid'),
++      userAgent: buildUserAgent('https://hestia.invalid'),
+       minGapMs: 0,
+       attempts: 1,
+     }),
+diff --git a/apps/service/src/deals/flipp/request-queue.test.ts b/apps/service/src/deals/flipp/request-queue.test.ts
+index 2c8d925..46800eb 100644
+--- a/apps/service/src/deals/flipp/request-queue.test.ts
++++ b/apps/service/src/deals/flipp/request-queue.test.ts
+@@ -38,7 +38,7 @@ function queueWith(statuses: (number | 'throw')[], options: Record<string, unkno
+   const fake = transport(statuses);
+   const queue = new FlippRequestQueue({
+     get: fake.get,
+-    userAgent: buildUserAgent('https://hearth.example.ts.net'),
++    userAgent: buildUserAgent('https://hestia.example.ts.net'),
+     ...options,
+   });
+   return { ...fake, queue };
+@@ -64,7 +64,7 @@ describe('the serialized request queue', () => {
+         starts.push(clock);
+         return Promise.resolve({ status: 200, json: () => Promise.resolve({}) });
+       },
+-      userAgent: buildUserAgent('https://hearth.example.ts.net'),
++      userAgent: buildUserAgent('https://hestia.example.ts.net'),
+       now: () => clock,
+       sleep: (ms) => {
+         clock += !wokeEarly && ms > 1 ? ms - 1 : ms;
+@@ -101,7 +101,7 @@ describe('the serialized request queue', () => {
+     await result;
+ 
+     expect(calls[0]?.headers['User-Agent']).toBe(
+-      'Hearth/1.0 (self-hosted household admin; +https://hearth.example.ts.net)',
++      'Hestia/1.0 (self-hosted household admin; +https://hestia.example.ts.net)',
+     );
+   });
+ 
+diff --git a/apps/service/src/deals/flipp/request-queue.ts b/apps/service/src/deals/flipp/request-queue.ts
+index 9d026a9..ce2de6a 100644
+--- a/apps/service/src/deals/flipp/request-queue.ts
++++ b/apps/service/src/deals/flipp/request-queue.ts
+@@ -82,7 +82,7 @@ export const fetchGet: HttpGet = async (url, headers) => {
+ };
+ 
+ export function buildUserAgent(origin: string): string {
+-  return `Hearth/1.0 (self-hosted household admin; +${origin})`;
++  return `Hestia/1.0 (self-hosted household admin; +${origin})`;
+ }
+ 
+ /**
+diff --git a/apps/service/src/openapi.ts b/apps/service/src/openapi.ts
+index a82648e..a13f36e 100644
+--- a/apps/service/src/openapi.ts
++++ b/apps/service/src/openapi.ts
+@@ -69,7 +69,7 @@ export function buildOpenApiDocument(list: readonly Endpoint[] = endpoints): Jso
+   }
+   return {
+     openapi: '3.1.0',
+-    info: { title: 'Hearth API', version: '1' },
++    info: { title: 'Hestia API', version: '1' },
+     security: [{ bearer: [] }],
+     components: {
+       securitySchemes: { bearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
+diff --git a/apps/service/src/push/web-push-transport.test.ts b/apps/service/src/push/web-push-transport.test.ts
+index 0ce8536..d4d071b 100644
+--- a/apps/service/src/push/web-push-transport.test.ts
++++ b/apps/service/src/push/web-push-transport.test.ts
+@@ -13,7 +13,7 @@ const SUBSCRIPTION = { id: 'sub-1', endpoint: ENDPOINT, keys: KEYS };
+ 
+ function vapid() {
+   const keys = webPush.generateVAPIDKeys();
+-  return { subject: 'https://hearth.example.ts.net', ...keys };
++  return { subject: 'https://hestia.example.ts.net', ...keys };
+ }
+ 
+ afterEach(() => {
+@@ -65,7 +65,7 @@ describe('createWebPushTransport', () => {
+   it('refuses a malformed VAPID private key at construction, so startup fails rather than the first send', () => {
+     expect(() =>
+       createWebPushTransport({
+-        subject: 'https://hearth.example.ts.net',
++        subject: 'https://hestia.example.ts.net',
+         publicKey: 'not-a-key',
+         privateKey: 'not-a-key',
+       }),
+diff --git a/apps/service/src/recipes/fetch-recipe.test.ts b/apps/service/src/recipes/fetch-recipe.test.ts
+index 2f481f1..6879390 100644
+--- a/apps/service/src/recipes/fetch-recipe.test.ts
++++ b/apps/service/src/recipes/fetch-recipe.test.ts
+@@ -115,7 +115,7 @@ describe('requestWithLimits', () => {
+     const page = await requestWithLimits(url, {
+       address: '127.0.0.1',
+       family: 4,
+-      userAgent: 'Hearth/1.0 (+https://hearth.test)',
++      userAgent: 'Hestia/1.0 (+https://hestia.test)',
+     });
+     expect(page.status).toBe(200);
+     expect(page.body).toBe('<html>hi</html>');
+@@ -131,9 +131,9 @@ describe('requestWithLimits', () => {
+     await requestWithLimits(url, {
+       address: '127.0.0.1',
+       family: 4,
+-      userAgent: 'Hearth/1.0 (self-hosted household admin; +https://hearth.test)',
++      userAgent: 'Hestia/1.0 (self-hosted household admin; +https://hestia.test)',
+     });
+-    expect(seen).toBe('Hearth/1.0 (self-hosted household admin; +https://hearth.test)');
++    expect(seen).toBe('Hestia/1.0 (self-hosted household admin; +https://hestia.test)');
+   });
+ 
+   it('rejects a non-200 status', async () => {
+diff --git a/apps/service/src/recipes/fixture-fetch.test.ts b/apps/service/src/recipes/fixture-fetch.test.ts
+index 66c9f11..974df1d 100644
+--- a/apps/service/src/recipes/fixture-fetch.test.ts
++++ b/apps/service/src/recipes/fixture-fetch.test.ts
+@@ -14,7 +14,7 @@ describe('recipeFixtureFetch', () => {
+   let dir: string;
+ 
+   beforeEach(() => {
+-    dir = mkdtempSync(join(tmpdir(), 'hearth-recipe-fixtures-'));
++    dir = mkdtempSync(join(tmpdir(), 'hestia-recipe-fixtures-'));
+     writeFileSync(join(dir, 'a.html'), '<html>fixture a</html>', 'utf8');
+   });
+ 
+diff --git a/apps/service/src/services/backups.test.ts b/apps/service/src/services/backups.test.ts
+index f3d82c7..605a0b0 100644
+--- a/apps/service/src/services/backups.test.ts
++++ b/apps/service/src/services/backups.test.ts
+@@ -11,7 +11,7 @@ afterEach(async () => {
+ });
+ 
+ async function fixture(): Promise<string> {
+-  const dir = await mkdtemp(join(tmpdir(), 'hearth-backups-'));
++  const dir = await mkdtemp(join(tmpdir(), 'hestia-backups-'));
+   made.push(dir);
+   return dir;
+ }
+@@ -40,7 +40,7 @@ describe('newestBackupTime', () => {
+ 
+   it('is null for an empty, missing, or unset directory', async () => {
+     expect(await newestBackupTime(await fixture())).toBeNull();
+-    expect(await newestBackupTime('/nonexistent/hearth/backups')).toBeNull();
++    expect(await newestBackupTime('/nonexistent/hestia/backups')).toBeNull();
+     expect(await newestBackupTime(undefined)).toBeNull();
+   });
+ });
+diff --git a/apps/service/src/services/invites.test.ts b/apps/service/src/services/invites.test.ts
+index 3b450dd..1de7365 100644
+--- a/apps/service/src/services/invites.test.ts
++++ b/apps/service/src/services/invites.test.ts
+@@ -44,8 +44,8 @@ describe('invite credentials', () => {
+   });
+ 
+   it('puts the token in the link’s fragment', () => {
+-    expect(inviteLink('https://hearth.tail1234.ts.net', 'abc_-123')).toBe(
+-      'https://hearth.tail1234.ts.net/join#token=abc_-123',
++    expect(inviteLink('https://hestia.tail1234.ts.net', 'abc_-123')).toBe(
++      'https://hestia.tail1234.ts.net/join#token=abc_-123',
+     );
+   });
+ });
+diff --git a/apps/service/src/test/fake-app.ts b/apps/service/src/test/fake-app.ts
+index a04b260..ddae30d 100644
+--- a/apps/service/src/test/fake-app.ts
++++ b/apps/service/src/test/fake-app.ts
+@@ -17,7 +17,7 @@ import { currentInstant } from './zone-dates.js';
+ /** Helpers for unit tests that drive the app with inject() and no database or GoTrue. */
+ 
+ export const TEST_JWT_SECRET = 'unit-test-secret-at-least-32-characters-long';
+-export const TEST_ORIGIN = 'https://hearth.test.ts.net';
++export const TEST_ORIGIN = 'https://hestia.test.ts.net';
+ export const TEST_OWNER_EMAIL = 'Owner@Example.com';
+ 
+ /** An HS256 token signed the way GoTrue signs one. */
+diff --git a/apps/service/src/test/fixture-deal-source.ts b/apps/service/src/test/fixture-deal-source.ts
+index 78b7f05..46826e7 100644
+--- a/apps/service/src/test/fixture-deal-source.ts
++++ b/apps/service/src/test/fixture-deal-source.ts
+@@ -24,7 +24,7 @@ export function fixtureDealSource(): FlippDealSource {
+   return new FlippDealSource({
+     queue: new FlippRequestQueue({
+       get: fixtureTransport(),
+-      userAgent: buildUserAgent('https://hearth.invalid'),
++      userAgent: buildUserAgent('https://hestia.invalid'),
+       minGapMs: 0,
+       attempts: 1,
+     }),
+diff --git a/apps/service/src/test/service-stack.ts b/apps/service/src/test/service-stack.ts
+index 8636c0d..acdfa74 100644
+--- a/apps/service/src/test/service-stack.ts
++++ b/apps/service/src/test/service-stack.ts
+@@ -30,7 +30,7 @@ export interface StackConfig {
+   serviceDatabaseUrl: string;
+ }
+ 
+-const SERVICE_PASSWORD = process.env['HESTIA_TEST_SERVICE_PASSWORD'] ?? 'hearth';
++const SERVICE_PASSWORD = process.env['HESTIA_TEST_SERVICE_PASSWORD'] ?? 'hestia';
+ 
+ function supabaseStatus(): Record<string, string> {
+   const output = execFileSync('supabase', ['status', '--output', 'env'], {
+diff --git a/apps/web/src/screens/onboarding/onboarding.test.tsx b/apps/web/src/screens/onboarding/onboarding.test.tsx
+index 3ea39d3..6034cca 100644
+--- a/apps/web/src/screens/onboarding/onboarding.test.tsx
++++ b/apps/web/src/screens/onboarding/onboarding.test.tsx
+@@ -100,7 +100,7 @@ describe('sign up', () => {
+ 
+     await user.type(screen.getByLabelText('Display name'), 'Alex Rivera');
+     await user.type(screen.getByLabelText('Email'), 'alex@example.com');
+-    await user.type(screen.getByLabelText('Password'), 'hearth-seed-pass-2026');
++    await user.type(screen.getByLabelText('Password'), 'hestia-seed-pass-2026');
+     await user.click(screen.getByRole('button', { name: 'Create account' }));
+ 
+     await waitFor(() => {
+@@ -132,14 +132,14 @@ describe('set a new password', () => {
+     renderScreen(<SetPasswordScreen />);
+ 
+     expect(screen.queryByLabelText('Current password')).not.toBeInTheDocument();
+-    await user.type(screen.getByLabelText('New password'), 'hearth-seed-pass-2026');
++    await user.type(screen.getByLabelText('New password'), 'hestia-seed-pass-2026');
+     await user.click(screen.getByRole('button', { name: 'Set password' }));
+ 
+     await waitFor(() => {
+       expect(stub.calls).toContainEqual({
+         method: 'POST',
+         path: '/api/users/me/password',
+-        body: { newPassword: 'hearth-seed-pass-2026' },
++        body: { newPassword: 'hestia-seed-pass-2026' },
+       });
+     });
+   });
+@@ -154,7 +154,7 @@ describe('set a new password', () => {
+     });
+     renderScreen(<SetPasswordScreen />);
+ 
+-    await user.type(screen.getByLabelText('New password'), 'hearth-seed-pass-2026');
++    await user.type(screen.getByLabelText('New password'), 'hestia-seed-pass-2026');
+     await user.click(screen.getByRole('button', { name: 'Set password' }));
+ 
+     expect(await screen.findByText(RESET_LINK_EXPIRED_MESSAGE)).toBeInTheDocument();
+diff --git a/apps/web/src/screens/settings/settings.test.tsx b/apps/web/src/screens/settings/settings.test.tsx
+index ae2863e..7eb7526 100644
+--- a/apps/web/src/screens/settings/settings.test.tsx
++++ b/apps/web/src/screens/settings/settings.test.tsx
+@@ -153,7 +153,7 @@ describe('Settings', () => {
+           status: 201,
+           body: {
+             invite: inviteFixture,
+-            link: 'https://hearth.example.ts.net/join#token=abcdefghijklmnopqrstuvwxyz012345678',
++            link: 'https://hestia.example.ts.net/join#token=abcdefghijklmnopqrstuvwxyz012345678',
+             code: '9XKR4TZ2',
+           },
+         }),
+diff --git a/docker/Caddyfile b/docker/Caddyfile
+index e588fea..fd0242e 100644
+--- a/docker/Caddyfile
++++ b/docker/Caddyfile
+@@ -1,4 +1,4 @@
+-# Hearth ingress.
++# Hestia ingress.
+ # Tailscale Funnel terminates TLS on the host and forwards plain HTTP to 127.0.0.1:8080.
+ {
+ 	auto_https off
+diff --git a/docker/db/roles.sql b/docker/db/roles.sql
+index 49a3a46..3c4bf20 100644
+--- a/docker/db/roles.sql
++++ b/docker/db/roles.sql
+@@ -1,5 +1,5 @@
+ -- GoTrue connects as supabase_auth_admin. The other roles Supabase's self-hosting stack gives
+--- passwords to (authenticator, pgbouncer, storage, functions) serve services Hearth does not
++-- passwords to (authenticator, pgbouncer, storage, functions) serve services Hestia does not
+ -- run, so they keep no password and cannot log in.
+ \set pgpass `echo "$POSTGRES_PASSWORD"`
+ 
+diff --git a/docker/docker-compose.yml b/docker/docker-compose.yml
+index ded33e6..907c1ce 100644
+--- a/docker/docker-compose.yml
++++ b/docker/docker-compose.yml
+@@ -1,6 +1,6 @@
+-# Hearth production stack.
++# Hestia production stack.
+ #
+-# The Supabase services are the subset of Supabase's official self-hosting compose that Hearth
++# The Supabase services are the subset of Supabase's official self-hosting compose that Hestia
+ # uses. db, auth, and realtime are pinned to the same images the pinned Supabase CLI runs for
+ # `supabase start`, so a production dump restores into local development unchanged.
+ #
+diff --git a/docs/architecture.md b/docs/architecture.md
+index 75a7a4c..e558994 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -2,7 +2,7 @@
+ 
+ ## Overview
+ 
+-Hearth is a monorepo: a Fastify API service (`apps/service`), a React PWA (`apps/web`), and a
++Hestia is a monorepo: a Fastify API service (`apps/service`), a React PWA (`apps/web`), and a
+ self-hosted Supabase stack — Postgres, GoTrue (auth), Realtime, and Kong (the gateway in front of
+ GoTrue and Realtime) — all reachable through Caddy as a single origin. The service is the only
+ HTTP path to application data; there is no PostgREST. Caddy also serves the built PWA as static
+diff --git a/docs/branding.md b/docs/branding.md
+index 6c2867a..139a4fc 100644
+--- a/docs/branding.md
++++ b/docs/branding.md
+@@ -1,10 +1,10 @@
+-# Hearth — Branding
++# Hestia — Branding
+ 
+ Navigation, screen states, empty states, and accessibility patterns: see `docs/design.md`.
+ 
+ ## 1. Name and voice
+ 
+-The product is **Hearth** — a household admin tool (shopping lists and deals, meals, bills,
++The product is **Hestia** — a household admin tool (shopping lists and deals, meals, bills,
+ chores). The name is deliberately not matched by the visual style: the brand direction is "a
+ well-organized kitchen" — bright, uncluttered, fast to find things in — rather than
+ cozy-rustic literalism.
+diff --git a/docs/deployment.md b/docs/deployment.md
+index 202b6ef..7a3d92e 100644
+--- a/docs/deployment.md
++++ b/docs/deployment.md
+@@ -1,4 +1,4 @@
+-# Deploying Hearth
++# Deploying Hestia
+ 
+ ## Overview
+ 
+@@ -7,7 +7,7 @@ Compose. The box is reached over the internet only through Tailscale Funnel, whi
+ on the host and forwards plain HTTP to Caddy; Caddy is the only container that publishes a port
+ (`127.0.0.1:8080`), and it is the only way in — there is no port forwarded on the router and no
+ DNS record to manage. Caddy serves the built PWA directly and reverse-proxies `/api/*` to the
+-Hearth service and `/auth/v1/*` / `/realtime/v1/*` to Kong, which fronts GoTrue (auth) and
++Hestia service and `/auth/v1/*` / `/realtime/v1/*` to Kong, which fronts GoTrue (auth) and
+ Realtime. A nightly backup container dumps Postgres to a second physical disk. Deploys are
+ triggered by a passing CI run on `main` and run on a self-hosted GitHub Actions runner on the same
+ box.
+@@ -118,7 +118,7 @@ by hand.
+ | `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hestia-service`. |
+ | `HESTIA_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
+ | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
+-| `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
++| `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hestia service connects to Postgres as. |
+ | `JWT_SECRET` | GoTrue's HS256 JWT signing secret. |
+ | `ANON_KEY` | The anon API key, signed with `JWT_SECRET`. Used as the `apikey` header on GoTrue/Kong calls. |
+ | `SERVICE_ROLE_KEY` | The service-role API key, signed with `JWT_SECRET`. Used only for sanctioned service-role operations. |
+diff --git a/docs/design.md b/docs/design.md
+index aba93f5..c06d552 100644
+--- a/docs/design.md
++++ b/docs/design.md
+@@ -1,4 +1,4 @@
+-# Hearth — Design Reference
++# Hestia — Design Reference
+ 
+ Color, type, spacing, icon, motion, and voice tokens are in `docs/branding.md`. Tokens are
+ referenced here by name (the accent color token, the section color).
+diff --git a/docs/development.md b/docs/development.md
+index 7c32a79..326bd01 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -53,10 +53,10 @@ database from the migrations. The commands:
+ 
+ ```sh
+ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+-  -c "alter role hestia_service with login password 'hearth'"
++  -c "alter role hestia_service with login password 'hestia'"
+ 
+ eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
+-export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
++export DATABASE_URL=postgresql://hestia_service:hestia@127.0.0.1:54322/postgres
+ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://auth:9999 in production
+ export HESTIA_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
+ export HESTIA_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
+@@ -100,7 +100,7 @@ The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABL
+ | `pnpm test:integration` | RLS, database and route tests; isolation is in [testing.md](testing.md#integration-tests) |
+ 
+ Run `pnpm db:types` after every new migration and commit the result. `pnpm db:seed` needs `psql`
+-on the path. It creates the five seed users (password `hearth-seed-pass-2026`) and prints the
++on the path. It creates the five seed users (password `hestia-seed-pass-2026`) and prints the
+ outstanding Oak Street invite's code and link token. It runs once per database: run
+ `supabase db reset` before seeding again. It refuses a database or GoTrue that has any user other
+ than the five seed users, so it cannot add them to a stack that real people use. See
+diff --git a/docs/file-map.md b/docs/file-map.md
+index a76a07a..ea3d6a9 100644
+--- a/docs/file-map.md
++++ b/docs/file-map.md
+@@ -1,6 +1,6 @@
+ # File Map
+ 
+-What every top-level folder and key file in the Hearth repository is for. Not an implementation
++What every top-level folder and key file in the Hestia repository is for. Not an implementation
+ reference — for behavior, architecture, and design decisions, see the specs in `docs/`.
+ 
+ ## 1. Repository layout
+@@ -17,7 +17,7 @@ reference — for behavior, architecture, and design decisions, see the specs in
+ | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
+ | `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, the gate scripts (the knip baseline, repository hygiene, migration append-only and production audit checks) and the deploy gate that decides whether a commit is deployed, with harness tests for the scripts that have one. |
+ | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
+-| `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
++| `docs/` | The specifications and reference documents that describe what Hestia is and how it behaves. |
+ | `.github/` | Continuous integration and deployment automation (GitHub Actions: `ci.yml`, `sweep.yml` and `deploy.yml`), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
+ | `.husky/` | Git hooks that run checks automatically before a commit is made. |
+ | `README.md` | The entry point, with an overview, prerequisites, a quickstart, the architecture summary with the repository layout, and the documentation index. |
+@@ -88,7 +88,7 @@ These are small, standalone libraries used by more than one part of the system,
+ 
+ ## 5. supabase/
+ 
+-Hearth self-hosts Supabase, which bundles several open-source pieces behind one configuration:
++Hestia self-hosts Supabase, which bundles several open-source pieces behind one configuration:
+ 
+ - **Postgres** is the database that stores all household data.
+ - **GoTrue** is the authentication service — it handles signup, sign-in, password resets, and issuing the tokens that prove who a user is.
+@@ -181,14 +181,14 @@ shopping list.
+ | `testing.md` | How unit, integration, frontend, and end-to-end tests are structured, how to add more of each, and how to test the running app by hand. |
+ | `development.md` | Local setup, dev servers and commands, running the API against a local Supabase stack, database and seed commands, commit hooks, scripts, and the checks to run before pushing. |
+ | `deployment.md` | The production deployment runbook: system requirements, Compose services, environment variables and secrets, first-time setup, deploys and rollback, backups and restore, and troubleshooting. |
+-| `use-cases.md` | Hearth's product requirements, restated as use cases: who does what, under what conditions, with what result. |
++| `use-cases.md` | Hestia's product requirements, restated as use cases: who does what, under what conditions, with what result. |
+ | `architecture.md` | The system's shape — request authorization and the RLS isolation pattern, data model, API surface, background jobs, realtime sync, offline writes, and the notification pipeline. |
+-| `branding.md` | Hearth's name, voice, and visual identity — color, type, spacing, icons, motion, and copy rules. |
+-| `design.md` | Hearth's design decisions — navigation, state handling, empty states, and accessibility commitments. |
++| `branding.md` | Hestia's name, voice, and visual identity — color, type, spacing, icons, motion, and copy rules. |
++| `design.md` | Hestia's design decisions — navigation, state handling, empty states, and accessibility commitments. |
+ 
+ ## 10. Root configuration files
+ 
+-| Tool/file | What it is | Why Hearth uses it |
++| Tool/file | What it is | Why Hestia uses it |
+ | --- | --- | --- |
+ | pnpm, `pnpm-workspace.yaml` | pnpm is the package manager that installs JavaScript/TypeScript dependencies. A "workspace" lets one repository (a "monorepo") hold several installable projects — here, the apps and packages — that can depend on each other directly. | Lets `apps/web` and `apps/service` share `packages/shared`, `packages/recurrence`, and `packages/matching` without publishing them anywhere, and keeps every dependency version pinned exactly in one lockfile. |
+ | TypeScript, `tsconfig.base.json` | TypeScript adds type-checking to JavaScript, catching a category of bugs before the code ever runs. The base config holds the strict settings every workspace inherits. | Keeps the whole codebase held to the same strict standard, with no workspace quietly opting out. |
+diff --git a/docs/testing.md b/docs/testing.md
+index 379efc3..6e985bb 100644
+--- a/docs/testing.md
++++ b/docs/testing.md
+@@ -501,7 +501,7 @@ its own.
+ 
+ ### Users and households
+ 
+-Every seed user has the password `hearth-seed-pass-2026`.
++Every seed user has the password `hestia-seed-pass-2026`.
+ 
+ | Name | Email | Timezone |
+ | --- | --- | --- |
+@@ -668,7 +668,7 @@ A walkthrough for clicking through the real app locally, outside the test suites
+ ```sh
+ supabase start                                                      # Postgres, GoTrue, Realtime, Kong, Studio
+ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+-  -c "alter role hestia_service with login password 'hearth'"
++  -c "alter role hestia_service with login password 'hestia'"
+ pnpm db:seed                                                         # creates the 5 seed users + seed.sql rows
+ ```
+ 
+@@ -680,7 +680,7 @@ users, so it's safe only against a fresh local stack.
+ 
+ ```sh
+ eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
+-export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
++export DATABASE_URL=postgresql://hestia_service:hestia@127.0.0.1:54322/postgres
+ export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
+ export HESTIA_ORIGIN=http://127.0.0.1:5173
+ export HESTIA_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
+diff --git a/docs/use-cases.md b/docs/use-cases.md
+index a641cfa..1203543 100644
+--- a/docs/use-cases.md
++++ b/docs/use-cases.md
+@@ -1,4 +1,4 @@
+-# Hearth — Use Cases
++# Hestia — Use Cases
+ 
+ ## Actors
+ 
+@@ -48,7 +48,7 @@
+   1. The admin creates an invite. The service generates an opaque random token (for a shareable link) and an 8-character code drawn from the Crockford Base32 alphabet (no I, L, O, or U).
+   2. Both credentials are stored only as SHA-256 hashes, in lowercase hex.
+   3. `expires_at` is set to exactly 7 days after `created_at`.
+-  4. The admin shares the link or the code with the invitee by any out-of-band means (Hearth never emails it).
++  4. The admin shares the link or the code with the invitee by any out-of-band means (Hestia never emails it).
+   5. The admin can view the list of outstanding invites for the household at any time, and can revoke one — revocation takes effect immediately for both the link and the code.
+ - **Alternate/exception flows:**
+   - **Non-admin attempts to create an invite:** refused.
+@@ -383,7 +383,7 @@
+   - **"Still using this?" prompt:** shown when usage has not been confirmed for 60 days, clocked from `last_used_confirmed_at`, or from `created_at` if usage has never been confirmed.
+     - **"Still using":** sets `last_used_confirmed_at` to now, resetting the clock.
+     - **"Stop tracking":** archives the bill.
+-  - Usage is self-reported only; Hearth has no way to detect actual usage.
++  - Usage is self-reported only; Hestia has no way to detect actual usage.
+ - **Postconditions:** the subscriptions total and per-row figures reflect current recurrence data; `last_used_confirmed_at` is updated if the user confirmed usage.
+ 
+ ### Use case: Receive and act on a bill reminder
+@@ -527,7 +527,7 @@
+   2. A notification whose `send_after` falls inside the window has `send_after` moved to the end of the window — delivered when the window opens, never dropped.
+   3. Batching and the outbox key still apply during this shift, so a night's list activity arrives as one morning notification per list.
+   4. Every addition to a batch re-applies the window, so the batch's send time always reflects its latest addition, and a batch is never split across two windows.
+-  5. There is no urgent-override tier — nothing Hearth sends warrants waking someone.
++  5. There is no urgent-override tier — nothing Hestia sends warrants waking someone.
+ - **Alternate/exception flows:**
+   - **Quiet hours changed after a notification was already written:** the change applies only to notifications written after the change; already-written rows keep their original send time.
+ - **Postconditions:** no notification is delivered inside the recipient's quiet-hours window; it is deferred to the window's end instead.
+diff --git a/e2e/fixtures/recipes/full-json-ld-dark.html b/e2e/fixtures/recipes/full-json-ld-dark.html
+index 3a7809d..f00c265 100644
+--- a/e2e/fixtures/recipes/full-json-ld-dark.html
++++ b/e2e/fixtures/recipes/full-json-ld-dark.html
+@@ -2,7 +2,7 @@
+ <html lang="en">
+   <head>
+     <meta charset="utf-8" />
+-    <title>Baked Cod with Broccoli — Hearth E2E Fixture</title>
++    <title>Baked Cod with Broccoli — Hestia E2E Fixture</title>
+     <script type="application/ld+json">
+       {
+         "@context": "https://schema.org",
+diff --git a/e2e/fixtures/recipes/full-json-ld-light.html b/e2e/fixtures/recipes/full-json-ld-light.html
+index 0b2043a..bb36dd6 100644
+--- a/e2e/fixtures/recipes/full-json-ld-light.html
++++ b/e2e/fixtures/recipes/full-json-ld-light.html
+@@ -2,7 +2,7 @@
+ <html lang="en">
+   <head>
+     <meta charset="utf-8" />
+-    <title>Baked Cod with Asparagus — Hearth E2E Fixture</title>
++    <title>Baked Cod with Asparagus — Hestia E2E Fixture</title>
+     <script type="application/ld+json">
+       {
+         "@context": "https://schema.org",
+diff --git a/e2e/support/env.ts b/e2e/support/env.ts
+index 713e2f5..d04aa21 100644
+--- a/e2e/support/env.ts
++++ b/e2e/support/env.ts
+@@ -92,7 +92,7 @@ function distinctFreePort(avoid: string): string {
+ }
+ 
+ /** The password every seed user signs in with. */
+-export const SEED_PASSWORD = 'hearth-seed-pass-2026';
++export const SEED_PASSWORD = 'hestia-seed-pass-2026';
+ 
+ /** The seed users and households. */
+ export const SEED = {
+diff --git a/e2e/tests/06-owner-reset-password.spec.ts b/e2e/tests/06-owner-reset-password.spec.ts
+index 1b6e851..6734b85 100644
+--- a/e2e/tests/06-owner-reset-password.spec.ts
++++ b/e2e/tests/06-owner-reset-password.spec.ts
+@@ -13,7 +13,7 @@ import { BASE_URL, SEED } from '../support/env.ts';
+  * subject, because no other test depends on Morgan's password.
+  */
+ 
+-const NEW_PASSWORD = 'hearth-reset-pass-2026';
++const NEW_PASSWORD = 'hestia-reset-pass-2026';
+ 
+ test('the forgot-password screen points at the server owner', async ({ page }) => {
+   await page.goto('/sign-in');
+diff --git a/packages/shared/src/problem.test.ts b/packages/shared/src/problem.test.ts
+index 1d5ad1b..6746ade 100644
+--- a/packages/shared/src/problem.test.ts
++++ b/packages/shared/src/problem.test.ts
+@@ -9,7 +9,7 @@ import { PROBLEM_CONTENT_TYPE, problemDetailsSchema } from './problem.js';
+ describe('problemDetailsSchema', () => {
+   it('accepts a full problem body with an in-range HTTP status', () => {
+     const result = problemDetailsSchema.safeParse({
+-      type: 'https://hearth.example/problems/validation',
++      type: 'https://hestia.example/problems/validation',
+       title: 'Validation failed',
+       status: 422,
+       detail: 'Enter a name.',
+diff --git a/packages/shared/src/scrub.test.ts b/packages/shared/src/scrub.test.ts
+index d6305c5..b8a7139 100644
+--- a/packages/shared/src/scrub.test.ts
++++ b/packages/shared/src/scrub.test.ts
+@@ -65,7 +65,7 @@ describe('scrubErrorText: money', () => {
+ describe('scrubErrorText: emails', () => {
+   it.each([
+     'Duplicate user alex@example.com',
+-    'user <Alex.Rivera+hearth@Example.CO.uk> not found',
++    'user <Alex.Rivera+hestia@Example.CO.uk> not found',
+     'mailto:sam@example.com bounced',
+     'email=casey@example.com',
+     'Login failed for "morgan@example.com"',
+@@ -148,7 +148,7 @@ describe('scrubErrorText: household content', () => {
+       'fetch failed: https://www.example.com/recipes/grandmas-lasagna?servings=4',
+       'lasagna',
+     );
+-    expectScrubbed('open https://hearth.tail1234.ts.net/join#token=abcDEF', 'abcDEF');
++    expectScrubbed('open https://hestia.tail1234.ts.net/join#token=abcDEF', 'abcDEF');
+     expectScrubbed('ws wss://host/realtime/v1?apikey=secret', 'secret');
+     expectScrubbed('img data:image/png;base64,iVBORw0KGgo', 'iVBORw0KGgo');
+   });
+@@ -237,7 +237,7 @@ describe('scrubRoute', () => {
+     expect(scrubRoute('/api/households/:id/members/:userId/departure-preview')).toBe(
+       '/api/households/:id/members/:userId/departure-preview',
+     );
+-    expect(scrubRoute('https://hearth.example.ts.net/join?token=abc#code=XYZ')).toBe('/join');
++    expect(scrubRoute('https://hestia.example.ts.net/join?token=abc#code=XYZ')).toBe('/join');
+     expect(scrubRoute('/deals/search/Chicken%20Breast')).toBe('/deals/search/:param');
+     expect(scrubRoute('/users/alex@example.com')).toBe('/users/:param');
+     expect(scrubRoute('/bills/45.00')).toBe('/bills/:param');
+diff --git a/scripts/audit-prod.test.mjs b/scripts/audit-prod.test.mjs
+index fa055f1..e00cb9b 100644
+--- a/scripts/audit-prod.test.mjs
++++ b/scripts/audit-prod.test.mjs
+@@ -19,7 +19,7 @@ const TODAY = '2026-10-22';
+ const BRACES_ID = 'GHSA-vfj7-8cjw-p6xm';
+ const BRACES_PATH = 'apps__service>kysely-codegen>micromatch>braces';
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-audit-prod-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-audit-prod-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+diff --git a/scripts/check-knip-baseline.mjs b/scripts/check-knip-baseline.mjs
+index 1288bef..349ff97 100644
+--- a/scripts/check-knip-baseline.mjs
++++ b/scripts/check-knip-baseline.mjs
+@@ -110,7 +110,7 @@ function currentRows(reportText) {
+   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+     throw new Error('the knip report is not a JSON object');
+   }
+-  const dir = mkdtempSync(join(tmpdir(), 'hearth-knip-baseline-'));
++  const dir = mkdtempSync(join(tmpdir(), 'hestia-knip-baseline-'));
+   try {
+     const reportPath = join(dir, 'report.json');
+     const summaryPath = join(dir, 'summary.txt');
+diff --git a/scripts/check-knip-baseline.test.mjs b/scripts/check-knip-baseline.test.mjs
+index 61575e7..31ad648 100644
+--- a/scripts/check-knip-baseline.test.mjs
++++ b/scripts/check-knip-baseline.test.mjs
+@@ -17,7 +17,7 @@ const REPO_ROOT = resolve(import.meta.dirname, '..');
+ const CHECKER = join(REPO_ROOT, 'scripts', 'check-knip-baseline.mjs');
+ const COMMITTED_BASELINE = join(REPO_ROOT, 'scripts', 'knip-production-baseline.txt');
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-knip-baseline-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-knip-baseline-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+@@ -117,7 +117,7 @@ describe('check-knip-baseline: comparing findings with the baseline', () => {
+ describe('check-knip-baseline: cases it cannot decide exit 2', () => {
+   it('rejects a report that is not JSON', () => {
+     const run = check({
+-      reportText: '> hearth@ knip\nnot json',
++      reportText: '> hestia@ knip\nnot json',
+       baseline: baselineText(BASELINE_ROWS),
+     });
+     assert.equal(run.status, 2);
+diff --git a/scripts/check-migrations-append-only.test.mjs b/scripts/check-migrations-append-only.test.mjs
+index d1e34ad..e07e739 100644
+--- a/scripts/check-migrations-append-only.test.mjs
++++ b/scripts/check-migrations-append-only.test.mjs
+@@ -26,7 +26,7 @@ import { after, describe, it } from 'node:test';
+ const REPO_ROOT = resolve(import.meta.dirname, '..');
+ const CHECKER = join(REPO_ROOT, 'scripts', 'check-migrations-append-only.mjs');
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-migrations-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-migrations-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+@@ -54,7 +54,7 @@ function git(repo, ...args) {
+     'git',
+     [
+       '-c',
+-      'user.name=hearth-test',
++      'user.name=hestia-test',
+       '-c',
+       'user.email=test@example.invalid',
+       '-c',
+diff --git a/scripts/check-repo-hygiene.test.mjs b/scripts/check-repo-hygiene.test.mjs
+index 6c5442c..55a0919 100644
+--- a/scripts/check-repo-hygiene.test.mjs
++++ b/scripts/check-repo-hygiene.test.mjs
+@@ -17,7 +17,7 @@ import { after, describe, it } from 'node:test';
+ const REPO_ROOT = resolve(import.meta.dirname, '..');
+ const HYGIENE = join(REPO_ROOT, 'scripts', 'check-repo-hygiene.mjs');
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-hygiene-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-hygiene-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+@@ -33,7 +33,7 @@ function childEnvironment() {
+   return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' };
+ }
+ 
+-const GIT_IDENTITY = ['-c', 'user.name=hearth-test', '-c', 'user.email=test@example.invalid'];
++const GIT_IDENTITY = ['-c', 'user.name=hestia-test', '-c', 'user.email=test@example.invalid'];
+ 
+ function git(repo, args, input) {
+   const run = spawnSync(
+diff --git a/scripts/deploy-gate.test.mjs b/scripts/deploy-gate.test.mjs
+index 86fa56a..fc53bac 100644
+--- a/scripts/deploy-gate.test.mjs
++++ b/scripts/deploy-gate.test.mjs
+@@ -28,7 +28,7 @@ import { after, describe, it } from 'node:test';
+ const REPO_ROOT = resolve(import.meta.dirname, '..');
+ const GATE = join(REPO_ROOT, 'scripts', 'deploy-gate.sh');
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-gate-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-gate-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+@@ -62,7 +62,7 @@ function gitEnvironment() {
+ function git(cwd, ...args) {
+   const run = spawnSync(
+     'git',
+-    ['-c', 'user.name=hearth-test', '-c', 'user.email=test@example.invalid', ...args],
++    ['-c', 'user.name=hestia-test', '-c', 'user.email=test@example.invalid', ...args],
+     { cwd, encoding: 'utf8', env: gitEnvironment() },
+   );
+   assert.equal(run.status, 0, `git ${args.join(' ')}: ${run.stderr}`);
+diff --git a/scripts/deploy.test.mjs b/scripts/deploy.test.mjs
+index e104989..8d2f382 100644
+--- a/scripts/deploy.test.mjs
++++ b/scripts/deploy.test.mjs
+@@ -30,7 +30,7 @@ const SERVICE_PASSWORD = 'svc-sentinel-7d41b09e';
+ const RESERVED_PASSWORD = 'p@ss/w:rd#1?x%y';
+ const DEPLOY_SHA = '0123456789abcdef0123456789abcdef01234567';
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-deploy-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-deploy-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+diff --git a/scripts/jscpd-config.test.mjs b/scripts/jscpd-config.test.mjs
+index 58e01d2..76a7b2b 100644
+--- a/scripts/jscpd-config.test.mjs
++++ b/scripts/jscpd-config.test.mjs
+@@ -18,7 +18,7 @@ const JSCPD = join(REPO_ROOT, 'node_modules', '.bin', 'jscpd');
+ const CONFIG = JSON.parse(readFileSync(join(REPO_ROOT, '.jscpd.json'), 'utf8'));
+ const PACKAGE = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8'));
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-jscpd-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-jscpd-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+diff --git a/scripts/test-sweep.test.mjs b/scripts/test-sweep.test.mjs
+index 3b74d1a..54dde20 100644
+--- a/scripts/test-sweep.test.mjs
++++ b/scripts/test-sweep.test.mjs
+@@ -14,7 +14,7 @@ import { after, describe, it } from 'node:test';
+ const REPO_ROOT = resolve(import.meta.dirname, '..');
+ const SWEEP = join(REPO_ROOT, 'scripts', 'test-sweep.mjs');
+ 
+-const scratch = mkdtempSync(join(tmpdir(), 'hearth-sweep-'));
++const scratch = mkdtempSync(join(tmpdir(), 'hestia-sweep-'));
+ after(() => {
+   rmSync(scratch, { recursive: true, force: true });
+ });
+diff --git a/supabase/config.toml b/supabase/config.toml
+index 1b0726d..84cda43 100644
+--- a/supabase/config.toml
++++ b/supabase/config.toml
+@@ -32,7 +32,7 @@ enabled = true
+ port = 54323
+ api_url = "http://127.0.0.1"
+ 
+-# Hearth sends no email while magic link is disabled.
++# Hestia sends no email while magic link is disabled.
+ [local_smtp]
+ enabled = false
+ 
+diff --git a/supabase/seed/seed-users.ts b/supabase/seed/seed-users.ts
+index 37e2a68..b2389b6 100644
+--- a/supabase/seed/seed-users.ts
++++ b/supabase/seed/seed-users.ts
+@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
+ import pg from 'pg';
+ import { recomputeReadinessForHousehold } from './compute-readiness.js';
+ 
+-const SEED_PASSWORD = 'hearth-seed-pass-2026';
++const SEED_PASSWORD = 'hestia-seed-pass-2026';
+ 
+ const USERS = [
+   { email: 'alex@example.com', displayName: 'Alex Rivera', timezone: 'America/New_York' },
+diff --git a/test/clock-setup.mjs b/test/clock-setup.mjs
+index 15fe1db..1f87e50 100644
+--- a/test/clock-setup.mjs
++++ b/test/clock-setup.mjs
+@@ -48,7 +48,7 @@ const DEFAULT_TEST_NOW = '2026-10-14T12:00:00.000Z';
+ // with `isolate: false` runs the setup files once per test file in the same global): the pin
+ // remembers the class it replaced, so a second load builds one pin over the native class instead
+ // of a second pin over the first. A clock a test left installed inherits the marker from the pin.
+-const NATIVE = Symbol.for('hearth.nativeDate');
++const NATIVE = Symbol.for('hestia.nativeDate');
+ const NativeDate = globalThis.Date[NATIVE] ?? globalThis.Date;
+ 
+ function pinnedInstant() {
+diff --git a/test/clock-setup.test.mjs b/test/clock-setup.test.mjs
+index 841d708..b1a2cb7 100644
+--- a/test/clock-setup.test.mjs
++++ b/test/clock-setup.test.mjs
+@@ -403,7 +403,7 @@ describe('clock-setup: the default pin, overrides and restoration', () => {
+ const SHARED_GLOBAL_FILE = `
+ import { describe, expect, it } from 'vitest';
+ 
+-const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
++const position = (globalThis.__hestiaFilePosition = (globalThis.__hestiaFilePosition ?? 0) + 1);
+ // Padding keeps the unit files larger than the integration file, which Vitest then runs last.
+ // ${'x'.repeat(4000)}
+ 
+@@ -428,7 +428,7 @@ describe(\`file at position \${position}\`, () => {
+ const SHARED_GLOBAL_INTEGRATION_FILE = `
+ import { describe, expect, it } from 'vitest';
+ 
+-const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
++const position = (globalThis.__hestiaFilePosition = (globalThis.__hestiaFilePosition ?? 0) + 1);
+ 
+ describe(\`integration file at position \${position}\`, () => {
+   it('is left on the native Date, not on a pin an earlier file installed', () => {
+diff --git a/test/support/vitest-project.mjs b/test/support/vitest-project.mjs
+index 730e6f3..8987a6c 100644
+--- a/test/support/vitest-project.mjs
++++ b/test/support/vitest-project.mjs
+@@ -23,7 +23,7 @@ const VITEST_BIN = join(REPO_ROOT, 'packages', 'shared', 'node_modules', 'vitest
+  * `message`) plus the exit status and the combined output.
+  */
+ export function runVitestProject({ files, env = {}, testConfig = {} }) {
+-  const directory = mkdtempSync(join(tmpdir(), 'hearth-clock-'));
++  const directory = mkdtempSync(join(tmpdir(), 'hestia-clock-'));
+   try {
+     for (const [name, source] of Object.entries(files)) {
+       const path = join(directory, name);
+-- 
+2.43.0
+

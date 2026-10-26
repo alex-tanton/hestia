@@ -1,0 +1,343 @@
+From 2c19200ac37aeb14912871d2b492e1b388e3bdc9 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 04:02:08 +0000
+Subject: [PATCH 26/31] ci: fail the hygiene gate on any leftover legacy
+ product name
+
+- check 4 scans the index for the former name in content and in paths
+- six allowlisted paths and twelve pinned quotes in four planning files
+- nine cases on temporary repositories cover content, path, quotes and index
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ scripts/check-repo-hygiene.mjs      | 120 +++++++++++++++++++++-
+ scripts/check-repo-hygiene.test.mjs | 152 ++++++++++++++++++++++++++--
+ 2 files changed, 265 insertions(+), 7 deletions(-)
+
+diff --git a/scripts/check-repo-hygiene.mjs b/scripts/check-repo-hygiene.mjs
+index f1dde11..f06d044 100644
+--- a/scripts/check-repo-hygiene.mjs
++++ b/scripts/check-repo-hygiene.mjs
+@@ -1,6 +1,6 @@
+ /*
+  * Repository hygiene gate: reads the git index (what a commit would contain, never the working
+- * tree a checkout may have rewritten) and fails on three kinds of drift that review misses.
++ * tree a checkout may have rewritten) and fails on four kinds of drift that review misses.
+  *
+  *   node scripts/check-repo-hygiene.mjs [--repo DIR]
+  *
+@@ -12,6 +12,10 @@
+  * 3. A text file whose index copy has CRLF or mixed line endings, unless its attributes mark it
+  *    `-text`. `.gitattributes` normalizes line endings in a checkout, so only the index shows what
+  *    was really committed.
++ * 4. The product's former name, in any case, in the content of a tracked text file or in a tracked
++ *    path (binary files are not judged). `LEGACY_NAME_ALLOWLIST` and `LEGACY_NAME_QUOTES` are the
++ *    only places text may carry the former name: the allowlist exempts whole paths, and the quotes
++ *    exempt exact substrings of the four planning state files, which are scanned line by line.
+  *
+  * Exit codes: 0 clean; 1 problems found; 2 the check could not run (not a git work tree, a failing
+  * git call, bad usage), which is never treated as a pass.
+@@ -27,6 +31,58 @@ const SYMLINK_MODE = '120000';
+ const SUBMODULE_MODE = '160000';
+ const EXECUTABLE_MODE = '100755';
+ 
++/** The product's former name, matched in any case. */
++const LEGACY_NAME = 'hearth';
++
++/**
++ * Whole paths that may carry the former name. An entry ending in `/` covers that directory prefix;
++ * any other entry covers exactly one path, never a sibling such as `<entry>.bak`. Keep this list
++ * short: adding an entry needs the owner's review.
++ */
++const LEGACY_NAME_ALLOWLIST = Object.freeze([
++  // The v1.0 archive is history; the rebrand decisions name it as exempt.
++  '.planning/milestones/',
++  // Records of the rename itself. These two prefixes rest on the planner's reading of the decision
++  // that text which must quote the former name is exempt; the decision does not list them.
++  '.planning/phases/',
++  '.planning/research/',
++  // This script and its test hold the pattern, so they must spell the name.
++  'scripts/check-repo-hygiene.mjs',
++  'scripts/check-repo-hygiene.test.mjs',
++  // Its fromPath values keep the file name the pinned migrations had before the rename.
++  'scripts/migration-exemptions.json',
++]);
++
++/**
++ * Exact quotes that may carry the former name in the four planning state files. Those files
++ * describe the current state under the new name, so they are scanned line by line and are not on
++ * the allowlist. A quote is an exact, case-sensitive substring of a line; any other occurrence on
++ * the line, including one next to a quote, still fails. Anything else in these files must call it
++ * "the former name".
++ */
++const LEGACY_NAME_QUOTES = Object.freeze({
++  '.planning/PROJECT.md': Object.freeze([
++    'from Hearth to Hestia',
++    'from `hearth-admin` to `hestia-admin`',
++    'from `@hearth/*` to `@hestia/*`',
++    'from `HEARTH_*` to `HESTIA_*`',
++    'Goddess of the Hearth',
++  ]),
++  '.planning/REQUIREMENTS.md': Object.freeze([
++    'refers to Hearth',
++    'from `hearth-admin` to `hestia-admin`',
++    'from `@hearth/*` to `@hestia/*`',
++    'from `HEARTH_*` to `HESTIA_*`',
++  ]),
++  '.planning/ROADMAP.md': Object.freeze([
++    'v1.0 Hearth — Cleanup and Hardening',
++    'from Hearth to Hestia',
++  ]),
++  '.planning/STATE.md': Object.freeze([
++    'file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md',
++  ]),
++});
++
+ const USAGE = `usage: node scripts/check-repo-hygiene.mjs [--repo DIR]
+   --repo DIR   the repository to check (default: this checkout)`;
+ 
+@@ -115,6 +171,50 @@ function eolEntries(repo) {
+   });
+ }
+ 
++function isLegacyNameAllowlisted(path) {
++  return LEGACY_NAME_ALLOWLIST.some((entry) =>
++    entry.endsWith('/') ? path.startsWith(entry) : path === entry,
++  );
++}
++
++function mentionsLegacyName(text) {
++  return text.toLowerCase().includes(LEGACY_NAME);
++}
++
++/**
++ * Paths whose index copy is a text file containing the former name in any case. `git grep` exits 1
++ * when nothing matches, so status 0 and 1 are both answers; any other status is a failure.
++ */
++function legacyNameHits(repo) {
++  const run = spawnSync(
++    'git',
++    ['-C', repo, 'grep', '--cached', '-I', '-l', '-i', '-z', '-F', '-e', LEGACY_NAME],
++    { maxBuffer: MAX_BUFFER },
++  );
++  if (run.error !== undefined) {
++    throw new Error(`cannot run git: ${String(run.error)}`, { cause: run.error });
++  }
++  if (run.status !== 0 && run.status !== 1) {
++    throw new Error(
++      `git grep exited with status ${String(run.status ?? run.signal)}: ` +
++        run.stderr.toString('utf8').trim(),
++    );
++  }
++  return records(run.stdout);
++}
++
++/** The 1-based numbers of the lines that carry the former name outside the file's pinned quotes. */
++function linesOutsideQuotes(repo, sha, quotes) {
++  const lines = git(repo, ['cat-file', 'blob', sha]).toString('utf8').split('\n');
++  const numbers = [];
++  lines.forEach((line, index) => {
++    let rest = line;
++    for (const quote of quotes) rest = rest.split(quote).join(' ');
++    if (mentionsLegacyName(rest)) numbers.push(index + 1);
++  });
++  return numbers;
++}
++
+ function main() {
+   const { repo } = parseArguments(process.argv.slice(2));
+   const problems = [];
+@@ -151,6 +251,24 @@ function main() {
+         problems.push({ path: entry.path, text: `CRLF line endings in the index: ${entry.path}` });
+       }
+     }
++
++    const shaByPath = new Map(entries.map((entry) => [entry.path, entry.sha]));
++    for (const path of legacyNameHits(repo)) {
++      if (isLegacyNameAllowlisted(path)) continue;
++      const sha = shaByPath.get(path);
++      if (Object.hasOwn(LEGACY_NAME_QUOTES, path) && sha !== undefined) {
++        for (const line of linesOutsideQuotes(repo, sha, LEGACY_NAME_QUOTES[path])) {
++          problems.push({ path, text: `legacy name in ${path}:${String(line)}` });
++        }
++      } else {
++        problems.push({ path, text: `legacy name in ${path}` });
++      }
++    }
++    for (const { path } of entries) {
++      if (!isLegacyNameAllowlisted(path) && mentionsLegacyName(path)) {
++        problems.push({ path, text: `legacy name in file name: ${path}` });
++      }
++    }
+   } catch (error) {
+     console.error(
+       `check-repo-hygiene: cannot check ${repo}: ${error instanceof Error ? error.message : String(error)}`,
+diff --git a/scripts/check-repo-hygiene.test.mjs b/scripts/check-repo-hygiene.test.mjs
+index 55a0919..201b5b6 100644
+--- a/scripts/check-repo-hygiene.test.mjs
++++ b/scripts/check-repo-hygiene.test.mjs
+@@ -1,10 +1,10 @@
+ /*
+- * Tests for `scripts/check-repo-hygiene.mjs`: tracked-but-ignored files, script modes and index
+- * line endings. Each case builds a fresh temporary repository, stages files (the script reads the
+- * index, so nothing is committed) and runs the script as a child process with `--repo`. Git runs
+- * with the host's configuration and repository variables removed, so a developer's global config
+- * or a hook environment cannot change a verdict. Run by `pnpm test` through the root
+- * `test:harness` script.
++ * Tests for `scripts/check-repo-hygiene.mjs`: tracked-but-ignored files, script modes, index line
++ * endings and the product's former name. Each case builds a fresh temporary repository, stages
++ * files (the script reads the index, so nothing is committed) and runs the script as a child
++ * process with `--repo`. Git runs with the host's configuration and repository variables removed,
++ * so a developer's global config or a hook environment cannot change a verdict. Run by `pnpm test`
++ * through the root `test:harness` script.
+  */
+ 
+ import assert from 'node:assert/strict';
+@@ -253,3 +253,143 @@ describe('check-repo-hygiene: cases it cannot decide exit 2', () => {
+     assert.match(run.stderr, /--repo needs a value/);
+   });
+ });
++
++/* The old product name, spelled out so the fixtures below read like the real leftovers. This file
++ * is on the guard's allowlist because it must hold the pattern. */
++const OLD_NAME = 'hearth';
++const PINNED_STATE_LINK = `file:///c:/Users/actanton/Development/Aberrance/${OLD_NAME}/.planning/PROJECT.md`;
++
++describe('check-repo-hygiene: legacy name', () => {
++  it('fails on a staged file that contains the old name and names it', () => {
++    const repo = newRepo();
++    stage(repo, 'src/a.ts', `export const brand = '${OLD_NAME}';\n`);
++    stage(repo, 'src/b.ts', 'export const brand = 1;\n');
++    const run = hygiene(repo);
++    assert.equal(run.status, 1);
++    assert.match(run.stderr, /^legacy name in src\/a\.ts$/m);
++    assert.doesNotMatch(run.stderr, /src\/b\.ts/);
++    assert.match(run.stdout, /^repo-hygiene: 1 problems$/m);
++  });
++
++  it('matches the old name in any case', () => {
++    const repo = newRepo();
++    stage(repo, 'src/cap.ts', 'const a = "Hearth";\n');
++    stage(repo, 'src/upper.ts', 'const a = "HEARTH_ORIGIN";\n');
++    const run = hygiene(repo);
++    assert.equal(run.status, 1);
++    assert.deepEqual(run.stderr.trim().split('\n'), [
++      'legacy name in src/cap.ts',
++      'legacy name in src/upper.ts',
++    ]);
++    assert.match(run.stdout, /^repo-hygiene: 2 problems$/m);
++  });
++
++  it('fails on a tracked path whose name contains the old name', () => {
++    const repo = newRepo();
++    stage(repo, `docs/${OLD_NAME}-notes.md`, 'clean text\n');
++    const run = hygiene(repo);
++    assert.equal(run.status, 1);
++    assert.deepEqual(run.stderr.trim().split('\n'), [
++      `legacy name in file name: docs/${OLD_NAME}-notes.md`,
++    ]);
++    assert.match(run.stdout, /^repo-hygiene: 1 problems$/m);
++  });
++
++  it('passes when the old name appears only in allowlisted paths', () => {
++    const repo = newRepo();
++    const text = `quotes ${OLD_NAME}\n`;
++    stage(repo, '.planning/milestones/v1.0/x.md', text);
++    stage(repo, '.planning/phases/08-x/notes.md', text);
++    stage(repo, '.planning/research/notes.md', text);
++    stage(repo, 'scripts/migration-exemptions.json', `{ "fromPath": "${OLD_NAME}" }\n`);
++    stage(repo, 'scripts/check-repo-hygiene.mjs', text);
++    stage(repo, 'scripts/check-repo-hygiene.test.mjs', text);
++    const run = hygiene(repo);
++    assert.equal(run.status, 0, run.stderr);
++    assert.match(run.stdout, /^repo-hygiene: clean \(6 files, 0 scripts\)$/m);
++  });
++
++  it('does not extend an exact allowlist entry to a sibling path', () => {
++    const repo = newRepo();
++    const text = `quotes ${OLD_NAME}\n`;
++    stage(repo, 'scripts/migration-exemptions.json.bak', text);
++    stage(repo, '.planning/STATE.md.orig', `${PINNED_STATE_LINK}\n`);
++    stage(repo, '.planning/environment/setup.md', text);
++    const run = hygiene(repo);
++    assert.equal(run.status, 1);
++    assert.deepEqual(run.stderr.trim().split('\n'), [
++      'legacy name in .planning/STATE.md.orig',
++      'legacy name in .planning/environment/setup.md',
++      'legacy name in scripts/migration-exemptions.json.bak',
++    ]);
++    assert.match(run.stdout, /^repo-hygiene: 3 problems$/m);
++  });
++
++  it('allows only the pinned quotes in a planning state file', () => {
++    const repo = newRepo();
++    stage(
++      repo,
++      '.planning/ROADMAP.md',
++      [
++        '- [x] **[v1.0 Hearth — Cleanup and Hardening](milestones/v1.0/ROADMAP.md)** — 6 phases',
++        '- [ ] **Phase 8: Rebrand**',
++        '**Goal:** Rebrand the application from Hearth to Hestia across the monorepo',
++        '',
++      ].join('\n'),
++    );
++    stage(repo, '.planning/STATE.md', `See: [PROJECT.md](${PINNED_STATE_LINK}) (updated today)\n`);
++    const run = hygiene(repo);
++    assert.equal(run.status, 0, run.stderr);
++    assert.match(run.stdout, /^repo-hygiene: clean \(2 files, 0 scripts\)$/m);
++  });
++
++  it('fails on old-name text outside the pinned quotes, naming the line', () => {
++    const repo = newRepo();
++    stage(
++      repo,
++      '.planning/STATE.md',
++      [
++        `See: [PROJECT.md](${PINNED_STATE_LINK})`,
++        `- decision: the ${OLD_NAME}_service role`,
++        '',
++      ].join('\n'),
++    );
++    stage(repo, '.planning/PROJECT.md', `Goddess of the Hearth fits; set HEARTH_ORIGIN to taste\n`);
++    stage(
++      repo,
++      '.planning/ROADMAP.md',
++      `**Goal:** Rebrand the application from ${OLD_NAME} to Hestia\n`,
++    );
++    const run = hygiene(repo);
++    assert.equal(run.status, 1);
++    assert.deepEqual(run.stderr.trim().split('\n'), [
++      'legacy name in .planning/PROJECT.md:1',
++      'legacy name in .planning/ROADMAP.md:1',
++      'legacy name in .planning/STATE.md:2',
++    ]);
++    assert.match(run.stdout, /^repo-hygiene: 3 problems$/m);
++  });
++
++  it('skips binary files', () => {
++    const repo = newRepo();
++    stageRaw(
++      repo,
++      'image.bin',
++      Buffer.concat([Buffer.from([0x00]), Buffer.from(OLD_NAME)]),
++      '100644',
++    );
++    const run = hygiene(repo);
++    assert.equal(run.status, 0, run.stderr);
++  });
++
++  it('judges the index, not the working tree', () => {
++    const repo = newRepo();
++    stage(repo, 'clean.txt', 'clean\n');
++    writeFileSync(join(repo, 'clean.txt'), `${OLD_NAME}\n`);
++    stage(repo, 'dirty.txt', `${OLD_NAME}\n`);
++    writeFileSync(join(repo, 'dirty.txt'), 'clean\n');
++    const run = hygiene(repo);
++    assert.equal(run.status, 1);
++    assert.deepEqual(run.stderr.trim().split('\n'), ['legacy name in dirty.txt']);
++  });
++});
+-- 
+2.43.0
+

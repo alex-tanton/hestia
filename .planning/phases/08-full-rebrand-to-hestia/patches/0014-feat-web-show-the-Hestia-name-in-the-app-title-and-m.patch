@@ -1,0 +1,430 @@
+From 6465edf330300b58249f86608b79345a5793e161 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:43:56 +0000
+Subject: [PATCH 14/31] feat(web): show the Hestia name in the app, title and
+ manifest
+
+- replace the product name in titles, onboarding, install, shell states and copy
+- manifest name and short_name are Hestia; description, start_url and icons are unchanged
+- check-build check 3 fails the build on a manifest name, short_name or title other than Hestia
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ apps/web/index.html                                   |  2 +-
+ apps/web/scripts/check-build.mjs                      | 11 +++++++++++
+ apps/web/src/components/bills/bills-copy.ts           |  4 ++--
+ apps/web/src/components/shell/AppShell.tsx            |  2 +-
+ apps/web/src/components/shell/shell.test.tsx          |  6 +++---
+ apps/web/src/index.css                                |  2 +-
+ apps/web/src/lib/push/push-message.ts                 |  2 +-
+ apps/web/src/lib/push/service-worker-handlers.test.ts |  2 +-
+ apps/web/src/screens/AuthenticatedLayout.tsx          |  6 +++---
+ apps/web/src/screens/bills/bills-index.test.tsx       |  4 ++--
+ apps/web/src/screens/onboarding/InstallStep.tsx       | 10 +++++-----
+ apps/web/src/screens/onboarding/OnboardingLayout.tsx  |  2 +-
+ apps/web/src/screens/onboarding/OnboardingScreen.tsx  |  2 +-
+ apps/web/src/screens/onboarding/onboarding.test.tsx   |  2 +-
+ apps/web/src/screens/settings/notification-copy.ts    |  4 ++--
+ apps/web/src/sw.test.ts                               |  2 +-
+ apps/web/vite.config.ts                               |  4 ++--
+ e2e/tests/01-signup-and-first-household.spec.ts       |  4 ++--
+ e2e/tests/03-invites-link-and-code.spec.ts            |  4 ++--
+ e2e/tests/14-bills-and-subscriptions.spec.ts          |  2 +-
+ e2e/tests/17-accessibility-states.spec.ts             |  8 ++++----
+ 21 files changed, 48 insertions(+), 37 deletions(-)
+
+diff --git a/apps/web/index.html b/apps/web/index.html
+index 0df6cee..1b3f063 100644
+--- a/apps/web/index.html
++++ b/apps/web/index.html
+@@ -10,7 +10,7 @@
+     />
+     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+-    <title>Hearth</title>
++    <title>Hestia</title>
+   </head>
+   <body>
+     <div id="root"></div>
+diff --git a/apps/web/scripts/check-build.mjs b/apps/web/scripts/check-build.mjs
+index 7d09825..156f5af 100644
+--- a/apps/web/scripts/check-build.mjs
++++ b/apps/web/scripts/check-build.mjs
+@@ -6,6 +6,8 @@
+  * 2. The magic-link screens obey their flag:
+  *    with `VITE_MAGIC_LINK_ENABLED` off, none of their copy is in the build at all; with it on,
+  *    the copy is there but never in the shell, because both screens are behind lazy routes.
++ * 3. The product is named Hestia where it is installed and shown: the Web App Manifest `name` and
++ *    `short_name`, and the `<title>` of `index.html`.
+  */
+ 
+ import { readFileSync, readdirSync, statSync } from 'node:fs';
+@@ -69,6 +71,15 @@ if (shellBytes > SHELL_BUDGET_BYTES) {
+   fail(`App shell is ${shellKb} KB gzipped, over the ${budgetKb} KB budget.`);
+ }
+ 
++const manifest = JSON.parse(readFileSync(join(DIST, 'manifest.webmanifest'), 'utf8'));
++if (manifest.name !== 'Hestia') {
++  fail(`manifest name is ${JSON.stringify(manifest.name)}, expected "Hestia"`);
++}
++if (manifest.short_name !== 'Hestia') {
++  fail(`manifest short_name is ${JSON.stringify(manifest.short_name)}, expected "Hestia"`);
++}
++if (!html.includes('<title>Hestia</title>')) fail('index.html <title> is not Hestia');
++
+ const isMagicLinkEnabled = process.env['VITE_MAGIC_LINK_ENABLED'] === 'true';
+ 
+ for (const { text, source } of MAGIC_LINK_COPY) {
+diff --git a/apps/web/src/components/bills/bills-copy.ts b/apps/web/src/components/bills/bills-copy.ts
+index ee3276e..0ee1ec3 100644
+--- a/apps/web/src/components/bills/bills-copy.ts
++++ b/apps/web/src/components/bills/bills-copy.ts
+@@ -9,12 +9,12 @@ import { formatCalendarDate } from '../../lib/format.ts';
+ export const OFFLINE_ACTION_REASON = 'Needs a connection.';
+ 
+ /**
+- * Empty (first run): Hearth tracks bills but never pays them, and that is made honest and
++ * Empty (first run): Hestia tracks bills but never pays them, and that is made honest and
+  * explicit up front, rather than discovered the first time someone looks for a "Pay now" button
+  * that does not exist.
+  */
+ export const BILLS_LIST_EMPTY_COPY =
+-  'Hearth tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.';
++  'Hestia tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.';
+ 
+ /** E.g. "Skip the March 12 Duke Energy bill? It won't be marked paid." */
+ export function skipBillConfirmation(bill: Pick<Bill, 'name' | 'currentOccurrenceDate'>): string {
+diff --git a/apps/web/src/components/shell/AppShell.tsx b/apps/web/src/components/shell/AppShell.tsx
+index cd60c0c..4d4486d 100644
+--- a/apps/web/src/components/shell/AppShell.tsx
++++ b/apps/web/src/components/shell/AppShell.tsx
+@@ -83,7 +83,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
+   useTabScrollMemory(section, switcher.activeHouseholdId);
+ 
+   useEffect(() => {
+-    document.title = `${title} · Hearth`;
++    document.title = `${title} · Hestia`;
+   }, [title]);
+ 
+   return (
+diff --git a/apps/web/src/components/shell/shell.test.tsx b/apps/web/src/components/shell/shell.test.tsx
+index 1db4878..36b925b 100644
+--- a/apps/web/src/components/shell/shell.test.tsx
++++ b/apps/web/src/components/shell/shell.test.tsx
+@@ -56,7 +56,7 @@ describe('app shell', () => {
+     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
+     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
+     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings');
+-    expect(document.title).toBe('This Week · Hearth');
++    expect(document.title).toBe('This Week · Hestia');
+   });
+ 
+   it('shows the five tabs in order with the active one marked aria-current', async () => {
+@@ -90,7 +90,7 @@ describe('app shell', () => {
+     expect(
+       await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
+     ).toBeInTheDocument();
+-    expect(document.title).toBe('Meals · Hearth');
++    expect(document.title).toBe('Meals · Hestia');
+     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
+       'aria-current',
+       'page',
+@@ -124,7 +124,7 @@ describe('app shell', () => {
+     openPath('/nowhere');
+     expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
+     await waitFor(() => {
+-      expect(document.title).toBe('This Week · Hearth');
++      expect(document.title).toBe('This Week · Hestia');
+     });
+   });
+ });
+diff --git a/apps/web/src/index.css b/apps/web/src/index.css
+index 204c1cf..54ff223 100644
+--- a/apps/web/src/index.css
++++ b/apps/web/src/index.css
+@@ -1,7 +1,7 @@
+ @import 'tailwindcss';
+ 
+ /*
+- * Hearth design tokens. Raw hex lives only in this file; components use the role
++ * Hestia design tokens. Raw hex lives only in this file; components use the role
+  * utilities below (bg-base, text-section, ...), so a section color is never hardcoded.
+  * Tailwind's default palette, type scale, radii, and shadows are removed on purpose: the only
+  * values reachable from a utility are the ones defined here.
+diff --git a/apps/web/src/lib/push/push-message.ts b/apps/web/src/lib/push/push-message.ts
+index 01ade3c..46d7c1b 100644
+--- a/apps/web/src/lib/push/push-message.ts
++++ b/apps/web/src/lib/push/push-message.ts
+@@ -16,7 +16,7 @@ export const HOUSEHOLD_PARAM = 'household';
+ export const NOTIFICATION_ICON = '/icons/icon-192.png';
+ 
+ /** What a notification shows when a push arrives that cannot be read. Names nothing private. */
+-export const FALLBACK_NOTIFICATION = { title: 'Hearth', body: 'You have a new notification.' };
++export const FALLBACK_NOTIFICATION = { title: 'Hestia', body: 'You have a new notification.' };
+ 
+ export interface PushMessage {
+   title: string;
+diff --git a/apps/web/src/lib/push/service-worker-handlers.test.ts b/apps/web/src/lib/push/service-worker-handlers.test.ts
+index bde3d64..41f4e13 100644
+--- a/apps/web/src/lib/push/service-worker-handlers.test.ts
++++ b/apps/web/src/lib/push/service-worker-handlers.test.ts
+@@ -115,7 +115,7 @@ describe('push', () => {
+     handlePush(scope, push.event);
+     await push.settled();
+ 
+-    expect(shown[0]?.title).toBe('Hearth');
++    expect(shown[0]?.title).toBe('Hestia');
+   });
+ 
+   it('never deep-links off the site', async () => {
+diff --git a/apps/web/src/screens/AuthenticatedLayout.tsx b/apps/web/src/screens/AuthenticatedLayout.tsx
+index 5f041cc..bc778db 100644
+--- a/apps/web/src/screens/AuthenticatedLayout.tsx
++++ b/apps/web/src/screens/AuthenticatedLayout.tsx
+@@ -20,9 +20,9 @@ export function RequireSession(): ReactElement {
+     return (
+       <main className="mx-auto flex max-w-160 flex-col gap-3 p-4">
+         <p role="status" className="sr-only">
+-          Opening Hearth
++          Opening Hestia
+         </p>
+-        <SkeletonRows label="Opening Hearth" />
++        <SkeletonRows label="Opening Hestia" />
+       </main>
+     );
+   }
+@@ -92,7 +92,7 @@ export function AuthenticatedLayout(): ReactElement {
+     return (
+       <AppShell switcher={switcher} updatePrompt={<UpdatePrompt />}>
+         {isOffline ? (
+-          <OfflineState message="Hearth needs a connection to open. Your installed app will work offline once your household has loaded." />
++          <OfflineState message="Hestia needs a connection to open. Your installed app will work offline once your household has loaded." />
+         ) : (
+           <ErrorState
+             message="Couldn't load your household. Try again."
+diff --git a/apps/web/src/screens/bills/bills-index.test.tsx b/apps/web/src/screens/bills/bills-index.test.tsx
+index aed827f..af53488 100644
+--- a/apps/web/src/screens/bills/bills-index.test.tsx
++++ b/apps/web/src/screens/bills/bills-index.test.tsx
+@@ -109,9 +109,9 @@ describe('Bills dashboard', () => {
+     expect(spotify).toHaveTextContent('Personal');
+   });
+ 
+-  it('empty: first run explains Hearth tracks bills but never pays them', async () => {
++  it('empty: first run explains Hestia tracks bills but never pays them', async () => {
+     mount(baseHandlers({ 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) }));
+-    expect(await screen.findByText(/Hearth tracks what you owe and when/)).toBeInTheDocument();
++    expect(await screen.findByText(/Hestia tracks what you owe and when/)).toBeInTheDocument();
+     expect(screen.getAllByRole('button', { name: 'Add a bill' })[0]).toBeInTheDocument();
+   });
+ 
+diff --git a/apps/web/src/screens/onboarding/InstallStep.tsx b/apps/web/src/screens/onboarding/InstallStep.tsx
+index ff7cc74..fda6e7f 100644
+--- a/apps/web/src/screens/onboarding/InstallStep.tsx
++++ b/apps/web/src/screens/onboarding/InstallStep.tsx
+@@ -4,10 +4,10 @@ import { Button } from '../../components/ui/Button.tsx';
+ import { showInstallPrompt, useInstallMethod } from '../../lib/use-install-prompt.ts';
+ 
+ export const IOS_INSTALL_MESSAGE =
+-  'On iPhone and iPad, Hearth has to be on the home screen before it can send notifications. Tap the Share button, then Add to Home Screen. You can turn notifications on afterwards, in Settings.';
++  'On iPhone and iPad, Hestia has to be on the home screen before it can send notifications. Tap the Share button, then Add to Home Screen. You can turn notifications on afterwards, in Settings.';
+ 
+ export const INSTALL_MESSAGE =
+-  'Install Hearth to open it from your home screen and keep your lists a tap away.';
++  'Install Hestia to open it from your home screen and keep your lists a tap away.';
+ 
+ /**
+  * The install prompt, offered once onboarding completes rather than on first paint. iOS gets the sequence explained instead of a prompt it
+@@ -35,7 +35,7 @@ export function InstallStep({ onDone }: { onDone: () => void }): ReactElement {
+           <Share aria-hidden size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-section" />
+           <span className="max-w-[70ch]">{IOS_INSTALL_MESSAGE}</span>
+         </p>
+-        <Button onClick={onDone}>Go to Hearth</Button>
++        <Button onClick={onDone}>Go to Hestia</Button>
+       </div>
+     );
+   }
+@@ -58,7 +58,7 @@ export function InstallStep({ onDone }: { onDone: () => void }): ReactElement {
+             void handleInstall();
+           }}
+         >
+-          Install Hearth
++          Install Hestia
+         </Button>
+         <Button variant="ghost" onClick={onDone}>
+           Not now
+@@ -70,7 +70,7 @@ export function InstallStep({ onDone }: { onDone: () => void }): ReactElement {
+   return (
+     <div className="flex flex-col gap-4">
+       <p className="max-w-[70ch] text-body text-secondary">Your household is ready.</p>
+-      <Button onClick={onDone}>Go to Hearth</Button>
++      <Button onClick={onDone}>Go to Hestia</Button>
+     </div>
+   );
+ }
+diff --git a/apps/web/src/screens/onboarding/OnboardingLayout.tsx b/apps/web/src/screens/onboarding/OnboardingLayout.tsx
+index f0f6181..d0be882 100644
+--- a/apps/web/src/screens/onboarding/OnboardingLayout.tsx
++++ b/apps/web/src/screens/onboarding/OnboardingLayout.tsx
+@@ -51,7 +51,7 @@ export function OnboardingLayout({
+                 {onBack.label}
+               </Button>
+             )}
+-            <p className="text-caption tracking-[0.04em] text-muted uppercase">Hearth</p>
++            <p className="text-caption tracking-[0.04em] text-muted uppercase">Hestia</p>
+             <h1 className="text-display text-primary">{title}</h1>
+             {description !== undefined && (
+               <p className="max-w-[70ch] text-body text-secondary">{description}</p>
+diff --git a/apps/web/src/screens/onboarding/OnboardingScreen.tsx b/apps/web/src/screens/onboarding/OnboardingScreen.tsx
+index d86032f..318d39a 100644
+--- a/apps/web/src/screens/onboarding/OnboardingScreen.tsx
++++ b/apps/web/src/screens/onboarding/OnboardingScreen.tsx
+@@ -29,7 +29,7 @@ const HEADINGS: Record<OnboardingStep, { title: string; description?: string }>
+     title: 'Join a household',
+     description: 'Enter the 8-character code from your invite.',
+   },
+-  install: { title: 'Add Hearth to your home screen' },
++  install: { title: 'Add Hestia to your home screen' },
+ };
+ 
+ /**
+diff --git a/apps/web/src/screens/onboarding/onboarding.test.tsx b/apps/web/src/screens/onboarding/onboarding.test.tsx
+index bc0149f..3ea39d3 100644
+--- a/apps/web/src/screens/onboarding/onboarding.test.tsx
++++ b/apps/web/src/screens/onboarding/onboarding.test.tsx
+@@ -347,6 +347,6 @@ describe('the rest of onboarding', () => {
+     renderScreen(<InstallStep onDone={() => undefined} />);
+ 
+     expect(screen.getByText(IOS_INSTALL_MESSAGE)).toBeInTheDocument();
+-    expect(screen.getByRole('button', { name: 'Go to Hearth' })).toBeInTheDocument();
++    expect(screen.getByRole('button', { name: 'Go to Hestia' })).toBeInTheDocument();
+   });
+ });
+diff --git a/apps/web/src/screens/settings/notification-copy.ts b/apps/web/src/screens/settings/notification-copy.ts
+index 272037d..04243b6 100644
+--- a/apps/web/src/screens/settings/notification-copy.ts
++++ b/apps/web/src/screens/settings/notification-copy.ts
+@@ -59,12 +59,12 @@ export const SAVED_MESSAGE = 'Notification settings saved.';
+ export const SAVE_ERROR_MESSAGE = "Couldn't save that setting. Try again.";
+ 
+ export const UNSUPPORTED_MESSAGE =
+-  "Notifications aren't available in this browser. Hearth still works without them.";
++  "Notifications aren't available in this browser. Hestia still works without them.";
+ 
+ /** The device states that explain why this device will not receive a type yet. */
+ export const DEVICE_MESSAGES = {
+   denied:
+-    "Notifications are blocked for Hearth in this browser, so this device won't get them. Allow notifications for this site in your browser's settings, then turn a type on again.",
++    "Notifications are blocked for Hestia in this browser, so this device won't get them. Allow notifications for this site in your browser's settings, then turn a type on again.",
+   dismissed:
+     'Notifications stay off on this device until you allow them. Turn a type on again to be asked.',
+   failed: "Couldn't turn on notifications on this device. Try again.",
+diff --git a/apps/web/src/sw.test.ts b/apps/web/src/sw.test.ts
+index 0ca6d47..fa555df 100644
+--- a/apps/web/src/sw.test.ts
++++ b/apps/web/src/sw.test.ts
+@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
+  * for deal images) plus two listeners that delegate straight to `service-worker-handlers.ts`,
+  * which already has its own direct test. Workbox itself needs a real service worker scope (an
+  * install/activate lifecycle, the `caches` API) that jsdom does not have, so every Workbox export
+- * is faked here; what this file actually checks is Hearth's own glue: which event goes to which
++ * is faked here; what this file actually checks is Hestia's own glue: which event goes to which
+  * handler, the deal-image route's own matcher, and the one bit of real logic the worker has — the
+  * `SKIP_WAITING` message check.
+  */
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index 7cee41c..7c01b4c 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -49,8 +49,8 @@ export default defineConfig({
+       injectRegister: false,
+       includeAssets: ['icons/*.png'],
+       manifest: {
+-        name: 'Hearth',
+-        short_name: 'Hearth',
++        name: 'Hestia',
++        short_name: 'Hestia',
+         description: 'Deals, shopping lists, meals, bills, and chores for your household.',
+         start_url: '/',
+         scope: '/',
+diff --git a/e2e/tests/01-signup-and-first-household.spec.ts b/e2e/tests/01-signup-and-first-household.spec.ts
+index ef89ef4..c5ae88d 100644
+--- a/e2e/tests/01-signup-and-first-household.spec.ts
++++ b/e2e/tests/01-signup-and-first-household.spec.ts
+@@ -26,7 +26,7 @@ const ACCOUNTS = {
+ async function finishInstallStep(page: Page): Promise<void> {
+   // Chromium offers `beforeinstallprompt` when it feels like it, so the step ends on whichever
+   // of its two "go to the app" controls this run rendered.
+-  await page.getByRole('button', { name: /^(Go to Hearth|Not now)$/ }).click();
++  await page.getByRole('button', { name: /^(Go to Hestia|Not now)$/ }).click();
+ }
+ 
+ for (const theme of ['light', 'dark'] as const) {
+@@ -67,7 +67,7 @@ for (const theme of ['light', 'dark'] as const) {
+       await page.getByRole('button', { name: 'Continue' }).click();
+ 
+       await expect(
+-        page.getByRole('heading', { name: 'Add Hearth to your home screen' }),
++        page.getByRole('heading', { name: 'Add Hestia to your home screen' }),
+       ).toBeVisible();
+       await expectAccessible(page, `onboarding, install (${theme})`);
+       await finishInstallStep(page);
+diff --git a/e2e/tests/03-invites-link-and-code.spec.ts b/e2e/tests/03-invites-link-and-code.spec.ts
+index 1c26236..fd92bf6 100644
+--- a/e2e/tests/03-invites-link-and-code.spec.ts
++++ b/e2e/tests/03-invites-link-and-code.spec.ts
+@@ -49,9 +49,9 @@ test('an admin invites, one member joins by link and another by code', async ({
+ 
+   const morgan = await signedInPage(browser, SEED.morgan.email);
+   await morgan.goto(link);
+-  const installStep = morgan.getByRole('heading', { name: 'Add Hearth to your home screen' });
++  const installStep = morgan.getByRole('heading', { name: 'Add Hestia to your home screen' });
+   await expect(installStep).toBeVisible();
+-  await morgan.getByRole('button', { name: /^(Go to Hearth|Not now)$/ }).click();
++  await morgan.getByRole('button', { name: /^(Go to Hestia|Not now)$/ }).click();
+   await expectDashboard(morgan, SEED.oakStreet.name);
+   await expectAccessible(morgan, 'dashboard after joining by link');
+   await morgan.context().close();
+diff --git a/e2e/tests/14-bills-and-subscriptions.spec.ts b/e2e/tests/14-bills-and-subscriptions.spec.ts
+index 19449a7..3a1f869 100644
+--- a/e2e/tests/14-bills-and-subscriptions.spec.ts
++++ b/e2e/tests/14-bills-and-subscriptions.spec.ts
+@@ -7,7 +7,7 @@ import { SEED } from '../support/env.ts';
+ /**
+  * Bills and subscriptions, against the seeded stack. Figures and orders are the seed data's
+  * oracles: Alex sees Spectrum Internet and Spotify for $86.98 a month, Sam sees Spectrum Internet
+- * and Adobe for $134.98, and Adobe is invisible to Alex. Hearth never moves money, so the journeys
++ * and Adobe for $134.98, and Adobe is invisible to Alex. Hestia never moves money, so the journeys
+  * only record payments and skips.
+  */
+ 
+diff --git a/e2e/tests/17-accessibility-states.spec.ts b/e2e/tests/17-accessibility-states.spec.ts
+index 448d109..f4131a9 100644
+--- a/e2e/tests/17-accessibility-states.spec.ts
++++ b/e2e/tests/17-accessibility-states.spec.ts
+@@ -55,17 +55,17 @@ const COPY = {
+   recipesEmpty: 'No recipes yet. Paste a link or add one by hand.',
+   suggestionsEmpty: 'No recipes yet. Add one to see what you can make this week.',
+   billsEmpty:
+-    'Hearth tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.',
++    'Hestia tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.',
+   choresEmpty: 'No chores yet. Add one to start tracking what needs doing.',
+   errandsEmpty: 'No errands yet. Add one to keep track of it.',
+   saving: 'Saving…',
+   saveError: "Couldn't save that setting. Try again.",
+-  denied: "Notifications are blocked for Hearth in this browser, so this device won't get them.",
++  denied: "Notifications are blocked for Hestia in this browser, so this device won't get them.",
+   dismissed: 'Notifications stay off on this device until you allow them.',
+   failed: "Couldn't turn on notifications on this device. Try again.",
+-  unsupported: "Notifications aren't available in this browser. Hearth still works without them.",
++  unsupported: "Notifications aren't available in this browser. Hestia still works without them.",
+   iosInstall:
+-    'On iPhone and iPad, Hearth has to be on the home screen before it can send notifications.',
++    'On iPhone and iPad, Hestia has to be on the home screen before it can send notifications.',
+ } as const;
+ 
+ /** A notification preference write, which the save states hold open or fail on purpose. */
+-- 
+2.43.0
+

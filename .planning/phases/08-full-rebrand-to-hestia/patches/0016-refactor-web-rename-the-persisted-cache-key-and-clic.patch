@@ -1,0 +1,97 @@
+From fdceb3046b2a519f64c0cd134d494e22bb1d4516 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 03:46:24 +0000
+Subject: [PATCH 16/31] refactor(web): rename the persisted cache key and click
+ message
+
+- PERSIST_KEY is hestia-query-cache and the click message type is hestia:notification-click
+- a test pins PERSIST_KEY so a later rename cannot drop on-device caches unnoticed
+- no migration of the old values by design: queued offline writes are dropped once on upgrade
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01V5S12bM3ZF4JGyo6Y4SrjD
+---
+ apps/web/src/lib/offline/persist.ts                   | 2 +-
+ apps/web/src/lib/offline/write-queue.test.tsx         | 2 ++
+ apps/web/src/lib/push/notification-target.test.tsx    | 4 ++--
+ apps/web/src/lib/push/push-message.ts                 | 2 +-
+ apps/web/src/lib/push/service-worker-handlers.test.ts | 2 +-
+ 5 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/apps/web/src/lib/offline/persist.ts b/apps/web/src/lib/offline/persist.ts
+index 4aedbad..8cea2f3 100644
+--- a/apps/web/src/lib/offline/persist.ts
++++ b/apps/web/src/lib/offline/persist.ts
+@@ -11,7 +11,7 @@ import { del, get, set } from 'idb-keyval';
+  * TanStack's own defaults decide what goes in: successful queries, and mutations that are paused.
+  */
+ 
+-export const PERSIST_KEY = 'hearth-query-cache';
++export const PERSIST_KEY = 'hestia-query-cache';
+ 
+ /**
+  * Stale data beats empty data, and a phone can be away from a connection for longer than TanStack's
+diff --git a/apps/web/src/lib/offline/write-queue.test.tsx b/apps/web/src/lib/offline/write-queue.test.tsx
+index 7df01ea..20e82f7 100644
+--- a/apps/web/src/lib/offline/write-queue.test.tsx
++++ b/apps/web/src/lib/offline/write-queue.test.tsx
+@@ -621,6 +621,8 @@ describe('surviving a reload', () => {
+     // The initial list fetch already used up `persister`'s leading save (asyncThrottle fires its
+     // first call at once, then waits out the interval), so from here a save landing within its
+     // 60-second window can only have gone through the dedicated flush channel.
++    // The key is on-device data: renaming it silently drops every queued offline write.
++    expect(PERSIST_KEY).toBe('hestia-query-cache');
+     await waitFor(() => {
+       expect(storage.entries.has(PERSIST_KEY)).toBe(true);
+     });
+diff --git a/apps/web/src/lib/push/notification-target.test.tsx b/apps/web/src/lib/push/notification-target.test.tsx
+index a2c1346..5271595 100644
+--- a/apps/web/src/lib/push/notification-target.test.tsx
++++ b/apps/web/src/lib/push/notification-target.test.tsx
+@@ -85,7 +85,7 @@ describe('a tap on a notification', () => {
+ 
+     channel.dispatchEvent(
+       new MessageEvent('message', {
+-        data: { type: 'hearth:notification-click', url: '/chores', householdId: RIVERA_FAMILY_ID },
++        data: { type: 'hestia:notification-click', url: '/chores', householdId: RIVERA_FAMILY_ID },
+       }),
+     );
+ 
+@@ -102,7 +102,7 @@ describe('a tap on a notification', () => {
+ 
+     channel.dispatchEvent(
+       new MessageEvent('message', {
+-        data: { type: 'hearth:notification-click', url: '/bills', householdId: left },
++        data: { type: 'hestia:notification-click', url: '/bills', householdId: left },
+       }),
+     );
+ 
+diff --git a/apps/web/src/lib/push/push-message.ts b/apps/web/src/lib/push/push-message.ts
+index 46d7c1b..4429074 100644
+--- a/apps/web/src/lib/push/push-message.ts
++++ b/apps/web/src/lib/push/push-message.ts
+@@ -7,7 +7,7 @@
+  */
+ 
+ /** The message the worker posts to an open window when a notification is tapped. */
+-export const NOTIFICATION_CLICK_MESSAGE = 'hearth:notification-click';
++export const NOTIFICATION_CLICK_MESSAGE = 'hestia:notification-click';
+ 
+ /** The query parameter a tap carries into a window the worker had to open. */
+ export const HOUSEHOLD_PARAM = 'household';
+diff --git a/apps/web/src/lib/push/service-worker-handlers.test.ts b/apps/web/src/lib/push/service-worker-handlers.test.ts
+index 41f4e13..1bb6c91 100644
+--- a/apps/web/src/lib/push/service-worker-handlers.test.ts
++++ b/apps/web/src/lib/push/service-worker-handlers.test.ts
+@@ -142,7 +142,7 @@ describe('notificationclick', () => {
+     expect(click.close).toHaveBeenCalledOnce();
+     expect(window.focus).toHaveBeenCalledOnce();
+     expect(window.postMessage).toHaveBeenCalledWith({
+-      type: 'hearth:notification-click',
++      type: 'hestia:notification-click',
+       url: '/chores',
+       householdId: HOUSEHOLD,
+     });
+-- 
+2.43.0
+
