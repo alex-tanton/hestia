@@ -106,11 +106,11 @@ Plans:
 - [ ] 09-01-PLAN.md — Caddy takes the client from `CF-Connecting-IP` behind the trusted Compose subnet with no published port (tracer proven by E2E spec 20); pinned `cloudflared` with a required token, excluded from E2E; new origin and token in `.env.example` and `generate-secrets.sh`; static ingress test
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 09-02-PLAN.md — `deploy.sh` health gate inside the caddy container and `cloudflared` in the fail-early start; CI pre-pull skips the tunnel image; Caddy entrypoint refuses an empty trust list, with a harness test and a real-image CSP probe
+- [ ] 09-02-PLAN.md — `deploy.sh` prepares the whole stack first so the one-time network recreate completes (proven on a disposable stack), health gate inside the caddy container and `cloudflared` in the fail-early start; CI pre-pull skips the tunnel image; Caddy entrypoint refuses an empty trust list, with a harness test and a real-image CSP probe
 - [ ] 09-03-PLAN.md — Test fixtures and the `env.ts` comment move to `https://hestia.aberrance.app` (literal-only sweep)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 09-04-PLAN.md — `docs/deployment.md` Cloudflare Tunnel runbook and pinned origin; file map, testing, development, architecture and CLAUDE.md aligned; owner checklist
+- [ ] 09-04-PLAN.md — `docs/deployment.md` Cloudflare Tunnel runbook and pinned origin; file map, testing, development, architecture and CLAUDE.md aligned; owner checklist with the network-recreate recovery; NET-03, NET-04 and success criteria 3-4 worded to D-05/D-09
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 09-05-PLAN.md — Retired-ingress guard in the hygiene gate; every CI check, integration and the full E2E suite green
