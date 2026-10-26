@@ -63,11 +63,11 @@ Plans:
 5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
 
-**Plans:** 7 plans
+**Plans:** 1/7 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 08-01-PLAN.md — Rename the login role to `hestia_service` by editing the two applied migrations in place, admitted by a content-pinned, self-expiring exemption in the append-only gate
+- [x] 08-01-PLAN.md — Rename the login role to `hestia_service` by editing the two applied migrations in place, admitted by a content-pinned, self-expiring exemption in the append-only gate
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 08-02-PLAN.md — Rename the workspace packages to `@hestia/*` (seven, with `@hestia/seed`), regenerate the lockfile with pnpm, prove typecheck, builds and every repository gate
