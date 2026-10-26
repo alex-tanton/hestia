@@ -108,7 +108,7 @@
 - **Preconditions:** none for the user; the server owner must have shell access to the service container
 - **Main flow:**
   1. The user opens the in-app "Forgot password" screen, which tells them to ask the server owner. There is no email-based reset.
-  2. The server owner runs `hearth-admin reset-password <email>` in the service container.
+  2. The server owner runs `hestia-admin reset-password <email>` in the service container.
   3. The CLI prints a one-time reset link.
   4. The server owner hands the link to the user in person.
   5. The user follows the link and sets a new password, subject to the same password policy as signup (8+ characters, not on the common-password list, re-entry of... — not applicable here since there is no current password yet).

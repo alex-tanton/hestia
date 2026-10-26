@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "hearth-admin": "bin/hearth-admin"
+    "hestia-admin": "bin/hestia-admin"
   },
   "scripts": {
     "dev": "tsx watch src/main.ts",

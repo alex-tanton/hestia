@@ -79,12 +79,12 @@ pnpm --filter @hestia/service dev
 
 The generated API document is at `GET /api/openapi.json`. The owner CLI is a bin in the service
 image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hestia-service
-hearth-admin reset-password <email>`); locally it runs from the built bundle with `GOTRUE_URL`,
+hestia-admin reset-password <email>`); locally it runs from the built bundle with `GOTRUE_URL`,
 `SERVICE_ROLE_KEY`, and `HESTIA_ORIGIN` set:
 
 ```sh
 pnpm --filter @hestia/service build
-./apps/service/bin/hearth-admin reset-password you@example.com
+./apps/service/bin/hestia-admin reset-password you@example.com
 ```
 
 The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABLED`, which the

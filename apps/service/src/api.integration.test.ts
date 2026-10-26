@@ -200,7 +200,7 @@ describe('password and email changes', () => {
     await expect(signIn(user.email, user.password, user.ip)).rejects.toThrow(/sign-in failed/);
   });
 
-  it('lets a reset link from hearth-admin set a new password without the old one', async () => {
+  it('lets a reset link from hestia-admin set a new password without the old one', async () => {
     const user = await signUp(app, 'Forgetful');
     const config = stackConfig();
     const admin = createGoTrueAdmin({

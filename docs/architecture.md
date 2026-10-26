@@ -54,7 +54,7 @@ aggregate figures. Those run as `service_role`, which bypasses RLS entirely, thr
 changes (`apps/service/src/privileged/gotrue-admin.ts`), and the scheduled-reminder producer
 (`apps/service/src/privileged/scheduled-reminders.ts`) — lives in `apps/service/src/privileged/`.
 
-Only `main.ts` and the `hearth-admin` CLI (`cli.ts`) may import from that folder; every other
+Only `main.ts` and the `hestia-admin` CLI (`cli.ts`) may import from that folder; every other
 module gets the one narrow function it needs (`changeEmail`, `systemHealth`, a `DispatchOutbox`),
 never the privileged client itself. This is enforced by an ESLint rule in `eslint.config.js`
 (`@typescript-eslint/no-restricted-imports`, pattern `**/privileged/*`, scoped to

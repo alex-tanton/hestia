@@ -53,7 +53,7 @@ Vite, styled with Tailwind, and uses Workbox to work offline and install like a 
 ## 3. apps/service
 
 `apps/service` is the backend: a Fastify-based API, the background jobs that keep data current
-(fetching deals, sending notifications, pruning caches), and the `hearth-admin` command-line tool
+(fetching deals, sending notifications, pruning caches), and the `hestia-admin` command-line tool
 used for operational tasks like resetting a user's password.
 
 | Subfolder | Purpose |
@@ -72,7 +72,7 @@ used for operational tasks like resetting a user's password.
 | `notifications` | Composing and planning the notifications sent to users. |
 | `push` | Sending web push notifications to installed PWAs. |
 | `test` | Shared fixtures and harnesses used by the service's own automated tests, including `stack-hooks.ts` (the per-file stack lifecycle for integration tests) and `job-logger.ts` (a job logger that records its lines). |
-| `bin` | The `hearth-admin` command-line entry point: a hand-written POSIX shell wrapper that runs the bundled `dist/cli.js` (built from `src/cli.ts`). The service image links it onto the `PATH`. |
+| `bin` | The `hestia-admin` command-line entry point: a hand-written POSIX shell wrapper that runs the bundled `dist/cli.js` (built from `src/cli.ts`). The service image links it onto the `PATH`. |
 | `scripts` | Operational helper scripts for the service (for example, regenerating database types). |
 
 ## 4. packages/

@@ -16,7 +16,7 @@ function io() {
 
 const ORIGIN = 'https://hearth.tail1234.ts.net';
 
-describe('hearth-admin', () => {
+describe('hestia-admin', () => {
   it('prints a recovery link that lands on the set-new-password screen', async () => {
     const recoveryLink = vi.fn(() => Promise.resolve('https://h/auth/v1/verify?token=abc'));
     const { out, err, io: streams } = io();
@@ -39,7 +39,7 @@ describe('hearth-admin', () => {
       const { err, io: streams } = io();
       const recoveryLink = vi.fn();
       expect(await runCli(args, { recoveryLink }, ORIGIN, streams)).toBe(2);
-      expect(err[0]).toMatch(/^Usage: hearth-admin reset-password <email>/);
+      expect(err[0]).toMatch(/^Usage: hestia-admin reset-password <email>/);
       expect(recoveryLink).not.toHaveBeenCalled();
     },
   );
@@ -74,10 +74,10 @@ describe('hearth-admin', () => {
  * The `invokedDirectly` block (lines 60-74) only runs when the module is the process's actual
  * entrypoint -- `import.meta.url === pathToFileURL(process.argv[1]).href` -- which no in-process
  * unit test calling `runCli` directly can ever trigger. This spawns the real script as its own
- * process, the same way `bin/hearth-admin` does in production, against a throwaway local HTTP
+ * process, the same way `bin/hestia-admin` does in production, against a throwaway local HTTP
  * server standing in for GoTrue (never a live network call).
  */
-describe('hearth-admin, invoked directly as a script', () => {
+describe('hestia-admin, invoked directly as a script', () => {
   let server: Server | undefined;
 
   afterEach(async () => {

@@ -46,7 +46,7 @@ Production is one Linux host running `docker/docker-compose.yml`; see
 | Path                  | Contents                                            |
 | --------------------- | --------------------------------------------------- |
 | `apps/web`            | React PWA (Vite, Tailwind, Workbox)                 |
-| `apps/service`        | Fastify API, jobs, and the `hearth-admin` CLI       |
+| `apps/service`        | Fastify API, jobs, and the `hestia-admin` CLI       |
 | `packages/shared`     | Zod schemas, domain types, shared constants         |
 | `packages/recurrence` | Anchored recurrence logic (pure, dependency-free)   |
 | `packages/matching`   | Ingredient normalization and matching (pure)        |

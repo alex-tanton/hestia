@@ -29,7 +29,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - TSX - React screens and components in `apps/web/src/components/`, `apps/web/src/screens/`, `apps/web/src/pillars/`
 - SQL (PostgreSQL dialect) - schema, RLS, and functions in `supabase/migrations/*.sql` (8 files, applied in filename order)
 - HTML and CSS - `apps/web/index.html`, `apps/web/src/index.css` (Tailwind CSS v4)
-- POSIX shell - `scripts/deploy.sh`, `scripts/deploy-gate.sh`, `scripts/generate-secrets.sh`, `scripts/ci-prepull-images.sh`, `docker/caddy-entrypoint.sh`, `docker/kong-entrypoint.sh`, and the CLI wrapper `apps/service/bin/hearth-admin` (a hand-written `sh` script that `exec`s `node dist/cli.js`; it is not a build output)
+- POSIX shell - `scripts/deploy.sh`, `scripts/deploy-gate.sh`, `scripts/generate-secrets.sh`, `scripts/ci-prepull-images.sh`, `docker/caddy-entrypoint.sh`, `docker/kong-entrypoint.sh`, and the CLI wrapper `apps/service/bin/hestia-admin` (a hand-written `sh` script that `exec`s `node dist/cli.js`; it is not a build output)
 - Node ESM `.mjs` - `apps/web/scripts/check-build.mjs`, `apps/web/scripts/generate-icons.mjs`, `test/clock-setup.mjs`, `test/global-tz.mjs`, `scripts/test-sweep.mjs`, `scripts/knip-summary.mjs`, and the CI gate scripts `scripts/check-knip-baseline.mjs`, `scripts/check-repo-hygiene.mjs`, `scripts/check-migrations-append-only.mjs`, `scripts/audit-prod.mjs`
 
 ## Runtime
@@ -316,7 +316,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 | Deals source | Flipp HTTP client behind one rate-limited request queue, with a fixture transport for E2E | `apps/service/src/deals/flipp/*.ts`, `apps/service/src/deals/deal-source.ts` |
 | Recipe import | Fetches a pasted URL server-side, extracts JSON-LD, parses ingredients, rate-limits per host | `apps/service/src/recipes/*.ts` |
 | Push | Web Push transport (VAPID), recording transport for E2E, E2E seam route | `apps/service/src/push/*.ts` |
-| CLI | `hearth-admin reset-password`, the only owner command; the shell wrapper runs `node dist/cli.js` | `apps/service/src/cli.ts`, `apps/service/bin/hearth-admin` |
+| CLI | `hestia-admin reset-password`, the only owner command; the shell wrapper runs `node dist/cli.js` | `apps/service/src/cli.ts`, `apps/service/bin/hestia-admin` |
 | Web bootstrap | Creates the Supabase client, auth client, query client, persisters, realtime port | `apps/web/src/main.tsx` |
 | Web routing | Route table with lazy-loaded screens and session guards | `apps/web/src/routes.tsx`, `apps/web/src/screens/AuthenticatedLayout.tsx` |
 | API client | `fetch` wrapper that attaches the bearer token, refreshes once, parses problem responses | `apps/web/src/lib/api/client.ts` |
@@ -438,8 +438,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Location: `apps/service/src/main.ts`
 - Triggers: `node dist/main.js` in the `hestia-service` container (`docker/service.Dockerfile`, `CMD ["node", "dist/main.js"]`); `pnpm --filter @hestia/service dev` runs `tsx watch src/main.ts`.
 - Responsibilities: Parse env (`apps/service/src/env.ts`), build the pool, GoTrue, Flipp, recipe, and push clients, call `buildApp`, start the scheduler, handle SIGTERM and SIGINT, listen on the configured host and port.
-- Location: `apps/service/src/cli.ts`, built to `apps/service/dist/cli.js`. The hand-written POSIX shell wrapper `apps/service/bin/hearth-admin` resolves its own path and runs `node dist/cli.js`.
-- Triggers: `docker compose exec hestia-service hearth-admin reset-password <email>`.
+- Location: `apps/service/src/cli.ts`, built to `apps/service/dist/cli.js`. The hand-written POSIX shell wrapper `apps/service/bin/hestia-admin` resolves its own path and runs `node dist/cli.js`.
+- Triggers: `docker compose exec hestia-service hestia-admin reset-password <email>`.
 - Responsibilities: Creates a one-time GoTrue recovery link through the admin API. The only CLI command is `reset-password`.
 - Location: `apps/web/src/main.tsx`
 - Triggers: Browser load of the PWA.

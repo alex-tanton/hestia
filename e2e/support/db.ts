@@ -39,10 +39,10 @@ export function queryValue(sql: string): string {
  * Runs the owner CLI where it actually lives — a bin on the service container's PATH, reached
  * with `docker compose exec`.
  */
-export function hearthAdmin(args: readonly string[]): {
+export function hestiaAdmin(args: readonly string[]): {
   status: number;
   stdout: string;
   stderr: string;
 } {
-  return compose(['exec', '-T', 'hestia-service', 'hearth-admin', ...args]);
+  return compose(['exec', '-T', 'hestia-service', 'hestia-admin', ...args]);
 }

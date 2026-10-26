@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# hestia-service: the Fastify API, job runner, and hearth-admin CLI. Built from the repository
+# hestia-service: the Fastify API, job runner, and hestia-admin CLI. Built from the repository
 # root (see docker-compose.yml); tagged with the commit SHA by scripts/deploy.sh.
 
 FROM node:24.21.0-bookworm-slim AS source
@@ -32,9 +32,9 @@ COPY --from=prod-deps /repo/node_modules /app/node_modules
 COPY --from=prod-deps /repo/apps/service/node_modules /app/apps/service/node_modules
 COPY --from=build /repo/apps/service/package.json /app/apps/service/package.json
 COPY --from=build /repo/apps/service/dist /app/apps/service/dist
-# The owner CLI on the PATH, so `docker compose exec hestia-service hearth-admin ...` works.
-COPY --from=build --chmod=755 /repo/apps/service/bin/hearth-admin /app/apps/service/bin/hearth-admin
-RUN ln -s /app/apps/service/bin/hearth-admin /usr/local/bin/hearth-admin
+# The owner CLI on the PATH, so `docker compose exec hestia-service hestia-admin ...` works.
+COPY --from=build --chmod=755 /repo/apps/service/bin/hestia-admin /app/apps/service/bin/hestia-admin
+RUN ln -s /app/apps/service/bin/hestia-admin /usr/local/bin/hestia-admin
 WORKDIR /app/apps/service
 USER node
 EXPOSE 3000

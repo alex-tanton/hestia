@@ -8,7 +8,7 @@ import {
   waitForServiceWorker,
 } from '../support/app.ts';
 import { expectAccessible } from '../support/axe.ts';
-import { hearthAdmin } from '../support/db.ts';
+import { hestiaAdmin } from '../support/db.ts';
 import { SEED, SEED_PASSWORD } from '../support/env.ts';
 
 /**
@@ -136,7 +136,7 @@ for (const theme of THEMES) {
     test('set a new password that is too short', async ({ page }) => {
       // The owner's reset link is the only route to a recovery session. Morgan is the subject, as
       // in journey 6, and nothing is submitted with a password that would be accepted.
-      const printed = hearthAdmin(['reset-password', SEED.morgan.email]);
+      const printed = hestiaAdmin(['reset-password', SEED.morgan.email]);
       expect(printed.status, printed.stderr).toBe(0);
       await page.goto(printed.stdout.trim());
       await expect(page.getByRole('heading', { name: 'Set a new password' })).toBeVisible();
