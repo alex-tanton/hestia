@@ -49,10 +49,10 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 - **DOC-01**: Restructure `README.md` into a clean, concise overview, abstracting deep development, deployment, and testing details into dedicated guides in `docs/`.
 - **DOC-02**: Create `docs/development.md`, `docs/deployment.md`, and `docs/testing.md` preserving all technical runbook knowledge.
 - **BRAND-01**: Rebrand user-facing PWA app name to "Hestia" (page titles, HTML metadata, app shell header, onboarding copy, and install banner).
-- **BRAND-02**: Update PWA manifest with `name: "Hestia"`, `short_name: "Hestia"`, updated description, and matching theme/background tokens.
+- **BRAND-02**: Update PWA manifest with `name: "Hestia"` and `short_name: "Hestia"`; the manifest description names no brand and stays as it is.
 - **BRAND-03**: Rename service administrative CLI from `hearth-admin` to `hestia-admin` and update binary references.
-- **BRAND-04**: Migrate workspace package namespaces from `@hearth/*` to `@hestia/*` across `package.json` files and internal imports.
-- **BRAND-05**: Transition environment variables, Docker service names, and container configurations from `HEARTH_*` to `HESTIA_*` with backwards-compatibility fallbacks where appropriate.
+- **BRAND-04**: Migrate workspace package namespaces from `@hearth/*` to `@hestia/*` (seven packages, including `@hestia/seed`) across `package.json` files and internal imports.
+- **BRAND-05**: Transition environment variables, Docker service names, and container configurations from `HEARTH_*` to `HESTIA_*` as a hard cutover: the old names are not read.
 - **BRAND-06**: Update all unit, component, integration, and E2E test suites to pass under the Hestia brand name.
 - **NET-01**: Decommission Tailscale Funnel dependencies, CLI instructions, and host-network proxy configurations.
 - **NET-02**: Provide Cloudflare Tunnel (`cloudflared`) Docker Compose service configuration connecting `hestia.aberrance.app` to Caddy with zero exposed host ports.

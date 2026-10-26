@@ -59,8 +59,8 @@ Plans:
 1. PWA UI titles, shell header, onboarding copy, and home screen install banners display "Hestia".
 2. Web App Manifest generates with `name: "Hestia"` and `short_name: "Hestia"`.
 3. Administrative CLI command is `hestia-admin` in `apps/service`.
-4. Monorepo packages are renamed to `@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, and `@hestia/e2e`.
-5. Environment variables and Docker Compose services support `HESTIA_*` configuration.
+4. Monorepo packages are renamed to `@hestia/shared`, `@hestia/recurrence`, `@hestia/matching`, `@hestia/service`, `@hestia/web`, `@hestia/e2e`, and `@hestia/seed`.
+5. Environment variables and Docker Compose services support `HESTIA_*` configuration (hard cutover; the old names are not read).
 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
 
 **Plans:** 5/7 plans executed
