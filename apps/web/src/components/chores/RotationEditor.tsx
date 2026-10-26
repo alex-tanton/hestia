@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent, type ReactElement } from 'react';
-import type { Member } from '@hearth/shared';
+import type { Member } from '@hestia/shared';
 import { ROTATION_EMPTY_COPY } from './chore-copy.ts';
 import { Button } from '../ui/Button.tsx';
 import { Select } from '../ui/Select.tsx';

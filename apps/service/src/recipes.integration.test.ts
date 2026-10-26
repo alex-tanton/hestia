@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { normalize } from '@hearth/matching';
-import type { ParseRecipeResponse, Recipe, RecipeDetail } from '@hearth/shared';
+import { normalize } from '@hestia/matching';
+import type { ParseRecipeResponse, Recipe, RecipeDetail } from '@hestia/shared';
 import { RecipeFetchError } from './recipes/fetch-recipe.js';
 import {
   adminPool,
@@ -14,7 +14,7 @@ import {
 import { expectStatus } from './test/stack-hooks.js';
 
 /*
- * Recipes against `supabase start`: real Postgres as hearth_service, every request through
+ * Recipes against `supabase start`: real Postgres as hestia_service, every request through
  * withUserDb, so RLS is what decides each assertion. Requests here commit, so each test makes its
  * own users and households. `parseRecipeUrl` is stubbed per app instance — never the network —
  * since the fetch mechanics themselves are unit-tested in `recipes/`.
@@ -82,7 +82,7 @@ describe('recipe CRUD', () => {
     expect(recipe.householdId).toBe(home.household.id);
     expect(recipe.ingredients).toHaveLength(3);
     expect(recipe.ingredients.every((ingredient) => ingredient.rawText === null)).toBe(true);
-    // normalized_name is computed from item_name by @hearth/matching on save.
+    // normalized_name is computed from item_name by @hestia/matching on save.
     expect(recipe.ingredients.map((ingredient) => ingredient.normalizedName)).toEqual(
       ['lentils', 'coconut milk', 'onion'].map(normalize),
     );

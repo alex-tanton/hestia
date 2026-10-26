@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
+import { PROBLEM_CONTENT_TYPE } from '@hestia/shared';
 import { createApiClient, type AuthPort } from './client.ts';
 import { ApiError } from './problem.ts';
 

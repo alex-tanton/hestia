@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { NotificationType } from '@hearth/shared';
+import type { NotificationType } from '@hestia/shared';
 import { effectivePreferences, notificationDefaults } from './notifications.js';
 
 const HOUSEHOLD_A = '3f2b8c1e-9a4d-4e6f-8b1a-2c3d4e5f6a7b';

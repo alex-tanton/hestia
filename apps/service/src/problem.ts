@@ -1,5 +1,5 @@
 import { STATUS_CODES } from 'node:http';
-import { PROBLEM_CONTENT_TYPE, type ProblemDetails } from '@hearth/shared';
+import { PROBLEM_CONTENT_TYPE, type ProblemDetails } from '@hestia/shared';
 import type { GoTrueError } from './gotrue/http.js';
 import type { RecipeFetchError, RecipeFetchErrorCode } from './recipes/fetch-recipe.js';
 

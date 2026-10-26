@@ -24,7 +24,7 @@ export function fixtureDealSource(): FlippDealSource {
   return new FlippDealSource({
     queue: new FlippRequestQueue({
       get: fixtureTransport(),
-      userAgent: buildUserAgent('https://hearth.invalid'),
+      userAgent: buildUserAgent('https://hestia.invalid'),
       minGapMs: 0,
       attempts: 1,
     }),

@@ -11,7 +11,7 @@ import {
   type NotificationPreference,
   type NotificationPreferencesResponse,
   type UpdateNotificationPreferenceRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { useApi } from './api-context.tsx';
 import { queryKeys } from './keys.ts';
 

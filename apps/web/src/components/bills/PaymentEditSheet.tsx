@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
-import type { BillPayment } from '@hearth/shared';
+import type { BillPayment } from '@hestia/shared';
 import { formatPriceInput, parsePriceInput } from '../../lib/price-input.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import { Button } from '../ui/Button.tsx';

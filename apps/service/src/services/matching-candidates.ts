@@ -1,12 +1,12 @@
 import { sql, type Kysely, type Selectable } from 'kysely';
-import type { MatchCandidate, MatchOverride } from '@hearth/matching';
+import type { MatchCandidate, MatchOverride } from '@hestia/matching';
 import type { Database } from '../db.js';
 import { favoriteMerchantIds } from './deals/favorite-stores.js';
 
 /**
  * The shared candidate-building step behind readiness and "Add missing to list". Both features
  * match a household's recipe ingredients against the same two candidate pools — its pantry and its
- * favorite-merchant deals — so this is built once and handed to `@hearth/matching`'s pure
+ * favorite-merchant deals — so this is built once and handed to `@hestia/matching`'s pure
  * `matchIngredient`, rather than re-implemented per caller.
  */
 
@@ -20,7 +20,7 @@ export interface HouseholdMatchContext {
    * (`dealMatch ??= ...`), so pre-sorting the deals by ascending price makes "first match" and
    * "lowest-price match" the same thing. That is what encodes "When several favorite-merchant
    * deals match, the one with the lowest unit price is used" without duplicating any matching logic
-   * here or in `@hearth/matching` — a lower-price deal is simply seen, and therefore kept, before a
+   * here or in `@hestia/matching` — a lower-price deal is simply seen, and therefore kept, before a
    * higher-priced one.
    */
   candidates: MatchCandidate[];
@@ -34,7 +34,7 @@ const EMPTY_CONTEXT: HouseholdMatchContext = {
   pantryById: new Map(),
 };
 
-/** The household's pantry and current favorite-merchant deals, as `@hearth/matching` candidates. */
+/** The household's pantry and current favorite-merchant deals, as `@hestia/matching` candidates. */
 export async function buildMatchCandidates(
   db: Kysely<Database>,
   householdId: string,
@@ -89,7 +89,7 @@ export async function buildMatchCandidates(
   return { candidates, dealsById, pantryById };
 }
 
-/** The household's match overrides, in `@hearth/matching`'s `MatchOverride` shape. */
+/** The household's match overrides, in `@hestia/matching`'s `MatchOverride` shape. */
 export async function listMatchOverridesFor(
   db: Kysely<Database>,
   householdId: string,

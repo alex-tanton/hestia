@@ -3,7 +3,7 @@ import { composeChecked } from './compose.ts';
 /**
  * The service's own structured log, read back out of the running container. Pino writes one JSON
  * object per line;
- * `--no-log-prefix` is what keeps Compose from gluing a `hearth-service-1  |` tag onto the front of
+ * `--no-log-prefix` is what keeps Compose from gluing a `hestia-service-1  |` tag onto the front of
  * each one, which would otherwise stop it parsing as JSON.
  */
 export interface ServiceLogLine {
@@ -14,7 +14,7 @@ export interface ServiceLogLine {
 
 /** Every line the service has logged since the container started, oldest first. */
 export function serviceLogLines(): ServiceLogLine[] {
-  const output = composeChecked(['logs', '--no-color', '--no-log-prefix', 'hearth-service']);
+  const output = composeChecked(['logs', '--no-color', '--no-log-prefix', 'hestia-service']);
   const lines: ServiceLogLine[] = [];
   for (const line of output.split('\n')) {
     if (line.trim() === '') continue;

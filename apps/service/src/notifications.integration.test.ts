@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { Household, NotificationPreferencesResponse } from '@hearth/shared';
+import type { Household, NotificationPreferencesResponse } from '@hestia/shared';
 import { adminPool, as, signUp, uniqueName, type SignedUpUser } from './test/service-stack.js';
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
  * Notification preferences and push subscriptions through the service against `supabase start`:
- * real GoTrue, real Postgres as hearth_service, every request through withUserDb.
+ * real GoTrue, real Postgres as hestia_service, every request through withUserDb.
  */
 
 const PUSH_ENDPOINT = 'https://push.example.com/send/alpha';

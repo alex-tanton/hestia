@@ -1,6 +1,6 @@
 # E2E overlay for docker/docker-compose.yml.
 #
-#   docker compose -p hearth-e2e-<run> --env-file <generated .env> \
+#   docker compose -p hestia-e2e-<run> --env-file <generated .env> \
 #     -f docker/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --wait
 #
 # e2e/setup/stack.ts runs that for `pnpm test:e2e`. The suite exercises the production stack — the
@@ -17,12 +17,12 @@
 #   * the database port published, because the migrations, the seed, and the tests' own
 #     assertions reach it from the host
 #   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
-#     public origin an https one; E2E is plain HTTP on the loopback, so HEARTH_HOST — the only
+#     public origin an https one; E2E is plain HTTP on the loopback, so HESTIA_HOST — the only
 #     thing that entrypoint derives — is given directly
-#   * hearth-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
+#   * hestia-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
 #     info rather than warn so the rate discipline the deal journeys exercise is readable in
 #     `docker compose logs`
-#   * hearth-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
+#   * hestia-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
 #     for real: `fetchRecipePage`'s private/loopback/link-local refusal would just as correctly
 #     refuse a fixture server reachable only on this network, so journey 4 (a recipe imports from
 #     a URL with JSON-LD) swaps the fetch step itself rather than trying to make a reachable
@@ -34,48 +34,48 @@
 services:
   db:
     ports:
-      - 127.0.0.1:${HEARTH_E2E_DB_PORT:?}:5432
+      - 127.0.0.1:${HESTIA_E2E_DB_PORT:?}:5432
 
-  hearth-service:
+  hestia-service:
     # Relative to docker/, not to this file: Compose resolves every file's relative paths against
     # the first -f file's directory, which is docker/docker-compose.yml (`compose.ts`).
     volumes:
       - ../e2e/fixtures/flipp/raw:/app/fixtures/flipp/raw:ro
       - ../e2e/fixtures/recipes:/app/fixtures/recipes:ro
     environment:
-      HEARTH_TRUSTED_PROXIES: ${HEARTH_E2E_SUBNET:?}
+      HESTIA_TRUSTED_PROXIES: ${HESTIA_E2E_SUBNET:?}
       # Every browser context and API call in the suite comes from the loopback, so they all share
       # one per-IP bucket. Production's 300 a minute is
       # exhausted by a full run; the limiter stays on, just with room for the suite's own traffic.
-      HEARTH_RATE_LIMIT_PER_MINUTE: 3000
+      HESTIA_RATE_LIMIT_PER_MINUTE: 3000
       LOG_LEVEL: info
       # The fixture set's own instant (`FIXTURE_NOW`), so
       # the wrapper's active-flyer window matches what the captures cover regardless of today.
-      HEARTH_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
-      HEARTH_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
-      HEARTH_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
+      HESTIA_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
+      HESTIA_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
+      HESTIA_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
       # Pushes are recorded by the service rather than sent, and the suite reads them back through
       # the service-role seam under /api/test/push. No push service
       # is reachable from the stack in E2E. Only this file sets the value; production never does.
-      HEARTH_PUSH_TRANSPORT: test-double
+      HESTIA_PUSH_TRANSPORT: test-double
 
   kong:
     environment:
-      KONG_TRUSTED_IPS: ${HEARTH_E2E_SUBNET:?}
+      KONG_TRUSTED_IPS: ${HESTIA_E2E_SUBNET:?}
 
   caddy:
     command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
     environment:
-      HEARTH_HOST: 127.0.0.1:${HEARTH_E2E_CADDY_PORT:?}
-      HEARTH_HOST_GATEWAY: ${HEARTH_E2E_GATEWAY:?}
+      HESTIA_HOST: 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}
+      HESTIA_HOST_GATEWAY: ${HESTIA_E2E_GATEWAY:?}
     ports: !override
-      - 127.0.0.1:${HEARTH_E2E_CADDY_PORT:?}:8080
+      - 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}:8080
 
 networks:
-  # The base file's network is named `hearth` with its own ipam, which would pin a fixed name and
+  # The base file's network is named `hestia` with its own ipam, which would pin a fixed name and
   # subnet. The run creates this network itself (e2e/setup/stack.ts), so that two runs' subnets
   # cannot overlap silently, and Compose uses it as declared rather than creating one.
-  hearth:
-    name: ${HEARTH_E2E_NETWORK:?}
+  hestia:
+    name: ${HESTIA_E2E_NETWORK:?}
     external: true
     ipam: !reset null

@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
  * address on the machine or the Compose network — and a same-network fixture server would be
  * exactly that, so it would be refused by design, not bypassable by choosing a "reachable" address.
  * The E2E journey that imports a recipe by URL therefore never calls `fetchRecipePage` at all when
- * `HEARTH_RECIPE_FIXTURE_DIR` is set: the whole fetch step is swapped for this in-process file
- * read, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
+ * `HESTIA_RECIPE_FIXTURE_DIR` is set: the whole fetch step is swapped for this in-process file
+ * read, the same way `HESTIA_FLIPP_FIXTURE_DIR` swaps the Flipp transport.
  */
 
 export const RECIPE_FIXTURE_DIR = fileURLToPath(
@@ -27,7 +27,7 @@ export interface RecipeFixtureFetchOptions {
   /**
    * Where the fixture pages live. Defaults to the checked-out repo's own copy; the E2E stack
    * instead points this at the read-only mount the Compose overlay gives the built image
-   * (`HEARTH_RECIPE_FIXTURE_DIR`), since the image never has the source tree's `e2e/` directory
+   * (`HESTIA_RECIPE_FIXTURE_DIR`), since the image never has the source tree's `e2e/` directory
    * beside it (the same reason `fixture-transport.ts` takes a `dir` option).
    */
   dir?: string;

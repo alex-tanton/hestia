@@ -1,6 +1,6 @@
 import { onlineManager, useQueryClient } from '@tanstack/react-query';
 import { persistQueryClientSave } from '@tanstack/react-query-persist-client';
-import type { Chore, Member } from '@hearth/shared';
+import type { Chore, Member } from '@hestia/shared';
 import { useDeleteChoreCompletion } from '../../lib/api/chore-hooks.ts';
 import { useHousehold } from '../../lib/api/hooks.ts';
 import { useFlushPersister } from '../../lib/api/api-context.tsx';

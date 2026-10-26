@@ -1,4 +1,4 @@
-import type { ParseRecipeResponse } from '@hearth/shared';
+import type { ParseRecipeResponse } from '@hestia/shared';
 import { parseIngredientLine } from './ingredient-parser.js';
 import { extractRecipeJsonLd } from './json-ld.js';
 

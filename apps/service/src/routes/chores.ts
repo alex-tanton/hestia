@@ -7,7 +7,7 @@ import {
   createChoreRequestSchema,
   householdIdParamsSchema,
   updateChoreRequestSchema,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import {
   completeChore,
   createChore,

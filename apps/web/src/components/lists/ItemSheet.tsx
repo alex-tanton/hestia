@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
-import { itemNameSchema, type ListItem, type PriceUnit } from '@hearth/shared';
+import { itemNameSchema, type ListItem, type PriceUnit } from '@hestia/shared';
 import { formatPriceInput, parsePriceInput, parseQuantityInput } from '../../lib/price-input.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import { firstIssue } from '../../lib/validation.ts';

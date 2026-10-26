@@ -1,5 +1,5 @@
 import { useId, type ReactElement } from 'react';
-import type { Errand, Member } from '@hearth/shared';
+import type { Errand, Member } from '@hestia/shared';
 import { calendarDateOfInstant } from '../../lib/household-date.ts';
 import { formatDueIn, formatOverdue, formatRelativeAgo, memberName } from '../chores/chore-copy.ts';
 import { PENDING_CLASSES, PendingMark } from '../lists/PendingMark.tsx';

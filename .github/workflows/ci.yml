@@ -53,8 +53,8 @@ jobs:
       # Web runs once, with coverage, so its thresholds in apps/web/vite.config.ts gate every pull
       # request. The sweep (sweep.yml) keeps web's plain `test` script, so coverage is not paid for
       # in every time zone.
-      - run: pnpm -r --filter '!@hearth/web' test
-      - run: pnpm --filter @hearth/web test:coverage
+      - run: pnpm -r --filter '!@hestia/web' test
+      - run: pnpm --filter @hestia/web test:coverage
 
   test-integration:
     runs-on: ubuntu-latest
@@ -79,7 +79,7 @@ jobs:
       # Runs unit and integration tests together with coverage, enforcing
       # apps/service/vitest.coverage.config.ts's thresholds, rather than a separate job that would
       # pay for its own `supabase start`.
-      - run: pnpm --filter @hearth/service test:coverage
+      - run: pnpm --filter @hestia/service test:coverage
 
   test-e2e:
     # E2E is the slow job: pull requests and main only, not every branch push. Most of the time
@@ -103,7 +103,7 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: 2.117.0
-      - run: pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
+      - run: pnpm --filter @hestia/e2e exec playwright install --with-deps chromium
       # GHCR pulls run as this run's own read-only token instead of anonymously. The images are
       # public, so anonymous pulls work too: a failed login must not fail the job before the
       # script's public.ecr.aws fallback can run.

@@ -6,6 +6,8 @@
  * 2. The magic-link screens obey their flag:
  *    with `VITE_MAGIC_LINK_ENABLED` off, none of their copy is in the build at all; with it on,
  *    the copy is there but never in the shell, because both screens are behind lazy routes.
+ * 3. The product is named Hestia where it is installed and shown: the Web App Manifest `name` and
+ *    `short_name`, and the `<title>` of `index.html`.
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -68,6 +70,15 @@ const budgetKb = SHELL_BUDGET_BYTES / 1024;
 if (shellBytes > SHELL_BUDGET_BYTES) {
   fail(`App shell is ${shellKb} KB gzipped, over the ${budgetKb} KB budget.`);
 }
+
+const manifest = JSON.parse(readFileSync(join(DIST, 'manifest.webmanifest'), 'utf8'));
+if (manifest.name !== 'Hestia') {
+  fail(`manifest name is ${JSON.stringify(manifest.name)}, expected "Hestia"`);
+}
+if (manifest.short_name !== 'Hestia') {
+  fail(`manifest short_name is ${JSON.stringify(manifest.short_name)}, expected "Hestia"`);
+}
+if (!html.includes('<title>Hestia</title>')) fail('index.html <title> is not Hestia');
 
 const isMagicLinkEnabled = process.env['VITE_MAGIC_LINK_ENABLED'] === 'true';
 

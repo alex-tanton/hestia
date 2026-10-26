@@ -56,7 +56,7 @@ describe('app shell', () => {
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings');
-    expect(document.title).toBe('This Week · Hearth');
+    expect(document.title).toBe('This Week · Hestia');
   });
 
   it('shows the five tabs in order with the active one marked aria-current', async () => {
@@ -90,7 +90,7 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
     ).toBeInTheDocument();
-    expect(document.title).toBe('Meals · Hearth');
+    expect(document.title).toBe('Meals · Hestia');
     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -124,7 +124,7 @@ describe('app shell', () => {
     openPath('/nowhere');
     expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
     await waitFor(() => {
-      expect(document.title).toBe('This Week · Hearth');
+      expect(document.title).toBe('This Week · Hestia');
     });
   });
 });

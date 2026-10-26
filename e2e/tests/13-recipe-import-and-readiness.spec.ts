@@ -9,7 +9,7 @@ import { SEED } from '../support/env.ts';
  * when" spot checks that are cheap to verify live rather than only at the unit/integration layer:
  * the seed data's own readiness percentages, and that a match-override correction is reachable.
  *
- * Every URL pasted is a fixture the E2E stack serves in-process: `HEARTH_RECIPE_FIXTURE_DIR` swaps
+ * Every URL pasted is a fixture the E2E stack serves in-process: `HESTIA_RECIPE_FIXTURE_DIR` swaps
  * the recipe-fetch step itself for a read of the matching file under `e2e/fixtures/recipes/`, so
  * nothing here ever opens a socket, real or loopback. See that file's own comment and
  * `apps/service/src/recipes/fixture-fetch.ts` for why a same-network fixture server was not an
@@ -25,7 +25,7 @@ import { SEED } from '../support/env.ts';
  * so neither is ever added to the list.
  */
 
-const FIXTURE_ORIGIN = 'https://fixtures.hearth-e2e.test';
+const FIXTURE_ORIGIN = 'https://fixtures.hestia-e2e.test';
 
 interface OnSaleIngredient {
   itemName: string;

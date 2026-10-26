@@ -1,6 +1,6 @@
 # File Map
 
-What every top-level folder and key file in the Hearth repository is for. Not an implementation
+What every top-level folder and key file in the Hestia repository is for. Not an implementation
 reference — for behavior, architecture, and design decisions, see the specs in `docs/`.
 
 ## 1. Repository layout
@@ -17,10 +17,10 @@ reference — for behavior, architecture, and design decisions, see the specs in
 | `e2e/` | End-to-end tests that exercise the whole running system like a real user would. |
 | `scripts/` | Small operational scripts for deployment and secret generation, the CI image pre-pull, the test date and time-zone sweep and the knip report normalizer, the gate scripts (the knip baseline, repository hygiene, migration append-only and production audit checks) and the deploy gate that decides whether a commit is deployed, with harness tests for the scripts that have one. |
 | `test/` | Shared test setup that pins the clock and checks the time zone for every workspace's unit tests, and the harness tests that check that setup. |
-| `docs/` | The specifications and reference documents that describe what Hearth is and how it behaves. |
+| `docs/` | The specifications and reference documents that describe what Hestia is and how it behaves. |
 | `.github/` | Continuous integration and deployment automation (GitHub Actions: `ci.yml`, `sweep.yml` and `deploy.yml`), including the composite setup action in `.github/actions/setup/` that every CI job calls after checkout, plus dependency updates. |
 | `.husky/` | Git hooks that run checks automatically before a commit is made. |
-| `README.md` | The entry point: prerequisites, local development, deployment, and backup/restore steps. |
+| `README.md` | The entry point, with an overview, prerequisites, a quickstart, the architecture summary with the repository layout, and the documentation index. |
 | `CONTRIBUTING.md` | How changes land: which go straight to `main`, which need a pull request, and the commit rules. |
 | `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` | Define the monorepo's workspaces and pin every dependency's exact version. |
 | `tsconfig.base.json` | Shared TypeScript compiler settings every workspace builds on. |
@@ -53,7 +53,7 @@ Vite, styled with Tailwind, and uses Workbox to work offline and install like a 
 ## 3. apps/service
 
 `apps/service` is the backend: a Fastify-based API, the background jobs that keep data current
-(fetching deals, sending notifications, pruning caches), and the `hearth-admin` command-line tool
+(fetching deals, sending notifications, pruning caches), and the `hestia-admin` command-line tool
 used for operational tasks like resetting a user's password.
 
 | Subfolder | Purpose |
@@ -72,7 +72,7 @@ used for operational tasks like resetting a user's password.
 | `notifications` | Composing and planning the notifications sent to users. |
 | `push` | Sending web push notifications to installed PWAs. |
 | `test` | Shared fixtures and harnesses used by the service's own automated tests, including `stack-hooks.ts` (the per-file stack lifecycle for integration tests) and `job-logger.ts` (a job logger that records its lines). |
-| `bin` | The `hearth-admin` command-line entry point: a hand-written POSIX shell wrapper that runs the bundled `dist/cli.js` (built from `src/cli.ts`). The service image links it onto the `PATH`. |
+| `bin` | The `hestia-admin` command-line entry point: a hand-written POSIX shell wrapper that runs the bundled `dist/cli.js` (built from `src/cli.ts`). The service image links it onto the `PATH`. |
 | `scripts` | Operational helper scripts for the service (for example, regenerating database types). |
 
 ## 4. packages/
@@ -88,7 +88,7 @@ These are small, standalone libraries used by more than one part of the system, 
 
 ## 5. supabase/
 
-Hearth self-hosts Supabase, which bundles several open-source pieces behind one configuration:
+Hestia self-hosts Supabase, which bundles several open-source pieces behind one configuration:
 
 - **Postgres** is the database that stores all household data.
 - **GoTrue** is the authentication service — it handles signup, sign-in, password resets, and issuing the tokens that prove who a user is.
@@ -114,15 +114,15 @@ defines the full production stack:
 | `auth` | GoTrue, handling sign-in and account management. |
 | `realtime` | Pushes live updates to connected clients. |
 | `kong` | The gateway that routes external requests to `auth` and `realtime` only — nothing else is exposed through it. |
-| `hearth-service` | The backend API and background jobs (built from `apps/service`). |
+| `hestia-service` | The backend API and background jobs (built from `apps/service`). |
 | `caddy` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
 | `backup` | Runs the nightly database backup and keeps a rotation of older backups. |
 
 In plain terms, Caddy is the front door: every request from the internet reaches the box through
 it, and it decides whether to hand that request to the web app's static files, the API, or the
 auth service. (TLS — the encryption that makes a connection `https://` — is actually terminated
-upstream by Tailscale Funnel before traffic reaches Caddy; see `docker/Caddyfile` and the README's
-"Deployment" section for specifics.) `docker/kong.yml` configures Kong's routing, the
+upstream by Tailscale Funnel before traffic reaches Caddy; see `docker/Caddyfile` and
+`docs/deployment.md` for specifics.) `docker/kong.yml` configures Kong's routing, the
 `docker/db/*.sql` files set up database roles used only at container start, and the two
 `*.Dockerfile`s describe how to build the service and Caddy container images.
 
@@ -159,15 +159,16 @@ shopping list.
 | `check-knip-baseline.mjs` | Runs knip in production mode and compares its findings with `knip-production-baseline.txt`; fails on a new finding and on a baseline row knip no longer reports. |
 | `check-knip-baseline.test.mjs` | Harness test for the baseline check, run on fixture knip reports so knip itself never runs. Run by `pnpm test:harness`. |
 | `knip-production-baseline.txt` | The owner-reviewed production-mode knip findings (28 rows and a `total` row) that the baseline check accepts. A new row needs the owner's review. |
-| `check-repo-hygiene.mjs` | Reads the git index and fails on a tracked file that `.gitignore` ignores, a script that is not mode `100755`, and a text file committed with CRLF or mixed line endings. |
+| `check-repo-hygiene.mjs` | Reads the git index and fails on a tracked file that `.gitignore` ignores, a script that is not mode `100755`, a text file committed with CRLF or mixed line endings, and the product's former name in a tracked file or path outside its allowlist and the pinned quotes of the planning state files. |
 | `check-repo-hygiene.test.mjs` | Harness test for the hygiene check, run on temporary git repositories. Run by `pnpm test:harness`. |
-| `check-migrations-append-only.mjs` | Compares `supabase/migrations/` with the merge base of a given ref and fails on anything but added files, because an applied migration must never change. |
-| `check-migrations-append-only.test.mjs` | Harness test for the migration check, run on temporary repositories, including a base ref that must never reach a shell. Run by `pnpm test:harness`. |
+| `check-migrations-append-only.mjs` | Compares `supabase/migrations/` with the merge base of a given ref and fails on anything but added files, because an applied migration must never change. An entry in `migration-exemptions.json` admits one reviewed edit or rename while the merge base and `HEAD` hold its pinned blobs. |
+| `migration-exemptions.json` | Owner-reviewed one-time exemptions for the append-only check, each pinned to a migration's blob before and after the edit; inert once the edit is on `main`, and removed afterwards. |
+| `check-migrations-append-only.test.mjs` | Harness test for the migration check, run on temporary repositories, including a base ref that must never reach a shell and the exemption rules. Run by `pnpm test:harness`. |
 | `audit-prod.mjs` | Runs `pnpm audit --prod --json` and fails on an advisory that `audit-allowlist.json` does not allow, on an expired allowance, and when the registry could not be reached. |
 | `audit-prod.test.mjs` | Harness test for the audit script, run on saved audit reports and a stub `pnpm`. Run by `pnpm test:harness`. |
 | `audit-allowlist.json` | The advisories the audit script accepts, each with an id, an expiry day and a reason. Empty today. |
 | `jscpd-config.test.mjs` | Harness test for the duplicate-code check: runs jscpd with the settings in `.jscpd.json` on fixture trees. Run by `pnpm test:harness`. |
-| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hearth-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
+| `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hestia-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
 | `deploy-gate.test.mjs` | Harness test for the deploy gate, run on temporary git repositories with a stub `docker`. Run by `pnpm test:harness`. |
 | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
 | `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |
@@ -178,15 +179,16 @@ shopping list.
 | --- | --- |
 | `file-map.md` | Map of the repository's folders and files. |
 | `testing.md` | How unit, integration, frontend, and end-to-end tests are structured, how to add more of each, and how to test the running app by hand. |
-| `deploy.md` | System requirements, dependencies, and the full setup and operating instructions for a production deployment. |
-| `use-cases.md` | Hearth's product requirements, restated as use cases: who does what, under what conditions, with what result. |
+| `development.md` | Local setup, dev servers and commands, running the API against a local Supabase stack, database and seed commands, commit hooks, scripts, and the checks to run before pushing. |
+| `deployment.md` | The production deployment runbook: system requirements, Compose services, environment variables and secrets, first-time setup, deploys and rollback, backups and restore, and troubleshooting. |
+| `use-cases.md` | Hestia's product requirements, restated as use cases: who does what, under what conditions, with what result. |
 | `architecture.md` | The system's shape — request authorization and the RLS isolation pattern, data model, API surface, background jobs, realtime sync, offline writes, and the notification pipeline. |
-| `branding.md` | Hearth's name, voice, and visual identity — color, type, spacing, icons, motion, and copy rules. |
-| `design.md` | Hearth's design decisions — navigation, state handling, empty states, and accessibility commitments. |
+| `branding.md` | Hestia's name, voice, and visual identity — color, type, spacing, icons, motion, and copy rules. |
+| `design.md` | Hestia's design decisions — navigation, state handling, empty states, and accessibility commitments. |
 
 ## 10. Root configuration files
 
-| Tool/file | What it is | Why Hearth uses it |
+| Tool/file | What it is | Why Hestia uses it |
 | --- | --- | --- |
 | pnpm, `pnpm-workspace.yaml` | pnpm is the package manager that installs JavaScript/TypeScript dependencies. A "workspace" lets one repository (a "monorepo") hold several installable projects — here, the apps and packages — that can depend on each other directly. | Lets `apps/web` and `apps/service` share `packages/shared`, `packages/recurrence`, and `packages/matching` without publishing them anywhere, and keeps every dependency version pinned exactly in one lockfile. |
 | TypeScript, `tsconfig.base.json` | TypeScript adds type-checking to JavaScript, catching a category of bugs before the code ever runs. The base config holds the strict settings every workspace inherits. | Keeps the whole codebase held to the same strict standard, with no workspace quietly opting out. |
@@ -211,9 +213,9 @@ is in `docs/testing.md`, under "Dates and time zones".
 
 | File | Purpose |
 | --- | --- |
-| `clock-setup.mjs` | Vitest setup file loaded by every workspace's unit config: pins `Date` to `HEARTH_TEST_NOW` (default `2026-10-14T12:00:00.000Z`) so a test does not depend on the wall clock. Skips `*.integration.test.*` files. |
-| `global-tz.mjs` | Vitest `globalSetup` loaded by every workspace's Vitest config: validates `TZ` and `HEARTH_TEST_NOW` before any test runs. |
-| `test-now.mjs` | Parses `HEARTH_TEST_NOW` into an instant; shared by the pin and the zone hook. |
+| `clock-setup.mjs` | Vitest setup file loaded by every workspace's unit config: pins `Date` to `HESTIA_TEST_NOW` (default `2026-10-14T12:00:00.000Z`) so a test does not depend on the wall clock. Skips `*.integration.test.*` files. |
+| `global-tz.mjs` | Vitest `globalSetup` loaded by every workspace's Vitest config: validates `TZ` and `HESTIA_TEST_NOW` before any test runs. |
+| `test-now.mjs` | Parses `HESTIA_TEST_NOW` into an instant; shared by the pin and the zone hook. |
 | `clock-setup.test.mjs` | Harness test for the clock pin, run from inside real Vitest workers. |
 | `global-tz.test.mjs` | Harness test for the zone hook, one child process per case. |
 | `eslint-clock-ban.test.mjs` | Harness test for the ESLint rule that bans real-clock reads in test files. |

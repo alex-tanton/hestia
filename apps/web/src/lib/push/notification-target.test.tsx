@@ -85,7 +85,7 @@ describe('a tap on a notification', () => {
 
     channel.dispatchEvent(
       new MessageEvent('message', {
-        data: { type: 'hearth:notification-click', url: '/chores', householdId: RIVERA_FAMILY_ID },
+        data: { type: 'hestia:notification-click', url: '/chores', householdId: RIVERA_FAMILY_ID },
       }),
     );
 
@@ -102,7 +102,7 @@ describe('a tap on a notification', () => {
 
     channel.dispatchEvent(
       new MessageEvent('message', {
-        data: { type: 'hearth:notification-click', url: '/bills', householdId: left },
+        data: { type: 'hestia:notification-click', url: '/bills', householdId: left },
       }),
     );
 

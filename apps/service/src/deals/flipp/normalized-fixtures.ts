@@ -26,7 +26,7 @@ export async function buildNormalizedFixtures(): Promise<NormalizedFixtures> {
     // No gap and no backoff: the transport is the recorded fixtures, not the network.
     queue: new FlippRequestQueue({
       get: fixtureTransport(),
-      userAgent: buildUserAgent('https://hearth.invalid'),
+      userAgent: buildUserAgent('https://hestia.invalid'),
       minGapMs: 0,
       attempts: 1,
     }),

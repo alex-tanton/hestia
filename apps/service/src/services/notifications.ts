@@ -7,7 +7,7 @@ import {
   type NotificationType,
   type PushSubscriptionRequest,
   type UpdateNotificationPreferenceRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 

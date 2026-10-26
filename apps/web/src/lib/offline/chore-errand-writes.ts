@@ -1,12 +1,12 @@
 import { useMutationState, type MutationKey, type QueryClient } from '@tanstack/react-query';
-import { occurrenceToComplete, type Recurrence } from '@hearth/recurrence';
+import { occurrenceToComplete, type Recurrence } from '@hestia/recurrence';
 import {
   choreDetailSchema,
   errandSchema,
   type Chore,
   type ChoreDetail,
   type Errand,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { ApiClient } from '../api/client.ts';
 import { queryKeys } from '../api/keys.ts';
 import { todayInTimezone } from '../household-date.ts';

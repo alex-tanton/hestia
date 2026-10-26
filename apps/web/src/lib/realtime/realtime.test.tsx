@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ShoppingListDetail } from '@hearth/shared';
+import type { ShoppingListDetail } from '@hestia/shared';
 import { ListDetailScreen } from '../../screens/lists/ListDetailScreen.tsx';
 import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import {

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { Household, ShoppingListDetail } from '@hearth/shared';
+import type { Household, ShoppingListDetail } from '@hestia/shared';
 import {
   as,
   signUp,

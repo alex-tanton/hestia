@@ -1,4 +1,4 @@
--- The complete Hearth schema (Requirements, "Data model"). Every pillar's tables exist from Phase 1
+-- The complete Hestia schema (Requirements, "Data model"). Every pillar's tables exist from Phase 1
 -- so later phases never alter foundational tables (Implementation Handoff, "Build phases").
 -- Row-level security, grants, and the membership functions are in the migrations that follow.
 --

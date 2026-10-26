@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
-import type { Household } from '@hearth/shared';
+import type { Household } from '@hestia/shared';
 import pg from 'pg';
 import { buildApp, type AppDependencies } from '../app.js';
 import { createTokenVerifier } from '../auth/jwt.js';
@@ -17,7 +17,7 @@ import { FakeDealSource } from './fixture-deal-source.js';
 import { TEST_DATABASE_URL } from './integration-db.js';
 
 /**
- * The real service wired to the `supabase start` stack: Postgres as hearth_service and GoTrue
+ * The real service wired to the `supabase start` stack: Postgres as hestia_service and GoTrue
  * through Kong. Unlike the rolled-back database tests, requests here commit, so every test makes
  * its own users and households. Keys come from `supabase status` unless set in the environment.
  */
@@ -30,7 +30,7 @@ export interface StackConfig {
   serviceDatabaseUrl: string;
 }
 
-const SERVICE_PASSWORD = process.env['HEARTH_TEST_SERVICE_PASSWORD'] ?? 'hearth';
+const SERVICE_PASSWORD = process.env['HESTIA_TEST_SERVICE_PASSWORD'] ?? 'hestia';
 
 function supabaseStatus(): Record<string, string> {
   const output = execFileSync('supabase', ['status', '--output', 'env'], {
@@ -52,21 +52,21 @@ export function stackConfig(): StackConfig {
   if (cached !== undefined) return cached;
   const env = process.env;
   const status =
-    env['HEARTH_TEST_ANON_KEY'] === undefined ? supabaseStatus() : ({} as Record<string, string>);
+    env['HESTIA_TEST_ANON_KEY'] === undefined ? supabaseStatus() : ({} as Record<string, string>);
   const pick = (name: string, statusName: string): string => {
     const value = env[name] ?? status[statusName];
     if (value === undefined || value === '') throw new Error(`set ${name} or run supabase start`);
     return value;
   };
   const dbUrl = new URL(TEST_DATABASE_URL);
-  dbUrl.username = 'hearth_service';
+  dbUrl.username = 'hestia_service';
   dbUrl.password = SERVICE_PASSWORD;
   cached = {
     // Kong's port under `supabase start` (supabase/config.toml, [api].port).
-    gotrueUrl: env['HEARTH_TEST_GOTRUE_URL'] ?? 'http://127.0.0.1:54321/auth/v1',
-    anonKey: pick('HEARTH_TEST_ANON_KEY', 'ANON_KEY'),
-    serviceRoleKey: pick('HEARTH_TEST_SERVICE_ROLE_KEY', 'SERVICE_ROLE_KEY'),
-    jwtSecret: pick('HEARTH_TEST_JWT_SECRET', 'JWT_SECRET'),
+    gotrueUrl: env['HESTIA_TEST_GOTRUE_URL'] ?? 'http://127.0.0.1:54321/auth/v1',
+    anonKey: pick('HESTIA_TEST_ANON_KEY', 'ANON_KEY'),
+    serviceRoleKey: pick('HESTIA_TEST_SERVICE_ROLE_KEY', 'SERVICE_ROLE_KEY'),
+    jwtSecret: pick('HESTIA_TEST_JWT_SECRET', 'JWT_SECRET'),
     serviceDatabaseUrl: dbUrl.toString(),
   };
   return cached;
@@ -74,10 +74,10 @@ export function stackConfig(): StackConfig {
 
 export const adminPool = new pg.Pool({ connectionString: TEST_DATABASE_URL, max: 2 });
 
-/** The migrations create hearth_service without a login; give it the test password. */
+/** The migrations create hestia_service without a login; give it the test password. */
 export async function enableServiceLogin(): Promise<void> {
   await adminPool.query(
-    `alter role hearth_service with login password ${pg.escapeLiteral(SERVICE_PASSWORD)}`,
+    `alter role hestia_service with login password ${pg.escapeLiteral(SERVICE_PASSWORD)}`,
   );
 }
 

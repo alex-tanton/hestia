@@ -5,9 +5,9 @@ import { GoTrueError } from './gotrue/http.js';
 import { createGoTrueAdmin, type GoTrueAdmin } from './privileged/gotrue-admin.js';
 
 /**
- * hearth-admin, the owner CLI:
+ * hestia-admin, the owner CLI:
  *
- *   docker compose exec hearth-service hearth-admin reset-password <email>
+ *   docker compose exec hestia-service hestia-admin reset-password <email>
  *
  * Prints a one-time recovery link that opens the PWA's set-new-password screen. One of the
  * sanctioned service-role uses.
@@ -16,7 +16,7 @@ import { createGoTrueAdmin, type GoTrueAdmin } from './privileged/gotrue-admin.j
 /** Where GoTrue's /verify sends a recovery link, with the session in the fragment. */
 export const SET_PASSWORD_PATH = '/set-password';
 
-const USAGE = 'Usage: hearth-admin reset-password <email>';
+const USAGE = 'Usage: hestia-admin reset-password <email>';
 
 export interface CliIo {
   out: (line: string) => void;
@@ -63,7 +63,7 @@ const invokedDirectly =
 if (invokedDirectly) {
   const env = parseCliEnv(process.env);
   const admin = createGoTrueAdmin({ url: env.GOTRUE_URL, serviceRoleKey: env.SERVICE_ROLE_KEY });
-  process.exitCode = await runCli(process.argv.slice(2), admin, env.HEARTH_ORIGIN, {
+  process.exitCode = await runCli(process.argv.slice(2), admin, env.HESTIA_ORIGIN, {
     out: (line) => {
       process.stdout.write(`${line}\n`);
     },

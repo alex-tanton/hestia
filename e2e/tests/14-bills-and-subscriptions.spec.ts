@@ -7,7 +7,7 @@ import { SEED } from '../support/env.ts';
 /**
  * Bills and subscriptions, against the seeded stack. Figures and orders are the seed data's
  * oracles: Alex sees Spectrum Internet and Spotify for $86.98 a month, Sam sees Spectrum Internet
- * and Adobe for $134.98, and Adobe is invisible to Alex. Hearth never moves money, so the journeys
+ * and Adobe for $134.98, and Adobe is invisible to Alex. Hestia never moves money, so the journeys
  * only record payments and skips.
  */
 

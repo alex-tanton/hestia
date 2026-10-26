@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import type { MealType } from '@hearth/shared';
+import type { MealType } from '@hestia/shared';
 import { useCreateMealPlanEntry } from '../../lib/api/meal-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { todayInTimezone } from '../../lib/household-date.ts';

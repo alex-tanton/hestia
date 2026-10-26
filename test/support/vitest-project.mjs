@@ -17,13 +17,13 @@ const VITEST_BIN = join(REPO_ROOT, 'packages', 'shared', 'node_modules', 'vitest
 
 /**
  * Writes `files` (name to source) into a fresh project and runs Vitest over it with the clock
- * setup file. `env` is layered over the parent environment minus `TZ` and `HEARTH_TEST_NOW`, so a
+ * setup file. `env` is layered over the parent environment minus `TZ` and `HESTIA_TEST_NOW`, so a
  * run never inherits the sweep's cell. `testConfig` is merged into the project's `test` options
  * (for example `{ isolate: false }`). Returns one entry per test (`fullName`, `status`,
  * `message`) plus the exit status and the combined output.
  */
 export function runVitestProject({ files, env = {}, testConfig = {} }) {
-  const directory = mkdtempSync(join(tmpdir(), 'hearth-clock-'));
+  const directory = mkdtempSync(join(tmpdir(), 'hestia-clock-'));
   try {
     for (const [name, source] of Object.entries(files)) {
       const path = join(directory, name);
@@ -41,7 +41,7 @@ export function runVitestProject({ files, env = {}, testConfig = {} }) {
     const report = join(directory, 'report.json');
     const childEnvironment = { ...process.env };
     delete childEnvironment['TZ'];
-    delete childEnvironment['HEARTH_TEST_NOW'];
+    delete childEnvironment['HESTIA_TEST_NOW'];
     const run = spawnSync(
       process.execPath,
       [

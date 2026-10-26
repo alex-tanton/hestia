@@ -4,7 +4,7 @@ import type {
   BillPayment,
   Subscription,
   SubscriptionsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { ALEX_ID, JORDAN_ID, SAM_ID } from './fixtures.ts';
 
 /** Realistic bill fixtures from the seed data, so tests read like the real app. */

@@ -1,6 +1,6 @@
 import { Package, Pencil, Trash2 } from 'lucide-react';
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
-import { itemNameSchema, type PantryItem } from '@hearth/shared';
+import { itemNameSchema, type PantryItem } from '@hestia/shared';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';

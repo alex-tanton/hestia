@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { COMMON_PASSWORD_MESSAGE } from '@hearth/shared';
+import { COMMON_PASSWORD_MESSAGE } from '@hestia/shared';
 import { createAuthStub, problemBody, renderScreen, stubFetch } from '../../test/harness.tsx';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { merchantsResponse } from '../../test/deal-fixtures.ts';
@@ -100,7 +100,7 @@ describe('sign up', () => {
 
     await user.type(screen.getByLabelText('Display name'), 'Alex Rivera');
     await user.type(screen.getByLabelText('Email'), 'alex@example.com');
-    await user.type(screen.getByLabelText('Password'), 'hearth-seed-pass-2026');
+    await user.type(screen.getByLabelText('Password'), 'hestia-seed-pass-2026');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
@@ -132,14 +132,14 @@ describe('set a new password', () => {
     renderScreen(<SetPasswordScreen />);
 
     expect(screen.queryByLabelText('Current password')).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText('New password'), 'hearth-seed-pass-2026');
+    await user.type(screen.getByLabelText('New password'), 'hestia-seed-pass-2026');
     await user.click(screen.getByRole('button', { name: 'Set password' }));
 
     await waitFor(() => {
       expect(stub.calls).toContainEqual({
         method: 'POST',
         path: '/api/users/me/password',
-        body: { newPassword: 'hearth-seed-pass-2026' },
+        body: { newPassword: 'hestia-seed-pass-2026' },
       });
     });
   });
@@ -154,7 +154,7 @@ describe('set a new password', () => {
     });
     renderScreen(<SetPasswordScreen />);
 
-    await user.type(screen.getByLabelText('New password'), 'hearth-seed-pass-2026');
+    await user.type(screen.getByLabelText('New password'), 'hestia-seed-pass-2026');
     await user.click(screen.getByRole('button', { name: 'Set password' }));
 
     expect(await screen.findByText(RESET_LINK_EXPIRED_MESSAGE)).toBeInTheDocument();
@@ -347,6 +347,6 @@ describe('the rest of onboarding', () => {
     renderScreen(<InstallStep onDone={() => undefined} />);
 
     expect(screen.getByText(IOS_INSTALL_MESSAGE)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Go to Hearth' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Go to Hestia' })).toBeInTheDocument();
   });
 });

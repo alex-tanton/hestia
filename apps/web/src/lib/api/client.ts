@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { PROBLEM_CONTENT_TYPE } from '@hearth/shared';
+import { PROBLEM_CONTENT_TYPE } from '@hestia/shared';
 import { ApiError, parseProblem } from './problem.ts';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';

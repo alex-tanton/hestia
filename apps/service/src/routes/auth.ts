@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { signupRequestSchema } from '@hearth/shared';
-import { newPasswordSchema } from '@hearth/shared/common-passwords';
+import { signupRequestSchema } from '@hestia/shared';
+import { newPasswordSchema } from '@hestia/shared/common-passwords';
 import { parse, type RouteContext } from '../http/context.js';
 
 /** The wire schema with the common-password list applied, which is the full policy. */

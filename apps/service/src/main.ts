@@ -53,18 +53,18 @@ const queueLogger = {
   warn: (data: Record<string, unknown>, message: string) => wiring.log?.warn(data, message),
   info: (data: Record<string, unknown>, message: string) => wiring.log?.info(data, message),
 };
-// Only the E2E Compose overlay sets HEARTH_FLIPP_FIXTURE_DIR: every other caller, including a real
+// Only the E2E Compose overlay sets HESTIA_FLIPP_FIXTURE_DIR: every other caller, including a real
 // deployment, gets the live transport unchanged.
 const flippGet: HttpGet =
-  env.HEARTH_FLIPP_FIXTURE_DIR === undefined
+  env.HESTIA_FLIPP_FIXTURE_DIR === undefined
     ? fetchGet
-    : fixtureTransport({ dir: env.HEARTH_FLIPP_FIXTURE_DIR, itemDetail: FIXTURE_ITEM_DETAIL });
+    : fixtureTransport({ dir: env.HESTIA_FLIPP_FIXTURE_DIR, itemDetail: FIXTURE_ITEM_DETAIL });
 const flippQueue = new FlippRequestQueue({
   get: flippGet,
-  userAgent: buildUserAgent(env.HEARTH_ORIGIN),
+  userAgent: buildUserAgent(env.HESTIA_ORIGIN),
   logger: queueLogger,
 });
-const fixtureNow = env.HEARTH_FLIPP_FIXTURE_NOW;
+const fixtureNow = env.HESTIA_FLIPP_FIXTURE_NOW;
 const dealSource = new FlippDealSource({
   queue: flippQueue,
   logger: queueLogger,
@@ -80,19 +80,19 @@ const deals = createDealsService({
 // One limiter for every recipe fetch, so 1 request/second/host holds across requests, the same
 // way flippQueue holds Flipp's rate discipline.
 const recipeFetchLimiter = new HostRateLimiter();
-const recipeUserAgent = buildUserAgent(env.HEARTH_ORIGIN);
-// Only the E2E Compose overlay sets HEARTH_RECIPE_FIXTURE_DIR (see env.ts): every other caller,
+const recipeUserAgent = buildUserAgent(env.HESTIA_ORIGIN);
+// Only the E2E Compose overlay sets HESTIA_RECIPE_FIXTURE_DIR (see env.ts): every other caller,
 // including a real deployment, fetches the pasted URL for real.
 const recipeFetchPage: (pageUrl: string) => Promise<{ body: string }> =
-  env.HEARTH_RECIPE_FIXTURE_DIR === undefined
+  env.HESTIA_RECIPE_FIXTURE_DIR === undefined
     ? (pageUrl) =>
         fetchRecipePage(pageUrl, { userAgent: recipeUserAgent, limiter: recipeFetchLimiter })
-    : recipeFixtureFetch({ dir: env.HEARTH_RECIPE_FIXTURE_DIR });
+    : recipeFixtureFetch({ dir: env.HESTIA_RECIPE_FIXTURE_DIR });
 
 // The E2E push switch (env.ts). Only the Compose overlay selects `test-double`: then pushes are
 // recorded rather than sent, and the seam routes that let the suite run dispatch and read them back
 // are registered. Every other build keeps the web-push transport and has no test route.
-const testDouble = env.HEARTH_PUSH_TRANSPORT === 'test-double';
+const testDouble = env.HESTIA_PUSH_TRANSPORT === 'test-double';
 const recordingTransport = new RecordingPushTransport();
 
 const app = await buildApp(
@@ -110,11 +110,11 @@ const app = await buildApp(
     parseRecipeUrl: (url) => parseRecipeUrl(url, recipeFetchPage),
   },
   {
-    trustedProxies: env.HEARTH_TRUSTED_PROXIES,
+    trustedProxies: env.HESTIA_TRUSTED_PROXIES,
     logger: { level: env.LOG_LEVEL },
-    origin: env.HEARTH_ORIGIN,
-    ownerEmail: env.HEARTH_OWNER_EMAIL,
-    rateLimitPerMinute: env.HEARTH_RATE_LIMIT_PER_MINUTE,
+    origin: env.HESTIA_ORIGIN,
+    ownerEmail: env.HESTIA_OWNER_EMAIL,
+    rateLimitPerMinute: env.HESTIA_RATE_LIMIT_PER_MINUTE,
     openApiDocument: () => openApiDocument,
     testSeam: testDouble
       ? pushTestSeam({

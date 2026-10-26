@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
-import type { ProfileResponse } from '@hearth/shared';
+import type { ProfileResponse } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';

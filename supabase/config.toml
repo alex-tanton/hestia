@@ -2,7 +2,7 @@
 # Postgres, GoTrue, Realtime, Kong, and Studio.
 # Production runs docker/docker-compose.yml instead, on the same Postgres, GoTrue, and Realtime
 # images. Reference: https://supabase.com/docs/guides/local-development/cli/config
-project_id = "hearth"
+project_id = "hestia"
 
 [api]
 # No PostgREST: the service is the only HTTP path to the data. Kong still serves auth and
@@ -32,7 +32,7 @@ enabled = true
 port = 54323
 api_url = "http://127.0.0.1"
 
-# Hearth sends no email while magic link is disabled.
+# Hestia sends no email while magic link is disabled.
 [local_smtp]
 enabled = false
 

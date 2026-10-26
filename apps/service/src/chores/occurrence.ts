@@ -7,7 +7,7 @@ import {
   occurrenceToComplete,
   type CalendarDate,
   type Recurrence,
-} from '@hearth/recurrence';
+} from '@hestia/recurrence';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 

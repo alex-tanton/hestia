@@ -2,7 +2,7 @@
 
 ## Overview
 
-Hearth is a monorepo: a Fastify API service (`apps/service`), a React PWA (`apps/web`), and a
+Hestia is a monorepo: a Fastify API service (`apps/service`), a React PWA (`apps/web`), and a
 self-hosted Supabase stack — Postgres, GoTrue (auth), Realtime, and Kong (the gateway in front of
 GoTrue and Realtime) — all reachable through Caddy as a single origin. The service is the only
 HTTP path to application data; there is no PostgREST. Caddy also serves the built PWA as static
@@ -36,8 +36,8 @@ a cross-household leak is still refused at the database. The service's own valid
 business rules (derived recurrence, deal repricing, notification batching) that RLS cannot express,
 not for household isolation itself.
 
-The service connects to Postgres as a dedicated login role, `hearth_service`
-(`supabase/migrations/20260919060000_hearth_service_role.sql`). That role is `NOLOGIN` in the
+The service connects to Postgres as a dedicated login role, `hestia_service`
+(`supabase/migrations/20260919060000_hestia_service_role.sql`). That role is `NOLOGIN` in the
 migration — its password is supplied separately by the deploy environment — and `NOINHERIT`, with
 membership in `anon`, `authenticated`, and `service_role` and no privileges of its own. Until a
 transaction explicitly switches role, it holds none of those three roles' rights, so a code path
@@ -54,7 +54,7 @@ aggregate figures. Those run as `service_role`, which bypasses RLS entirely, thr
 changes (`apps/service/src/privileged/gotrue-admin.ts`), and the scheduled-reminder producer
 (`apps/service/src/privileged/scheduled-reminders.ts`) — lives in `apps/service/src/privileged/`.
 
-Only `main.ts` and the `hearth-admin` CLI (`cli.ts`) may import from that folder; every other
+Only `main.ts` and the `hestia-admin` CLI (`cli.ts`) may import from that folder; every other
 module gets the one narrow function it needs (`changeEmail`, `systemHealth`, a `DispatchOutbox`),
 never the privileged client itself. This is enforced by an ESLint rule in `eslint.config.js`
 (`@typescript-eslint/no-restricted-imports`, pattern `**/privileged/*`, scoped to

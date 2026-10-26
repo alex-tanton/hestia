@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import type { Errand, Member } from '@hearth/shared';
+import type { Errand, Member } from '@hestia/shared';
 import { UNASSIGNED_LABEL } from '../chores/chore-copy.ts';
 import { useCreateErrand, useUpdateErrand } from '../../lib/api/chore-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';

@@ -1,6 +1,6 @@
 /*
  * Date and time-zone sweep: runs a test suite once per cell of a fixed matrix, each cell in its
- * own child process with its own `HEARTH_TEST_NOW` (the pinned instant, read by
+ * own child process with its own `HESTIA_TEST_NOW` (the pinned instant, read by
  * `test/clock-setup.mjs`) and `TZ` (validated by `test/global-tz.mjs`). `docs/testing.md`
  * describes the contract.
  *
@@ -8,10 +8,10 @@
  *     recurrence|matching|e2e|all] [--cell ID]... [--only TEST_PATH] [--log-dir DIR] [--list]
  *     [--with-today [--today-instant ISO]]
  *
- * `--with-today` adds one unit cell, `today`, after the selected fixed cells: `HEARTH_TEST_NOW` is
+ * `--with-today` adds one unit cell, `today`, after the selected fixed cells: `HESTIA_TEST_NOW` is
  * the real instant at sweep start (or `--today-instant`, parsed with the same rules as
- * `HEARTH_TEST_NOW`) and `TZ` is one of `TODAY_ZONES`, chosen by the UTC epoch day. Its result
- * lines carry `now=` and `tz=`, so a red run is reproduced with `HEARTH_TEST_NOW={now} TZ={tz}`.
+ * `HESTIA_TEST_NOW`) and `TZ` is one of `TODAY_ZONES`, chosen by the UTC epoch day. Its result
+ * lines carry `now=` and `tz=`, so a red run is reproduced with `HESTIA_TEST_NOW={now} TZ={tz}`.
  * Without `--with-today` the matrix and the output are unchanged.
  *
  * Cells run one after another and the child inherits the zone, so every Vitest worker, under the
@@ -172,7 +172,7 @@ function parseArguments(argv) {
 
 function printMatrix(today) {
   const describe = (cell) =>
-    `  ${cell.id}: HEARTH_TEST_NOW=${cell.now ?? '(unset)'} TZ=${cell.tz ?? '(unset)'}`;
+    `  ${cell.id}: HESTIA_TEST_NOW=${cell.now ?? '(unset)'} TZ=${cell.tz ?? '(unset)'}`;
   console.log('unit cells:');
   for (const cell of UNIT_CELLS) console.log(describe(cell));
   console.log('integration cells:');
@@ -199,9 +199,9 @@ function childZone(env) {
 
 function cellEnvironment(cell) {
   const env = { ...process.env };
-  delete env['HEARTH_TEST_NOW'];
+  delete env['HESTIA_TEST_NOW'];
   delete env['TZ'];
-  if (cell.now !== undefined) env['HEARTH_TEST_NOW'] = cell.now;
+  if (cell.now !== undefined) env['HESTIA_TEST_NOW'] = cell.now;
   if (cell.tz !== undefined) env['TZ'] = cell.tz;
   return env;
 }
@@ -209,7 +209,7 @@ function cellEnvironment(cell) {
 function commandFor(suite, workspace, only) {
   const script = suite === 'integration' ? 'test:integration' : 'test';
   const filter = only === undefined ? '' : ` ${only}`;
-  return `pnpm --filter @hearth/${workspace} ${script}${filter}`;
+  return `pnpm --filter @hestia/${workspace} ${script}${filter}`;
 }
 
 /**
@@ -222,7 +222,7 @@ function selectedTestFiles(suite, workspace, only) {
   const env = cellEnvironment({ now: undefined, tz: undefined });
   const list = spawnSync(
     'pnpm',
-    ['--filter', `@hearth/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
+    ['--filter', `@hestia/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
     { cwd: REPO_ROOT, env, encoding: 'utf8' },
   );
   if (list.error !== undefined || list.status !== 0) {
@@ -288,7 +288,7 @@ function main() {
       selectedTestFiles(options.suite, single, options.only).length === 0
     ) {
       console.error(
-        `test-sweep: --only ${options.only} matches no test file in @hearth/${single} ` +
+        `test-sweep: --only ${options.only} matches no test file in @hestia/${single} ` +
           `(${options.suite} suite); a sweep that runs nothing is not a pass`,
       );
       return 2;

@@ -55,9 +55,9 @@ export function composeArgs(args: readonly string[]): string[] {
 // The run's own image tag: the `current` images a Compose stack on this machine runs are left
 // alone, and a concurrent run's build cannot replace the images this run is about to start.
 export function compose(args: readonly string[]): CommandResult {
-  return runCommand('docker', composeArgs(args), { HEARTH_TAG: IMAGE_TAG });
+  return runCommand('docker', composeArgs(args), { HESTIA_TAG: IMAGE_TAG });
 }
 
 export function composeChecked(args: readonly string[]): string {
-  return runChecked('docker', composeArgs(args), { HEARTH_TAG: IMAGE_TAG });
+  return runChecked('docker', composeArgs(args), { HESTIA_TAG: IMAGE_TAG });
 }

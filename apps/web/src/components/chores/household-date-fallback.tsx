@@ -1,6 +1,6 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import type { Household } from '@hearth/shared';
+import type { Household } from '@hestia/shared';
 import { ErrorState, OfflineState } from '../states/StateBlocks.tsx';
 import { SkeletonRows } from '../ui/Skeleton.tsx';
 

@@ -9,7 +9,7 @@ import type {
   Invite,
   Member,
   ProfileResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { runCli } from './cli.js';
 import type { Database } from './db.js';
 import { withUserDb } from './db/user-db.js';
@@ -30,7 +30,7 @@ import { app, expectStatus, registerStackHooks, stack } from './test/stack-hooks
 import { currentInstant } from './test/zone-dates.js';
 
 /*
- * The service end to end against `supabase start`: real GoTrue, real Postgres as hearth_service,
+ * The service end to end against `supabase start`: real GoTrue, real Postgres as hestia_service,
  * every request through withUserDb. Each test makes its own users and households.
  */
 
@@ -200,7 +200,7 @@ describe('password and email changes', () => {
     await expect(signIn(user.email, user.password, user.ip)).rejects.toThrow(/sign-in failed/);
   });
 
-  it('lets a reset link from hearth-admin set a new password without the old one', async () => {
+  it('lets a reset link from hestia-admin set a new password without the old one', async () => {
     const user = await signUp(app, 'Forgetful');
     const config = stackConfig();
     const admin = createGoTrueAdmin({
@@ -814,9 +814,9 @@ describe('isolation through withUserDb', () => {
       }>`select current_user as role, current_setting('request.jwt.claims', true) as claims`.execute(
         single,
       );
-      expect(rows[0]?.role).toBe('hearth_service');
+      expect(rows[0]?.role).toBe('hestia_service');
       expect(rows[0]?.claims ?? '').toBe('');
-      // hearth_service on its own may read nothing.
+      // hestia_service on its own may read nothing.
       await expect(single.selectFrom('profile').select('id').execute()).rejects.toMatchObject({
         code: '42501',
       });

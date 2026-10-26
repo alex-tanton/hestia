@@ -7,7 +7,7 @@
 # Run from the repository root. The image list is read from docker/docker-compose.yml and
 # docker/*.Dockerfile (the BuildKit `# syntax=` frontend included, because BuildKit pulls it during
 # `--build`), so a Dependabot bump needs no edit here. Images already present are skipped, and the
-# hearth-built images, the backup image and build-stage names are never pulled.
+# hestia-built images, the backup image and build-stage names are never pulled.
 #
 # The three Supabase images (public.ecr.aws/supabase/{name}:{tag}) are also published on
 # ghcr.io/supabase by the same publisher with the same manifest digests (checked 2026-10-20). They
@@ -33,7 +33,7 @@ fi
 list=$(
   {
     sed -nE 's/^[[:space:]]*image:[[:space:]]*//p' docker/docker-compose.yml |
-      { grep -vE '^hearth-|^prodrigestivill/' || true; }
+      { grep -vE '^hestia-|^prodrigestivill/' || true; }
     sed -nE 's/^FROM[[:space:]]+(--[^[:space:]]+[[:space:]]+)*([^[:space:]]+).*/\2/p' docker/*.Dockerfile |
       { grep -E '[:/]' || true; }
     grep -h '^# syntax=' docker/*.Dockerfile | sed 's/^# syntax=//' || true

@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
-import type { Bill, BillVisibility, RecurrenceUnit } from '@hearth/shared';
+import type { Bill, BillVisibility, RecurrenceUnit } from '@hestia/shared';
 import { recurrencePreviewSentence } from '../../lib/bills/recurrence-preview.ts';
 import { formatPriceInput, parsePriceInput } from '../../lib/price-input.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';

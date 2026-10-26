@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { clientErrorRequestSchema, type DeepHealthResponse } from '@hearth/shared';
+import { clientErrorRequestSchema, type DeepHealthResponse } from '@hestia/shared';
 import { parse, type RouteContext } from '../http/context.js';
 import { fail } from '../problem.js';
 import { buildErrorRecord } from '../services/errors.js';

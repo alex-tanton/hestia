@@ -11,7 +11,7 @@ afterEach(async () => {
 });
 
 async function fixture(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'hearth-backups-'));
+  const dir = await mkdtemp(join(tmpdir(), 'hestia-backups-'));
   made.push(dir);
   return dir;
 }
@@ -40,7 +40,7 @@ describe('newestBackupTime', () => {
 
   it('is null for an empty, missing, or unset directory', async () => {
     expect(await newestBackupTime(await fixture())).toBeNull();
-    expect(await newestBackupTime('/nonexistent/hearth/backups')).toBeNull();
+    expect(await newestBackupTime('/nonexistent/hestia/backups')).toBeNull();
     expect(await newestBackupTime(undefined)).toBeNull();
   });
 });

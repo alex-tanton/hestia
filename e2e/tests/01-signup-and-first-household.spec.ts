@@ -26,7 +26,7 @@ const ACCOUNTS = {
 async function finishInstallStep(page: Page): Promise<void> {
   // Chromium offers `beforeinstallprompt` when it feels like it, so the step ends on whichever
   // of its two "go to the app" controls this run rendered.
-  await page.getByRole('button', { name: /^(Go to Hearth|Not now)$/ }).click();
+  await page.getByRole('button', { name: /^(Go to Hestia|Not now)$/ }).click();
 }
 
 for (const theme of ['light', 'dark'] as const) {
@@ -67,7 +67,7 @@ for (const theme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Continue' }).click();
 
       await expect(
-        page.getByRole('heading', { name: 'Add Hearth to your home screen' }),
+        page.getByRole('heading', { name: 'Add Hestia to your home screen' }),
       ).toBeVisible();
       await expectAccessible(page, `onboarding, install (${theme})`);
       await finishInstallStep(page);

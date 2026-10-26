@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import type { DeparturePreview, Member } from '@hearth/shared';
+import type { DeparturePreview, Member } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';

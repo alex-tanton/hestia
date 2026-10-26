@@ -44,8 +44,8 @@ describe('invite credentials', () => {
   });
 
   it('puts the token in the link’s fragment', () => {
-    expect(inviteLink('https://hearth.tail1234.ts.net', 'abc_-123')).toBe(
-      'https://hearth.tail1234.ts.net/join#token=abc_-123',
+    expect(inviteLink('https://hestia.tail1234.ts.net', 'abc_-123')).toBe(
+      'https://hestia.tail1234.ts.net/join#token=abc_-123',
     );
   });
 });

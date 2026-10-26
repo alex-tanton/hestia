@@ -1,4 +1,4 @@
-# Hearth ingress.
+# Hestia ingress.
 # Tailscale Funnel terminates TLS on the host and forwards plain HTTP to 127.0.0.1:8080.
 {
 	auto_https off
@@ -9,7 +9,7 @@
 		# connection to Caddy from the Compose network's gateway, so that address is the one
 		# Caddy actually sees for it. The loopback entries cover Funnel if Caddy ever runs on
 		# the host network. Nothing else on the Compose network is trusted.
-		trusted_proxies static 127.0.0.1/32 ::1/128 {$HEARTH_HOST_GATEWAY}/32
+		trusted_proxies static 127.0.0.1/32 ::1/128 {$HESTIA_HOST_GATEWAY}/32
 		# Take the right-most untrusted address, so a client cannot pick its own IP by sending
 		# an X-Forwarded-For that Funnel then appends to.
 		trusted_proxies_strict
@@ -21,14 +21,14 @@
 	header {
 		# Applied as the response is written, so an upstream cannot replace them.
 		defer
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://{$HEARTH_HOST}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://{$HESTIA_HOST}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "same-origin"
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 	}
 
-	# Only hearth-service may call these GoTrue endpoints (it reaches auth:9999 directly), so
+	# Only hestia-service may call these GoTrue endpoints (it reaches auth:9999 directly), so
 	# the common-password check and password re-entry cannot be skipped. The path matcher
 	# compares the percent-decoded path with duplicate slashes merged, case-insensitively, so
 	# encoded and doubled-slash spellings match too.
@@ -47,7 +47,7 @@
 		respond @refused_signup 403
 		respond @refused_user 403
 
-		reverse_proxy /api/* hearth-service:3000 {
+		reverse_proxy /api/* hestia-service:3000 {
 			# Downstream sees exactly one address: the client Caddy resolved above.
 			header_up X-Forwarded-For {client_ip}
 		}

@@ -1,11 +1,11 @@
 import type { LightMyRequestResponse } from 'fastify';
 import { describe, expect, it } from 'vitest';
-import type { MatchOverride } from '@hearth/shared';
+import type { MatchOverride } from '@hestia/shared';
 import { adminPool, as, household, signUp, type HouseholdFixture } from './test/service-stack.js';
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
- * Match overrides against `supabase start`: real Postgres as hearth_service, every request through
+ * Match overrides against `supabase start`: real Postgres as hestia_service, every request through
  * withUserDb, so RLS and the unique constraint are what decide each assertion. Requests here
  * commit, so each test makes its own household.
  */
@@ -22,7 +22,7 @@ async function createOverride(
 }
 
 describe('POST /households/:id/match-overrides', () => {
-  it('normalizes both names through @hearth/matching before storing them', async () => {
+  it('normalizes both names through @hestia/matching before storing them', async () => {
     const home = await household(app);
     const response = await createOverride(home, {
       ingredientName: 'Cheese!',

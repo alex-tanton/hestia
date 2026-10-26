@@ -1,6 +1,6 @@
 import { ListChecks, Plus } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import type { Errand } from '@hearth/shared';
+import type { Errand } from '@hestia/shared';
 import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import { ErrandRow } from '../../components/errands/ErrandRow.tsx';
 import { ErrandSheet } from '../../components/errands/ErrandSheet.tsx';

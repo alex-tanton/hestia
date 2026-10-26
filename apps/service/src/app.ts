@@ -5,7 +5,7 @@ import Fastify, {
   type FastifyPluginCallback,
   type FastifyRequest,
 } from 'fastify';
-import { scrubErrorName, scrubErrorText } from '@hearth/shared';
+import { scrubErrorName, scrubErrorText } from '@hestia/shared';
 import { DEFAULT_RATE_LIMIT_PER_MINUTE } from './env.js';
 import { GoTrueError } from './gotrue/http.js';
 import { createRouteContext, type AppDependencies } from './http/context.js';
@@ -39,11 +39,11 @@ export type { AppDependencies } from './http/context.js';
 export interface AppOptions {
   trustedProxies: string[];
   logger: false | { level: string };
-  /** HEARTH_ORIGIN: invite links are built on it. */
+  /** HESTIA_ORIGIN: invite links are built on it. */
   origin: string;
-  /** HEARTH_OWNER_EMAIL; empty means nobody is the owner. */
+  /** HESTIA_OWNER_EMAIL; empty means nobody is the owner. */
   ownerEmail: string;
-  /** HEARTH_RATE_LIMIT_PER_MINUTE; defaults to production's limit. */
+  /** HESTIA_RATE_LIMIT_PER_MINUTE; defaults to production's limit. */
   rateLimitPerMinute?: number;
   openApiDocument?: () => unknown;
   /**

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import type { Errand, Household } from '@hearth/shared';
+import type { Errand, Household } from '@hestia/shared';
 import {
   as,
   signUp,

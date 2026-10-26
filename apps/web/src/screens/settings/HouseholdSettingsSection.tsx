@@ -1,5 +1,5 @@
 import { useState, type SyntheticEvent, type ReactElement } from 'react';
-import { householdNameSchema, postalCodeSchema, type Household } from '@hearth/shared';
+import { householdNameSchema, postalCodeSchema, type Household } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { ErrorState } from '../../components/states/StateBlocks.tsx';

@@ -8,7 +8,7 @@ import {
   waitForServiceWorker,
 } from '../support/app.ts';
 import { expectAccessible } from '../support/axe.ts';
-import { hearthAdmin } from '../support/db.ts';
+import { hestiaAdmin } from '../support/db.ts';
 import { SEED, SEED_PASSWORD } from '../support/env.ts';
 
 /**
@@ -55,17 +55,17 @@ const COPY = {
   recipesEmpty: 'No recipes yet. Paste a link or add one by hand.',
   suggestionsEmpty: 'No recipes yet. Add one to see what you can make this week.',
   billsEmpty:
-    'Hearth tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.',
+    'Hestia tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.',
   choresEmpty: 'No chores yet. Add one to start tracking what needs doing.',
   errandsEmpty: 'No errands yet. Add one to keep track of it.',
   saving: 'Saving…',
   saveError: "Couldn't save that setting. Try again.",
-  denied: "Notifications are blocked for Hearth in this browser, so this device won't get them.",
+  denied: "Notifications are blocked for Hestia in this browser, so this device won't get them.",
   dismissed: 'Notifications stay off on this device until you allow them.',
   failed: "Couldn't turn on notifications on this device. Try again.",
-  unsupported: "Notifications aren't available in this browser. Hearth still works without them.",
+  unsupported: "Notifications aren't available in this browser. Hestia still works without them.",
   iosInstall:
-    'On iPhone and iPad, Hearth has to be on the home screen before it can send notifications.',
+    'On iPhone and iPad, Hestia has to be on the home screen before it can send notifications.',
 } as const;
 
 /** A notification preference write, which the save states hold open or fail on purpose. */
@@ -136,7 +136,7 @@ for (const theme of THEMES) {
     test('set a new password that is too short', async ({ page }) => {
       // The owner's reset link is the only route to a recovery session. Morgan is the subject, as
       // in journey 6, and nothing is submitted with a password that would be accepted.
-      const printed = hearthAdmin(['reset-password', SEED.morgan.email]);
+      const printed = hestiaAdmin(['reset-password', SEED.morgan.email]);
       expect(printed.status, printed.stderr).toBe(0);
       await page.goto(printed.stdout.trim());
       await expect(page.getByRole('heading', { name: 'Set a new password' })).toBeVisible();

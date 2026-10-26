@@ -4,7 +4,7 @@ import {
   type NotificationPreference,
   type ProfileResponse,
   type UpdateNotificationPreferenceRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import {

@@ -11,7 +11,7 @@ import { del, get, set } from 'idb-keyval';
  * TanStack's own defaults decide what goes in: successful queries, and mutations that are paused.
  */
 
-export const PERSIST_KEY = 'hearth-query-cache';
+export const PERSIST_KEY = 'hestia-query-cache';
 
 /**
  * Stale data beats empty data, and a phone can be away from a connection for longer than TanStack's

@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
-import { listNameSchema, type ShoppingList, type ShoppingListDetail } from '@hearth/shared';
+import { listNameSchema, type ShoppingList, type ShoppingListDetail } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';

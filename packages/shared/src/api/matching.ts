@@ -24,7 +24,7 @@ export type MatchOverride = z.infer<typeof matchOverrideSchema>;
 /**
  * POST /api/households/:id/match-overrides. Names, not pre-normalized strings — like every other
  * `normalized_name` in the system (a manual item's `normalized_name` is computed from its name by
- * `@hearth/matching`), the service normalizes both sides itself rather than trusting a
+ * `@hestia/matching`), the service normalizes both sides itself rather than trusting a
  * client-supplied normalized form. The recipe breakdown a correction is made from already shows
  * the ingredient's and the target's plain names.
  */

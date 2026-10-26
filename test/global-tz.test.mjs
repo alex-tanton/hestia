@@ -1,6 +1,6 @@
 /*
  * Tests for `test/global-tz.mjs`, the Vitest `globalSetup` that validates `TZ` and
- * `HEARTH_TEST_NOW` before any test runs. `TZ` is process-wide state, so each case runs the hook
+ * `HESTIA_TEST_NOW` before any test runs. `TZ` is process-wide state, so each case runs the hook
  * in a child process with its own environment. Run by `pnpm test` through `test:harness`.
  */
 
@@ -24,7 +24,7 @@ console.log(JSON.stringify({ january: at('2026-01-15T12:00:00Z'), july: at('2026
 function runHook(env) {
   const childEnvironment = { ...process.env };
   delete childEnvironment['TZ'];
-  delete childEnvironment['HEARTH_TEST_NOW'];
+  delete childEnvironment['HESTIA_TEST_NOW'];
   const run = spawnSync(process.execPath, ['--input-type=module', '-e', SCRIPT], {
     env: { ...childEnvironment, ...env },
     encoding: 'utf8',
@@ -59,7 +59,7 @@ describe('global-tz: TZ values the process honors are accepted', () => {
     it(`TZ=${value}`, () => {
       const run = runHook({ TZ: value });
       assert.equal(run.status, 0, run.stderr);
-      assert.match(run.stdout, /\[test-clock\] TZ=\S+ HEARTH_TEST_NOW=\(default\)/);
+      assert.match(run.stdout, /\[test-clock\] TZ=\S+ HESTIA_TEST_NOW=\(default\)/);
       assert.deepEqual(offsets(run), { january, july });
     });
   }
@@ -84,7 +84,7 @@ describe('global-tz: TZ values that are not a zone are rejected', () => {
   }
 });
 
-describe('global-tz: HEARTH_TEST_NOW is validated upfront', () => {
+describe('global-tz: HESTIA_TEST_NOW is validated upfront', () => {
   for (const value of [
     '2026-10-14T12:00:00.000Z',
     '2030-10-05T23:30:00+02:00',
@@ -95,7 +95,7 @@ describe('global-tz: HEARTH_TEST_NOW is validated upfront', () => {
     it(`accepts ${value}`, () => {
       for (const zone of [undefined, 'Asia/Tokyo']) {
         const run = runHook(
-          zone === undefined ? { HEARTH_TEST_NOW: value } : { HEARTH_TEST_NOW: value, TZ: zone },
+          zone === undefined ? { HESTIA_TEST_NOW: value } : { HESTIA_TEST_NOW: value, TZ: zone },
         );
         assert.equal(run.status, 0, run.stderr);
       }
@@ -117,17 +117,17 @@ describe('global-tz: HEARTH_TEST_NOW is validated upfront', () => {
     it(`rejects ${value}`, () => {
       for (const zone of [undefined, 'Asia/Tokyo']) {
         const run = runHook(
-          zone === undefined ? { HEARTH_TEST_NOW: value } : { HEARTH_TEST_NOW: value, TZ: zone },
+          zone === undefined ? { HESTIA_TEST_NOW: value } : { HESTIA_TEST_NOW: value, TZ: zone },
         );
         assert.notEqual(run.status, 0, `accepted: ${run.stdout}`);
-        assert.match(run.stderr, /HEARTH_TEST_NOW=/);
+        assert.match(run.stderr, /HESTIA_TEST_NOW=/);
         assert.match(run.stderr, /ISO-8601/);
       }
     });
   }
 
   it('echoes the instant it was given', () => {
-    const run = runHook({ TZ: 'Asia/Tokyo', HEARTH_TEST_NOW: '2030-10-05T23:30:00+02:00' });
-    assert.match(run.stdout, /HEARTH_TEST_NOW=2030-10-05T23:30:00\+02:00/);
+    const run = runHook({ TZ: 'Asia/Tokyo', HESTIA_TEST_NOW: '2030-10-05T23:30:00+02:00' });
+    assert.match(run.stdout, /HESTIA_TEST_NOW=2030-10-05T23:30:00\+02:00/);
   });
 });

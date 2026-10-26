@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
-import type { IngredientInput, ParsedIngredient, RecipeIngredient } from '@hearth/shared';
+import type { IngredientInput, ParsedIngredient, RecipeIngredient } from '@hestia/shared';
 import { Button } from '../ui/Button.tsx';
 import { TextField } from '../ui/Field.tsx';
 

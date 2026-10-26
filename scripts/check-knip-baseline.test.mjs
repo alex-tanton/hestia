@@ -17,7 +17,7 @@ const REPO_ROOT = resolve(import.meta.dirname, '..');
 const CHECKER = join(REPO_ROOT, 'scripts', 'check-knip-baseline.mjs');
 const COMMITTED_BASELINE = join(REPO_ROOT, 'scripts', 'knip-production-baseline.txt');
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-knip-baseline-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-knip-baseline-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -51,7 +51,7 @@ function check({ reportText, baseline, extraArguments = [] }) {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       env: Object.fromEntries(
-        Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HEARTH_TEST_NOW'),
+        Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HESTIA_TEST_NOW'),
       ),
     },
   );
@@ -117,7 +117,7 @@ describe('check-knip-baseline: comparing findings with the baseline', () => {
 describe('check-knip-baseline: cases it cannot decide exit 2', () => {
   it('rejects a report that is not JSON', () => {
     const run = check({
-      reportText: '> hearth@ knip\nnot json',
+      reportText: '> hestia@ knip\nnot json',
       baseline: baselineText(BASELINE_ROWS),
     });
     assert.equal(run.status, 2);

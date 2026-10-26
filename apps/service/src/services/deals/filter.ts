@@ -1,4 +1,4 @@
-import { DEAL_PAGE_SIZE, type Deal, type DealSort } from '@hearth/shared';
+import { DEAL_PAGE_SIZE, type Deal, type DealSort } from '@hestia/shared';
 
 /**
  * Deal filtering, sorting, and pagination (50 per page). Pure, over deals already read from `deal`,

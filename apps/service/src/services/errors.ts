@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { sql, type Kysely } from 'kysely';
-import { SCRUBBED_MESSAGE_MAX_LENGTH, scrubErrorReport } from '@hearth/shared';
+import { SCRUBBED_MESSAGE_MAX_LENGTH, scrubErrorReport } from '@hestia/shared';
 import type { Database } from '../db.js';
 
 export type ErrorSource = 'service' | 'web';

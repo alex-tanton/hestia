@@ -8,7 +8,7 @@ import {
   flyerParamsSchema,
   flyersQuerySchema,
   householdIdParamsSchema,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { VerifiedUser } from '../auth/jwt.js';
 import type { Database } from '../db.js';
 import { withUserDb } from '../db/user-db.js';

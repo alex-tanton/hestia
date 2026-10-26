@@ -1,4 +1,4 @@
-import { notificationCopySchema, scrubErrorText, type NotificationType } from '@hearth/shared';
+import { notificationCopySchema, scrubErrorText, type NotificationType } from '@hestia/shared';
 import { z } from 'zod';
 import type { DroppedCopy } from '../notifications/copy.js';
 import type { JobLogger } from './types.js';

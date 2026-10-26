@@ -13,18 +13,18 @@ export const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
  * One run's identity is fixed once per process tree. This module is first loaded by the Playwright
  * config in the runner, which writes the values into the environment; the workers, global setup,
  * and global teardown inherit them, so every process in a run addresses the same stack, and two
- * runs on one machine never share one. `HEARTH_E2E_RUN_ID` names a run explicitly, which is how a
+ * runs on one machine never share one. `HESTIA_E2E_RUN_ID` names a run explicitly, which is how a
  * reused stack is found again.
  */
-const STATE_ROOT = process.env['HEARTH_E2E_STATE_DIR'] ?? join(tmpdir(), 'hearth-e2e');
+const STATE_ROOT = process.env['HESTIA_E2E_STATE_DIR'] ?? join(tmpdir(), 'hestia-e2e');
 
 if (
-  process.env['HEARTH_E2E_REUSE_STACK'] === '1' &&
-  process.env['HEARTH_E2E_RUN_ID'] === undefined
+  process.env['HESTIA_E2E_REUSE_STACK'] === '1' &&
+  process.env['HESTIA_E2E_RUN_ID'] === undefined
 ) {
   // A fresh id would name a stack nobody can find again, and the run would leave it running.
   throw new Error(
-    'HEARTH_E2E_REUSE_STACK=1 needs HEARTH_E2E_RUN_ID=<id>, the run id the stack printed when it started',
+    'HESTIA_E2E_REUSE_STACK=1 needs HESTIA_E2E_RUN_ID=<id>, the run id the stack printed when it started',
   );
 }
 
@@ -39,7 +39,7 @@ function freshRunId(stateRoot: string): string {
   }
 }
 
-export const RUN_ID = (process.env['HEARTH_E2E_RUN_ID'] ??= freshRunId(STATE_ROOT));
+export const RUN_ID = (process.env['HESTIA_E2E_RUN_ID'] ??= freshRunId(STATE_ROOT));
 const names = runNames(RUN_ID);
 export const COMPOSE_PROJECT = names.project;
 export const NETWORK = names.network;
@@ -60,13 +60,13 @@ export const BACKUP_DIR = join(STATE_DIR, 'backups');
  * which rules out letting Docker assign it. A reused stack keeps the ports it was brought up on.
  */
 const reused =
-  process.env['HEARTH_E2E_REUSE_STACK'] === '1' && existsSync(ENV_FILE)
+  process.env['HESTIA_E2E_REUSE_STACK'] === '1' && existsSync(ENV_FILE)
     ? parseEnvFile(readFileSync(ENV_FILE, 'utf8'))
     : {};
-const CADDY_PORT_VALUE = (process.env['HEARTH_E2E_CADDY_PORT'] ??=
-  reused['HEARTH_E2E_CADDY_PORT'] ?? freePort());
-const DB_PORT_VALUE = (process.env['HEARTH_E2E_DB_PORT'] ??=
-  reused['HEARTH_E2E_DB_PORT'] ?? distinctFreePort(CADDY_PORT_VALUE));
+const CADDY_PORT_VALUE = (process.env['HESTIA_E2E_CADDY_PORT'] ??=
+  reused['HESTIA_E2E_CADDY_PORT'] ?? freePort());
+const DB_PORT_VALUE = (process.env['HESTIA_E2E_DB_PORT'] ??=
+  reused['HESTIA_E2E_DB_PORT'] ?? distinctFreePort(CADDY_PORT_VALUE));
 
 /** The E2E stack's own ports, so a run never collides with a Compose or `supabase start` stack. */
 export const CADDY_PORT = Number(CADDY_PORT_VALUE);
@@ -92,7 +92,7 @@ function distinctFreePort(avoid: string): string {
 }
 
 /** The password every seed user signs in with. */
-export const SEED_PASSWORD = 'hearth-seed-pass-2026';
+export const SEED_PASSWORD = 'hestia-seed-pass-2026';
 
 /** The seed users and households. */
 export const SEED = {

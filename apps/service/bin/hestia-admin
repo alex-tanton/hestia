@@ -1,0 +1,5 @@
+#!/bin/sh
+# The owner CLI: docker compose exec hestia-service hestia-admin reset-password <email>
+# The image links this script onto the PATH, so resolve the link to find the bundle beside it.
+here=$(dirname "$(readlink -f "$0")")
+exec node "$here/../dist/cli.js" "$@"

@@ -5,7 +5,7 @@ import type {
   BillPayment,
   Household,
   SubscriptionsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import {
   adminPool,
   as,

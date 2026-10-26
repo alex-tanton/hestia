@@ -115,7 +115,7 @@ describe('push', () => {
     handlePush(scope, push.event);
     await push.settled();
 
-    expect(shown[0]?.title).toBe('Hearth');
+    expect(shown[0]?.title).toBe('Hestia');
   });
 
   it('never deep-links off the site', async () => {
@@ -142,7 +142,7 @@ describe('notificationclick', () => {
     expect(click.close).toHaveBeenCalledOnce();
     expect(window.focus).toHaveBeenCalledOnce();
     expect(window.postMessage).toHaveBeenCalledWith({
-      type: 'hearth:notification-click',
+      type: 'hestia:notification-click',
       url: '/chores',
       householdId: HOUSEHOLD,
     });

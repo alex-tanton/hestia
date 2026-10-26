@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ProfileResponse } from '@hearth/shared';
+import type { ProfileResponse } from '@hestia/shared';
 import { useProfile, useSwitchHousehold } from './lib/api/hooks.ts';
 import { queryKeys } from './lib/api/keys.ts';
 import {

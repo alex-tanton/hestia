@@ -1,7 +1,7 @@
 import { CalendarPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
-import type { RecipeDetail } from '@hearth/shared';
+import type { RecipeDetail } from '@hestia/shared';
 import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
 import { PlaceOnPlannerSheet } from '../../components/meals/PlaceOnPlannerSheet.tsx';
 import { ReadinessBreakdown } from '../../components/meals/ReadinessBreakdown.tsx';

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { scrubErrorName, scrubErrorText } from '@hearth/shared';
+import { scrubErrorName, scrubErrorText } from '@hestia/shared';
 import { PROBLEM_CONTENT_TYPE, problem } from '../problem.js';
 
 export interface HealthRouteOptions {

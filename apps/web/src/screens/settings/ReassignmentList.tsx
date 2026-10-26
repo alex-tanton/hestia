@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { DeparturePreview, Member } from '@hearth/shared';
+import type { DeparturePreview, Member } from '@hestia/shared';
 import { Card } from '../../components/ui/Card.tsx';
 import { Select } from '../../components/ui/Select.tsx';
 

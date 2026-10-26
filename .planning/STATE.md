@@ -1,270 +1,96 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 06
-current_phase_name: CI Enforcement and Lock-in
-status: executing
-stopped_at: Completed 06-15-PLAN.md
-last_updated: "2026-10-25T02:15:00.000Z"
-last_activity: 2026-10-24
-last_activity_desc: Plan 06-15 completed
-state_head: 5c44cc9
+milestone: v2.0
+milestone_name: Hestia — Domain Migration and Rebrand
+current_phase: 8
+current_phase_name: Full Rebrand to Hestia
+current_plan: 7
+status: verifying
+stopped_at: Completed 08-07-PLAN.md
+last_updated: "2026-10-26T04:27:52.537Z"
+last_activity: 2026-10-26
+last_activity_desc: Phase 08 execution started
+state_head: 969e8da2a3be287457c64a86ebdc66a854dbe32a
 progress:
-  total_phases: 6
-  completed_phases: 5
-  total_plans: 60
-  completed_plans: 59
-  percent: 98
+  total_phases: 5
+  completed_phases: 1
+  total_plans: 11
+  completed_plans: 11
+  percent: 20
+current_milestone: v2.0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-19)
+See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md) (updated 2026-10-25)
 
-**Core value:** The owner can start a manual review from a lean, trustworthy base: no dead code or stray generated files, a CI suite that passes repeatably regardless of day or timezone, and the known bugs fixed with regression tests.
-**Current focus:** Phase 06 — CI Enforcement and Lock-in
+**Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
+**Current focus:** Phase 08 — Full Rebrand to Hestia
 
 ## Current Position
 
-Phase: 06 (CI Enforcement and Lock-in) — EXECUTING
-Plan: 15 of 16
-Status: In progress — Plan 06-15 complete, ready for Plan 06-16
-Last activity: 2026-10-24 — Plan 06-15 complete
+Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
+Phase: 8 (Full Rebrand to Hestia)
+Current Plan: 7
+Total Plans in Phase: 7
+Phases: 1 of 5 complete (Phases 7–11)
+Status: Phase complete — ready for verification
+Last activity: 2026-10-26 — Phase 08 execution started
 
-Progress: [█████████▉] 98%
+Progress: [██░░░░░░░░] 20% of milestone plans
 
+## Milestone Roadmap
+
+- [ ] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 bloat, rewrite `README.md`, extract guides to `docs/`
+- [ ] **Phase 8: Full Rebrand to Hestia** - Web UI, manifest, CLI, packages (`@hestia/*`), env (`HESTIA_*`)
+- [ ] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale, add Cloudflare Tunnel, Caddy `CF-Connecting-IP`, origin `hestia.aberrance.app`
+- [ ] **Phase 10: Magic Links & Transactional Email** - Build flag, screens, GoTrue SMTP for Resend/Postmark, E2E tests
+- [ ] **Phase 11: Web Push & Edge Hardening** - VAPID `mailto:admin@aberrance.app`, iOS/Android PWA push verification, Cloudflare Edge caching, quality ratchet
+
+## Next Action
+
+Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+
+## Session
+
+**Last session:** 2026-10-26T04:27:52.497Z
+**Stopped at:** Completed 08-07-PLAN.md
+**Resume file:** None
 
 ## Performance Metrics
 
-**Velocity:**
-- Total plans completed: 44
-- Average duration: -
-- Total execution time: 0.0 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01 | 5 | - | - |
-| 02 | 9 | - | - |
-| 3 | 9 | - | - |
-| 4 | 8 | - | - |
-| 5 | 13 | - | - |
-
-**Recent Trend:**
-- Last 5 plans: -
-- Trend: -
-
-*Updated after each plan completion*
-**Per-Plan Metrics:**
-
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
-| Phase 01 P01 | 11min | 3 tasks | 15 files |
-| Phase 01 P02 | 11min | 2 tasks | 2 files |
-| Phase 01 P03 | 14min | 2 tasks | 2 files |
-| Phase 01 P04 | 15min | 3 tasks | 1 files |
-| Phase 01 P05 | ~35min | 3 tasks | 2 files |
-| Phase 03 P03 | 1h | 3 tasks | 6 files |
-| Phase 3 P04 | 30min | 2 tasks | 3 files |
-| Phase 03 P05 | 25min | 3 tasks | 12 files |
-| Phase 03 P06 | 30min | 2 tasks | 3 files |
-| Phase 03 P07 | resumed | 3 tasks | 1 files |
-| Phase 03 P08 | resumed session | 3 tasks | 1 files |
-| Phase 03 P09 | 2 sessions | 2 tasks | 5 files |
-| Phase 04 P01 | 12min | 3 tasks | 6 files |
-| Phase 04 P03 | 10min | 2 tasks | 5 files |
-| Phase 04 P05 | 10min | 3 tasks | 7 files |
-| Phase 04 P02 | 51min | 3 tasks | 2 files |
-| Phase 04 P06 | 8min | 2 tasks | 7 files |
-| Phase 04 P04-04 | 31min | 3 tasks | 1 files |
-| Phase 04 P07 | 1h 15m | 3 tasks | 1 files |
-| Phase 04 P08 | 1h | 2 tasks | 6 files |
-| Phase 05 P02 | 15min | 3 tasks | 17 files |
-| Phase 05 P01 | ~45min | 3 tasks | 13 files |
-| Phase 05 P04 | 35min | 3 tasks | 24 files |
-| Phase 5 P03 | 1h | 2 tasks | 2 files |
-| Phase 05 P05 | 1h45m | 3 tasks | 5 files |
-| Phase 05 P06 | 30min | 3 tasks | 82 files |
-| Phase 05 P07 | about 35min | 3 tasks | 144 files |
-| Phase 05 P08 | about 20min | 3 tasks | 11 files |
-| Phase 05 P09 | 80min | 3 tasks | 211 files |
-| Phase 05 P10 | 50min | 3 tasks | 44 files |
-| Phase 05 P11 | about 1h | 3 tasks | 3 files |
-| Phase 05 P12 | 1 session | 3 tasks | 8 files |
-| Phase 05 P13 | 3 sessions | 3 tasks | 6 files |
-| Phase 06 P01 | 12min | 3 tasks | 13 files |
-| Phase 06 P02 | 55min | 3 tasks | 9 files |
-| Phase 06 P03 | 75min | 2 tasks | 6 files |
-| Phase 06 P04 | 40min | 3 tasks | 4 files |
-| Phase 06 P05 | PART 1 and 2 (CI waits) | 3 tasks | 1 files |
-| Phase 06 P06 | about 1h | 3 tasks | 6 files |
-| Phase 06 P07 | 1h | 3 tasks | 8 files |
-| Phase 06 P08 | ~100min | 3 tasks | 1 files |
-| Phase 06 P09 | ~6.5h (CI waits, owner replies) | 3 tasks | 16 files |
-| Phase 06 P10 | ~10h (waiting for the first scheduled Sweep) | 3 tasks | 2 files |
-| Phase 06 P11 | ~45min | 3 tasks | 4 files |
-| Phase 06 P12 | ~45min | 3 tasks | 7 files |
-| Phase 06 P13 | ~50min | 3 tasks | 8 files |
-| Phase 06 P14 | 1 session | 3 tasks | 4 files |
-| Phase 06 P15 | 1 session | 3 tasks | 4 files |
+| Phase 07 P01 | 7min | 3 tasks | 289 files |
+| Phase 07 P02 | 9min | 3 tasks | 7 files |
+| Phase 07 P03 | 8min | 3 tasks | 4 files |
+| Phase 07 P04 | 8 min | 2 tasks | 3 files |
+| Phase 08 P01 | 15 min | 2 tasks | 32 files |
+| Phase 08 P02 | 7 min | 2 tasks | 216 files |
+| Phase 08 P03 | 7 min | 2 tasks | 73 files |
+| Phase 08 P04 | 7 min | 3 tasks | 41 files |
+| Phase 08 P05 | 8 min | 1 tasks | 52 files |
+| Phase 08 P06 | 10 min | 2 tasks | 7 files |
+| Phase 08 P07 | 24 min | 3 tasks | 5 files |
 
-## Accumulated Context
+## Decisions
 
-### Decisions
-
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- [Roadmap]: Git curation and push come first because every merge to `main` deploys (only `docs/` is exempt)
-- [Roadmap]: Determinism precedes removal so failures are attributable; enforcement is last so `main` is never red
-- [Roadmap]: Never rename the `CI` workflow or its job ids; `deploy.yml` fires on the workflow named `CI`
-- [Phase 01]: Gate 1 approved (approve-personal): 43 product commits + 1 policy commit; publish alex.c.tanton@gmail.com as author/committer email via identity-rewrite pass in plan 01-02; stale spec references kept
-- [Phase 01]: bee9a62 stays a plain pick: multi-scope header test(shared,matching) passes commitlint, scope-enum negative control fails
-- [Phase 01]: Plan 01-02: curated-main rebuilt (43 commits, tip 9dd6668) plus policy commit 83eae2c; identity rewritten to alex.c.tanton@gmail.com; use curated-main/83eae2c, not pre-identity 3c1dcea
-- [Phase 01]: Plan 01-03: curated tip 83eae2c841ab8de096d52990f8f3be3f4379c448 proven (43 PASS + 1 SKIP via rebase --exec, mode/CRLF/secret scans clean); plans 01-04 and 01-05 push only this SHA
-- [Phase 01]: Plan 01-04: Gate 2 approved (approve-gate-2); 83eae2c pushed to origin/curated-main only (new branch, no force); origin/main still 7da55e3; PR #1 opened (not merged), CI results recorded (see next entry)
-- [Phase 01]: Plan 01-04: PR #1 CI on tip 83eae2c: lint, typecheck, build, test-integration pass; test-unit fails (favorites.test.tsx as-of 4:00 AM vs 8:00 AM, 4h offset, analyst reading: UTC vs America/New_York, Phase 2 class) and test-e2e fails (registry toomanyrequests, no Playwright test ran); both in content identical to b96ca32; owner decides at Gate 3 (accept or re-run e2e first)
-
-- [Phase 01]: Plan 01-05: candidate tip changed after Gate 2 to d3da748223fb85432fc06defaa25ac00ac4ed258 (83eae2c plus a ci.yml-only pre-pull commit); pushed fast-forward to origin/curated-main; PR #1 CI: lint, typecheck, test-integration, test-e2e (102/102), build pass; test-unit fails on the one known timezone web test (Phase 2 TIME-01 class, unproven)
-- [Phase 01]: Plan 01-05: Gate 3 recorded as push-main-accept-red for d3da748 (owner reply approve-gate-3, 2026-10-12, red job test-unit). First push rejected by ruleset "Main PR Enforcement" (GH013); owner changed the ruleset and re-confirmed ("A done, re-confirm gate 3"); second plain push succeeded: origin/main 7da55e3..d3da748, PR #1 marked MERGED by GitHub; local main moved without disturbing .planning/ and .claude/; GIT-01..04 complete
-- [Phase 2]: Development moved to Claude Code cloud sessions. `.planning/` and `.claude/CLAUDE.md` are tracked on `main` (`commit_docs: true`); the plans run on Linux against `.planning/environment/cloud-setup.sh`, with Docker optional (no Docker: integration and E2E evidence comes from PR CI). Work branches `test/deterministic-clock` and `chore/knip-config` are backup-pushed after each plan with no PR; PRs open only at 02-08's gate (or 02-04's early-CI draft). Raw logs under `.planning/cleanup/logs/` are gitignored and never committed.
-- [Phase 2]: Clock pin is a subclass-safe `Date`, not `vi.setSystemTime` (it breaks `@date-fns/tz` in negative-offset zones); PR #8 later made suite-level overrides survive and covered the pin with 167 harness tests run by `pnpm test`
-- [Phase 2]: Owner decisions after verification (D-13 to D-18 in 02-CONTEXT.md): Phase 5 uses the test-inclusive jscpd baseline; weekend E2E run deferred; vitest declared at the root; fuzzy benchmark deleted; packages are internal; the jobs barrel keeps its test
-- [Phase 03]: A2=remove honored: 18 unused z.infer aliases removed from packages/shared, schemas kept
-- [Phase 03]: Plan 03-07: gate-pr2=approve; PR 2 (#13) opened at head 5f5b090 with six green CI jobs (test-e2e passed on attempt 3 after two ECR toomanyrequests re-runs); awaiting the owner's squash merge
-- [Phase 03]: Plan 03-09: final-tree proof on 9819e7c (knip default 1, production 28, nonode 1); knip-summary kept reported; DEAD-05 complete per OQ1=accept and local db:types evidence (permanent check Phase 6 CI-03); main test-e2e red on 51c077e and aefe63a (registry flake, owner-accepted, not re-run), green on 9819e7c after one re-run
-- [Phase 04]: Plan 04-01: FIX-01 held-id map keyed by list and deal (d4b01b2); FIX-04 drag handle as a draggable button with a role=presentation drop row, no eslint-disable (f1e16fd); FIX-02 tests on fix/list-adds-rotation (1571f07), per-list advisory lock one commit ahead on fix/list-adds-lock (2e357e5). Red/green in FIX-LEDGER-WEB.md; FIX-02 red/green pending PR 1 CI (04-02)
-- [Phase 04]: Plan 04-03: test/guard-tests (72b0668) holds the FIX-05 28-probe fence test (audit 0 violations, 4 mutations killed with 15/10/2/17 failures) and the FIX-03 registry-driven PATCH guard (autopay mutation killed); tests, harness wiring and docs only, no PR yet (04-04)
-- [Phase 04]: 04-05: PGPASSWORD prefix assignment with a password-free URL (T-04-13 accepted, D-09); Kong probes ship before the Kong fix; yaml@2.9.1 approved by the owner, installed by 04-06
-- [Phase 04]: 04-02: PR 1 (#15) opened with owner gate approve; FIX-02 red/green recorded from CI; test-e2e passed on attempt 2 after one owner-approved re-run of an unrelated attempt-1 failure
-- [Phase 04]: 04-06: Kong GoTrue is an allowlist at format 3.0 (verify, token, logout, user, otp, admin/users, denied); guarded by a Vitest test in apps/service using yaml 2.9.1; kong config parse skipped (no Docker); a kong.yml change needs a manual force-recreate of kong on the host
-- [Phase 04]: 04-04: PR 2 (#16) opened only after gate-pr2=approve was committed; six CI jobs green on first run, nothing merged
-- [Phase 04]: 04-07: PR 3 (#18) open at 7c0efdc with six green jobs; FIX-07 red from run 39457296052 job 118753127163 (34 unrefused); E2E flakes outside spec 08 re-run; no probe dropped; awaiting the owner's squash merge and the Kong recreate
-- [Phase 05]: Plan 05-02: service fixtures consolidated on test/shared-fixtures-wip (053f371): stack-hooks.ts and job-logger.ts, jscpd 99 -> 87 clones, service unit 757 = 757; readiness, deals and recipes keep their own hooks; 3 service pairs kept with reasons in FIXTURE-LEDGER.md; no PR opened
-- [Phase 05]: Plan 05-01: PR A content is on origin as ci/setup-action (43672635, tree fd704a4c); composite setup action keeps checkout in each job (D-12 deviation, ledger row for PR A body); seed typechecked once; GitHub refused the token push (no workflow scope) so the owner pushed via apply.sh (Windows Git Bash needs MSYS_NO_PATHCONV=1); working branch is claude/eloquent-mayer-szjtjf, not the plan's claude/vigilant-gates-a4ihid
-- [Phase 05]: Plan 05-04: web fixtures consolidated on test/shared-fixtures-wip (8a7e8e4): browser.ts, WithQueue, stubFetch, dealScreenHandlers, emptyDealSearch; jscpd 87 -> 66 clones, web 728 = 728; 14 pairs kept with reasons in FIXTURE-LEDGER.md (hoisted viewer-zone blocks, retry assertions, variant hooks); no PR opened
-- [Phase 05]: Plan 05-05: WB synced past PR A by one ordinary merge (no workflow-scope refusal); PR B (#27) opened from test/shared-fixtures with six green jobs, jscpd 96 -> 66 clones, integration tests 1190 = main; owner squash-merged as a660d58, main CI green
-- [Phase 05]: Plan 05-08: docs/sync-specs (158fd52) holds the seven specs and README audited against the code; docs-claims-check.mjs 582 tokens, 0 misses with a 34-token reasoned allowlist; hearth-admin documented as a hand-written shell wrapper; Kong routes, held deal-add id, per-list add-to-list lock and coverage setup stated as they are; README retired-spec citations removed; 14-row behavioral sample in DOCS-AUDIT-LEDGER.md; PR D opens in 05-13
-- [Phase 05]: Plan 05-13: PR D (#29) squash-merged by the owner as a5c4384 (docs: bring specs and codebase maps in line with the code); the dropped CLAUDE.md Anti-Patterns and Component Responsibilities were restored with 19 recorded corrections; main CI run 39718363858 needed three attempts (test-e2e failed at 19-notifications.spec.ts:140, then 17-accessibility-states.spec.ts:497 and :526, then green after the owner's rerun), treated as owner-approved flake exceptions; REDUNDANCY-LEDGER.md indexes RED-01 to RED-05; post-conditions on main: citations 0, migrations equal to c64d79e, docs 7 files, checker 2662 tokens 0 misses
-- [Phase 05]: Plan 05-11: PR C (#28) squash-merged by the owner as 9fdc9c9 (refactor: remove retired spec citations from code); main CI run 39709025122 six of six green; follow-up sweep (aaed732 comments, 33baf2d nine titles) included; Journey N labels and README pointers left for the owner and PR D; RED-04 completes with PR D
-- [Phase 06]: Plan 06-01: ci/gate-scripts pushed at e5895b2 with the knip baseline (28 rows, byte-equal to Phase 3), repo hygiene and migration append-only gates; check-knip-baseline runs knip-summary.mjs as a child process (PC-1); three .planning scripts now 100755; no PR opened
-- [Phase 06]: 06-02: the two production advisories are fixed by upgrading on deps/fix-prod-advisories (fastify 5.12.6, ip-address override 10.7.4), allowlist stays empty; jscpd 5.4.1 approved 2026-10-23
-- [Phase 06]: 06-03: today-cell zone is TODAY_ZONES[UTC epoch day % 11]; deploy gate reads the diff with --no-renames and fails open when ancestry cannot be decided
-- [Phase 06]: 06-04: owner pre-authorized opening PR 1; gate-pr1=approve-pr1 recorded without asking, 06-05 opens the pull request and the owner merges after CI passes
-- [Phase 06]: 06-06: PR 2 built on ci/enforce-gates (W2, local only, patches on WB); web coverage thresholds 84/80/77/85 from measured 85.38/81.83/78.59/86.96; db:types deterministic locally (81209804...); sweep.yml and deploy-gate wiring complete
-- [Phase 06]: 06-07: ci/enforce-gates pushed by the owner at the pinned tree (token lacks workflow scope); canary choice with-migration
-- [Phase 06]: 06-08: unused-dependency canary plant is fastest-levenshtein@1.0.16, not yaml (knip counts yaml as an optional peer, so it is never unused)
-- [Phase 06]: 06-08: PR 2 test-e2e needed three attempts (two distinct notification-spec failures, no registry flake), each rerun owner-authorized under rule 9 (DA-4)
-- [Phase 06]: Plan 06-09: main went red on date-dependent audit advisories twice (zod, then undici and fast-uri); the owner chose small fix PRs #38 and #43 (major-scoped pnpm.overrides) over allowlisting, keeping OD-1's empty allowlist
-- [Phase 06]: Plan 06-09: Sweep's push runs passed 36/36 on main; CI still triggers Deploy (run 40041408163 queued on the unregistered hearth runner); PR 3 (#42) open and green on all seven jobs; main's own latest test-e2e is red on a notification spec (DA-4), accepted by the owner without a rerun
-- [Phase 06]: Plan 06-10: PR 3 merged as f1c8583; CI green; Deploy workflow_run created within 2s but its deploy job not evaluated (hearth runner not provisioned, older queued run holds the concurrency group); CI-07 ticked complete with a caveat (ci07=partial); Sweep 36/36 on push and 42/42 by hand and on the first scheduled run; phase 6 closed
-- [Phase 06]: Plan 06-11: G-06-5: saved 18 unexpired E2E traces before retention expiry; mined all 89 CI runs and 6 Sweep runs (116 attempts, 676 jobs); classified 116 failure signatures into flaky (17), real (56), intentional (10), and infra (33); summarized 5 flaky specs (F-01..F-05); measured flake rate p = 15/81 = 0.185 for test-e2e (0 for unit and integration) and established proof bar N = 15; verified local suites repeatable with 0 failures (unit 5/5, integration 3/3, isweep 5/5, sweep 42/42 with today cell); flake-inventory=done
-- [Phase 06]: Plan 06-12: G-06-3: deploy gate modified to check for redeploy run via GitHub API, allowing manual re-run of Deploy to redeploy running commit while skipping CI push runs of the same commit; docs and tests updated; 13 local gates clean.
-- [Phase 06]: Plan 06-13: G-06-3: PR #44 opened with deploy.yml changes; 7/7 CI jobs green.
-- [Phase 06]: Plan 06-14: G-06-5: root cause analysis of all 5 flaky tests from traces; local reproduction of all 5 tests; owner approval of fix strategy (gate-flake-fixes=approve 2026-10-24, proof-bar-ci=15, proof-reruns=14).
-- [Phase 06]: Plan 06-15: G-06-5: flake fixes F-01 through F-05 implemented on fix/ci-flakes; F-01 product fix (cancel in-flight profile queries on active household switch) verified red-before-green with Vitest; F-02..F-05 test fixes verified; all 5 tests passed 30/30 local proof under repro conditions; 30-iteration cross-check on HEAD passed (150 passes); whole-suite proof passed 3 consecutive runs (104 passed each); 15 local gates passed exit=0; WB merged and fix/ci-flakes pushed to origin at 5c44cc9.
-
-
-### Pending Todos
-
-None yet.
-
-### Blockers/Concerns
-
-- [Phase 3]: Main CI gap: `test-e2e` is red on the main runs for 51c077e (PR 1) and aefe63a (PR 2) from the registry pre-pull flake; the owner chose not to re-run them so Deploy does not pick up superseded commits (each PR's own CI was green on an identical tree). 9819e7c is green after one re-run; `17-accessibility-states.spec.ts:527` and `19-notifications.spec.ts:141` flaked once there (look at them in Phase 6)
-- [Phase 5]: Notification e2e specs flaked across three attempts of main CI on a5c4384 (`19-notifications.spec.ts:140`, then `17-accessibility-states.spec.ts:497` and `:526`); the attempts ran about 23:43 to 00:19 America/New_York, so a time-of-day cause is a hypothesis, unconfirmed. Look at these specs in Phase 6
-- [Phase 3]: DEAD-05 is marked complete on the owner-authorized local Docker run (`pnpm db:types` twice, both equal to the committed file; `pnpm db:seed` exit 0), not CI; the permanent drift check is Phase 6 CI-03
-- [Phase 3]: `knip:production` reports `scripts/knip-summary.mjs` as a files line (owner decision keep-reported); revisit with Phase 6 CI-01, together with the `**/test/**` hidden-entry blind spot of the committed knip config
-- [Phase 1]: The "Main PR Enforcement" ruleset (id 23693495) was changed by the owner to permit the main push (the API now returns 404 for it, so it appears deleted rather than disabled). Nothing is enforced on main now; if it is re-created, a required check plus the red test-unit (favorites.test.tsx timezone test, Phase 2 TIME-01 class) will block PRs. CONTRIBUTING.md says branch protection is not configured; reconcile in Phase 6. Owner may cancel a queued Deploy run and delete origin/curated-main.
-- [Phase 3]: Three of the six proven-dead rows in `.planning/cleanup/TRIAGE.md` (`currentWeekFixture`, `emptyWeekFixture`, `previousWeekFixture` in `apps/web/src/test/meal-fixtures.ts`) no longer appear in a fresh `pnpm knip` run: the root `test:harness` script (PR #8) makes knip's Node plugin treat `test/**` files as entries, so a fresh default run gives 54 findings (recorded: 59) and 79 production (recorded: 80). Re-establish the tool evidence for those three before deleting anything; decide whether `knip.json` should stop that side effect
-- [Phase 3]: `../hearth-aside/bin/knip-summary.mjs` (outside the repo) normalizes the knip reports and is cited by TRIAGE.md; it is lost with the cloud container unless committed
-- [Phase 2]: TIME-03's weekend E2E confirmation is deferred by the owner; CI `test-e2e` has run on one calendar day only
-- [Phase 2]: The second code review (02-REVIEW-FIXES.md, of PR #8's code) has 0 critical, 6 warnings and 6 infos, all open; the owner has not yet decided whether to fix them
-- [Phase 6]: `main` has no branch protection and the Deploy job waits on an unregistered self-hosted runner; Dependabot PR #9 (29 npm updates) failed CI on 2026-10-16 and security alert dependabot/1 is unexamined
-- [Phase 4]: The offline-duplicate root cause is unproven; reproduce `useAddDealToList` (client id minted inside `mutationFn`) before fixing.
-- [Phase 6]: `db:types` determinism is unverified (run twice before gating); `braces` advisory has no upstream patch; web coverage thresholds need an enforce-or-remove decision.
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 261020-v7v | Fix WR-02: hold the deal-add item id at QueryClient scope (branch fix/held-deal-id, pushed, no PR, awaiting the owner's merge) | 2026-10-20 | c69569a | [261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien](./quick/261020-v7v-fix-wr-02-held-deal-add-id-at-queryclien/) |
-| 261020-wnk | CI: pull the Supabase E2E images from GHCR first with ECR fallback, plus GHCR and optional Docker Hub logins (branch ci/pull-supabase-from-ghcr, 2 local commits, NOT pushed: token lacks workflow scope; no PR) | 2026-10-20 | d25d8e6 | [261020-wnk-make-ci-image-pulls-robust-against-regis](./quick/261020-wnk-make-ci-image-pulls-robust-against-regis/) |
-| 3 | Document the cloud-sandbox CA workaround for running e2e (.claude/CLAUDE.md, branch claude/admiring-cerf-5q7am1, not pushed) | 2026-10-21 | 0a9d89d | — |
-
-## Deferred Items
-
-Items acknowledged and deferred at milestone close, most recent first:
-
-| Category | Item | Status | Deferred At | Milestone |
-|----------|------|--------|-------------|-----------|
-| *(none)* | | | | |
-
-## Session Continuity
-
-Last session: 2026-10-24T13:20:35.593Z
-Stopped at: Completed 06-10-PLAN.md
-Resume file: None
-
-### Resume point for Phase 5 (after 05-13, 2026-10-22)
-
-Update on 05-13: PR D (#29) is merged to `main` as `a5c43841a90b1ec3f98ea219b577b9100c2d712a`; `origin/main` is at that commit and WB merged it (`0db4b1b`). All four PRs are on `main` (A `ac8ef34`, B `a660d58`, C `9fdc9c9`, D `a5c4384`). Main CI run 39718363858 is green on attempt 3 after two test-e2e failures that were not registry flakes (owner-approved exceptions, recorded in `DOCS-AUDIT-LEDGER.md`). The phase is not marked complete; the orchestrator verifies next. `REDUNDANCY-LEDGER.md` is the index with the Phase 6 hand-offs. The summary and state ride along with Phase 6's first pull request (D-04). The notes below are older and mention PR D as unmerged.
-
-(Older notes, as of 05-12.)
-
-Update on 05-12: the seven maps (`e486d7f`, `last_mapped_commit` `283f15d`, contains PR C's `9fdc9c9`) and `.claude/CLAUDE.md` (`b506589`) are regenerated with the D-11 Comments rule; RED-04 is restated as 1,116 lines in 456 files (`34a753c`); `docs/sync-specs` is pushed at `8bd18ab` (also fixes the file-map `jobs` row and the compose comment citing README "Restore"). WB tip is the `docs: complete plan 05-12` commit. Next is 05-13: open PR D after merging WB into `docs/sync-specs` once more, then the owner merges. The old CLAUDE.md Anti-Patterns and Component Responsibilities sections are not in the regenerated one (mapper output); the owner may want them back.
-
-(Notes below are from after 05-11.)
-
-Update on 05-11: PR C (#28) is merged to `main` as `9fdc9c910410d5e0bcdd5ff6472bb7f3cff75423`; `main` CI (run 39709025122) is green in all six jobs. The follow-up sweep (`aaed732`, `33baf2d`) is part of it. `refactor/drop-spec-citations` no longer exists on `origin`. Next is 05-12, which syncs WB with `origin/main` first (phase rule 7). Left for PR D: README lines 69, 121 and 146 and `.claude/CLAUDE.md` line 232 (`left-for-pr-d=4`), plus the README pointers in `.env.example:9` and `docker/docker-compose.yml:275`. Reported for the owner, not edited: `Journey N` labels in the E2E suite and the items in the ledger's "Follow-up sweep". The text below is as of 05-10 where it mentions PR C as unmerged.
-
-Resume with `/gsd-execute-phase 5`. Plans 05-01 to 05-10 have SUMMARYs; 05-11 to 05-13 remain. Update on 05-10: PR C's content is complete (`pr-c-left=0`): `refactor/drop-spec-citations` is pushed at `b8decf1` (non-TS files and root configs `05cebd4`, recipe fixtures `4f4c124`, 45 test titles `96fb846`); test counts are unchanged in every workspace. Nine test titles with bare `Design`, `Branding` or `Requirements` wording were left as out of the plan's scope (listed in the 05-10 SUMMARY). The WB tip and the table below are as of 05-08, except that `refactor/drop-spec-citations` is now at `b8decf1`.
-
-Working branch (WB) for all `.planning/` state: `claude/eloquent-mayer-szjtjf` (the plans name `claude/vigilant-gates-a4ihid`, which never existed). Pushed, tip `5d7c32e`; always read the newest STATE from `origin` of this branch.
-
-Merged to `main`: PR A #26 (`ac8ef34`, RED-01/02) and PR B #27 (`a660d58`, RED-03); main CI green on both. The deploy runs for those merges were pending on the self-hosted runner.
-
-Unmerged work, all pushed (no PR opened for either):
-
-| Branch | Worktree | Tip | Holds | PR |
-|--------|----------|-----|-------|----|
-| `refactor/drop-spec-citations` | `/home/user/hearth-citations` | `da58b20` | PR C so far: recurrence, matching, shared, seed-ts, e2e, service batches; 15 service test titles left for 05-10 | opened and landed by 05-11 |
-| `docs/sync-specs` | `/home/user/hearth-docs-sync` | `158fd52` | PR D so far: docs claims checker output, `docs/*.md` and `README.md` fixes | opened by 05-13 |
-
-Before pushing either branch again, run `git merge --no-edit claude/eloquent-mayer-szjtjf` in its worktree (D-04). `test/shared-fixtures-wip` is a redundant backup (its content is merged via PR B). Worktrees are local to the container that ran this session; recreate with `git worktree add <path> <branch>` from `origin` if they are gone.
-
-Next, in order: 05-11 (open and land PR C: owner merge), 05-12 (finish PR D: sync, maps, `.claude/CLAUDE.md`), 05-13 (land PR D and close the phase: owner merge).
-
-Open items for the owner: `Journey N` labels in the E2E suite (34 lines, reported in `TEXT-SYNC-LEDGER.md` "Follow-up sweep", not edited); `Phase N` mentions (29 lines naming the app's build phases, unchanged); the requirement ID `TIME-05` in `bills.integration.test.ts:533`; the flaky notification e2e specs (`19-notifications.spec.ts:140` and `:141`, `17-accessibility-states.spec.ts:497`, `:526` and `:527`; three attempts of main CI on `a5c4384` ran around midnight America/New_York, a hypothesis only; `18-chores-and-errands-offline.spec.ts:140` also flaked once earlier); if a PR touches `.github/workflows` and GitHub refuses for the `workflow` scope, use the `apply.sh` hand-off with `export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` on Windows Git Bash and a save-to-file invocation.
-
-### Start-up checklist and standing rules for the next session (read before dispatching executors)
-
-Start-up, in order:
-1. You must be on `claude/eloquent-mayer-szjtjf` at tip `origin/claude/eloquent-mayer-szjtjf` (`git fetch origin && git status -sb`). `main` carries only the older `.planning/` state, so do not read STATE from it.
-2. Run `/gsd-execute-phase 5`. Expected: 10 of 13 plans have SUMMARYs, 05-11 is ready, and `blocked_by` is empty. The first dispatch is 05-11.
-3. Recreate the PR C worktree before 05-09 (the old ones lived in a previous container): `git fetch origin && git worktree add /home/user/hearth-citations refactor/drop-spec-citations` (if the branch is not checked out locally, `git worktree add -b refactor/drop-spec-citations /home/user/hearth-citations origin/refactor/drop-spec-citations`). For PR D later: `git worktree add -b docs/sync-specs /home/user/hearth-docs-sync origin/docs/sync-specs`. Use the same paths the plans and ledgers name. Tip check after adding: `refactor/drop-spec-citations` = `b8decf1`, `docs/sync-specs` = `158fd52`.
-4. `config.json` has `workflow.use_worktrees: false`, so executors run one at a time on the primary checkout, with code branches in separate `git worktree` directories as above. Do not run two executors at once: they all commit to this branch.
-
-Corrections to the plan text:
-- Plans 05-01 to 05-08 (already executed) name the working branch (WB) `claude/vigilant-gates-a4ihid`; that branch never existed and is left as history there. Plans 05-09 to 05-13 have been corrected to name `claude/eloquent-mayer-szjtjf`. WB is `claude/eloquent-mayer-szjtjf` everywhere (plan files, ledgers and commands); if an older summary or ledger line says otherwise, it means this branch.
-- `.planning/` files go in the PRs (D-04), so each of `refactor/drop-spec-citations` and `docs/sync-specs` needs `git merge --no-edit claude/eloquent-mayer-szjtjf` run in its worktree before every push.
-
-Environment rules that earlier executors followed:
-- Use Node 24: `export PATH=/opt/node-v24/bin:$PATH` (default `node` there was 22.22; `/opt/node-v24/bin/node` is 24.21.0). Re-check it exists in a new container; otherwise install Node 24 per `.nvmrc`.
-- Commitlint (`commitlint.config.js`) allows scopes `web, service, shared, recurrence, matching, db, e2e, docker` or no scope; subjects must stay within the repo's length rule (keep to 71 characters or fewer). Never use `--no-verify`. Husky runs typecheck and lint-staged on every commit.
-- Commit planning files path-limited (`git commit -- <paths>`), then check the file mode of any script (`git ls-tree`); path-limited commits reset the executable bit, so run `git update-index --chmod=+x` first for scripts.
-- Leave the untracked `.planning/milestone.lock` alone (add `.planning/milestone.lock` to `.git/info/exclude` if the stop hook complains).
-- `GH_TOKEN` is passed through the environment for the session and is never written to a file, log or commit. It lacks the `workflow` scope, so pushes that add or change `.github/workflows/*` fail; use the D-22 hand-off (patches under `.planning/cleanup/patches/` plus an `apply.sh` for the owner). PR C and PR D should touch no workflow files, so none is expected.
-- Never rerun a CI job without the owner's explicit OK (registry `toomanyrequests` flakes are the only allowed exception, up to the number the plan states). A red job that is not a registry flake becomes a decision for the owner.
-- Never force-push, never merge a PR (the owner squash-merges), and never add files under `docs/` beyond editing the seven existing specs.
-
-Comment-only proof tooling for PR C (`.planning/cleanup/tools/`):
-- `citation-inventory.mjs` (modes `inventory`, `apply-pure`, `queue`), `comment-only-check.mjs` (compiler-print comparison, `--titles` mode, directive guard), `comment-only-controls.sh` (six self-checks).
-- In the controls output, controls 3, 4 and 6 are negative controls, so `FAIL FAIL` is the correct result for them. Controls 1, 2 and 5 must print `OK OK`.
-- Ledger: `.planning/cleanup/TEXT-SYNC-LEDGER.md`, with per-batch TSVs under `.planning/cleanup/text-sync/`. Citation recount at plan 05-06: 1,116 lines in 456 files (592 pure, 239 mixed, 240 prose, 45 titles); 340 service sites are done; 15 service test titles are deferred to 05-10.
-
-Decided in 05-10: the three root config lines (`commitlint.config.js` once, `eslint.config.js` twice) are in PR C, because D-09 names "the two root JS configs". The knip tool reports `.planning/cleanup/tools/expand-compare.mjs`, `jscpd-compare.mjs` and `nonts-comment-check.mjs` as unused files; Phase 6's CI-01 must account for them.
-
-PR C wording the owner may want to look at when it opens: `services/bills.ts` `updateBillPayment` ("(autopay-logged ones included)") and `services/subscriptions.ts` `monthlyCents` (lists the conversion factors), both rewritten because the cited spec text could not be recovered.
+- [Phase 07]: 07-01: all 47 v1.0 raw outputs kept under the D-04 evidence rule (cited by tracked planning files; patches not regenerable in this clone), zero deletions
+- [Phase 07]: 07-02: DOC-02 left open in REQUIREMENTS.md; this plan delivers only the docs/deployment.md part, development.md and testing.md merge and README links follow in 07-03 and 07-04
+- [Phase 07]: 07-03: DOC-02 left open; development.md, the testing.md E2E merge and CONTRIBUTING links are done, the README cut and its links follow in 07-04
+- [Phase 07]: README keeps intro, Prerequisites and Layout verbatim and links every docs file; Prerequisites heading kept for docs/development.md anchor
+- [Phase 08]: 08-01: the login role is renamed by editing the two applied migrations in place; scripts/migration-exemptions.json pins each edit to the exact base and head blobs so the append-only gate admits only those edits and expires on its own once they are on main
+- [Phase 08]: 08-01: exemption entry paths must be flat .sql names under supabase/migrations/ and reasons single-line, stricter than the plan contract, to keep entry data from reaching git or the CI log unvalidated
+- [Phase 08]: 08-02: the phase docs-claims checker copy finds the root workspace by directory and its allowlist keeps both old and new product names allowed; the 08-07 legacy-name guard rejects old names in docs
+- [Phase 08]: 08-03: hard cutover to HESTIA_*; no fallback read of any pre-rebrand name anywhere (D-01)
+- [Phase 08]: 08-03: Compose project/network hestia, service hestia-service, runner label hestia; /srv/hestia host path
+- [Phase 08]: 08-04: no alias for the old CLI name and no migration of the old IndexedDB key or notification message type (D-07, D-08); manifest description, start_url, icons unchanged (D-10)
+- [Phase 08]: The outbound User-Agent and the OpenAPI title follow the product name; the dev seed, reset and test database passwords moved with their readers in one commit (08-05)
+- [Phase 08]: The live-file sweep leaves .planning/, the lockfile, the exemptions file and supabase/migrations untouched, so the former name remains there until 08-06 and 08-07 (08-05)
+- [Phase 08]: BRAND-02 text aligned with D-10: manifest and meta descriptions name no brand and stay as they are (orchestrator choice, owner-visible in 08-OWNER-CHECKLIST.md, overrule by changing both descriptions and restoring the requirement clause) — D-10 locks only name and short_name; the owner was unavailable
+- [Phase 08]: Guard allowlist prefixes .planning/phases/ and .planning/research/ are the planner's reading of D-13, recorded as an owner-visible choice in 08-OWNER-CHECKLIST.md — D-13 lists only the v1.0 archive; overrule by dropping a prefix from LEGACY_NAME_ALLOWLIST
+- [Phase 08]: CLI requirement is a clean break (no alias or shim, D-07) and the environment requirement is a hard cutover with no fallback reads (D-01, D-02); cloud-session probe targets alex-tanton/hestia and fails until the repository is renamed after merge — Requirement text must describe what 08-03 and 08-04 delivered
+- [Phase 08]: 08-07: the former product name is blocked in CI by check 4 of the existing hygiene script; six allowlisted paths, and the four planning state files allow only twelve exact quotes, so anything else there must say the former name
+- [Phase 08]: 08-07: every CI check, test:integration, the service coverage run and all 104 Playwright tests pass on the renamed stack; the browser look at the tab title, manifest and install step is left to the owner

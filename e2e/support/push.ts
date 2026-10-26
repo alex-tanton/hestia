@@ -3,7 +3,7 @@ import { readStackEnv } from './env.ts';
 
 /*
  * The E2E push double, from the suite's side. The stack records each push instead of sending it
- * (HEARTH_PUSH_TRANSPORT=test-double), and these helpers run the dispatch job at a chosen instant
+ * (HESTIA_PUSH_TRANSPORT=test-double), and these helpers run the dispatch job at a chosen instant
  * and read the record back. Both go through the service-role seam, so they need the run's own
  * generated key from `.env`.
  */

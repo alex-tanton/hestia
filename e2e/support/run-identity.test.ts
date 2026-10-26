@@ -6,8 +6,8 @@ import { SUBNET_CANDIDATES, parseEnvFile, runNames } from './run-identity.ts';
 void describe('runNames', () => {
   void it('derives the project, network, and image tag from the run id', () => {
     assert.deepEqual(runNames('3f9a1c'), {
-      project: 'hearth-e2e-3f9a1c',
-      network: 'hearth-e2e-3f9a1c',
+      project: 'hestia-e2e-3f9a1c',
+      network: 'hestia-e2e-3f9a1c',
       imageTag: 'e2e-3f9a1c',
     });
   });
@@ -22,7 +22,7 @@ void describe('runNames', () => {
 
   void it('refuses an id Docker would reject as a project or tag name', () => {
     for (const bad of ['', 'ABC', 'a_b', 'a-b', 'a b', 'x'.repeat(17)]) {
-      assert.throws(() => runNames(bad), /HEARTH_E2E_RUN_ID/, `accepted '${bad}'`);
+      assert.throws(() => runNames(bad), /HESTIA_E2E_RUN_ID/, `accepted '${bad}'`);
     }
   });
 });

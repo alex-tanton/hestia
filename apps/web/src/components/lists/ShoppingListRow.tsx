@@ -1,6 +1,6 @@
 import { PenLine, Store, Tag, UtensilsCrossed, type LucideIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
-import type { ListItem, ListItemSource } from '@hearth/shared';
+import type { ListItem, ListItemSource } from '@hestia/shared';
 import { cn } from '../../lib/cn.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Checkbox } from '../ui/Checkbox.tsx';

@@ -2,7 +2,7 @@
  * Vitest setup file shared by every workspace: pins `Date` so a unit test does not depend on
  * the wall clock. `docs/testing.md` describes the clock pin and the sweep that varies it.
  *
- * The instant comes from `HEARTH_TEST_NOW`, otherwise `DEFAULT_TEST_NOW`. Only `Date` is frozen
+ * The instant comes from `HESTIA_TEST_NOW`, otherwise `DEFAULT_TEST_NOW`. Only `Date` is frozen
  * and no fake timers are installed, so real timers keep running for `waitFor`.
  *
  * Overriding the clock (`docs/testing.md` states the same contract):
@@ -21,7 +21,7 @@
  *   its adjustment is applied twice.
  *
  * The pin is a `Date` of its own rather than `vi.setSystemTime`. Vitest's mock leaves
- * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hearth/recurrence`)
+ * `Date.prototype` without its own methods, and `@date-fns/tz` (used by `@hestia/recurrence`)
  * lists those methods when it loads in order to override them: loaded under that mock, its
  * `TZDate` answers in the machine's zone, which is wrong in every negative-offset zone. This pin
  * is in place before any test module is imported, so it has to look like `Date` to such code and
@@ -48,11 +48,11 @@ const DEFAULT_TEST_NOW = '2026-10-14T12:00:00.000Z';
 // with `isolate: false` runs the setup files once per test file in the same global): the pin
 // remembers the class it replaced, so a second load builds one pin over the native class instead
 // of a second pin over the first. A clock a test left installed inherits the marker from the pin.
-const NATIVE = Symbol.for('hearth.nativeDate');
+const NATIVE = Symbol.for('hestia.nativeDate');
 const NativeDate = globalThis.Date[NATIVE] ?? globalThis.Date;
 
 function pinnedInstant() {
-  const configured = process.env['HEARTH_TEST_NOW'];
+  const configured = process.env['HESTIA_TEST_NOW'];
   if (configured === undefined || configured === '') return NativeDate.parse(DEFAULT_TEST_NOW);
   return parseTestNow(configured);
 }

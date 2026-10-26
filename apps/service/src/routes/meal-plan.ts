@@ -7,7 +7,7 @@ import {
   mealPlanEntryIdParamsSchema,
   mealPlanQuerySchema,
   weekAddToListRequestSchema,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { parse, type RouteContext } from '../http/context.js';
 import { addMissingIngredientsToList } from '../services/add-to-list.js';
 import {

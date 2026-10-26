@@ -83,7 +83,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
   useTabScrollMemory(section, switcher.activeHouseholdId);
 
   useEffect(() => {
-    document.title = `${title} · Hearth`;
+    document.title = `${title} · Hestia`;
   }, [title]);
 
   return (

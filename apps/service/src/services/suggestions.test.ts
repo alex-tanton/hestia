@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Suggestion } from '@hearth/shared';
+import type { Suggestion } from '@hestia/shared';
 import { rankByReadiness } from './suggestions.js';
 
 function suggestion(title: string, readinessPercent: number): Suggestion {

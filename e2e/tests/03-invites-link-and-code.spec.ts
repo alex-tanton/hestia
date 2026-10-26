@@ -49,9 +49,9 @@ test('an admin invites, one member joins by link and another by code', async ({
 
   const morgan = await signedInPage(browser, SEED.morgan.email);
   await morgan.goto(link);
-  const installStep = morgan.getByRole('heading', { name: 'Add Hearth to your home screen' });
+  const installStep = morgan.getByRole('heading', { name: 'Add Hestia to your home screen' });
   await expect(installStep).toBeVisible();
-  await morgan.getByRole('button', { name: /^(Go to Hearth|Not now)$/ }).click();
+  await morgan.getByRole('button', { name: /^(Go to Hestia|Not now)$/ }).click();
   await expectDashboard(morgan, SEED.oakStreet.name);
   await expectAccessible(morgan, 'dashboard after joining by link');
   await morgan.context().close();

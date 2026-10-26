@@ -1,11 +1,11 @@
 /*
  * Tests for `scripts/deploy-gate.sh`: which commits the deploy workflow ships. Every case builds a
  * throwaway git repository, copies the real script into it, and runs it with a stub `docker` that
- * answers `image inspect hearth-service:current` with the running revision label (or fails, as when
+ * answers `image inspect hestia-service:current` with the running revision label (or fails, as when
  * no image exists). Nothing reaches a real Docker daemon, the network or the host's repository.
  * The cases pin the deploy rules (a commit equal to or older than the running revision is skipped,
  * a change confined to docs/ and .planning/ is skipped, anything else deploys, including an unknown
- * running revision) and that a hostile `HEARTH_DEPLOY_SHA` never reaches a shell. Run by
+ * running revision) and that a hostile `HESTIA_DEPLOY_SHA` never reaches a shell. Run by
  * `pnpm test` through the root `test:harness` script.
  */
 
@@ -28,7 +28,7 @@ import { after, describe, it } from 'node:test';
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const GATE = join(REPO_ROOT, 'scripts', 'deploy-gate.sh');
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-gate-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-gate-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -62,7 +62,7 @@ function gitEnvironment() {
 function git(cwd, ...args) {
   const run = spawnSync(
     'git',
-    ['-c', 'user.name=hearth-test', '-c', 'user.email=test@example.invalid', ...args],
+    ['-c', 'user.name=hestia-test', '-c', 'user.email=test@example.invalid', ...args],
     { cwd, encoding: 'utf8', env: gitEnvironment() },
   );
   assert.equal(run.status, 0, `git ${args.join(' ')}: ${run.stderr}`);
@@ -109,13 +109,13 @@ function gate(dir, { revision, deploySha, omitSha = false, attempt } = {}) {
   const log = join(scratch, `docker-${String(runs)}.log`);
   writeFileSync(log, '');
   const env = { ...gitEnvironment(), PATH: `${binDir}${delimiter}${process.env['PATH'] ?? ''}` };
-  delete env['HEARTH_DEPLOY_SHA'];
-  delete env['HEARTH_DEPLOY_ATTEMPT'];
+  delete env['HESTIA_DEPLOY_SHA'];
+  delete env['HESTIA_DEPLOY_ATTEMPT'];
   delete env['STUB_REVISION'];
   env['STUB_LOG'] = log;
   if (revision !== undefined) env['STUB_REVISION'] = revision;
-  if (!omitSha) env['HEARTH_DEPLOY_SHA'] = deploySha ?? git(dir, 'rev-parse', 'HEAD');
-  if (attempt !== undefined) env['HEARTH_DEPLOY_ATTEMPT'] = String(attempt);
+  if (!omitSha) env['HESTIA_DEPLOY_SHA'] = deploySha ?? git(dir, 'rev-parse', 'HEAD');
+  if (attempt !== undefined) env['HESTIA_DEPLOY_ATTEMPT'] = String(attempt);
   const run = spawnSync('bash', [join(dir, 'scripts', 'deploy-gate.sh')], {
     cwd: dir,
     encoding: 'utf8',
@@ -136,7 +136,7 @@ function assertDecision(run, decision, reason) {
   assert.match(run.stderr, /^deploy-gate: running revision .+: .+\n$/);
   if (reason !== undefined) assert.match(run.stderr, reason);
   for (const call of run.dockerCalls) {
-    assert.match(call, /^image inspect .* hearth-service:current$/);
+    assert.match(call, /^image inspect .* hestia-service:current$/);
   }
   assert.equal(run.dockerCalls.length, 1, run.dockerCalls.join('\n'));
 }
@@ -299,7 +299,7 @@ describe('deploy-gate: anything else since the running revision deploys', () => 
   });
 });
 
-describe('deploy-gate: a bad HEARTH_DEPLOY_SHA is refused before anything else runs', () => {
+describe('deploy-gate: a bad HESTIA_DEPLOY_SHA is refused before anything else runs', () => {
   const marker = join(scratch, 'pwned');
   const hostile = [
     ['unset', { omitSha: true }],
@@ -321,7 +321,7 @@ describe('deploy-gate: a bad HEARTH_DEPLOY_SHA is refused before anything else r
       const run = gate(dir, { revision: 'deadbeefcafe', ...options });
       assert.notEqual(run.status, 0, `${run.stdout}\n${run.stderr}`);
       assert.equal(run.stdout, '', 'no decision may be printed');
-      assert.match(run.stderr, /^deploy-gate: HEARTH_DEPLOY_SHA /);
+      assert.match(run.stderr, /^deploy-gate: HESTIA_DEPLOY_SHA /);
       assert.deepEqual(run.dockerCalls, [], 'docker must not be asked before the SHA is checked');
       assert.equal(existsSync(marker), false, 'the value reached a shell');
     });
@@ -393,7 +393,7 @@ describe('deploy-gate: deliberate redeploy of the commit already running (OD-7, 
   });
 });
 
-describe('deploy-gate: a bad HEARTH_DEPLOY_ATTEMPT is refused before anything else runs', () => {
+describe('deploy-gate: a bad HESTIA_DEPLOY_ATTEMPT is refused before anything else runs', () => {
   for (const value of ['0', '01', 'x', '2;touch x', '', '10000']) {
     it(`refuses ${JSON.stringify(value)}`, () => {
       const dir = createRepository();
@@ -401,7 +401,7 @@ describe('deploy-gate: a bad HEARTH_DEPLOY_ATTEMPT is refused before anything el
       const run = gate(dir, { attempt: value });
       assert.equal(run.status, 1);
       assert.equal(run.stdout, '');
-      assert.match(run.stderr, /^deploy-gate: HEARTH_DEPLOY_ATTEMPT/);
+      assert.match(run.stderr, /^deploy-gate: HESTIA_DEPLOY_ATTEMPT/);
       assert.equal(run.dockerCalls.length, 0);
       assert.equal(existsSync(join(dir, 'x')), false);
     });

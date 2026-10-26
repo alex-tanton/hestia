@@ -20,9 +20,9 @@ export function RequireSession(): ReactElement {
     return (
       <main className="mx-auto flex max-w-160 flex-col gap-3 p-4">
         <p role="status" className="sr-only">
-          Opening Hearth
+          Opening Hestia
         </p>
-        <SkeletonRows label="Opening Hearth" />
+        <SkeletonRows label="Opening Hestia" />
       </main>
     );
   }
@@ -92,7 +92,7 @@ export function AuthenticatedLayout(): ReactElement {
     return (
       <AppShell switcher={switcher} updatePrompt={<UpdatePrompt />}>
         {isOffline ? (
-          <OfflineState message="Hearth needs a connection to open. Your installed app will work offline once your household has loaded." />
+          <OfflineState message="Hestia needs a connection to open. Your installed app will work offline once your household has loaded." />
         ) : (
           <ErrorState
             message="Couldn't load your household. Try again."

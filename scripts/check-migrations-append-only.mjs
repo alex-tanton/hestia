@@ -5,19 +5,31 @@
  * edit, a delete, a rename (git reports it as a delete plus an add), a mode change and a type
  * change all fail. Whether new files sort after the existing ones is not checked.
  *
- *   node scripts/check-migrations-append-only.mjs --base REF [--repo DIR]
+ *   node scripts/check-migrations-append-only.mjs --base REF [--repo DIR] [--exemptions FILE]
  *
  * `--base` is a commit SHA or a ref name. In CI it comes from workflow event data, which a pull
  * request author controls, so it is validated against a strict pattern before git sees it and git
  * runs from an argument array, never a shell. The checkout needs enough history to contain the
  * merge base (`fetch-depth: 0`).
  *
+ * Exemptions: `scripts/migration-exemptions.json` (inside `--repo`, or `--exemptions FILE`) lists
+ * the one-time edits and renames the owner has reviewed. An entry names a migration path before and
+ * after the change and the exact git blob at each end. It applies only while the merge base still
+ * holds `fromBlob` and HEAD holds `toBlob`, and it removes only its own changes (`M path` for an
+ * edit, `D fromPath` plus `A toPath` for a rename); anything else in the diff still fails. Once the
+ * change is on the base branch the merge base holds the new content, so the entry stops matching
+ * and the gate is strict again without any edit. Each applied entry prints an `exempt:` line so the
+ * CI log shows what was admitted. The file is read as data with `node:fs` and its paths reach git
+ * only as a single `rev-parse` argument after validation. A missing file means no exemptions; an
+ * unreadable or malformed one is exit 2, never a pass.
+ *
  * Exit codes: 0 only additions; 1 an applied migration changed; 2 the check could not decide (bad
  * usage, an all-zero or unresolvable base, a git failure), which is never treated as a pass.
  */
 
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const MIGRATIONS_DIR = 'supabase/migrations';
@@ -26,10 +38,15 @@ const MAX_BUFFER = 64 * 1024 * 1024;
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const ZERO_SHA_PATTERN = /^0{40}$/;
 const REF_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/;
+/** A migration file name: directly under the migrations directory, no separator, no `..` segment. */
+const MIGRATION_NAME_PATTERN = /^[\w.-]+\.sql$/;
+const EXEMPTION_KEYS = ['fromPath', 'toPath', 'fromBlob', 'toBlob', 'reason'];
+const DEFAULT_EXEMPTIONS = join('scripts', 'migration-exemptions.json');
 
-const USAGE = `usage: node scripts/check-migrations-append-only.mjs --base REF [--repo DIR]
-  --base REF   commit SHA or ref name to compare with (required)
-  --repo DIR   the repository to check (default: this checkout)`;
+const USAGE = `usage: node scripts/check-migrations-append-only.mjs --base REF [--repo DIR] [--exemptions FILE]
+  --base REF          commit SHA or ref name to compare with (required)
+  --repo DIR          the repository to check (default: this checkout)
+  --exemptions FILE   reviewed one-time exemptions (default: ${DEFAULT_EXEMPTIONS} inside --repo)`;
 
 function usageError(message) {
   console.error(`check-migrations-append-only: ${message}`);
@@ -38,17 +55,21 @@ function usageError(message) {
 }
 
 function parseArguments(argv) {
-  const options = { base: undefined, repo: REPO_ROOT };
+  const options = { base: undefined, repo: REPO_ROOT, exemptions: undefined };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
-    if (flag !== '--base' && flag !== '--repo') usageError(`unknown flag ${String(flag)}`);
+    if (flag !== '--base' && flag !== '--repo' && flag !== '--exemptions') {
+      usageError(`unknown flag ${String(flag)}`);
+    }
     const value = argv[index + 1];
     if (value === undefined || value === '') usageError(`${flag} needs a value`);
     index += 1;
     if (flag === '--base') options.base = value;
-    else options.repo = resolve(value);
+    else if (flag === '--repo') options.repo = resolve(value);
+    else options.exemptions = resolve(value);
   }
   if (options.base === undefined) usageError('--base is required');
+  options.exemptions ??= join(options.repo, DEFAULT_EXEMPTIONS);
   if (!SHA_PATTERN.test(options.base) && !REF_PATTERN.test(options.base)) {
     usageError('--base must be a commit SHA or a ref name');
   }
@@ -80,8 +101,124 @@ function parseNameStatus(output) {
   return changes;
 }
 
+/** Throws unless `value` is a lowercase 40-digit git object id. */
+function requireBlob(label, key, value) {
+  if (typeof value !== 'string' || !SHA_PATTERN.test(value)) {
+    throw new Error(`${label}: ${key} must be 40 lowercase hex digits`);
+  }
+}
+
+/** Throws unless `value` is `supabase/migrations/<name>.sql` with a flat, plain file name. */
+function requireMigrationPath(label, key, value) {
+  const prefix = `${MIGRATIONS_DIR}/`;
+  const name =
+    typeof value === 'string' && value.startsWith(prefix) ? value.slice(prefix.length) : '';
+  if (!MIGRATION_NAME_PATTERN.test(name)) {
+    throw new Error(`${label}: ${key} must be a .sql file directly under ${MIGRATIONS_DIR}/`);
+  }
+}
+
+/** Reads the exemptions file as data: a missing file is no exemptions, anything else invalid throws. */
+function loadExemptions(file) {
+  let text;
+  try {
+    text = readFileSync(file, 'utf8');
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return [];
+    throw new Error(
+      `cannot read exemptions file ${file}: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new Error(
+      `exemptions file ${file} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+  if (!Array.isArray(parsed)) throw new Error(`exemptions file ${file} must be a JSON array`);
+  return parsed.map((entry, index) => {
+    const label = `exemptions entry ${String(index)}`;
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+      throw new Error(`${label}: must be an object`);
+    }
+    const keys = Object.keys(entry).sort();
+    if (keys.join() !== [...EXEMPTION_KEYS].sort().join()) {
+      throw new Error(`${label}: keys must be exactly ${EXEMPTION_KEYS.join(', ')}`);
+    }
+    requireMigrationPath(label, 'fromPath', entry.fromPath);
+    requireMigrationPath(label, 'toPath', entry.toPath);
+    requireBlob(label, 'fromBlob', entry.fromBlob);
+    requireBlob(label, 'toBlob', entry.toBlob);
+    if (
+      typeof entry.reason !== 'string' ||
+      entry.reason.trim() === '' ||
+      /[\r\n]/.test(entry.reason)
+    ) {
+      throw new Error(`${label}: reason must be a non-empty single line`);
+    }
+    return {
+      fromPath: entry.fromPath,
+      toPath: entry.toPath,
+      fromBlob: entry.fromBlob,
+      toBlob: entry.toBlob,
+      reason: entry.reason,
+    };
+  });
+}
+
+/** The object id `spec` names (`<commit>:<path>`), or undefined when it does not resolve. */
+function blobAt(repo, spec) {
+  const run = git(repo, ['rev-parse', '--verify', '--quiet', spec]);
+  return run.status === 0 ? run.stdout.trim() : undefined;
+}
+
+/**
+ * Removes the changes an entry accounts for. An entry applies only when its exact changes are in
+ * the diff, the merge base holds `fromBlob` at `fromPath` and HEAD holds `toBlob` at `toPath`.
+ * Every other entry is inert. Returns the remaining changes and the entries that applied.
+ */
+function applyExemptions(repo, base, entries, changes) {
+  if (entries.length === 0) return { remaining: changes, applied: [] };
+  const mergeBase = git(repo, ['merge-base', base, 'HEAD']);
+  if (mergeBase.status !== 0) {
+    throw new Error(
+      `git merge-base exited with status ${String(mergeBase.status)}: ${mergeBase.stderr.trim()}`,
+    );
+  }
+  const mergeBaseSha = mergeBase.stdout.trim();
+  let remaining = changes;
+  const applied = [];
+  for (const entry of entries) {
+    const wanted =
+      entry.fromPath === entry.toPath
+        ? [{ status: 'M', path: entry.fromPath }]
+        : [
+            { status: 'D', path: entry.fromPath },
+            { status: 'A', path: entry.toPath },
+          ];
+    const isWanted = (change) =>
+      wanted.some(({ status, path }) => change.status === status && change.path === path);
+    const present = wanted.every(({ status, path }) =>
+      remaining.some((change) => change.status === status && change.path === path),
+    );
+    if (
+      present &&
+      blobAt(repo, `${mergeBaseSha}:${entry.fromPath}`) === entry.fromBlob &&
+      blobAt(repo, `HEAD:${entry.toPath}`) === entry.toBlob
+    ) {
+      remaining = remaining.filter((change) => !isWanted(change));
+      applied.push(entry);
+    }
+  }
+  return { remaining, applied };
+}
+
 function main() {
-  const { base, repo } = parseArguments(process.argv.slice(2));
+  const { base, repo, exemptions } = parseArguments(process.argv.slice(2));
 
   if (ZERO_SHA_PATTERN.test(base)) {
     console.error(
@@ -91,8 +228,10 @@ function main() {
     return 2;
   }
 
-  let changes;
+  let remaining;
+  let applied;
   try {
+    const entries = loadExemptions(exemptions);
     const resolved = git(repo, ['rev-parse', '--verify', '--quiet', `${base}^{commit}`]);
     if (resolved.status !== 0) {
       console.error(
@@ -116,7 +255,7 @@ function main() {
       );
       return 2;
     }
-    changes = parseNameStatus(diff.stdout);
+    ({ remaining, applied } = applyExemptions(repo, base, entries, parseNameStatus(diff.stdout)));
   } catch (error) {
     console.error(
       `check-migrations-append-only: ${error instanceof Error ? error.message : String(error)}`,
@@ -124,7 +263,10 @@ function main() {
     return 2;
   }
 
-  const problems = changes.filter((change) => change.status !== 'A');
+  for (const { fromPath, toPath, reason } of applied) {
+    console.log(`exempt: ${fromPath} -> ${toPath}: ${reason}`);
+  }
+  const problems = remaining.filter((change) => change.status !== 'A');
   for (const { status, path } of problems) {
     console.error(
       `${status} ${path}: applied migrations are append-only; only new files may be added`,
@@ -134,7 +276,12 @@ function main() {
     console.log(`migrations: ${String(problems.length)} problems`);
     return 1;
   }
-  console.log(`migrations: ${String(changes.length)} added, nothing else changed`);
+  const added = `${String(remaining.length)} added, nothing else changed`;
+  console.log(
+    applied.length === 0
+      ? `migrations: ${added}`
+      : `migrations: ${added}, ${String(applied.length)} exempt`,
+  );
   return 0;
 }
 

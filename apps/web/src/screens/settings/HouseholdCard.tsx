@@ -1,7 +1,7 @@
 import { LogOut } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
-import type { Membership } from '@hearth/shared';
+import type { Membership } from '@hestia/shared';
 import { Badge } from '../../components/ui/Badge.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';

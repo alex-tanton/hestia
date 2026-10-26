@@ -1,4 +1,4 @@
-import type { MerchantSkipRate } from '@hearth/shared';
+import type { MerchantSkipRate } from '@hestia/shared';
 
 /**
  * Per-merchant skip rates from the most recent deal refresh. In memory: a restart forgets them

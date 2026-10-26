@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { ProfileResponse } from '@hearth/shared';
+import type { ProfileResponse } from '@hestia/shared';
 import { Card } from '../../components/ui/Card.tsx';
 import { formatTimezone } from '../../lib/format.ts';
 import { ReadOnlyValue, SettingsSection } from './SettingsSection.tsx';

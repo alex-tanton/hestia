@@ -1,5 +1,5 @@
 import cron, { type ScheduledTask } from 'node-cron';
-import { scrubErrorText } from '@hearth/shared';
+import { scrubErrorText } from '@hestia/shared';
 import { withJobLock } from './advisory-lock.js';
 import {
   runDispatchNotifications,

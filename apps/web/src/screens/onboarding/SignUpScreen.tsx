@@ -1,6 +1,6 @@
 import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { displayNameSchema, emailSchema } from '@hearth/shared';
+import { displayNameSchema, emailSchema } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';

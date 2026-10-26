@@ -1,7 +1,7 @@
 import { Newspaper } from 'lucide-react';
 import { useCallback, useState, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router';
-import type { DealScope, Flyer } from '@hearth/shared';
+import type { DealScope, Flyer } from '@hestia/shared';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { SegmentedControl } from '../../components/ui/SegmentedControl.tsx';

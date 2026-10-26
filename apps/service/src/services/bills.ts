@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import { currentBillOccurrence, type CalendarDate, type Recurrence } from '@hearth/recurrence';
+import { currentBillOccurrence, type CalendarDate, type Recurrence } from '@hestia/recurrence';
 import type {
   Bill,
   BillDetail,
@@ -9,7 +9,7 @@ import type {
   PayBillRequest,
   UpdateBillPaymentRequest,
   UpdateBillRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from './households.js';

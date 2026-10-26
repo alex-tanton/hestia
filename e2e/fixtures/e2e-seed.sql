@@ -58,7 +58,7 @@ begin
   -- `deal_query_cache` rows are "saffron" and "chicken", neither a favorited-merchant deal a
   -- journey can add to a list. A row per theme, already warm, is what lets the journey's search be
   -- a cache hit rather than a live Flipp call the suite must never make: each
-  -- `normalized_query` is exactly what `@hearth/matching` normalizes the raw item name to, which is
+  -- `normalized_query` is exactly what `@hestia/matching` normalizes the raw item name to, which is
   -- also what the journey types into the search box.
   -- -------------------------------------------------------------------------------------------
 

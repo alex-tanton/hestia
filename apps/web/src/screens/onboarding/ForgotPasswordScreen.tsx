@@ -5,7 +5,7 @@ import { OnboardingLayout } from './OnboardingLayout.tsx';
 /**
  * A single screen with no form. There is no email-based reset — nothing is
  * ever emailed — so the only route back in is a link the server owner generates with
- * `hearth-admin reset-password`.
+ * `hestia-admin reset-password`.
  */
 export function ForgotPasswordScreen(): ReactElement {
   const navigate = useNavigate();

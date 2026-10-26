@@ -1,4 +1,4 @@
-import type { ListItem, PantryItem, ShoppingList, ShoppingListDetail } from '@hearth/shared';
+import type { ListItem, PantryItem, ShoppingList, ShoppingListDetail } from '@hestia/shared';
 import { ALEX_ID, OAK_STREET_ID, SAM_ID } from './fixtures.ts';
 
 /*

@@ -2,20 +2,20 @@
 # Decides whether the checked-out commit should be deployed. Prints exactly one line on stdout,
 # `deploy=true` or `deploy=false`, and one `deploy-gate: ...` line on stderr naming the running
 # revision and the rule that decided. Exit 0 whenever a decision was printed; exit 1, with nothing
-# on stdout, when HEARTH_DEPLOY_SHA is unusable.
+# on stdout, when HESTIA_DEPLOY_SHA is unusable.
 #
-#   HEARTH_DEPLOY_SHA=$(git rev-parse HEAD) [HEARTH_DEPLOY_ATTEMPT=1] scripts/deploy-gate.sh
+#   HESTIA_DEPLOY_SHA=$(git rev-parse HEAD) [HESTIA_DEPLOY_ATTEMPT=1] scripts/deploy-gate.sh
 #
-#   HEARTH_DEPLOY_SHA       the commit being deployed: 40 lowercase hex digits, equal to the checked-out
+#   HESTIA_DEPLOY_SHA       the commit being deployed: 40 lowercase hex digits, equal to the checked-out
 #                           HEAD. It comes from a workflow payload and this runs on the production box,
 #                           so it is checked before anything else uses it.
-#   HEARTH_DEPLOY_ATTEMPT   the attempt number of this Deploy run (1..9999, default 1). Re-running CI
+#   HESTIA_DEPLOY_ATTEMPT   the attempt number of this Deploy run (1..9999, default 1). Re-running CI
 #                           starts a new Deploy run (attempt 1) and skips the running commit; re-running
 #                           the Deploy run itself raises attempt to 2 or more and redeploys it.
 #
 # Called by the `changes` step of .github/workflows/deploy.yml, with the checkout at fetch-depth 0
 # (the comparison needs history). The decision compares HEAD with the revision of the image that is
-# running, `hearth-service:current`, whose `org.opencontainers.image.revision` label deploy.sh sets
+# running, `hestia-service:current`, whose `org.opencontainers.image.revision` label deploy.sh sets
 # to the first 12 hex digits of the deployed SHA:
 #
 #   - Comparing with the running revision, not with HEAD~1, means a code deploy that never ran
@@ -37,7 +37,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-image="hearth-service:current"
+image="hestia-service:current"
 # Spelled out rather than a-f / 0-9 ranges: ranges can match uppercase in some locales.
 hex='0123456789abcdef'
 
@@ -52,14 +52,14 @@ decide() {
   exit 0
 }
 
-sha="${HEARTH_DEPLOY_SHA-}"
-[[ -n "$sha" ]] || refuse "HEARTH_DEPLOY_SHA is not set"
-[[ "$sha" =~ ^[$hex]{40}$ ]] || refuse "HEARTH_DEPLOY_SHA is not 40 lowercase hex digits"
+sha="${HESTIA_DEPLOY_SHA-}"
+[[ -n "$sha" ]] || refuse "HESTIA_DEPLOY_SHA is not set"
+[[ "$sha" =~ ^[$hex]{40}$ ]] || refuse "HESTIA_DEPLOY_SHA is not 40 lowercase hex digits"
 head_sha="$(git -C "$repo_root" rev-parse HEAD)" || refuse "cannot read HEAD of $repo_root"
-[[ "$sha" == "$head_sha" ]] || refuse "HEARTH_DEPLOY_SHA is not the checked-out HEAD ($head_sha)"
+[[ "$sha" == "$head_sha" ]] || refuse "HESTIA_DEPLOY_SHA is not the checked-out HEAD ($head_sha)"
 
-attempt="${HEARTH_DEPLOY_ATTEMPT-1}"
-[[ "$attempt" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "HEARTH_DEPLOY_ATTEMPT is invalid: $attempt"
+attempt="${HESTIA_DEPLOY_ATTEMPT-1}"
+[[ "$attempt" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "HESTIA_DEPLOY_ATTEMPT is invalid: $attempt"
 
 running="$(docker image inspect \
   --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image" 2>/dev/null)" ||

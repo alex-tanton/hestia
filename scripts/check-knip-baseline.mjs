@@ -110,7 +110,7 @@ function currentRows(reportText) {
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('the knip report is not a JSON object');
   }
-  const dir = mkdtempSync(join(tmpdir(), 'hearth-knip-baseline-'));
+  const dir = mkdtempSync(join(tmpdir(), 'hestia-knip-baseline-'));
   try {
     const reportPath = join(dir, 'report.json');
     const summaryPath = join(dir, 'summary.txt');

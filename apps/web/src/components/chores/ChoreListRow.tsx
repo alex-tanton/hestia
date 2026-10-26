@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
-import type { Chore, Member } from '@hearth/shared';
+import type { Chore, Member } from '@hestia/shared';
 import { calendarDateOfInstant } from '../../lib/household-date.ts';
 import { PENDING_CLASSES, PendingMark } from '../lists/PendingMark.tsx';
 import { Badge } from '../ui/Badge.tsx';

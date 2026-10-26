@@ -1,43 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": null,
+  "milestone": "v2.0 — Hestia — Domain Migration and Rebrand",
   "phases": [
     {
-      "number": "1",
-      "name": "Git History Curation and Branch Policy",
+      "number": "7",
+      "name": "Planning Cleanup & Documentation Restructure",
       "status": "complete"
     },
     {
-      "number": "2",
-      "name": "Baseline, Net Stabilization, and Analysis",
-      "status": "complete"
-    },
-    {
-      "number": "3",
-      "name": "Evidence-Gated Removal",
-      "status": "complete"
-    },
-    {
-      "number": "4",
-      "name": "Bug Fixes With Regression Tests",
-      "status": "complete"
-    },
-    {
-      "number": "5",
-      "name": "Redundancy Reduction and Text Sync",
-      "status": "complete"
-    },
-    {
-      "number": "6",
-      "name": "CI Enforcement and Lock-in",
+      "number": "8",
+      "name": "Full Rebrand to Hestia",
       "status": "in_progress"
+    },
+    {
+      "number": "9",
+      "name": "Domain & Network Migration (Cloudflare Tunnel & Ingress)",
+      "status": "pending"
+    },
+    {
+      "number": "10",
+      "name": "Magic Links & Transactional Email",
+      "status": "pending"
+    },
+    {
+      "number": "11",
+      "name": "Web Push & Edge Hardening",
+      "status": "pending"
     }
   ],
   "next": {
     "command": "/gsd:progress --next",
     "label": "Advance to the next step (verify)",
-    "reason": "Phase 06 of 6 · 83% · ready to verify"
+    "reason": "Phase 8 of 5 · 20% · ready to verify"
   },
-  "updated_at": "2026-10-24T13:20:33.477Z"
+  "updated_at": "2026-10-26T04:27:51.684Z"
 }

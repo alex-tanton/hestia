@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState, type ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import type { MealPlanEntry } from '@hearth/shared';
+import type { MealPlanEntry } from '@hestia/shared';
 import {
   blankIngredient,
   IngredientEditor,

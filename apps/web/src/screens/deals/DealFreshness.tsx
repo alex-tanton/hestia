@@ -1,6 +1,6 @@
 import { Clock, RefreshCw, RotateCw } from 'lucide-react';
 import type { ReactElement } from 'react';
-import type { Freshness } from '@hearth/shared';
+import type { Freshness } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { formatDateTime } from '../../lib/format.ts';
 

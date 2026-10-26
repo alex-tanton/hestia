@@ -8,14 +8,14 @@ import type {
   RecipeDetail,
   ShoppingListDetail,
   SuggestionsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { adminPool, as, household, type HouseholdFixture } from './test/service-stack.js';
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 import { currentInstant } from './test/zone-dates.js';
 
 /*
  * The week planner, "Add missing to list", and suggestions against `supabase start`. Real Postgres
- * as hearth_service, every request through withUserDb, so RLS decides every isolation assertion.
+ * as hestia_service, every request through withUserDb, so RLS decides every isolation assertion.
  */
 
 registerStackHooks();

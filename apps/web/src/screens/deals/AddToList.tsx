@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
-import type { Deal } from '@hearth/shared';
+import type { Deal } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { ErrorState } from '../../components/states/StateBlocks.tsx';
 import { ListRow } from '../../components/ui/ListRow.tsx';

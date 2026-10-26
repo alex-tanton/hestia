@@ -52,9 +52,9 @@ count as unit tests: nothing touches a socket or a real database.
 ```sh
 pnpm test                              # the harness tests, then every workspace's unit + component tests
 pnpm test:harness                      # only the thirteen harness tests
-pnpm --filter @hearth/recurrence test  # one workspace
-pnpm --filter @hearth/matching test
-pnpm --filter @hearth/service test     # excludes *.integration.test.ts (vitest.config.ts)
+pnpm --filter @hestia/recurrence test  # one workspace
+pnpm --filter @hestia/matching test
+pnpm --filter @hestia/service test     # excludes *.integration.test.ts (vitest.config.ts)
 ```
 
 **Adding one:** put `<name>.test.ts` next to the module it tests, in the same package. A minimal
@@ -72,8 +72,8 @@ Tests must pass on any weekday and in any household time zone, so the clock and 
 controlled, not inherited from the machine.
 
 - **The clock pin.** Every unit and component test runs with `Date` pinned by
-  `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
-  Wednesday). `HEARTH_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
+  `test/clock-setup.mjs` to `HESTIA_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
+  Wednesday). `HESTIA_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
   (`2030-10-05T23:30:00+02:00`); a value without one is read in the machine's zone and is
   rejected. Every workspace's unit Vitest config (and the service coverage config) loads the setup
   file; the integration config does not, and the setup file skips `*.integration.test.*` files in
@@ -109,19 +109,19 @@ controlled, not inherited from the machine.
   `TZ` value Node runs on as a zone, including UTC aliases (`GMT`, `Etc/UTC`) and the POSIX
   leading-colon form (`:America/New_York`). It fails the run for an unknown zone, a wrong letter
   case (Node falls back to UTC) and POSIX offset strings such as `UTC+3`. It also checks
-  `HEARTH_TEST_NOW` before any test runs, so a bad value is one message, not an error in every test
+  `HESTIA_TEST_NOW` before any test runs, so a bad value is one message, not an error in every test
   file.
 - **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
-  its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
+  its own process with its own `HESTIA_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
   takes `--workspace`, `--cell`, `--only`, `--log-dir` and `--list`, and prints
   `sweep: {passed}/{total} passed`. An `--only` that selects no test file exits 2 with a message
   before anything runs, instead of passing an empty run. `--with-today` adds one more unit cell,
   `today`: the real instant at the start of the run, in one of 11 zones chosen by the UTC day
   (the UTC epoch day modulo 11, so a weekday does not keep its zone). `--today-instant {ISO}`
-  fixes that instant (it takes what `HEARTH_TEST_NOW` takes) and needs `--with-today`. The
+  fixes that instant (it takes what `HESTIA_TEST_NOW` takes) and needs `--with-today`. The
   cell's result line carries `now=` and `tz=`; a failing today cell is reproduced by running the
-  unit suite with `HEARTH_TEST_NOW` and `TZ` set to those two values.
+  unit suite with `HESTIA_TEST_NOW` and `TZ` set to those two values.
   `.github/workflows/sweep.yml` (workflow `Sweep`) runs the six fixed cells on every push to `main`
   that changes more than `docs/` and `.planning/`, and adds the today cell in the nightly run at
   05:17 UTC and in manual runs. When it fails it uploads the per-cell logs as the `sweep-logs`
@@ -154,11 +154,11 @@ controlled, not inherited from the machine.
   - `test/clock-setup.test.mjs` checks the pin from inside real Vitest workers. Each scenario is a
     test file run by a throwaway Vitest project that loads `test/clock-setup.mjs`, built in a
     temporary directory by `test/support/vitest-project.mjs` (so no workspace run can pick it up);
-    it covers the default pin, overrides and their lifetime, `HEARTH_TEST_NOW`, integration files,
+    it covers the default pin, overrides and their lifetime, `HESTIA_TEST_NOW`, integration files,
     a `Date` subclass installed as the global, and the setup file running again in one global
     under `isolate: false`.
   - `test/global-tz.test.mjs` runs the hook in `test/global-tz.mjs` in a child process per case,
-    because `TZ` is process-wide. It parses `HEARTH_TEST_NOW` with `test/test-now.mjs`, the module
+    because `TZ` is process-wide. It parses `HESTIA_TEST_NOW` with `test/test-now.mjs`, the module
     the pin shares with the hook.
   - `scripts/test-sweep.test.mjs` runs the sweep as a child process: argument rejection, an
     `--only` that selects nothing, a listing that cannot run, and one real single-cell run. The
@@ -184,7 +184,7 @@ controlled, not inherited from the machine.
     binaries placed first on `PATH` and fixture `docker/` folders. It checks that each
     `public.ecr.aws/supabase` image is pulled from its `ghcr.io/supabase` mirror first and tagged
     with its ECR name, that a failed mirror pull falls back to ECR within each attempt, that Docker
-    Hub images are pulled directly, that a present image is skipped, that the hearth-built and
+    Hub images are pulled directly, that a present image is skipped, that the hestia-built and
     backup images are never pulled, that an unsafe image name is refused before any pull, and that
     six failed attempts end in an `::error::` annotation, with the delays scaled by
     `CI_PREPULL_DELAY_SCALE`. One case reads the real `docker/` files. Nothing pulls an image or
@@ -198,12 +198,19 @@ controlled, not inherited from the machine.
     files and runs `scripts/check-repo-hygiene.mjs` on its index. It checks that a tracked file
     `.gitignore` ignores, a shebang file or `*.sh` file that is not `100755`, and a file with
     CRLF or mixed endings in the index each fail, that symlinks and `-text` files are skipped, and
-    that a directory that is not a git work tree exits 2.
+    that a directory that is not a git work tree exits 2. The legacy-name cases check that a staged
+    text file or a tracked path containing the product's former name in any case fails, that
+    binary files and the working tree are not judged, that an exact allowlist entry or quote key
+    does not extend to a sibling path, and that a planning state file fails on the line that
+    carries the former name outside its pinned quotes.
   - `scripts/check-migrations-append-only.test.mjs` builds a temporary repository with two applied
     migrations and a branch per case, and runs `scripts/check-migrations-append-only.mjs`. It
     checks that an added file passes and that an edit, delete, rename, mode change or type change
     fails, that an all-zero or unresolvable base exits 2, and that a hostile `--base` never
-    reaches a shell (the marker file a command substitution would create stays absent).
+    reaches a shell (the marker file a command substitution would create stays absent). It also
+    checks the content-pinned exemptions: an exempted rename and edit pass, while a wrong head
+    blob, an expired entry, an unrelated edit next to an exempted one and a wrong rename target
+    each fail, and a file that is not JSON or an invalid entry exits 2.
   - `scripts/audit-prod.test.mjs` runs `scripts/audit-prod.mjs` on saved `pnpm audit --prod
     --json` reports with a fixed `--today`, and in four cases with a stub `pnpm` first on `PATH`
     so no registry is contacted. It checks the allowlist rules (an unlisted advisory fails, a
@@ -218,13 +225,13 @@ controlled, not inherited from the machine.
     threshold, path and format settings and the `jscpd` script in `package.json` keeps
     `--fail-on-empty`.
   - `scripts/deploy-gate.test.mjs` copies the real `scripts/deploy-gate.sh` into a temporary git
-    repository with a stub `docker` that answers `image inspect hearth-service:current` with a
+    repository with a stub `docker` that answers `image inspect hestia-service:current` with a
     revision label. It checks the rules: a commit older than the running revision, a change confined
     to `docs/` and `.planning/`, and a commit already running at attempt 1 (or unset) print
     `deploy=false`; attempt 2 or later of a running commit (a deliberate re-run of the Deploy run),
     an unknown or diverged running revision and any code change print `deploy=true`. The older-commit
-    and docs-only rules hold under any attempt. Malformed `HEARTH_DEPLOY_ATTEMPT` values and a
-    `HEARTH_DEPLOY_SHA` that is not the checked-out commit's 40 lowercase hex digits exit 1 with
+    and docs-only rules hold under any attempt. Malformed `HESTIA_DEPLOY_ATTEMPT` values and a
+    `HESTIA_DEPLOY_SHA` that is not the checked-out commit's 40 lowercase hex digits exit 1 with
     empty stdout before docker is asked. It also checks that code moved into `docs/` still deploys.
     Nothing reaches a Docker daemon.
 - **The Kong route table.** `apps/service/src/kong-routes.test.ts` is a Vitest test in the service
@@ -280,7 +287,7 @@ without regenerated types, or a hand edit of the generated file, fails CI.
 2. **Service/route-level tests** (most other `*.integration.test.ts` files, e.g.
    `bills.integration.test.ts`, `chores.integration.test.ts`) use
    `apps/service/src/test/service-stack.ts`'s `startStack()`. This builds the real Fastify app
-   wired to the real `supabase start` Postgres (as `hearth_service`) and real GoTrue through Kong,
+   wired to the real `supabase start` Postgres (as `hestia_service`) and real GoTrue through Kong,
    and tests call it with `app.inject()` the way a real HTTP request would arrive. Requests here
    **commit for real** — there is no rollback — so isolation instead comes from every test creating
    its own users, households, and postal codes with randomized or counter-based unique values
@@ -365,7 +372,7 @@ arbitrary mix.
 **Running them:**
 
 ```sh
-pnpm --filter @hearth/web test
+pnpm --filter @hestia/web test
 ```
 
 ## End-to-end tests
@@ -410,9 +417,9 @@ accounts of its own outside either seed, since signing up is the journey under t
 "Birch Lane"), both in postal code 27514 with the same seed password.
 
 **Per-run isolation:** each invocation of `pnpm test:e2e` is a "run" with its own six-hex-digit id
-(`HEARTH_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
+(`HESTIA_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
 `e2e/support/env.ts`. Everything the run touches is namespaced by that id: the Compose project
-(`hearth-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
+(`hestia-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
 up`, on the first free `/24` between `172.16.240.0/24` and `172.16.254.0/24` — Docker's atomic
 "refuse an overlapping subnet" check means two runs starting together can't collide), the image
 tag (`e2e-<id>`) for the two images the run builds, a state directory under the OS temp dir holding
@@ -425,13 +432,13 @@ from an empty, freshly-seeded database.
 
 **The Flipp/recipe fixture seam:** the suite never calls the live Flipp service or fetches a real
 recipe page. The overlay mounts `e2e/fixtures/flipp/raw` read-only into the service container and
-sets `HEARTH_FLIPP_FIXTURE_DIR` (plus `HEARTH_FLIPP_FIXTURE_NOW`, pinning "now" to the captures'
+sets `HESTIA_FLIPP_FIXTURE_DIR` (plus `HESTIA_FLIPP_FIXTURE_NOW`, pinning "now" to the captures'
 own instant) so the deal-fetching code reads the checked-in captures instead of the network; both
 variables are unset in every real deployment. Recipe import similarly mounts
-`e2e/fixtures/recipes` read-only and sets `HEARTH_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
+`e2e/fixtures/recipes` read-only and sets `HESTIA_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
 swapped for a fixture-reading function that never opens a socket. Journey 4 pastes one of three
-fixture URLs under the never-resolved domain `fixtures.hearth-e2e.test`. Web Push gets the same
-treatment: `HEARTH_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
+fixture URLs under the never-resolved domain `fixtures.hestia-e2e.test`. Web Push gets the same
+treatment: `HESTIA_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
 through `/api/test/push`, and the browser's `PushManager` is stubbed before the app loads so no
 real push service is ever contacted.
 
@@ -439,25 +446,28 @@ real push service is ever contacted.
 
 ```sh
 # once: install the browser
-pnpm --filter @hearth/e2e exec playwright install --with-deps chromium
+pnpm --filter @hestia/e2e exec playwright install --with-deps chromium
 
 # the whole suite: builds and starts the Compose stack from an empty database,
 # migrates, seeds, runs every journey, tears the stack down
 pnpm test:e2e
 ```
 
+Global setup hands the suite a stack on a free loopback port, printed as `ready at …` (the stack's
+base URL) when it is up.
+
 Needs Docker, the Supabase CLI, and `psql` on the path. For iterating on a single test without
 paying for a full stack bring-up/teardown each time:
 
 ```sh
-# first run: note the run id it prints ("run <id>, project hearth-e2e-<id>: ...")
-HEARTH_E2E_REUSE_STACK=1 pnpm test:e2e
+# first run: note the run id it prints ("run <id>, project hestia-e2e-<id>: ...")
+HESTIA_E2E_REUSE_STACK=1 pnpm test:e2e
 
 # subsequent runs: reuse that stack, point Playwright at one spec file
-HEARTH_E2E_REUSE_STACK=1 HEARTH_E2E_RUN_ID=<id> pnpm --filter @hearth/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
+HESTIA_E2E_REUSE_STACK=1 HESTIA_E2E_RUN_ID=<id> pnpm --filter @hestia/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
 ```
 
-`HEARTH_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
+`HESTIA_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
 teardown, so the stack is still running — and, importantly, no longer backed by an *empty*
 database — afterward. Only trust a run's result when it started from an empty database, i.e.
 without reuse.
@@ -495,7 +505,7 @@ its own.
 
 ### Users and households
 
-Every seed user has the password `hearth-seed-pass-2026`.
+Every seed user has the password `hestia-seed-pass-2026`.
 
 | Name | Email | Timezone |
 | --- | --- | --- |
@@ -505,7 +515,7 @@ Every seed user has the password `hearth-seed-pass-2026`.
 | Morgan Reed | `morgan@example.com` | `America/Chicago` |
 | Casey Nguyen | `casey@example.com` | `America/Los_Angeles` |
 
-`HEARTH_OWNER_EMAIL` in the local `.env` is `alex@example.com`, so Alex is the only seed user who
+`HESTIA_OWNER_EMAIL` in the local `.env` is `alex@example.com`, so Alex is the only seed user who
 sees System health.
 
 | Household | Postal code | Timezone | Members |
@@ -662,7 +672,7 @@ A walkthrough for clicking through the real app locally, outside the test suites
 ```sh
 supabase start                                                      # Postgres, GoTrue, Realtime, Kong, Studio
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
-  -c "alter role hearth_service with login password 'hearth'"
+  -c "alter role hestia_service with login password 'hestia'"
 pnpm db:seed                                                         # creates the 5 seed users + seed.sql rows
 ```
 
@@ -674,18 +684,18 @@ users, so it's safe only against a fresh local stack.
 
 ```sh
 eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
-export DATABASE_URL=postgresql://hearth_service:hearth@127.0.0.1:54322/postgres
+export DATABASE_URL=postgresql://hestia_service:hestia@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
-export HEARTH_ORIGIN=http://127.0.0.1:5173
-export HEARTH_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
+export HESTIA_ORIGIN=http://127.0.0.1:5173
+export HESTIA_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
 export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
-pnpm --filter @hearth/service dev
+pnpm --filter @hestia/service dev
 ```
 
 In a second terminal:
 
 ```sh
-pnpm --filter @hearth/web dev
+pnpm --filter @hestia/web dev
 ```
 
 Open `http://127.0.0.1:5173`.
@@ -693,7 +703,7 @@ Open `http://127.0.0.1:5173`.
 ### 3. Sign in as a seeded user
 
 Sign in as **Alex Rivera** (`alex@example.com`), the seeded owner — the only account that sees
-System health (`HEARTH_OWNER_EMAIL` above). See Seed data above for every other seeded account, who
+System health (`HESTIA_OWNER_EMAIL` above). See Seed data above for every other seeded account, who
 belongs to which household with what role, and what's already there to look at in each pillar.
 
 ### 4. Click through each pillar
@@ -771,7 +781,7 @@ pnpm db:seed              # re-seed from scratch
   `thresholds: { statements: 95, branches: 83, functions: 96, lines: 97 }`, each a few points under
   the suite's actual measured coverage (96.65% / 85.78% / 98.07% / 98.56% as of the coverage unit
   that added it) rather than the exact number, so ordinary churn doesn't fail CI on noise.
-  `pnpm --filter @hearth/service test:coverage` reports coverage across its unit *and* integration
+  `pnpm --filter @hestia/service test:coverage` reports coverage across its unit *and* integration
   tests together (a unit-only number would understate what's exercised through the integration
   suite). It needs `supabase start` running, so CI's `test-integration` job runs it in place of a
   plain `pnpm test:integration` (the same job already pays for `supabase start`), enforcing the
@@ -780,7 +790,7 @@ pnpm db:seed              # re-seed from scratch
 - **`apps/web`** has a `test:coverage` script (`vitest run --coverage --passWithNoTests`) and a
   coverage configuration in `vite.config.ts`: `thresholds: { statements: 84, branches: 80,
   functions: 77, lines: 85 }`, each the measured value (85.38% / 81.83% / 78.59% / 86.96%) rounded
-  down, minus one point. CI's `test-unit` job runs `pnpm --filter @hearth/web test:coverage` on
+  down, minus one point. CI's `test-unit` job runs `pnpm --filter @hestia/web test:coverage` on
   every pull request and push to main, so a drop below a threshold fails CI. The `test` script of
   the workspace still has no `--coverage`, so `pnpm test` and the sweep stay plain and pay nothing
   for it. The E2E journeys are what stand in for coverage of the running UI.
@@ -819,11 +829,22 @@ of `pnpm test` (see Harness tests above). Run them before pushing:
 - **The hygiene check** is `node scripts/check-repo-hygiene.mjs`. It reads the git index and fails
   on a tracked file that `.gitignore` ignores, a script that is not mode `100755` (a file that
   starts with `#!`, or whose name ends in .sh), and a text file whose committed copy has CRLF or mixed
-  line endings.
+  line endings. Check 4 fails on the product's former name, in any case, in the content of a
+  tracked text file (`legacy name in <path>`) or in a tracked path (`legacy name in file name: <path>`).
+  `LEGACY_NAME_ALLOWLIST` in the script lists the six paths that may carry it: the v1.0 archive,
+  the phase and research records, the script and its test, and the migration exemptions file. The
+  four planning state files, `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`,
+  `.planning/ROADMAP.md` and `.planning/STATE.md`, are scanned line by line instead
+  (`legacy name in <path>:<line>`), and `LEGACY_NAME_QUOTES` pins the exact quotes that may carry
+  it there. Anything else in those files calls it "the former name".
 - **The migration check** is `node scripts/check-migrations-append-only.mjs --base {ref}`. It
   compares `supabase/migrations/` with the merge base of `{ref}` and `HEAD` and fails on anything
   but added files: an edit, a delete, a rename, a mode change or a type change. It needs history
-  back to the merge base, and it does not check that new files sort after the old ones.
+  back to the merge base, and it does not check that new files sort after the old ones. An entry
+  in `scripts/migration-exemptions.json` admits one edit or rename of an applied migration, and
+  only while the merge base still holds the entry's `fromBlob` and `HEAD` holds its `toBlob`, so it
+  expires by itself once the change is on `main`. Each applied entry prints an `exempt:` line, and
+  an entry needs the owner's review.
 
 Each script exits 0 when it passes, 1 when it finds a problem and 2 when it could not decide (bad
 usage, an unreadable input, a tool that did not run).

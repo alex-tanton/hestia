@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import type { RecipeDetail } from '@hearth/shared';
+import type { RecipeDetail } from '@hestia/shared';
 import {
   blankIngredient,
   fromParsedIngredient,

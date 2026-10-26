@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
-import type { MealPlanEntry } from '@hearth/shared';
+import type { MealPlanEntry } from '@hestia/shared';
 import { OverflowMenu } from '../ui/OverflowMenu.tsx';
 import { DELETED_RECIPE_NOTE } from './meal-copy.ts';
 

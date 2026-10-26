@@ -621,6 +621,8 @@ describe('surviving a reload', () => {
     // The initial list fetch already used up `persister`'s leading save (asyncThrottle fires its
     // first call at once, then waits out the interval), so from here a save landing within its
     // 60-second window can only have gone through the dedicated flush channel.
+    // The key is on-device data: renaming it silently drops every queued offline write.
+    expect(PERSIST_KEY).toBe('hestia-query-cache');
     await waitFor(() => {
       expect(storage.entries.has(PERSIST_KEY)).toBe(true);
     });

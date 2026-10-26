@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type SyntheticEvent, type ReactElement } from 'react';
-import { emailSchema } from '@hearth/shared';
+import { emailSchema } from '@hestia/shared';
 import { Button } from '../../../components/ui/Button.tsx';
 import { TextField } from '../../../components/ui/Field.tsx';
 import { FormMessage } from '../../../components/ui/FormMessage.tsx';

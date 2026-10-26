@@ -1,10 +1,10 @@
 {
-  "name": "@hearth/service",
+  "name": "@hestia/service",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "bin": {
-    "hearth-admin": "bin/hearth-admin"
+    "hestia-admin": "bin/hestia-admin"
   },
   "scripts": {
     "dev": "tsx watch src/main.ts",
@@ -14,15 +14,15 @@
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --config vitest.coverage.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:types": "kysely-codegen --dialect postgres --url \"${HEARTH_DB_ADMIN_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" --include-pattern \"public.*\" --date-parser string --out-file src/db/types.ts && prettier --write src/db/types.ts",
+    "db:types": "kysely-codegen --dialect postgres --url \"${HESTIA_DB_ADMIN_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" --include-pattern \"public.*\" --date-parser string --out-file src/db/types.ts && prettier --write src/db/types.ts",
     "db:seed": "tsx ../../supabase/seed/seed-users.ts",
     "fixtures:normalize": "tsx scripts/normalize-fixtures.ts"
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",
-    "@hearth/matching": "workspace:*",
-    "@hearth/recurrence": "workspace:*",
-    "@hearth/shared": "workspace:*",
+    "@hestia/matching": "workspace:*",
+    "@hestia/recurrence": "workspace:*",
+    "@hestia/shared": "workspace:*",
     "cheerio": "1.2.0",
     "fastify": "5.12.6",
     "kysely": "0.29.6",

@@ -6,7 +6,7 @@ import {
   type CalendarDate,
   type Recurrence,
   type RecurrenceUnit,
-} from '@hearth/recurrence';
+} from '@hestia/recurrence';
 import type { Database } from '../db.js';
 import type { JobDatabase, JobLogger } from './types.js';
 

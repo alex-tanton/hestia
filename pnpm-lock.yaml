@@ -72,13 +72,13 @@ importers:
       '@fastify/rate-limit':
         specifier: 11.2.0
         version: 11.2.0
-      '@hearth/matching':
+      '@hestia/matching':
         specifier: workspace:*
         version: link:../../packages/matching
-      '@hearth/recurrence':
+      '@hestia/recurrence':
         specifier: workspace:*
         version: link:../../packages/recurrence
-      '@hearth/shared':
+      '@hestia/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       cheerio:
@@ -136,10 +136,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@hearth/recurrence':
+      '@hestia/recurrence':
         specifier: workspace:*
         version: link:../../packages/recurrence
-      '@hearth/shared':
+      '@hestia/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@supabase/supabase-js':
@@ -308,7 +308,7 @@ importers:
 
   supabase/seed:
     dependencies:
-      '@hearth/matching':
+      '@hestia/matching':
         specifier: workspace:*
         version: link:../../packages/matching
       pg:

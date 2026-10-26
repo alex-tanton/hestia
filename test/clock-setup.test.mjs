@@ -403,7 +403,7 @@ describe('clock-setup: the default pin, overrides and restoration', () => {
 const SHARED_GLOBAL_FILE = `
 import { describe, expect, it } from 'vitest';
 
-const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
+const position = (globalThis.__hestiaFilePosition = (globalThis.__hestiaFilePosition ?? 0) + 1);
 // Padding keeps the unit files larger than the integration file, which Vitest then runs last.
 // ${'x'.repeat(4000)}
 
@@ -428,7 +428,7 @@ describe(\`file at position \${position}\`, () => {
 const SHARED_GLOBAL_INTEGRATION_FILE = `
 import { describe, expect, it } from 'vitest';
 
-const position = (globalThis.__hearthFilePosition = (globalThis.__hearthFilePosition ?? 0) + 1);
+const position = (globalThis.__hestiaFilePosition = (globalThis.__hestiaFilePosition ?? 0) + 1);
 
 describe(\`integration file at position \${position}\`, () => {
   it('is left on the native Date, not on a pin an earlier file installed', () => {
@@ -458,7 +458,7 @@ describe('clock-setup: loaded again in the same global (isolate: false)', () => 
   ]);
 });
 
-describe('clock-setup: HEARTH_TEST_NOW', () => {
+describe('clock-setup: HESTIA_TEST_NOW', () => {
   const FIXTURE = `
 import { describe, expect, it } from 'vitest';
 
@@ -473,7 +473,7 @@ describe('configured pin', () => {
     describe(`in ${zone}`, () => {
       const result = runVitestProject({
         files: { 'configured.test.mjs': FIXTURE },
-        env: { HEARTH_TEST_NOW: '2030-10-05T23:30:00+02:00', TZ: zone },
+        env: { HESTIA_TEST_NOW: '2030-10-05T23:30:00+02:00', TZ: zone },
       });
       expectPassed(result, ['configured pin is the instant of the offset time, whatever the zone']);
     });
@@ -495,7 +495,7 @@ describe('integration file', () => {
   expectPassed(result, ['integration file is left on the native Date']);
 });
 
-describe('clock-setup: an invalid HEARTH_TEST_NOW', () => {
+describe('clock-setup: an invalid HESTIA_TEST_NOW', () => {
   const FIXTURE = `
 import { describe, expect, it } from 'vitest';
 
@@ -509,10 +509,10 @@ describe('never runs', () => {
     it(`fails the run with a message naming it: ${value}`, () => {
       const result = runVitestProject({
         files: { 'never.test.mjs': FIXTURE },
-        env: { HEARTH_TEST_NOW: value },
+        env: { HESTIA_TEST_NOW: value },
       });
       assert.notEqual(result.status, 0);
-      assert.match(result.output, /HEARTH_TEST_NOW=/);
+      assert.match(result.output, /HESTIA_TEST_NOW=/);
       assert.match(result.output, /ISO-8601/);
     });
   }

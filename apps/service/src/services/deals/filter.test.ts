@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Deal } from '@hearth/shared';
+import type { Deal } from '@hestia/shared';
 import { filterDeals, paginate, selectDeals, sortDeals } from './filter.js';
 
 /** Deal search and browse, paginated at 50 per page. */

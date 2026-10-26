@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import type { DeparturePreview, DepartResult } from '@hearth/shared';
+import type { DeparturePreview, DepartResult } from '@hestia/shared';
 import type { Database } from '../db.js';
 
 /*

@@ -109,9 +109,9 @@ describe('Bills dashboard', () => {
     expect(spotify).toHaveTextContent('Personal');
   });
 
-  it('empty: first run explains Hearth tracks bills but never pays them', async () => {
+  it('empty: first run explains Hestia tracks bills but never pays them', async () => {
     mount(baseHandlers({ 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) }));
-    expect(await screen.findByText(/Hearth tracks what you owe and when/)).toBeInTheDocument();
+    expect(await screen.findByText(/Hestia tracks what you owe and when/)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Add a bill' })[0]).toBeInTheDocument();
   });
 

@@ -3,7 +3,7 @@ import type {
   CreateMealPlanEntryRequest,
   MealPlanEntry,
   MealPlanWeekResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
 import { markHouseholdActive } from './households.js';

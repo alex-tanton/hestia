@@ -12,7 +12,7 @@ import pg from 'pg';
  */
 
 export const TEST_DATABASE_URL =
-  process.env['HEARTH_TEST_DATABASE_URL'] ??
+  process.env['HESTIA_TEST_DATABASE_URL'] ??
   'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 
 export interface TestUser {
@@ -40,7 +40,7 @@ export interface TestDb {
   as: (user: TestUser) => Actor;
   anon: Actor;
   /**
-   * Switches through each role in turn (for example hearth_service, then authenticated), with
+   * Switches through each role in turn (for example hestia_service, then authenticated), with
    * optional claims, to check what a role may switch into and hold.
    */
   asRoles: (roles: string[], claims?: Row) => Actor;

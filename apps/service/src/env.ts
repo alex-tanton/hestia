@@ -30,13 +30,13 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   // Comma-separated addresses or CIDRs (the Compose network's subnet in production).
   // Empty means no proxy is trusted, so X-Forwarded-For is ignored.
-  HEARTH_TRUSTED_PROXIES: trustedProxies,
-  HEARTH_ORIGIN: origin,
+  HESTIA_TRUSTED_PROXIES: trustedProxies,
+  HESTIA_ORIGIN: origin,
   // Unset means nobody is the server owner, so System health is closed to everyone.
-  HEARTH_OWNER_EMAIL: z.string().trim().default(''),
+  HESTIA_OWNER_EMAIL: z.string().trim().default(''),
   // Requests per minute per client IP across `/api/*`. Must stay a positive integer; a value of 0
   // would refuse everything, so it is rejected rather than read as "off".
-  HEARTH_RATE_LIMIT_PER_MINUTE: z.coerce
+  HESTIA_RATE_LIMIT_PER_MINUTE: z.coerce
     .number()
     .int()
     .min(1)
@@ -57,19 +57,19 @@ const envSchema = z.object({
    * keeps "tests never make live calls" true for the built image the E2E suite runs, not only for
    * Vitest's in-process doubles.
    */
-  HEARTH_FLIPP_FIXTURE_DIR: z.string().min(1).optional(),
+  HESTIA_FLIPP_FIXTURE_DIR: z.string().min(1).optional(),
   // The fixture captures' own instant (`FIXTURE_NOW`), so the wrapper's active-flyer window
   // matches what the captures actually cover regardless of the host's real clock.
-  HEARTH_FLIPP_FIXTURE_NOW: z.coerce.date().optional(),
+  HESTIA_FLIPP_FIXTURE_NOW: z.coerce.date().optional(),
   /*
    * Unset in every real deployment, so production always fetches a pasted recipe URL for real.
    * The E2E Compose overlay is the one caller that sets it: `fetchRecipePage`'s
    * private/loopback/link-local refusal would just as correctly refuse a fixture server reachable
    * only on the Compose network, so the E2E recipe-import journey swaps the fetch step itself for
-   * reading the checked-in pages this points at, the same way `HEARTH_FLIPP_FIXTURE_DIR` swaps the
+   * reading the checked-in pages this points at, the same way `HESTIA_FLIPP_FIXTURE_DIR` swaps the
    * Flipp transport.
    */
-  HEARTH_RECIPE_FIXTURE_DIR: z.string().min(1).optional(),
+  HESTIA_RECIPE_FIXTURE_DIR: z.string().min(1).optional(),
   /*
    * Web Push. The dispatch job is scheduled in every service process, so the key pair is required
    * at startup rather than failing on the first send. Both match the names docker-compose.yml
@@ -87,7 +87,7 @@ const envSchema = z.object({
    * push for the suite to read and contacts no push service. Any other value fails at startup
    * rather than falling back to either transport.
    */
-  HEARTH_PUSH_TRANSPORT: z.enum(['web-push', 'test-double']).default('web-push'),
+  HESTIA_PUSH_TRANSPORT: z.enum(['web-push', 'test-double']).default('web-push'),
 });
 
 export type Env = z.infer<typeof envSchema> & { VAPID_SUBJECT: string };
@@ -117,8 +117,8 @@ function isContactUri(value: string): boolean {
  */
 export function vapidSubjectFor(env: {
   VAPID_SUBJECT?: string | undefined;
-  HEARTH_OWNER_EMAIL: string;
-  HEARTH_ORIGIN: string;
+  HESTIA_OWNER_EMAIL: string;
+  HESTIA_ORIGIN: string;
 }): string {
   if (env.VAPID_SUBJECT !== undefined) {
     if (!isContactUri(env.VAPID_SUBJECT)) {
@@ -126,14 +126,14 @@ export function vapidSubjectFor(env: {
     }
     return env.VAPID_SUBJECT;
   }
-  if (z.email().safeParse(env.HEARTH_OWNER_EMAIL).success) {
-    return `mailto:${env.HEARTH_OWNER_EMAIL}`;
+  if (z.email().safeParse(env.HESTIA_OWNER_EMAIL).success) {
+    return `mailto:${env.HESTIA_OWNER_EMAIL}`;
   }
-  if (new URL(env.HEARTH_ORIGIN).protocol === 'https:') return env.HEARTH_ORIGIN;
+  if (new URL(env.HESTIA_ORIGIN).protocol === 'https:') return env.HESTIA_ORIGIN;
   throw new Error(
     'Invalid environment:\nVAPID_SUBJECT is unset and no contact can be derived: set VAPID_SUBJECT ' +
-      'to a mailto: or https: URI, set HEARTH_OWNER_EMAIL to an email address, or serve ' +
-      'HEARTH_ORIGIN over https',
+      'to a mailto: or https: URI, set HESTIA_OWNER_EMAIL to an email address, or serve ' +
+      'HESTIA_ORIGIN over https',
   );
 }
 
@@ -144,7 +144,7 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
 }
 
 const cliEnvSchema = envSchema.pick({
-  HEARTH_ORIGIN: true,
+  HESTIA_ORIGIN: true,
   GOTRUE_URL: true,
   SERVICE_ROLE_KEY: true,
 });

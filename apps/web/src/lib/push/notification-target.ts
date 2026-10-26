@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import type { ProfileResponse } from '@hearth/shared';
+import type { ProfileResponse } from '@hestia/shared';
 import { useSwitchHousehold } from '../api/hooks.ts';
 import { HOUSEHOLD_PARAM, parseClickMessage } from './push-message.ts';
 

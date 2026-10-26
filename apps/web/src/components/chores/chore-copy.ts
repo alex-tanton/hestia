@@ -1,4 +1,4 @@
-import type { Chore, Member, RecurrenceUnit } from '@hearth/shared';
+import type { Chore, Member, RecurrenceUnit } from '@hestia/shared';
 import { addDays, weekStart } from '../../lib/household-date.ts';
 
 /*

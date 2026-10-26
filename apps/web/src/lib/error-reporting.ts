@@ -1,4 +1,4 @@
-import { scrubErrorReport } from '@hearth/shared';
+import { scrubErrorReport } from '@hestia/shared';
 
 /**
  * Unexpected errors are reported to `POST /api/client-error` after passing through the shared

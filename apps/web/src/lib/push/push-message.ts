@@ -7,7 +7,7 @@
  */
 
 /** The message the worker posts to an open window when a notification is tapped. */
-export const NOTIFICATION_CLICK_MESSAGE = 'hearth:notification-click';
+export const NOTIFICATION_CLICK_MESSAGE = 'hestia:notification-click';
 
 /** The query parameter a tap carries into a window the worker had to open. */
 export const HOUSEHOLD_PARAM = 'household';
@@ -16,7 +16,7 @@ export const HOUSEHOLD_PARAM = 'household';
 export const NOTIFICATION_ICON = '/icons/icon-192.png';
 
 /** What a notification shows when a push arrives that cannot be read. Names nothing private. */
-export const FALLBACK_NOTIFICATION = { title: 'Hearth', body: 'You have a new notification.' };
+export const FALLBACK_NOTIFICATION = { title: 'Hestia', body: 'You have a new notification.' };
 
 export interface PushMessage {
   title: string;

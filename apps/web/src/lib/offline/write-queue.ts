@@ -5,7 +5,7 @@ import {
   type ListItem,
   type ShoppingListDetail,
   type UpdateListItemRequest,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import type { ApiClient } from '../api/client.ts';
 import { queryKeys } from '../api/keys.ts';
 import { ApiError } from '../api/problem.ts';

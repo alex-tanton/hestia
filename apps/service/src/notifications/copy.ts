@@ -2,7 +2,7 @@ import {
   notificationCopySchema,
   type NotificationCopy,
   type NotificationType,
-} from '@hearth/shared';
+} from '@hestia/shared';
 
 /*
  * Notification copy. Every producer builds its title and body here and validates them against the

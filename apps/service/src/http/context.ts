@@ -1,7 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import type { Kysely } from 'kysely';
 import type { z } from 'zod';
-import type { MerchantSkipRate, ParseRecipeResponse } from '@hearth/shared';
+import type { MerchantSkipRate, ParseRecipeResponse } from '@hestia/shared';
 import { isServerOwner, TokenError, type TokenVerifier, type VerifiedUser } from '../auth/jwt.js';
 import type { Database } from '../db.js';
 import { withUserDb } from '../db/user-db.js';
@@ -14,7 +14,7 @@ import { markHouseholdActive } from '../services/households.js';
 
 export interface AppDependencies {
   pingDatabase: () => Promise<void>;
-  /** The hearth_service pool. Handlers reach it only through withUserDb. */
+  /** The hestia_service pool. Handlers reach it only through withUserDb. */
   db: Kysely<Database>;
   verifyToken: TokenVerifier;
   gotrue: Pick<GoTrueClient, 'signup' | 'verifyPassword' | 'updatePassword'>;

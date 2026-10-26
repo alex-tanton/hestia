@@ -1,4 +1,4 @@
-import type { NotificationType } from '@hearth/shared';
+import type { NotificationType } from '@hestia/shared';
 
 /*
  * Copy for Settings › Notifications. Each type
@@ -59,12 +59,12 @@ export const SAVED_MESSAGE = 'Notification settings saved.';
 export const SAVE_ERROR_MESSAGE = "Couldn't save that setting. Try again.";
 
 export const UNSUPPORTED_MESSAGE =
-  "Notifications aren't available in this browser. Hearth still works without them.";
+  "Notifications aren't available in this browser. Hestia still works without them.";
 
 /** The device states that explain why this device will not receive a type yet. */
 export const DEVICE_MESSAGES = {
   denied:
-    "Notifications are blocked for Hearth in this browser, so this device won't get them. Allow notifications for this site in your browser's settings, then turn a type on again.",
+    "Notifications are blocked for Hestia in this browser, so this device won't get them. Allow notifications for this site in your browser's settings, then turn a type on again.",
   dismissed:
     'Notifications stay off on this device until you allow them. Turn a type on again to be asked.',
   failed: "Couldn't turn on notifications on this device. Try again.",

@@ -9,7 +9,7 @@ import { PROBLEM_CONTENT_TYPE, problemDetailsSchema } from './problem.js';
 describe('problemDetailsSchema', () => {
   it('accepts a full problem body with an in-range HTTP status', () => {
     const result = problemDetailsSchema.safeParse({
-      type: 'https://hearth.example/problems/validation',
+      type: 'https://hestia.example/problems/validation',
       title: 'Validation failed',
       status: 422,
       detail: 'Enter a name.',

@@ -1,6 +1,6 @@
 import { Ticket } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import type { CreatedInvite } from '@hearth/shared';
+import type { CreatedInvite } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { CopyButton } from '../../components/ui/CopyButton.tsx';

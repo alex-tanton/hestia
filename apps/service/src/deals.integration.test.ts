@@ -6,7 +6,7 @@ import type {
   FlyerItemsResponse,
   FlyersResponse,
   MerchantsResponse,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import { createDealsService, type DealsService } from './services/deals/deals.js';
 import { aDeal, aFlyer, FakeDealSource, fetchFailure } from './test/fixture-deal-source.js';
 import {
@@ -23,7 +23,7 @@ import { currentInstant } from './test/zone-dates.js';
 
 /*
  * Deals, flyers, merchants, and favorite stores against `supabase start`: real Postgres as
- * hearth_service, every request through withUserDb, so RLS decides each assertion. The deal
+ * hestia_service, every request through withUserDb, so RLS decides each assertion. The deal
  * source is always a double — tests never call Flipp.
  */
 

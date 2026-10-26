@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import type { Chore, ChoreDetail, Household } from '@hearth/shared';
+import type { Chore, ChoreDetail, Household } from '@hestia/shared';
 import {
   adminPool,
   as,
@@ -14,7 +14,7 @@ import { currentInstant } from './test/zone-dates.js';
 
 /*
  * Chores, completions, rotation, and undo, against real Postgres. Every request goes through
- * withUserDb as hearth_service, so RLS decides every isolation assertion.
+ * withUserDb as hestia_service, so RLS decides every isolation assertion.
  */
 
 registerStackHooks();

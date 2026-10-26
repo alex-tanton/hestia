@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { COMMON_PASSWORD_MESSAGE } from '@hearth/shared';
+import { COMMON_PASSWORD_MESSAGE } from '@hestia/shared';
 import { validateNewPassword } from './password.ts';
 
 describe('validateNewPassword', () => {
@@ -30,9 +30,9 @@ const PATTERNS = [
 ];
 
 function resolveSpecifier(specifier: string, fromFile: string): string | undefined {
-  if (specifier === '@hearth/shared') return join(SHARED, 'index.ts');
-  if (specifier.startsWith('@hearth/shared/')) {
-    return join(SHARED, `${specifier.slice('@hearth/shared/'.length)}.ts`);
+  if (specifier === '@hestia/shared') return join(SHARED, 'index.ts');
+  if (specifier.startsWith('@hestia/shared/')) {
+    return join(SHARED, `${specifier.slice('@hestia/shared/'.length)}.ts`);
   }
   if (!specifier.startsWith('.')) return undefined; // node_modules: not our graph
   // Shared compiles for NodeNext and so writes `.js`; the file next to it is the `.ts`.

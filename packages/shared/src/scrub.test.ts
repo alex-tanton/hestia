@@ -65,7 +65,7 @@ describe('scrubErrorText: money', () => {
 describe('scrubErrorText: emails', () => {
   it.each([
     'Duplicate user alex@example.com',
-    'user <Alex.Rivera+hearth@Example.CO.uk> not found',
+    'user <Alex.Rivera+hestia@Example.CO.uk> not found',
     'mailto:sam@example.com bounced',
     'email=casey@example.com',
     'Login failed for "morgan@example.com"',
@@ -148,7 +148,7 @@ describe('scrubErrorText: household content', () => {
       'fetch failed: https://www.example.com/recipes/grandmas-lasagna?servings=4',
       'lasagna',
     );
-    expectScrubbed('open https://hearth.tail1234.ts.net/join#token=abcDEF', 'abcDEF');
+    expectScrubbed('open https://hestia.tail1234.ts.net/join#token=abcDEF', 'abcDEF');
     expectScrubbed('ws wss://host/realtime/v1?apikey=secret', 'secret');
     expectScrubbed('img data:image/png;base64,iVBORw0KGgo', 'iVBORw0KGgo');
   });
@@ -237,7 +237,7 @@ describe('scrubRoute', () => {
     expect(scrubRoute('/api/households/:id/members/:userId/departure-preview')).toBe(
       '/api/households/:id/members/:userId/departure-preview',
     );
-    expect(scrubRoute('https://hearth.example.ts.net/join?token=abc#code=XYZ')).toBe('/join');
+    expect(scrubRoute('https://hestia.example.ts.net/join?token=abc#code=XYZ')).toBe('/join');
     expect(scrubRoute('/deals/search/Chicken%20Breast')).toBe('/deals/search/:param');
     expect(scrubRoute('/users/alex@example.com')).toBe('/users/:param');
     expect(scrubRoute('/bills/45.00')).toBe('/bills/:param');

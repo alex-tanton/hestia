@@ -1,5 +1,5 @@
 import type { createClient } from '@supabase/supabase-js';
-import { sessionResponseSchema, type SignupRequest } from '@hearth/shared';
+import { sessionResponseSchema, type SignupRequest } from '@hestia/shared';
 import { ApiError, parseProblem } from '../api/problem.ts';
 import type { AuthPort } from '../api/client.ts';
 

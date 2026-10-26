@@ -1,10 +1,10 @@
 /*
- * Tests for `scripts/check-repo-hygiene.mjs`: tracked-but-ignored files, script modes and index
- * line endings. Each case builds a fresh temporary repository, stages files (the script reads the
- * index, so nothing is committed) and runs the script as a child process with `--repo`. Git runs
- * with the host's configuration and repository variables removed, so a developer's global config
- * or a hook environment cannot change a verdict. Run by `pnpm test` through the root
- * `test:harness` script.
+ * Tests for `scripts/check-repo-hygiene.mjs`: tracked-but-ignored files, script modes, index line
+ * endings and the product's former name. Each case builds a fresh temporary repository, stages
+ * files (the script reads the index, so nothing is committed) and runs the script as a child
+ * process with `--repo`. Git runs with the host's configuration and repository variables removed,
+ * so a developer's global config or a hook environment cannot change a verdict. Run by `pnpm test`
+ * through the root `test:harness` script.
  */
 
 import assert from 'node:assert/strict';
@@ -17,7 +17,7 @@ import { after, describe, it } from 'node:test';
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const HYGIENE = join(REPO_ROOT, 'scripts', 'check-repo-hygiene.mjs');
 
-const scratch = mkdtempSync(join(tmpdir(), 'hearth-hygiene-'));
+const scratch = mkdtempSync(join(tmpdir(), 'hestia-hygiene-'));
 after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -27,13 +27,13 @@ function childEnvironment() {
   const env = Object.fromEntries(
     Object.entries(process.env).filter(
       ([key]) =>
-        !['TZ', 'HEARTH_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
+        !['TZ', 'HESTIA_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
     ),
   );
   return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' };
 }
 
-const GIT_IDENTITY = ['-c', 'user.name=hearth-test', '-c', 'user.email=test@example.invalid'];
+const GIT_IDENTITY = ['-c', 'user.name=hestia-test', '-c', 'user.email=test@example.invalid'];
 
 function git(repo, args, input) {
   const run = spawnSync(
@@ -251,5 +251,145 @@ describe('check-repo-hygiene: cases it cannot decide exit 2', () => {
     });
     assert.equal(run.status, 2);
     assert.match(run.stderr, /--repo needs a value/);
+  });
+});
+
+/* The old product name, spelled out so the fixtures below read like the real leftovers. This file
+ * is on the guard's allowlist because it must hold the pattern. */
+const OLD_NAME = 'hearth';
+const PINNED_STATE_LINK = `file:///c:/Users/actanton/Development/Aberrance/${OLD_NAME}/.planning/PROJECT.md`;
+
+describe('check-repo-hygiene: legacy name', () => {
+  it('fails on a staged file that contains the old name and names it', () => {
+    const repo = newRepo();
+    stage(repo, 'src/a.ts', `export const brand = '${OLD_NAME}';\n`);
+    stage(repo, 'src/b.ts', 'export const brand = 1;\n');
+    const run = hygiene(repo);
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /^legacy name in src\/a\.ts$/m);
+    assert.doesNotMatch(run.stderr, /src\/b\.ts/);
+    assert.match(run.stdout, /^repo-hygiene: 1 problems$/m);
+  });
+
+  it('matches the old name in any case', () => {
+    const repo = newRepo();
+    stage(repo, 'src/cap.ts', 'const a = "Hearth";\n');
+    stage(repo, 'src/upper.ts', 'const a = "HEARTH_ORIGIN";\n');
+    const run = hygiene(repo);
+    assert.equal(run.status, 1);
+    assert.deepEqual(run.stderr.trim().split('\n'), [
+      'legacy name in src/cap.ts',
+      'legacy name in src/upper.ts',
+    ]);
+    assert.match(run.stdout, /^repo-hygiene: 2 problems$/m);
+  });
+
+  it('fails on a tracked path whose name contains the old name', () => {
+    const repo = newRepo();
+    stage(repo, `docs/${OLD_NAME}-notes.md`, 'clean text\n');
+    const run = hygiene(repo);
+    assert.equal(run.status, 1);
+    assert.deepEqual(run.stderr.trim().split('\n'), [
+      `legacy name in file name: docs/${OLD_NAME}-notes.md`,
+    ]);
+    assert.match(run.stdout, /^repo-hygiene: 1 problems$/m);
+  });
+
+  it('passes when the old name appears only in allowlisted paths', () => {
+    const repo = newRepo();
+    const text = `quotes ${OLD_NAME}\n`;
+    stage(repo, '.planning/milestones/v1.0/x.md', text);
+    stage(repo, '.planning/phases/08-x/notes.md', text);
+    stage(repo, '.planning/research/notes.md', text);
+    stage(repo, 'scripts/migration-exemptions.json', `{ "fromPath": "${OLD_NAME}" }\n`);
+    stage(repo, 'scripts/check-repo-hygiene.mjs', text);
+    stage(repo, 'scripts/check-repo-hygiene.test.mjs', text);
+    const run = hygiene(repo);
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(run.stdout, /^repo-hygiene: clean \(6 files, 0 scripts\)$/m);
+  });
+
+  it('does not extend an exact allowlist entry to a sibling path', () => {
+    const repo = newRepo();
+    const text = `quotes ${OLD_NAME}\n`;
+    stage(repo, 'scripts/migration-exemptions.json.bak', text);
+    stage(repo, '.planning/STATE.md.orig', `${PINNED_STATE_LINK}\n`);
+    stage(repo, '.planning/environment/setup.md', text);
+    const run = hygiene(repo);
+    assert.equal(run.status, 1);
+    assert.deepEqual(run.stderr.trim().split('\n'), [
+      'legacy name in .planning/STATE.md.orig',
+      'legacy name in .planning/environment/setup.md',
+      'legacy name in scripts/migration-exemptions.json.bak',
+    ]);
+    assert.match(run.stdout, /^repo-hygiene: 3 problems$/m);
+  });
+
+  it('allows only the pinned quotes in a planning state file', () => {
+    const repo = newRepo();
+    stage(
+      repo,
+      '.planning/ROADMAP.md',
+      [
+        '- [x] **[v1.0 Hearth — Cleanup and Hardening](milestones/v1.0/ROADMAP.md)** — 6 phases',
+        '- [ ] **Phase 8: Rebrand**',
+        '**Goal:** Rebrand the application from Hearth to Hestia across the monorepo',
+        '',
+      ].join('\n'),
+    );
+    stage(repo, '.planning/STATE.md', `See: [PROJECT.md](${PINNED_STATE_LINK}) (updated today)\n`);
+    const run = hygiene(repo);
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(run.stdout, /^repo-hygiene: clean \(2 files, 0 scripts\)$/m);
+  });
+
+  it('fails on old-name text outside the pinned quotes, naming the line', () => {
+    const repo = newRepo();
+    stage(
+      repo,
+      '.planning/STATE.md',
+      [
+        `See: [PROJECT.md](${PINNED_STATE_LINK})`,
+        `- decision: the ${OLD_NAME}_service role`,
+        '',
+      ].join('\n'),
+    );
+    stage(repo, '.planning/PROJECT.md', `Goddess of the Hearth fits; set HEARTH_ORIGIN to taste\n`);
+    stage(
+      repo,
+      '.planning/ROADMAP.md',
+      `**Goal:** Rebrand the application from ${OLD_NAME} to Hestia\n`,
+    );
+    const run = hygiene(repo);
+    assert.equal(run.status, 1);
+    assert.deepEqual(run.stderr.trim().split('\n'), [
+      'legacy name in .planning/PROJECT.md:1',
+      'legacy name in .planning/ROADMAP.md:1',
+      'legacy name in .planning/STATE.md:2',
+    ]);
+    assert.match(run.stdout, /^repo-hygiene: 3 problems$/m);
+  });
+
+  it('skips binary files', () => {
+    const repo = newRepo();
+    stageRaw(
+      repo,
+      'image.bin',
+      Buffer.concat([Buffer.from([0x00]), Buffer.from(OLD_NAME)]),
+      '100644',
+    );
+    const run = hygiene(repo);
+    assert.equal(run.status, 0, run.stderr);
+  });
+
+  it('judges the index, not the working tree', () => {
+    const repo = newRepo();
+    stage(repo, 'clean.txt', 'clean\n');
+    writeFileSync(join(repo, 'clean.txt'), `${OLD_NAME}\n`);
+    stage(repo, 'dirty.txt', `${OLD_NAME}\n`);
+    writeFileSync(join(repo, 'dirty.txt'), 'clean\n');
+    const run = hygiene(repo);
+    assert.equal(run.status, 1);
+    assert.deepEqual(run.stderr.trim().split('\n'), ['legacy name in dirty.txt']);
   });
 });

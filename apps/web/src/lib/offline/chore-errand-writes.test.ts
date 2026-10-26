@@ -5,7 +5,7 @@ import {
 } from '@tanstack/react-query-persist-client';
 import { waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Chore } from '@hearth/shared';
+import type { Chore } from '@hestia/shared';
 import { OFFLINE_ACTION_REASON } from '../../components/chores/chore-copy.ts';
 import {
   TAKE_OUT_TRASH_ID,

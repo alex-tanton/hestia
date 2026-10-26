@@ -6,7 +6,7 @@ import type {
   PantryItem,
   ShoppingList,
   ShoppingListDetail,
-} from '@hearth/shared';
+} from '@hestia/shared';
 import {
   adminPool,
   as,
@@ -19,7 +19,7 @@ import {
 import { app, expectStatus, registerStackHooks } from './test/stack-hooks.js';
 
 /*
- * Lists, items, and the pantry against `supabase start`: real Postgres as hearth_service, every
+ * Lists, items, and the pantry against `supabase start`: real Postgres as hestia_service, every
  * request through withUserDb, so RLS is what decides each assertion. Requests here commit, so
  * each test makes its own users, household, and deals.
  */

@@ -1,6 +1,6 @@
 /*
  * Repository hygiene gate: reads the git index (what a commit would contain, never the working
- * tree a checkout may have rewritten) and fails on three kinds of drift that review misses.
+ * tree a checkout may have rewritten) and fails on four kinds of drift that review misses.
  *
  *   node scripts/check-repo-hygiene.mjs [--repo DIR]
  *
@@ -12,6 +12,10 @@
  * 3. A text file whose index copy has CRLF or mixed line endings, unless its attributes mark it
  *    `-text`. `.gitattributes` normalizes line endings in a checkout, so only the index shows what
  *    was really committed.
+ * 4. The product's former name, in any case, in the content of a tracked text file or in a tracked
+ *    path (binary files are not judged). `LEGACY_NAME_ALLOWLIST` and `LEGACY_NAME_QUOTES` are the
+ *    only places text may carry the former name: the allowlist exempts whole paths, and the quotes
+ *    exempt exact substrings of the four planning state files, which are scanned line by line.
  *
  * Exit codes: 0 clean; 1 problems found; 2 the check could not run (not a git work tree, a failing
  * git call, bad usage), which is never treated as a pass.
@@ -26,6 +30,58 @@ const MAX_BUFFER = 512 * 1024 * 1024;
 const SYMLINK_MODE = '120000';
 const SUBMODULE_MODE = '160000';
 const EXECUTABLE_MODE = '100755';
+
+/** The product's former name, matched in any case. */
+const LEGACY_NAME = 'hearth';
+
+/**
+ * Whole paths that may carry the former name. An entry ending in `/` covers that directory prefix;
+ * any other entry covers exactly one path, never a sibling such as `<entry>.bak`. Keep this list
+ * short: adding an entry needs the owner's review.
+ */
+const LEGACY_NAME_ALLOWLIST = Object.freeze([
+  // The v1.0 archive is history; the rebrand decisions name it as exempt.
+  '.planning/milestones/',
+  // Records of the rename itself. These two prefixes rest on the planner's reading of the decision
+  // that text which must quote the former name is exempt; the decision does not list them.
+  '.planning/phases/',
+  '.planning/research/',
+  // This script and its test hold the pattern, so they must spell the name.
+  'scripts/check-repo-hygiene.mjs',
+  'scripts/check-repo-hygiene.test.mjs',
+  // Its fromPath values keep the file name the pinned migrations had before the rename.
+  'scripts/migration-exemptions.json',
+]);
+
+/**
+ * Exact quotes that may carry the former name in the four planning state files. Those files
+ * describe the current state under the new name, so they are scanned line by line and are not on
+ * the allowlist. A quote is an exact, case-sensitive substring of a line; any other occurrence on
+ * the line, including one next to a quote, still fails. Anything else in these files must call it
+ * "the former name".
+ */
+const LEGACY_NAME_QUOTES = Object.freeze({
+  '.planning/PROJECT.md': Object.freeze([
+    'from Hearth to Hestia',
+    'from `hearth-admin` to `hestia-admin`',
+    'from `@hearth/*` to `@hestia/*`',
+    'from `HEARTH_*` to `HESTIA_*`',
+    'Goddess of the Hearth',
+  ]),
+  '.planning/REQUIREMENTS.md': Object.freeze([
+    'refers to Hearth',
+    'from `hearth-admin` to `hestia-admin`',
+    'from `@hearth/*` to `@hestia/*`',
+    'from `HEARTH_*` to `HESTIA_*`',
+  ]),
+  '.planning/ROADMAP.md': Object.freeze([
+    'v1.0 Hearth — Cleanup and Hardening',
+    'from Hearth to Hestia',
+  ]),
+  '.planning/STATE.md': Object.freeze([
+    'file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md',
+  ]),
+});
 
 const USAGE = `usage: node scripts/check-repo-hygiene.mjs [--repo DIR]
   --repo DIR   the repository to check (default: this checkout)`;
@@ -115,6 +171,50 @@ function eolEntries(repo) {
   });
 }
 
+function isLegacyNameAllowlisted(path) {
+  return LEGACY_NAME_ALLOWLIST.some((entry) =>
+    entry.endsWith('/') ? path.startsWith(entry) : path === entry,
+  );
+}
+
+function mentionsLegacyName(text) {
+  return text.toLowerCase().includes(LEGACY_NAME);
+}
+
+/**
+ * Paths whose index copy is a text file containing the former name in any case. `git grep` exits 1
+ * when nothing matches, so status 0 and 1 are both answers; any other status is a failure.
+ */
+function legacyNameHits(repo) {
+  const run = spawnSync(
+    'git',
+    ['-C', repo, 'grep', '--cached', '-I', '-l', '-i', '-z', '-F', '-e', LEGACY_NAME],
+    { maxBuffer: MAX_BUFFER },
+  );
+  if (run.error !== undefined) {
+    throw new Error(`cannot run git: ${String(run.error)}`, { cause: run.error });
+  }
+  if (run.status !== 0 && run.status !== 1) {
+    throw new Error(
+      `git grep exited with status ${String(run.status ?? run.signal)}: ` +
+        run.stderr.toString('utf8').trim(),
+    );
+  }
+  return records(run.stdout);
+}
+
+/** The 1-based numbers of the lines that carry the former name outside the file's pinned quotes. */
+function linesOutsideQuotes(repo, sha, quotes) {
+  const lines = git(repo, ['cat-file', 'blob', sha]).toString('utf8').split('\n');
+  const numbers = [];
+  lines.forEach((line, index) => {
+    let rest = line;
+    for (const quote of quotes) rest = rest.split(quote).join(' ');
+    if (mentionsLegacyName(rest)) numbers.push(index + 1);
+  });
+  return numbers;
+}
+
 function main() {
   const { repo } = parseArguments(process.argv.slice(2));
   const problems = [];
@@ -149,6 +249,24 @@ function main() {
     for (const entry of eolEntries(repo)) {
       if ((entry.eol === 'crlf' || entry.eol === 'mixed') && !entry.attributes.includes('-text')) {
         problems.push({ path: entry.path, text: `CRLF line endings in the index: ${entry.path}` });
+      }
+    }
+
+    const shaByPath = new Map(entries.map((entry) => [entry.path, entry.sha]));
+    for (const path of legacyNameHits(repo)) {
+      if (isLegacyNameAllowlisted(path)) continue;
+      const sha = shaByPath.get(path);
+      if (Object.hasOwn(LEGACY_NAME_QUOTES, path) && sha !== undefined) {
+        for (const line of linesOutsideQuotes(repo, sha, LEGACY_NAME_QUOTES[path])) {
+          problems.push({ path, text: `legacy name in ${path}:${String(line)}` });
+        }
+      } else {
+        problems.push({ path, text: `legacy name in ${path}` });
+      }
+    }
+    for (const { path } of entries) {
+      if (!isLegacyNameAllowlisted(path) && mentionsLegacyName(path)) {
+        problems.push({ path, text: `legacy name in file name: ${path}` });
       }
     }
   } catch (error) {

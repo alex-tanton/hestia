@@ -1,5 +1,5 @@
 import { useId, useState, type SyntheticEvent, type ReactElement } from 'react';
-import { quietHoursSchema, type ProfileResponse } from '@hearth/shared';
+import { quietHoursSchema, type ProfileResponse } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { Checkbox } from '../../components/ui/Checkbox.tsx';

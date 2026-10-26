@@ -1,6 +1,6 @@
 import { UtensilsCrossed } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import type { RecipeDetail } from '@hearth/shared';
+import type { RecipeDetail } from '@hestia/shared';
 import { RecipeCard } from '../../components/meals/RecipeCard.tsx';
 import {
   RECIPE_LIBRARY_EMPTY_COPY,

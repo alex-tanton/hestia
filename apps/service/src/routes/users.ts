@@ -7,8 +7,8 @@ import {
   setActiveHouseholdRequestSchema,
   updateNotificationPreferenceRequestSchema,
   updateProfileRequestSchema,
-} from '@hearth/shared';
-import { newPasswordSchema } from '@hearth/shared/common-passwords';
+} from '@hestia/shared';
+import { newPasswordSchema } from '@hestia/shared/common-passwords';
 import { isRecentRecovery } from '../auth/jwt.js';
 import { parse, type RouteContext } from '../http/context.js';
 import { fail } from '../problem.js';

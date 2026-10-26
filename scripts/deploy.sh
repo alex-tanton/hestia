@@ -4,22 +4,22 @@
 #
 #   scripts/deploy.sh
 #
-#   HEARTH_ENV_FILE     the host's .env (default /srv/hearth/.env, outside any checkout)
-#   HEARTH_DEPLOY_SHA   the commit being deployed (default: git HEAD)
+#   HESTIA_ENV_FILE     the host's .env (default /srv/hestia/.env, outside any checkout)
+#   HESTIA_DEPLOY_SHA   the commit being deployed (default: git HEAD)
 #
 # Steps: build both images tagged with the commit SHA; back up the database; apply pending
-# migrations; restart hearth-service and caddy on the new images; require GET /api/health
+# migrations; restart hestia-service and caddy on the new images; require GET /api/health
 # through Caddy within 60 seconds, else roll both back to the images that were running.
 # A failed build, backup, or migration aborts before anything is restarted. Safe to re-run.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-env_file="${HEARTH_ENV_FILE:-/srv/hearth/.env}"
-sha="${HEARTH_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
+env_file="${HESTIA_ENV_FILE:-/srv/hestia/.env}"
+sha="${HESTIA_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
 new_tag="${sha:0:12}"
 health_url="http://127.0.0.1:8080/api/health"
 health_timeout_seconds=60
-images=(hearth-service hearth-caddy)
+images=(hestia-service hestia-caddy)
 # Old SHA-tagged images kept per image, for manual rollback beyond the automatic one.
 keep_tags=5
 
@@ -51,30 +51,30 @@ healthy_within() {
 
 # Points :current at the given images and recreates the two containers on them.
 switch_to() {
-  docker tag "$1" hearth-service:current
-  docker tag "$2" hearth-caddy:current
-  compose up --detach --no-deps --no-build hearth-service caddy
+  docker tag "$1" hestia-service:current
+  docker tag "$2" hestia-caddy:current
+  compose up --detach --no-deps --no-build hestia-service caddy
 }
 
-[[ -r "$env_file" ]] || fail "cannot read $env_file (set HEARTH_ENV_FILE)"
+[[ -r "$env_file" ]] || fail "cannot read $env_file (set HESTIA_ENV_FILE)"
 command -v supabase >/dev/null || fail "the Supabase CLI is not installed"
 cd "$repo_root"
 
 log "deploying $new_tag"
 
 # 1. Record what is running now; it is the rollback target.
-prev_service="$(image_id hearth-service:current)"
-prev_caddy="$(image_id hearth-caddy:current)"
+prev_service="$(image_id hestia-service:current)"
+prev_caddy="$(image_id hestia-caddy:current)"
 if [[ -n "$prev_service" && -n "$prev_caddy" ]]; then
-  log "previous: hearth-service $(revision_of hearth-service:current)," \
-    "hearth-caddy $(revision_of hearth-caddy:current)"
+  log "previous: hestia-service $(revision_of hestia-service:current)," \
+    "hestia-caddy $(revision_of hestia-caddy:current)"
 else
   log "previous: none (first deploy; there is nothing to roll back to)"
 fi
 
 # 2. Build. Nothing is restarted yet, so a failed build changes nothing.
-log "building hearth-service:$new_tag and hearth-caddy:$new_tag"
-HEARTH_TAG="$new_tag" compose build hearth-service caddy || fail "build failed; nothing restarted"
+log "building hestia-service:$new_tag and hestia-caddy:$new_tag"
+HESTIA_TAG="$new_tag" compose build hestia-service caddy || fail "build failed; nothing restarted"
 
 # The Supabase services and backup must be running for the backup and migrations. Only
 # missing containers are started: a deploy never recreates the database.
@@ -98,20 +98,20 @@ PGPASSWORD="$(env_value POSTGRES_PASSWORD)" supabase migration up --workdir "$re
   --db-url "postgresql://postgres@${db_ip}:5432/postgres?sslmode=disable" ||
   fail "migration failed; nothing restarted (the backup above is the restore point)"
 
-# hearth_service's LOGIN and password come from .env, not a migration; re-applying them is
+# hestia_service's LOGIN and password come from .env, not a migration; re-applying them is
 # idempotent and picks up a rotated password.
 compose exec -T db psql --username supabase_admin --dbname postgres --quiet \
-  --set ON_ERROR_STOP=1 --file - <docker/db/hearth-service-login.sql ||
-  fail "setting the hearth_service login failed; nothing restarted"
+  --set ON_ERROR_STOP=1 --file - <docker/db/hestia-service-login.sql ||
+  fail "setting the hestia_service login failed; nothing restarted"
 
 # 5. Restart on the new images, gated on health.
-log "restarting hearth-service and caddy on $new_tag"
-switch_to "hearth-service:$new_tag" "hearth-caddy:$new_tag"
+log "restarting hestia-service and caddy on $new_tag"
+switch_to "hestia-service:$new_tag" "hestia-caddy:$new_tag"
 if healthy_within "$health_timeout_seconds"; then
   log "healthy; deployed $new_tag"
 else
   log "GET /api/health did not succeed within ${health_timeout_seconds}s"
-  compose logs --tail 30 hearth-service caddy || true
+  compose logs --tail 30 hestia-service caddy || true
   if [[ -z "$prev_service" || -z "$prev_caddy" ]]; then
     fail "$new_tag is unhealthy and there is no previous image to roll back to"
   fi
