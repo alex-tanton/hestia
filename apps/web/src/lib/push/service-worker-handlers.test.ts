@@ -115,7 +115,7 @@ describe('push', () => {
     handlePush(scope, push.event);
     await push.settled();
 
-    expect(shown[0]?.title).toBe('Hearth');
+    expect(shown[0]?.title).toBe('Hestia');
   });
 
   it('never deep-links off the site', async () => {

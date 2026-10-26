@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /*
- * Hearth design tokens. Raw hex lives only in this file; components use the role
+ * Hestia design tokens. Raw hex lives only in this file; components use the role
  * utilities below (bg-base, text-section, ...), so a section color is never hardcoded.
  * Tailwind's default palette, type scale, radii, and shadows are removed on purpose: the only
  * values reachable from a utility are the ones defined here.

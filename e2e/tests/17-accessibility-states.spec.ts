@@ -55,17 +55,17 @@ const COPY = {
   recipesEmpty: 'No recipes yet. Paste a link or add one by hand.',
   suggestionsEmpty: 'No recipes yet. Add one to see what you can make this week.',
   billsEmpty:
-    'Hearth tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.',
+    'Hestia tracks what you owe and when — it never pays a bill or touches your accounts. Add a bill to start.',
   choresEmpty: 'No chores yet. Add one to start tracking what needs doing.',
   errandsEmpty: 'No errands yet. Add one to keep track of it.',
   saving: 'Saving…',
   saveError: "Couldn't save that setting. Try again.",
-  denied: "Notifications are blocked for Hearth in this browser, so this device won't get them.",
+  denied: "Notifications are blocked for Hestia in this browser, so this device won't get them.",
   dismissed: 'Notifications stay off on this device until you allow them.',
   failed: "Couldn't turn on notifications on this device. Try again.",
-  unsupported: "Notifications aren't available in this browser. Hearth still works without them.",
+  unsupported: "Notifications aren't available in this browser. Hestia still works without them.",
   iosInstall:
-    'On iPhone and iPad, Hearth has to be on the home screen before it can send notifications.',
+    'On iPhone and iPad, Hestia has to be on the home screen before it can send notifications.',
 } as const;
 
 /** A notification preference write, which the save states hold open or fail on purpose. */

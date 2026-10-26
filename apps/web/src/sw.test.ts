@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
  * for deal images) plus two listeners that delegate straight to `service-worker-handlers.ts`,
  * which already has its own direct test. Workbox itself needs a real service worker scope (an
  * install/activate lifecycle, the `caches` API) that jsdom does not have, so every Workbox export
- * is faked here; what this file actually checks is Hearth's own glue: which event goes to which
+ * is faked here; what this file actually checks is Hestia's own glue: which event goes to which
  * handler, the deal-image route's own matcher, and the one bit of real logic the worker has — the
  * `SKIP_WAITING` message check.
  */

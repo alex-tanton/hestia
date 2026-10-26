@@ -29,7 +29,7 @@ const HEADINGS: Record<OnboardingStep, { title: string; description?: string }> 
     title: 'Join a household',
     description: 'Enter the 8-character code from your invite.',
   },
-  install: { title: 'Add Hearth to your home screen' },
+  install: { title: 'Add Hestia to your home screen' },
 };
 
 /**

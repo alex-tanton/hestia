@@ -4,10 +4,10 @@ import { Button } from '../../components/ui/Button.tsx';
 import { showInstallPrompt, useInstallMethod } from '../../lib/use-install-prompt.ts';
 
 export const IOS_INSTALL_MESSAGE =
-  'On iPhone and iPad, Hearth has to be on the home screen before it can send notifications. Tap the Share button, then Add to Home Screen. You can turn notifications on afterwards, in Settings.';
+  'On iPhone and iPad, Hestia has to be on the home screen before it can send notifications. Tap the Share button, then Add to Home Screen. You can turn notifications on afterwards, in Settings.';
 
 export const INSTALL_MESSAGE =
-  'Install Hearth to open it from your home screen and keep your lists a tap away.';
+  'Install Hestia to open it from your home screen and keep your lists a tap away.';
 
 /**
  * The install prompt, offered once onboarding completes rather than on first paint. iOS gets the sequence explained instead of a prompt it
@@ -35,7 +35,7 @@ export function InstallStep({ onDone }: { onDone: () => void }): ReactElement {
           <Share aria-hidden size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-section" />
           <span className="max-w-[70ch]">{IOS_INSTALL_MESSAGE}</span>
         </p>
-        <Button onClick={onDone}>Go to Hearth</Button>
+        <Button onClick={onDone}>Go to Hestia</Button>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export function InstallStep({ onDone }: { onDone: () => void }): ReactElement {
             void handleInstall();
           }}
         >
-          Install Hearth
+          Install Hestia
         </Button>
         <Button variant="ghost" onClick={onDone}>
           Not now
@@ -70,7 +70,7 @@ export function InstallStep({ onDone }: { onDone: () => void }): ReactElement {
   return (
     <div className="flex flex-col gap-4">
       <p className="max-w-[70ch] text-body text-secondary">Your household is ready.</p>
-      <Button onClick={onDone}>Go to Hearth</Button>
+      <Button onClick={onDone}>Go to Hestia</Button>
     </div>
   );
 }

@@ -49,8 +49,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'Hearth',
-        short_name: 'Hearth',
+        name: 'Hestia',
+        short_name: 'Hestia',
         description: 'Deals, shopping lists, meals, bills, and chores for your household.',
         start_url: '/',
         scope: '/',

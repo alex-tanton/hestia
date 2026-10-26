@@ -51,7 +51,7 @@ export function OnboardingLayout({
                 {onBack.label}
               </Button>
             )}
-            <p className="text-caption tracking-[0.04em] text-muted uppercase">Hearth</p>
+            <p className="text-caption tracking-[0.04em] text-muted uppercase">Hestia</p>
             <h1 className="text-display text-primary">{title}</h1>
             {description !== undefined && (
               <p className="max-w-[70ch] text-body text-secondary">{description}</p>

@@ -347,6 +347,6 @@ describe('the rest of onboarding', () => {
     renderScreen(<InstallStep onDone={() => undefined} />);
 
     expect(screen.getByText(IOS_INSTALL_MESSAGE)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Go to Hearth' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Go to Hestia' })).toBeInTheDocument();
   });
 });
