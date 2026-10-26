@@ -125,3 +125,8 @@ No gaps. Every rebrand deliverable is present, wired and consistent in the code,
 
 _Verified: 2026-10-26_
 _Verifier: Claude (gsd-verifier)_
+
+
+## Acknowledged Gaps
+
+Owner accepted on 2026-10-26 and declared verification complete. The real-browser brand check and the CI-green-on-PR check are skipped as final: the app has never been deployed or installed, and no pull request or CI run exists. Source-level checks of the Hestia strings stand in for the browser check.
