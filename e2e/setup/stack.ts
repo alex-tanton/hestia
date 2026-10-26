@@ -47,9 +47,12 @@ function writeEnvFile(): void {
   mkdirSync(BACKUP_DIR, { recursive: true });
   rmSync(ENV_FILE, { force: true });
   runChecked('bash', [join(REPO_ROOT, 'scripts', 'generate-secrets.sh'), ENV_FILE], {
-    // Plain HTTP on the loopback: there is no Cloudflare edge in front of the E2E stack, and every link
-    // the stack prints — an invite, the owner's reset link — has to be one the browser can open.
+    // Plain HTTP on the loopback: there is no Cloudflare edge in front of the E2E stack, and every
+    // link the stack prints — an invite, the owner's reset link — has to be one the browser can open.
     HESTIA_ORIGIN: BASE_URL,
+    // Compose interpolates the base file's required token even though the overlay never starts the
+    // connector, so a placeholder satisfies it and nothing ever dials Cloudflare.
+    CLOUDFLARE_TUNNEL_TOKEN: 'e2e-not-a-real-token',
     // Alex is the development owner, so Alex sees System health.
     HESTIA_OWNER_EMAIL: 'alex@example.com',
     BACKUP_DIR,

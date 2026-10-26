@@ -3,10 +3,10 @@
 #
 #   scripts/generate-secrets.sh [output-path]      (default: $HESTIA_ENV_FILE or /srv/hestia/.env)
 #
-# HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR are copied from the environment when set,
-# otherwise left as .env.example's placeholders for the owner to fill in. Refuses to overwrite an
-# existing file: regenerating secrets on a live install locks every user out and strands the
-# database.
+# HESTIA_ORIGIN, CLOUDFLARE_TUNNEL_TOKEN, HESTIA_OWNER_EMAIL, and BACKUP_DIR are copied from the
+# environment when set, otherwise they keep .env.example's values: the literal origin, an empty
+# token, and placeholders for the owner to fill in. Refuses to overwrite an existing file:
+# regenerating secrets on a live install locks every user out and strands the database.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -69,7 +69,12 @@ const generated = {
   VAPID_PUBLIC_KEY: vapid.publicKey,
   VAPID_PRIVATE_KEY: vapid.privateKey,
 };
-const fromEnvironment = ['HESTIA_ORIGIN', 'HESTIA_OWNER_EMAIL', 'BACKUP_DIR'];
+const fromEnvironment = [
+  'HESTIA_ORIGIN',
+  'CLOUDFLARE_TUNNEL_TOKEN',
+  'HESTIA_OWNER_EMAIL',
+  'BACKUP_DIR',
+];
 
 const lines = readFileSync(process.env.EXAMPLE, 'utf8')
   .split('\n')
@@ -88,6 +93,10 @@ writeFileSync(process.env.OUT, lines.join('\n'));
 EOF
 
 echo "generate-secrets: wrote $out"
-if grep -Eq '^HESTIA_ORIGIN=.*<machine>|^HESTIA_OWNER_EMAIL=owner@example\.com$' "$out"; then
-  echo "generate-secrets: now set HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR in $out" >&2
+missing=()
+grep -Eq '^CLOUDFLARE_TUNNEL_TOKEN=$' "$out" && missing+=(CLOUDFLARE_TUNNEL_TOKEN)
+grep -Eq '^HESTIA_OWNER_EMAIL=owner@example\.com$' "$out" && missing+=(HESTIA_OWNER_EMAIL)
+grep -Eq '^HESTIA_ORIGIN=$' "$out" && missing+=(HESTIA_ORIGIN)
+if ((${#missing[@]} > 0)); then
+  echo "generate-secrets: now set ${missing[*]} in $out, and check BACKUP_DIR" >&2
 fi

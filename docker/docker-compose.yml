@@ -253,6 +253,29 @@ services:
       timeout: 5s
       retries: 3
 
+  # A remotely-managed tunnel: the public hostname route hestia.aberrance.app to http://caddy:8080
+  # lives in the Cloudflare dashboard, so the repository holds no credentials file or config. The
+  # image's entrypoint already passes --no-autoupdate, and the token comes from the environment so
+  # it never appears in the process list.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.3
+    restart: unless-stopped
+    logging: *logging
+    networks: [hestia]
+    command: [tunnel, run]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set in .env}
+      # `cloudflared tunnel ready` reads the metrics address from here; loopback keeps the metrics
+      # off the Compose network.
+      TUNNEL_METRICS: 127.0.0.1:2000
+    healthcheck:
+      # The image has no shell, so the exec form is required.
+      test: [CMD, cloudflared, tunnel, ready]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
   backup:
     image: prodrigestivill/postgres-backup-local:17-debian-d257e5d
     restart: unless-stopped

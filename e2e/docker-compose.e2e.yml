@@ -20,6 +20,10 @@
 #     public origin an https one; E2E is plain HTTP on the loopback, so HESTIA_HOST — the only
 #     thing that entrypoint derives — is given directly, and HESTIA_TRUSTED_PROXIES is set to the
 #     run's own subnet
+#   * the tunnel connector left out by a profile: there is no Cloudflare edge in front of the
+#     loopback stack, so `cloudflared` is never started. The profile keeps it out of every `up`,
+#     `down` and `ps` that does not name it. Compose still interpolates the base file's required
+#     token, so the run's `.env` carries a placeholder (see e2e/setup/stack.ts)
 #   * the client address: there is no Cloudflare edge in front of the loopback stack. Playwright
 #     reaches Caddy through the published port, so Caddy's peer is the run network's gateway,
 #     inside the trusted subnet, and with no CF-Connecting-IP header that address is the client.
@@ -68,6 +72,11 @@ services:
   kong:
     environment:
       KONG_TRUSTED_IPS: ${HESTIA_E2E_SUBNET:?}
+
+  # Never started in E2E; see the header. The profile excludes it from every command that does not
+  # name it.
+  cloudflared:
+    profiles: [e2e-excluded]
 
   caddy:
     command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
