@@ -2,10 +2,10 @@
 gsd_state_version: "1.0"
 milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
-current_phase: 8
-current_phase_name: Full Rebrand to Hestia
+current_phase: 9
+current_phase_name: Domain & Network Migration (Cloudflare Tunnel & Ingress)
 current_plan: 7
-status: verifying
+status: ready_to_plan
 stopped_at: Completed 08-07-PLAN.md
 last_updated: "2026-10-26T04:27:52.537Z"
 last_activity: 2026-10-26
@@ -13,10 +13,10 @@ last_activity_desc: Phase 08 execution started
 state_head: 969e8da2a3be287457c64a86ebdc66a854dbe32a
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
   completed_plans: 11
-  percent: 20
+  percent: 40
 current_milestone: v2.0
 ---
 
@@ -32,11 +32,11 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
 ## Current Position
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
-Phase: 8 (Full Rebrand to Hestia)
+Phase: 9 (Domain & Network Migration)
 Current Plan: 7
 Total Plans in Phase: 7
-Phases: 1 of 5 complete (Phases 7–11)
-Status: Phase complete — ready for verification
+Phases: 2 of 5 complete (Phases 7–11)
+Status: Phase 8 complete (owner override); Phase 9 ready to plan
 Last activity: 2026-10-26 — Phase 08 execution started
 
 Progress: [██░░░░░░░░] 20% of milestone plans
@@ -44,14 +44,14 @@ Progress: [██░░░░░░░░] 20% of milestone plans
 ## Milestone Roadmap
 
 - [ ] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 bloat, rewrite `README.md`, extract guides to `docs/`
-- [ ] **Phase 8: Full Rebrand to Hestia** - Web UI, manifest, CLI, packages (`@hestia/*`), env (`HESTIA_*`)
+- [x] **Phase 8: Full Rebrand to Hestia** - Web UI, manifest, CLI, packages (`@hestia/*`), env (`HESTIA_*`)
 - [ ] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale, add Cloudflare Tunnel, Caddy `CF-Connecting-IP`, origin `hestia.aberrance.app`
 - [ ] **Phase 10: Magic Links & Transactional Email** - Build flag, screens, GoTrue SMTP for Resend/Postmark, E2E tests
 - [ ] **Phase 11: Web Push & Edge Hardening** - VAPID `mailto:admin@aberrance.app`, iOS/Android PWA push verification, Cloudflare Edge caching, quality ratchet
 
 ## Next Action
 
-Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+Plan Phase 9 with /gsd-plan-phase 9.
 
 ## Session
 

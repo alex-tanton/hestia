@@ -14,7 +14,7 @@
 ### Phases
 
 - [x] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 planning bloat, restructure `README.md`, and create modular runbooks under `docs/`. (completed 2026-10-25)
-- [ ] **Phase 8: Full Rebrand to Hestia** - Rebrand web UI, PWA manifest, CLI, workspace packages (`@hestia/*`), and environment variables (`HESTIA_*`).
+- [x] **Phase 8: Full Rebrand to Hestia** - Rebrand web UI, PWA manifest, CLI, workspace packages (`@hestia/*`), and environment variables (`HESTIA_*`). (completed 2026-10-26, owner override of skipped UAT and stale verification)
 - [ ] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale Funnel, add Cloudflare Tunnel, update Caddy real-IP restoration (`CF-Connecting-IP`), and configure domain routing for `hestia.aberrance.app`.
 - [ ] **Phase 10: Magic Links & Transactional Email** - Activate magic link routes and screens, configure GoTrue SMTP for Resend/Postmark, and implement E2E verification.
 - [ ] **Phase 11: Web Push & Edge Hardening** - Update VAPID claims under RFC 8292, verify iOS/Android standalone PWA push notifications, configure Cloudflare Edge caching/WAF, and run full verification.
