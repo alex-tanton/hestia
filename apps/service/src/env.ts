@@ -14,7 +14,7 @@ const trustedProxies = z
 // `supabase start`. A trailing slash is dropped so paths can be appended.
 const gotrueUrl = z.url({ protocol: /^https?$/ }).transform((value) => value.replace(/\/+$/, ''));
 
-// The public origin, https://<machine>.<tailnet>.ts.net; invite and reset links are built on it.
+// The public origin, https://hestia.aberrance.app; invite and reset links are built on it.
 const origin = z.url({ protocol: /^https?$/ }).transform((value) => new URL(value).origin);
 
 /**

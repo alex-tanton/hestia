@@ -3,7 +3,7 @@ import { parseCliEnv, parseEnv, vapidSubjectFor } from './env.js';
 
 const REQUIRED = {
   DATABASE_URL: 'postgres://u:p@db:5432/postgres',
-  HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net/',
+  HESTIA_ORIGIN: 'https://hestia.aberrance.app/',
   GOTRUE_URL: 'http://auth:9999/',
   JWT_SECRET: 'x'.repeat(40),
   ANON_KEY: 'anon',
@@ -47,7 +47,7 @@ describe('parseEnv', () => {
 
     expect(env).toEqual({
       ...REQUIRED,
-      HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net',
+      HESTIA_ORIGIN: 'https://hestia.aberrance.app',
       GOTRUE_URL: 'http://auth:9999',
       HOST: '0.0.0.0',
       PORT: 3000,
@@ -56,7 +56,7 @@ describe('parseEnv', () => {
       HESTIA_OWNER_EMAIL: '',
       HESTIA_RATE_LIMIT_PER_MINUTE: 300,
       HESTIA_PUSH_TRANSPORT: 'web-push',
-      VAPID_SUBJECT: 'https://hestia.tail1234.ts.net',
+      VAPID_SUBJECT: 'https://hestia.aberrance.app',
     });
   });
 
@@ -139,12 +139,12 @@ describe('parseEnv', () => {
   );
 
   it('derives VAPID_SUBJECT from the https origin when no owner email is set', () => {
-    expect(parseEnv(REQUIRED).VAPID_SUBJECT).toBe('https://hestia.tail1234.ts.net');
+    expect(parseEnv(REQUIRED).VAPID_SUBJECT).toBe('https://hestia.aberrance.app');
   });
 });
 
 describe('vapidSubjectFor', () => {
-  const base = { HESTIA_OWNER_EMAIL: '', HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net' };
+  const base = { HESTIA_OWNER_EMAIL: '', HESTIA_ORIGIN: 'https://hestia.aberrance.app' };
 
   it('uses an explicit VAPID_SUBJECT when it is a mailto: or https: URI', () => {
     expect(vapidSubjectFor({ ...base, VAPID_SUBJECT: 'mailto:ops@example.com' })).toBe(
@@ -186,7 +186,7 @@ describe('vapidSubjectFor', () => {
 
   it('falls back to the origin when it is https and the owner email is not a valid address', () => {
     expect(vapidSubjectFor({ ...base, HESTIA_OWNER_EMAIL: 'not an address' })).toBe(
-      'https://hestia.tail1234.ts.net',
+      'https://hestia.aberrance.app',
     );
   });
 
@@ -230,7 +230,7 @@ describe('parseCliEnv', () => {
         SERVICE_ROLE_KEY: 'service',
       }),
     ).toEqual({
-      HESTIA_ORIGIN: 'https://hestia.tail1234.ts.net',
+      HESTIA_ORIGIN: 'https://hestia.aberrance.app',
       GOTRUE_URL: 'http://auth:9999',
       SERVICE_ROLE_KEY: 'service',
     });
