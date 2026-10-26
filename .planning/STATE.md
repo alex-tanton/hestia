@@ -5,17 +5,17 @@ milestone_name: Hestia — Domain Migration and Rebrand
 current_phase: 09
 current_phase_name: Domain & Network Migration (Cloudflare Tunnel & Ingress)
 current_plan: 5
-status: executing
-stopped_at: Completed 09-04-PLAN.md
-last_updated: "2026-10-26T18:15:57.008Z"
+status: verifying
+stopped_at: Completed 09-05-PLAN.md
+last_updated: "2026-10-26T18:50:46.521Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 09 execution started
-state_head: ceef38c75848941d759b2be551f5a2af7ac4dc69
+state_head: d4451be2dbc789ca4dcbc343b3df0e1587e49338
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 16
-  completed_plans: 15
+  completed_plans: 16
   percent: 40
 current_milestone: v2.0
 ---
@@ -36,7 +36,7 @@ Phase: 09 (Domain & Network Migration (Cloudflare Tunnel & Ingress)) — EXECUTI
 Current Plan: 5
 Total Plans in Phase: 5
 Phases: 2 of 5 complete (Phases 7–11)
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-26 — Phase 09 execution started
 
 Progress: [████░░░░░░] 40% of milestone plans
@@ -55,8 +55,8 @@ Plan Phase 9 with /gsd-plan-phase 9.
 
 ## Session
 
-**Last session:** 2026-10-26T18:15:56.925Z
-**Stopped at:** Completed 09-04-PLAN.md
+**Last session:** 2026-10-26T18:50:46.447Z
+**Stopped at:** Completed 09-05-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -78,6 +78,7 @@ Plan Phase 9 with /gsd-plan-phase 9.
 | Phase 09 P02 | 5 min | 2 tasks | 7 files |
 | Phase 09 P03 | 5 min | 2 tasks | 10 files |
 | Phase 09 P04 | 14 min | 3 tasks | 10 files |
+| Phase 09 P05 | 38 min | 3 tasks | 5 files |
 
 ## Decisions
 
@@ -105,3 +106,4 @@ Plan Phase 9 with /gsd-plan-phase 9.
 - [Phase 09]: 09-02: caddy-entrypoint.sh exits 1 on an unset or empty HESTIA_TRUSTED_PROXIES and names https://hestia.aberrance.app; commit scope docker for Compose, deploy and entrypoint work
 - [Phase 09]: 09-03: test fixtures swept to https://hestia.aberrance.app by literal-only replacement; env.ts changed by one comment line, HESTIA_ORIGIN still required with no default
 - [Phase 09]: 09-04: first-deploy network recreate documented in docs/deployment.md and checklist step 7; only four requirement/roadmap lines reworded (D-05, D-06, D-09)
+- [Phase 09]: Hygiene check 5: legacy-name machinery generalised into a TERM_RULES table; retired-ingress allowlist is three entries and one pinned quote (funnel through here in the recurrence comment)

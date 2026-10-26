@@ -43,15 +43,15 @@ Milestone v2.0 migrates the application to the custom domain `hestia.aberrance.a
 
 ### Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)
 
-- [ ] **NET-01**: Decommission Tailscale Funnel dependencies, removing Tailscale commands, host network binding references, and Funnel documentation.
+- [x] **NET-01**: Decommission Tailscale Funnel dependencies, removing Tailscale commands, host network binding references, and Funnel documentation.
   - *Acceptance Criteria*: Codebase contains no active dependencies or setup instructions requiring Tailscale Funnel.
-- [ ] **NET-02**: Configure Cloudflare Tunnel (`cloudflared`) in Docker Compose to securely forward `hestia.aberrance.app` traffic to Caddy without exposing router ports 80/443.
+- [x] **NET-02**: Configure Cloudflare Tunnel (`cloudflared`) in Docker Compose to securely forward `hestia.aberrance.app` traffic to Caddy without exposing router ports 80/443.
   - *Acceptance Criteria*: `docker-compose.yml` includes an optional/standard `cloudflared` service using a tunnel token; traffic routes cleanly to `caddy:8080`.
-- [ ] **NET-03**: Update `docker/Caddyfile` to trust only the Compose subnet that `cloudflared` connects from and to take the client IP from `CF-Connecting-IP` alone, with no `X-Forwarded-For` fallback (D-05, D-06).
+- [x] **NET-03**: Update `docker/Caddyfile` to trust only the Compose subnet that `cloudflared` connects from and to take the client IP from `CF-Connecting-IP` alone, with no `X-Forwarded-For` fallback (D-05, D-06).
   - *Acceptance Criteria*: Downstream service logs and rate limiting resolve true client IPs provided by Cloudflare.
-- [ ] **NET-04**: Keep the Content Security Policy's `connect-src 'self' wss://hestia.aberrance.app` derived from `HESTIA_ORIGIN` (`'self'` covers `https://hestia.aberrance.app`), and pin with tests that no CORS or cookie surface exists to configure: the service sends no CORS headers and the app keeps its tokens in browser storage, not cookies (D-09).
+- [x] **NET-04**: Keep the Content Security Policy's `connect-src 'self' wss://hestia.aberrance.app` derived from `HESTIA_ORIGIN` (`'self'` covers `https://hestia.aberrance.app`), and pin with tests that no CORS or cookie surface exists to configure: the service sends no CORS headers and the app keeps its tokens in browser storage, not cookies (D-09).
   - *Acceptance Criteria*: Browser console emits no CSP violation errors during realtime WebSocket connections or API calls on `hestia.aberrance.app`.
-- [ ] **NET-05**: Update default host origin configurations across web and service to `https://hestia.aberrance.app`.
+- [x] **NET-05**: Update default host origin configurations across web and service to `https://hestia.aberrance.app`.
   - *Acceptance Criteria*: Generated links (invites, password resets, magic links) use `https://hestia.aberrance.app`.
 
 ### Phase 10: Magic Links & Transactional Email
