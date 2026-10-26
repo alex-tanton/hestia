@@ -95,8 +95,8 @@ Plans:
 **Success Criteria:**
 1. Tailscale Funnel dependencies, host-loopback proxy requirements, and Funnel documentation are removed.
 2. Cloudflare Tunnel (`cloudflared`) is integrated in Docker Compose to route `hestia.aberrance.app` to Caddy with zero open router ports.
-3. `docker/Caddyfile` trusts Cloudflare proxy IPs and resolves true client IP addresses via `CF-Connecting-IP`.
-4. CSP (`connect-src wss://hestia.aberrance.app`), CORS, and cookie policies are configured for `https://hestia.aberrance.app`.
+3. `docker/Caddyfile` trusts only the Compose subnet that `cloudflared` connects from and resolves true client IP addresses via `CF-Connecting-IP` alone.
+4. CSP (`connect-src 'self' wss://hestia.aberrance.app`) is derived from `https://hestia.aberrance.app`, and tests pin that no CORS or cookie surface exists to configure.
 5. Base origin across all services points to `https://hestia.aberrance.app`.
 
 **Plans:** 3/5 plans executed
