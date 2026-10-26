@@ -210,7 +210,11 @@ controlled, not inherited from the machine.
     text file or a tracked path containing the product's former name in any case fails, that
     binary files and the working tree are not judged, that an exact allowlist entry or quote key
     does not extend to a sibling path, and that a planning state file fails on the line that
-    carries the former name outside its pinned quotes.
+    carries the former name outside its pinned quotes. The retired-ingress cases check that a
+    staged text file naming the retired ingress in any case fails and is named, that so does a
+    tracked path, that the planning records and the guard's own two files pass, that the one
+    pinned recurrence comment passes while any other use of the word in that file fails with its
+    line, and that neither the quote nor an allowlist entry extends to another path.
   - `scripts/check-migrations-append-only.test.mjs` builds a temporary repository with two applied
     migrations and a branch per case, and runs `scripts/check-migrations-append-only.mjs`. It
     checks that an added file passes and that an edit, delete, rename, mode change or type change
@@ -864,6 +868,15 @@ of `pnpm test` (see Harness tests above). Run them before pushing:
   `.planning/ROADMAP.md` and `.planning/STATE.md`, are scanned line by line instead
   (`legacy name in <path>:<line>`), and `LEGACY_NAME_QUOTES` pins the exact quotes that may carry
   it there. Anything else in those files calls it "the former name".
+  Check 5 fails when the retired ingress returns: a tracked text file whose content names it, in
+  any case (`retired ingress term in <path>`), a tracked path that does
+  (`retired ingress term in file name: <path>`), or a use outside the one pinned quote
+  (`retired ingress term in <path>:<line>`). It is the same term rule as check 4, applied to the
+  four terms in `RETIRED_INGRESS_TERMS`: the retired product's name, its private-network term, its
+  public-forwarding feature and its hosts' DNS suffix. `RETIRED_INGRESS_ALLOWLIST` is three
+  entries (the planning records, which include the v1.0 archive, and the script and its test), and
+  `RETIRED_INGRESS_QUOTES` pins a single English verb in a recurrence comment. To pass, reword
+  the text.
 - **The migration check** is `node scripts/check-migrations-append-only.mjs --base {ref}`. It
   compares `supabase/migrations/` with the merge base of `{ref}` and `HEAD` and fails on anything
   but added files: an edit, a delete, a rename, a mode change or a type change. It needs history
