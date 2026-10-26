@@ -99,7 +99,7 @@ Plans:
 4. CSP (`connect-src 'self' wss://hestia.aberrance.app`) is derived from `https://hestia.aberrance.app`, and tests pin that no CORS or cookie surface exists to configure.
 5. Base origin across all services points to `https://hestia.aberrance.app`.
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 **Wave 1**
@@ -110,7 +110,7 @@ Plans:
 - [x] 09-03-PLAN.md — Test fixtures and the `env.ts` comment move to `https://hestia.aberrance.app` (literal-only sweep)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 09-04-PLAN.md — `docs/deployment.md` Cloudflare Tunnel runbook and pinned origin; file map, testing, development, architecture and CLAUDE.md aligned; owner checklist with the network-recreate recovery; NET-03, NET-04 and success criteria 3-4 worded to D-05/D-09
+- [x] 09-04-PLAN.md — `docs/deployment.md` Cloudflare Tunnel runbook and pinned origin; file map, testing, development, architecture and CLAUDE.md aligned; owner checklist with the network-recreate recovery; NET-03, NET-04 and success criteria 3-4 worded to D-05/D-09
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 09-05-PLAN.md — Retired-ingress guard in the hygiene gate; every CI check, integration and the full E2E suite green

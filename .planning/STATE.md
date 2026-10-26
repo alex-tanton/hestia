@@ -4,18 +4,18 @@ milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
 current_phase: 09
 current_phase_name: Domain & Network Migration (Cloudflare Tunnel & Ingress)
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: Completed 09-03-PLAN.md
-last_updated: "2026-10-26T18:07:56.762Z"
+stopped_at: Completed 09-04-PLAN.md
+last_updated: "2026-10-26T18:15:57.008Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 09 execution started
-state_head: cf3decf3948ba4f2984946ab60ea92c629c3cc43
+state_head: ceef38c75848941d759b2be551f5a2af7ac4dc69
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 16
-  completed_plans: 14
+  completed_plans: 15
   percent: 40
 current_milestone: v2.0
 ---
@@ -33,7 +33,7 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hear
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
 Phase: 09 (Domain & Network Migration (Cloudflare Tunnel & Ingress)) — EXECUTING
-Current Plan: 4
+Current Plan: 5
 Total Plans in Phase: 5
 Phases: 2 of 5 complete (Phases 7–11)
 Status: Ready to execute
@@ -55,8 +55,8 @@ Plan Phase 9 with /gsd-plan-phase 9.
 
 ## Session
 
-**Last session:** 2026-10-26T18:07:56.656Z
-**Stopped at:** Completed 09-03-PLAN.md
+**Last session:** 2026-10-26T18:15:56.925Z
+**Stopped at:** Completed 09-04-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -77,6 +77,7 @@ Plan Phase 9 with /gsd-plan-phase 9.
 | Phase 09 P01 | 12 min | 3 tasks | 9 files |
 | Phase 09 P02 | 5 min | 2 tasks | 7 files |
 | Phase 09 P03 | 5 min | 2 tasks | 10 files |
+| Phase 09 P04 | 14 min | 3 tasks | 10 files |
 
 ## Decisions
 
@@ -103,3 +104,4 @@ Plan Phase 9 with /gsd-plan-phase 9.
 - [Phase 09]: 09-02: deploy.sh prepares the whole project (up --no-start --no-recreate --no-build with HESTIA_TAG) before the subset start so the hestia network recreate completes; health gate runs wget inside the caddy container; cloudflared is in the fail-early start
 - [Phase 09]: 09-02: caddy-entrypoint.sh exits 1 on an unset or empty HESTIA_TRUSTED_PROXIES and names https://hestia.aberrance.app; commit scope docker for Compose, deploy and entrypoint work
 - [Phase 09]: 09-03: test fixtures swept to https://hestia.aberrance.app by literal-only replacement; env.ts changed by one comment line, HESTIA_ORIGIN still required with no default
+- [Phase 09]: 09-04: first-deploy network recreate documented in docs/deployment.md and checklist step 7; only four requirement/roadmap lines reworded (D-05, D-06, D-09)
