@@ -198,7 +198,11 @@ controlled, not inherited from the machine.
     files and runs `scripts/check-repo-hygiene.mjs` on its index. It checks that a tracked file
     `.gitignore` ignores, a shebang file or `*.sh` file that is not `100755`, and a file with
     CRLF or mixed endings in the index each fail, that symlinks and `-text` files are skipped, and
-    that a directory that is not a git work tree exits 2.
+    that a directory that is not a git work tree exits 2. The legacy-name cases check that a staged
+    text file or a tracked path containing the product's former name in any case fails, that
+    binary files and the working tree are not judged, that an exact allowlist entry or quote key
+    does not extend to a sibling path, and that a planning state file fails on the line that
+    carries the former name outside its pinned quotes.
   - `scripts/check-migrations-append-only.test.mjs` builds a temporary repository with two applied
     migrations and a branch per case, and runs `scripts/check-migrations-append-only.mjs`. It
     checks that an added file passes and that an edit, delete, rename, mode change or type change
@@ -825,7 +829,14 @@ of `pnpm test` (see Harness tests above). Run them before pushing:
 - **The hygiene check** is `node scripts/check-repo-hygiene.mjs`. It reads the git index and fails
   on a tracked file that `.gitignore` ignores, a script that is not mode `100755` (a file that
   starts with `#!`, or whose name ends in .sh), and a text file whose committed copy has CRLF or mixed
-  line endings.
+  line endings. Check 4 fails on the product's former name, in any case, in the content of a
+  tracked text file (`legacy name in <path>`) or in a tracked path (`legacy name in file name: <path>`).
+  `LEGACY_NAME_ALLOWLIST` in the script lists the six paths that may carry it: the v1.0 archive,
+  the phase and research records, the script and its test, and the migration exemptions file. The
+  four planning state files, `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`,
+  `.planning/ROADMAP.md` and `.planning/STATE.md`, are scanned line by line instead
+  (`legacy name in <path>:<line>`), and `LEGACY_NAME_QUOTES` pins the exact quotes that may carry
+  it there. Anything else in those files calls it "the former name".
 - **The migration check** is `node scripts/check-migrations-append-only.mjs --base {ref}`. It
   compares `supabase/migrations/` with the merge base of `{ref}` and `HEAD` and fails on anything
   but added files: an edit, a delete, a rename, a mode change or a type change. It needs history
