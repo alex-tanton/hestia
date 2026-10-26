@@ -7,7 +7,7 @@
  */
 
 /** The message the worker posts to an open window when a notification is tapped. */
-export const NOTIFICATION_CLICK_MESSAGE = 'hearth:notification-click';
+export const NOTIFICATION_CLICK_MESSAGE = 'hestia:notification-click';
 
 /** The query parameter a tap carries into a window the worker had to open. */
 export const HOUSEHOLD_PARAM = 'household';

@@ -142,7 +142,7 @@ describe('notificationclick', () => {
     expect(click.close).toHaveBeenCalledOnce();
     expect(window.focus).toHaveBeenCalledOnce();
     expect(window.postMessage).toHaveBeenCalledWith({
-      type: 'hearth:notification-click',
+      type: 'hestia:notification-click',
       url: '/chores',
       householdId: HOUSEHOLD,
     });
