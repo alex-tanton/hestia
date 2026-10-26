@@ -1,18 +1,14 @@
 ---
-status: testing
+status: complete
 phase: 08-full-rebrand-to-hestia
 source: [08-VERIFICATION.md]
 started: 2026-10-26T05:10:00Z
-updated: 2026-10-26T06:00:00Z
+updated: 2026-10-26T13:22:50.101Z
 ---
 
 ## Current Test
 
-number: 1
-name: Real-browser check of the Hestia brand
-expected: |
-  Tab title reads Hestia (page titles like "This Week · Hestia"); onboarding says "Install Hestia" and "Go to Hestia"; the installed PWA is named Hestia (iOS may keep the old label until the app is re-added)
-awaiting: user response
+[testing complete]
 
 ## Tests
 
@@ -34,14 +30,15 @@ source: owner-reported
 
 ### 4. Allowlist choice for .planning/phases/ and .planning/research/
 expected: Owner accepts it or asks for those prefixes to be dropped in a follow-up
-result: [pending]
+result: pass
+note: "Owner accepted the allowlist as is." 
 
 ## Summary
 
 total: 4
-passed: 1
+passed: 2
 issues: 0
-pending: 1
+pending: 0
 skipped: 2
 blocked: 0
 
