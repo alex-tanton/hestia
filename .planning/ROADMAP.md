@@ -63,7 +63,7 @@ Plans:
 5. Environment variables and Docker Compose services support `HESTIA_*` configuration (hard cutover; the old names are not read).
 6. All existing unit, component, integration, and E2E tests pass cleanly under the new brand.
 
-**Plans:** 6/7 plans executed
+**Plans:** 7/7 plans executed
 
 Plans:
 **Wave 1**
@@ -83,7 +83,7 @@ Plans:
 - [x] 08-06-PLAN.md — Planning text aligned with the decisions (BRAND-02 to BRAND-05), cloud tooling renamed, owner checklist with PR notes and owner-visible choices
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 08-07-PLAN.md — Legacy-name guard in the hygiene gate; every CI check, `pnpm test:integration`, the integration coverage suite and the E2E suite green under the new brand
+- [x] 08-07-PLAN.md — Legacy-name guard in the hygiene gate; every CI check, `pnpm test:integration`, the integration coverage suite and the E2E suite green under the new brand
 
 ---
 

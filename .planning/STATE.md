@@ -5,17 +5,17 @@ milestone_name: Hestia — Domain Migration and Rebrand
 current_phase: 8
 current_phase_name: Full Rebrand to Hestia
 current_plan: 7
-status: executing
-stopped_at: Completed 08-06-PLAN.md
-last_updated: "2026-10-26T03:59:24.322Z"
+status: verifying
+stopped_at: Completed 08-07-PLAN.md
+last_updated: "2026-10-26T04:27:52.537Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 08 execution started
-state_head: 5a7457dbeadfd0c4be52dc2b88e83b6e4ce89448
+state_head: 969e8da2a3be287457c64a86ebdc66a854dbe32a
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
   percent: 20
 current_milestone: v2.0
 ---
@@ -36,7 +36,7 @@ Phase: 8 (Full Rebrand to Hestia)
 Current Plan: 7
 Total Plans in Phase: 7
 Phases: 1 of 5 complete (Phases 7–11)
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-26 — Phase 08 execution started
 
 Progress: [██░░░░░░░░] 20% of milestone plans
@@ -55,8 +55,8 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 
 ## Session
 
-**Last session:** 2026-10-26T03:59:24.284Z
-**Stopped at:** Completed 08-06-PLAN.md
+**Last session:** 2026-10-26T04:27:52.497Z
+**Stopped at:** Completed 08-07-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -73,6 +73,7 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 | Phase 08 P04 | 7 min | 3 tasks | 41 files |
 | Phase 08 P05 | 8 min | 1 tasks | 52 files |
 | Phase 08 P06 | 10 min | 2 tasks | 7 files |
+| Phase 08 P07 | 24 min | 3 tasks | 5 files |
 
 ## Decisions
 
@@ -91,3 +92,5 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 - [Phase 08]: BRAND-02 text aligned with D-10: manifest and meta descriptions name no brand and stay as they are (orchestrator choice, owner-visible in 08-OWNER-CHECKLIST.md, overrule by changing both descriptions and restoring the requirement clause) — D-10 locks only name and short_name; the owner was unavailable
 - [Phase 08]: Guard allowlist prefixes .planning/phases/ and .planning/research/ are the planner's reading of D-13, recorded as an owner-visible choice in 08-OWNER-CHECKLIST.md — D-13 lists only the v1.0 archive; overrule by dropping a prefix from LEGACY_NAME_ALLOWLIST
 - [Phase 08]: CLI requirement is a clean break (no alias or shim, D-07) and the environment requirement is a hard cutover with no fallback reads (D-01, D-02); cloud-session probe targets alex-tanton/hestia and fails until the repository is renamed after merge — Requirement text must describe what 08-03 and 08-04 delivered
+- [Phase 08]: 08-07: the former product name is blocked in CI by check 4 of the existing hygiene script; six allowlisted paths, and the four planning state files allow only twelve exact quotes, so anything else there must say the former name
+- [Phase 08]: 08-07: every CI check, test:integration, the service coverage run and all 104 Playwright tests pass on the renamed stack; the browser look at the tab title, manifest and install step is left to the owner
