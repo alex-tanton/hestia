@@ -3,20 +3,20 @@ gsd_state_version: "1.0"
 milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
 current_phase: 09
-current_phase_name: domain-network-migration-cloudflare-tunnel-ingress
-current_plan: 7
+current_phase_name: Domain & Network Migration (Cloudflare Tunnel & Ingress)
+current_plan: 2
 status: executing
-stopped_at: Phase 9 context gathered
-last_updated: "2026-10-26T14:58:24.297Z"
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-10-26T17:54:45.325Z"
 last_activity: 2026-10-26
-last_activity_desc: Phase 08 execution started
-state_head: 49a029f113ded5c843042975e3f793caca8adf69
+last_activity_desc: Phase 09 execution started
+state_head: a8952d7a1b50b872e508fae97f5effd458ed0d11
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 16
-  completed_plans: 11
-  percent: 0
+  completed_plans: 12
+  percent: 40
 current_milestone: v2.0
 ---
 
@@ -27,19 +27,19 @@ current_milestone: v2.0
 See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md) (updated 2026-10-25)
 
 **Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
-**Current focus:** Phase 08 — Full Rebrand to Hestia
+**Current focus:** Phase 09 — Domain & Network Migration (Cloudflare Tunnel & Ingress)
 
 ## Current Position
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
-Phase: 09 (domain-network-migration-cloudflare-tunnel-ingress) — READY TO EXECUTE
-Current Plan: 7
+Phase: 09 (Domain & Network Migration (Cloudflare Tunnel & Ingress)) — EXECUTING
+Current Plan: 2
 Total Plans in Phase: 5
 Phases: 2 of 5 complete (Phases 7–11)
 Status: Ready to execute
-Last activity: 2026-10-26 — Phase 08 execution started
+Last activity: 2026-10-26 — Phase 09 execution started
 
-Progress: [░░░░░░░░░░] 0% of milestone plans
+Progress: [████░░░░░░] 40% of milestone plans
 
 ## Milestone Roadmap
 
@@ -55,9 +55,9 @@ Plan Phase 9 with /gsd-plan-phase 9.
 
 ## Session
 
-**Last session:** 2026-10-26T13:40:35.380Z
-**Stopped at:** Phase 9 context gathered
-**Resume file:** .planning/phases/09-domain-network-migration-cloudflare-tunnel-ingress/09-CONTEXT.md
+**Last session:** 2026-10-26T17:54:45.225Z
+**Stopped at:** Completed 09-01-PLAN.md
+**Resume file:** None
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Plan Phase 9 with /gsd-plan-phase 9.
 | Phase 08 P05 | 8 min | 1 tasks | 52 files |
 | Phase 08 P06 | 10 min | 2 tasks | 7 files |
 | Phase 08 P07 | 24 min | 3 tasks | 5 files |
+| Phase 09 P01 | 12 min | 3 tasks | 9 files |
 
 ## Decisions
 
@@ -94,3 +95,6 @@ Plan Phase 9 with /gsd-plan-phase 9.
 - [Phase 08]: CLI requirement is a clean break (no alias or shim, D-07) and the environment requirement is a hard cutover with no fallback reads (D-01, D-02); cloud-session probe targets alex-tanton/hestia and fails until the repository is renamed after merge — Requirement text must describe what 08-03 and 08-04 delivered
 - [Phase 08]: 08-07: the former product name is blocked in CI by check 4 of the existing hygiene script; six allowlisted paths, and the four planning state files allow only twelve exact quotes, so anything else there must say the former name
 - [Phase 08]: 08-07: every CI check, test:integration, the service coverage run and all 104 Playwright tests pass on the renamed stack; the browser look at the tab title, manifest and install step is left to the owner
+- [Phase 09]: 09-01: the hestia network pins only its subnet (no gateway); the first deploy recreates the network, handled by 09-02 and the 09-04 runbook
+- [Phase 09]: 09-01: member-removal E2E journey renumbered to 21 so it stays last; spec 20 is the ingress client-IP and CSP spec
+- [Phase 09]: 09-01: commits use scope docker or service because commitlint's scope list is closed; Supabase images pulled by identical digest from Docker Hub when ECR hit its data limit in the sandbox
