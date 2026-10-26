@@ -99,7 +99,7 @@ Plans:
 4. CSP (`connect-src wss://hestia.aberrance.app`), CORS, and cookie policies are configured for `https://hestia.aberrance.app`.
 5. Base origin across all services points to `https://hestia.aberrance.app`.
 
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 **Wave 1**
@@ -107,7 +107,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 09-02-PLAN.md — `deploy.sh` prepares the whole stack first so the one-time network recreate completes (proven on a disposable stack), health gate inside the caddy container and `cloudflared` in the fail-early start; CI pre-pull skips the tunnel image; Caddy entrypoint refuses an empty trust list, with a harness test and a real-image CSP probe
-- [ ] 09-03-PLAN.md — Test fixtures and the `env.ts` comment move to `https://hestia.aberrance.app` (literal-only sweep)
+- [x] 09-03-PLAN.md — Test fixtures and the `env.ts` comment move to `https://hestia.aberrance.app` (literal-only sweep)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 09-04-PLAN.md — `docs/deployment.md` Cloudflare Tunnel runbook and pinned origin; file map, testing, development, architecture and CLAUDE.md aligned; owner checklist with the network-recreate recovery; NET-03, NET-04 and success criteria 3-4 worded to D-05/D-09
