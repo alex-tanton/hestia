@@ -355,22 +355,30 @@ if (!/<title>Hestia<\/title>/.test(html)) fail('index.html <title> is not Hestia
 | A8 | `vite-plugin-pwa` writes `manifest.webmanifest` into `dist/` | Code Examples | Wave 0 `ls` corrects the filename in the check |
 | A9 | Supabase images can be pulled in this sandbox for `test:integration` and E2E (scripts prefer the ghcr mirror) | Environment Availability | Integration/E2E can only be proven in CI |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Runner label: rename or keep?**
+All six were resolved during planning. Each resolution is recorded in `08-05-PLAN.md` (context facts and the owner checklist's "Assumptions and choices" table) and carried out by the plan named in it.
+
+1. **Runner label: rename or keep?** (RESOLVED)
    - What we know: D-03 says rename everything; `deploy.yml:29`, `CONTRIBUTING.md:35`, `docs/deployment.md:62` carry the label; D-12 names the runner in the owner checklist.
    - What's unclear: whether the owner will relabel the host runner.
    - Recommendation: rename to `hestia` in the repo and require the owner to add the label before merge (checklist step 2). If the owner declines, keep `hearth` as one more allowlist entry (`.github/workflows/deploy.yml`, docs lines) rather than weaken the guard globally.
+   - **RESOLVED:** renamed to `hestia` per D-03. 08-03 Task 2 changes `deploy.yml` to `runs-on: [self-hosted, hestia]` and updates `CONTRIBUTING.md`, `docs/deployment.md` and `.claude/CLAUDE.md` to match. The owner adds the `hestia` label before merge and removes `hearth` after it (08-05 owner checklist steps 2 and 12). No allowlist entry is needed.
 
-2. **Exact new repository name** (Assumption A1). Recommendation: `hestia`; confirm before the plan writes `.planning/environment/*`.
+2. **Exact new repository name** (Assumption A1). Recommendation: `hestia`; confirm before the plan writes `.planning/environment/*`. (RESOLVED)
+   - **RESOLVED:** `hestia` (`alex-tanton/hestia`), still recorded as assumption A1 for the owner to confirm. 08-05 Task 3 writes the slug into `.planning/environment/*`, and the owner renames the repository after merge (checklist step 10, `gh repo rename hestia --repo alex-tanton/hearth`).
 
-3. **Guard allowlist breadth.** D-13 lists the v1.0 archive explicitly; the recommendation here is `.planning/` as a whole because phase 08 documents, REQUIREMENTS and PROJECT necessarily quote the old name. If the owner wants a tighter guard, allowlist `.planning/milestones/`, `.planning/phases/`, `.planning/research/` and scan `PROJECT.md`, `ROADMAP.md`, `STATE.md`, `.planning/environment/`.
+3. **Guard allowlist breadth.** D-13 lists the v1.0 archive explicitly; the recommendation here is `.planning/` as a whole because phase 08 documents, REQUIREMENTS and PROJECT necessarily quote the old name. If the owner wants a tighter guard, allowlist `.planning/milestones/`, `.planning/phases/`, `.planning/research/` and scan `PROJECT.md`, `ROADMAP.md`, `STATE.md`, `.planning/environment/`. (RESOLVED)
+   - **RESOLVED:** tighter than both options above. 08-06 Task 1 makes `LEGACY_NAME_ALLOWLIST` six whole-path entries: `.planning/milestones/` (the v1.0 archive D-13 names), `.planning/phases/` and `.planning/research/` (records of the rename and the research before it; this is the planner's reading of D-13's "text that must quote the old name" clause, not entries D-13 lists), the guard script and its test, and `scripts/migration-exemptions.json`. `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md` and `STATE.md` are scanned line by line, and the only old-name text allowed in them is the exact quotes pinned in `LEGACY_NAME_QUOTES`. `.planning/environment/` is scanned in full (08-05 Task 3 cleans it).
 
-4. **Rename the role migration file or only edit its contents?** D-05 and D-03 imply renaming; the pinned exemption supports a rename as `D`+`A` (Pattern 2). Keeping the file name would leave the old word in a tracked path and need one more allowlist entry. Recommendation: rename (the Compose mount lines `docker-compose.yml:51-52` are the only references).
+4. **Rename the role migration file or only edit its contents?** D-05 and D-03 imply renaming; the pinned exemption supports a rename as `D`+`A` (Pattern 2). Keeping the file name would leave the old word in a tracked path and need one more allowlist entry. Recommendation: rename (the Compose mount lines `docker-compose.yml:51-52` are the only references). (RESOLVED)
+   - **RESOLVED:** renamed with `git mv` to `supabase/migrations/20260919060000_hestia_service_role.sql`, keeping the version prefix (08-01 Task 1). The gate accepts it through one rename entry in `scripts/migration-exemptions.json`, and the schema comment edit gets one equal-path entry.
 
-5. **Outbound User-Agent changes (`Hearth/1.0` to `Hestia/1.0`).** It is a brand string sent to Flipp and recipe sites, so it is externally visible behavior; CLAUDE.md says behavior must not change except documented fixes. Recommendation: rename (D-11 sweeps source), list it in the PR body; tests `request-queue.test.ts:104` and `fetch-recipe.test.ts:118-136` assert it.
+5. **Outbound User-Agent changes (`Hearth/1.0` to `Hestia/1.0`).** It is a brand string sent to Flipp and recipe sites, so it is externally visible behavior; CLAUDE.md says behavior must not change except documented fixes. Recommendation: rename (D-11 sweeps source), list it in the PR body; tests `request-queue.test.ts:104` and `fetch-recipe.test.ts:118-136` assert it. (RESOLVED)
+   - **RESOLVED:** renamed to `Hestia/1.0 (self-hosted household admin; +<origin>)` by the 08-05 Task 1 catch-all, asserted by that task's verify and by the two tests. It is listed in the owner checklist's PR body notes.
 
-6. **Dev-only literals** (`hearth-seed-pass-2026`, test DB password `hearth`, `hearth@` in a knip test fixture, `project_id = "hearth"`): all renamed by the catch-all; they are dev/test values (`supabase/seed/seed-users.ts:24`, `e2e/support/env.ts:95`, `service-stack.ts:33`, docs). Check the new seed password still passes `@hestia/shared` password rules and the common-password list (`hestia-seed-pass-2026` is 21 characters, expected to pass; confirm by running the onboarding tests).
+6. **Dev-only literals** (`hearth-seed-pass-2026`, test DB password `hearth`, `hearth@` in a knip test fixture, `project_id = "hearth"`): all renamed by the catch-all; they are dev/test values (`supabase/seed/seed-users.ts:24`, `e2e/support/env.ts:95`, `service-stack.ts:33`, docs). Check the new seed password still passes `@hestia/shared` password rules and the common-password list (`hestia-seed-pass-2026` is 21 characters, expected to pass; confirm by running the onboarding tests). (RESOLVED)
+   - **RESOLVED:** renamed. `project_id = "hestia"` lands in 08-03 Task 2. The seed password `hestia-seed-pass-2026`, the E2E reset password `hestia-reset-pass-2026`, the test database password and the fixtures land in the 08-05 Task 1 catch-all. That task's verify checks that neither password is in `packages/shared/src/data/common-passwords.ts`, and `pnpm test` covers the onboarding tests.
 
 ## Environment Availability
 
