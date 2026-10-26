@@ -6,7 +6,7 @@ Four layers, each catching a different class of bug:
 
 | Layer | Tool | Runs where | Catches |
 | --- | --- | --- | --- |
-| Unit | Vitest, plus fifteen `node --test` files: two in `e2e/support`, thirteen harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
+| Unit | Vitest, plus sixteen `node --test` files: two in `e2e/support`, fourteen harness tests (see Dates and time zones) | Plain Node, no I/O | Bugs in pure logic: recurrence math, price parsing, matching, formatting |
 | Integration | Vitest against a real Postgres | `supabase start`'s local Postgres/GoTrue | Bugs in SQL, RLS policies, transactions, and the service's route layer |
 | Component (frontend) | Vitest + Testing Library | jsdom (a simulated browser DOM, no real browser) | Bugs in how a React component renders and reacts to state |
 | End-to-end | Playwright | A real Chromium browser against the full Docker Compose stack | Bugs that only show up with real HTTP, real Caddy routing, and a real browser |
@@ -26,10 +26,10 @@ page, tests substitute a fixture or a test double instead.
 The exceptions use Node's built-in test runner (`node --test`) instead of Vitest, so they need no
 dependencies and no Docker to run. Two are in `e2e/support`: `run-identity.test.ts`, which tests the
 pure run-naming logic in `run-identity.ts` (Compose project/network/image-tag derivation), and
-`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other thirteen are the
+`clock.test.ts`, which tests the household-clock helpers in `clock.ts`. The other fourteen are the
 harness tests (the four for the clock pin, the zone hook, the sweep and the lint ban, plus the
-service-role fence probe, the deploy script's password test and the CI image pre-pull test, then
-six for the gate scripts: the knip baseline check, repository hygiene, migration append-only, the
+service-role fence probe, the deploy script's test, the Caddy entrypoint test and the CI image
+pre-pull test, then six for the gate scripts: the knip baseline check, repository hygiene, migration append-only, the
 production audit, the jscpd configuration and the deploy gate), described under Dates and time
 zones below.
 
@@ -45,13 +45,13 @@ memory with `apps/service/src/test/fake-app.ts`, which wires fake dependencies (
 `DummyDriver`, no real database, no GoTrue) and drives it with Fastify's `inject()`. These still
 count as unit tests: nothing touches a socket or a real database.
 
-**Runner:** Vitest everywhere except the fifteen `node --test` files above.
+**Runner:** Vitest everywhere except the sixteen `node --test` files above.
 
 **How to run them:**
 
 ```sh
 pnpm test                              # the harness tests, then every workspace's unit + component tests
-pnpm test:harness                      # only the thirteen harness tests
+pnpm test:harness                      # only the fourteen harness tests
 pnpm --filter @hestia/recurrence test  # one workspace
 pnpm --filter @hestia/matching test
 pnpm --filter @hestia/service test     # excludes *.integration.test.ts (vitest.config.ts)
@@ -174,18 +174,26 @@ controlled, not inherited from the machine.
     and test code are exempt. It does not cover four gaps: a dynamic import whose specifier is a
     variable or template literal, `require`, a raw `set local role service_role` in SQL, and
     code outside `apps/service/src`.
-  - `scripts/deploy.test.mjs` runs the real `scripts/deploy.sh` to the end against stub `docker`,
-    `supabase` and `curl` binaries placed first on `PATH`, with a fake env file and made-up
-    passwords. It checks that no command line carries a database password, that the script prints
-    none, that only the migration command sees `PGPASSWORD`, and that a password with URL-reserved
-    characters arrives intact. Nothing starts a container or touches a database.
+  - `scripts/deploy.test.mjs` runs the real `scripts/deploy.sh` to the end against stub `docker`
+    and `supabase` binaries placed first on `PATH`, with a fake env file and made-up passwords, and
+    a host HTTP client stub that must never be called. It checks that no command line carries a
+    database password, that the script prints none, that only the migration command sees
+    `PGPASSWORD`, and that a password with URL-reserved characters arrives intact. It also checks
+    that the whole project is prepared before the supporting services start, that the health gate
+    runs `wget` inside the caddy container and never touches a host port, and that `cloudflared`
+    starts with the supporting services before anything is restarted. Nothing starts a container
+    or touches a database.
+  - `scripts/caddy-entrypoint.test.mjs` runs the real `docker/caddy-entrypoint.sh` under `sh`
+    against a stub `caddy` placed first on `PATH`. It checks that `HESTIA_HOST` is derived from the
+    origin and the baked-in Caddyfile is run, that an origin that is not https is refused, and that
+    an empty or missing `HESTIA_TRUSTED_PROXIES` is refused, each before Caddy starts.
   - `scripts/ci-prepull-images.test.mjs` runs the real `scripts/ci-prepull-images.sh`, which CI's
     `test-e2e` job uses to pre-pull the Compose stack's images, against stub `docker` and `sleep`
     binaries placed first on `PATH` and fixture `docker/` folders. It checks that each
     `public.ecr.aws/supabase` image is pulled from its `ghcr.io/supabase` mirror first and tagged
     with its ECR name, that a failed mirror pull falls back to ECR within each attempt, that Docker
-    Hub images are pulled directly, that a present image is skipped, that the hestia-built and
-    backup images are never pulled, that an unsafe image name is refused before any pull, and that
+    Hub images are pulled directly, that a present image is skipped, that the hestia-built,
+    backup and `cloudflare/` images are never pulled, that an unsafe image name is refused before any pull, and that
     six failed attempts end in an `::error::` annotation, with the delays scaled by
     `CI_PREPULL_DELAY_SCALE`. One case reads the real `docker/` files. Nothing pulls an image or
     needs a Docker daemon.
@@ -239,6 +247,17 @@ controlled, not inherited from the machine.
   service's `yaml` devDependency and pins the GoTrue allowlist: the routes, their methods and
   exact paths, the ACL groups, the refusing route, and which browser calls reach which route.
   There is still no Docker; E2E spec 08 and the sign-in journeys prove the running gateway.
+- **The ingress configuration.** `apps/service/src/ingress-config.test.ts` is a Vitest test in the
+  service unit suite. It reads both Compose files, the Caddyfile, `.env.example` and the service's
+  `package.json` through the `yaml` devDependency and runs eight checks: no host port and no pinned
+  network gateway in production; a pinned `cloudflared` that needs the tunnel token and never
+  carries it on a command line; Caddy trusting only the Compose subnet, the same one Kong and the
+  service trust; the client taken only from `CF-Connecting-IP`, with one `X-Forwarded-For` passed
+  downstream; `cloudflared` kept out of E2E and Caddy given the run's own subnet there; the CSP
+  WebSocket host and GoTrue's URLs derived from `HESTIA_ORIGIN`; no CORS or cookie surface (no
+  `access-control-` or `set-cookie` in the Caddyfile and no CORS or cookie plugin in the service);
+  and the new origin with an empty token in `.env.example`. There is no Docker; E2E spec 20 and the
+  entrypoint harness test prove the running behaviour.
 - **Setting `TZ`.** Set it only through the sweep, or through an `env` object passed to a spawned
   process. The hook then validates it, and the sweep checks that it took effect. Never export it in
   the shell or force `TZ=UTC` for a whole suite.
@@ -383,10 +402,11 @@ and Kong exactly as deployed, and the service's real build, not a dev server or 
 
 **How journeys are organized:** numbered spec files under `e2e/tests/`, each a real user story,
 e.g. `01-signup-and-first-household.spec.ts`, `09-search-deals-and-add-to-list.spec.ts`,
-`14-bills-and-subscriptions.spec.ts`, `19-notifications.spec.ts`, `20-remove-member.spec.ts`.
+`14-bills-and-subscriptions.spec.ts`, `19-notifications.spec.ts`,
+`20-ingress-client-ip-and-csp.spec.ts`, `21-remove-member.spec.ts`.
 Journeys with two files for one story keep the shared number scheme in order rather than sharing a
 prefix (journey 7's list half is `11-offline-list-sync.spec.ts`, its chores/errands half is
-`18-chores-and-errands-offline.spec.ts`). `20-remove-member.spec.ts` runs last on purpose: the
+`18-chores-and-errands-offline.spec.ts`). `21-remove-member.spec.ts` runs last on purpose: the
 suite runs on a single worker, in file order, sharing one seeded database, and removing members
 from Oak Street would invalidate what later journeys expect to find — so a new journey is numbered
 after the last non-removal file, and the removal journey is renumbered to stay last.
@@ -442,6 +462,14 @@ treatment: `HESTIA_PUSH_TRANSPORT=test-double` records pushes instead of sending
 through `/api/test/push`, and the browser's `PushManager` is stubbed before the app loads so no
 real push service is ever contacted.
 
+**The client address in E2E.** There is no Cloudflare edge in front of the test stack, so nothing
+sets `CF-Connecting-IP`. The overlay makes Caddy trust the run's own Compose subnet, and
+Playwright's connections arrive from the run network's gateway address, so every request that sends
+no header shares that one client address (and one per-IP rate-limit bucket). Spec 20 sends
+`CF-Connecting-IP` itself to prove the header is honoured and that a client's `X-Forwarded-For` is
+not. The overlay also excludes `cloudflared` by a Compose profile, and the run's generated `.env`
+carries a placeholder tunnel token so Compose can interpolate the base file.
+
 **Running the suite:**
 
 ```sh
@@ -473,9 +501,8 @@ database — afterward. Only trust a run's result when it started from an empty 
 without reuse.
 
 **Adding a new journey:** create `e2e/tests/<next-number>-<slug>.spec.ts`, where `<next-number>` is
-one past the highest-numbered file that isn't the member-removal journey (currently `20-`); if your
-journey needs to run after member removal is irrelevant, add it as the new highest number and leave
-`20-remove-member.spec.ts` renumbered to stay last. Wrap the test in the `for (const theme of
+one past the highest-numbered file that isn't the member-removal journey (currently `21-`), and
+rename the member-removal journey to the number after yours so that it stays last. Wrap the test in the `for (const theme of
 ['light', 'dark'])` / `test.use({ colorScheme: theme })` loop, and call `expectAccessible(page,
 '<screen description>')` from `e2e/support/axe.ts` on every screen state the journey reaches. Use
 the helpers in `e2e/support/` (`app.ts` for shared navigation like `expectDashboard`/`switcher`,

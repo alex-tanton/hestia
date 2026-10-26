@@ -116,13 +116,14 @@ defines the full production stack:
 | `kong` | The gateway that routes external requests to `auth` and `realtime` only — nothing else is exposed through it. |
 | `hestia-service` | The backend API and background jobs (built from `apps/service`). |
 | `caddy` | The reverse proxy that the PWA is served through and that forwards API and auth traffic to the right internal service. It also builds in the PWA itself as static files. |
+| `cloudflared` | The tunnel connector that carries public traffic from Cloudflare to Caddy. |
 | `backup` | Runs the nightly database backup and keeps a rotation of older backups. |
 
 In plain terms, Caddy is the front door: every request from the internet reaches the box through
 it, and it decides whether to hand that request to the web app's static files, the API, or the
-auth service. (TLS — the encryption that makes a connection `https://` — is actually terminated
-upstream by Tailscale Funnel before traffic reaches Caddy; see `docker/Caddyfile` and
-`docs/deployment.md` for specifics.) `docker/kong.yml` configures Kong's routing, the
+auth service. (TLS — the encryption that makes a connection `https://` — is actually terminated at
+Cloudflare's edge; `cloudflared` forwards plain HTTP to `caddy:8080` over the Compose network, and
+no service publishes a host port. See `docker/Caddyfile` and `docs/deployment.md` for specifics.) `docker/kong.yml` configures Kong's routing, the
 `docker/db/*.sql` files set up database roles used only at container start, and the two
 `*.Dockerfile`s describe how to build the service and Caddy container images.
 
@@ -150,9 +151,10 @@ shopping list.
 
 | Script | Purpose |
 | --- | --- |
-| `deploy.sh` | Builds and deploys the production stack: backs up the database, applies pending migrations, swaps in new containers, and rolls back automatically if the new version fails a health check. |
-| `deploy.test.mjs` | Harness test for `deploy.sh`: runs the real script against stub `docker`, `supabase` and `curl` binaries and checks that the database password reaches the Supabase CLI through its environment and appears in no argument. Run by `pnpm test:harness`. |
-| `ci-prepull-images.sh` | Pre-pulls the images the end-to-end stack needs, with retries and a `ghcr.io` mirror tried first for the three Supabase images, so a rate-limited registry does not fail `docker compose up` in CI. |
+| `deploy.sh` | Builds and deploys the production stack: backs up the database, applies pending migrations, swaps in new containers, and rolls back automatically if the new version fails a health check, which it runs inside the caddy container. |
+| `deploy.test.mjs` | Harness test for `deploy.sh`: runs the real script against stub `docker` and `supabase` binaries and checks the password handling, that the whole project is prepared before the supporting services start, the in-container health gate, and that `cloudflared` starts with the supporting services. A host HTTP client stub exists only to prove it is never called. Run by `pnpm test:harness`. |
+| `caddy-entrypoint.test.mjs` | Harness test for `docker/caddy-entrypoint.sh`, run against a stub `caddy`. It checks the derived `HESTIA_HOST`, the https origin check and the trust-list check. Run by `pnpm test:harness`. |
+| `ci-prepull-images.sh` | Pre-pulls the images the end-to-end stack needs, with retries and a `ghcr.io` mirror tried first for the three Supabase images, so a rate-limited registry does not fail `docker compose up` in CI. It never pulls the tunnel connector, which E2E does not start. |
 | `ci-prepull-images.test.mjs` | Harness test for the pre-pull script, run against stub `docker` and `sleep` binaries so no image is pulled. Run by `pnpm test:harness`. |
 | `test-sweep.mjs` | Runs the unit or service integration test suite once per cell of a fixed matrix of pinned dates and time zones, each cell in its own process (`pnpm test:sweep`, `pnpm test:sweep:integration`). With `--with-today` it adds a unit cell at the real instant in a zone chosen by the UTC day, and prints the instant and zone so a failure can be reproduced. |
 | `test-sweep.test.mjs` | Harness test for the sweep: argument checks, an `--only` that selects nothing, a listing that cannot run, the today cell's zone for fixed instants, and real single-cell and two-cell runs. Run by `pnpm test:harness`. |
@@ -171,7 +173,7 @@ shopping list.
 | `deploy-gate.sh` | Decides whether the checked-out commit should be deployed by comparing it with the revision of the running `hestia-service:current` image. Prints `deploy=true` or `deploy=false` and the reason; a commit older than the running revision and a change confined to `docs/` and `.planning/` are not deployed. `deploy.yml`'s `changes` step runs it. |
 | `deploy-gate.test.mjs` | Harness test for the deploy gate, run on temporary git repositories with a stub `docker`. Run by `pnpm test:harness`. |
 | `knip-summary.mjs` | Turns a `knip --reporter json` report into sorted lines of kind, path and symbol separated by tabs, with a closing `total` line, so two knip runs can be compared line by line (`pnpm knip:summary {report.json} {out.txt}`). |
-| `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |
+| `generate-secrets.sh` | Creates the real `.env` file with freshly generated passwords and keys for a new production install, copies the owner values and the tunnel token from the environment when set, and warns about missing ones. Refuses to overwrite an existing one, since regenerating secrets on a live install would sign everyone out and break the database login. |
 
 ## 9. docs/
 

@@ -7,12 +7,14 @@ self-hosted Supabase stack — Postgres, GoTrue (auth), Realtime, and Kong (the 
 GoTrue and Realtime) — all reachable through Caddy as a single origin. The service is the only
 HTTP path to application data; there is no PostgREST. Caddy also serves the built PWA as static
 assets and proxies `/auth/v1/*` and `/realtime/v1/*` straight to Kong, so sign-in, token refresh,
-and realtime subscriptions reach Supabase directly without passing through the service.
+and realtime subscriptions reach Supabase directly without passing through the service. The stack
+is reached from the internet only through a Cloudflare Tunnel: TLS ends at Cloudflare's edge and
+`cloudflared` forwards to Caddy over the Compose network (see `docs/deployment.md`).
 
 ## Request flow and authorization
 
-Every data-bearing request follows the same path: browser → Caddy → the Fastify service →
-Postgres, and back. The service verifies the caller's Supabase JWT itself (signature and expiry)
+Every data-bearing request follows the same path: browser → Cloudflare → `cloudflared` → Caddy
+→ the Fastify service → Postgres, and back. The service verifies the caller's Supabase JWT itself (signature and expiry)
 and then does all of its database work through one function, `withUserDb` (`apps/service/src/db/user-db.ts`).
 `withUserDb` opens a transaction on the service's connection pool and, before running anything
 else, issues:

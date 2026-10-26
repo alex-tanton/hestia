@@ -106,15 +106,18 @@ outstanding Oak Street invite's code and link token. It runs once per database: 
 than the five seed users, so it cannot add them to a stack that real people use. See
 [Seed data](testing.md#seed-data) for what the seed contains.
 
-To seed a Compose stack instead (development only, never production), point it at Caddy and at
-the `db` container's address on the Compose network (`hestia-compose` is the alias defined in
+To seed a Compose stack instead (development only, never production), note that Caddy publishes no
+host port, so point the seed at both Caddy and the `db` container by their addresses on the Compose
+network (`hestia-compose` is the alias defined in
 [First-time setup](deployment.md#first-time-setup)):
 
 ```sh
 set -a; . /srv/hestia/.env; set +a
 DB_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
   "$(hestia-compose ps --quiet db)")
-HESTIA_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
+CADDY_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+  "$(hestia-compose ps --quiet caddy)")
+HESTIA_SEED_AUTH_URL=http://$CADDY_IP:8080/auth/v1 \
   HESTIA_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
   HESTIA_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \
   pnpm db:seed
