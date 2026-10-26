@@ -6,7 +6,7 @@ import type {
 
 /**
  * A push transport that records every attempt and answers from a table keyed by endpoint. Tests
- * use it, and so does the E2E stack when `HEARTH_PUSH_TRANSPORT` is `test-double` (see env.ts): the
+ * use it, and so does the E2E stack when `HESTIA_PUSH_TRANSPORT` is `test-double` (see env.ts): the
  * record is then what the suite reads, and no push service is contacted. An endpoint with no entry
  * is accepted, which is the common case.
  */

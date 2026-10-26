@@ -103,7 +103,7 @@ describe('hearth-admin, invoked directly as a script', () => {
     return `http://127.0.0.1:${String(address.port)}`;
   }
 
-  const ENV_KEYS = ['GOTRUE_URL', 'SERVICE_ROLE_KEY', 'HEARTH_ORIGIN'] as const;
+  const ENV_KEYS = ['GOTRUE_URL', 'SERVICE_ROLE_KEY', 'HESTIA_ORIGIN'] as const;
 
   // Cache-busting token for the re-import below. The clock cannot serve: the shared pin freezes
   // it, so a second import would repeat the query string and hit the module cache.
@@ -144,7 +144,7 @@ describe('hearth-admin, invoked directly as a script', () => {
       process.argv = [originalArgv[0] ?? 'node', cliPath, 'reset-password', 'alex@example.com'];
       process.env['GOTRUE_URL'] = gotrueUrl;
       process.env['SERVICE_ROLE_KEY'] = 'test-service-role-key';
-      process.env['HEARTH_ORIGIN'] = 'https://hearth.example.test';
+      process.env['HESTIA_ORIGIN'] = 'https://hearth.example.test';
       process.exitCode = undefined;
 
       await import(/* @vite-ignore */ `./cli.ts?invoked-directly=${String(++importCount)}`);

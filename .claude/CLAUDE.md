@@ -56,7 +56,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 ## Frameworks
 
 - Fastify 5.12.5 - HTTP server; app factory `apps/service/src/app.ts`, entry point `apps/service/src/main.ts`
-- `@fastify/rate-limit` 11.2.0 - per-IP limit on `/api/*`; default 300 per minute from `apps/service/src/env.ts` (`HEARTH_RATE_LIMIT_PER_MINUTE`)
+- `@fastify/rate-limit` 11.2.0 - per-IP limit on `/api/*`; default 300 per minute from `apps/service/src/env.ts` (`HESTIA_RATE_LIMIT_PER_MINUTE`)
 - Zod 4.6.5 - environment and request validation (`apps/service/src/env.ts`)
 - Kysely 0.29.6 over `pg` 8.23.0 - typed query builder; pool in `apps/service/src/db.ts`; generated types in `apps/service/src/db/types.ts`
 - node-cron 4.6.0 - in-process scheduler (`apps/service/src/jobs/scheduler.ts`)
@@ -112,14 +112,14 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 ## Configuration
 
 - Read from process environment and validated by Zod; the service fails at startup on an invalid or missing variable
-- Required: `DATABASE_URL`, `HEARTH_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
-- Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HEARTH_TRUSTED_PROXIES`, `HEARTH_OWNER_EMAIL`, `HEARTH_RATE_LIMIT_PER_MINUTE` (`300`), `HEARTH_PUSH_TRANSPORT` (`web-push`)
+- Required: `DATABASE_URL`, `HESTIA_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+- Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HESTIA_TRUSTED_PROXIES`, `HESTIA_OWNER_EMAIL`, `HESTIA_RATE_LIMIT_PER_MINUTE` (`300`), `HESTIA_PUSH_TRANSPORT` (`web-push`)
 - Optional: `BACKUP_DIR`, `VAPID_SUBJECT`
-- E2E-only overrides (set only by the E2E Compose overlay): `HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_FLIPP_FIXTURE_NOW`, `HEARTH_RECIPE_FIXTURE_DIR`, `HEARTH_PUSH_TRANSPORT=test-double`
-- The owner CLI reads only `HEARTH_ORIGIN`, `GOTRUE_URL`, and `SERVICE_ROLE_KEY` (`parseCliEnv` in `apps/service/src/env.ts`)
+- E2E-only overrides (set only by the E2E Compose overlay): `HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_FLIPP_FIXTURE_NOW`, `HESTIA_RECIPE_FIXTURE_DIR`, `HESTIA_PUSH_TRANSPORT=test-double`
+- The owner CLI reads only `HESTIA_ORIGIN`, `GOTRUE_URL`, and `SERVICE_ROLE_KEY` (`parseCliEnv` in `apps/service/src/env.ts`)
 - `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, `VITE_MAGIC_LINK_ENABLED`
 - Injected as Docker build args in `docker/caddy.Dockerfile`; changing them requires a rebuild
-- Dev and preview proxies read `HEARTH_DEV_API` (default `http://127.0.0.1:3000`) and `HEARTH_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
+- Dev and preview proxies read `HESTIA_DEV_API` (default `http://127.0.0.1:3000`) and `HESTIA_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
 - The production env file lives outside the checkout at `/srv/hearth/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
 - `scripts/generate-secrets.sh` writes that file once and refuses to overwrite it.
 - `pnpm-workspace.yaml` (workspace graph), root `package.json`, `tsconfig.base.json` (shared TypeScript options) with per-package `tsconfig.json` in `apps/service`, `apps/web`, `packages/*`, and `e2e`
@@ -148,8 +148,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 | `auth` | `public.ecr.aws/supabase/gotrue:v2.196.0` | `docker/docker-compose.yml` | Supabase GoTrue auth server |
 | `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` | Supabase Realtime (WebSocket change feed) |
 | `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` | API gateway for GoTrue and Realtime |
-| `hearth-service` | `hearth-service:${HEARTH_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
-| `caddy` | `hearth-caddy:${HEARTH_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
+| `hearth-service` | `hearth-service:${HESTIA_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
+| `caddy` | `hearth-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
 | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` | Daily dump at `0 2 * * *`; keeps 14 days, 8 weeks, 6 months |
 
 ## Database
@@ -157,7 +157,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - PostgreSQL 17 (`supabase/config.toml` `major_version = 17`)
 - Migrations: `supabase/migrations/` (8 files; `20260919060000_hestia_service_role.sql` through `20261004090100_depart_clears_notification_preferences.sql`)
 - Typed schema: `apps/service/src/db/types.ts` (generated by `kysely-codegen`, committed)
-- Login role used by the service: `hestia_service` (NOINHERIT; the password is supplied through `HEARTH_SERVICE_DB_PASSWORD`, applied by `docker/db/hestia-service-login.sql`)
+- Login role used by the service: `hestia_service` (NOINHERIT; the password is supplied through `HESTIA_SERVICE_DB_PASSWORD`, applied by `docker/db/hestia-service-login.sql`)
 
 ## CI/CD Toolchain
 
@@ -185,7 +185,7 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Route plugins: one file per resource in `apps/service/src/routes/` (`bills.ts`, `chores.ts`, `meal-plan.ts`).
 - Migrations: `supabase/migrations/YYYYMMDDHHMMSS_<name>.sql`.
 - Tests: `<name>.test.ts(x)` co-located with the module, or `<name>.integration.test.ts` for database and route tests against `supabase start`. Test helpers live in `apps/service/src/test/` and `apps/web/src/test/`.
-- Test time: unit and component tests run with `Date` pinned to `2026-10-14T12:00:00.000Z` (`HEARTH_TEST_NOW` overrides it), and ESLint `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test files and test helpers. Do not set `TZ` by hand: set it only through the sweep or an `env` object passed to a spawned process, and never force `TZ=UTC` for a whole suite; see "Dates and time zones" in `docs/testing.md`.
+- Test time: unit and component tests run with `Date` pinned to `2026-10-14T12:00:00.000Z` (`HESTIA_TEST_NOW` overrides it), and ESLint `no-restricted-syntax` bans bare `new Date()` and `Date.now()` in test files and test helpers. Do not set `TZ` by hand: set it only through the sweep or an `env` object passed to a spawned process, and never force `TZ=UTC` for a whole suite; see "Dates and time zones" in `docs/testing.md`.
 - camelCase. Service and domain functions are verbs: `listBills`, `createHouseholdBill`, `payBill`, `archiveBill` in `apps/service/src/services/bills.ts`.
 - Pure planners return a plan object: `planBillMove` in `apps/service/src/services/bills.ts`.
 - Pure bill helpers: `currentBillOccurrence` in `packages/recurrence/src/bills.ts`; `billOccurrence` and `planBillMove` in `apps/service/src/services/bills.ts`.
@@ -462,8 +462,8 @@ Hearth is a household-management PWA (shopping lists, chores, bills, meals/recip
 - **Process count:** One service process is assumed. Cron jobs and in-memory state (Flipp queue, recipe rate limiter, skip rates) are per process. Advisory locks prevent overlap of the same job, and only through the database.
 - **Global state:** Module-level singletons are created in `apps/service/src/main.ts` (`wiring`, `skipRates`, `flippQueue`, `recipeFetchLimiter`, `recordingTransport`). The web client creates its singletons in `apps/web/src/main.tsx`.
 - **Build-time configuration:** `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, and `VITE_MAGIC_LINK_ENABLED` are fixed at build time; a change requires a rebuild.
-- **Test-only seams:** Fixture transports (`HEARTH_FLIPP_FIXTURE_DIR`, `HEARTH_RECIPE_FIXTURE_DIR`), the push double (`HEARTH_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
-- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`docs/deployment.md`, "Pinned names"). `HEARTH_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
+- **Test-only seams:** Fixture transports (`HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_RECIPE_FIXTURE_DIR`), the push double (`HESTIA_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
+- **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`docs/deployment.md`, "Pinned names"). `HESTIA_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
 - **Public unauthenticated routes:** `/api/health`, `/api/signup`, `/api/client-error` (rate limited per IP, `apps/service/src/routes/system.ts`), `/api/openapi.json`. All others call `ctx.authenticate`.
 
 ## Layering Deviations (observed)

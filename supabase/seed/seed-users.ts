@@ -7,9 +7,9 @@
  *
  * Defaults target `supabase start`. For the Compose stack, point it at Caddy and the db container:
  *
- *   HEARTH_SEED_AUTH_URL   GoTrue through Kong (default http://127.0.0.1:54321/auth/v1)
- *   HEARTH_SEED_SERVICE_ROLE_KEY   the service-role key (default: from `supabase status`)
- *   HEARTH_SEED_DB_URL     Postgres as postgres (default the supabase start database)
+ *   HESTIA_SEED_AUTH_URL   GoTrue through Kong (default http://127.0.0.1:54321/auth/v1)
+ *   HESTIA_SEED_SERVICE_ROLE_KEY   the service-role key (default: from `supabase status`)
+ *   HESTIA_SEED_DB_URL     Postgres as postgres (default the supabase start database)
  *
  * Users that already exist are left alone; seed.sql refuses to run twice, so reset the database
  * (`supabase db reset`) to seed again. It refuses any target that has users other than the seed
@@ -31,12 +31,12 @@ const USERS = [
   { email: 'casey@example.com', displayName: 'Casey Nguyen', timezone: 'America/Los_Angeles' },
 ] as const;
 
-const authUrl = process.env['HEARTH_SEED_AUTH_URL'] ?? 'http://127.0.0.1:54321/auth/v1';
+const authUrl = process.env['HESTIA_SEED_AUTH_URL'] ?? 'http://127.0.0.1:54321/auth/v1';
 const dbUrl =
-  process.env['HEARTH_SEED_DB_URL'] ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
+  process.env['HESTIA_SEED_DB_URL'] ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 
 function serviceRoleKey(): string {
-  const fromEnv = process.env['HEARTH_SEED_SERVICE_ROLE_KEY'];
+  const fromEnv = process.env['HESTIA_SEED_SERVICE_ROLE_KEY'];
   if (fromEnv !== undefined && fromEnv !== '') return fromEnv;
   const status = execFileSync('supabase', ['status', '--output', 'env'], {
     cwd: fileURLToPath(new URL('../..', import.meta.url)),
@@ -45,7 +45,7 @@ function serviceRoleKey(): string {
   });
   const match = /^SERVICE_ROLE_KEY="?([^"\n]+)"?$/m.exec(status);
   if (match?.[1] === undefined) {
-    throw new Error('set HEARTH_SEED_SERVICE_ROLE_KEY, or run `supabase start` first');
+    throw new Error('set HESTIA_SEED_SERVICE_ROLE_KEY, or run `supabase start` first');
   }
   return match[1];
 }

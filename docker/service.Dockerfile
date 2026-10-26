@@ -24,8 +24,8 @@ RUN --mount=type=cache,id=hearth-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --prod --ignore-scripts --store-dir /pnpm/store --filter @hestia/service
 
 FROM node:24.21.0-bookworm-slim
-ARG HEARTH_REVISION=dev
-LABEL org.opencontainers.image.revision=$HEARTH_REVISION
+ARG HESTIA_REVISION=dev
+LABEL org.opencontainers.image.revision=$HESTIA_REVISION
 ENV NODE_ENV=production
 # pnpm's node_modules links are relative, so the repository layout is kept.
 COPY --from=prod-deps /repo/node_modules /app/node_modules

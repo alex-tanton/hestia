@@ -28,7 +28,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
  * e2e/support/env.ts), so a run never touches another run's stack, not even one started a moment
  * earlier. Teardown removes exactly those things and nothing selected by pattern.
  *
- * Set `HEARTH_E2E_REUSE_STACK=1` to skip bring-up and keep the stack afterwards, which is for
+ * Set `HESTIA_E2E_REUSE_STACK=1` to skip bring-up and keep the stack afterwards, which is for
  * iterating on one test locally, not for a run whose result is being trusted.
  */
 
@@ -36,7 +36,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
 const DATA_SERVICES = ['db', 'auth', 'realtime', 'kong'];
 const APP_SERVICES = ['hearth-service', 'caddy'];
 
-const isReuse = process.env['HEARTH_E2E_REUSE_STACK'] === '1';
+const isReuse = process.env['HESTIA_E2E_REUSE_STACK'] === '1';
 
 function step(message: string): void {
   process.stdout.write(`e2e stack: ${message}\n`);
@@ -49,9 +49,9 @@ function writeEnvFile(): void {
   runChecked('bash', [join(REPO_ROOT, 'scripts', 'generate-secrets.sh'), ENV_FILE], {
     // Plain HTTP on the loopback: there is no Funnel in front of the E2E stack, and every link
     // the stack prints — an invite, the owner's reset link — has to be one the browser can open.
-    HEARTH_ORIGIN: BASE_URL,
+    HESTIA_ORIGIN: BASE_URL,
     // Alex is the development owner, so Alex sees System health.
-    HEARTH_OWNER_EMAIL: 'alex@example.com',
+    HESTIA_OWNER_EMAIL: 'alex@example.com',
     BACKUP_DIR,
   });
 }
@@ -68,7 +68,7 @@ function reserveSubnet(): Subnet {
   const existing = runCommand('docker', ['network', 'inspect', NETWORK]);
   if (existing.status === 0) {
     throw new Error(
-      `network ${NETWORK} already exists; another run is using HEARTH_E2E_RUN_ID=${RUN_ID}. Remove it with docker network rm once no run holds it`,
+      `network ${NETWORK} already exists; another run is using HESTIA_E2E_RUN_ID=${RUN_ID}. Remove it with docker network rm once no run holds it`,
     );
   }
 
@@ -96,18 +96,18 @@ function reserveSubnet(): Subnet {
 /** The run's own values, which docker-compose.e2e.yml interpolates on every Compose command. */
 function appendRunEnv(subnet: Subnet): void {
   const lines = [
-    `HEARTH_E2E_CADDY_PORT=${String(CADDY_PORT)}`,
-    `HEARTH_E2E_DB_PORT=${String(DB_PORT)}`,
-    `HEARTH_E2E_NETWORK=${NETWORK}`,
-    `HEARTH_E2E_SUBNET=${subnet.subnet}`,
-    `HEARTH_E2E_GATEWAY=${subnet.gateway}`,
+    `HESTIA_E2E_CADDY_PORT=${String(CADDY_PORT)}`,
+    `HESTIA_E2E_DB_PORT=${String(DB_PORT)}`,
+    `HESTIA_E2E_NETWORK=${NETWORK}`,
+    `HESTIA_E2E_SUBNET=${subnet.subnet}`,
+    `HESTIA_E2E_GATEWAY=${subnet.gateway}`,
   ];
   appendFileSync(ENV_FILE, `${lines.join('\n')}\n`);
 }
 
 export function startStack(): void {
   if (isReuse && existsSync(ENV_FILE)) {
-    step(`reusing the running stack, run ${RUN_ID} (HEARTH_E2E_REUSE_STACK=1)`);
+    step(`reusing the running stack, run ${RUN_ID} (HESTIA_E2E_REUSE_STACK=1)`);
     return;
   }
   if (!isReuse && existsSync(ENV_FILE)) {
@@ -116,7 +116,7 @@ export function startStack(): void {
     // destroy whatever holds it, so the run stops and says how to clear it.
     throw new Error(
       `run ${RUN_ID} already has state in ${STATE_DIR}: a live run or a crashed one holds this id. ` +
-        `Pick another HEARTH_E2E_RUN_ID, or clear it with: docker compose -p ${COMPOSE_PROJECT} down --volumes --remove-orphans, then delete ${STATE_DIR}`,
+        `Pick another HESTIA_E2E_RUN_ID, or clear it with: docker compose -p ${COMPOSE_PROJECT} down --volumes --remove-orphans, then delete ${STATE_DIR}`,
     );
   }
 
@@ -148,9 +148,9 @@ export function startStack(): void {
 
   step('seeding');
   runChecked('pnpm', ['--filter', '@hestia/service', 'db:seed'], {
-    HEARTH_SEED_AUTH_URL: `${BASE_URL}/auth/v1`,
-    HEARTH_SEED_SERVICE_ROLE_KEY: env['SERVICE_ROLE_KEY'] ?? '',
-    HEARTH_SEED_DB_URL: dbUrl,
+    HESTIA_SEED_AUTH_URL: `${BASE_URL}/auth/v1`,
+    HESTIA_SEED_SERVICE_ROLE_KEY: env['SERVICE_ROLE_KEY'] ?? '',
+    HESTIA_SEED_DB_URL: dbUrl,
   });
   runChecked('psql', [
     dbUrl,
@@ -167,7 +167,7 @@ export function startStack(): void {
 
 export function stopStack(): void {
   if (isReuse) {
-    step('leaving the stack running (HEARTH_E2E_REUSE_STACK=1)');
+    step('leaving the stack running (HESTIA_E2E_REUSE_STACK=1)');
     return;
   }
   if (!existsSync(ENV_FILE)) return;

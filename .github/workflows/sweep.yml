@@ -40,7 +40,7 @@ jobs:
         run: pnpm test:sweep --log-dir sweep-logs
       # The nightly and manual runs add today's cell, a rotating zone at the real instant, so a
       # date-dependent test fails on the night it breaks instead of on a pull request later. A red
-      # run prints `now=` and `tz=`, which reproduce it with HEARTH_TEST_NOW and TZ.
+      # run prints `now=` and `tz=`, which reproduce it with HESTIA_TEST_NOW and TZ.
       - name: Six fixed cells and today's cell
         if: github.event_name != 'push'
         run: pnpm test:sweep --with-today --log-dir sweep-logs

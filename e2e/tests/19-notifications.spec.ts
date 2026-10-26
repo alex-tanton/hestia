@@ -19,7 +19,7 @@ import { parsePushBody, recordedDeliveries, runDispatchAt } from '../support/pus
  *
  * Alex turns on one type that is off by default, meal reminders. The browser's push half is faked
  * in the page, and the service records each push instead of sending it
- * (HEARTH_PUSH_TRANSPORT=test-double), so no push service is contacted from the browser or the
+ * (HESTIA_PUSH_TRANSPORT=test-double), so no push service is contacted from the browser or the
  * stack. The reminder is then due because the suite runs the dispatch job at a chosen instant, on
  * the day whose 08:00 send time is still inside the job's retry window (`reminderDay`). That day's
  * dinner is the seeded one, or one the journey plans through the meal-plan API. The job's own

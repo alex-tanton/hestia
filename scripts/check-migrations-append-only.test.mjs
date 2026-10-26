@@ -43,7 +43,7 @@ function childEnvironment() {
   const env = Object.fromEntries(
     Object.entries(process.env).filter(
       ([key]) =>
-        !['TZ', 'HEARTH_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
+        !['TZ', 'HESTIA_TEST_NOW', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'].includes(key),
     ),
   );
   return { ...env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' };

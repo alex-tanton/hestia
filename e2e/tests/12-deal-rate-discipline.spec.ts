@@ -10,7 +10,7 @@ import { SEED } from '../support/env.ts';
  *
  * E2E never calls Flipp live: the Compose overlay points hearth-service at the checked-in raw
  * captures instead of `backflipp.wishabi.com` (`e2e/docker-compose.e2e.yml`,
- * `HEARTH_FLIPP_FIXTURE_DIR`), so every "flipp request" log line this run has printed came from the
+ * `HESTIA_FLIPP_FIXTURE_DIR`), so every "flipp request" log line this run has printed came from the
  * fixture transport.
  *
  * The raw captures only cover 27514: `FlippDealSource.listMerchants` also asks for the active

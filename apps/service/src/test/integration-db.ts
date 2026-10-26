@@ -12,7 +12,7 @@ import pg from 'pg';
  */
 
 export const TEST_DATABASE_URL =
-  process.env['HEARTH_TEST_DATABASE_URL'] ??
+  process.env['HESTIA_TEST_DATABASE_URL'] ??
   'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 
 export interface TestUser {

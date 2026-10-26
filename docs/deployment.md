@@ -72,7 +72,7 @@ Install on the host before first start:
 > migration path for an origin change.
 
 The owner fills in the machine and tailnet names once, in the table below, and sets
-`HEARTH_ORIGIN` in `/srv/hearth/.env` to the same origin. Keep the two in sync.
+`HESTIA_ORIGIN` in `/srv/hearth/.env` to the same origin. Keep the two in sync.
 
 | Name    | Value                                |
 | ------- | ------------------------------------ |
@@ -112,13 +112,13 @@ by hand.
 
 | Variable | Purpose |
 | --- | --- |
-| `HEARTH_ORIGIN` | The pinned public origin, `https://<machine>.<tailnet>.ts.net`. Baked into every installed PWA and push subscription; must never change. |
-| `HEARTH_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
-| `HEARTH_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
+| `HESTIA_ORIGIN` | The pinned public origin, `https://<machine>.<tailnet>.ts.net`. Baked into every installed PWA and push subscription; must never change. |
+| `HESTIA_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
+| `HESTIA_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
 | `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hearth-service`. |
-| `HEARTH_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
+| `HESTIA_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
 | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
-| `HEARTH_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
+| `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service`, the login role the Hearth service connects to Postgres as. |
 | `JWT_SECRET` | GoTrue's HS256 JWT signing secret. |
 | `ANON_KEY` | The anon API key, signed with `JWT_SECRET`. Used as the `apikey` header on GoTrue/Kong calls. |
 | `SERVICE_ROLE_KEY` | The service-role API key, signed with `JWT_SECRET`. Used only for sanctioned service-role operations. |
@@ -128,7 +128,7 @@ by hand.
 | `VAPID_PRIVATE_KEY` | Web Push VAPID private key (P-256, base64url). |
 
 Not in `.env.example` but worth knowing: an optional `VAPID_SUBJECT` can be set by hand. When
-unset, the service falls back to `mailto:` + `HEARTH_OWNER_EMAIL`, or else `HEARTH_ORIGIN` if it's
+unset, the service falls back to `mailto:` + `HESTIA_OWNER_EMAIL`, or else `HESTIA_ORIGIN` if it's
 an `https:` URL; a set value must itself be a `mailto:` or `https:` URI, or the service fails at
 startup.
 
@@ -140,7 +140,7 @@ Run from a checkout of `main`, on the host. The real `.env` lives outside the ch
 ```sh
 sudo install -d -m 700 -o "$USER" /srv/hearth
 sudo install -d -m 755 /mnt/backup/hearth
-HEARTH_ORIGIN=https://<machine>.<tailnet>.ts.net HEARTH_OWNER_EMAIL=<owner email> \
+HESTIA_ORIGIN=https://<machine>.<tailnet>.ts.net HESTIA_OWNER_EMAIL=<owner email> \
   BACKUP_DIR=/mnt/backup/hearth scripts/generate-secrets.sh
 
 alias hearth-compose='docker compose --env-file /srv/hearth/.env -f docker/docker-compose.yml'
@@ -175,7 +175,7 @@ deploys when no labelled image is running, and **skips a commit older than the r
 re-run of an old CI run never rolls production back). To deliberately redeploy the commit already running,
 re-run the Deploy run from the Actions tab (which raises that run's own attempt number to 2 or later and
 redeploys), or run `scripts/deploy.sh` by hand on the host from a checkout of the commit, with
-`HEARTH_DEPLOY_SHA` set to it. The job checks out the full history the comparison needs and keeps
+`HESTIA_DEPLOY_SHA` set to it. The job checks out the full history the comparison needs and keeps
 no token on the host. A deploy can also be run by hand from a checkout.
 
 `scripts/deploy.sh` performs these steps, in order, aborting before anything is restarted if any
@@ -345,7 +345,7 @@ them re-initialize against the wrong state.
 - **Health check:** `GET http://127.0.0.1:8080/api/health` (through Caddy) returns service status
   plus a database connectivity check. This is the URL both `scripts/deploy.sh`'s health gate and
   the first-start verification use. `GET /api/health/deep` is owner-only (gated on
-  `HEARTH_OWNER_EMAIL`) and backs Settings → About → System health in the app, for deeper
+  `HESTIA_OWNER_EMAIL`) and backs Settings → About → System health in the app, for deeper
   diagnosis (job freshness, recent error fingerprints, backup age, Flipp skip rates).
 - **Failed deploy / automatic rollback:** if the new images don't pass the health check within 60
   seconds, `scripts/deploy.sh` re-tags the previously running images `current`, recreates
@@ -355,7 +355,7 @@ them re-initialize against the wrong state.
   images were already tagged `current` but before the containers came up healthy (or a first deploy
   had nothing to roll back to), retrying requires the deliberate path because the commit is already
   running: re-run the Deploy run from the Actions tab (attempt 2 or later redeploys the commit
-  already running), or run `scripts/deploy.sh` by hand on the host with `HEARTH_DEPLOY_SHA` set to
+  already running), or run `scripts/deploy.sh` by hand on the host with `HESTIA_DEPLOY_SHA` set to
   the commit.
 - **Hung but "running" container:** Docker only restarts a container that exits, never one that's
   merely `unhealthy`. Restart it by hand with `docker compose restart <service>`.

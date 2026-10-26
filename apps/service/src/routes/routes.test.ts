@@ -510,7 +510,7 @@ describe('GET /api/health/deep', () => {
     const response = await instance.inject({
       method: 'GET',
       url: '/api/health/deep',
-      // Case differs from HEARTH_OWNER_EMAIL on purpose.
+      // Case differs from HESTIA_OWNER_EMAIL on purpose.
       headers: bearer(userClaims({ email: 'owner@example.COM' })),
     });
     expect(response.statusCode).toBe(200);

@@ -19,7 +19,7 @@ export interface RunNames {
 
 export function runNames(runId: string): RunNames {
   if (!RUN_ID_PATTERN.test(runId)) {
-    throw new Error(`HEARTH_E2E_RUN_ID must be 1-16 lowercase letters or digits (got '${runId}')`);
+    throw new Error(`HESTIA_E2E_RUN_ID must be 1-16 lowercase letters or digits (got '${runId}')`);
   }
   return {
     project: `hearth-e2e-${runId}`,

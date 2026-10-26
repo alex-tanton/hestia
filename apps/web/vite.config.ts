@@ -13,13 +13,13 @@ const THEME_COLOR = '#475569';
  * prefixes; the addresses default to `supabase start` and a locally run service.
  */
 const proxy = {
-  '/api': { target: process.env['HEARTH_DEV_API'] ?? 'http://127.0.0.1:3000', changeOrigin: true },
+  '/api': { target: process.env['HESTIA_DEV_API'] ?? 'http://127.0.0.1:3000', changeOrigin: true },
   '/auth/v1': {
-    target: process.env['HEARTH_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
+    target: process.env['HESTIA_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
     changeOrigin: true,
   },
   '/realtime/v1': {
-    target: process.env['HEARTH_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
+    target: process.env['HESTIA_DEV_SUPABASE'] ?? 'http://127.0.0.1:54321',
     changeOrigin: true,
     ws: true,
   },

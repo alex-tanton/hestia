@@ -27,7 +27,7 @@ export default defineConfig({
     ? [['github'], ['list'], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: process.env['HEARTH_E2E_BASE_URL'] ?? BASE_URL,
+    baseURL: process.env['HESTIA_E2E_BASE_URL'] ?? BASE_URL,
     // The seed households run on New York time, and the app renders instants such as "As of"
     // stamps in the viewer's zone, so pinning the browser keeps rendered times independent of the
     // runner's zone (CI runs in UTC). Calendar dates already follow the household.

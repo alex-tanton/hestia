@@ -9,7 +9,7 @@
 		# connection to Caddy from the Compose network's gateway, so that address is the one
 		# Caddy actually sees for it. The loopback entries cover Funnel if Caddy ever runs on
 		# the host network. Nothing else on the Compose network is trusted.
-		trusted_proxies static 127.0.0.1/32 ::1/128 {$HEARTH_HOST_GATEWAY}/32
+		trusted_proxies static 127.0.0.1/32 ::1/128 {$HESTIA_HOST_GATEWAY}/32
 		# Take the right-most untrusted address, so a client cannot pick its own IP by sending
 		# an X-Forwarded-For that Funnel then appends to.
 		trusted_proxies_strict
@@ -21,7 +21,7 @@
 	header {
 		# Applied as the response is written, so an upstream cannot replace them.
 		defer
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://{$HEARTH_HOST}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://{$HESTIA_HOST}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "same-origin"

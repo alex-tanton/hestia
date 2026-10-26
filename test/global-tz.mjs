@@ -4,7 +4,7 @@
  * Node silently falls back to UTC for an unknown zone, so a mistyped `TZ` would run the whole
  * suite in UTC and still report green. This hook fails the run before any test instead. When
  * `TZ` is unset it changes nothing, so a plain run behaves as it always did. The sweep
- * (`scripts/test-sweep.mjs`) is what sets `TZ` and `HEARTH_TEST_NOW`; `docs/testing.md`
+ * (`scripts/test-sweep.mjs`) is what sets `TZ` and `HESTIA_TEST_NOW`; `docs/testing.md`
  * describes the contract.
  *
  * A `TZ` value is accepted when it names a zone and the process really runs on that zone's
@@ -14,7 +14,7 @@
  * hook checks that `Intl` knows the zone (after dropping a leading colon), then compares the
  * offsets of that zone with the offsets the process uses over a few years of sample instants.
  * An unknown zone, or one whose letter case is wrong, makes Node fall back to UTC and fails the
- * comparison. `HEARTH_TEST_NOW` must be an ISO-8601 instant with an offset (`test-now.mjs`).
+ * comparison. `HESTIA_TEST_NOW` must be an ISO-8601 instant with an offset (`test-now.mjs`).
  */
 
 import { parseTestNow } from './test-now.mjs';
@@ -51,7 +51,7 @@ function sampleInstants(pinned) {
 
 export default function setup() {
   const requested = process.env['TZ'];
-  const now = process.env['HEARTH_TEST_NOW'];
+  const now = process.env['HESTIA_TEST_NOW'];
   const configured = now !== undefined && now !== '';
   const pinned = configured ? parseTestNow(now) : undefined;
 
@@ -93,5 +93,5 @@ export default function setup() {
   }
 
   const zone = formatter.resolvedOptions().timeZone;
-  console.log(`[test-clock] TZ=${zone} HEARTH_TEST_NOW=${configured ? now : '(default)'}`);
+  console.log(`[test-clock] TZ=${zone} HESTIA_TEST_NOW=${configured ? now : '(default)'}`);
 }

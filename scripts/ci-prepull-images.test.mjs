@@ -98,11 +98,11 @@ function fixture(extraComposeLines = '') {
   kong:
     image: kong/kong:1.0.0
   hearth-service:
-    image: hearth-service:\${HEARTH_TAG:-current}
+    image: hearth-service:\${HESTIA_TAG:-current}
     build:
       context: ..
   caddy:
-    image: hearth-caddy:\${HEARTH_TAG:-current}
+    image: hearth-caddy:\${HESTIA_TAG:-current}
     build:
       context: ..
   backup:

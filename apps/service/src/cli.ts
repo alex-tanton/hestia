@@ -63,7 +63,7 @@ const invokedDirectly =
 if (invokedDirectly) {
   const env = parseCliEnv(process.env);
   const admin = createGoTrueAdmin({ url: env.GOTRUE_URL, serviceRoleKey: env.SERVICE_ROLE_KEY });
-  process.exitCode = await runCli(process.argv.slice(2), admin, env.HEARTH_ORIGIN, {
+  process.exitCode = await runCli(process.argv.slice(2), admin, env.HESTIA_ORIGIN, {
     out: (line) => {
       process.stdout.write(`${line}\n`);
     },

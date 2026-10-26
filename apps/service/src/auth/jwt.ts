@@ -191,7 +191,7 @@ export function isRecentRecovery(
   );
 }
 
-/** `isServerOwner`: the token's email equals HEARTH_OWNER_EMAIL, ignoring case. */
+/** `isServerOwner`: the token's email equals HESTIA_OWNER_EMAIL, ignoring case. */
 export function isServerOwner(email: string, ownerEmail: string): boolean {
   const normalizedOwner = ownerEmail.trim().toLowerCase();
   return normalizedOwner !== '' && email.trim().toLowerCase() === normalizedOwner;

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Writes a fresh .env from .env.example with every secret generated.
 #
-#   scripts/generate-secrets.sh [output-path]      (default: $HEARTH_ENV_FILE or /srv/hearth/.env)
+#   scripts/generate-secrets.sh [output-path]      (default: $HESTIA_ENV_FILE or /srv/hearth/.env)
 #
-# HEARTH_ORIGIN, HEARTH_OWNER_EMAIL, and BACKUP_DIR are copied from the environment when set,
+# HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR are copied from the environment when set,
 # otherwise left as .env.example's placeholders for the owner to fill in. Refuses to overwrite an
 # existing file: regenerating secrets on a live install locks every user out and strands the
 # database.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-out="${1:-${HEARTH_ENV_FILE:-/srv/hearth/.env}}"
+out="${1:-${HESTIA_ENV_FILE:-/srv/hearth/.env}}"
 
 if [[ -e "$out" ]]; then
   echo "generate-secrets: $out already exists; not overwriting it." >&2
@@ -57,7 +57,7 @@ const vapid = vapidKeys();
 
 const generated = {
   POSTGRES_PASSWORD: hex(24),
-  HEARTH_SERVICE_DB_PASSWORD: hex(24),
+  HESTIA_SERVICE_DB_PASSWORD: hex(24),
   JWT_SECRET: jwtSecret,
   ANON_KEY: signJwt({ role: 'anon', iss: 'supabase', iat: issuedAt, exp: expiresAt }, jwtSecret),
   SERVICE_ROLE_KEY: signJwt(
@@ -69,7 +69,7 @@ const generated = {
   VAPID_PUBLIC_KEY: vapid.publicKey,
   VAPID_PRIVATE_KEY: vapid.privateKey,
 };
-const fromEnvironment = ['HEARTH_ORIGIN', 'HEARTH_OWNER_EMAIL', 'BACKUP_DIR'];
+const fromEnvironment = ['HESTIA_ORIGIN', 'HESTIA_OWNER_EMAIL', 'BACKUP_DIR'];
 
 const lines = readFileSync(process.env.EXAMPLE, 'utf8')
   .split('\n')
@@ -88,6 +88,6 @@ writeFileSync(process.env.OUT, lines.join('\n'));
 EOF
 
 echo "generate-secrets: wrote $out"
-if grep -Eq '^HEARTH_ORIGIN=.*<machine>|^HEARTH_OWNER_EMAIL=owner@example\.com$' "$out"; then
-  echo "generate-secrets: now set HEARTH_ORIGIN, HEARTH_OWNER_EMAIL, and BACKUP_DIR in $out" >&2
+if grep -Eq '^HESTIA_ORIGIN=.*<machine>|^HESTIA_OWNER_EMAIL=owner@example\.com$' "$out"; then
+  echo "generate-secrets: now set HESTIA_ORIGIN, HESTIA_OWNER_EMAIL, and BACKUP_DIR in $out" >&2
 fi

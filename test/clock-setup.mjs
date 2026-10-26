@@ -2,7 +2,7 @@
  * Vitest setup file shared by every workspace: pins `Date` so a unit test does not depend on
  * the wall clock. `docs/testing.md` describes the clock pin and the sweep that varies it.
  *
- * The instant comes from `HEARTH_TEST_NOW`, otherwise `DEFAULT_TEST_NOW`. Only `Date` is frozen
+ * The instant comes from `HESTIA_TEST_NOW`, otherwise `DEFAULT_TEST_NOW`. Only `Date` is frozen
  * and no fake timers are installed, so real timers keep running for `waitFor`.
  *
  * Overriding the clock (`docs/testing.md` states the same contract):
@@ -52,7 +52,7 @@ const NATIVE = Symbol.for('hearth.nativeDate');
 const NativeDate = globalThis.Date[NATIVE] ?? globalThis.Date;
 
 function pinnedInstant() {
-  const configured = process.env['HEARTH_TEST_NOW'];
+  const configured = process.env['HESTIA_TEST_NOW'];
   if (configured === undefined || configured === '') return NativeDate.parse(DEFAULT_TEST_NOW);
   return parseTestNow(configured);
 }

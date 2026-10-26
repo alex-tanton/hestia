@@ -81,7 +81,7 @@ export interface FixtureTransportOptions {
   /**
    * Where the raw captures live. Defaults to the checked-out repo's own copy, which is what every
    * Vitest caller wants; the E2E stack instead points this at the read-only mount the Compose
-   * overlay gives the built image (`HEARTH_FLIPP_FIXTURE_DIR`), since the image never has the
+   * overlay gives the built image (`HESTIA_FLIPP_FIXTURE_DIR`), since the image never has the
    * source tree's `e2e/` directory beside it.
    */
   dir?: string;

@@ -4,8 +4,8 @@
 #
 #   scripts/deploy.sh
 #
-#   HEARTH_ENV_FILE     the host's .env (default /srv/hearth/.env, outside any checkout)
-#   HEARTH_DEPLOY_SHA   the commit being deployed (default: git HEAD)
+#   HESTIA_ENV_FILE     the host's .env (default /srv/hearth/.env, outside any checkout)
+#   HESTIA_DEPLOY_SHA   the commit being deployed (default: git HEAD)
 #
 # Steps: build both images tagged with the commit SHA; back up the database; apply pending
 # migrations; restart hearth-service and caddy on the new images; require GET /api/health
@@ -14,8 +14,8 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-env_file="${HEARTH_ENV_FILE:-/srv/hearth/.env}"
-sha="${HEARTH_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
+env_file="${HESTIA_ENV_FILE:-/srv/hearth/.env}"
+sha="${HESTIA_DEPLOY_SHA:-$(git -C "$repo_root" rev-parse HEAD)}"
 new_tag="${sha:0:12}"
 health_url="http://127.0.0.1:8080/api/health"
 health_timeout_seconds=60
@@ -56,7 +56,7 @@ switch_to() {
   compose up --detach --no-deps --no-build hearth-service caddy
 }
 
-[[ -r "$env_file" ]] || fail "cannot read $env_file (set HEARTH_ENV_FILE)"
+[[ -r "$env_file" ]] || fail "cannot read $env_file (set HESTIA_ENV_FILE)"
 command -v supabase >/dev/null || fail "the Supabase CLI is not installed"
 cd "$repo_root"
 
@@ -74,7 +74,7 @@ fi
 
 # 2. Build. Nothing is restarted yet, so a failed build changes nothing.
 log "building hearth-service:$new_tag and hearth-caddy:$new_tag"
-HEARTH_TAG="$new_tag" compose build hearth-service caddy || fail "build failed; nothing restarted"
+HESTIA_TAG="$new_tag" compose build hearth-service caddy || fail "build failed; nothing restarted"
 
 # The Supabase services and backup must be running for the backup and migrations. Only
 # missing containers are started: a deploy never recreates the database.

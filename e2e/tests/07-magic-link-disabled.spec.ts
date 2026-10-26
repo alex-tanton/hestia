@@ -3,7 +3,7 @@ import { readStackEnv } from '../support/env.ts';
 
 /**
  * With the magic-link flag off, no magic-link UI is reachable.
- * The flag is a build-time decision — the caddy image build turns HEARTH_MAGIC_LINK_ENABLED into
+ * The flag is a build-time decision — the caddy image build turns HESTIA_MAGIC_LINK_ENABLED into
  * VITE_MAGIC_LINK_ENABLED, so no flag reaches the browser at runtime — which is why this asserts
  * against the built PWA the stack is serving.
  *
@@ -18,7 +18,7 @@ const MAGIC_LINK_WORDING = /email me a sign-in link|sign-in link|magic link|chec
 const MAGIC_LINK_PATHS = ['/sign-in/link', '/sign-in/code'];
 
 test('the flag the stack was built with is off', () => {
-  expect(readStackEnv()['HEARTH_MAGIC_LINK_ENABLED']).toBe('false');
+  expect(readStackEnv()['HESTIA_MAGIC_LINK_ENABLED']).toBe('false');
 });
 
 test('sign-in offers no way to a magic link', async ({ page }) => {

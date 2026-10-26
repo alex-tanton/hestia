@@ -72,8 +72,8 @@ Tests must pass on any weekday and in any household time zone, so the clock and 
 controlled, not inherited from the machine.
 
 - **The clock pin.** Every unit and component test runs with `Date` pinned by
-  `test/clock-setup.mjs` to `HEARTH_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
-  Wednesday). `HEARTH_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
+  `test/clock-setup.mjs` to `HESTIA_TEST_NOW`, which defaults to `2026-10-14T12:00:00.000Z` (a
+  Wednesday). `HESTIA_TEST_NOW` must be an ISO-8601 instant with `Z` or an offset
   (`2030-10-05T23:30:00+02:00`); a value without one is read in the machine's zone and is
   rejected. Every workspace's unit Vitest config (and the service coverage config) loads the setup
   file; the integration config does not, and the setup file skips `*.integration.test.*` files in
@@ -109,19 +109,19 @@ controlled, not inherited from the machine.
   `TZ` value Node runs on as a zone, including UTC aliases (`GMT`, `Etc/UTC`) and the POSIX
   leading-colon form (`:America/New_York`). It fails the run for an unknown zone, a wrong letter
   case (Node falls back to UTC) and POSIX offset strings such as `UTC+3`. It also checks
-  `HEARTH_TEST_NOW` before any test runs, so a bad value is one message, not an error in every test
+  `HESTIA_TEST_NOW` before any test runs, so a bad value is one message, not an error in every test
   file.
 - **The sweep.** `pnpm test:sweep` runs the unit suite once per cell of a fixed matrix, each cell in
-  its own process with its own `HEARTH_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
+  its own process with its own `HESTIA_TEST_NOW` and `TZ`; `pnpm test:sweep:integration` runs the
   service integration suite once per zone. Both come from `scripts/test-sweep.mjs`, which also
   takes `--workspace`, `--cell`, `--only`, `--log-dir` and `--list`, and prints
   `sweep: {passed}/{total} passed`. An `--only` that selects no test file exits 2 with a message
   before anything runs, instead of passing an empty run. `--with-today` adds one more unit cell,
   `today`: the real instant at the start of the run, in one of 11 zones chosen by the UTC day
   (the UTC epoch day modulo 11, so a weekday does not keep its zone). `--today-instant {ISO}`
-  fixes that instant (it takes what `HEARTH_TEST_NOW` takes) and needs `--with-today`. The
+  fixes that instant (it takes what `HESTIA_TEST_NOW` takes) and needs `--with-today`. The
   cell's result line carries `now=` and `tz=`; a failing today cell is reproduced by running the
-  unit suite with `HEARTH_TEST_NOW` and `TZ` set to those two values.
+  unit suite with `HESTIA_TEST_NOW` and `TZ` set to those two values.
   `.github/workflows/sweep.yml` (workflow `Sweep`) runs the six fixed cells on every push to `main`
   that changes more than `docs/` and `.planning/`, and adds the today cell in the nightly run at
   05:17 UTC and in manual runs. When it fails it uploads the per-cell logs as the `sweep-logs`
@@ -154,11 +154,11 @@ controlled, not inherited from the machine.
   - `test/clock-setup.test.mjs` checks the pin from inside real Vitest workers. Each scenario is a
     test file run by a throwaway Vitest project that loads `test/clock-setup.mjs`, built in a
     temporary directory by `test/support/vitest-project.mjs` (so no workspace run can pick it up);
-    it covers the default pin, overrides and their lifetime, `HEARTH_TEST_NOW`, integration files,
+    it covers the default pin, overrides and their lifetime, `HESTIA_TEST_NOW`, integration files,
     a `Date` subclass installed as the global, and the setup file running again in one global
     under `isolate: false`.
   - `test/global-tz.test.mjs` runs the hook in `test/global-tz.mjs` in a child process per case,
-    because `TZ` is process-wide. It parses `HEARTH_TEST_NOW` with `test/test-now.mjs`, the module
+    because `TZ` is process-wide. It parses `HESTIA_TEST_NOW` with `test/test-now.mjs`, the module
     the pin shares with the hook.
   - `scripts/test-sweep.test.mjs` runs the sweep as a child process: argument rejection, an
     `--only` that selects nothing, a listing that cannot run, and one real single-cell run. The
@@ -226,8 +226,8 @@ controlled, not inherited from the machine.
     to `docs/` and `.planning/`, and a commit already running at attempt 1 (or unset) print
     `deploy=false`; attempt 2 or later of a running commit (a deliberate re-run of the Deploy run),
     an unknown or diverged running revision and any code change print `deploy=true`. The older-commit
-    and docs-only rules hold under any attempt. Malformed `HEARTH_DEPLOY_ATTEMPT` values and a
-    `HEARTH_DEPLOY_SHA` that is not the checked-out commit's 40 lowercase hex digits exit 1 with
+    and docs-only rules hold under any attempt. Malformed `HESTIA_DEPLOY_ATTEMPT` values and a
+    `HESTIA_DEPLOY_SHA` that is not the checked-out commit's 40 lowercase hex digits exit 1 with
     empty stdout before docker is asked. It also checks that code moved into `docs/` still deploys.
     Nothing reaches a Docker daemon.
 - **The Kong route table.** `apps/service/src/kong-routes.test.ts` is a Vitest test in the service
@@ -413,7 +413,7 @@ accounts of its own outside either seed, since signing up is the journey under t
 "Birch Lane"), both in postal code 27514 with the same seed password.
 
 **Per-run isolation:** each invocation of `pnpm test:e2e` is a "run" with its own six-hex-digit id
-(`HEARTH_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
+(`HESTIA_E2E_RUN_ID`, generated if not set), computed in `e2e/support/run-identity.ts` and
 `e2e/support/env.ts`. Everything the run touches is namespaced by that id: the Compose project
 (`hearth-e2e-<id>`), a Docker network of the same name (created by the run itself, before `compose
 up`, on the first free `/24` between `172.16.240.0/24` and `172.16.254.0/24` — Docker's atomic
@@ -428,13 +428,13 @@ from an empty, freshly-seeded database.
 
 **The Flipp/recipe fixture seam:** the suite never calls the live Flipp service or fetches a real
 recipe page. The overlay mounts `e2e/fixtures/flipp/raw` read-only into the service container and
-sets `HEARTH_FLIPP_FIXTURE_DIR` (plus `HEARTH_FLIPP_FIXTURE_NOW`, pinning "now" to the captures'
+sets `HESTIA_FLIPP_FIXTURE_DIR` (plus `HESTIA_FLIPP_FIXTURE_NOW`, pinning "now" to the captures'
 own instant) so the deal-fetching code reads the checked-in captures instead of the network; both
 variables are unset in every real deployment. Recipe import similarly mounts
-`e2e/fixtures/recipes` read-only and sets `HEARTH_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
+`e2e/fixtures/recipes` read-only and sets `HESTIA_RECIPE_FIXTURE_DIR`, so `fetchRecipePage` is
 swapped for a fixture-reading function that never opens a socket. Journey 4 pastes one of three
 fixture URLs under the never-resolved domain `fixtures.hearth-e2e.test`. Web Push gets the same
-treatment: `HEARTH_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
+treatment: `HESTIA_PUSH_TRANSPORT=test-double` records pushes instead of sending them, read back
 through `/api/test/push`, and the browser's `PushManager` is stubbed before the app loads so no
 real push service is ever contacted.
 
@@ -457,13 +457,13 @@ paying for a full stack bring-up/teardown each time:
 
 ```sh
 # first run: note the run id it prints ("run <id>, project hearth-e2e-<id>: ...")
-HEARTH_E2E_REUSE_STACK=1 pnpm test:e2e
+HESTIA_E2E_REUSE_STACK=1 pnpm test:e2e
 
 # subsequent runs: reuse that stack, point Playwright at one spec file
-HEARTH_E2E_REUSE_STACK=1 HEARTH_E2E_RUN_ID=<id> pnpm --filter @hestia/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
+HESTIA_E2E_REUSE_STACK=1 HESTIA_E2E_RUN_ID=<id> pnpm --filter @hestia/e2e exec playwright test tests/14-bills-and-subscriptions.spec.ts
 ```
 
-`HEARTH_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
+`HESTIA_E2E_REUSE_STACK=1` skips bring-up (if a stack for that run id already exists) and skips
 teardown, so the stack is still running — and, importantly, no longer backed by an *empty*
 database — afterward. Only trust a run's result when it started from an empty database, i.e.
 without reuse.
@@ -511,7 +511,7 @@ Every seed user has the password `hearth-seed-pass-2026`.
 | Morgan Reed | `morgan@example.com` | `America/Chicago` |
 | Casey Nguyen | `casey@example.com` | `America/Los_Angeles` |
 
-`HEARTH_OWNER_EMAIL` in the local `.env` is `alex@example.com`, so Alex is the only seed user who
+`HESTIA_OWNER_EMAIL` in the local `.env` is `alex@example.com`, so Alex is the only seed user who
 sees System health.
 
 | Household | Postal code | Timezone | Members |
@@ -682,8 +682,8 @@ users, so it's safe only against a fresh local stack.
 eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
 export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
-export HEARTH_ORIGIN=http://127.0.0.1:5173
-export HEARTH_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
+export HESTIA_ORIGIN=http://127.0.0.1:5173
+export HESTIA_OWNER_EMAIL=alex@example.com                          # Alex is the seeded owner
 export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
 pnpm --filter @hestia/service dev
 ```
@@ -699,7 +699,7 @@ Open `http://127.0.0.1:5173`.
 ### 3. Sign in as a seeded user
 
 Sign in as **Alex Rivera** (`alex@example.com`), the seeded owner — the only account that sees
-System health (`HEARTH_OWNER_EMAIL` above). See Seed data above for every other seeded account, who
+System health (`HESTIA_OWNER_EMAIL` above). See Seed data above for every other seeded account, who
 belongs to which household with what role, and what's already there to look at in each pillar.
 
 ### 4. Click through each pillar

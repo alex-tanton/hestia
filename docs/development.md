@@ -58,8 +58,8 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
 eval "$(supabase status -o env)"                                    # ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET
 export DATABASE_URL=postgresql://hestia_service:hearth@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1                    # http://auth:9999 in production
-export HEARTH_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
-export HEARTH_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
+export HESTIA_ORIGIN=http://127.0.0.1:5173                          # where invite and reset links point
+export HESTIA_OWNER_EMAIL=you@example.com                           # unlocks GET /api/health/deep
 export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
 pnpm --filter @hestia/service dev
 ```
@@ -71,16 +71,16 @@ pnpm --filter @hestia/service dev
 | `JWT_SECRET` | Verifying access tokens (HS256; local sessions are ES256 via its JWKS) |
 | `ANON_KEY` | The `apikey` header on GoTrue calls |
 | `SERVICE_ROLE_KEY` | The sanctioned service-role uses only (email change, owner CLI) |
-| `HEARTH_ORIGIN` | Invite links (`/join#token=…`) and the reset link's `/set-password` |
-| `HEARTH_OWNER_EMAIL` | Who may open System health; unset means nobody |
-| `HEARTH_TRUSTED_PROXIES` | Whose `X-Forwarded-For` to believe; unset trusts none |
+| `HESTIA_ORIGIN` | Invite links (`/join#token=…`) and the reset link's `/set-password` |
+| `HESTIA_OWNER_EMAIL` | Who may open System health; unset means nobody |
+| `HESTIA_TRUSTED_PROXIES` | Whose `X-Forwarded-For` to believe; unset trusts none |
 | `BACKUP_DIR` | Optional; System health reports the newest backup file's time |
 | `LOG_LEVEL`, `HOST`, `PORT` | Pino level and the listen address |
 
 The generated API document is at `GET /api/openapi.json`. The owner CLI is a bin in the service
 image, a shell wrapper around the built `dist/cli.js` (`docker compose exec hearth-service
 hearth-admin reset-password <email>`); locally it runs from the built bundle with `GOTRUE_URL`,
-`SERVICE_ROLE_KEY`, and `HEARTH_ORIGIN` set:
+`SERVICE_ROLE_KEY`, and `HESTIA_ORIGIN` set:
 
 ```sh
 pnpm --filter @hestia/service build
@@ -88,7 +88,7 @@ pnpm --filter @hestia/service build
 ```
 
 The PWA's magic-link screens are decided at build time by `VITE_MAGIC_LINK_ENABLED`, which the
-`caddy` image build takes from `HEARTH_MAGIC_LINK_ENABLED` in `.env` (default `false`).
+`caddy` image build takes from `HESTIA_MAGIC_LINK_ENABLED` in `.env` (default `false`).
 
 ## Database
 
@@ -114,9 +114,9 @@ the `db` container's address on the Compose network (`hearth-compose` is the ali
 set -a; . /srv/hearth/.env; set +a
 DB_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
   "$(hearth-compose ps --quiet db)")
-HEARTH_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
-  HEARTH_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
-  HEARTH_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \
+HESTIA_SEED_AUTH_URL=http://127.0.0.1:8080/auth/v1 \
+  HESTIA_SEED_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+  HESTIA_SEED_DB_URL="postgresql://postgres:$POSTGRES_PASSWORD@$DB_IP:5432/postgres" \
   pnpm db:seed
 ```
 

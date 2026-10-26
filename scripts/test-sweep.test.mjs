@@ -24,7 +24,7 @@ function sweep(...args) {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     env: Object.fromEntries(
-      Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HEARTH_TEST_NOW'),
+      Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HESTIA_TEST_NOW'),
     ),
   });
   return { status: run.status, stdout: run.stdout, stderr: run.stderr };
@@ -109,7 +109,7 @@ describe('test-sweep: the today cell', () => {
       const now = new Date(instant).toISOString();
       assert.match(run.stdout, /^today cell:$/m);
       assert.ok(
-        run.stdout.split('\n').includes(`  today: HEARTH_TEST_NOW=${now} TZ=${zone}`),
+        run.stdout.split('\n').includes(`  today: HESTIA_TEST_NOW=${now} TZ=${zone}`),
         run.stdout,
       );
       assert.doesNotMatch(run.stdout, /result=/);
@@ -122,7 +122,7 @@ describe('test-sweep: the today cell', () => {
       const instant = new Date(Date.UTC(2026, 9, 1 + day, 12)).toISOString();
       const run = sweep('--list', '--with-today', '--today-instant', instant);
       assert.equal(run.status, 0, run.stderr);
-      zones.push(/^ {2}today: HEARTH_TEST_NOW=\S+ TZ=(\S+)$/m.exec(run.stdout)?.[1]);
+      zones.push(/^ {2}today: HESTIA_TEST_NOW=\S+ TZ=(\S+)$/m.exec(run.stdout)?.[1]);
     }
     assert.equal(new Set(zones.slice(0, 11)).size, 11, zones.join(' '));
     assert.equal(zones[11], zones[0]);
@@ -139,14 +139,14 @@ describe('test-sweep: the today cell', () => {
     assert.equal(run.status, 0, run.stderr);
     assert.match(
       run.stdout,
-      /^ {2}today: HEARTH_TEST_NOW=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z TZ=[A-Za-z_]+\/[A-Za-z_]+$/m,
+      /^ {2}today: HESTIA_TEST_NOW=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z TZ=[A-Za-z_]+\/[A-Za-z_]+$/m,
     );
   });
 
   const rejected = [
     [['--today-instant', '2026-10-22T14:00:00.000Z'], /--today-instant needs --with-today/],
-    [['--with-today', '--today-instant', '2026-10-22T14:00:00'], /HEARTH_TEST_NOW=/],
-    [['--with-today', '--today-instant', 'nope'], /HEARTH_TEST_NOW="nope"/],
+    [['--with-today', '--today-instant', '2026-10-22T14:00:00'], /HESTIA_TEST_NOW=/],
+    [['--with-today', '--today-instant', 'nope'], /HESTIA_TEST_NOW="nope"/],
     [['--with-today', '--today-instant'], /--today-instant needs a value/],
     [['--with-today', '--today-instant', '--list'], /--today-instant needs a value/],
     [['--suite', 'integration', '--with-today'], /the today cell is a unit cell/],

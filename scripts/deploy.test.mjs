@@ -75,7 +75,7 @@ function deploy(password) {
   const log = join(dir, 'stub.log');
   writeFileSync(
     envFile,
-    `POSTGRES_PASSWORD=${password}\nHEARTH_SERVICE_DB_PASSWORD=${SERVICE_PASSWORD}\n`,
+    `POSTGRES_PASSWORD=${password}\nHESTIA_SERVICE_DB_PASSWORD=${SERVICE_PASSWORD}\n`,
   );
   writeFileSync(log, '');
   const run = spawnSync('bash', [DEPLOY], {
@@ -84,8 +84,8 @@ function deploy(password) {
     env: {
       ...Object.fromEntries(Object.entries(process.env).filter(([key]) => key !== 'PGPASSWORD')),
       PATH: `${binDir}${delimiter}${process.env['PATH'] ?? ''}`,
-      HEARTH_ENV_FILE: envFile,
-      HEARTH_DEPLOY_SHA: DEPLOY_SHA,
+      HESTIA_ENV_FILE: envFile,
+      HESTIA_DEPLOY_SHA: DEPLOY_SHA,
       STUB_LOG: log,
     },
   });

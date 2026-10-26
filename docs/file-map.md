@@ -213,9 +213,9 @@ is in `docs/testing.md`, under "Dates and time zones".
 
 | File | Purpose |
 | --- | --- |
-| `clock-setup.mjs` | Vitest setup file loaded by every workspace's unit config: pins `Date` to `HEARTH_TEST_NOW` (default `2026-10-14T12:00:00.000Z`) so a test does not depend on the wall clock. Skips `*.integration.test.*` files. |
-| `global-tz.mjs` | Vitest `globalSetup` loaded by every workspace's Vitest config: validates `TZ` and `HEARTH_TEST_NOW` before any test runs. |
-| `test-now.mjs` | Parses `HEARTH_TEST_NOW` into an instant; shared by the pin and the zone hook. |
+| `clock-setup.mjs` | Vitest setup file loaded by every workspace's unit config: pins `Date` to `HESTIA_TEST_NOW` (default `2026-10-14T12:00:00.000Z`) so a test does not depend on the wall clock. Skips `*.integration.test.*` files. |
+| `global-tz.mjs` | Vitest `globalSetup` loaded by every workspace's Vitest config: validates `TZ` and `HESTIA_TEST_NOW` before any test runs. |
+| `test-now.mjs` | Parses `HESTIA_TEST_NOW` into an instant; shared by the pin and the zone hook. |
 | `clock-setup.test.mjs` | Harness test for the clock pin, run from inside real Vitest workers. |
 | `global-tz.test.mjs` | Harness test for the zone hook, one child process per case. |
 | `eslint-clock-ban.test.mjs` | Harness test for the ESLint rule that bans real-clock reads in test files. |

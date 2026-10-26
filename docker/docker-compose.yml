@@ -39,7 +39,7 @@ services:
       POSTGRES_DB: postgres
       JWT_EXP: 3600
       # Read by docker/db/hestia-service-login.sql, at initialization and on every deploy.
-      HEARTH_SERVICE_DB_PASSWORD: ${HEARTH_SERVICE_DB_PASSWORD:?set in .env}
+      HESTIA_SERVICE_DB_PASSWORD: ${HESTIA_SERVICE_DB_PASSWORD:?set in .env}
     volumes:
       # init-scripts run as postgres, migrations as supabase_admin, each set in name order after
       # the image's own. They run only when the data volume is empty.
@@ -70,18 +70,18 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: ${HEARTH_ORIGIN:?set in .env}
+      API_EXTERNAL_URL: ${HESTIA_ORIGIN:?set in .env}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      GOTRUE_SITE_URL: ${HEARTH_ORIGIN}
-      GOTRUE_URI_ALLOW_LIST: ${HEARTH_ORIGIN},${HEARTH_ORIGIN}/**
+      GOTRUE_SITE_URL: ${HESTIA_ORIGIN}
+      GOTRUE_URI_ALLOW_LIST: ${HESTIA_ORIGIN},${HESTIA_ORIGIN}/**
       GOTRUE_DISABLE_SIGNUP: 'false'
       GOTRUE_JWT_ADMIN_ROLES: service_role
       GOTRUE_JWT_AUD: authenticated
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_EXP: 3600
       GOTRUE_JWT_SECRET: ${JWT_SECRET:?set in .env}
-      GOTRUE_JWT_ISSUER: ${HEARTH_ORIGIN}/auth/v1
+      GOTRUE_JWT_ISSUER: ${HESTIA_ORIGIN}/auth/v1
       GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
       GOTRUE_EXTERNAL_PHONE_ENABLED: 'false'
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: 'false'
@@ -181,12 +181,12 @@ services:
       retries: 5
 
   hearth-service:
-    image: hearth-service:${HEARTH_TAG:-current}
+    image: hearth-service:${HESTIA_TAG:-current}
     build:
       context: ..
       dockerfile: docker/service.Dockerfile
       args:
-        HEARTH_REVISION: ${HEARTH_TAG:-dev}
+        HESTIA_REVISION: ${HESTIA_TAG:-dev}
     restart: unless-stopped
     logging: *logging
     networks: [hearth]
@@ -196,12 +196,12 @@ services:
       auth:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://hestia_service:${HEARTH_SERVICE_DB_PASSWORD}@db:5432/postgres
-      HEARTH_TRUSTED_PROXIES: *subnet
+      DATABASE_URL: postgresql://hestia_service:${HESTIA_SERVICE_DB_PASSWORD}@db:5432/postgres
+      HESTIA_TRUSTED_PROXIES: *subnet
       LOG_LEVEL: info
-      HEARTH_ORIGIN: ${HEARTH_ORIGIN}
-      HEARTH_OWNER_EMAIL: ${HEARTH_OWNER_EMAIL:?set in .env}
-      HEARTH_MAGIC_LINK_ENABLED: ${HEARTH_MAGIC_LINK_ENABLED:-false}
+      HESTIA_ORIGIN: ${HESTIA_ORIGIN}
+      HESTIA_OWNER_EMAIL: ${HESTIA_OWNER_EMAIL:?set in .env}
+      HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-false}
       GOTRUE_URL: http://auth:9999
       JWT_SECRET: ${JWT_SECRET}
       ANON_KEY: ${ANON_KEY}
@@ -224,13 +224,13 @@ services:
       start_period: 10s
 
   caddy:
-    image: hearth-caddy:${HEARTH_TAG:-current}
+    image: hearth-caddy:${HESTIA_TAG:-current}
     build:
       context: ..
       dockerfile: docker/caddy.Dockerfile
       args:
-        HEARTH_REVISION: ${HEARTH_TAG:-dev}
-        HEARTH_MAGIC_LINK_ENABLED: ${HEARTH_MAGIC_LINK_ENABLED:-false}
+        HESTIA_REVISION: ${HESTIA_TAG:-dev}
+        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-false}
         ANON_KEY: ${ANON_KEY:?set in .env}
         VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
     restart: unless-stopped
@@ -245,10 +245,10 @@ services:
     ports:
       - 127.0.0.1:8080:8080
     environment:
-      HEARTH_ORIGIN: ${HEARTH_ORIGIN}
+      HESTIA_ORIGIN: ${HESTIA_ORIGIN}
       # Funnel's connection to the published port reaches Caddy from this address; see the
       # Caddyfile's trusted_proxies.
-      HEARTH_HOST_GATEWAY: &gateway 172.16.238.1
+      HESTIA_HOST_GATEWAY: &gateway 172.16.238.1
     healthcheck:
       test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:8080/index.html]
       interval: 30s

@@ -34,7 +34,7 @@ export interface RequestQueueOptions {
   get: HttpGet;
   /**
    * Identifies the app and the host it runs on, so an operator seeing the traffic can tell what
-   * it is and where it comes from. Built from HEARTH_ORIGIN.
+   * it is and where it comes from. Built from HESTIA_ORIGIN.
    */
   userAgent: string;
   logger?: QueueLogger;

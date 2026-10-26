@@ -48,9 +48,9 @@ jobs:
         run: scripts/deploy-gate.sh >> "$GITHUB_OUTPUT"
         env:
           # This Deploy run's own attempt number: attempt 1 skips the running commit; 2+ redeploys it.
-          HEARTH_DEPLOY_ATTEMPT: ${{ github.run_attempt }}
-          HEARTH_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          HESTIA_DEPLOY_ATTEMPT: ${{ github.run_attempt }}
+          HESTIA_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
       - if: steps.changes.outputs.deploy == 'true'
         run: scripts/deploy.sh
         env:
-          HEARTH_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          HESTIA_DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}

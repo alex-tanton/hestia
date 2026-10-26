@@ -2,14 +2,14 @@
 # Decides whether the checked-out commit should be deployed. Prints exactly one line on stdout,
 # `deploy=true` or `deploy=false`, and one `deploy-gate: ...` line on stderr naming the running
 # revision and the rule that decided. Exit 0 whenever a decision was printed; exit 1, with nothing
-# on stdout, when HEARTH_DEPLOY_SHA is unusable.
+# on stdout, when HESTIA_DEPLOY_SHA is unusable.
 #
-#   HEARTH_DEPLOY_SHA=$(git rev-parse HEAD) [HEARTH_DEPLOY_ATTEMPT=1] scripts/deploy-gate.sh
+#   HESTIA_DEPLOY_SHA=$(git rev-parse HEAD) [HESTIA_DEPLOY_ATTEMPT=1] scripts/deploy-gate.sh
 #
-#   HEARTH_DEPLOY_SHA       the commit being deployed: 40 lowercase hex digits, equal to the checked-out
+#   HESTIA_DEPLOY_SHA       the commit being deployed: 40 lowercase hex digits, equal to the checked-out
 #                           HEAD. It comes from a workflow payload and this runs on the production box,
 #                           so it is checked before anything else uses it.
-#   HEARTH_DEPLOY_ATTEMPT   the attempt number of this Deploy run (1..9999, default 1). Re-running CI
+#   HESTIA_DEPLOY_ATTEMPT   the attempt number of this Deploy run (1..9999, default 1). Re-running CI
 #                           starts a new Deploy run (attempt 1) and skips the running commit; re-running
 #                           the Deploy run itself raises attempt to 2 or more and redeploys it.
 #
@@ -52,14 +52,14 @@ decide() {
   exit 0
 }
 
-sha="${HEARTH_DEPLOY_SHA-}"
-[[ -n "$sha" ]] || refuse "HEARTH_DEPLOY_SHA is not set"
-[[ "$sha" =~ ^[$hex]{40}$ ]] || refuse "HEARTH_DEPLOY_SHA is not 40 lowercase hex digits"
+sha="${HESTIA_DEPLOY_SHA-}"
+[[ -n "$sha" ]] || refuse "HESTIA_DEPLOY_SHA is not set"
+[[ "$sha" =~ ^[$hex]{40}$ ]] || refuse "HESTIA_DEPLOY_SHA is not 40 lowercase hex digits"
 head_sha="$(git -C "$repo_root" rev-parse HEAD)" || refuse "cannot read HEAD of $repo_root"
-[[ "$sha" == "$head_sha" ]] || refuse "HEARTH_DEPLOY_SHA is not the checked-out HEAD ($head_sha)"
+[[ "$sha" == "$head_sha" ]] || refuse "HESTIA_DEPLOY_SHA is not the checked-out HEAD ($head_sha)"
 
-attempt="${HEARTH_DEPLOY_ATTEMPT-1}"
-[[ "$attempt" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "HEARTH_DEPLOY_ATTEMPT is invalid: $attempt"
+attempt="${HESTIA_DEPLOY_ATTEMPT-1}"
+[[ "$attempt" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "HESTIA_DEPLOY_ATTEMPT is invalid: $attempt"
 
 running="$(docker image inspect \
   --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image" 2>/dev/null)" ||

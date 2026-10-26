@@ -51,7 +51,7 @@ function check({ reportText, baseline, extraArguments = [] }) {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       env: Object.fromEntries(
-        Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HEARTH_TEST_NOW'),
+        Object.entries(process.env).filter(([key]) => key !== 'TZ' && key !== 'HESTIA_TEST_NOW'),
       ),
     },
   );

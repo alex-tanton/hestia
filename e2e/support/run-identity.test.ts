@@ -22,7 +22,7 @@ void describe('runNames', () => {
 
   void it('refuses an id Docker would reject as a project or tag name', () => {
     for (const bad of ['', 'ABC', 'a_b', 'a-b', 'a b', 'x'.repeat(17)]) {
-      assert.throws(() => runNames(bad), /HEARTH_E2E_RUN_ID/, `accepted '${bad}'`);
+      assert.throws(() => runNames(bad), /HESTIA_E2E_RUN_ID/, `accepted '${bad}'`);
     }
   });
 });
