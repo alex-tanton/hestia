@@ -2,21 +2,21 @@
 gsd_state_version: "1.0"
 milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
-current_phase: 09
-current_phase_name: Domain & Network Migration (Cloudflare Tunnel & Ingress)
-current_plan: 5
-status: verifying
-stopped_at: Completed 09-05-PLAN.md
-last_updated: "2026-10-26T18:50:46.521Z"
-last_activity: 2026-10-26
-last_activity_desc: Phase 09 execution started
-state_head: d4451be2dbc789ca4dcbc343b3df0e1587e49338
+current_phase: 10
+current_phase_name: Magic Links & Transactional Email
+current_plan: Not started
+status: planning
+stopped_at: Phase 09 complete, ready to plan Phase 10
+last_updated: "2026-11-01T22:56:00.000Z"
+last_activity: 2026-11-01
+last_activity_desc: Phase 09 complete, transitioned to Phase 10
+state_head: 73c9efb3e1b241d3bec5ff4e9a3b1e6ae0c075fa
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 16
   completed_plans: 16
-  percent: 40
+  percent: 60
 current_milestone: v2.0
 ---
 
@@ -24,39 +24,38 @@ current_milestone: v2.0
 
 ## Project Reference
 
-See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md) (updated 2026-10-25)
+See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-01)
 
 **Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
-**Current focus:** Phase 09 — Domain & Network Migration (Cloudflare Tunnel & Ingress)
+**Current focus:** Phase 10 — Magic Links & Transactional Email
 
 ## Current Position
 
 Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
-Phase: 09 (Domain & Network Migration (Cloudflare Tunnel & Ingress)) — EXECUTING
-Current Plan: 5
-Total Plans in Phase: 5
-Phases: 2 of 5 complete (Phases 7–11)
-Status: Phase complete — ready for verification
-Last activity: 2026-10-26 — Phase 09 execution started
+Phase: 10 — Magic Links & Transactional Email
+Current Plan: Not started
+Phases: 3 of 5 complete (Phases 7–11)
+Status: Ready to plan
+Last activity: 2026-11-01 — Phase 09 complete, transitioned to Phase 10
 
-Progress: [████░░░░░░] 40% of milestone plans
+Progress: [██████░░░░] 60% of milestone
 
 ## Milestone Roadmap
 
-- [ ] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 bloat, rewrite `README.md`, extract guides to `docs/`
+- [x] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 bloat, rewrite `README.md`, extract guides to `docs/`
 - [x] **Phase 8: Full Rebrand to Hestia** - Web UI, manifest, CLI, packages (`@hestia/*`), env (`HESTIA_*`)
-- [ ] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale, add Cloudflare Tunnel, Caddy `CF-Connecting-IP`, origin `hestia.aberrance.app`
+- [x] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale, add Cloudflare Tunnel, Caddy `CF-Connecting-IP`, origin `hestia.aberrance.app`
 - [ ] **Phase 10: Magic Links & Transactional Email** - Build flag, screens, GoTrue SMTP for Resend/Postmark, E2E tests
 - [ ] **Phase 11: Web Push & Edge Hardening** - VAPID `mailto:admin@aberrance.app`, iOS/Android PWA push verification, Cloudflare Edge caching, quality ratchet
 
 ## Next Action
 
-Plan Phase 9 with /gsd-plan-phase 9.
+Discuss Phase 10 with /gsd-discuss-phase 10 (or plan directly with /gsd-plan-phase 10).
 
 ## Session
 
-**Last session:** 2026-10-26T18:50:46.447Z
-**Stopped at:** Completed 09-05-PLAN.md
+**Last session:** 2026-11-01T22:56:00.000Z
+**Stopped at:** Phase 09 complete, ready to plan Phase 10
 **Resume file:** None
 
 ## Performance Metrics

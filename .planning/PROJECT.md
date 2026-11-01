@@ -43,22 +43,25 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 - ✓ Composite setup action, consolidated fixtures, and docs synchronized with code — v1.0 (Phase 5)
 - ✓ Blocking CI ratchet (hygiene, Knip, JSCPD, audit, migration append-only, deploy gate) with zero flaky tests — v1.0 (Phase 6)
 
+### Validated (v2.0)
+
+- ✓ **CLEAN-01**: Archive v1.0 phases and cleanup ledgers to `.planning/milestones/v1.0/` — Phase 7
+- ✓ **DOC-01**: Restructure `README.md` into clean overview — Phase 7
+- ✓ **DOC-02**: Create `docs/development.md`, `docs/deployment.md`, and `docs/testing.md` — Phase 7
+- ✓ **BRAND-01**: Rebrand user-facing PWA app name to "Hestia" — Phase 8
+- ✓ **BRAND-02**: Update PWA manifest with `name: "Hestia"` and `short_name: "Hestia"` — Phase 8
+- ✓ **BRAND-03**: Rename service CLI from `hearth-admin` to `hestia-admin` — Phase 8
+- ✓ **BRAND-04**: Migrate workspace packages to `@hestia/*` namespace — Phase 8
+- ✓ **BRAND-05**: Transition environment and Docker variables from `HEARTH_*` to `HESTIA_*` — Phase 8
+- ✓ **BRAND-06**: Update test suites to pass under Hestia brand — Phase 8
+- ✓ **NET-01**: Decommission Tailscale Funnel dependencies, CLI instructions, and host proxy — Phase 9
+- ✓ **NET-02**: Cloudflare Tunnel (`cloudflared`) in Docker Compose with zero host ports — Phase 9
+- ✓ **NET-03**: Caddy trusts Compose subnet and extracts IP from `CF-Connecting-IP` — Phase 9
+- ✓ **NET-04**: CSP, CORS, and cookie security policies updated for `hestia.aberrance.app` — Phase 9
+- ✓ **NET-05**: Set base origin and site URL configurations to `https://hestia.aberrance.app` — Phase 9
+
 ### Active (v2.0)
 
-- **CLEAN-01**: Archive v1.0 phases and cleanup ledgers to `.planning/milestones/v1.0/`, removing obsolete planning bloat.
-- **DOC-01**: Restructure `README.md` into a clean, concise overview, abstracting deep development, deployment, and testing details into dedicated guides in `docs/`.
-- **DOC-02**: Create `docs/development.md`, `docs/deployment.md`, and `docs/testing.md` preserving all technical runbook knowledge.
-- **BRAND-01**: Rebrand user-facing PWA app name to "Hestia" (page titles, HTML metadata, app shell header, onboarding copy, and install banner).
-- **BRAND-02**: Update PWA manifest with `name: "Hestia"` and `short_name: "Hestia"`; the manifest description names no brand and stays as it is.
-- **BRAND-03**: Rename service administrative CLI from `hearth-admin` to `hestia-admin` and update binary references.
-- **BRAND-04**: Migrate workspace package namespaces from `@hearth/*` to `@hestia/*` (seven packages, including `@hestia/seed`) across `package.json` files and internal imports.
-- **BRAND-05**: Transition environment variables, Docker service names, and container configurations from `HEARTH_*` to `HESTIA_*` as a hard cutover: the old names are not read.
-- **BRAND-06**: Update all unit, component, integration, and E2E test suites to pass under the Hestia brand name.
-- **NET-01**: Decommission Tailscale Funnel dependencies, CLI instructions, and host-network proxy configurations.
-- **NET-02**: Provide Cloudflare Tunnel (`cloudflared`) Docker Compose service configuration connecting `hestia.aberrance.app` to Caddy with zero exposed host ports.
-- **NET-03**: Update `docker/Caddyfile` to trust Cloudflare proxy IP ranges and extract client IP from `CF-Connecting-IP`.
-- **NET-04**: Update CSP (`connect-src wss://hestia.aberrance.app`), CORS, and cookie security policies for `hestia.aberrance.app`.
-- **NET-05**: Set base origin and site URL configurations to `https://hestia.aberrance.app`.
 - **AUTH-01**: Enable `VITE_MAGIC_LINK_ENABLED=true` and `HESTIA_MAGIC_LINK_ENABLED=true` in build arguments and runtime environment.
 - **AUTH-02**: Activate and verify magic link routes (`/sign-in/link`, `/sign-in/code`) and screens in the web PWA.
 - **AUTH-03**: Configure GoTrue SMTP settings (`GOTRUE_SMTP_*`) supporting Resend/Postmark with custom sender name ("Hestia") and address (`auth@aberrance.app` or `hestia@aberrance.app`).
@@ -94,13 +97,13 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Rename app to Hestia without verbose philosophical justification | Goddess of the Hearth fits household management; keep documentation clean and direct | Pending — v2.0 |
-| Use Cloudflare Tunnel (`cloudflared`) instead of port forwarding or Tailscale Funnel | Zero exposed host ports, automatic edge SSL, and native Cloudflare DNS integration | Pending — v2.0 |
+| Rename app to Hestia without verbose philosophical justification | Goddess of the Hearth fits household management; keep documentation clean and direct | Validated — Phase 8 |
+| Use Cloudflare Tunnel (`cloudflared`) instead of port forwarding or Tailscale Funnel | Zero exposed host ports, automatic edge SSL, and native Cloudflare DNS integration | Validated — Phase 9 |
 | Enable GoTrue Magic Links via Resend / Postmark SMTP | Seamless passwordless sign-in with verified deliverability on custom domain | Pending — v2.0 |
 | Update VAPID subject to `mailto:admin@aberrance.app` | RFC 8292 compliance required by Apple and Mozilla push endpoints | Pending — v2.0 |
-| Full rebrand (PWA, CLI, package scopes `@hestia/*`, env vars `HESTIA_*`) | Complete architectural consistency across monorepo and operations | Pending — v2.0 |
-| Abstract `README.md` into dedicated `docs/` runbooks | Keeps main landing clean for new developers while preserving in-depth runbooks | Pending — v2.0 |
-| Archive v1.0 phases into `.planning/milestones/v1.0/` | Clears clutter from active planning directory while preserving audit trail | Pending — v2.0 |
+| Full rebrand (PWA, CLI, package scopes `@hestia/*`, env vars `HESTIA_*`) | Complete architectural consistency across monorepo and operations | Validated — Phase 8 |
+| Abstract `README.md` into dedicated `docs/` runbooks | Keeps main landing clean for new developers while preserving in-depth runbooks | Validated — Phase 7 |
+| Archive v1.0 phases into `.planning/milestones/v1.0/` | Clears clutter from active planning directory while preserving audit trail | Validated — Phase 7 |
 
 ---
-*Last updated: 2026-10-25 starting v2.0 milestone cycle*
+*Last updated: 2026-11-01 after Phase 09*
