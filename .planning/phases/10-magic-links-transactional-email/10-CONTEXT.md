@@ -135,3 +135,4 @@ Out of scope:
 
 *Phase: 10-Magic Links & Transactional Email*
 *Context gathered: 2026-11-01*
+
