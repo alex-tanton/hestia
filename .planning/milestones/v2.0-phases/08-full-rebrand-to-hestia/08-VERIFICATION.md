@@ -42,6 +42,10 @@ human_verification:
   - test: "Review the owner-visible choice that .planning/phases/ and .planning/research/ are allowlisted wholesale in LEGACY_NAME_ALLOWLIST"
     expected: "Owner accepts it or asks for those prefixes to be dropped in a follow-up"
     why_human: "Planner's reading of D-13's quoting clause; it is a policy choice, documented in the checklist"
+audit_acknowledged:
+  milestone: v2.0
+  at: 2026-11-02
+  status: human_needed
 ---
 
 # Phase 8: Full Rebrand to Hestia Verification Report
@@ -125,7 +129,6 @@ No gaps. Every rebrand deliverable is present, wired and consistent in the code,
 
 _Verified: 2026-10-26_
 _Verifier: Claude (gsd-verifier)_
-
 
 ## Acknowledged Gaps
 

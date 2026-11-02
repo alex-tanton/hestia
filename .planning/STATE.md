@@ -2,14 +2,12 @@
 gsd_state_version: "1.0"
 milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
-current_phase: 11
-current_plan: Not started
-status: completed
+status: Awaiting next milestone
 stopped_at: Phase 11 complete — all phases complete
-last_updated: "2026-11-02T15:40:50.514Z"
+last_updated: "2026-11-02T16:28:02.207Z"
 last_activity: 2026-11-02
-last_activity_desc: Phase 11 complete
-state_head: 5c6322ad3846b2b4774251bffc8380d36a8f4e9d
+last_activity_desc: Milestone v2.0 completed and archived
+state_head: c118c57da46c6de02490387e942ecd6398e9937f
 progress:
   total_phases: 5
   completed_phases: 5
@@ -17,27 +15,24 @@ progress:
   completed_plans: 23
   percent: 100
 current_milestone: v2.0
+current_phase: 11
 ---
 
 # Project State
 
 ## Project Reference
 
-See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-01)
+See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-02)
 
 **Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
-**Current focus:** Milestone v2.0 completed
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Milestone: v2.0 (Hestia Domain Migration and Rebrand) — COMPLETED
-Phase: 11
-Current Plan: Not started
-Phases: 5 of 5 complete (Phases 7–11)
-Status: All phases complete
-Last activity: 2026-11-02 — Phase 11 complete
-
-Progress: [██████████] 100% of milestone
+Phase: Milestone v2.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-02 — Milestone v2.0 completed and archived
 
 ## Milestone Roadmap
 
@@ -49,7 +44,7 @@ Progress: [██████████] 100% of milestone
 
 ## Next Action
 
-Milestone v2.0 is complete (5 of 5 phases, 23 of 23 plans, 21 requirements validated). Archive milestone or prepare next milestone planning.
+Milestone v2.0 complete and archived. Run `/gsd-new-milestone` to start next milestone.
 
 ## Session
 
@@ -105,3 +100,15 @@ Milestone v2.0 is complete (5 of 5 phases, 23 of 23 plans, 21 requirements valid
 - [Phase 09]: 09-03: test fixtures swept to https://hestia.aberrance.app by literal-only replacement; env.ts changed by one comment line, HESTIA_ORIGIN still required with no default
 - [Phase 09]: 09-04: first-deploy network recreate documented in docs/deployment.md and checklist step 7; only four requirement/roadmap lines reworded (D-05, D-06, D-09)
 - [Phase 09]: Hygiene check 5: legacy-name machinery generalised into a TERM_RULES table; retired-ingress allowlist is three entries and one pinned quote (funnel through here in the recurrence comment)
+
+## Deferred Items
+
+Items acknowledged and deferred at milestone close, most recent first:
+
+| Category | Item | Status | Deferred At | Milestone |
+|----------|------|--------|-------------|-----------|
+| verification_gaps | 08/08-VERIFICATION.md | human_needed | 2026-11-02 | v2.0 |
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

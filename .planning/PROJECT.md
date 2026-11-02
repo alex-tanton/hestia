@@ -6,20 +6,12 @@ Hestia is a self-hosted household-management PWA (grocery deals, shopping lists,
 
 ## Current State
 
-**Shipped Milestone:** v1.0 — Cleanup and Hardening (2026-10-25)
-- Lean, trustworthy base for manual review: clean published git history, deterministic test suite (36-cell date and timezone sweep), bare-clock lint ban, proven-dead code removed with Knip baseline.
-- Known bugs fixed with regression tests: offline list-add replay duplicates, `RotationEditor` keyboard accessibility, PATCH schema default injection, scoped `service_role` and GoTrue route fencing.
-- Redundancy reduced: composite CI setup action, consolidated web/service test fixtures, retired spec citations removed.
-- Blocking CI enforcement ratchet: Knip baseline (0 default findings), JSCPD duplication (<2%), repo hygiene (modes, line endings, tracked-ignored), migration append-only, and zero intermittent CI failures (`CI-08`).
-- 40 requirements verified complete; 100% UAT pass across 32 tests.
+**Shipped Milestones:**
+- **v1.0 — Cleanup and Hardening (2026-10-25):** 6 phases, 60 plans, 40 requirements. Test determinism, bare-clock ban, Knip baseline, bug fixes, CI ratchets.
+- **v2.0 — Hestia Domain Migration and Rebrand (2026-11-02):** 5 phases, 23 plans, 21 requirements. Custom domain `hestia.aberrance.app` via Cloudflare Tunnel, full Hestia rebrand, GoTrue magic link authentication, RFC 8292 Web Push VAPID, edge caching & WAF rate limits, documentation modularization in `docs/`.
 
-**Active Milestone:** v2.0 — Hestia Domain Migration and Rebrand
-- Rebrand the entire application, PWA manifest, CLI, packages, and environment from Hearth to Hestia.
-- Migrate ingress from Tailscale Funnel to custom domain `hestia.aberrance.app` using Cloudflare Tunnel (`cloudflared`) and Cloudflare Edge.
-- Enable GoTrue magic links with transactional SMTP email delivery (Resend / Postmark).
-- Configure Web Push VAPID claims under RFC 8292 (`mailto:admin@aberrance.app`) and verify iOS/Android standalone PWA push notifications.
-- Restructure repository documentation: simplify `README.md` and abstract detailed runbooks into `docs/` (`development.md`, `deployment.md`, `testing.md`).
-- Archive v1.0 planning bloat and reset project memory for v2.0.
+**Next Milestone Goals:**
+- To be planned via `/gsd-new-milestone`.
 
 ## Core Value
 
@@ -69,9 +61,9 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 - ✓ **EDGE-01**: Document Cloudflare Edge caching rules for immutable Vite assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*` — Phase 11
 - ✓ **VERIFY-01**: Full test suite sweep, build validation, Knip, and CI verification green across all packages — Phase 11
 
-### Active (v2.0)
+### Active
 
-*None — all 21 milestone requirements validated.*
+*None — ready for next milestone planning via `/gsd-new-milestone`.*
 
 ### Out of Scope
 
@@ -82,10 +74,10 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 
 ## Context
 
-- Brownfield codebase with 6 completed and archived v1.0 phases.
-- Domain `aberrance.app` purchased via Cloudflare; targeting subdomain `hestia.aberrance.app`.
+- Brownfield codebase with 11 completed and archived phases across v1.0 and v2.0.
+- Shipped v2.0 with ~81,600 LOC TypeScript across monorepo.
+- Custom domain `hestia.aberrance.app` active under Cloudflare Tunnel.
 - pnpm workspace (TypeScript 6, Node 24).
-- Ingress shifting from Tailscale Funnel to Cloudflare Tunnel.
 
 ## Constraints
 
@@ -107,4 +99,4 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 | Archive v1.0 phases into `.planning/milestones/v1.0/` | Clears clutter from active planning directory while preserving audit trail | Validated — Phase 7 |
 
 ---
-*Last updated: 2026-11-02 after Phase 11*
+*Last updated: 2026-11-02 after v2.0 milestone*
