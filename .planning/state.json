@@ -26,13 +26,13 @@
     {
       "number": "11",
       "name": "Web Push & Edge Hardening",
-      "status": "in_progress"
+      "status": "complete"
     }
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 11 of 5 · 20% · executing"
+    "label": "Milestone v2.0 complete",
+    "reason": "Phase 11 of 5 · 100% · complete"
   },
-  "updated_at": "2026-11-02T05:48:35.838Z"
+  "updated_at": "2026-11-02T14:14:19.640Z"
 }

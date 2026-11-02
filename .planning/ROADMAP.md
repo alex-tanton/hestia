@@ -3,7 +3,7 @@
 ## Milestones
 
 - [x] **[v1.0 Hearth — Cleanup and Hardening](milestones/v1.0/ROADMAP.md)** — 6 phases, 60 plans, 40 requirements; completed 2026-10-25
-- [ ] **v2.0 Hestia — Domain Migration and Rebrand** — 5 phases (7–11), 21 requirements; active
+- [x] **v2.0 Hestia — Domain Migration and Rebrand** — 5 phases (7–11), 21 requirements; completed 2026-11-02
 
 ---
 
@@ -17,7 +17,7 @@
 - [x] **Phase 8: Full Rebrand to Hestia** - Rebrand web UI, PWA manifest, CLI, workspace packages (`@hestia/*`), and environment variables (`HESTIA_*`). (completed 2026-10-26, owner override of skipped UAT and stale verification)
 - [x] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale Funnel, add Cloudflare Tunnel, update Caddy real-IP restoration (`CF-Connecting-IP`), and configure domain routing for `hestia.aberrance.app`. (completed 2026-11-01)
 - [x] **Phase 10: Magic Links & Transactional Email** - Activate magic link routes and screens, configure GoTrue SMTP for Resend/Postmark, and implement E2E verification. (completed 2026-11-01)
-- [ ] **Phase 11: Web Push & Edge Hardening** - Update VAPID claims under RFC 8292, verify iOS/Android standalone PWA push notifications, configure Cloudflare Edge caching/WAF, and run full verification.
+- [x] **Phase 11: Web Push & Edge Hardening** - Update VAPID claims under RFC 8292, verify iOS/Android standalone PWA push notifications, configure Cloudflare Edge caching/WAF, and run full verification. (completed 2026-11-02)
 
 ---
 
@@ -140,3 +140,12 @@ Plans:
 2. Standalone PWA push subscription and notification receipt are verified for iOS Safari and Android Chrome over HTTPS.
 3. Cloudflare Edge caching rules for immutable Vite assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*` are documented and tested.
 4. Complete test sweep, build verification, Knip, and JSCPD checks pass with 100% green status.
+
+**Plans:** 4/4 plans complete
+
+Plans:
+- [x] 11-01-PLAN.md — RFC 8292 VAPID Subject Enforcement
+- [x] 11-02-PLAN.md — Ingress Caching & Cloudflare Edge Hardening
+- [x] 11-03-PLAN.md — Mobile Push CLI Tool & Verification Runbook
+- [x] 11-04-PLAN.md — Full Quality Gate Ratchet & Milestone Verification
+

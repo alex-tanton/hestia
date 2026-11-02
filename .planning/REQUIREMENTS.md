@@ -69,13 +69,13 @@ Milestone v2.0 migrates the application to the custom domain `hestia.aberrance.a
 
 ### Phase 11: Web Push & Edge Hardening
 
-- [ ] **PUSH-01**: Update Web Push VAPID configuration in `apps/service` to set `VAPID_SUBJECT` to `mailto:admin@aberrance.app` (satisfying RFC 8292).
+- [x] **PUSH-01**: Update Web Push VAPID configuration in `apps/service` to set `VAPID_SUBJECT` to `mailto:admin@aberrance.app` (satisfying RFC 8292).
   - *Acceptance Criteria*: Web push tokens are signed with valid contact claim; Apple Push Notification Service and Mozilla Autopush accept subscriptions without warnings.
-- [ ] **PUSH-02**: Verify standalone PWA push subscription and notification dispatch over HTTPS for iOS and Android devices.
+- [x] **PUSH-02**: Verify standalone PWA push subscription and notification dispatch over HTTPS for iOS and Android devices.
   - *Acceptance Criteria*: Test device running installed PWA on `https://hestia.aberrance.app` receives push notifications for assigned chores and reminders.
-- [ ] **EDGE-01**: Document and configure Cloudflare Edge caching rules for immutable Vite build assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*`.
+- [x] **EDGE-01**: Document and configure Cloudflare Edge caching rules for immutable Vite build assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*`.
   - *Acceptance Criteria*: Static assets return edge cache hits; edge rate limiting protects auth endpoints against brute force attempts.
-- [ ] **VERIFY-01**: Execute full test suite sweep, build validation, Knip dead-code scan, JSCPD duplication scan, and CI ratchet checks to guarantee zero regressions.
+- [x] **VERIFY-01**: Execute full test suite sweep, build validation, Knip dead-code scan, JSCPD duplication scan, and CI ratchet checks to guarantee zero regressions.
   - *Acceptance Criteria*: `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm knip`, `pnpm jscpd`, and `pnpm build` pass with zero warnings or errors.
 
 ---
