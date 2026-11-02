@@ -164,4 +164,19 @@ describe('ingress configuration', () => {
     expect(lines).toContain('HESTIA_ORIGIN=https://hestia.aberrance.app');
     expect(lines).toContain('CLOUDFLARE_TUNNEL_TOKEN=');
   });
+
+  it('configures differentiated Cache-Control headers for hashed assets, entrypoints, and manifest', () => {
+    expect(caddyDirectives).toContain('@assets path /assets/*');
+    expect(caddyDirectives).toContain(
+      'header @assets Cache-Control "public, max-age=31536000, immutable"',
+    );
+    expect(caddyDirectives).toContain('@entry path / /index.html /sw.js');
+    expect(caddyDirectives).toContain('header @entry Cache-Control "no-cache, must-revalidate"');
+    expect(caddyDirectives).toContain(
+      '@icons_manifest path /icons/* /manifest.webmanifest /favicon.ico',
+    );
+    expect(caddyDirectives).toContain(
+      'header @icons_manifest Cache-Control "public, max-age=86400, must-revalidate"',
+    );
+  });
 });
