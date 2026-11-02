@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Milestone v2.0 complete",
-    "reason": "Phase 11 of 5 · 100% · complete"
+    "command": "/gsd-new-milestone",
+    "label": "Start a new milestone",
+    "reason": "All phases complete — start a new milestone"
   },
-  "updated_at": "2026-11-02T14:14:19.640Z"
+  "updated_at": "2026-11-02T15:40:50.580Z"
 }
