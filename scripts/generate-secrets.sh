@@ -76,6 +76,7 @@ const fromEnvironment = [
   'HESTIA_MAGIC_LINK_ENABLED',
   'GOTRUE_SMTP_PASS',
   'BACKUP_DIR',
+  'VAPID_SUBJECT',
 ];
 
 const lines = readFileSync(process.env.EXAMPLE, 'utf8')

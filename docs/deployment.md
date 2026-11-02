@@ -148,11 +148,7 @@ by hand.
 | `REALTIME_DB_ENC_KEY` | Realtime's 16-character tenant-credential encryption key. |
 | `VAPID_PUBLIC_KEY` | Web Push VAPID public key (P-256, base64url). |
 | `VAPID_PRIVATE_KEY` | Web Push VAPID private key (P-256, base64url). |
-
-Not in `.env.example` but worth knowing: an optional `VAPID_SUBJECT` can be set by hand. When
-unset, the service falls back to `mailto:` + `HESTIA_OWNER_EMAIL`, or else `HESTIA_ORIGIN` if it's
-an `https:` URL; a set value must itself be a `mailto:` or `https:` URI, or the service fails at
-startup.
+| `VAPID_SUBJECT` | The contact URI sent in each push request's VAPID claims (RFC 8292). Strictly required; must be a valid mailto: or https: URI (e.g. mailto:admin@aberrance.app). |
 
 ## Cloudflare Tunnel
 
