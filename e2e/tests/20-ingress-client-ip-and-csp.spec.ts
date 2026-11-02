@@ -80,3 +80,28 @@ test("the CSP allows WebSockets to the stack's own host and no CORS or cookie he
     expect(response.headers()['set-cookie']).toBeUndefined();
   }
 });
+
+test('serves static assets with immutable cache and entrypoints with no-cache', async ({
+  request,
+}) => {
+  const index = await request.get('/index.html');
+  expect(index.status()).toBe(200);
+  expect(index.headers()['cache-control']).toBe('no-cache, must-revalidate');
+
+  const sw = await request.get('/sw.js');
+  expect(sw.status()).toBe(200);
+  expect(sw.headers()['cache-control']).toBe('no-cache, must-revalidate');
+
+  const manifest = await request.get('/manifest.webmanifest');
+  expect(manifest.status()).toBe(200);
+  expect(manifest.headers()['cache-control']).toBe('public, max-age=86400, must-revalidate');
+
+  // Resolve a built asset link from index.html if present, or assert path matching directly
+  const html = await index.text();
+  const assetMatch = /\/assets\/[a-zA-Z0-9_-]+\.(?:js|css)/.exec(html);
+  if (assetMatch) {
+    const asset = await request.get(assetMatch[0]);
+    expect(asset.status()).toBe(200);
+    expect(asset.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
+  }
+});
