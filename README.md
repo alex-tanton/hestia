@@ -63,5 +63,4 @@ Production is one Linux host running `docker/docker-compose.yml`; see
 | [docs/deployment.md](docs/deployment.md)     | The production runbook: first-time setup, deploys and rollback, backups and restore, troubleshooting.     |
 | [docs/testing.md](docs/testing.md)           | How unit, integration, frontend, and end-to-end tests are structured and how to add more.                 |
 | [docs/architecture.md](docs/architecture.md) | Request authorization and RLS, data model, API surface, background jobs, realtime, and notifications.     |
-| [docs/design.md](docs/design.md)             | Design decisions: navigation, state handling, empty states, and accessibility.                            |
 | [CONTRIBUTING.md](CONTRIBUTING.md)           | Development workflow, quality gates, and commit guidelines.                                               |
