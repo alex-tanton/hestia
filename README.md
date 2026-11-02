@@ -53,7 +53,7 @@ Production is one Linux host running `docker/docker-compose.yml`; see
 | `e2e`                 | Playwright journeys and Flipp fixtures              |
 | `supabase`            | Supabase CLI config, SQL migrations, and seed       |
 | `docker`              | Compose file, Caddyfile, Kong config, Dockerfiles   |
-| `scripts`             | Deploy, secrets, CI pre-pull and test sweep scripts |
+| `scripts`             | Deploy, secrets, and repository health gate scripts |
 
 ## Documentation
 
