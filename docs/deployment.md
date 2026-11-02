@@ -547,6 +547,50 @@ done
 - Requests 1 through 15 return standard application responses (`400`, `422`, or `200`).
 - Request 16 returns HTTP `403` with Cloudflare Managed Challenge HTML.
 
+## Mobile Web Push Verification
+
+Web Push notifications operate across desktop browsers, Android Chrome, and iOS Safari 16.4+. Testing on real mobile devices requires specific device prerequisites and standalone PWA installation.
+
+### Mobile OS Prerequisites & Constraints
+- **iOS Safari (16.4+) Requirements:**
+  1. Must be served over HTTPS (`https://hestia.aberrance.app`).
+  2. The application **must** be added to the Home Screen (`display: standalone`). Standard Safari browser tabs do not support Web Push.
+  3. Permission can only be requested via direct user touch gesture (navigating to **Settings → Notifications** and toggling an alert type).
+  4. Apple Push Notification Service (APNs) mandates RFC 8292 compliant VAPID JWT claims (`VAPID_SUBJECT=mailto:admin@aberrance.app`).
+- **Android Chrome Requirements:**
+  1. Application must be served with valid PWA manifest and icons (`/manifest.webmanifest`).
+  2. User must grant notification permission when prompted.
+
+### Step-by-Step Device Verification Runbook
+1. **Install PWA on Device**:
+   - **iOS**: Open `https://hestia.aberrance.app` in Safari. Tap the **Share** button (box with upward arrow) → **Add to Home Screen** → **Add**.
+   - **Android**: Open `https://hestia.aberrance.app` in Chrome. Tap the **Install** banner or menu (⋮) → **Install app**.
+2. **Launch Standalone Application**:
+   - Tap the Hestia icon on the device Home Screen. Verify the app launches in standalone display mode (no browser URL bar or navigation controls).
+3. **Sign In**:
+   - Sign in using a magic link or password.
+4. **Enable Push Notifications**:
+   - Navigate to **Settings** (gear icon) → **Notifications**.
+   - Toggle on any notification type (e.g. **Chore reminders** or **Bill due reminders**).
+   - When the native system dialog appears ("Hestia Would Like to Send You Notifications"), tap **Allow**.
+5. **Dispatch Immediate Test Notification**:
+   - From the deployment server or development terminal, run the administrative test push tool:
+     ```bash
+     # Inside Docker Compose:
+     docker compose exec hestia-service hestia-admin test-push --email <user-email>
+
+     # Or via pnpm shortcut on host:
+     pnpm hestia-admin test-push --email <user-email>
+     # Or:
+     pnpm hestia:test-push --email <user-email>
+     ```
+   - Confirm terminal output:
+     `Dispatched test push to 1 device(s) for <user-email>: 1 accepted, 0 gone, 0 failed.`
+6. **Verify Device Notification Receipt**:
+   - Lock the device or switch to another app.
+   - Confirm a system notification banner appears with title "Test Push Notification" and body "This is a test notification from Hestia.".
+   - Tap the notification banner and confirm it opens Hestia to the home dashboard (`/`).
+
 ## Troubleshooting
 
 - **Health check:** `hestia-compose exec -T caddy wget -q -O - http://127.0.0.1:8080/api/health`
