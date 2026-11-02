@@ -94,14 +94,29 @@ export function SignInScreen(): ReactElement {
       </form>
       <div className="flex flex-col gap-2 text-body-sm">
         {/*
-         * Magic link is built but disabled. The flag is a build-time constant, so with it off this
-         * option — and the sentence naming it — is folded out of the build rather than hidden at
-         * runtime.
+         * Magic link option with 'or' divider and secondary button.
+         * The flag is a build-time constant, so with it off this option is folded out of the build.
          */}
         {import.meta.env.VITE_MAGIC_LINK_ENABLED === 'true' && (
-          <Link to="/sign-in/link" className="font-semibold text-section">
-            Email me a sign-in link
-          </Link>
+          <>
+            <div className="relative my-3 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-input" />
+              </div>
+              <span className="relative bg-base px-2 text-body-sm text-secondary uppercase">
+                or
+              </span>
+            </div>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => {
+                void navigate('/sign-in/link');
+              }}
+            >
+              Email me a sign-in link
+            </Button>
+          </>
         )}
         <Link to="/forgot-password" className="font-semibold text-section">
           Forgot password?
