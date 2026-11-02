@@ -56,15 +56,15 @@ Milestone v2.0 migrates the application to the custom domain `hestia.aberrance.a
 
 ### Phase 10: Magic Links & Transactional Email
 
-- [ ] **AUTH-01**: Enable magic link build arguments and runtime environment flags (`VITE_MAGIC_LINK_ENABLED=true`, `HESTIA_MAGIC_LINK_ENABLED=true`).
+- [x] **AUTH-01**: Enable magic link build arguments and runtime environment flags (`VITE_MAGIC_LINK_ENABLED=true`, `HESTIA_MAGIC_LINK_ENABLED=true`).
   - *Acceptance Criteria*: Web bundle includes magic link routes and screens without dead-code elimination folding them away.
-- [ ] **AUTH-02**: Activate and verify magic link routes (`/sign-in/link`, `/sign-in/code`) and user navigation links in the PWA sign-in screen.
+- [x] **AUTH-02**: Activate and verify magic link routes (`/sign-in/link`, `/sign-in/code`) and user navigation links in the PWA sign-in screen.
   - *Acceptance Criteria*: Sign-in screen offers "Email me a sign-in link"; submitting valid email navigates to the 6-digit code entry screen.
-- [ ] **AUTH-03**: Configure GoTrue SMTP settings (`GOTRUE_SMTP_*`) supporting Resend/Postmark with custom sender name ("Hestia") and address (`auth@aberrance.app` or `hestia@aberrance.app`).
+- [x] **AUTH-03**: Configure GoTrue SMTP settings (`GOTRUE_SMTP_*`) supporting Resend/Postmark with custom sender name ("Hestia") and address (`auth@aberrance.app` or `hestia@aberrance.app`).
   - *Acceptance Criteria*: GoTrue sends OTP email upon magic link request; instructions for Cloudflare DNS records (SPF, DKIM, DMARC) are documented.
-- [ ] **AUTH-04**: Update GoTrue site URL and redirect allow lists to `https://hestia.aberrance.app` and `https://hestia.aberrance.app/**`.
+- [x] **AUTH-04**: Update GoTrue site URL and redirect allow lists to `https://hestia.aberrance.app` and `https://hestia.aberrance.app/**`.
   - *Acceptance Criteria*: GoTrue redirects users back to the app securely after email link clicks.
-- [ ] **AUTH-05**: Replace `07-magic-link-disabled.spec.ts` with Playwright E2E tests validating the active magic link request, OTP code validation, and session creation.
+- [x] **AUTH-05**: Replace `07-magic-link-disabled.spec.ts` with Playwright E2E tests validating the active magic link request, OTP code validation, and session creation.
   - *Acceptance Criteria*: Automated E2E test runs successfully against the stack with magic links enabled.
 
 ### Phase 11: Web Push & Edge Hardening
