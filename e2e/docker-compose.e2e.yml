@@ -42,6 +42,28 @@
 # faster without it.
 
 services:
+  inbucket:
+    image: inbucket/inbucket:3.1.0
+    restart: unless-stopped
+    networks: [hestia]
+    ports:
+      - 127.0.0.1:${HESTIA_E2E_INBUCKET_PORT:?}:9000
+
+  auth:
+    depends_on:
+      db:
+        condition: service_healthy
+      inbucket:
+        condition: service_healthy
+    environment:
+      GOTRUE_SMTP_HOST: inbucket
+      GOTRUE_SMTP_PORT: 2500
+      GOTRUE_SMTP_USER: ''
+      GOTRUE_SMTP_PASS: ''
+      GOTRUE_SMTP_ADMIN_EMAIL: auth@aberrance.app
+      GOTRUE_SMTP_SENDER_NAME: Hestia
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://caddy:8080/templates/magic_link.html
+
   db:
     ports:
       - 127.0.0.1:${HESTIA_E2E_DB_PORT:?}:5432

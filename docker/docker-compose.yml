@@ -75,7 +75,7 @@ services:
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       GOTRUE_SITE_URL: ${HESTIA_ORIGIN}
       GOTRUE_URI_ALLOW_LIST: ${HESTIA_ORIGIN},${HESTIA_ORIGIN}/**
-      GOTRUE_DISABLE_SIGNUP: 'false'
+      GOTRUE_DISABLE_SIGNUP: 'true'
       GOTRUE_JWT_ADMIN_ROLES: service_role
       GOTRUE_JWT_AUD: authenticated
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
@@ -85,15 +85,24 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
       GOTRUE_EXTERNAL_PHONE_ENABLED: 'false'
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: 'false'
-      # Auth configuration table. No GOTRUE_SMTP_* while magic link is disabled.
+      # Auth configuration table.
       GOTRUE_MAILER_AUTOCONFIRM: 'true'
       GOTRUE_PASSWORD_MIN_LENGTH: 8
       GOTRUE_MAILER_OTP_LENGTH: 6
-      GOTRUE_MAILER_OTP_EXP: 3600
+      GOTRUE_MAILER_OTP_EXP: 900
       GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_MAGIC_LINK: /auth/v1/verify
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Magic Link
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://caddy:8080/templates/magic_link.html
+      GOTRUE_SMTP_HOST: ${GOTRUE_SMTP_HOST:-smtp.resend.com}
+      GOTRUE_SMTP_PORT: ${GOTRUE_SMTP_PORT:-465}
+      GOTRUE_SMTP_USER: ${GOTRUE_SMTP_USER:-resend}
+      GOTRUE_SMTP_PASS: ${GOTRUE_SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${GOTRUE_SMTP_ADMIN_EMAIL:-auth@aberrance.app}
+      GOTRUE_SMTP_SENDER_NAME: ${GOTRUE_SMTP_SENDER_NAME:-Hestia}
       # Per-IP limits key on the client address Caddy and Kong pass along.
       GOTRUE_RATE_LIMIT_HEADER: X-Forwarded-For
     healthcheck:
@@ -230,7 +239,7 @@ services:
       dockerfile: docker/caddy.Dockerfile
       args:
         HESTIA_REVISION: ${HESTIA_TAG:-dev}
-        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-false}
+        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-true}
         ANON_KEY: ${ANON_KEY:?set in .env}
         VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
     restart: unless-stopped

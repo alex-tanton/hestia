@@ -136,7 +136,7 @@ describe('ingress configuration', () => {
       .filter(([, entry]) => entry.ports !== undefined)
       .map(([name]) => name)
       .sort();
-    expect(published).toEqual(['caddy', 'db']);
+    expect(published).toEqual(['caddy', 'db', 'inbucket']);
   });
 
   it("derives the CSP WebSocket host and GoTrue's URLs from HESTIA_ORIGIN", () => {
