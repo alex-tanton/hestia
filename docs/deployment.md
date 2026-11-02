@@ -130,7 +130,13 @@ by hand.
 | `HESTIA_ORIGIN` | The pinned public origin, `https://hestia.aberrance.app`. Baked into every installed PWA and push subscription; must never change. |
 | `CLOUDFLARE_TUNNEL_TOKEN` | The tunnel token, read only by `cloudflared`. It cannot be generated: paste it into `/srv/hestia/.env` by editing the file, never on a command line. Compose refuses every command while it is empty. `generate-secrets.sh` copies it only when it is already in its environment, as E2E does. |
 | `HESTIA_OWNER_EMAIL` | The server owner's sign-in email. Unlocks `GET /api/health/deep` (System health). |
-| `HESTIA_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. Needs a domain and SMTP relay to work; the Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `false`. |
+| `HESTIA_MAGIC_LINK_ENABLED` | Whether magic-link sign-in is enabled. The Caddy image build turns this into `VITE_MAGIC_LINK_ENABLED` for the PWA. Defaults to `true`. |
+| `GOTRUE_SMTP_HOST` | GoTrue SMTP host. Defaults to `smtp.resend.com`. |
+| `GOTRUE_SMTP_PORT` | GoTrue SMTP port. Defaults to `465` (implicit TLS). |
+| `GOTRUE_SMTP_USER` | GoTrue SMTP username. Defaults to `resend`. |
+| `GOTRUE_SMTP_PASS` | GoTrue SMTP password (Resend API key). Empty default for dev/test; must be set in production `/srv/hestia/.env`. |
+| `GOTRUE_SMTP_ADMIN_EMAIL` | Sender email address for auth emails. Defaults to `auth@aberrance.app`. |
+| `GOTRUE_SMTP_SENDER_NAME` | Sender display name. Defaults to `Hestia`. |
 | `BACKUP_DIR` | The backup directory on the second physical disk. Mounted read-write into the `backup` container and read-only into `hestia-service`. |
 | `HESTIA_RATE_LIMIT_PER_MINUTE` | Optional. Per-IP requests per minute across `/api`. Commented out in `.env.example`; leave unset in production (default 300). |
 | `POSTGRES_PASSWORD` | Postgres superuser password. Also used by GoTrue (`supabase_auth_admin`), Realtime, and the backup container. |
@@ -426,6 +432,66 @@ hestia-compose exec -T caddy wget -q -O - http://127.0.0.1:8080/api/health
 Only `db` runs while the dump loads: GoTrue and Realtime keep their own migration state inside the
 database, so they must find the restored state when they start — bringing them up early would let
 them re-initialize against the wrong state.
+
+## Transactional Email (SMTP & DNS)
+
+Hestia uses passwordless magic link authentication and transactional emails delivered via Resend. GoTrue handles outbound SMTP (`smtp.resend.com:465`, implicit TLS) with sender `Hestia <auth@aberrance.app>`.
+
+### Provider Configuration
+
+- **Provider**: Resend
+- **Host**: `smtp.resend.com`
+- **Port**: `465` (SSL/TLS implicit)
+- **User**: `resend`
+- **Password**: Resend API key (`re_...`), configured in `/srv/hestia/.env` as `GOTRUE_SMTP_PASS`
+- **From Address**: `auth@aberrance.app`
+- **From Name**: `Hestia`
+
+### Cloudflare DNS Configuration
+
+To ensure optimal inbox deliverability and prevent spoofing, the following DNS records must be configured in Cloudflare for `aberrance.app`:
+
+```dns
+; 1. SPF (Sender Policy Framework)
+TXT    @                  v=spf1 include:resend.com ~all
+
+; 2. DKIM (DomainKeys Identified Mail)
+CNAME  resend._domainkey  resend._domainkey.resend.com.
+
+; 3. DMARC (Domain-based Message Authentication, Reporting, and Conformance)
+TXT    _dmarc             v=DMARC1; p=quarantine; rua=mailto:dmarc@aberrance.app; pct=100;
+
+; 4. Custom Return-Path (Bounce Handling)
+MX     bounces            feedback-smtp.resend.com. (Priority 10)
+TXT    bounces            v=spf1 include:resend.com ~all
+```
+
+### Applying SMTP Configuration (GoTrue Service Recreation)
+
+Because `scripts/deploy.sh` only recreates application containers (`hestia-service` and `caddy`) and leaves supporting infrastructure services running by default, operators must recreate the `auth` container once after adding or updating `GOTRUE_SMTP_PASS` in `/srv/hestia/.env`:
+
+```bash
+hestia-compose up -d --wait
+```
+
+This picks up the new environment variables and restarts `auth` with the updated SMTP credentials.
+
+### Production Smoke Verification
+
+Verify end-to-end transactional email delivery:
+
+1. **Verify DNS alignment**:
+   ```bash
+   dig +short TXT aberrance.app
+   dig +short CNAME resend._domainkey.aberrance.app
+   ```
+2. **Inspect server environment**: Confirm `GOTRUE_SMTP_PASS` is non-empty in `/srv/hestia/.env`.
+3. **Trigger sign-in link**: Navigate to `https://hestia.aberrance.app/sign-in`, click **Email me a sign-in link**, and enter the owner email address.
+4. **Confirm receipt**: Check the recipient inbox for an email from `Hestia <auth@aberrance.app>` with subject `Your Magic Link`, containing both the button and the 6-digit numeric OTP code.
+5. **Inspect headers**: Confirm authentication headers pass:
+   - `SPF: PASS` with domain `aberrance.app` or `bounces.aberrance.app`
+   - `DKIM: PASS` with domain `aberrance.app` (selector `resend`)
+6. **Complete sign-in**: Enter the 6-digit OTP code on the web screen (or click the confirmation link) and verify successful authentication into the household dashboard.
 
 ## Troubleshooting
 
