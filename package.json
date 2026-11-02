@@ -20,6 +20,7 @@
     "db:types": "pnpm --filter @hestia/service db:types",
     "db:seed": "pnpm --filter @hestia/service db:seed",
     "fixtures:normalize": "pnpm --filter @hestia/service fixtures:normalize",
+    "hestia-admin": "pnpm --filter @hestia/service exec hestia-admin",
     "test:e2e": "pnpm --filter @hestia/e2e test:e2e",
     "build": "pnpm -r --if-present build",
     "jscpd": "jscpd --fail-on-empty",

@@ -33,8 +33,18 @@ describe('hestia-admin', () => {
     expect(SET_PASSWORD_PATH).toBe('/set-password');
   });
 
-  it.each([[[]], [['reset-password']], [['other', 'a@b.co']], [['reset-password', 'a@b.co', 'x']]])(
-    'prints usage for %j',
+  it.each([[[]], [['other', 'a@b.co']]])('prints general usage for %j', async (args) => {
+    const { err, io: streams } = io();
+    const recoveryLink = vi.fn();
+    expect(await runCli(args, { recoveryLink }, ORIGIN, streams)).toBe(2);
+    expect(err[0]).toMatch(
+      /^Usage:\s+hestia-admin reset-password <email>\s+hestia-admin test-push/,
+    );
+    expect(recoveryLink).not.toHaveBeenCalled();
+  });
+
+  it.each([[['reset-password']], [['reset-password', 'a@b.co', 'x']]])(
+    'prints reset-password usage for %j',
     async (args) => {
       const { err, io: streams } = io();
       const recoveryLink = vi.fn();
