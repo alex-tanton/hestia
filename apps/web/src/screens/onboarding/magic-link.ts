@@ -20,6 +20,8 @@ export const CODE_LENGTH = 6;
 export const RESEND_AFTER_SECONDS = 30;
 
 export const SEND_FAILED_MESSAGE = "Couldn't send a sign-in link. Try again.";
+export const UNKNOWN_EMAIL_MESSAGE =
+  'No account found with this email. Ask your household admin for an invite.';
 export const EMAIL_REQUIRED_MESSAGE = 'Enter your email address.';
 export const CODE_INVALID_MESSAGE = 'That code is incorrect or has expired. Ask for a new one.';
 export const CODE_LENGTH_MESSAGE = 'Enter the 6-digit code from the email.';
@@ -58,6 +60,12 @@ export function magicLinkMessage(error: unknown, fallback: string): string {
   if (error instanceof AuthError) {
     if (error.status === 429) return RATE_LIMITED_MESSAGE;
     if (error.status === 0) return OFFLINE_MESSAGE;
+    if (
+      error.message.toLowerCase().includes('signups not allowed for otp') ||
+      error.message.toLowerCase().includes('not found')
+    ) {
+      return UNKNOWN_EMAIL_MESSAGE;
+    }
   }
   return fallback;
 }

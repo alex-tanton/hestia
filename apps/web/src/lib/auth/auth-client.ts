@@ -139,7 +139,10 @@ export function createAuthClient(client: Promise<SupabaseAuthClient>): AuthClien
         email,
         // The email carries a link and a 6-digit code. The link lands on the app's root with the
         // session in the URL fragment, which `detectSessionInUrl` above is already watching for.
-        options: { emailRedirectTo: `${window.location.origin}/` },
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/`,
+        },
       });
       // The screen chooses the sentence: GoTrue's own message is for the log, not the user.
       if (error) throw new AuthError(error.message, error.status);
