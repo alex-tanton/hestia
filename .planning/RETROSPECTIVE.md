@@ -59,3 +59,4 @@
 
 1. Enforce quality gates at the commit and CI boundaries early; fixing regressions late costs exponentially more context and time.
 2. Maintain strict documentation traceability between requirements, plans, and verification reports.
+
