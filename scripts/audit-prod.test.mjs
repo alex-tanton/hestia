@@ -258,6 +258,17 @@ cat "$STUB_OUTPUT"
 exit "\${STUB_EXIT:-0}"
 `,
   );
+  if (process.platform === 'win32') {
+    writeFileSync(
+      join(bin, 'pnpm.cmd'),
+      `@echo off
+setlocal
+echo %* >> "%STUB_LOG%"
+type "%STUB_OUTPUT%"
+if defined STUB_EXIT (exit /b %STUB_EXIT%) else (exit /b 0)
+`,
+    );
+  }
   chmodSync(join(bin, 'pnpm'), 0o755);
 
   function withStub(output, status = '0') {
@@ -270,7 +281,10 @@ exit "\${STUB_EXIT:-0}"
       AUDIT_RETRY_DELAY_SCALE: '0',
     };
     const result = run([SCRIPT, '--allowlist', write({ allow: [] }), '--today', TODAY], env);
-    const calls = readFileSync(log, 'utf8').split('\n').filter(Boolean);
+    const calls = readFileSync(log, 'utf8')
+      .split('\n')
+      .map((line) => line.replace(/\r$/, '').trimEnd())
+      .filter(Boolean);
     return { result, calls };
   }
 

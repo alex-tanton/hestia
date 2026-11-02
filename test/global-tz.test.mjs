@@ -56,7 +56,8 @@ describe('global-tz: TZ values the process honors are accepted', () => {
     [':UTC', 0, 0],
   ];
   for (const [value, january, july] of accepted) {
-    it(`TZ=${value}`, () => {
+    const isGlibcColon = process.platform === 'win32' && value.startsWith(':');
+    (isGlibcColon ? it.skip : it)(`TZ=${value}`, () => {
       const run = runHook({ TZ: value });
       assert.equal(run.status, 0, run.stderr);
       assert.match(run.stdout, /\[test-clock\] TZ=\S+ HESTIA_TEST_NOW=\(default\)/);

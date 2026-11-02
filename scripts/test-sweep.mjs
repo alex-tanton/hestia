@@ -223,7 +223,7 @@ function selectedTestFiles(suite, workspace, only) {
   const list = spawnSync(
     'pnpm',
     ['--filter', `@hestia/${workspace}`, 'exec', 'vitest', 'list', '--filesOnly', ...config, only],
-    { cwd: REPO_ROOT, env, encoding: 'utf8' },
+    { cwd: REPO_ROOT, env, encoding: 'utf8', shell: process.platform === 'win32' },
   );
   if (list.error !== undefined || list.status !== 0) {
     // `error` is set when pnpm cannot be spawned (then `status` and `stderr` are null); otherwise

@@ -47,13 +47,18 @@ writeFileSync(
 );
 chmodSync(join(binDir, 'caddy'), 0o755);
 
+const SH =
+  process.platform === 'win32' && existsSync('C:\\Program Files\\Git\\bin\\sh.exe')
+    ? 'C:\\Program Files\\Git\\bin\\sh.exe'
+    : 'sh';
+
 let runs = 0;
 
 /** Runs the real entrypoint with only the HESTIA_* values a case sets. */
 function entrypoint(values) {
   runs += 1;
   const log = join(scratch, `run-${runs}.log`);
-  const run = spawnSync('sh', [ENTRYPOINT], {
+  const run = spawnSync(SH, [ENTRYPOINT], {
     encoding: 'utf8',
     env: {
       PATH: `${binDir}${delimiter}${process.env['PATH'] ?? ''}`,

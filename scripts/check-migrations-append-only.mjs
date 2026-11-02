@@ -68,6 +68,18 @@ function parseArguments(argv) {
     else if (flag === '--repo') options.repo = resolve(value);
     else options.exemptions = resolve(value);
   }
+  if (options.base === undefined) {
+    if (process.env['BASE_SHA'] !== undefined && process.env['BASE_SHA'] !== '') {
+      options.base = process.env['BASE_SHA'];
+    } else if (options.repo === REPO_ROOT) {
+      const probe = spawnSync('git', ['-C', REPO_ROOT, 'rev-parse', '--verify', 'origin/main'], {
+        encoding: 'utf8',
+      });
+      if (probe.status === 0) {
+        options.base = 'origin/main';
+      }
+    }
+  }
   if (options.base === undefined) usageError('--base is required');
   options.exemptions ??= join(options.repo, DEFAULT_EXEMPTIONS);
   if (!SHA_PATTERN.test(options.base) && !REF_PATTERN.test(options.base)) {

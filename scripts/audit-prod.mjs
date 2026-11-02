@@ -150,6 +150,7 @@ function runAudit() {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     maxBuffer: MAX_REPORT_BYTES,
+    shell: process.platform === 'win32',
   });
   if (run.error !== undefined) return { unavailable: `cannot run pnpm: ${String(run.error)}` };
   return checkReport(run.stdout);

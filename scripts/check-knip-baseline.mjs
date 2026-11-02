@@ -86,6 +86,7 @@ function readReport(options) {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     maxBuffer: MAX_REPORT_BYTES,
+    shell: process.platform === 'win32',
   });
   if (run.error !== undefined) {
     throw new Error(`cannot run knip: ${String(run.error)}`, { cause: run.error });

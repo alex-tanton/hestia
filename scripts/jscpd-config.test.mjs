@@ -46,6 +46,7 @@ function scan(files) {
   const run = spawnSync(JSCPD, ['--config', config, '--fail-on-empty'], {
     cwd: dir,
     encoding: 'utf8',
+    shell: process.platform === 'win32',
   });
   return { status: run.status, output: `${run.stdout}\n${run.stderr}` };
 }
