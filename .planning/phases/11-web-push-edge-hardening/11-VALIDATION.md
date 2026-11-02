@@ -1,9 +1,9 @@
 ---
 phase: "11"
 slug: "web-push-edge-hardening"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ready
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-11-01"
 ---
 
@@ -43,7 +43,7 @@ created: "2026-11-01"
 | 11-02-01 | 02 | 2 | EDGE-01 | T-11-03 | Caddyfile emits immutable headers for `/assets/*` and no-cache for `/index.html` and `/sw.js` | static/unit | `pnpm --filter @hestia/service test src/ingress-config.test.ts` | ✅ | ⬜ pending |
 | 11-02-02 | 02 | 2 | EDGE-01 | T-11-04 | E2E ingress test verifies exact `Cache-Control` response headers across origin routes | e2e | `pnpm --filter @hestia/e2e test:e2e tests/20-ingress-client-ip-and-csp.spec.ts` | ✅ | ⬜ pending |
 | 11-02-03 | 02 | 2 | EDGE-01 | T-11-05 | Cloudflare Edge Cache Rules and WAF Rate Limiting runbooks documented | doc | `node -e "const doc=require('fs').readFileSync('docs/deployment.md','utf8'); if(!doc.includes('Edge Caching') || !doc.includes('Rate Limiting')) process.exit(1);"` | ✅ | ⬜ pending |
-| 11-03-01 | 03 | 3 | PUSH-02 | T-11-06 | `hestia-admin test-push` CLI argument parsing, user subscription lookup, and push dispatch | unit | `pnpm --filter @hestia/service test src/cli.test.ts` | ❌ W0 | ⬜ pending |
+| 11-03-01 | 03 | 3 | PUSH-02 | T-11-06 | `hestia-admin test-push` CLI argument parsing, user subscription lookup, and push dispatch | unit | `pnpm --filter @hestia/service test src/cli.test.ts` | ✅ | ⬜ pending |
 | 11-03-02 | 03 | 3 | PUSH-02 | T-11-07 | PWA standalone mobile push verification runbook and checklist documented | doc | `node -e "const doc=require('fs').readFileSync('docs/deployment.md','utf8'); if(!doc.includes('Mobile Push Verification') || !doc.includes('Safari')) process.exit(1);"` | ✅ | ⬜ pending |
 | 11-04-01 | 04 | 4 | VERIFY-01 | T-11-08 | Full CI test sweep, build, knip, jscpd, and repo hygiene pass with 100% green | quality | `pnpm lint && pnpm typecheck && pnpm test && pnpm jscpd && pnpm knip && node scripts/check-repo-hygiene.mjs && pnpm --filter @hestia/web build` | ✅ | ⬜ pending |
 
@@ -53,7 +53,7 @@ created: "2026-11-01"
 
 ## Wave 0 Requirements
 
-- [ ] `apps/service/src/cli.test.ts` — unit test suite for `hestia-admin test-push` subcommand arguments, validation, and error states
+*None — existing test infrastructure covers all phase requirements (existing `apps/service/src/cli.test.ts` is extended for `test-push`).*
 
 ---
 
@@ -69,11 +69,12 @@ created: "2026-11-01"
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved
+
