@@ -59,18 +59,19 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 - ✓ **NET-03**: Caddy trusts Compose subnet and extracts IP from `CF-Connecting-IP` — Phase 9
 - ✓ **NET-04**: CSP, CORS, and cookie security policies updated for `hestia.aberrance.app` — Phase 9
 - ✓ **NET-05**: Set base origin and site URL configurations to `https://hestia.aberrance.app` — Phase 9
+- ✓ **AUTH-01**: Enable `VITE_MAGIC_LINK_ENABLED=true` and `HESTIA_MAGIC_LINK_ENABLED=true` in build arguments and runtime environment — Phase 10
+- ✓ **AUTH-02**: Activate and verify magic link routes (`/sign-in/link`, `/sign-in/code`) and screens in the web PWA — Phase 10
+- ✓ **AUTH-03**: Configure GoTrue SMTP settings (`GOTRUE_SMTP_*`) supporting Resend/Postmark with custom sender name ("Hestia") and address (`auth@aberrance.app` or `hestia@aberrance.app`) — Phase 10
+- ✓ **AUTH-04**: Update GoTrue site URL and URI allow-list to `https://hestia.aberrance.app` and `https://hestia.aberrance.app/**` — Phase 10
+- ✓ **AUTH-05**: Replace `07-magic-link-disabled.spec.ts` with Playwright E2E tests validating active magic link request and code entry flows — Phase 10
+- ✓ **PUSH-01**: Update Web Push VAPID configuration in `apps/service` to use `mailto:admin@aberrance.app` as RFC 8292 subject — Phase 11
+- ✓ **PUSH-02**: Verify standalone PWA push subscription and notification dispatch over HTTPS for iOS and Android devices — Phase 11
+- ✓ **EDGE-01**: Document Cloudflare Edge caching rules for immutable Vite assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*` — Phase 11
+- ✓ **VERIFY-01**: Full test suite sweep, build validation, Knip, and CI verification green across all packages — Phase 11
 
 ### Active (v2.0)
 
-- **AUTH-01**: Enable `VITE_MAGIC_LINK_ENABLED=true` and `HESTIA_MAGIC_LINK_ENABLED=true` in build arguments and runtime environment.
-- **AUTH-02**: Activate and verify magic link routes (`/sign-in/link`, `/sign-in/code`) and screens in the web PWA.
-- **AUTH-03**: Configure GoTrue SMTP settings (`GOTRUE_SMTP_*`) supporting Resend/Postmark with custom sender name ("Hestia") and address (`auth@aberrance.app` or `hestia@aberrance.app`).
-- **AUTH-04**: Update GoTrue site URL and URI allow-list to `https://hestia.aberrance.app` and `https://hestia.aberrance.app/**`.
-- **AUTH-05**: Replace `07-magic-link-disabled.spec.ts` with Playwright E2E tests validating active magic link request and code entry flows.
-- **PUSH-01**: Update Web Push VAPID configuration in `apps/service` to use `mailto:admin@aberrance.app` as RFC 8292 subject.
-- **PUSH-02**: Verify standalone PWA push subscription and notification dispatch over HTTPS for iOS and Android devices.
-- **EDGE-01**: Document Cloudflare Edge caching rules for immutable Vite assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*`.
-- **VERIFY-01**: Full test suite sweep, build validation, Knip, and CI verification green across all packages.
+*None — all 21 milestone requirements validated.*
 
 ### Out of Scope
 
@@ -99,11 +100,11 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 |----------|-----------|---------|
 | Rename app to Hestia without verbose philosophical justification | Goddess of the Hearth fits household management; keep documentation clean and direct | Validated — Phase 8 |
 | Use Cloudflare Tunnel (`cloudflared`) instead of port forwarding or Tailscale Funnel | Zero exposed host ports, automatic edge SSL, and native Cloudflare DNS integration | Validated — Phase 9 |
-| Enable GoTrue Magic Links via Resend / Postmark SMTP | Seamless passwordless sign-in with verified deliverability on custom domain | Pending — v2.0 |
-| Update VAPID subject to `mailto:admin@aberrance.app` | RFC 8292 compliance required by Apple and Mozilla push endpoints | Pending — v2.0 |
+| Enable GoTrue Magic Links via Resend / Postmark SMTP | Seamless passwordless sign-in with verified deliverability on custom domain | Validated — Phase 10 |
+| Update VAPID subject to `mailto:admin@aberrance.app` | RFC 8292 compliance required by Apple and Mozilla push endpoints | Validated — Phase 11 |
 | Full rebrand (PWA, CLI, package scopes `@hestia/*`, env vars `HESTIA_*`) | Complete architectural consistency across monorepo and operations | Validated — Phase 8 |
 | Abstract `README.md` into dedicated `docs/` runbooks | Keeps main landing clean for new developers while preserving in-depth runbooks | Validated — Phase 7 |
 | Archive v1.0 phases into `.planning/milestones/v1.0/` | Clears clutter from active planning directory while preserving audit trail | Validated — Phase 7 |
 
 ---
-*Last updated: 2026-11-01 after Phase 09*
+*Last updated: 2026-11-02 after Phase 11*
