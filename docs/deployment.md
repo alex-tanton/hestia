@@ -489,6 +489,64 @@ Verify end-to-end transactional email delivery:
    - `DKIM: PASS` with domain `aberrance.app` (selector `resend`)
 6. **Complete sign-in**: Enter the 6-digit OTP code on the web screen (or click the confirmation link) and verify successful authentication into the household dashboard.
 
+## Cloudflare Edge Caching
+
+Hestia's ingress emits explicit `Cache-Control` headers for all served routes. Cloudflare's Edge Cache respects these headers when a Cache Rule is configured.
+
+### Configuring the Cache Rule
+1. In Cloudflare Dashboard, select domain `aberrance.app`.
+2. Navigate to **Caching** → **Cache Rules** → **Create rule**.
+3. Rule name: `Cache Hestia Static Assets`.
+4. Expression:
+   ```text
+   http.host eq "hestia.aberrance.app" and starts_with(http.request.uri.path, "/assets/")
+   ```
+5. Cache eligibility: **Eligible for cache**.
+6. Edge TTL: **Respect origin** (falls back to 1 year / 31536000s).
+7. Browser TTL: **Respect origin**.
+8. Click **Deploy**.
+
+### Verifying Edge Caching
+Verify using curl against an active hashed asset bundle:
+```bash
+curl -sI https://hestia.aberrance.app/assets/<bundle>.js | grep -iE 'cf-cache-status|cache-control'
+```
+- Initial request returns `cf-cache-status: MISS` (or `DYNAMIC`).
+- Immediate subsequent request returns `cf-cache-status: HIT` and `cache-control: public, max-age=31536000, immutable`.
+- Requesting entrypoint `https://hestia.aberrance.app/` or `/sw.js` returns `cache-control: no-cache, must-revalidate` and `cf-cache-status: DYNAMIC`.
+
+## Cloudflare Edge Security & WAF Rate Limiting
+
+To protect GoTrue authentication endpoints (`/auth/v1/token`, `/auth/v1/otp`, `/auth/v1/recover`) against automated brute-force attacks and credential stuffing, Cloudflare WAF Rate Limiting enforces an edge threshold before requests reach host infrastructure.
+
+### Policy Specifications
+- **Scope:** Strictly POST requests targeting `/auth/v1/*` (`http.request.method eq "POST"`). Read-only requests (`GET /auth/v1/user`), which the client issues to check session status, are excluded to prevent quota exhaustion on shared household Wi-Fi.
+- **Rate:** 15 requests per 1-minute window per client IP.
+- **Mitigation Action:** **Managed Challenge** (Cloudflare Turnstile challenge) with a **10-minute action duration**. Automated attack bots fail the challenge, while human users encountering a false positive can self-verify.
+
+### Configuring the WAF Rate Limiting Rule
+1. In Cloudflare Dashboard, select domain `aberrance.app`.
+2. Navigate to **Security** → **WAF** → **Rate limiting rules** → **Create rule**.
+3. Rule name: `Protect Hestia Auth Endpoints`.
+4. Expression:
+   ```text
+   http.host eq "hestia.aberrance.app" and starts_with(http.request.uri.path, "/auth/v1/") and http.request.method eq "POST"
+   ```
+5. Rate: `15` requests per `1 minute`.
+6. Mitigation action: `Managed Challenge`, duration `10 minutes`.
+7. Click **Deploy**.
+
+### Verifying Rate Limiting Simulation
+Run a rapid curl loop sending 16 requests to the OTP endpoint:
+```bash
+for i in $(seq 1 16); do
+  curl -s -o /dev/null -w "%{http_code}\n" -X POST https://hestia.aberrance.app/auth/v1/otp \
+    -H "Content-Type: application/json" -d '{"email":"probe@example.com"}'
+done
+```
+- Requests 1 through 15 return standard application responses (`400`, `422`, or `200`).
+- Request 16 returns HTTP `403` with Cloudflare Managed Challenge HTML.
+
 ## Troubleshooting
 
 - **Health check:** `hestia-compose exec -T caddy wget -q -O - http://127.0.0.1:8080/api/health`
