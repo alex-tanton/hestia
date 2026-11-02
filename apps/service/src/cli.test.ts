@@ -1,7 +1,7 @@
 import { createServer, type Server } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { runCli, SET_PASSWORD_PATH } from './cli.js';
+import { runCli, SET_PASSWORD_PATH, type PushOps, type PushSubscriptionTarget } from './cli.js';
 import { GoTrueError } from './gotrue/http.js';
 
 function io() {
@@ -78,6 +78,266 @@ describe('hestia-admin', () => {
       expect(out).toEqual([]);
       expect(err[0]).toMatch(message);
     }
+  });
+});
+
+function mockPushOps(overrides: Partial<PushOps> = {}): PushOps {
+  return {
+    lookupUser: vi.fn(() => Promise.resolve({ id: 'user-1' })),
+    listSubscriptions: vi.fn(() =>
+      Promise.resolve([
+        {
+          id: 'sub-1',
+          endpoint: 'https://push1.example.com',
+          keys: { p256dh: 'key1', auth: 'auth1' },
+        },
+      ]),
+    ),
+    deleteSubscription: vi.fn(() => Promise.resolve()),
+    transport: {
+      send: vi.fn(() => Promise.resolve({ kind: 'accepted' as const })),
+    },
+    ...overrides,
+  };
+}
+
+describe('hestia-admin test-push', () => {
+  it.each([
+    [['test-push']],
+    [['test-push', '--unknown']],
+    [['test-push', '--email']],
+    [['test-push', '--email', 'a@b.co', '--title']],
+    [['test-push', '--email', 'a@b.co', '--body']],
+  ])('prints usage for %j', async (args) => {
+    const { err, io: streams } = io();
+    const ops = mockPushOps();
+    expect(await runCli(args, { recoveryLink: vi.fn() }, ORIGIN, streams, ops)).toBe(2);
+    expect(err[0]).toMatch(/^Usage: hestia-admin test-push --email <email>/);
+  });
+
+  it('fails when push operations are not configured', async () => {
+    const { err, io: streams } = io();
+    expect(
+      await runCli(
+        ['test-push', '--email', 'alex@example.com'],
+        { recoveryLink: vi.fn() },
+        ORIGIN,
+        streams,
+      ),
+    ).toBe(1);
+    expect(err[0]).toBe('Push operations are not configured.');
+  });
+
+  it('refuses an invalid email address', async () => {
+    const { err, io: streams } = io();
+    const ops = mockPushOps();
+    expect(
+      await runCli(
+        ['test-push', '--email', 'invalid-email'],
+        { recoveryLink: vi.fn() },
+        ORIGIN,
+        streams,
+        ops,
+      ),
+    ).toBe(2);
+    expect(err[0]).toBe('Not an email address: invalid-email');
+  });
+
+  it('reports error when user is not found in profile', async () => {
+    const { err, io: streams } = io();
+    const ops = mockPushOps({
+      lookupUser: vi.fn(() => Promise.resolve(undefined)),
+    });
+    expect(
+      await runCli(
+        ['test-push', '--email', 'unknown@example.com'],
+        { recoveryLink: vi.fn() },
+        ORIGIN,
+        streams,
+        ops,
+      ),
+    ).toBe(1);
+    expect(err[0]).toBe('No user has the email unknown@example.com.');
+  });
+
+  it('reports notice when user has no active push subscriptions', async () => {
+    const { err, io: streams } = io();
+    const ops = mockPushOps({
+      listSubscriptions: vi.fn(() => Promise.resolve([])),
+    });
+    expect(
+      await runCli(
+        ['test-push', '--email', 'alex@example.com'],
+        { recoveryLink: vi.fn() },
+        ORIGIN,
+        streams,
+        ops,
+      ),
+    ).toBe(1);
+    expect(err[0]).toBe('User alex@example.com has no active push subscriptions.');
+  });
+
+  it('successfully dispatches test push to devices with default copy', async () => {
+    const { out, io: streams } = io();
+    const sub1: PushSubscriptionTarget = {
+      id: 'sub-1',
+      endpoint: 'https://push1',
+      keys: { p256dh: 'k1', auth: 'a1' },
+    };
+    const sub2: PushSubscriptionTarget = {
+      id: 'sub-2',
+      endpoint: 'https://push2',
+      keys: { p256dh: 'k2', auth: 'a2' },
+    };
+    const send = vi.fn(() => Promise.resolve({ kind: 'accepted' as const }));
+    const ops = mockPushOps({
+      listSubscriptions: vi.fn(() => Promise.resolve([sub1, sub2])),
+      transport: { send },
+    });
+
+    const code = await runCli(
+      ['test-push', '--email', 'alex@example.com'],
+      { recoveryLink: vi.fn() },
+      ORIGIN,
+      streams,
+      ops,
+    );
+
+    expect(code).toBe(0);
+    expect(out[0]).toBe(
+      'Dispatched test push to 2 device(s) for alex@example.com: 2 accepted, 0 gone, 0 failed.',
+    );
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(send).toHaveBeenNthCalledWith(
+      1,
+      sub1,
+      JSON.stringify({
+        title: 'Test Push Notification',
+        body: 'This is a test notification from Hestia.',
+        url: '/',
+      }),
+    );
+    expect(send).toHaveBeenNthCalledWith(
+      2,
+      sub2,
+      JSON.stringify({
+        title: 'Test Push Notification',
+        body: 'This is a test notification from Hestia.',
+        url: '/',
+      }),
+    );
+  });
+
+  it('supports custom --title and --body arguments', async () => {
+    const { out, io: streams } = io();
+    const sub: PushSubscriptionTarget = {
+      id: 'sub-1',
+      endpoint: 'https://push1',
+      keys: { p256dh: 'k1', auth: 'a1' },
+    };
+    const send = vi.fn(() => Promise.resolve({ kind: 'accepted' as const }));
+    const ops = mockPushOps({
+      listSubscriptions: vi.fn(() => Promise.resolve([sub])),
+      transport: { send },
+    });
+
+    const code = await runCli(
+      [
+        'test-push',
+        '--email',
+        'alex@example.com',
+        '--title',
+        'Custom Title',
+        '--body',
+        'Custom Body',
+      ],
+      { recoveryLink: vi.fn() },
+      ORIGIN,
+      streams,
+      ops,
+    );
+
+    expect(code).toBe(0);
+    expect(out[0]).toBe(
+      'Dispatched test push to 1 device(s) for alex@example.com: 1 accepted, 0 gone, 0 failed.',
+    );
+    expect(send).toHaveBeenCalledWith(
+      sub,
+      JSON.stringify({
+        title: 'Custom Title',
+        body: 'Custom Body',
+        url: '/',
+      }),
+    );
+  });
+
+  it('deletes expired subscriptions when transport returns gone', async () => {
+    const { out, io: streams } = io();
+    const sub1: PushSubscriptionTarget = {
+      id: 'sub-1',
+      endpoint: 'https://push1',
+      keys: { p256dh: 'k1', auth: 'a1' },
+    };
+    const sub2: PushSubscriptionTarget = {
+      id: 'sub-2',
+      endpoint: 'https://push2',
+      keys: { p256dh: 'k2', auth: 'a2' },
+    };
+    const deleteSubscription = vi.fn(() => Promise.resolve());
+    const send = vi.fn((sub: PushSubscriptionTarget) => {
+      if (sub.id === 'sub-1') return Promise.resolve({ kind: 'gone' as const });
+      return Promise.resolve({ kind: 'accepted' as const });
+    });
+    const ops = mockPushOps({
+      listSubscriptions: vi.fn(() => Promise.resolve([sub1, sub2])),
+      deleteSubscription,
+      transport: { send },
+    });
+
+    const code = await runCli(
+      ['test-push', '--email', 'alex@example.com'],
+      { recoveryLink: vi.fn() },
+      ORIGIN,
+      streams,
+      ops,
+    );
+
+    expect(code).toBe(0);
+    expect(out[0]).toBe(
+      'Dispatched test push to 2 device(s) for alex@example.com: 1 accepted, 1 gone, 0 failed.',
+    );
+    expect(deleteSubscription).toHaveBeenCalledTimes(1);
+    expect(deleteSubscription).toHaveBeenCalledWith('sub-1');
+  });
+
+  it('handles failed transport sends without throwing', async () => {
+    const { out, io: streams } = io();
+    const sub: PushSubscriptionTarget = {
+      id: 'sub-1',
+      endpoint: 'https://push1',
+      keys: { p256dh: 'k1', auth: 'a1' },
+    };
+    const deleteSubscription = vi.fn(() => Promise.resolve());
+    const send = vi.fn(() => Promise.resolve({ kind: 'failed' as const, statusCode: 500 }));
+    const ops = mockPushOps({
+      listSubscriptions: vi.fn(() => Promise.resolve([sub])),
+      deleteSubscription,
+      transport: { send },
+    });
+
+    const code = await runCli(
+      ['test-push', '--email', 'alex@example.com'],
+      { recoveryLink: vi.fn() },
+      ORIGIN,
+      streams,
+      ops,
+    );
+
+    expect(code).toBe(0);
+    expect(out[0]).toBe(
+      'Dispatched test push to 1 device(s) for alex@example.com: 0 accepted, 0 gone, 1 failed.',
+    );
+    expect(deleteSubscription).not.toHaveBeenCalled();
   });
 });
 /**
