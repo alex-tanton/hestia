@@ -1,25 +1,15 @@
-# Hestia ingress.
-# Cloudflare's edge terminates TLS for the public origin; the cloudflared container on the Compose
-# network forwards plain HTTP to caddy:8080. Nothing publishes a host port.
 {
 	auto_https off
 	admin off
 	servers {
-		# Only the Compose subnet may name the client: it is where cloudflared connects from in
-		# production and the run's own subnet in E2E. A request from any other peer is identified
-		# by its connection address.
 		trusted_proxies static {$HESTIA_TRUSTED_PROXIES}
-		# Parse the header right to left, so an address a client prepends is never the one chosen.
 		trusted_proxies_strict
-		# Only Cloudflare's header is read, never X-Forwarded-For, so a request without it cannot
-		# choose its own address.
 		client_ip_headers CF-Connecting-IP
 	}
 }
 
 :8080 {
 	header {
-		# Applied as the response is written, so an upstream cannot replace them.
 		defer
 		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://f.wishabi.net https://images.wishabi.net; connect-src 'self' wss://{$HESTIA_HOST}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		Strict-Transport-Security "max-age=31536000"
@@ -28,10 +18,6 @@
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 	}
 
-	# Only hestia-service may call these GoTrue endpoints (it reaches auth:9999 directly), so
-	# the common-password check and password re-entry cannot be skipped. The path matcher
-	# compares the percent-decoded path with duplicate slashes merged, case-insensitively, so
-	# encoded and doubled-slash spellings match too.
 	@refused_signup {
 		method POST
 		path /auth/v1/signup*
@@ -42,7 +28,6 @@
 	}
 	@kong path /auth/v1/* /realtime/v1/*
 
-	# Cache-Control policies
 	@assets path /assets/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
 
@@ -52,13 +37,11 @@
 	@icons_manifest path /icons/* /manifest.webmanifest /favicon.ico
 	header @icons_manifest Cache-Control "public, max-age=86400, must-revalidate"
 
-	# route keeps this order: the refusals run before any proxying.
 	route {
 		respond @refused_signup 403
 		respond @refused_user 403
 
 		reverse_proxy /api/* hestia-service:3000 {
-			# Downstream sees exactly one address: the client Caddy resolved above.
 			header_up X-Forwarded-For {client_ip}
 		}
 

@@ -1,110 +1,26 @@
-# Contributing
+# Contributing to Hestia
 
-This file describes how changes reach `main` and what the checks expect of them. The specifications
-in [`docs/`](docs/) remain the source of truth for behavior, architecture, and design.
+## Development Workflow
 
-## How changes land
+1. **Prerequisites**: Node.js 24+, pnpm 10+, Docker, and optionally Supabase CLI.
+2. **Setup**:
+   ```bash
+   pnpm install
+   ```
+3. **Quality Gates**:
+   Before submitting code, ensure all checks pass:
+   ```bash
+   pnpm lint          # ESLint rules
+   pnpm format:check   # Prettier verification
+   pnpm typecheck      # TypeScript validation across all workspaces
+   pnpm test           # Workspace unit & component tests
+   ```
 
-| Change                                                                                                                            | How it lands                                           |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Docs-only, comment-only, formatting, lockfile or dependency version bumps, and mechanical renames                                 | Commit straight to `main`.                             |
-| Anything that changes behavior, tests, CI (`.github/`), migrations (`supabase/migrations/`), or Docker (`docker/`, compose files) | Pull request from a branch or worktree, squash-merged. |
+## Commit Guidelines
 
-A change that mixes both kinds goes through a pull request.
+- Write clear, imperative commit messages describing the change and rationale.
+- Keep commits focused and atomic.
 
-## Deploys
+## Deployment
 
-A passing `CI` push run on `main` triggers the Deploy workflow
-([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)), which asks
-[`scripts/deploy-gate.sh`](scripts/deploy-gate.sh) whether to deploy. The gate compares the commit
-with the revision the running `hestia-service` image was built from:
-
-- It deploys when anything outside `docs/` and `.planning/` changed since that revision, over the
-  whole range and not only the tip commit. A code change whose deploy never ran therefore still
-  ships behind a later docs-only commit. The root `README.md`, `CONTRIBUTING.md` and `.claude/` are
-  outside those two folders, so editing them deploys.
-- It never deploys a commit older than the running one (a re-run of an old `CI` run). It skips a
-  commit that is already running: every completed attempt of a `CI` push run on `main` starts a
-  new Deploy run (at attempt 1), so re-running `CI` will not redeploy the running commit. To
-  redeploy that commit, re-run the Deploy run itself (attempt 2 or later) or run `scripts/deploy.sh`
-  on the host.
-- It deploys when no labelled image is running or the running revision is not in the history.
-- A newer Deploy run replaces a pending one; the gate still deploys every change since the running
-  revision.
-
-The deploy job runs on a self-hosted runner labelled `hestia`. Until such a runner is registered, a
-Deploy run waits in the queue and deploys nothing.
-
-## What CI checks
-
-The `CI` workflow runs seven jobs on every pull request and every push to `main`, each with a
-timeout:
-
-| Job                | What fails it                                                                                            |
-| ------------------ | -------------------------------------------------------------------------------------------------------- |
-| `lint`             | `pnpm lint` or `pnpm format:check`.                                                                      |
-| `typecheck`        | `pnpm typecheck`.                                                                                        |
-| `test-unit`        | The harness tests, any non-web workspace's tests, or the web unit tests below their coverage thresholds. |
-| `test-integration` | The integration suite, or `apps/service/src/db/types.ts` differing from what `pnpm db:types` generates.  |
-| `test-e2e`         | A Playwright journey or accessibility check.                                                             |
-| `build`            | `pnpm build`.                                                                                            |
-| `hygiene`          | Any of the six checks below.                                                                             |
-
-`test-unit` enforces the web coverage thresholds set in `apps/web/vite.config.ts`; add tests rather
-than lowering a threshold. `test-integration` applies the migrations to a local database,
-regenerates the types and fails on a difference: run `pnpm db:types` after a migration and commit
-the result, and never edit that file by hand.
-
-The `hygiene` job runs these six checks as separate steps. Every step runs even after another one
-failed, so one run shows every finding:
-
-| Check                                           | Fails when                                                                                                                                                                                                                                                                                                                                                                                                              | How to satisfy it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm knip`                                     | knip reports any unused file, export or dependency.                                                                                                                                                                                                                                                                                                                                                                     | Remove the dead code or dependency.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `node scripts/check-knip-baseline.mjs`          | A production finding is not in `scripts/knip-production-baseline.txt`, or a baseline row no longer appears.                                                                                                                                                                                                                                                                                                             | Remove the row that no longer appears. A new row needs the owner's review before it goes into the baseline.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `pnpm jscpd`                                    | Duplicated lines exceed 2% of all lines, tests included.                                                                                                                                                                                                                                                                                                                                                                | Extract the duplicate, or share the test helper.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `node scripts/audit-prod.mjs`                   | `pnpm audit --prod` reports an advisory that has no allowance.                                                                                                                                                                                                                                                                                                                                                          | Upgrade the package. An allowance in `scripts/audit-allowlist.json` needs the GHSA id, an `expires` date at most 180 days ahead and a reason; an expired allowance fails even if it still matches.                                                                                                                                                                                                                                                                                                                                                         |
-| `node scripts/check-repo-hygiene.mjs`           | A tracked file is ignored by `.gitignore`, a script is not mode `100755`, a text file has CRLF endings, or a tracked file or path outside the allowlist contains the product's former name, or a planning state file has it outside its pinned quotes, or a tracked file or path outside `RETIRED_INGRESS_ALLOWLIST` names the retired ingress, or a file in `RETIRED_INGRESS_QUOTES` uses it outside its pinned quote. | Untrack the file, or fix the mode or the line endings (see [Scripts](docs/development.md#scripts)). Reword the former name away. For a record that must quote it, add the path to `LEGACY_NAME_ALLOWLIST` in the script, or the exact quote to `LEGACY_NAME_QUOTES` for a planning state file, with a reason and the owner's review. The same goes for the retired ingress: reword it away, and a record that must name it gets a path in `RETIRED_INGRESS_ALLOWLIST` or an exact quote in `RETIRED_INGRESS_QUOTES`, with a reason and the owner's review. |
-| `node scripts/check-migrations-append-only.mjs` | A change edits, renames or deletes an applied migration under `supabase/migrations/`.                                                                                                                                                                                                                                                                                                                                   | Add a new migration; never edit, rename or delete an applied one. An entry in `scripts/migration-exemptions.json` admits one owner-reviewed edit or rename while the merge base and `HEAD` hold its pinned blobs, and expires once the change is on `main`.                                                                                                                                                                                                                                                                                                |
-
-The audit and an allowance's expiry depend on the date, so `CI` can turn red on an unchanged tree
-when a new production advisory is published. That blocks the next deploy until the package is
-upgraded or the advisory is allowlisted with an expiry.
-
-The separate `Sweep` workflow runs the unit suites across a fixed date and time-zone matrix on pushes
-to `main` that change more than `docs/` and `.planning/`, and nightly with an extra cell that
-depends on the day. It never gates a merge and never triggers a deploy. A failed scheduled run mails
-whoever last changed the workflow's cron line, so keep Actions notifications on. See
-[`docs/testing.md`](docs/testing.md) for the matrix.
-
-## Commit and squash messages
-
-- Use Conventional Commits, with types and scopes from the closed lists in
-  [`commitlint.config.js`](commitlint.config.js).
-- Keep the subject (the text after `type(scope): `) to at most 71 characters. For squash merges,
-  keep it short enough that GitHub's appended ` (#N)` still fits.
-- Keep body lines to at most 100 characters.
-- Every squash message must pass commitlint.
-- Never bypass the hooks (`--no-verify`, `HUSKY=0`).
-
-## Branches and worktrees
-
-Name branches `{type}/{topic}` and create each one in its own worktree:
-
-```sh
-git worktree add ../hestia-{topic} -b {type}/{topic}
-```
-
-Run `pnpm install` inside each new worktree. That installs the Husky hooks there; without it no hook
-runs. Delete the branch after its squash merge.
-
-## Checks before pushing
-
-The checks to run before a push are listed in
-[docs/development.md](docs/development.md#checks-before-pushing).
-
-## Not yet enforced
-
-GitHub branch protection, required status checks, and the squash-only merge setting are not
-configured, so a red `CI` run blocks nothing on its own until the owner makes the checks required.
-The rules above hold by convention until the owner enables them.
+Deployments trigger automatically from passing `main` branch builds via `.github/workflows/deploy.yml`.

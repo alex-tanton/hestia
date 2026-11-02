@@ -28,9 +28,8 @@ The API needs `DATABASE_URL` and the rest of its environment; see
 | `pnpm lint` | ESLint |
 | `pnpm format` | Prettier (write); `pnpm format:check` to verify |
 | `pnpm typecheck` | `tsc --noEmit` in every workspace |
-| `pnpm test` | Harness tests, then Vitest unit and component tests |
+| `pnpm test` | Unit and component tests across workspaces |
 | `pnpm test:integration` | Vitest against `supabase start` |
-| `pnpm test:sweep` | Unit tests across pinned dates and time zones |
 | `pnpm test:e2e` | Playwright against the Compose stack ([testing.md](testing.md#end-to-end-tests)) |
 | `pnpm build` | Production builds of web and service |
 | `pnpm knip` | Report of unused files, exports and dependencies |

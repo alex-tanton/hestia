@@ -51,9 +51,8 @@ const LEGACY_NAME_ALLOWLIST = Object.freeze([
   // that text which must quote the former name is exempt; the decision does not list them.
   '.planning/phases/',
   '.planning/research/',
-  // This script and its test hold the pattern, so they must spell the name.
+  // This script holds the pattern, so it must spell the name.
   'scripts/check-repo-hygiene.mjs',
-  'scripts/check-repo-hygiene.test.mjs',
   // Its fromPath values keep the file name the pinned migrations had before the rename.
   'scripts/migration-exemptions.json',
 ]);
