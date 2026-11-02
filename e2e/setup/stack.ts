@@ -9,6 +9,7 @@ import {
   DB_PORT,
   ENV_FILE,
   IMAGE_TAG,
+  INBUCKET_PORT,
   NETWORK,
   REPO_ROOT,
   RUN_ID,
@@ -33,7 +34,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
  */
 
 /** Stack services in start order. `backup` is left out: nothing in the suite reads a backup. */
-const DATA_SERVICES = ['db', 'auth', 'realtime', 'kong'];
+const DATA_SERVICES = ['db', 'inbucket', 'auth', 'realtime', 'kong'];
 const APP_SERVICES = ['hestia-service', 'caddy'];
 
 const isReuse = process.env['HESTIA_E2E_REUSE_STACK'] === '1';
@@ -55,6 +56,7 @@ function writeEnvFile(): void {
     CLOUDFLARE_TUNNEL_TOKEN: 'e2e-not-a-real-token',
     // Alex is the development owner, so Alex sees System health.
     HESTIA_OWNER_EMAIL: 'alex@example.com',
+    HESTIA_MAGIC_LINK_ENABLED: 'true',
     BACKUP_DIR,
   });
 }
@@ -101,6 +103,7 @@ function appendRunEnv(subnet: Subnet): void {
   const lines = [
     `HESTIA_E2E_CADDY_PORT=${String(CADDY_PORT)}`,
     `HESTIA_E2E_DB_PORT=${String(DB_PORT)}`,
+    `HESTIA_E2E_INBUCKET_PORT=${String(INBUCKET_PORT)}`,
     `HESTIA_E2E_NETWORK=${NETWORK}`,
     `HESTIA_E2E_SUBNET=${subnet.subnet}`,
   ];
