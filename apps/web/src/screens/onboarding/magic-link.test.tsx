@@ -16,6 +16,7 @@ import {
   MAGIC_LINK_PATH,
   RESEND_AFTER_SECONDS,
   SEND_FAILED_MESSAGE,
+  UNKNOWN_EMAIL_MESSAGE,
   normalizeCode,
   resendCountdown,
   resentConfirmation,
@@ -59,6 +60,7 @@ describe('with the magic-link flag off', () => {
     renderScreen(<SignInScreen />, { auth: signedOut() });
 
     expect(screen.getByRole('link', { name: 'Forgot password?' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: MAGIC_LINK_LABEL })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: MAGIC_LINK_LABEL })).not.toBeInTheDocument();
   });
 
@@ -93,13 +95,18 @@ describe('with the magic-link flag on', () => {
     vi.unstubAllEnvs();
   });
 
-  it('offers the option on sign in', () => {
-    renderScreen(<SignInScreen />, { auth: signedOut() });
+  it('offers the option on sign in', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      routes: createRoutes(),
+      initialEntries: ['/sign-in'],
+      auth: signedOut(),
+    });
 
-    expect(screen.getByRole('link', { name: MAGIC_LINK_LABEL })).toHaveAttribute(
-      'href',
-      MAGIC_LINK_PATH,
-    );
+    const button = await screen.findByRole('button', { name: MAGIC_LINK_LABEL });
+    expect(button).toBeInTheDocument();
+    await user.click(button);
+    expect(await screen.findByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument();
   });
 
   it('routes to the request screen', async () => {
@@ -213,6 +220,20 @@ describe('the request-link screen', () => {
     await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(RATE_LIMITED_MESSAGE);
+  });
+
+  it('rejects an unknown email with an invite reminder', async () => {
+    const user = userEvent.setup();
+    const auth = signedOut();
+    auth.sendSignInLink = vi.fn(() =>
+      Promise.reject(new AuthError('Signups not allowed for otp', 400)),
+    );
+    renderRequestScreen(auth);
+
+    await user.type(screen.getByLabelText('Email'), 'uninvited@example.com');
+    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(UNKNOWN_EMAIL_MESSAGE);
   });
 
   it('explains why sending is unavailable offline', () => {
