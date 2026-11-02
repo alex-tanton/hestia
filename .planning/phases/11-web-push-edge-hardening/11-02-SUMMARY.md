@@ -20,6 +20,7 @@ tech-stack:
   - vitest
   - playwright
   - cloudflare-waf
+requirements-completed: [EDGE-01]
 key-files:
   modified:
     - docker/Caddyfile

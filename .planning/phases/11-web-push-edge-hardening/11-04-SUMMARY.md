@@ -21,6 +21,7 @@ tech-stack:
   - vitest
   - knip
   - jscpd
+requirements-completed: [VERIFY-01]
 key-files:
   modified:
     - .planning/REQUIREMENTS.md

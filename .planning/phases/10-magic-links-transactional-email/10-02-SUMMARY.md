@@ -15,6 +15,7 @@ tech-stack:
   - react-router
   - vitest
   - vite
+requirements-completed: [AUTH-01, AUTH-02]
 key-files:
   created: []
   modified:

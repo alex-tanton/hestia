@@ -15,6 +15,7 @@ tech-stack:
   - playwright
   - inbucket
   - markdown
+requirements-completed: [AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05]
 key-files:
   created:
     - e2e/support/inbucket.ts

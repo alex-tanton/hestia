@@ -20,6 +20,7 @@ tech-stack:
   - vitest
   - docker-compose
   - typescript
+requirements-completed: [PUSH-01]
 key-files:
   modified:
     - apps/service/src/env.ts

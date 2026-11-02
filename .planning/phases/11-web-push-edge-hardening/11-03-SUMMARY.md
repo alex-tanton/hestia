@@ -20,6 +20,7 @@ tech-stack:
   - vitest
   - web-push
   - kysely
+requirements-completed: [PUSH-02]
 key-files:
   modified:
     - apps/service/src/cli.ts

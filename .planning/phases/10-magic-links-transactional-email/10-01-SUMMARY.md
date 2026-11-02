@@ -19,6 +19,7 @@ tech-stack:
   - inbucket
   - caddy
   - vitest
+requirements-completed: [AUTH-01, AUTH-03, AUTH-04]
 key-files:
   created:
     - apps/web/public/templates/magic_link.html
