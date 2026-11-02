@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseCliEnv, parseEnv, vapidSubjectFor } from './env.js';
+import { parseCliEnv, parseEnv } from './env.js';
 
 const REQUIRED = {
   DATABASE_URL: 'postgres://u:p@db:5432/postgres',
@@ -10,6 +10,7 @@ const REQUIRED = {
   SERVICE_ROLE_KEY: 'service',
   VAPID_PUBLIC_KEY: 'BPublicKeyPlaceholder',
   VAPID_PRIVATE_KEY: 'privatePlaceholder',
+  VAPID_SUBJECT: 'mailto:admin@aberrance.app',
 };
 
 // The pre-rebrand variable prefix, assembled from two fragments so this file never spells the old
@@ -56,7 +57,7 @@ describe('parseEnv', () => {
       HESTIA_OWNER_EMAIL: '',
       HESTIA_RATE_LIMIT_PER_MINUTE: 300,
       HESTIA_PUSH_TRANSPORT: 'web-push',
-      VAPID_SUBJECT: 'https://hestia.aberrance.app',
+      VAPID_SUBJECT: 'mailto:admin@aberrance.app',
     });
   });
 
@@ -128,9 +129,9 @@ describe('parseEnv', () => {
     );
   });
 
-  // The dispatch job is scheduled in every process, so a service without its VAPID pair would fail
+  // The dispatch job is scheduled in every process, so a service without its VAPID credentials would fail
   // on the first send; refusing to start is the earlier and clearer failure.
-  it.each(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY'] as const)(
+  it.each(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT'] as const)(
     'refuses to start without %s',
     (key) => {
       expect(() => parseEnv({ ...REQUIRED, [key]: undefined })).toThrow(new RegExp(key));
@@ -138,87 +139,31 @@ describe('parseEnv', () => {
     },
   );
 
-  it('derives VAPID_SUBJECT from the https origin when no owner email is set', () => {
-    expect(parseEnv(REQUIRED).VAPID_SUBJECT).toBe('https://hestia.aberrance.app');
-  });
-});
-
-describe('vapidSubjectFor', () => {
-  const base = { HESTIA_OWNER_EMAIL: '', HESTIA_ORIGIN: 'https://hestia.aberrance.app' };
-
-  it('uses an explicit VAPID_SUBJECT when it is a mailto: or https: URI', () => {
-    expect(vapidSubjectFor({ ...base, VAPID_SUBJECT: 'mailto:ops@example.com' })).toBe(
-      'mailto:ops@example.com',
-    );
-    expect(vapidSubjectFor({ ...base, VAPID_SUBJECT: 'https://contact.example.com' })).toBe(
-      'https://contact.example.com',
-    );
-  });
-
-  it('refuses an explicit VAPID_SUBJECT that web-push would reject, without echoing it', () => {
-    expect(() =>
-      vapidSubjectFor({ ...base, VAPID_SUBJECT: 'http://127.0.0.1:8080/secret-value' }),
-    ).toThrow(/VAPID_SUBJECT must be a mailto: or https: URI/);
-    let message = '';
-    try {
-      vapidSubjectFor({ ...base, VAPID_SUBJECT: 'http://127.0.0.1:8080/secret-value' });
-    } catch (caught: unknown) {
-      message = (caught as Error).message;
-    }
-    expect(message).not.toContain('secret-value');
-  });
-
-  it('derives mailto: from HESTIA_OWNER_EMAIL when no explicit subject is set', () => {
+  it('accepts valid mailto: and https: contact URIs for VAPID_SUBJECT', () => {
     expect(
-      vapidSubjectFor({
-        ...base,
-        HESTIA_OWNER_EMAIL: 'owner@example.com',
-        HESTIA_ORIGIN: 'http://127.0.0.1:8080',
-      }),
-    ).toBe('mailto:owner@example.com');
+      parseEnv({ ...REQUIRED, VAPID_SUBJECT: 'mailto:admin@aberrance.app' }).VAPID_SUBJECT,
+    ).toBe('mailto:admin@aberrance.app');
+    expect(
+      parseEnv({ ...REQUIRED, VAPID_SUBJECT: 'https://hestia.aberrance.app' }).VAPID_SUBJECT,
+    ).toBe('https://hestia.aberrance.app');
   });
 
-  it('prefers the owner email over the https origin', () => {
-    expect(vapidSubjectFor({ ...base, HESTIA_OWNER_EMAIL: 'owner@example.com' })).toBe(
-      'mailto:owner@example.com',
-    );
-  });
-
-  it('falls back to the origin when it is https and the owner email is not a valid address', () => {
-    expect(vapidSubjectFor({ ...base, HESTIA_OWNER_EMAIL: 'not an address' })).toBe(
-      'https://hestia.aberrance.app',
-    );
-  });
-
-  it('fails fast over plain http with no owner email, naming the variables and not the origin', () => {
-    const error = (() => {
+  it.each(['http://127.0.0.1:8080', 'not-a-uri', 'mailto:not-an-email'])(
+    'refuses non-contact URI %s for VAPID_SUBJECT without echoing the value',
+    (invalidUri) => {
+      expect(() => parseEnv({ ...REQUIRED, VAPID_SUBJECT: invalidUri })).toThrow(
+        /VAPID_SUBJECT must be a mailto: or https: URI/,
+      );
+      let message = '';
       try {
-        vapidSubjectFor({ ...base, HESTIA_ORIGIN: 'http://127.0.0.1:8080' });
-        return undefined;
+        parseEnv({ ...REQUIRED, VAPID_SUBJECT: invalidUri });
       } catch (caught: unknown) {
-        return caught;
+        message = (caught as Error).message;
       }
-    })();
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toMatch(/VAPID_SUBJECT/);
-    expect((error as Error).message).toMatch(/HESTIA_OWNER_EMAIL/);
-    expect((error as Error).message).not.toContain('127.0.0.1');
-  });
-
-  it('makes parseEnv fail at startup when no contact can be derived', () => {
-    expect(() => parseEnv({ ...REQUIRED, HESTIA_ORIGIN: 'http://127.0.0.1:8080' })).toThrow(
-      /VAPID_SUBJECT is unset/,
-    );
-  });
-
-  it('lets parseEnv boot over plain http when HESTIA_OWNER_EMAIL is set', () => {
-    const env = parseEnv({
-      ...REQUIRED,
-      HESTIA_ORIGIN: 'http://127.0.0.1:8080',
-      HESTIA_OWNER_EMAIL: 'alex@example.com',
-    });
-    expect(env.VAPID_SUBJECT).toBe('mailto:alex@example.com');
-  });
+      expect(message).toMatch(/VAPID_SUBJECT/);
+      expect(message).not.toContain(invalidUri);
+    },
+  );
 });
 
 describe('parseCliEnv', () => {
@@ -235,6 +180,28 @@ describe('parseCliEnv', () => {
       SERVICE_ROLE_KEY: 'service',
     });
     expect(() => parseCliEnv({})).toThrow(/SERVICE_ROLE_KEY/);
+  });
+
+  it('accepts optional database and VAPID fields', () => {
+    expect(
+      parseCliEnv({
+        HESTIA_ORIGIN: REQUIRED.HESTIA_ORIGIN,
+        GOTRUE_URL: REQUIRED.GOTRUE_URL,
+        SERVICE_ROLE_KEY: 'service',
+        DATABASE_URL: REQUIRED.DATABASE_URL,
+        VAPID_PUBLIC_KEY: REQUIRED.VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY: REQUIRED.VAPID_PRIVATE_KEY,
+        VAPID_SUBJECT: REQUIRED.VAPID_SUBJECT,
+      }),
+    ).toEqual({
+      HESTIA_ORIGIN: 'https://hestia.aberrance.app',
+      GOTRUE_URL: 'http://auth:9999',
+      SERVICE_ROLE_KEY: 'service',
+      DATABASE_URL: REQUIRED.DATABASE_URL,
+      VAPID_PUBLIC_KEY: REQUIRED.VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY: REQUIRED.VAPID_PRIVATE_KEY,
+      VAPID_SUBJECT: REQUIRED.VAPID_SUBJECT,
+    });
   });
 
   it('refuses the pre-rebrand origin name, naming HESTIA_ORIGIN', () => {
