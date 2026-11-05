@@ -4,6 +4,7 @@ import { App } from './App.tsx';
 import { createApiClient } from './lib/api/client.ts';
 import { createQueryClient } from './lib/api/query-client.ts';
 import { createAuthClient, loadSupabaseClient } from './lib/auth/auth-client.ts';
+import { config } from './lib/config.ts';
 import { installErrorReporting } from './lib/error-reporting.ts';
 import { createCachePersister, createImmediateFlushPersister } from './lib/offline/persist.ts';
 import { registerQueueDefaults } from './lib/offline/chore-errand-writes.ts';
@@ -21,10 +22,7 @@ installErrorReporting();
 // this origin and Caddy routes `/auth/v1` onwards. The anon key is baked in at build time,
 // where every other build-time setting is decided. The client itself arrives after this first
 // render, which is why the session starts `loading`.
-const supabase = loadSupabaseClient(
-  window.location.origin,
-  import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
-);
+const supabase = loadSupabaseClient(window.location.origin, config.supabaseAnonKey);
 
 const auth = createAuthClient(supabase);
 const queryClient = createQueryClient();

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { TEST_CONFIG } from '@hestia/shared';
 import pg from 'pg';
 
 /**
@@ -12,8 +13,7 @@ import pg from 'pg';
  */
 
 export const TEST_DATABASE_URL =
-  process.env['HESTIA_TEST_DATABASE_URL'] ??
-  'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
+  process.env['HESTIA_TEST_DATABASE_URL'] ?? TEST_CONFIG.DEFAULT_DEV_DATABASE_URL;
 
 export interface TestUser {
   id: string;

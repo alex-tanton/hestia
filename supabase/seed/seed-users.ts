@@ -18,10 +18,11 @@
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { TEST_CONFIG } from '@hestia/shared';
 import pg from 'pg';
 import { recomputeReadinessForHousehold } from './compute-readiness.js';
 
-const SEED_PASSWORD = 'hestia-seed-pass-2026';
+const SEED_PASSWORD = TEST_CONFIG.SEED_PASSWORD;
 
 const USERS = [
   { email: 'alex@example.com', displayName: 'Alex Rivera', timezone: 'America/New_York' },
@@ -31,9 +32,8 @@ const USERS = [
   { email: 'casey@example.com', displayName: 'Casey Nguyen', timezone: 'America/Los_Angeles' },
 ] as const;
 
-const authUrl = process.env['HESTIA_SEED_AUTH_URL'] ?? 'http://127.0.0.1:54321/auth/v1';
-const dbUrl =
-  process.env['HESTIA_SEED_DB_URL'] ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
+const authUrl = process.env['HESTIA_SEED_AUTH_URL'] ?? TEST_CONFIG.DEFAULT_DEV_AUTH_URL;
+const dbUrl = process.env['HESTIA_SEED_DB_URL'] ?? TEST_CONFIG.DEFAULT_DEV_DATABASE_URL;
 
 function serviceRoleKey(): string {
   const fromEnv = process.env['HESTIA_SEED_SERVICE_ROLE_KEY'];

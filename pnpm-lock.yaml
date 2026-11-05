@@ -241,6 +241,10 @@ importers:
         version: 7.4.1
 
   e2e:
+    dependencies:
+      '@hestia/shared':
+        specifier: workspace:*
+        version: link:../packages/shared
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.13.0
@@ -311,6 +315,9 @@ importers:
       '@hestia/matching':
         specifier: workspace:*
         version: link:../../packages/matching
+      '@hestia/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       pg:
         specifier: 8.23.0
         version: 8.23.0

@@ -64,7 +64,7 @@ Production settings reside outside the repository at `/srv/hestia/.env`.
 | `HESTIA_ORIGIN` | Pinned public origin (`https://hestia.aberrance.app`) | Configured |
 | `CLOUDFLARE_TUNNEL_TOKEN` | Tunnel authentication token from Cloudflare dashboard | Configured |
 | `HESTIA_OWNER_EMAIL` | Admin email address granting access to deep system health | Configured |
-| `HESTIA_MAGIC_LINK_ENABLED` | Toggles passwordless magic link authentication (`true`/`false`) | Configured |
+| `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` | Toggles passwordless magic link authentication (`true`/`false`) | Configured |
 | `GOTRUE_SMTP_HOST` | SMTP server host (`smtp.resend.com`) | Configured |
 | `GOTRUE_SMTP_PORT` | SMTP port (`465` for implicit TLS) | Configured |
 | `GOTRUE_SMTP_USER` | SMTP username (`resend`) | Configured |

@@ -187,7 +187,6 @@ services:
       LOG_LEVEL: info
       HESTIA_ORIGIN: ${HESTIA_ORIGIN}
       HESTIA_OWNER_EMAIL: ${HESTIA_OWNER_EMAIL:?set in .env}
-      HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-true}
       GOTRUE_URL: http://auth:9999
       JWT_SECRET: ${JWT_SECRET}
       ANON_KEY: ${ANON_KEY}
@@ -216,9 +215,9 @@ services:
       dockerfile: docker/caddy.Dockerfile
       args:
         HESTIA_REVISION: ${HESTIA_TAG:-dev}
-        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-true}
-        ANON_KEY: ${ANON_KEY:?set in .env}
-        VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
+        HESTIA_PUBLIC_MAGIC_LINK_ENABLED: ${HESTIA_PUBLIC_MAGIC_LINK_ENABLED:-${HESTIA_MAGIC_LINK_ENABLED:-true}}
+        HESTIA_PUBLIC_SUPABASE_ANON_KEY: ${HESTIA_PUBLIC_SUPABASE_ANON_KEY:-${ANON_KEY:?set in .env}}
+        HESTIA_PUBLIC_VAPID_KEY: ${HESTIA_PUBLIC_VAPID_KEY:-${VAPID_PUBLIC_KEY:?set in .env}}
     restart: unless-stopped
     logging: *logging
     networks: [hestia]

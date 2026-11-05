@@ -73,6 +73,7 @@ const fromEnvironment = [
   'HESTIA_ORIGIN',
   'CLOUDFLARE_TUNNEL_TOKEN',
   'HESTIA_OWNER_EMAIL',
+  'HESTIA_PUBLIC_MAGIC_LINK_ENABLED',
   'HESTIA_MAGIC_LINK_ENABLED',
   'GOTRUE_SMTP_PASS',
   'BACKUP_DIR',
@@ -87,6 +88,9 @@ const lines = readFileSync(process.env.EXAMPLE, 'utf8')
     const key = match[1];
     if (key in generated) return `${key}=${generated[key]}`;
     if (fromEnvironment.includes(key) && process.env[key]) return `${key}=${process.env[key]}`;
+    if (key === 'HESTIA_PUBLIC_MAGIC_LINK_ENABLED' && process.env['HESTIA_MAGIC_LINK_ENABLED']) {
+      return `${key}=${process.env['HESTIA_MAGIC_LINK_ENABLED']}`;
+    }
     return line;
   });
 const missing = Object.keys(generated).filter((key) => !lines.some((l) => l.startsWith(`${key}=`)));

@@ -26,6 +26,7 @@ const proxy = {
 };
 
 export default defineConfig({
+  envPrefix: ['VITE_', 'HESTIA_PUBLIC_'],
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   server: { proxy },
   preview: { proxy },

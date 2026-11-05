@@ -80,7 +80,10 @@ if (manifest.short_name !== 'Hestia') {
 }
 if (!html.includes('<title>Hestia</title>')) fail('index.html <title> is not Hestia');
 
-const isMagicLinkEnabled = process.env['VITE_MAGIC_LINK_ENABLED'] === 'true';
+const isMagicLinkEnabled =
+  (process.env['HESTIA_PUBLIC_MAGIC_LINK_ENABLED'] ??
+    process.env['HESTIA_MAGIC_LINK_ENABLED'] ??
+    process.env['VITE_MAGIC_LINK_ENABLED']) === 'true';
 
 for (const { text, source } of MAGIC_LINK_COPY) {
   if (!readFileSync(join(WEB, source), 'utf8').includes(text)) {

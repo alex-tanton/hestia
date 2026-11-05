@@ -12,3 +12,4 @@ status: complete
 2. Identify duplications, aliases, dead pass-throughs, and lack of schema validation.
 3. Formulate a comprehensive single-source-of-truth architecture centered on `@hestia/shared/config` and Vite `envPrefix`.
 4. Document the full findings, audit matrix, and phased migration proposal.
+

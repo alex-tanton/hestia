@@ -118,7 +118,7 @@ Hestia is a household-management PWA (shopping lists, chores, bills, meals/recip
 - `CLOUDFLARE_TUNNEL_TOKEN` is Compose-only: `cloudflared` reads it, the service does not
 - E2E-only overrides (set only by the E2E Compose overlay): `HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_FLIPP_FIXTURE_NOW`, `HESTIA_RECIPE_FIXTURE_DIR`, `HESTIA_PUSH_TRANSPORT=test-double`
 - The owner CLI reads only `HESTIA_ORIGIN`, `GOTRUE_URL`, and `SERVICE_ROLE_KEY` (`parseCliEnv` in `apps/service/src/env.ts`)
-- `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, `VITE_MAGIC_LINK_ENABLED`
+- Client variables: `HESTIA_PUBLIC_MAGIC_LINK_ENABLED`, `HESTIA_PUBLIC_SUPABASE_ANON_KEY`, `HESTIA_PUBLIC_VAPID_KEY` (with legacy `VITE_*` fallbacks), validated via typed `parseClientConfig` in `@hestia/shared/config`
 - Injected as Docker build args in `docker/caddy.Dockerfile`; changing them requires a rebuild
 - Dev and preview proxies read `HESTIA_DEV_API` (default `http://127.0.0.1:3000`) and `HESTIA_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
 - The production env file lives outside the checkout at `/srv/hestia/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
