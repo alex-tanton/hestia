@@ -1,3 +1,4 @@
+import { config } from '../config.ts';
 import { isIosBrowser, isStandalone } from '../use-install-prompt.ts';
 
 /*
@@ -30,7 +31,7 @@ export interface PushPort {
 }
 
 /** Set at build time by the caddy image. */
-export const VAPID_PUBLIC_KEY: string = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '';
+export const VAPID_PUBLIC_KEY: string = config.vapidPublicKey;
 
 function hasPushApis(): boolean {
   return (

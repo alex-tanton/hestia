@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
-import type { Household } from '@hestia/shared';
+import { TEST_CONFIG, type Household } from '@hestia/shared';
 import pg from 'pg';
 import { buildApp, type AppDependencies } from '../app.js';
 import { createTokenVerifier } from '../auth/jwt.js';
@@ -63,8 +63,8 @@ export function stackConfig(): StackConfig {
   dbUrl.password = SERVICE_PASSWORD;
   cached = {
     // Kong's port under `supabase start` (supabase/config.toml, [api].port).
-    gotrueUrl: env['HESTIA_TEST_GOTRUE_URL'] ?? 'http://127.0.0.1:54321/auth/v1',
-    anonKey: pick('HESTIA_TEST_ANON_KEY', 'ANON_KEY'),
+    gotrueUrl: env['HESTIA_TEST_GOTRUE_URL'] ?? TEST_CONFIG.DEFAULT_DEV_AUTH_URL,
+    anonKey: env['HESTIA_PUBLIC_SUPABASE_ANON_KEY'] ?? pick('HESTIA_TEST_ANON_KEY', 'ANON_KEY'),
     serviceRoleKey: pick('HESTIA_TEST_SERVICE_ROLE_KEY', 'SERVICE_ROLE_KEY'),
     jwtSecret: pick('HESTIA_TEST_JWT_SECRET', 'JWT_SECRET'),
     serviceDatabaseUrl: dbUrl.toString(),

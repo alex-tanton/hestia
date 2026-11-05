@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TEST_CONFIG } from '@hestia/shared';
 import { parseEnvFile, runNames } from './run-identity.ts';
 
 /** The repository root, from this file's location. */
@@ -96,7 +97,7 @@ function distinctFreePort(...avoid: string[]): string {
 }
 
 /** The password every seed user signs in with. */
-export const SEED_PASSWORD = 'hestia-seed-pass-2026';
+export const SEED_PASSWORD = TEST_CONFIG.SEED_PASSWORD;
 
 /** The seed users and households. */
 export const SEED = {

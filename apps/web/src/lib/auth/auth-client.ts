@@ -20,7 +20,7 @@ export interface AuthClient extends AuthPort {
   signOut: () => Promise<void>;
   /**
    * Magic link. Nothing calls either of these unless the build included the magic-link screens,
-   * which is what `VITE_MAGIC_LINK_ENABLED` decides.
+   * which is what `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` decides.
    */
   sendSignInLink: (email: string) => Promise<void>;
   verifySignInCode: (email: string, code: string) => Promise<void>;

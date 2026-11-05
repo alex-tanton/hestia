@@ -43,7 +43,7 @@ export DATABASE_URL=postgresql://hestia_service:hestia@127.0.0.1:54322/postgres
 export GOTRUE_URL=http://127.0.0.1:54321/auth/v1
 export HESTIA_ORIGIN=http://127.0.0.1:5173
 export HESTIA_OWNER_EMAIL=you@example.com
-export ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
+export HESTIA_PUBLIC_SUPABASE_ANON_KEY SERVICE_ROLE_KEY JWT_SECRET
 pnpm --filter @hestia/service dev
 ```
 
@@ -54,7 +54,7 @@ pnpm --filter @hestia/service dev
 | `DATABASE_URL` | Postgres connection string for `hestia_service` role (`withUserDb`) |
 | `GOTRUE_URL` | Auth service URL for signup, sign-in, and password resets |
 | `JWT_SECRET` | Secret used to verify HS256 access tokens |
-| `ANON_KEY` | Public anon key sent to GoTrue / Kong |
+| `HESTIA_PUBLIC_SUPABASE_ANON_KEY` | Public anon key sent to GoTrue / Kong |
 | `SERVICE_ROLE_KEY` | Privileged key for admin operations (email update, CLI tasks) |
 | `HESTIA_ORIGIN` | Base URL used for invite and password-reset links |
 | `HESTIA_OWNER_EMAIL` | Email address permitted to access `GET /api/health/deep` |

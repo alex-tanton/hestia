@@ -5,7 +5,7 @@ import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
  * The magic-link screens' copy and input rules (flag-hidden).
  *
  * Only the two magic-link screens import this module, and both sit behind routes that exist
- * only when `VITE_MAGIC_LINK_ENABLED` is `true`, so with the flag off none of these sentences are
+ * only when `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` is `true`, so with the flag off none of these sentences are
  * built into the app at all. `pnpm build` checks that for itself.
  */
 

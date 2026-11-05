@@ -11,7 +11,7 @@ export async function accessToken(
   password: string = SEED_PASSWORD,
 ): Promise<string> {
   const response = await request.post('/auth/v1/token?grant_type=password', {
-    headers: { apikey: readStackEnv()['ANON_KEY'] ?? '' },
+    headers: { apikey: readStackEnv()['HESTIA_PUBLIC_SUPABASE_ANON_KEY'] ?? '' },
     data: { email, password },
   });
   expect(response.status(), 'password grant').toBe(200);

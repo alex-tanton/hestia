@@ -112,13 +112,13 @@ Hestia is a household-management PWA (shopping lists, chores, bills, meals/recip
 ## Configuration
 
 - Read from process environment and validated by Zod; the service fails at startup on an invalid or missing variable
-- Required: `DATABASE_URL`, `HESTIA_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+- Required: `DATABASE_URL`, `HESTIA_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `HESTIA_PUBLIC_SUPABASE_ANON_KEY`, `SERVICE_ROLE_KEY`, `HESTIA_PUBLIC_VAPID_KEY`, `VAPID_PRIVATE_KEY`
 - Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HESTIA_TRUSTED_PROXIES`, `HESTIA_OWNER_EMAIL`, `HESTIA_RATE_LIMIT_PER_MINUTE` (`300`), `HESTIA_PUSH_TRANSPORT` (`web-push`)
 - Optional: `BACKUP_DIR`, `VAPID_SUBJECT`
 - `CLOUDFLARE_TUNNEL_TOKEN` is Compose-only: `cloudflared` reads it, the service does not
 - E2E-only overrides (set only by the E2E Compose overlay): `HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_FLIPP_FIXTURE_NOW`, `HESTIA_RECIPE_FIXTURE_DIR`, `HESTIA_PUSH_TRANSPORT=test-double`
 - The owner CLI reads only `HESTIA_ORIGIN`, `GOTRUE_URL`, and `SERVICE_ROLE_KEY` (`parseCliEnv` in `apps/service/src/env.ts`)
-- `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, `VITE_MAGIC_LINK_ENABLED`
+- Client variables: `HESTIA_PUBLIC_MAGIC_LINK_ENABLED`, `HESTIA_PUBLIC_SUPABASE_ANON_KEY`, `HESTIA_PUBLIC_VAPID_KEY`, validated via typed `parseClientConfig` in `@hestia/shared/config`
 - Injected as Docker build args in `docker/caddy.Dockerfile`; changing them requires a rebuild
 - Dev and preview proxies read `HESTIA_DEV_API` (default `http://127.0.0.1:3000`) and `HESTIA_DEV_SUPABASE` (default `http://127.0.0.1:54321`) from `apps/web/vite.config.ts`
 - The production env file lives outside the checkout at `/srv/hestia/.env`, passed to Compose with `--env-file`. `.env.example` at the repo root documents every key by name; `.gitignore` excludes `.env*` except `.env.example`.
@@ -448,7 +448,7 @@ Hestia is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Responsibilities: Install error reporting, create the Supabase client, auth client, query client, and write-queue defaults, then render `<App>` with the realtime port and persisters.
 - Location: `apps/web/src/routes.tsx`
 - Triggers: Every navigation.
-- Responsibilities: Map paths to lazily loaded screens. `/` is the dashboard (`DashboardRoute`). Public routes are `/sign-in`, `/sign-up`, `/forgot-password`, `/set-password`. `/onboarding` and `/join` require a session. Pillar routes and Settings sit under `AuthenticatedLayout`. Magic-link routes exist only when `VITE_MAGIC_LINK_ENABLED` is `'true'` at build time.
+- Responsibilities: Map paths to lazily loaded screens. `/` is the dashboard (`DashboardRoute`). Public routes are `/sign-in`, `/sign-up`, `/forgot-password`, `/set-password`. `/onboarding` and `/join` require a session. Pillar routes and Settings sit under `AuthenticatedLayout`. Magic-link routes exist only when `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` is `'true'` at build time.
 - Location: `apps/web/src/sw.ts` (built with `injectManifest` by `vite-plugin-pwa`, `apps/web/vite.config.ts`)
 - Triggers: Browser service worker lifecycle.
 - Responsibilities: Precache, navigation fallback, offline caching strategies, push event display (`apps/web/src/lib/push/service-worker-handlers.ts`).
@@ -463,7 +463,7 @@ Hestia is a household-management PWA (shopping lists, chores, bills, meals/recip
 - **Threading:** Single-threaded Node event loop for the service; async I/O only. No worker threads.
 - **Process count:** One service process is assumed. Cron jobs and in-memory state (Flipp queue, recipe rate limiter, skip rates) are per process. Advisory locks prevent overlap of the same job, and only through the database.
 - **Global state:** Module-level singletons are created in `apps/service/src/main.ts` (`wiring`, `skipRates`, `flippQueue`, `recipeFetchLimiter`, `recordingTransport`). The web client creates its singletons in `apps/web/src/main.tsx`.
-- **Build-time configuration:** `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, and `VITE_MAGIC_LINK_ENABLED` are fixed at build time; a change requires a rebuild.
+- **Build-time configuration:** `HESTIA_PUBLIC_SUPABASE_ANON_KEY`, `HESTIA_PUBLIC_VAPID_KEY`, and `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` are fixed at build time; a change requires a rebuild.
 - **Test-only seams:** Fixture transports (`HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_RECIPE_FIXTURE_DIR`), the push double (`HESTIA_PUSH_TRANSPORT=test-double`) (all set only by the E2E Compose overlay, `e2e/docker-compose.e2e.yml`), and the `POST /api/test/push/dispatch` and `GET /api/test/push/deliveries` routes in `apps/service/src/push/test-seam.ts`. The seam is registered only when `main.ts` passes it, which happens only for the test-double transport.
 - **Pinned origin:** The public origin is part of installed PWAs and push subscriptions (`docs/deployment.md`, "Pinned names"). `HESTIA_ORIGIN` is used for invite links and the user agent; changing the host is a breaking change.
 - **Public unauthenticated routes:** `/api/health`, `/api/signup`, `/api/client-error` (rate limited per IP, `apps/service/src/routes/system.ts`), `/api/openapi.json`. All others call `ctx.authenticate`.

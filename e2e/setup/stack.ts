@@ -56,7 +56,7 @@ function writeEnvFile(): void {
     CLOUDFLARE_TUNNEL_TOKEN: 'e2e-not-a-real-token',
     // Alex is the development owner, so Alex sees System health.
     HESTIA_OWNER_EMAIL: 'alex@example.com',
-    HESTIA_MAGIC_LINK_ENABLED: 'true',
+    HESTIA_PUBLIC_MAGIC_LINK_ENABLED: 'true',
     VAPID_SUBJECT: 'mailto:admin@aberrance.app',
     BACKUP_DIR,
   });

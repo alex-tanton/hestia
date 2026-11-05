@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { AUTH_CONFIG } from './config/constants.js';
 
 /** GoTrue enforces the same minimum (GOTRUE_PASSWORD_MIN_LENGTH). */
-export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MIN_LENGTH = AUTH_CONFIG.PASSWORD_MIN_LENGTH;
 
 /** bcrypt, which GoTrue hashes with, ignores everything past 72 bytes. */
-export const PASSWORD_MAX_LENGTH = 72;
+export const PASSWORD_MAX_LENGTH = AUTH_CONFIG.PASSWORD_MAX_LENGTH;
 
 /** The PWA and the service both show exactly this sentence. */
 export const COMMON_PASSWORD_MESSAGE = 'That password is too common. Choose another.';

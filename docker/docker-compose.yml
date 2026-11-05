@@ -124,7 +124,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer ${ANON_KEY:?set in .env}" http://localhost:4000/api/tenants/realtime-dev/health'
+        - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer ${HESTIA_PUBLIC_SUPABASE_ANON_KEY:?set in .env}" http://localhost:4000/api/tenants/realtime-dev/health'
       interval: 30s
       timeout: 5s
       retries: 3
@@ -158,7 +158,7 @@ services:
       KONG_TRUSTED_IPS: &subnet 172.16.238.0/24
       KONG_REAL_IP_HEADER: X-Forwarded-For
       KONG_REAL_IP_RECURSIVE: 'on'
-      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_ANON_KEY: ${HESTIA_PUBLIC_SUPABASE_ANON_KEY:?set in .env}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:?set in .env}
     healthcheck:
       test: [CMD, kong, health]
@@ -187,12 +187,11 @@ services:
       LOG_LEVEL: info
       HESTIA_ORIGIN: ${HESTIA_ORIGIN}
       HESTIA_OWNER_EMAIL: ${HESTIA_OWNER_EMAIL:?set in .env}
-      HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-true}
       GOTRUE_URL: http://auth:9999
       JWT_SECRET: ${JWT_SECRET}
-      ANON_KEY: ${ANON_KEY}
+      HESTIA_PUBLIC_SUPABASE_ANON_KEY: ${HESTIA_PUBLIC_SUPABASE_ANON_KEY:?set in .env}
       SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
-      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
+      HESTIA_PUBLIC_VAPID_KEY: ${HESTIA_PUBLIC_VAPID_KEY:?set in .env}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?set in .env}
       VAPID_SUBJECT: ${VAPID_SUBJECT:?set in .env}
       BACKUP_DIR: /backups
@@ -216,9 +215,9 @@ services:
       dockerfile: docker/caddy.Dockerfile
       args:
         HESTIA_REVISION: ${HESTIA_TAG:-dev}
-        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-true}
-        ANON_KEY: ${ANON_KEY:?set in .env}
-        VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
+        HESTIA_PUBLIC_MAGIC_LINK_ENABLED: ${HESTIA_PUBLIC_MAGIC_LINK_ENABLED:?set in .env}
+        HESTIA_PUBLIC_SUPABASE_ANON_KEY: ${HESTIA_PUBLIC_SUPABASE_ANON_KEY:?set in .env}
+        HESTIA_PUBLIC_VAPID_KEY: ${HESTIA_PUBLIC_VAPID_KEY:?set in .env}
     restart: unless-stopped
     logging: *logging
     networks: [hestia]

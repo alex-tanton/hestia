@@ -20,7 +20,8 @@ exports	apps/web/src/components/chores/chore-copy.ts	BANNED_GAMIFICATION_WORDS
 exports	apps/web/src/components/chores/chore-copy.ts	allChoreCopyStrings
 exports	apps/web/src/lib/push/use-push-device.tsx	PushPortProvider
 exports	packages/matching/src/normalize.ts	normalizeTokens
+exports	packages/shared/src/config/constants.ts	TEST_CONFIG
 exports	packages/shared/src/scrub.ts	scrubFields
 files	apps/service/src/deals/flipp/normalized-fixtures.ts	-
 files	scripts/knip-summary.mjs	-
-total	25	-
+total	26	-

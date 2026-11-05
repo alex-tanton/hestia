@@ -37,7 +37,7 @@ export function createRoutes(): RouteObject[] {
    * sign-in.
    */
   const magicLinkRoutes: RouteObject[] =
-    import.meta.env.VITE_MAGIC_LINK_ENABLED === 'true'
+    import.meta.env.HESTIA_PUBLIC_MAGIC_LINK_ENABLED === 'true'
       ? [
           {
             path: 'sign-in/link',

@@ -46,7 +46,7 @@ describe('support', () => {
   });
 
   it('is supported on an installed iOS home-screen app, same as any other browser', async () => {
-    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', 'test-vapid-key');
+    vi.stubEnv('HESTIA_PUBLIC_VAPID_KEY', 'test-vapid-key');
     vi.mocked(isIosBrowser).mockReturnValue(true);
     vi.mocked(isStandalone).mockReturnValue(true);
     stubBrowserApis();
@@ -61,14 +61,14 @@ describe('support', () => {
   });
 
   it('is unsupported when a push API is missing, even with a VAPID key', async () => {
-    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', 'test-vapid-key');
+    vi.stubEnv('HESTIA_PUBLIC_VAPID_KEY', 'test-vapid-key');
     // No serviceWorker, no PushManager, no Notification stubbed.
     const { browserPushPort } = await import('./push-port.ts');
     expect(browserPushPort.support()).toBe('unsupported');
   });
 
   it('is supported with a VAPID key and every push API present', async () => {
-    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', 'test-vapid-key');
+    vi.stubEnv('HESTIA_PUBLIC_VAPID_KEY', 'test-vapid-key');
     stubBrowserApis();
     const { browserPushPort } = await import('./push-port.ts');
     expect(browserPushPort.support()).toBe('supported');

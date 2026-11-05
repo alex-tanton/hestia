@@ -35,7 +35,10 @@ import { SkipRateRegistry } from './services/skip-rates.js';
 
 const env = parseEnv(process.env);
 const database = createDatabase(env.DATABASE_URL);
-const gotrue = createGoTrueClient({ url: env.GOTRUE_URL, anonKey: env.ANON_KEY });
+const gotrue = createGoTrueClient({
+  url: env.GOTRUE_URL,
+  anonKey: env.HESTIA_PUBLIC_SUPABASE_ANON_KEY,
+});
 // The privileged clients are built here and handed to routes only as the two narrow functions
 // the sanctioned uses need.
 const gotrueAdmin = createGoTrueAdmin({
@@ -141,7 +144,7 @@ const scheduler = createScheduler({
       ? recordingTransport
       : createWebPushTransport({
           subject: env.VAPID_SUBJECT,
-          publicKey: env.VAPID_PUBLIC_KEY,
+          publicKey: env.HESTIA_PUBLIC_VAPID_KEY,
           privateKey: env.VAPID_PRIVATE_KEY,
         }),
   },

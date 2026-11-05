@@ -1,19 +1,19 @@
 /// <reference types="vite/client" />
 
 /**
- * Build-time configuration. Vite exposes only `VITE_`-prefixed variables, and both of these are
- * decided when the caddy image is built, so no flag or key is fetched at runtime.
+ * Build-time configuration. Vite exposes HESTIA_PUBLIC_-prefixed variables.
+ * Decided when the caddy image is built, so no flag or key is fetched at runtime.
  */
 interface ImportMetaEnv {
   /** "true" builds the magic-link and code-entry screens in; anything else omits them. */
-  readonly VITE_MAGIC_LINK_ENABLED?: string;
+  readonly HESTIA_PUBLIC_MAGIC_LINK_ENABLED?: string;
   /** The Supabase anon key, which Kong requires on every `/auth/v1` call. */
-  readonly VITE_SUPABASE_ANON_KEY?: string;
+  readonly HESTIA_PUBLIC_SUPABASE_ANON_KEY?: string;
   /**
    * The VAPID public key a device subscribes with. Public by design; the private half stays on the
    * server. Absent in a build without push, where the notification settings say push is unavailable.
    */
-  readonly VITE_VAPID_PUBLIC_KEY?: string;
+  readonly HESTIA_PUBLIC_VAPID_KEY?: string;
 }
 
 interface ImportMeta {

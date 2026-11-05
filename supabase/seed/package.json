@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@hestia/matching": "workspace:*",
+    "@hestia/shared": "workspace:*",
     "pg": "8.23.0"
   },
   "devDependencies": {
