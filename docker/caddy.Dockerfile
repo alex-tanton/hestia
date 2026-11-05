@@ -15,7 +15,7 @@ RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
 COPY . .
 # The PWA build omits the magic-link screens unless this is true. Vite exposes only VITE_-prefixed
 # variables to the app, as import.meta.env.VITE_MAGIC_LINK_ENABLED.
-ARG HESTIA_MAGIC_LINK_ENABLED=false
+ARG HESTIA_MAGIC_LINK_ENABLED=true
 ENV VITE_MAGIC_LINK_ENABLED=$HESTIA_MAGIC_LINK_ENABLED
 # Kong requires an apikey on every /auth/v1 call, so supabase-js in the PWA is built with the
 # anon key. It is the public half of the pair and carries no privilege of its own; RLS and the
