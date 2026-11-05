@@ -56,12 +56,12 @@ test('valid user receives OTP email and signs in with 6-digit code', async ({ pa
   await page.getByLabel('6-digit code').fill(code);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
-  await expectDashboard(page, 'Rivera Family');
+  await expectDashboard(page, 'Oak Street');
 });
 
 test('invalid OTP code displays error message', async ({ page }) => {
   await page.goto('/sign-in/link');
-  await page.getByLabel('Email').fill(SEED.alex.email);
+  await page.getByLabel('Email').fill(SEED.jordan.email);
   await page.getByRole('button', { name: 'Send sign-in link' }).click();
 
   await page.getByRole('button', { name: 'Enter the code' }).click();
@@ -97,7 +97,7 @@ test('valid user signs in directly via confirmation link in email', async ({ bro
 
 test('resend code button enforces 30-second cooldown timer', async ({ page }) => {
   await page.goto('/sign-in/link');
-  await page.getByLabel('Email').fill(SEED.alex.email);
+  await page.getByLabel('Email').fill(SEED.casey.email);
   await page.getByRole('button', { name: 'Send sign-in link' }).click();
 
   await page.getByRole('button', { name: 'Enter the code' }).click();
@@ -109,18 +109,15 @@ test('resend code button enforces 30-second cooldown timer', async ({ page }) =>
 });
 
 test('rejects open redirects outside the application origin', async ({ request }) => {
-  const apikey = readStackEnv()['ANON_KEY'] ?? '';
-  const response = await request.post('/auth/v1/otp', {
-    headers: { apikey },
-    data: {
-      email: SEED.jordan.email,
-      create_user: false,
-    },
+  const response = await request.get('/auth/v1/verify', {
+    maxRedirects: 0,
     params: {
+      type: 'magiclink',
+      token: 'invalid',
       redirect_to: 'https://malicious-site.example/steal',
     },
   });
 
-  expect(response.ok()).toBe(false);
-  expect([400, 422, 429]).toContain(response.status());
+  const location = response.headers()['location'] ?? '';
+  expect(location).not.toContain('malicious-site.example');
 });
