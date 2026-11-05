@@ -18,28 +18,13 @@ function toBoolean(value: unknown): boolean {
 }
 
 /**
- * Validates and normalizes client environment from import.meta.env or build process.
- * Supports canonical HESTIA_PUBLIC_* prefixes and legacy fallbacks.
+ * Validates and normalizes client environment strictly from canonical HESTIA_PUBLIC_* keys.
+ * No legacy fallbacks are permitted.
  */
 export function parseClientConfig(source: Record<string, unknown> = {}): ClientConfig {
-  const magicLinkValue =
-    source['HESTIA_PUBLIC_MAGIC_LINK_ENABLED'] ??
-    source['HESTIA_MAGIC_LINK_ENABLED'] ??
-    source['VITE_MAGIC_LINK_ENABLED'];
-
-  const anonKeyValue =
-    source['HESTIA_PUBLIC_SUPABASE_ANON_KEY'] ??
-    source['HESTIA_PUBLIC_ANON_KEY'] ??
-    source['VITE_SUPABASE_ANON_KEY'] ??
-    source['ANON_KEY'] ??
-    '';
-
-  const vapidPublicKeyValue =
-    source['HESTIA_PUBLIC_VAPID_KEY'] ??
-    source['HESTIA_PUBLIC_VAPID_PUBLIC_KEY'] ??
-    source['VITE_VAPID_PUBLIC_KEY'] ??
-    source['VAPID_PUBLIC_KEY'] ??
-    '';
+  const magicLinkValue = source['HESTIA_PUBLIC_MAGIC_LINK_ENABLED'];
+  const anonKeyValue = source['HESTIA_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
+  const vapidPublicKeyValue = source['HESTIA_PUBLIC_VAPID_KEY'] ?? '';
 
   return clientConfigSchema.parse({
     magicLinkEnabled: toBoolean(magicLinkValue),

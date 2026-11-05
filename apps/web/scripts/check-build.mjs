@@ -4,7 +4,7 @@
  * 1. The app shell stays under its 200KB gzipped budget. The shell is the entry chunk plus
  *    everything `index.html` preloads with it.
  * 2. The magic-link screens obey their flag:
- *    with `VITE_MAGIC_LINK_ENABLED` off, none of their copy is in the build at all; with it on,
+ *    with `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` off, none of their copy is in the build at all; with it on,
  *    the copy is there but never in the shell, because both screens are behind lazy routes.
  * 3. The product is named Hestia where it is installed and shown: the Web App Manifest `name` and
  *    `short_name`, and the `<title>` of `index.html`.
@@ -80,10 +80,7 @@ if (manifest.short_name !== 'Hestia') {
 }
 if (!html.includes('<title>Hestia</title>')) fail('index.html <title> is not Hestia');
 
-const isMagicLinkEnabled =
-  (process.env['HESTIA_PUBLIC_MAGIC_LINK_ENABLED'] ??
-    process.env['HESTIA_MAGIC_LINK_ENABLED'] ??
-    process.env['VITE_MAGIC_LINK_ENABLED']) === 'true';
+const isMagicLinkEnabled = process.env['HESTIA_PUBLIC_MAGIC_LINK_ENABLED'] === 'true';
 
 for (const { text, source } of MAGIC_LINK_COPY) {
   if (!readFileSync(join(WEB, source), 'utf8').includes(text)) {

@@ -170,7 +170,7 @@ if (invokedDirectly) {
   if (process.argv[2] === 'test-push') {
     if (
       !env.DATABASE_URL ||
-      !env.VAPID_PUBLIC_KEY ||
+      !env.HESTIA_PUBLIC_VAPID_KEY ||
       !env.VAPID_PRIVATE_KEY ||
       !env.VAPID_SUBJECT
     ) {
@@ -181,7 +181,7 @@ if (invokedDirectly) {
     dbHandle = handle;
     const transport = createWebPushTransport({
       subject: env.VAPID_SUBJECT,
-      publicKey: env.VAPID_PUBLIC_KEY,
+      publicKey: env.HESTIA_PUBLIC_VAPID_KEY,
       privateKey: env.VAPID_PRIVATE_KEY,
     });
     pushOps = {

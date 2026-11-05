@@ -89,7 +89,7 @@ describe('with the magic-link flag off', () => {
 
 describe('with the magic-link flag on', () => {
   beforeEach(() => {
-    vi.stubEnv('VITE_MAGIC_LINK_ENABLED', 'true');
+    vi.stubEnv('HESTIA_PUBLIC_MAGIC_LINK_ENABLED', 'true');
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -292,7 +292,7 @@ describe('the code-entry screen', () => {
   });
 
   it('verifies the code against the address it was sent to', async () => {
-    vi.stubEnv('VITE_MAGIC_LINK_ENABLED', 'true');
+    vi.stubEnv('HESTIA_PUBLIC_MAGIC_LINK_ENABLED', 'true');
     try {
       const user = userEvent.setup();
       // The whole route tree, because a verified code lands on the dashboard.

@@ -44,7 +44,7 @@ describe('shared configuration', () => {
       });
     });
 
-    it('falls back to legacy VITE_* keys when canonical keys are absent', () => {
+    it('ignores legacy VITE_* keys without fallbacks', () => {
       const config = parseClientConfig({
         VITE_MAGIC_LINK_ENABLED: 'true',
         VITE_SUPABASE_ANON_KEY: 'legacy-anon-key',
@@ -52,9 +52,9 @@ describe('shared configuration', () => {
       });
 
       expect(config).toEqual({
-        magicLinkEnabled: true,
-        supabaseAnonKey: 'legacy-anon-key',
-        vapidPublicKey: 'legacy-vapid-key',
+        magicLinkEnabled: false,
+        supabaseAnonKey: '',
+        vapidPublicKey: '',
       });
     });
 
@@ -101,9 +101,9 @@ describe('shared configuration', () => {
       HESTIA_ORIGIN: 'https://hestia.aberrance.app',
       GOTRUE_URL: 'http://auth:9999',
       JWT_SECRET: 'a'.repeat(32),
-      ANON_KEY: 'anon-key',
+      HESTIA_PUBLIC_SUPABASE_ANON_KEY: 'anon-key',
       SERVICE_ROLE_KEY: 'service-key',
-      VAPID_PUBLIC_KEY: 'vapid-pub',
+      HESTIA_PUBLIC_VAPID_KEY: 'vapid-pub',
       VAPID_PRIVATE_KEY: 'vapid-priv',
       VAPID_SUBJECT: 'mailto:admin@aberrance.app',
     };

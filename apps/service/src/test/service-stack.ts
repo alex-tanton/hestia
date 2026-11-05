@@ -64,7 +64,7 @@ export function stackConfig(): StackConfig {
   cached = {
     // Kong's port under `supabase start` (supabase/config.toml, [api].port).
     gotrueUrl: env['HESTIA_TEST_GOTRUE_URL'] ?? TEST_CONFIG.DEFAULT_DEV_AUTH_URL,
-    anonKey: pick('HESTIA_TEST_ANON_KEY', 'ANON_KEY'),
+    anonKey: pick('HESTIA_TEST_ANON_KEY', 'HESTIA_PUBLIC_SUPABASE_ANON_KEY'),
     serviceRoleKey: pick('HESTIA_TEST_SERVICE_ROLE_KEY', 'SERVICE_ROLE_KEY'),
     jwtSecret: pick('HESTIA_TEST_JWT_SECRET', 'JWT_SECRET'),
     serviceDatabaseUrl: dbUrl.toString(),

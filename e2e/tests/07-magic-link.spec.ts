@@ -10,7 +10,7 @@ import {
 
 test('the flag the stack was built with is on', () => {
   const env = readStackEnv();
-  expect(env['HESTIA_PUBLIC_MAGIC_LINK_ENABLED'] ?? env['HESTIA_MAGIC_LINK_ENABLED']).toBe('true');
+  expect(env['HESTIA_PUBLIC_MAGIC_LINK_ENABLED']).toBe('true');
 });
 
 test('sign-in offers the secondary magic link button with or divider', async ({ page }) => {

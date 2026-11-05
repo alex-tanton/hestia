@@ -59,7 +59,7 @@ test('PUT /auth/v1/user is refused in every spelling', async () => {
 });
 
 test('the refusal is method-restricted, so sign-in still reaches GoTrue', async ({ request }) => {
-  const apikey = readStackEnv()['ANON_KEY'] ?? '';
+  const apikey = readStackEnv()['HESTIA_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
 
   // Same path, different method: Kong and GoTrue answer, so it is 401 for a missing token.
   const read = await rawRequest('GET', '/auth/v1/user', { apikey });
@@ -103,7 +103,7 @@ const KONG_REFUSED: readonly (readonly [method: string, path: string])[] = [
 ];
 
 test('Kong refuses every GoTrue path and method that has no route, with or without a key', async () => {
-  const apikey = readStackEnv()['ANON_KEY'] ?? '';
+  const apikey = readStackEnv()['HESTIA_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
   // Soft assertions, so one run lists every combination Kong does not refuse.
   for (const [method, path] of KONG_REFUSED) {
     for (const [keyed, headers] of [
@@ -119,7 +119,7 @@ test('Kong refuses every GoTrue path and method that has no route, with or witho
 });
 
 test('Kong answers the calls the PWA makes itself', async () => {
-  const apikey = readStackEnv()['ANON_KEY'] ?? '';
+  const apikey = readStackEnv()['HESTIA_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
   const refused = (body: string): boolean => body.includes(KONG_REFUSAL);
 
   // Sign-in and refresh: a bad grant is GoTrue's 400, not a refusal.

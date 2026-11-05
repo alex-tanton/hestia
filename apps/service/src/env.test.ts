@@ -6,9 +6,9 @@ const REQUIRED = {
   HESTIA_ORIGIN: 'https://hestia.aberrance.app/',
   GOTRUE_URL: 'http://auth:9999/',
   JWT_SECRET: 'x'.repeat(40),
-  ANON_KEY: 'anon',
+  HESTIA_PUBLIC_SUPABASE_ANON_KEY: 'anon',
   SERVICE_ROLE_KEY: 'service',
-  VAPID_PUBLIC_KEY: 'BPublicKeyPlaceholder',
+  HESTIA_PUBLIC_VAPID_KEY: 'BPublicKeyPlaceholder',
   VAPID_PRIVATE_KEY: 'privatePlaceholder',
   VAPID_SUBJECT: 'mailto:admin@aberrance.app',
 };
@@ -131,7 +131,7 @@ describe('parseEnv', () => {
 
   // The dispatch job is scheduled in every process, so a service without its VAPID credentials would fail
   // on the first send; refusing to start is the earlier and clearer failure.
-  it.each(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT'] as const)(
+  it.each(['HESTIA_PUBLIC_VAPID_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT'] as const)(
     'refuses to start without %s',
     (key) => {
       expect(() => parseEnv({ ...REQUIRED, [key]: undefined })).toThrow(new RegExp(key));
@@ -189,7 +189,7 @@ describe('parseCliEnv', () => {
         GOTRUE_URL: REQUIRED.GOTRUE_URL,
         SERVICE_ROLE_KEY: 'service',
         DATABASE_URL: REQUIRED.DATABASE_URL,
-        VAPID_PUBLIC_KEY: REQUIRED.VAPID_PUBLIC_KEY,
+        HESTIA_PUBLIC_VAPID_KEY: REQUIRED.HESTIA_PUBLIC_VAPID_KEY,
         VAPID_PRIVATE_KEY: REQUIRED.VAPID_PRIVATE_KEY,
         VAPID_SUBJECT: REQUIRED.VAPID_SUBJECT,
       }),
@@ -198,7 +198,7 @@ describe('parseCliEnv', () => {
       GOTRUE_URL: 'http://auth:9999',
       SERVICE_ROLE_KEY: 'service',
       DATABASE_URL: REQUIRED.DATABASE_URL,
-      VAPID_PUBLIC_KEY: REQUIRED.VAPID_PUBLIC_KEY,
+      HESTIA_PUBLIC_VAPID_KEY: REQUIRED.HESTIA_PUBLIC_VAPID_KEY,
       VAPID_PRIVATE_KEY: REQUIRED.VAPID_PRIVATE_KEY,
       VAPID_SUBJECT: REQUIRED.VAPID_SUBJECT,
     });

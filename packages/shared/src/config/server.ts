@@ -50,7 +50,7 @@ export const serverEnvSchema = z.object({
   // GoTrue's HS256 secret: verifies access tokens.
   JWT_SECRET: z.string().min(32),
   // Sent as `apikey` on calls to GoTrue, which Kong requires under `supabase start`.
-  ANON_KEY: z.string().min(1),
+  HESTIA_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   // For the sanctioned service-role uses only.
   SERVICE_ROLE_KEY: z.string().min(1),
   // Where the backup container writes; System health reports the newest file's time.
@@ -69,7 +69,7 @@ export const serverEnvSchema = z.object({
   /*
    * Web Push key pair and contact URI (RFC 8292).
    */
-  VAPID_PUBLIC_KEY: z.string().min(1),
+  HESTIA_PUBLIC_VAPID_KEY: z.string().min(1),
   VAPID_PRIVATE_KEY: z.string().min(1),
   VAPID_SUBJECT: z.string().min(1).refine(isContactUri, {
     message: 'VAPID_SUBJECT must be a mailto: or https: URI',
@@ -103,7 +103,7 @@ export const cliEnvSchema = serverEnvSchema
   })
   .extend({
     DATABASE_URL: z.string().min(1).optional(),
-    VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+    HESTIA_PUBLIC_VAPID_KEY: z.string().min(1).optional(),
     VAPID_PRIVATE_KEY: z.string().min(1).optional(),
     VAPID_SUBJECT: z.string().min(1).optional(),
   });

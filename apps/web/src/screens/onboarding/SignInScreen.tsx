@@ -97,8 +97,7 @@ export function SignInScreen(): ReactElement {
          * Magic link option with 'or' divider and secondary button.
          * The flag is a build-time constant, so with it off this option is folded out of the build.
          */}
-        {(import.meta.env.HESTIA_PUBLIC_MAGIC_LINK_ENABLED ??
-          import.meta.env.VITE_MAGIC_LINK_ENABLED) === 'true' && (
+        {import.meta.env.HESTIA_PUBLIC_MAGIC_LINK_ENABLED === 'true' && (
           <>
             <div className="relative my-3 flex items-center justify-center">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">

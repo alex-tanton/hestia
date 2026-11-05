@@ -59,14 +59,17 @@ const generated = {
   POSTGRES_PASSWORD: hex(24),
   HESTIA_SERVICE_DB_PASSWORD: hex(24),
   JWT_SECRET: jwtSecret,
-  ANON_KEY: signJwt({ role: 'anon', iss: 'supabase', iat: issuedAt, exp: expiresAt }, jwtSecret),
+  HESTIA_PUBLIC_SUPABASE_ANON_KEY: signJwt(
+    { role: 'anon', iss: 'supabase', iat: issuedAt, exp: expiresAt },
+    jwtSecret,
+  ),
   SERVICE_ROLE_KEY: signJwt(
     { role: 'service_role', iss: 'supabase', iat: issuedAt, exp: expiresAt },
     jwtSecret,
   ),
   REALTIME_SECRET_KEY_BASE: hex(32),
   REALTIME_DB_ENC_KEY: hex(8),
-  VAPID_PUBLIC_KEY: vapid.publicKey,
+  HESTIA_PUBLIC_VAPID_KEY: vapid.publicKey,
   VAPID_PRIVATE_KEY: vapid.privateKey,
 };
 const fromEnvironment = [
@@ -74,7 +77,6 @@ const fromEnvironment = [
   'CLOUDFLARE_TUNNEL_TOKEN',
   'HESTIA_OWNER_EMAIL',
   'HESTIA_PUBLIC_MAGIC_LINK_ENABLED',
-  'HESTIA_MAGIC_LINK_ENABLED',
   'GOTRUE_SMTP_PASS',
   'BACKUP_DIR',
   'VAPID_SUBJECT',
@@ -88,9 +90,6 @@ const lines = readFileSync(process.env.EXAMPLE, 'utf8')
     const key = match[1];
     if (key in generated) return `${key}=${generated[key]}`;
     if (fromEnvironment.includes(key) && process.env[key]) return `${key}=${process.env[key]}`;
-    if (key === 'HESTIA_PUBLIC_MAGIC_LINK_ENABLED' && process.env['HESTIA_MAGIC_LINK_ENABLED']) {
-      return `${key}=${process.env['HESTIA_MAGIC_LINK_ENABLED']}`;
-    }
     return line;
   });
 const missing = Object.keys(generated).filter((key) => !lines.some((l) => l.startsWith(`${key}=`)));

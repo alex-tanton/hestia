@@ -76,11 +76,11 @@ Production settings reside outside the repository at `/srv/hestia/.env`.
 | `POSTGRES_PASSWORD` | PostgreSQL superuser password | `generate-secrets.sh` |
 | `HESTIA_SERVICE_DB_PASSWORD` | Password for `hestia_service` database login role | `generate-secrets.sh` |
 | `JWT_SECRET` | HS256 secret for signing auth tokens | `generate-secrets.sh` |
-| `ANON_KEY` | Public anon key for GoTrue / Kong | `generate-secrets.sh` |
+| `HESTIA_PUBLIC_SUPABASE_ANON_KEY` | Public anon key for GoTrue / Kong / Web | `generate-secrets.sh` |
 | `SERVICE_ROLE_KEY` | Privileged admin key for internal system calls | `generate-secrets.sh` |
 | `REALTIME_SECRET_KEY_BASE` | Cookie secret for Realtime | `generate-secrets.sh` |
 | `REALTIME_DB_ENC_KEY` | 16-character encryption key for Realtime | `generate-secrets.sh` |
-| `VAPID_PUBLIC_KEY` | RFC 8292 Web Push public key (base64url P-256) | `generate-secrets.sh` |
+| `HESTIA_PUBLIC_VAPID_KEY` | RFC 8292 Web Push public key (base64url P-256) | `generate-secrets.sh` |
 | `VAPID_PRIVATE_KEY` | RFC 8292 Web Push private key (base64url P-256) | `generate-secrets.sh` |
 | `VAPID_SUBJECT` | Contact URI sent with push payloads (`mailto:...`) | Configured |
 
