@@ -45,6 +45,7 @@ test('valid user receives OTP email and signs in with 6-digit code', async ({ pa
   await page.getByLabel('Email').fill(SEED.alex.email);
   await page.getByRole('button', { name: 'Send sign-in link' }).click();
 
+  await page.getByRole('button', { name: 'Enter the code' }).click();
   await expect(page).toHaveURL(/\/sign-in\/code$/);
 
   const email = await waitForLatestEmail(SEED.alex.email);
@@ -63,6 +64,7 @@ test('invalid OTP code displays error message', async ({ page }) => {
   await page.getByLabel('Email').fill(SEED.alex.email);
   await page.getByRole('button', { name: 'Send sign-in link' }).click();
 
+  await page.getByRole('button', { name: 'Enter the code' }).click();
   await expect(page).toHaveURL(/\/sign-in\/code$/);
 
   await page.getByLabel('6-digit code').fill('000000');
@@ -98,6 +100,7 @@ test('resend code button enforces 30-second cooldown timer', async ({ page }) =>
   await page.getByLabel('Email').fill(SEED.alex.email);
   await page.getByRole('button', { name: 'Send sign-in link' }).click();
 
+  await page.getByRole('button', { name: 'Enter the code' }).click();
   await expect(page).toHaveURL(/\/sign-in\/code$/);
 
   const resendButton = page.getByRole('button', { name: /Send a new code/i });
@@ -106,7 +109,9 @@ test('resend code button enforces 30-second cooldown timer', async ({ page }) =>
 });
 
 test('rejects open redirects outside the application origin', async ({ request }) => {
+  const apikey = readStackEnv()['ANON_KEY'] ?? '';
   const response = await request.post('/auth/v1/otp', {
+    headers: { apikey },
     data: {
       email: SEED.alex.email,
       create_user: false,
