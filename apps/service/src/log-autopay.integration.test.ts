@@ -94,8 +94,8 @@ async function insertAutopayBill(fields: {
     `insert into public.bill (household_id, owner_user_id, name, amount, recurrence_unit,
        "interval", anchor_date, visibility, autopay, created_at, archived_at)
      values ($1, $2, 'Autopay Test Bill', 20.00, $3, $4,
-       (now() at time zone $9)::date - ($5 || ' days')::interval, $10, $6,
-       now() - ($7 || ' days')::interval,
+       ((now() at time zone $9)::date - ($5 || ' days')::interval)::date, $10, $6,
+       ((now() at time zone $9)::date - ($7 || ' days')::interval) at time zone $9,
        case when $8 then now() else null end)
      returning id`,
     [
