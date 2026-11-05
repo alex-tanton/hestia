@@ -27,7 +27,7 @@ function sourceWith(get: HttpGet = fixtureTransport(), logger?: QueueLogger) {
   const source = new FlippDealSource({
     queue: new FlippRequestQueue({
       get: recording,
-      userAgent: buildUserAgent('https://hestia.example.ts.net'),
+      userAgent: buildUserAgent('https://hestia.aberrance.app'),
       minGapMs: 0,
       attempts: 1,
       ...(logger === undefined ? {} : { logger }),
@@ -249,7 +249,7 @@ describe('listFlyerItems', () => {
     const source = new FlippDealSource({
       queue: new FlippRequestQueue({
         get: failing,
-        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+        userAgent: buildUserAgent('https://hestia.aberrance.app'),
         minGapMs: 0,
         attempts: 1,
         failureThreshold: 1,
@@ -331,7 +331,7 @@ describe('in-flight coalescing', () => {
     const source = new FlippDealSource({
       queue: new FlippRequestQueue({
         get,
-        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+        userAgent: buildUserAgent('https://hestia.aberrance.app'),
         minGapMs: 0,
         attempts: 1,
       }),
@@ -358,7 +358,7 @@ describe('in-flight coalescing', () => {
     const source = new FlippDealSource({
       queue: new FlippRequestQueue({
         get,
-        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+        userAgent: buildUserAgent('https://hestia.aberrance.app'),
         minGapMs: 0,
         attempts: 1,
       }),
@@ -386,7 +386,7 @@ describe('in-flight coalescing', () => {
     const source = new FlippDealSource({
       queue: new FlippRequestQueue({
         get,
-        userAgent: buildUserAgent('https://hestia.example.ts.net'),
+        userAgent: buildUserAgent('https://hestia.aberrance.app'),
         minGapMs: 0,
         attempts: 1,
       }),

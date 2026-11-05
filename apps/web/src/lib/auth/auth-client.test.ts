@@ -39,7 +39,10 @@ describe('the magic-link calls', () => {
 
     expect(auth.signInWithOtp).toHaveBeenCalledWith({
       email: 'alex@example.com',
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/`,
+      },
     });
   });
 

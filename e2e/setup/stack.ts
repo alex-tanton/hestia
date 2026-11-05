@@ -9,6 +9,7 @@ import {
   DB_PORT,
   ENV_FILE,
   IMAGE_TAG,
+  INBUCKET_PORT,
   NETWORK,
   REPO_ROOT,
   RUN_ID,
@@ -33,7 +34,7 @@ import { SUBNET_CANDIDATES, type Subnet } from '../support/run-identity.ts';
  */
 
 /** Stack services in start order. `backup` is left out: nothing in the suite reads a backup. */
-const DATA_SERVICES = ['db', 'auth', 'realtime', 'kong'];
+const DATA_SERVICES = ['db', 'inbucket', 'auth', 'realtime', 'kong'];
 const APP_SERVICES = ['hestia-service', 'caddy'];
 
 const isReuse = process.env['HESTIA_E2E_REUSE_STACK'] === '1';
@@ -47,11 +48,16 @@ function writeEnvFile(): void {
   mkdirSync(BACKUP_DIR, { recursive: true });
   rmSync(ENV_FILE, { force: true });
   runChecked('bash', [join(REPO_ROOT, 'scripts', 'generate-secrets.sh'), ENV_FILE], {
-    // Plain HTTP on the loopback: there is no Funnel in front of the E2E stack, and every link
-    // the stack prints — an invite, the owner's reset link — has to be one the browser can open.
+    // Plain HTTP on the loopback: there is no Cloudflare edge in front of the E2E stack, and every
+    // link the stack prints — an invite, the owner's reset link — has to be one the browser can open.
     HESTIA_ORIGIN: BASE_URL,
+    // Compose interpolates the base file's required token even though the overlay never starts the
+    // connector, so a placeholder satisfies it and nothing ever dials Cloudflare.
+    CLOUDFLARE_TUNNEL_TOKEN: 'e2e-not-a-real-token',
     // Alex is the development owner, so Alex sees System health.
     HESTIA_OWNER_EMAIL: 'alex@example.com',
+    HESTIA_MAGIC_LINK_ENABLED: 'true',
+    VAPID_SUBJECT: 'mailto:admin@aberrance.app',
     BACKUP_DIR,
   });
 }
@@ -98,9 +104,9 @@ function appendRunEnv(subnet: Subnet): void {
   const lines = [
     `HESTIA_E2E_CADDY_PORT=${String(CADDY_PORT)}`,
     `HESTIA_E2E_DB_PORT=${String(DB_PORT)}`,
+    `HESTIA_E2E_INBUCKET_PORT=${String(INBUCKET_PORT)}`,
     `HESTIA_E2E_NETWORK=${NETWORK}`,
     `HESTIA_E2E_SUBNET=${subnet.subnet}`,
-    `HESTIA_E2E_GATEWAY=${subnet.gateway}`,
   ];
   appendFileSync(ENV_FILE, `${lines.join('\n')}\n`);
 }

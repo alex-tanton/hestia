@@ -115,6 +115,7 @@ Hestia is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Required: `DATABASE_URL`, `HESTIA_ORIGIN`, `GOTRUE_URL`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
 - Optional with defaults: `HOST` (`0.0.0.0`), `PORT` (`3000`), `LOG_LEVEL` (`info`), `HESTIA_TRUSTED_PROXIES`, `HESTIA_OWNER_EMAIL`, `HESTIA_RATE_LIMIT_PER_MINUTE` (`300`), `HESTIA_PUSH_TRANSPORT` (`web-push`)
 - Optional: `BACKUP_DIR`, `VAPID_SUBJECT`
+- `CLOUDFLARE_TUNNEL_TOKEN` is Compose-only: `cloudflared` reads it, the service does not
 - E2E-only overrides (set only by the E2E Compose overlay): `HESTIA_FLIPP_FIXTURE_DIR`, `HESTIA_FLIPP_FIXTURE_NOW`, `HESTIA_RECIPE_FIXTURE_DIR`, `HESTIA_PUSH_TRANSPORT=test-double`
 - The owner CLI reads only `HESTIA_ORIGIN`, `GOTRUE_URL`, and `SERVICE_ROLE_KEY` (`parseCliEnv` in `apps/service/src/env.ts`)
 - `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`, `VITE_MAGIC_LINK_ENABLED`
@@ -136,7 +137,7 @@ Hestia is a household-management PWA (shopping lists, chores, bills, meals/recip
 - Docker with the Compose plugin for the full stack and the E2E overlay `e2e/docker-compose.e2e.yml`
 - Playwright Chromium: `pnpm --filter @hestia/e2e exec playwright install --with-deps chromium`
 - Single Linux host running the Compose stack in `docker/docker-compose.yml`
-- Only the `caddy` service publishes a port, bound to `127.0.0.1:8080`; public ingress is Tailscale Funnel (`sudo tailscale funnel --bg http://127.0.0.1:8080`), origin `https://<machine>.<tailnet>.ts.net`
+- No service publishes a host port. Public ingress is a remotely-managed Cloudflare Tunnel: the `cloudflared` service, with its token `CLOUDFLARE_TUNNEL_TOKEN` in `/srv/hestia/.env`, routes `hestia.aberrance.app` to `http://caddy:8080`. The origin is `https://hestia.aberrance.app`
 - A second disk mounted at `BACKUP_DIR`
 - Self-hosted GitHub Actions runner with labels `self-hosted, hestia`, running as a user in the `docker` group (`.github/workflows/deploy.yml`)
 
@@ -149,7 +150,8 @@ Hestia is a household-management PWA (shopping lists, chores, bills, meals/recip
 | `realtime` | `public.ecr.aws/supabase/realtime:v2.130.0` | `docker/docker-compose.yml` | Supabase Realtime (WebSocket change feed) |
 | `kong` | `kong/kong:3.9.3` | `docker/docker-compose.yml`, config `docker/kong.yml` | API gateway for GoTrue and Realtime |
 | `hestia-service` | `hestia-service:${HESTIA_TAG}` | built from `docker/service.Dockerfile` | The Fastify service |
-| `caddy` | `hestia-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy |
+| `caddy` | `hestia-caddy:${HESTIA_TAG}` | built from `docker/caddy.Dockerfile`, final stage `caddy:2.11.7-alpine`, config `docker/Caddyfile` | Static PWA plus reverse proxy; resolves the client address from `CF-Connecting-IP`, trusted only from the Compose subnet |
+| `cloudflared` | `cloudflare/cloudflared:2026.10.3` | `docker/docker-compose.yml` | Tunnel connector; token from `CLOUDFLARE_TUNNEL_TOKEN`; never started in E2E |
 | `backup` | `prodrigestivill/postgres-backup-local:17-debian-d257e5d` | `docker/docker-compose.yml` | Daily dump at `0 2 * * *`; keeps 14 days, 8 weeks, 6 months |
 
 ## Database
@@ -563,7 +565,7 @@ This section is hand-maintained and sits outside the `GSD:*` managed blocks, so 
    ```
 
 3. Append `!docker/ca.crt` to `.dockerignore` (the `docker` directory is otherwise excluded from the build context).
-4. Run `pnpm test:e2e`. It takes about 9 minutes; the expected result is 104 passed.
+4. Run `pnpm test:e2e`. It takes about 9 minutes; the expected result is 107 passed.
 5. Revert: `git checkout docker/service.Dockerfile docker/caddy.Dockerfile .dockerignore && rm docker/ca.crt`, then confirm `git status` is clean.
 
 Retagging a local `node:24.21.0-bookworm-slim` image with the CA does not work: BuildKit resolves the `FROM` by registry digest and ignores local tags.

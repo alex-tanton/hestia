@@ -11,28 +11,28 @@
     {
       "number": "8",
       "name": "Full Rebrand to Hestia",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "9",
       "name": "Domain & Network Migration (Cloudflare Tunnel & Ingress)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "10",
       "name": "Magic Links & Transactional Email",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "11",
       "name": "Web Push & Edge Hardening",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 8 of 5 · 20% · ready to verify"
+    "command": "/gsd-progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-10-26T04:27:51.684Z"
+  "updated_at": "2026-11-02T16:28:02.307Z"
 }

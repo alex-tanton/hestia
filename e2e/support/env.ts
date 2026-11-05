@@ -67,11 +67,15 @@ const CADDY_PORT_VALUE = (process.env['HESTIA_E2E_CADDY_PORT'] ??=
   reused['HESTIA_E2E_CADDY_PORT'] ?? freePort());
 const DB_PORT_VALUE = (process.env['HESTIA_E2E_DB_PORT'] ??=
   reused['HESTIA_E2E_DB_PORT'] ?? distinctFreePort(CADDY_PORT_VALUE));
+const INBUCKET_PORT_VALUE = (process.env['HESTIA_E2E_INBUCKET_PORT'] ??=
+  reused['HESTIA_E2E_INBUCKET_PORT'] ?? distinctFreePort(CADDY_PORT_VALUE, DB_PORT_VALUE));
 
 /** The E2E stack's own ports, so a run never collides with a Compose or `supabase start` stack. */
 export const CADDY_PORT = Number(CADDY_PORT_VALUE);
 export const BASE_URL = `http://127.0.0.1:${CADDY_PORT_VALUE}`;
 export const DB_PORT = Number(DB_PORT_VALUE);
+export const INBUCKET_PORT = Number(INBUCKET_PORT_VALUE);
+export const INBUCKET_BASE_URL = `http://127.0.0.1:${INBUCKET_PORT_VALUE}`;
 
 /**
  * A loopback port the OS has just confirmed free. It is asked for in a child process because this
@@ -85,9 +89,9 @@ function freePort(): string {
   return execFileSync(process.execPath, ['-e', probe], { encoding: 'utf8' }).trim();
 }
 
-function distinctFreePort(avoid: string): string {
+function distinctFreePort(...avoid: string[]): string {
   let port = freePort();
-  while (port === avoid) port = freePort();
+  while (avoid.includes(port)) port = freePort();
   return port;
 }
 

@@ -2,62 +2,61 @@
 gsd_state_version: "1.0"
 milestone: v2.0
 milestone_name: Hestia — Domain Migration and Rebrand
-current_phase: 8
-current_phase_name: Full Rebrand to Hestia
-current_plan: 7
-status: verifying
-stopped_at: Completed 08-07-PLAN.md
-last_updated: "2026-10-26T04:27:52.537Z"
-last_activity: 2026-10-26
-last_activity_desc: Phase 08 execution started
-state_head: 969e8da2a3be287457c64a86ebdc66a854dbe32a
+status: Awaiting next milestone
+stopped_at: Phase 11 complete — all phases complete
+last_updated: "2026-11-02T16:28:02.207Z"
+last_activity: 2026-11-02
+last_activity_desc: Milestone v2.0 completed and archived
+state_head: c118c57da46c6de02490387e942ecd6398e9937f
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 11
-  completed_plans: 11
-  percent: 20
+  completed_phases: 5
+  total_plans: 23
+  completed_plans: 23
+  percent: 100
 current_milestone: v2.0
+current_phase: 11
 ---
 
 # Project State
 
 ## Project Reference
 
-See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hearth/.planning/PROJECT.md) (updated 2026-10-25)
+See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-02)
 
 **Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
-**Current focus:** Phase 08 — Full Rebrand to Hestia
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Milestone: v2.0 (Hestia Domain Migration and Rebrand) — ACTIVE
-Phase: 8 (Full Rebrand to Hestia)
-Current Plan: 7
-Total Plans in Phase: 7
-Phases: 1 of 5 complete (Phases 7–11)
-Status: Phase complete — ready for verification
-Last activity: 2026-10-26 — Phase 08 execution started
-
-Progress: [██░░░░░░░░] 20% of milestone plans
+Phase: Milestone v2.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-02 — Milestone v2.0 completed and archived
 
 ## Milestone Roadmap
 
-- [ ] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 bloat, rewrite `README.md`, extract guides to `docs/`
-- [ ] **Phase 8: Full Rebrand to Hestia** - Web UI, manifest, CLI, packages (`@hestia/*`), env (`HESTIA_*`)
-- [ ] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale, add Cloudflare Tunnel, Caddy `CF-Connecting-IP`, origin `hestia.aberrance.app`
-- [ ] **Phase 10: Magic Links & Transactional Email** - Build flag, screens, GoTrue SMTP for Resend/Postmark, E2E tests
-- [ ] **Phase 11: Web Push & Edge Hardening** - VAPID `mailto:admin@aberrance.app`, iOS/Android PWA push verification, Cloudflare Edge caching, quality ratchet
+- [x] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 bloat, rewrite `README.md`, extract guides to `docs/`
+- [x] **Phase 8: Full Rebrand to Hestia** - Web UI, manifest, CLI, packages (`@hestia/*`), env (`HESTIA_*`)
+- [x] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale, add Cloudflare Tunnel, Caddy `CF-Connecting-IP`, origin `hestia.aberrance.app`
+- [x] **Phase 10: Magic Links & Transactional Email** - Build flag, screens, GoTrue SMTP for Resend/Postmark, E2E tests
+- [x] **Phase 11: Web Push & Edge Hardening** - VAPID `mailto:admin@aberrance.app`, iOS/Android PWA push verification, Cloudflare Edge caching, quality ratchet
 
 ## Next Action
 
-Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
+Milestone v2.0 complete and archived. Run `/gsd-new-milestone` to start next milestone.
 
 ## Session
 
-**Last session:** 2026-10-26T04:27:52.497Z
-**Stopped at:** Completed 08-07-PLAN.md
-**Resume file:** None
+**Last session:** 2026-11-02T04:48:07.179Z
+**Stopped at:** Phase 11 complete — all phases complete
+**Resume file:** .planning/phases/11-web-push-edge-hardening/11-CONTEXT.md
+
+## Quick Tasks Completed
+
+| Slug | Date | Description | Status |
+|------|------|-------------|--------|
+| 20261102-prune-project | 2026-11-02 | Prune temporary files, non-core docs, obsolete planning files, redundant tests, and simplify configurations | complete ✓ |
 
 ## Performance Metrics
 
@@ -74,6 +73,11 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 | Phase 08 P05 | 8 min | 1 tasks | 52 files |
 | Phase 08 P06 | 10 min | 2 tasks | 7 files |
 | Phase 08 P07 | 24 min | 3 tasks | 5 files |
+| Phase 09 P01 | 12 min | 3 tasks | 9 files |
+| Phase 09 P02 | 5 min | 2 tasks | 7 files |
+| Phase 09 P03 | 5 min | 2 tasks | 10 files |
+| Phase 09 P04 | 14 min | 3 tasks | 10 files |
+| Phase 09 P05 | 38 min | 3 tasks | 5 files |
 
 ## Decisions
 
@@ -94,3 +98,23 @@ Execute Phase 08 plan 08-03 (environment variables, Compose and image names).
 - [Phase 08]: CLI requirement is a clean break (no alias or shim, D-07) and the environment requirement is a hard cutover with no fallback reads (D-01, D-02); cloud-session probe targets alex-tanton/hestia and fails until the repository is renamed after merge — Requirement text must describe what 08-03 and 08-04 delivered
 - [Phase 08]: 08-07: the former product name is blocked in CI by check 4 of the existing hygiene script; six allowlisted paths, and the four planning state files allow only twelve exact quotes, so anything else there must say the former name
 - [Phase 08]: 08-07: every CI check, test:integration, the service coverage run and all 104 Playwright tests pass on the renamed stack; the browser look at the tab title, manifest and install step is left to the owner
+- [Phase 09]: 09-01: the hestia network pins only its subnet (no gateway); the first deploy recreates the network, handled by 09-02 and the 09-04 runbook
+- [Phase 09]: 09-01: member-removal E2E journey renumbered to 21 so it stays last; spec 20 is the ingress client-IP and CSP spec
+- [Phase 09]: 09-01: commits use scope docker or service because commitlint's scope list is closed; Supabase images pulled by identical digest from Docker Hub when ECR hit its data limit in the sandbox
+- [Phase 09]: 09-02: deploy.sh prepares the whole project (up --no-start --no-recreate --no-build with HESTIA_TAG) before the subset start so the hestia network recreate completes; health gate runs wget inside the caddy container; cloudflared is in the fail-early start
+- [Phase 09]: 09-02: caddy-entrypoint.sh exits 1 on an unset or empty HESTIA_TRUSTED_PROXIES and names https://hestia.aberrance.app; commit scope docker for Compose, deploy and entrypoint work
+- [Phase 09]: 09-03: test fixtures swept to https://hestia.aberrance.app by literal-only replacement; env.ts changed by one comment line, HESTIA_ORIGIN still required with no default
+- [Phase 09]: 09-04: first-deploy network recreate documented in docs/deployment.md and checklist step 7; only four requirement/roadmap lines reworded (D-05, D-06, D-09)
+- [Phase 09]: Hygiene check 5: legacy-name machinery generalised into a TERM_RULES table; retired-ingress allowlist is three entries and one pinned quote (funnel through here in the recurrence comment)
+
+## Deferred Items
+
+Items acknowledged and deferred at milestone close, most recent first:
+
+| Category | Item | Status | Deferred At | Milestone |
+|----------|------|--------|-------------|-----------|
+| verification_gaps | 08/08-VERIFICATION.md | human_needed | 2026-11-02 | v2.0 |
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

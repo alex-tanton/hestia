@@ -14,7 +14,7 @@ const trustedProxies = z
 // `supabase start`. A trailing slash is dropped so paths can be appended.
 const gotrueUrl = z.url({ protocol: /^https?$/ }).transform((value) => value.replace(/\/+$/, ''));
 
-// The public origin, https://<machine>.<tailnet>.ts.net; invite and reset links are built on it.
+// The public origin, https://hestia.aberrance.app; invite and reset links are built on it.
 const origin = z.url({ protocol: /^https?$/ }).transform((value) => new URL(value).origin);
 
 /**
@@ -22,6 +22,18 @@ const origin = z.url({ protocol: /^https?$/ }).transform((value) => new URL(valu
  * every loopback request shares one client address.
  */
 export const DEFAULT_RATE_LIMIT_PER_MINUTE = 300;
+
+function isContactUri(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol === 'mailto:') {
+      return z.email().safeParse(url.pathname).success;
+    }
+    return url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 const envSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
@@ -77,9 +89,10 @@ const envSchema = z.object({
    */
   VAPID_PUBLIC_KEY: z.string().min(1),
   VAPID_PRIVATE_KEY: z.string().min(1),
-  // The contact URI sent in each push request's VAPID claims. Optional: when unset it is derived in
-  // `vapidSubjectFor`, so `Env.VAPID_SUBJECT` is always a usable mailto: or https: URI.
-  VAPID_SUBJECT: z.string().min(1).optional(),
+  // The contact URI sent in each push request's VAPID claims (RFC 8292). Must be mailto: or https:
+  VAPID_SUBJECT: z.string().min(1).refine(isContactUri, {
+    message: 'VAPID_SUBJECT must be a mailto: or https: URI',
+  }),
   /*
    * Which transport the dispatch job sends through. `web-push` is the only value a real deployment
    * sees: docker-compose.yml passes the service's environment through by name and never forwards
@@ -90,7 +103,7 @@ const envSchema = z.object({
   HESTIA_PUSH_TRANSPORT: z.enum(['web-push', 'test-double']).default('web-push'),
 });
 
-export type Env = z.infer<typeof envSchema> & { VAPID_SUBJECT: string };
+export type Env = z.infer<typeof envSchema>;
 
 function parse<T extends z.ZodType>(schema: T, source: NodeJS.ProcessEnv): z.infer<T> {
   const result = schema.safeParse(source);
@@ -100,54 +113,23 @@ function parse<T extends z.ZodType>(schema: T, source: NodeJS.ProcessEnv): z.inf
   return result.data;
 }
 
-function isContactUri(value: string): boolean {
-  try {
-    const protocol = new URL(value).protocol;
-    return protocol === 'mailto:' || protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-/**
- * The contact a push service is given in VAPID claims. web-push rejects any other scheme (plain
- * http included), so the choice is made here and never left to fail on the first send. An explicit
- * VAPID_SUBJECT wins; otherwise the owner's address as mailto:, otherwise the origin when it is
- * https. The error names the variables but never echoes their values, which hold household data.
- */
-export function vapidSubjectFor(env: {
-  VAPID_SUBJECT?: string | undefined;
-  HESTIA_OWNER_EMAIL: string;
-  HESTIA_ORIGIN: string;
-}): string {
-  if (env.VAPID_SUBJECT !== undefined) {
-    if (!isContactUri(env.VAPID_SUBJECT)) {
-      throw new Error('Invalid environment:\nVAPID_SUBJECT must be a mailto: or https: URI');
-    }
-    return env.VAPID_SUBJECT;
-  }
-  if (z.email().safeParse(env.HESTIA_OWNER_EMAIL).success) {
-    return `mailto:${env.HESTIA_OWNER_EMAIL}`;
-  }
-  if (new URL(env.HESTIA_ORIGIN).protocol === 'https:') return env.HESTIA_ORIGIN;
-  throw new Error(
-    'Invalid environment:\nVAPID_SUBJECT is unset and no contact can be derived: set VAPID_SUBJECT ' +
-      'to a mailto: or https: URI, set HESTIA_OWNER_EMAIL to an email address, or serve ' +
-      'HESTIA_ORIGIN over https',
-  );
-}
-
 /** Parses the environment, throwing with every problem listed so startup fails fast. */
 export function parseEnv(source: NodeJS.ProcessEnv): Env {
-  const env = parse(envSchema, source);
-  return { ...env, VAPID_SUBJECT: vapidSubjectFor(env) };
+  return parse(envSchema, source);
 }
 
-const cliEnvSchema = envSchema.pick({
-  HESTIA_ORIGIN: true,
-  GOTRUE_URL: true,
-  SERVICE_ROLE_KEY: true,
-});
+const cliEnvSchema = envSchema
+  .pick({
+    HESTIA_ORIGIN: true,
+    GOTRUE_URL: true,
+    SERVICE_ROLE_KEY: true,
+  })
+  .extend({
+    DATABASE_URL: z.string().min(1).optional(),
+    VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+    VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+    VAPID_SUBJECT: z.string().min(1).optional(),
+  });
 
 export type CliEnv = z.infer<typeof cliEnvSchema>;
 

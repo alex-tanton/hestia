@@ -1,13 +1,3 @@
-# Hestia production stack.
-#
-# The Supabase services are the subset of Supabase's official self-hosting compose that Hestia
-# uses. db, auth, and realtime are pinned to the same images the pinned Supabase CLI runs for
-# `supabase start`, so a production dump restores into local development unchanged.
-#
-# Run from the repository root, with the host's .env (which lives outside the checkout):
-#   docker compose --env-file /srv/hestia/.env -f docker/docker-compose.yml up -d
-# scripts/deploy.sh is the normal way to build and restart; see docs/deployment.md.
-
 name: hestia
 
 x-logging: &logging
@@ -26,7 +16,6 @@ services:
       - postgres
       - -c
       - config_file=/etc/postgresql/postgresql.conf
-      # Realtime polls constantly; below fatal the log is mostly its queries.
       - -c
       - log_min_messages=fatal
     environment:
@@ -38,20 +27,14 @@ services:
       PGDATABASE: postgres
       POSTGRES_DB: postgres
       JWT_EXP: 3600
-      # Read by docker/db/hestia-service-login.sql, at initialization and on every deploy.
       HESTIA_SERVICE_DB_PASSWORD: ${HESTIA_SERVICE_DB_PASSWORD:?set in .env}
     volumes:
-      # init-scripts run as postgres, migrations as supabase_admin, each set in name order after
-      # the image's own. They run only when the data volume is empty.
       - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
       - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
       - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
-      # The role migration itself, so a fresh database (first start, or a restore target) has
-      # hestia_service before the service first connects. Re-applying it later is a no-op.
       - ../supabase/migrations/20260919060000_hestia_service_role.sql:/docker-entrypoint-initdb.d/migrations/99-z1-hestia-service-role.sql:ro
       - ./db/hestia-service-login.sql:/docker-entrypoint-initdb.d/migrations/99-z2-hestia-service-login.sql:ro
       - db-data:/var/lib/postgresql/data
-      # The image keeps its pgsodium root key here; it must outlive the container.
       - db-config:/etc/postgresql-custom
     healthcheck:
       test: [CMD, pg_isready, -U, postgres, -h, localhost]
@@ -85,16 +68,23 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
       GOTRUE_EXTERNAL_PHONE_ENABLED: 'false'
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: 'false'
-      # Auth configuration table. No GOTRUE_SMTP_* while magic link is disabled.
       GOTRUE_MAILER_AUTOCONFIRM: 'true'
       GOTRUE_PASSWORD_MIN_LENGTH: 8
       GOTRUE_MAILER_OTP_LENGTH: 6
-      GOTRUE_MAILER_OTP_EXP: 3600
+      GOTRUE_MAILER_OTP_EXP: 900
       GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
-      # Per-IP limits key on the client address Caddy and Kong pass along.
+      GOTRUE_MAILER_URLPATHS_MAGIC_LINK: /auth/v1/verify
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Magic Link
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://caddy:8080/templates/magic_link.html
+      GOTRUE_SMTP_HOST: ${GOTRUE_SMTP_HOST:-smtp.resend.com}
+      GOTRUE_SMTP_PORT: ${GOTRUE_SMTP_PORT:-465}
+      GOTRUE_SMTP_USER: ${GOTRUE_SMTP_USER:-resend}
+      GOTRUE_SMTP_PASS: ${GOTRUE_SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${GOTRUE_SMTP_ADMIN_EMAIL:-auth@aberrance.app}
+      GOTRUE_SMTP_SENDER_NAME: ${GOTRUE_SMTP_SENDER_NAME:-Hestia}
       GOTRUE_RATE_LIMIT_HEADER: X-Forwarded-For
     healthcheck:
       test: [CMD, wget, --no-verbose, --tries=1, --spider, http://localhost:9999/health]
@@ -108,8 +98,6 @@ services:
     logging: *logging
     networks:
       hestia:
-        # Realtime takes the tenant id from the first label of the Host header Kong sends, and
-        # the self-hosted tenant it seeds is "realtime-dev".
         aliases: [realtime-dev.supabase-realtime]
     depends_on:
       db:
@@ -163,12 +151,10 @@ services:
       KONG_DNS_NOT_FOUND_TTL: 1
       KONG_DNS_VALID_TTL: 5
       KONG_PLUGINS: key-auth,acl,request-termination
-      # One nginx worker per CPU by default, ~50 MB each; two are plenty for a household.
       KONG_NGINX_WORKER_PROCESSES: 2
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
       KONG_PROXY_ACCESS_LOG: /dev/stdout combined
-      # Client IP passthrough: only Caddy, on this network, may name the client.
       KONG_TRUSTED_IPS: &subnet 172.16.238.0/24
       KONG_REAL_IP_HEADER: X-Forwarded-For
       KONG_REAL_IP_RECURSIVE: 'on'
@@ -201,14 +187,14 @@ services:
       LOG_LEVEL: info
       HESTIA_ORIGIN: ${HESTIA_ORIGIN}
       HESTIA_OWNER_EMAIL: ${HESTIA_OWNER_EMAIL:?set in .env}
-      HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-false}
+      HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-true}
       GOTRUE_URL: http://auth:9999
       JWT_SECRET: ${JWT_SECRET}
       ANON_KEY: ${ANON_KEY}
       SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?set in .env}
-      # System health reports the newest backup's modification time from here.
+      VAPID_SUBJECT: ${VAPID_SUBJECT:?set in .env}
       BACKUP_DIR: /backups
     volumes:
       - ${BACKUP_DIR:?set in .env}:/backups:ro
@@ -230,7 +216,7 @@ services:
       dockerfile: docker/caddy.Dockerfile
       args:
         HESTIA_REVISION: ${HESTIA_TAG:-dev}
-        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-false}
+        HESTIA_MAGIC_LINK_ENABLED: ${HESTIA_MAGIC_LINK_ENABLED:-true}
         ANON_KEY: ${ANON_KEY:?set in .env}
         VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env}
     restart: unless-stopped
@@ -241,19 +227,30 @@ services:
         condition: service_started
       kong:
         condition: service_started
-    # Tailscale Funnel on the host forwards here; nothing else is published.
-    ports:
-      - 127.0.0.1:8080:8080
     environment:
       HESTIA_ORIGIN: ${HESTIA_ORIGIN}
-      # Funnel's connection to the published port reaches Caddy from this address; see the
-      # Caddyfile's trusted_proxies.
-      HESTIA_HOST_GATEWAY: &gateway 172.16.238.1
+      HESTIA_TRUSTED_PROXIES: *subnet
     healthcheck:
       test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:8080/index.html]
       interval: 30s
       timeout: 5s
       retries: 3
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.3
+    restart: unless-stopped
+    logging: *logging
+    networks: [hestia]
+    command: [tunnel, run]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set in .env}
+      TUNNEL_METRICS: 127.0.0.1:2000
+    healthcheck:
+      test: [CMD, cloudflared, tunnel, ready]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   backup:
     image: prodrigestivill/postgres-backup-local:17-debian-d257e5d
@@ -268,11 +265,8 @@ services:
     environment:
       POSTGRES_HOST: db
       POSTGRES_DB: postgres
-      # pg_dump needs to read every schema, auth included.
       POSTGRES_USER: supabase_admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      # Gzip-compressed plain SQL. --clean --if-exists lets the dump replace the objects a fresh
-      # Supabase Postgres container already has (docs/deployment.md, "Restore production").
       POSTGRES_EXTRA_OPTS: -Z1 --clean --if-exists
       SCHEDULE: 0 2 * * *
       TZ: UTC
@@ -292,7 +286,6 @@ networks:
     ipam:
       config:
         - subnet: *subnet
-          gateway: *gateway
 
 volumes:
   db-data:

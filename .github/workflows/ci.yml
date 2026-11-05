@@ -49,10 +49,6 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - run: pnpm test:harness
-      # Web runs once, with coverage, so its thresholds in apps/web/vite.config.ts gate every pull
-      # request. The sweep (sweep.yml) keeps web's plain `test` script, so coverage is not paid for
-      # in every time zone.
       - run: pnpm -r --filter '!@hestia/web' test
       - run: pnpm --filter @hestia/web test:coverage
 

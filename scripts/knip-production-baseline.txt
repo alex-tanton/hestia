@@ -20,10 +20,7 @@ exports	apps/web/src/components/chores/chore-copy.ts	BANNED_GAMIFICATION_WORDS
 exports	apps/web/src/components/chores/chore-copy.ts	allChoreCopyStrings
 exports	apps/web/src/lib/push/use-push-device.tsx	PushPortProvider
 exports	packages/matching/src/normalize.ts	normalizeTokens
-exports	packages/recurrence/src/index.ts	currentChoreOccurrence
-exports	packages/recurrence/src/index.ts	rebaseRotationOnDeparture
-exports	packages/recurrence/src/rotation.ts	rebaseRotationOnDeparture
 exports	packages/shared/src/scrub.ts	scrubFields
 files	apps/service/src/deals/flipp/normalized-fixtures.ts	-
 files	scripts/knip-summary.mjs	-
-total	28	-
+total	25	-

@@ -53,7 +53,7 @@ Production is one Linux host running `docker/docker-compose.yml`; see
 | `e2e`                 | Playwright journeys and Flipp fixtures              |
 | `supabase`            | Supabase CLI config, SQL migrations, and seed       |
 | `docker`              | Compose file, Caddyfile, Kong config, Dockerfiles   |
-| `scripts`             | Deploy, secrets, CI pre-pull and test sweep scripts |
+| `scripts`             | Deploy, secrets, and repository health gate scripts |
 
 ## Documentation
 
@@ -63,8 +63,4 @@ Production is one Linux host running `docker/docker-compose.yml`; see
 | [docs/deployment.md](docs/deployment.md)     | The production runbook: first-time setup, deploys and rollback, backups and restore, troubleshooting.     |
 | [docs/testing.md](docs/testing.md)           | How unit, integration, frontend, and end-to-end tests are structured and how to add more.                 |
 | [docs/architecture.md](docs/architecture.md) | Request authorization and RLS, data model, API surface, background jobs, realtime, and notifications.     |
-| [docs/design.md](docs/design.md)             | Design decisions: navigation, state handling, empty states, and accessibility.                            |
-| [docs/use-cases.md](docs/use-cases.md)       | Product requirements restated as use cases: who does what, under what conditions, with what result.       |
-| [docs/branding.md](docs/branding.md)         | The name, voice, and visual identity: color, type, spacing, icons, motion, and copy rules.                |
-| [docs/file-map.md](docs/file-map.md)         | A map of the repository's folders and files.                                                              |
-| [CONTRIBUTING.md](CONTRIBUTING.md)           | How changes land: which go straight to `main`, which need a pull request, and the commit rules.           |
+| [CONTRIBUTING.md](CONTRIBUTING.md)           | Development workflow, quality gates, and commit guidelines.                                               |

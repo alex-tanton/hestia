@@ -1,2 +1,0 @@
-devDependencies	apps/web/package.json	tailwindcss
-total	1	-

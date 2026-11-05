@@ -1,80 +1,61 @@
-# E2E overlay for docker/docker-compose.yml.
-#
-#   docker compose -p hestia-e2e-<run> --env-file <generated .env> \
-#     -f docker/docker-compose.yml -f e2e/docker-compose.e2e.yml up -d --wait
-#
-# e2e/setup/stack.ts runs that for `pnpm test:e2e`. The suite exercises the production stack — the
-# same images, the same Caddyfile, the same Kong declarative config — so the routing rules it
-# asserts are the ones that ship. Only what the loopback demands is different. Every value that
-# differs between two runs on one machine is a variable the generated `.env` supplies (see
-# e2e/setup/stack.ts and e2e/support/run-identity.ts), so the overlay itself names nothing fixed:
-#
-#   * its own project name, network name, and subnet, so a run never touches a Compose stack or a
-#     `supabase start` stack already on the machine, and `down --volumes` only ever drops its own
-#     database. The network is created before `up` and declared external here, so Docker itself
-#     refuses a subnet another run already holds
-#   * Caddy and Postgres on free loopback ports chosen at run start, for the same reason
-#   * the database port published, because the migrations, the seed, and the tests' own
-#     assertions reach it from the host
-#   * Caddy started without docker/caddy-entrypoint.sh, whose guard exists to keep the pinned
-#     public origin an https one; E2E is plain HTTP on the loopback, so HESTIA_HOST — the only
-#     thing that entrypoint derives — is given directly
-#   * hestia-service reads the checked-in Flipp captures instead of the live endpoint, and logs at
-#     info rather than warn so the rate discipline the deal journeys exercise is readable in
-#     `docker compose logs`
-#   * hestia-service reads the checked-in recipe-page fixtures instead of fetching a pasted URL
-#     for real: `fetchRecipePage`'s private/loopback/link-local refusal would just as correctly
-#     refuse a fixture server reachable only on this network, so journey 4 (a recipe imports from
-#     a URL with JSON-LD) swaps the fetch step itself rather than trying to make a reachable
-#     address pass that check
-#
-# The `backup` service is left out: nothing in the suite reads a backup, and the stack starts
-# faster without it.
+# E2E test overlay for docker/docker-compose.yml
 
 services:
+  inbucket:
+    image: inbucket/inbucket:3.1.0
+    restart: unless-stopped
+    networks: [hestia]
+    ports:
+      - 127.0.0.1:${HESTIA_E2E_INBUCKET_PORT:?}:9000
+
+  auth:
+    depends_on:
+      db:
+        condition: service_healthy
+      inbucket:
+        condition: service_healthy
+    environment:
+      GOTRUE_SMTP_HOST: inbucket
+      GOTRUE_SMTP_PORT: 2500
+      GOTRUE_SMTP_USER: ''
+      GOTRUE_SMTP_PASS: ''
+      GOTRUE_SMTP_ADMIN_EMAIL: auth@aberrance.app
+      GOTRUE_SMTP_SENDER_NAME: Hestia
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://caddy:8080/templates/magic_link.html
+
   db:
     ports:
       - 127.0.0.1:${HESTIA_E2E_DB_PORT:?}:5432
 
   hestia-service:
-    # Relative to docker/, not to this file: Compose resolves every file's relative paths against
-    # the first -f file's directory, which is docker/docker-compose.yml (`compose.ts`).
     volumes:
       - ../e2e/fixtures/flipp/raw:/app/fixtures/flipp/raw:ro
       - ../e2e/fixtures/recipes:/app/fixtures/recipes:ro
     environment:
       HESTIA_TRUSTED_PROXIES: ${HESTIA_E2E_SUBNET:?}
-      # Every browser context and API call in the suite comes from the loopback, so they all share
-      # one per-IP bucket. Production's 300 a minute is
-      # exhausted by a full run; the limiter stays on, just with room for the suite's own traffic.
       HESTIA_RATE_LIMIT_PER_MINUTE: 3000
       LOG_LEVEL: info
-      # The fixture set's own instant (`FIXTURE_NOW`), so
-      # the wrapper's active-flyer window matches what the captures cover regardless of today.
       HESTIA_FLIPP_FIXTURE_DIR: /app/fixtures/flipp/raw
       HESTIA_FLIPP_FIXTURE_NOW: '2026-09-19T06:38:27.000Z'
       HESTIA_RECIPE_FIXTURE_DIR: /app/fixtures/recipes
-      # Pushes are recorded by the service rather than sent, and the suite reads them back through
-      # the service-role seam under /api/test/push. No push service
-      # is reachable from the stack in E2E. Only this file sets the value; production never does.
       HESTIA_PUSH_TRANSPORT: test-double
 
   kong:
     environment:
       KONG_TRUSTED_IPS: ${HESTIA_E2E_SUBNET:?}
 
+  cloudflared:
+    profiles: [e2e-excluded]
+
   caddy:
     command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
     environment:
       HESTIA_HOST: 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}
-      HESTIA_HOST_GATEWAY: ${HESTIA_E2E_GATEWAY:?}
-    ports: !override
+      HESTIA_TRUSTED_PROXIES: ${HESTIA_E2E_SUBNET:?}
+    ports:
       - 127.0.0.1:${HESTIA_E2E_CADDY_PORT:?}:8080
 
 networks:
-  # The base file's network is named `hestia` with its own ipam, which would pin a fixed name and
-  # subnet. The run creates this network itself (e2e/setup/stack.ts), so that two runs' subnets
-  # cannot overlap silently, and Compose uses it as declared rather than creating one.
   hestia:
     name: ${HESTIA_E2E_NETWORK:?}
     external: true
