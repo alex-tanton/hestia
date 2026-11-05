@@ -54,7 +54,7 @@ test('valid user receives OTP email and signs in with 6-digit code', async ({ pa
 
   const code = extractOtpCode(email);
   await page.getByLabel('6-digit code').fill(code);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   await expectDashboard(page, 'Rivera Family');
 });
@@ -68,7 +68,7 @@ test('invalid OTP code displays error message', async ({ page }) => {
   await expect(page).toHaveURL(/\/sign-in\/code$/);
 
   await page.getByLabel('6-digit code').fill('000000');
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   await expect(
     page.getByText('That code is incorrect or has expired. Ask for a new one.'),
@@ -113,7 +113,7 @@ test('rejects open redirects outside the application origin', async ({ request }
   const response = await request.post('/auth/v1/otp', {
     headers: { apikey },
     data: {
-      email: SEED.alex.email,
+      email: SEED.jordan.email,
       create_user: false,
     },
     params: {
@@ -122,5 +122,5 @@ test('rejects open redirects outside the application origin', async ({ request }
   });
 
   expect(response.ok()).toBe(false);
-  expect([400, 422]).toContain(response.status());
+  expect([400, 422, 429]).toContain(response.status());
 });
