@@ -3,7 +3,7 @@
 # docker-compose.yml); tagged with the commit SHA by scripts/deploy.sh, so the PWA, routing, and
 # headers roll back together.
 
-FROM node:24.21.0-bookworm-slim AS build
+FROM node:24.22.1-bookworm-slim AS build
 ENV CI=true HUSKY=0
 RUN corepack enable
 WORKDIR /repo
