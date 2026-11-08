@@ -82,3 +82,4 @@ Features that seem good but create problems.
 ---
 *Feature research for: Grocery Deals, Barcode Scanning & Kitchen Management*
 *Researched: 2026-11-08*
+

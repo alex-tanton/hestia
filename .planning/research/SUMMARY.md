@@ -106,3 +106,4 @@ Suggested phase structure for Milestone v2.1:
 ---
 *Research completed: 2026-11-08*
 *Ready for roadmap: yes*
+

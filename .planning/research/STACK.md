@@ -71,3 +71,4 @@ pnpm --filter @hestia/web add barcode-detector
 ---
 *Stack research for: Grocery Deals, Barcode Scanning & Kitchen Management*
 *Researched: 2026-11-08*
+

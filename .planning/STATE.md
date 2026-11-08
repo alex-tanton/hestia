@@ -3,43 +3,45 @@ gsd_state_version: "1.0"
 milestone: v2.1
 milestone_name: Grocery & Deals Intelligence
 status: planning
-last_updated: "2026-11-08T22:52:08.775Z"
+last_updated: "2026-11-08T23:04:00.000Z"
 last_activity: 2026-11-08
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
   percent: 0
+current_milestone: v2.1
+current_phase: 12
 ---
 
 # Project State
 
 ## Project Reference
 
-See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-02)
+See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-08)
 
-**Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
-**Current focus:** Planning next milestone
+**Core value:** Overhaul the grocery and deals experience with reliable image delivery, intelligent pricing & discount computation, high-performance deal syncing, barcode scanning for grocery list management, flexible meal planning with standalone items, and robust real-world test coverage.
+**Current focus:** Milestone v2.1 — Phase 12: Store & Deal Image Delivery
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 12 — Store & Deal Image Delivery
 Plan: —
-Status: Defining requirements
-Last activity: 2026-11-08 — Milestone v2.1 started
+Status: Ready to plan Phase 12
+Last activity: 2026-11-08 — Milestone v2.1 roadmap created (5 phases)
 
 ## Milestone Roadmap
 
-- [x] **Phase 7: Planning Cleanup & Documentation Restructure** - Archive v1.0 bloat, rewrite `README.md`, extract guides to `docs/`
-- [x] **Phase 8: Full Rebrand to Hestia** - Web UI, manifest, CLI, packages (`@hestia/*`), env (`HESTIA_*`)
-- [x] **Phase 9: Domain & Network Migration (Cloudflare Tunnel & Ingress)** - Decommission Tailscale, add Cloudflare Tunnel, Caddy `CF-Connecting-IP`, origin `hestia.aberrance.app`
-- [x] **Phase 10: Magic Links & Transactional Email** - Build flag, screens, GoTrue SMTP for Resend/Postmark, E2E tests
-- [x] **Phase 11: Web Push & Edge Hardening** - VAPID `mailto:admin@aberrance.app`, iOS/Android PWA push verification, Cloudflare Edge caching, quality ratchet
+- [ ] **Phase 12: Store & Deal Image Delivery** - Unblock modern Flipp CDNs and Open Food Facts images across Caddy CSP, Service Worker, and PWA components
+- [ ] **Phase 13: Deal Pricing Engine & Ingestion Performance** - Display prominent sale prices, % off badges, and original prices while eliminating 15+ minute deal sync delays
+- [ ] **Phase 14: Barcode Scanning & Grocery List Integration** - Camera-based scanner with Open Food Facts lookup to add and mark items bought in grocery lists
+- [ ] **Phase 15: Flexible Meal Planning (Custom Items & Recipes)** - Support standalone food items (banana, yogurt) directly on the meal planner alongside recipes
+- [ ] **Phase 16: Verification & Real-World Test Hardening** - Comprehensive unit, integration, and Playwright E2E verification of real-world grocery workflows
 
 ## Next Action
 
-Milestone v2.0 complete and archived. Run `/gsd-new-milestone` to start next milestone.
+Run `/gsd-discuss-phase 12` or `/gsd-plan-phase 12` to start execution.
 
 ## Session
 
