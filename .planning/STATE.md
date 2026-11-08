@@ -1,21 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v2.0
-milestone_name: Hestia — Domain Migration and Rebrand
-status: Awaiting next milestone
-stopped_at: Phase 11 complete — all phases complete
-last_updated: "2026-11-02T16:28:02.207Z"
-last_activity: 2026-11-02
-last_activity_desc: Milestone v2.0 completed and archived
-state_head: c118c57da46c6de02490387e942ecd6398e9937f
+milestone: v2.1
+milestone_name: Grocery & Deals Intelligence
+status: planning
+last_updated: "2026-11-08T22:52:08.775Z"
+last_activity: 2026-11-08
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 23
-  completed_plans: 23
-  percent: 100
-current_milestone: v2.0
-current_phase: 11
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -29,10 +24,10 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hest
 
 ## Current Position
 
-Phase: Milestone v2.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-02 — Milestone v2.0 completed and archived
+Status: Defining requirements
+Last activity: 2026-11-08 — Milestone v2.1 started
 
 ## Milestone Roadmap
 

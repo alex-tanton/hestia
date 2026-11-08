@@ -1,38 +1,12 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.0 — Hestia — Domain Migration and Rebrand",
-  "phases": [
-    {
-      "number": "7",
-      "name": "Planning Cleanup & Documentation Restructure",
-      "status": "complete"
-    },
-    {
-      "number": "8",
-      "name": "Full Rebrand to Hestia",
-      "status": "complete"
-    },
-    {
-      "number": "9",
-      "name": "Domain & Network Migration (Cloudflare Tunnel & Ingress)",
-      "status": "complete"
-    },
-    {
-      "number": "10",
-      "name": "Magic Links & Transactional Email",
-      "status": "complete"
-    },
-    {
-      "number": "11",
-      "name": "Web Push & Edge Hardening",
-      "status": "complete"
-    }
-  ],
+  "milestone": "v2.1",
+  "phases": [],
   "next": {
-    "command": "/gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "/gsd-discuss-phase",
+    "label": "Discuss the first phase",
+    "reason": "Project initialized — plan your first phase"
   },
-  "updated_at": "2026-11-02T16:28:02.307Z"
+  "updated_at": "2026-11-08T22:52:08.791Z"
 }

@@ -10,8 +10,18 @@ Hestia is a self-hosted household-management PWA (grocery deals, shopping lists,
 - **v1.0 — Cleanup and Hardening (2026-10-25):** 6 phases, 60 plans, 40 requirements. Test determinism, bare-clock ban, Knip baseline, bug fixes, CI ratchets.
 - **v2.0 — Hestia Domain Migration and Rebrand (2026-11-02):** 5 phases, 23 plans, 21 requirements. Custom domain `hestia.aberrance.app` via Cloudflare Tunnel, full Hestia rebrand, GoTrue magic link authentication, RFC 8292 Web Push VAPID, edge caching & WAF rate limits, documentation modularization in `docs/`.
 
-**Next Milestone Goals:**
-- To be planned via `/gsd-new-milestone`.
+## Current Milestone: v2.1 Grocery & Deals Intelligence
+
+**Goal:** Overhaul the grocery and deals experience with reliable image delivery, intelligent pricing & discount computation, high-performance deal syncing, barcode scanning for grocery list management, flexible meal planning with standalone items, and robust real-world test coverage.
+
+**Target features:**
+- Fix missing store and item images by updating CSP and image origin allowlists across Caddy, PWA service worker, and web components.
+- Derive and display original price (secondary) and percent-off discount badge alongside primary sale price, computing discounts from sale stories when needed.
+- Accelerate deal ingestion and refresh performance to eliminate 15+ minute stalls for new accounts and active postal codes.
+- Implement camera-based barcode scanning (with manual entry fallback) and Open Food Facts lookup to add items to grocery lists.
+- Enable barcode scanning to automatically match and mark list items as purchased (`bought`).
+- Support first-class standalone items (e.g. banana, yogurt) on the meal planner without requiring a recipe.
+- Improve unit, integration, and Playwright E2E test coverage with real-world grocery and deal scenarios.
 
 ## Core Value
 
@@ -63,7 +73,13 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 
 ### Active
 
-*None — ready for next milestone planning via `/gsd-new-milestone`.*
+- [ ] **IMG-01**: Fix missing store and item images across Caddy CSP, PWA service worker, and web components for modern Flipp CDNs.
+- [ ] **PRICE-01**: Derive and display original price (secondary) and percent-off discount badge alongside primary sale price, computing discounts from sale stories when needed.
+- [ ] **PERF-01**: Accelerate deal ingestion and refresh performance to eliminate 15+ minute stalls for new accounts and active postal codes.
+- [ ] **SCAN-01**: Camera-based barcode scanner in PWA (with manual entry fallback) and Open Food Facts lookup to add items to grocery list.
+- [ ] **SCAN-02**: Barcode scanning to automatically match and mark list items as purchased (`bought`).
+- [ ] **MEAL-01**: First-class custom standalone items on meal planner without requiring a recipe.
+- [ ] **TEST-01**: Comprehensive unit, integration, and E2E test coverage for grocery, deal, and meal features.
 
 ### Out of Scope
 
@@ -98,5 +114,22 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 | Abstract `README.md` into dedicated `docs/` runbooks | Keeps main landing clean for new developers while preserving in-depth runbooks | Validated — Phase 7 |
 | Archive v1.0 phases into `.planning/milestones/v1.0/` | Clears clutter from active planning directory while preserving audit trail | Validated — Phase 7 |
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-11-02 after v2.0 milestone*
+*Last updated: 2026-11-08 for milestone v2.1*
