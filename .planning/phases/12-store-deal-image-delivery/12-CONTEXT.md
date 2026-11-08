@@ -86,3 +86,4 @@ None — discussion stayed within phase scope.
 
 *Phase: 12-Store & Deal Image Delivery*
 *Context gathered: 2026-11-08*
+
