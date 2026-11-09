@@ -5,16 +5,16 @@ milestone_name: Grocery & Deals Intelligence
 current_phase: 13
 current_phase_name: Deal Pricing Engine & Ingestion Performance
 status: executing
-stopped_at: Completed 13-02-PLAN.md
-last_updated: "2026-11-09T19:18:42.707Z"
+stopped_at: Completed 13-03-PLAN.md
+last_updated: "2026-11-09T19:34:16.411Z"
 last_activity: 2026-11-09
 last_activity_desc: Phase 13 execution started
-state_head: c418371fb72fd9afebac70cd34422b30da250052
+state_head: "0bee785ee093e39ded59929e28d0ea5b07ce9c61"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 20
 current_milestone: v2.1
 ---
@@ -49,8 +49,8 @@ Run `/gsd-plan-phase 13` to start planning.
 
 ## Session
 
-**Last session:** 2026-11-09T19:18:36.870Z
-**Stopped at:** Completed 13-02-PLAN.md
+**Last session:** 2026-11-09T19:34:04.675Z
+**Stopped at:** Completed 13-03-PLAN.md
 **Resume file:** None
 
 ## Quick Tasks Completed
@@ -82,6 +82,7 @@ Run `/gsd-plan-phase 13` to start planning.
 | Phase 09 P05 | 38 min | 3 tasks | 5 files |
 | Phase 13 P01 | 15 min | 2 tasks | 4 files |
 | Phase Phase 13 PP02 | 12 min | 2 tasks | 4 files |
+| Phase 13 P03 | 14 min | 2 tasks | 3 files |
 
 ## Decisions
 
@@ -112,6 +113,7 @@ Run `/gsd-plan-phase 13` to start planning.
 - [Phase 09]: Hygiene check 5: legacy-name machinery generalised into a TERM_RULES table; retired-ingress allowlist is three entries and one pinned quote (funnel through here in the recurrence comment)
 - [Phase 13]: 13-01: Derives effective unit prices and regular prices for multi-buy bundles and Buy-N-Get-M promotions using half-up cent rounding and 1%-95% sanity bounds (D-01, D-02, D-03, D-04)
 - [Phase Phase 13]: 13-02: Bounded 4-worker concurrency pool with 150ms pacing (D-05), concurrent flyer item resolution (D-06), and in-memory 2,000-item LRU cache with 6-hour TTL (D-07)
+- [Phase 13]: 13-03: DealCard anchors primary sale price in text-section tabular-nums with inline -X% discount badge beside strikethrough original price, clean fallback when regular price missing (DEAL-01), and 4.5s client polling with 3-minute ceiling (D-08, DEAL-03)
 
 ## Deferred Items
 
