@@ -28,18 +28,32 @@ describe('a deal card', () => {
       screen.getByRole('heading', { name: "Egg-Land's Best Extra Large Eggs" }),
     ).toBeInTheDocument();
     expect(screen.getByText('Harris Teeter')).toBeInTheDocument();
-    expect(screen.getByText('$2.50')).toBeInTheDocument();
+    const unitPrice = screen.getByText('$2.50');
+    expect(unitPrice).toBeInTheDocument();
+    expect(unitPrice).toHaveClass('text-section');
     expect(screen.getByText('2/$5.00')).toBeInTheDocument();
   });
 
-  it('strikes the original price, shows the discount, and names the validity dates', () => {
+  it('strikes the original price, shows the inline discount badge, and names the validity dates', () => {
     stubFetch({});
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={stouffersDeal} />);
 
-    expect(screen.getByText('$2.00')).toBeInTheDocument();
+    const salePrice = screen.getByText('$2.00');
+    expect(salePrice).toBeInTheDocument();
+    expect(salePrice).toHaveClass('text-section');
     expect(screen.getByText('$3.00')).toHaveClass('line-through');
-    expect(screen.getByText('33% off')).toBeInTheDocument();
+    expect(screen.getByText('-33%')).toBeInTheDocument();
     expect(screen.getByText('09/23/2026 – 09/29/2026')).toBeInTheDocument();
+  });
+
+  it('renders clean unit price with no strikethrough or discount badge when regular price is missing', () => {
+    stubFetch({});
+    const { container } = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
+
+    const unitPrice = screen.getByText('$2.50');
+    expect(unitPrice).toHaveClass('text-section');
+    expect(screen.queryByText(/%/)).toBeNull();
+    expect(container.querySelector('.line-through')).toBeNull();
   });
 
   it('prices a per-pound deal with its unit', () => {
