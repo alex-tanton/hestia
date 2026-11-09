@@ -71,11 +71,14 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 - ✓ **EDGE-01**: Document Cloudflare Edge caching rules for immutable Vite assets (`/assets/*`) and WAF rate limiting for `/auth/v1/*` — Phase 11
 - ✓ **VERIFY-01**: Full test suite sweep, build validation, Knip, and CI verification green across all packages — Phase 11
 
+### Validated (v2.1)
+
+- ✓ **IMG-01**: Fix missing store and item images across Caddy CSP, PWA service worker, and web components for modern Flipp CDNs — Phase 12
+- ✓ **PRICE-01**: Derive and display original price (secondary) and percent-off discount badge alongside primary sale price, computing discounts from sale stories when needed — Phase 13
+- ✓ **PERF-01**: Accelerate deal ingestion and refresh performance to eliminate 15+ minute stalls for new accounts and active postal codes — Phase 13
+
 ### Active
 
-- [ ] **IMG-01**: Fix missing store and item images across Caddy CSP, PWA service worker, and web components for modern Flipp CDNs.
-- [ ] **PRICE-01**: Derive and display original price (secondary) and percent-off discount badge alongside primary sale price, computing discounts from sale stories when needed.
-- [ ] **PERF-01**: Accelerate deal ingestion and refresh performance to eliminate 15+ minute stalls for new accounts and active postal codes.
 - [ ] **SCAN-01**: Camera-based barcode scanner in PWA (with manual entry fallback) and Open Food Facts lookup to add items to grocery list.
 - [ ] **SCAN-02**: Barcode scanning to automatically match and mark list items as purchased (`bought`).
 - [ ] **MEAL-01**: First-class custom standalone items on meal planner without requiring a recipe.
@@ -113,6 +116,9 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 | Full rebrand (PWA, CLI, package scopes `@hestia/*`, env vars `HESTIA_*`) | Complete architectural consistency across monorepo and operations | Validated — Phase 8 |
 | Abstract `README.md` into dedicated `docs/` runbooks | Keeps main landing clean for new developers while preserving in-depth runbooks | Validated — Phase 7 |
 | Archive v1.0 phases into `.planning/milestones/v1.0/` | Clears clutter from active planning directory while preserving audit trail | Validated — Phase 7 |
+| Derive promotional unit & original prices mathematically | Half-up rounding with 1%-95% sanity bounds translates marketing stories into structured prices | Validated — Phase 13 |
+| Bounded 4-worker pool with 150ms pacing & 2,000-item LRU cache for Flipp | Eliminates 15-minute ingestion serialization bottleneck while respecting upstream limits | Validated — Phase 13 |
+| Anchor primary sale price with inline discount badge & single-price fallback | Highlights real savings cleanly without duplicate badges or zero/null discount confusion | Validated — Phase 13 |
 
 ## Evolution
 
@@ -132,4 +138,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-08 for milestone v2.1*
+*Last updated: 2026-11-09 after Phase 13*
