@@ -74,12 +74,19 @@ export const parseMixAndMatchLimit: PriceParser = (copy) => {
 };
 
 /**
- * Minimum-quantity pricing: the price does not apply to one item. Real copy: Lowes Foods'
- * "ea MUST BUY 2" and Harris Teeter's "save at least $2.08 over our already low VIC price when
- * you buy 4".
+ * Minimum-quantity pricing: the price does not apply to one item unless the minimum quantity is
+ * purchased. When shelf price exists, parse the unit price directly unless copy.pre indicates
+ * a multi-buy bundle (e.g. "2/$6.00 MUST BUY 2"), in which case defer to parseMultiBuy.
  */
 export const parseMinimumQuantity: PriceParser = (copy) => {
-  if (/\bwhen you buy\b|\bmust buy\b|\bbuy \d+ or more\b/.test(copy.offer)) {
+  if (/\bwhen you buy\b|\bmust buy\b|\bbuy \d+ or more\b/i.test(copy.offer)) {
+    if (/\d+\s*(?:\/|for\b)/i.test(copy.pre)) {
+      return null;
+    }
+    const current = copy.price.currentPrice;
+    if (current !== null) {
+      return { unitPrice: current, priceUnit: 'each', originalPrice: copy.price.originalPrice };
+    }
     return skip('minimum_quantity');
   }
   return null;
@@ -87,41 +94,74 @@ export const parseMinimumQuantity: PriceParser = (copy) => {
 
 /**
  * Flyers write the count with a filler word in between: Food Lion prints both "BUY 2 GET 1 FREE"
- * and "BUY ANY 2 GET 1 FREE" in the same capture, and reading only the first would price the
- * second as though it were a plain shelf price.
+ * and "BUY ANY 2 GET 1 FREE" in the same capture.
  */
 const BUY_N = String.raw`\bbuy ?(?:any )?`;
 
 /** Half off, 60% off, "half price": anything but "free" on the second item. */
-const PARTIAL_BOGO = /\b(?:bogo|buy ?\d ?get ?\d)\b[^.]{0,20}?(?:\d+ ?%|half price)/;
+const PARTIAL_BOGO = /\b(?:bogo|buy ?\d ?get ?\d)\b[^.]{0,20}?(?:\d+ ?%|half price)/i;
+
 /**
  * Publix Liquors prints the amount both ways: "Buy 2 Get $6.00 Off" and "Buy 2 Get 10.00 Off".
  * The bare-number form needs the trailing "off", or "get 1 free" would match its own count.
  */
 const BUY_N_GET_AMOUNT = new RegExp(
-  `${BUY_N}\\d+\\b[^.]{0,25}?\\bget\\b[^.]{0,15}?(?:\\$\\d|\\d+(?:\\.\\d+)? ?off\\b)`,
+  `${BUY_N}(\\d+)\\b[^.]{0,25}?\\bget\\b[^.]{0,15}?(?:\\$\\s*(\\d+(?:\\.\\d{1,2})?)|(\\d+(?:\\.\\d{1,2})?)\\s*off\\b)`,
+  'i',
 );
 const BUY_N_GET_FREE = new RegExp(
   `${BUY_N}(\\d+)\\b[^.]{0,30}?\\bget ?(?:any )?(\\d+)\\b[^.]{0,20}?\\bfree\\b`,
+  'i',
 );
 const BUY_1_GET_1_FREE = new RegExp(
   `${BUY_N}1\\b[^.]{0,20}?\\bget ?(?:any )?1\\b[^.]{0,20}?\\bfree\\b`,
+  'i',
 );
 
 /**
- * Buy-N-get-M in every form except a plain buy-one-get-one free, with or without a base price.
- * Real copy: Food Lion's "BUY 2 GET 1 FREE" printed over an each price of $1.99, Harris Teeter's
- * "BUY 2 GET $8.00 OFF", CVS's "Buy 1 get 1 50% OFF* WITH CARD".
- *
- * A buy-2-get-1 at $1.99 each is $1.33 an item only if you buy three, so the shelf price is not
- * the price of one.
+ * Buy-N-get-M promotions derive effective unit price from base price:
+ * e.g. "BUY 2 GET 1 FREE" at $1.99 each -> unitPrice $1.33, originalPrice $1.99.
+ * Without a base price, the promotion is skipped as buy_n_get_m.
  */
 export const parseBuyNGetM: PriceParser = (copy) => {
   if (PARTIAL_BOGO.test(copy.offer)) return skip('buy_n_get_m');
-  if (BUY_N_GET_AMOUNT.test(copy.offer)) return skip('buy_n_get_m');
 
-  const free = BUY_N_GET_FREE.exec(copy.offer);
-  if (free !== null && !(free[1] === '1' && free[2] === '1')) return skip('buy_n_get_m');
+  const freeMatch = BUY_N_GET_FREE.exec(copy.offer);
+  if (freeMatch !== null) {
+    const n = Number(freeMatch[1]);
+    const m = Number(freeMatch[2]);
+    if (n === 1 && m === 1) return null; // delegating to parseBogo
+    const base = copy.price.currentPrice ?? copy.price.originalPrice;
+    if (base === null) return skip('buy_n_get_m');
+    if (!Number.isInteger(n) || !Number.isInteger(m) || n < 1 || m < 1) return null;
+    const paidCount = n;
+    const totalCount = n + m;
+    const totalPaid = paidCount * base;
+    const unitPrice = divideCents(totalPaid, totalCount);
+    const originalPrice = base;
+    const discountPercent = Math.round(((originalPrice - unitPrice) / originalPrice) * 100);
+    return { unitPrice, priceUnit: 'each', originalPrice, discountPercent };
+  }
+
+  const amountMatch = BUY_N_GET_AMOUNT.exec(copy.offer);
+  if (amountMatch !== null) {
+    const base = copy.price.currentPrice ?? copy.price.originalPrice;
+    if (base === null) return skip('buy_n_get_m');
+    const n = Number(amountMatch[1]);
+    const dollars = amountMatch[2] ?? amountMatch[3];
+    if (dollars !== undefined && Number.isInteger(n) && n >= 1) {
+      const amountCents = Math.round(Number(dollars) * 100);
+      if (n * base > amountCents) {
+        const totalPaid = n * base - amountCents;
+        const unitPrice = divideCents(totalPaid, n);
+        const originalPrice = base;
+        const discountPercent = Math.round(((originalPrice - unitPrice) / originalPrice) * 100);
+        return { unitPrice, priceUnit: 'each', originalPrice, discountPercent };
+      }
+    }
+    return skip('buy_n_get_m');
+  }
+
   return null;
 };
 
@@ -177,11 +217,19 @@ export const parseAmountOff: PriceParser = (copy) => {
   return { unitPrice: original - amount, priceUnit: 'each', originalPrice: original };
 };
 
+const BUNDLE_SAVINGS_DOLLARS =
+  /(?:\bsave\s+\$ ?(\d+(?:\.\d{1,2})?)(?:\s*(?:on|off|for)\s*(\d+))?|\$ ?(\d+(?:\.\d{1,2})?)\s*off(?:\s*(?:on|off|for)\s*(\d+))?)/i;
+const BUNDLE_SAVINGS_CENTS =
+  /(?:\bsave\s+(?:at least\s+)?(\d+)¢(?:\s*(?:on|off|for)\s*(\d+))?|(\d+)¢\s*off(?:\s*(?:on|off|for)\s*(\d+))?)/i;
+
 /**
  * Multi-buy, divided and rounded half-up, with the copy kept for display. Real copy: Harris
  * Teeter's "2/" over $6.00, Food Lion's "MVP 2/" over $5.00, CVS's "2/" over $14.00, Lowes Foods'
  * "FINAL PRICE 2/" over $4.00 against an original of $6.00 — where the original is the bundle total
  * too, so both are divided (unit $2.00, original $3.00, 33% off).
+ *
+ * When bundle savings are specified in marketing text (e.g. "save $1.50 on 2" or "save 98¢ on 2"),
+ * the original price is derived as (total + savings) / count.
  *
  * The multiplier is only ever in the pre-price text; post-price text such as "/lb" starts with
  * the same slash and means something else entirely.
@@ -189,11 +237,46 @@ export const parseAmountOff: PriceParser = (copy) => {
 export const parseMultiBuy: PriceParser = (copy) => {
   const total = copy.price.currentPrice;
   if (total === null) return null;
-  const match = /(\d+) ?(?:\/|for\b)/.exec(copy.pre);
+  const match = /(\d+) ?(?:\/|for\b)/i.exec(copy.pre);
   if (match === null) return null;
 
   const count = Number(match[1]);
   if (!Number.isInteger(count) || count < 2) return null;
+
+  // Check if copy contains bundle savings
+  const dollarMatch = BUNDLE_SAVINGS_DOLLARS.exec(copy.text);
+  const centMatch = dollarMatch === null ? BUNDLE_SAVINGS_CENTS.exec(copy.text) : null;
+
+  if (dollarMatch !== null) {
+    const dollars = dollarMatch[1] ?? dollarMatch[3];
+    const savingsCents = Math.round(Number(dollars) * 100);
+    const countStr = dollarMatch[2] ?? dollarMatch[4];
+    const savingsCount = countStr !== undefined ? Number(countStr) : null;
+
+    if (savingsCount === null || savingsCount === count) {
+      const totalCents = total;
+      const originalTotal = copy.price.originalPrice ?? totalCents + savingsCents;
+      const unitPrice = divideCents(totalCents, count);
+      const originalPrice = divideCents(originalTotal, count);
+      const discountPercent = Math.round(((originalPrice - unitPrice) / originalPrice) * 100);
+      return { unitPrice, priceUnit: 'each', originalPrice, discountPercent };
+    }
+  } else if (centMatch !== null) {
+    const cents = centMatch[1] ?? centMatch[3];
+    const savingsCents = Number(cents);
+    const countStr = centMatch[2] ?? centMatch[4];
+    const savingsCount = countStr !== undefined ? Number(countStr) : null;
+
+    if (savingsCount === null || savingsCount === count) {
+      const totalCents = total;
+      const originalTotal = copy.price.originalPrice ?? totalCents + savingsCents;
+      const unitPrice = divideCents(totalCents, count);
+      const originalPrice = divideCents(originalTotal, count);
+      const discountPercent = Math.round(((originalPrice - unitPrice) / originalPrice) * 100);
+      return { unitPrice, priceUnit: 'each', originalPrice, discountPercent };
+    }
+  }
+
   const original = copy.price.originalPrice;
   return {
     unitPrice: divideCents(total, count),

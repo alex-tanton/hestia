@@ -226,7 +226,7 @@ describe('parsePrice: each price rule, row by row', () => {
     ).toEqual({ skipped: 'bogo_no_base' });
   });
 
-  it('buy-N-get-M free other than BOGO is skipped, base price or not', () => {
+  it('buy-N-get-M free derives effective unit price when base price is known', () => {
     // Food Lion "Food Lion Cream Cheese": MVP $1.99 EA with "BUY 2 GET 1 FREE".
     expect(
       parsePrice(
@@ -237,14 +237,16 @@ describe('parsePrice: each price rule, row by row', () => {
           saleStory: 'BUY 2 GET 1 FREE',
         }),
       ),
-    ).toEqual({ skipped: 'buy_n_get_m' });
+    ).toMatchObject({
+      parsed: { unitPrice: 133, originalPrice: 199, discountPercent: 33 },
+    });
     // Publix "Blue Bunny Mini Swirls": BUY 2 GET 3 Free!, no price.
     expect(parsePrice(copy({ saleStory: 'BUY 2 GET 3 Free!' }))).toEqual({
       skipped: 'buy_n_get_m',
     });
   });
 
-  it('buy-N-get-an-amount-off is skipped', () => {
+  it('buy-N-get-an-amount-off derives unit price when base price is known', () => {
     // Harris Teeter "BUY 2 GET $8.00 OFF" / "Buy 2 Get $8.00 Off, SAVE $8.00 ON 2".
     expect(
       parsePrice(
@@ -254,19 +256,22 @@ describe('parsePrice: each price rule, row by row', () => {
           saleStory: 'Buy 2 Get $8.00 Off, SAVE $8.00 ON 2',
         }),
       ),
-    ).toEqual({ skipped: 'buy_n_get_m' });
-  });
-
-  it('buy-N-get-an-amount-off is skipped when the flyer omits the dollar sign', () => {
-    // Publix Liquors prints both forms. "Jack Daniel's Single Barrel": Buy 2 Get $6.00 Off.
-    // "Jameson Black Barrel": Buy 2 Get 10.00 Off, over $37.99 — not the price of one bottle
-    // under that offer, so it has to skip exactly like its sibling.
-    expect(parsePrice(copy({ currentPrice: 3799, saleStory: 'Buy 2 Get 10.00 Off' }))).toEqual({
-      skipped: 'buy_n_get_m',
+    ).toMatchObject({
+      parsed: { unitPrice: 1599, originalPrice: 1999, discountPercent: 20 },
     });
   });
 
-  it('buy-N-get-M free is skipped when a filler word separates "buy" from the count', () => {
+  it('buy-N-get-an-amount-off derives unit price when the flyer omits the dollar sign', () => {
+    // Publix Liquors prints both forms. "Jack Daniel's Single Barrel": Buy 2 Get $6.00 Off.
+    // "Jameson Black Barrel": Buy 2 Get 10.00 Off, over $37.99 -> derives effective unit price.
+    expect(
+      parsePrice(copy({ currentPrice: 3799, saleStory: 'Buy 2 Get 10.00 Off' })),
+    ).toMatchObject({
+      parsed: { unitPrice: 3299, originalPrice: 3799, discountPercent: 13 },
+    });
+  });
+
+  it('buy-N-get-M free derives effective price when a filler word separates "buy" from the count', () => {
     // Food Lion prints both "BUY 2 GET 1 FREE" (Glacéau Smart Water) and "HOT SALE!! BUY ANY 2
     // GET 1 FREE!" (V8 V-Fusion), the second over $5.99 EA.
     expect(
@@ -277,7 +282,9 @@ describe('parsePrice: each price rule, row by row', () => {
           saleStory: 'HOT SALE!! BUY ANY 2 GET 1 FREE!',
         }),
       ),
-    ).toEqual({ skipped: 'buy_n_get_m' });
+    ).toMatchObject({
+      parsed: { unitPrice: 399, originalPrice: 599, discountPercent: 33 },
+    });
   });
 
   it('still halves a buy-one-get-one written with that same filler word', () => {
@@ -293,10 +300,10 @@ describe('parsePrice: each price rule, row by row', () => {
     });
   });
 
-  it('minimum-quantity pricing is skipped', () => {
+  it('minimum-quantity pricing parses shelf price when present', () => {
     // Lowes Foods "Liquid Death Sparkling Energy": $1.95 ea MUST BUY 2.
-    expect(parsePrice(copy({ currentPrice: 195, postPriceText: 'ea MUST BUY 2' }))).toEqual({
-      skipped: 'minimum_quantity',
+    expect(parsePrice(copy({ currentPrice: 195, postPriceText: 'ea MUST BUY 2' }))).toMatchObject({
+      parsed: { unitPrice: 195, priceUnit: 'each' },
     });
     // Harris Teeter "Harris Teeter Granulated Sugar": $2.97 when you buy 4.
     expect(
@@ -306,7 +313,13 @@ describe('parsePrice: each price rule, row by row', () => {
           saleStory: 'save at least $2.08 over our already low VIC price when you buy 4',
         }),
       ),
-    ).toEqual({ skipped: 'minimum_quantity' });
+    ).toMatchObject({
+      parsed: { unitPrice: 297, priceUnit: 'each' },
+    });
+    // Minimum quantity with no price skips
+    expect(parsePrice(copy({ saleStory: 'MUST BUY 2' }))).toEqual({
+      skipped: 'minimum_quantity',
+    });
   });
 
   it('percent off with no base price is skipped', () => {
@@ -622,5 +635,127 @@ describe('display copy and qualifiers', () => {
     expect(
       detectQualifier(buildCopy(copy({ currentPrice: 399, saleStory: 'HOT SALE!!' }))),
     ).toBeNull();
+  });
+});
+
+describe('derived pricing math for bundles and promotions (D-01, D-02)', () => {
+  it('derives bundle savings with dollar discount ("2/$6.00 with $1.50 off on 2")', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 600,
+          prePriceText: '2/',
+          saleStory: 'with $1.50 off on 2',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 300,
+        originalPrice: 375,
+        discountPercent: 20,
+        displayPrice: '2/$6.00',
+      },
+    });
+  });
+
+  it('derives bundle savings with cent discount ("2/$6.00 with save at least 98¢ on 2")', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 600,
+          prePriceText: '2/',
+          saleStory: 'save at least 98¢ on 2',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 300,
+        originalPrice: 349,
+        discountPercent: 14,
+        displayPrice: '2/$6.00',
+      },
+    });
+  });
+
+  it('derives BUY 2 GET 1 FREE at $1.99 each', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 199,
+          saleStory: 'BUY 2 GET 1 FREE',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 133,
+        originalPrice: 199,
+        discountPercent: 33,
+        priceUnit: 'each',
+      },
+    });
+  });
+
+  it('derives BUY 2 GET $8.00 OFF at $19.99 each', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 1999,
+          prePriceText: 'BUY 2 GET $8.00 OFF',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 1599,
+        originalPrice: 1999,
+        discountPercent: 20,
+        priceUnit: 'each',
+      },
+    });
+  });
+
+  it('derives MUST BUY 2 over $1.95', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 195,
+          postPriceText: 'MUST BUY 2',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 195,
+        priceUnit: 'each',
+      },
+    });
+  });
+
+  it('divides 2/$6.00 MUST BUY 2 via multi-buy bundle division rather than returning un-divided 600', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 600,
+          prePriceText: '2/',
+          postPriceText: 'MUST BUY 2',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 300,
+        priceUnit: 'each',
+        displayPrice: '2/$6.00 MUST BUY 2',
+      },
+    });
+  });
+
+  it('skips BUY 2 GET 3 Free! when no price is present', () => {
+    expect(
+      parsePrice(
+        copy({
+          saleStory: 'BUY 2 GET 3 Free!',
+        }),
+      ),
+    ).toEqual({
+      skipped: 'buy_n_get_m',
+    });
   });
 });
