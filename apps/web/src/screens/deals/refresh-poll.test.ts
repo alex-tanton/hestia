@@ -1,9 +1,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  FIRST_DELAY_MS,
   MAX_ATTEMPTS,
-  MAX_DELAY_MS,
+  MAX_POLL_MS,
+  POLL_INTERVAL_MS,
   refreshDelayMs,
   useRefreshPoll,
 } from './use-refresh-poll.ts';
@@ -16,32 +16,32 @@ describe('the dormant-postal-code refetch loop', () => {
     vi.useRealTimers();
   });
 
-  it('backs off rather than asking on a fixed beat, and caps the wait', () => {
-    expect(refreshDelayMs(0)).toBe(FIRST_DELAY_MS);
-    expect(refreshDelayMs(1)).toBe(FIRST_DELAY_MS * 2);
-    expect(refreshDelayMs(2)).toBe(FIRST_DELAY_MS * 4);
-    expect(refreshDelayMs(20)).toBe(MAX_DELAY_MS);
+  it('uses a fixed 4.5s interval and 3-minute ceiling', () => {
+    expect(refreshDelayMs()).toBe(POLL_INTERVAL_MS);
+    expect(POLL_INTERVAL_MS).toBe(4_500);
+    expect(MAX_POLL_MS).toBe(180_000);
+    expect(MAX_ATTEMPTS).toBe(40);
   });
 
-  it('refetches while the server says it is refreshing', () => {
+  it('refetches repeatedly at 4.5s intervals while the server says it is refreshing', () => {
     const refetch = vi.fn();
     renderHook(() => useRefreshPoll(true, refetch));
 
     expect(refetch).not.toHaveBeenCalled();
     act(() => {
-      vi.advanceTimersByTime(FIRST_DELAY_MS);
+      vi.advanceTimersByTime(POLL_INTERVAL_MS);
     });
     expect(refetch).toHaveBeenCalledTimes(1);
 
     act(() => {
-      vi.advanceTimersByTime(FIRST_DELAY_MS);
-    });
-    // The second wait is twice the first, so the same advance is not yet enough.
-    expect(refetch).toHaveBeenCalledTimes(1);
-    act(() => {
-      vi.advanceTimersByTime(FIRST_DELAY_MS);
+      vi.advanceTimersByTime(POLL_INTERVAL_MS);
     });
     expect(refetch).toHaveBeenCalledTimes(2);
+
+    act(() => {
+      vi.advanceTimersByTime(POLL_INTERVAL_MS);
+    });
+    expect(refetch).toHaveBeenCalledTimes(3);
   });
 
   it('stops as soon as the refresh resolves', () => {
@@ -52,26 +52,25 @@ describe('the dormant-postal-code refetch loop', () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(FIRST_DELAY_MS);
+      vi.advanceTimersByTime(POLL_INTERVAL_MS);
     });
     expect(refetch).toHaveBeenCalledTimes(1);
 
     rerender({ isRefreshing: false });
     expect(result.current.isPolling).toBe(false);
     act(() => {
-      vi.advanceTimersByTime(MAX_DELAY_MS * 5);
+      vi.advanceTimersByTime(POLL_INTERVAL_MS * 5);
     });
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
-  it('gives up after its attempts are spent rather than polling forever', () => {
+  it('gives up after its attempts are spent (3 minutes / 40 attempts) rather than polling forever', () => {
     const refetch = vi.fn();
     const { result } = renderHook(() => useRefreshPoll(true, refetch));
 
-    // Each advance fires one wait; the next is scheduled by the effect React runs after it.
     for (let tick = 0; tick < MAX_ATTEMPTS + 5; tick += 1) {
       act(() => {
-        vi.advanceTimersByTime(MAX_DELAY_MS);
+        vi.advanceTimersByTime(POLL_INTERVAL_MS);
       });
     }
 
@@ -85,7 +84,7 @@ describe('the dormant-postal-code refetch loop', () => {
     renderHook(() => useRefreshPoll(true, refetch, false));
 
     act(() => {
-      vi.advanceTimersByTime(MAX_DELAY_MS * 3);
+      vi.advanceTimersByTime(POLL_INTERVAL_MS * 3);
     });
     expect(refetch).not.toHaveBeenCalled();
   });
