@@ -17,6 +17,7 @@ export * from './api/recipes.js';
 export * from './api/system.js';
 export * from './api/users.js';
 export * from './config/index.js';
+export * from './images.js';
 export * from './password.js';
 export * from './problem.js';
 export * from './scrub.js';
