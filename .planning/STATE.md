@@ -3,18 +3,18 @@ gsd_state_version: "1.0"
 milestone: v2.1
 milestone_name: Grocery & Deals Intelligence
 current_phase: 13
-current_phase_name: deal-pricing-engine-ingestion-performance
+current_phase_name: Deal Pricing Engine & Ingestion Performance
 status: executing
-stopped_at: Phase 13 context gathered
-last_updated: "2026-11-09T18:26:06.019Z"
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-11-09T18:58:17.175Z"
 last_activity: 2026-11-09
-last_activity_desc: Phase 12 complete, transitioned to Phase 13
-state_head: 45d174b029e0af30d83832ed1e3426558b82ce8b
+last_activity_desc: Phase 13 execution started
+state_head: 7de763180121be978cec9a6397520ed40d2ae58f
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
   percent: 20
 current_milestone: v2.1
 ---
@@ -30,10 +30,10 @@ See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hest
 
 ## Current Position
 
-Phase: 13 (deal-pricing-engine-ingestion-performance) — READY TO EXECUTE
-Plan: Not started
+Phase: 13 (Deal Pricing Engine & Ingestion Performance) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-11-09 — Phase 12 complete, transitioned to Phase 13
+Last activity: 2026-11-09 — Phase 13 execution started
 
 ## Milestone Roadmap
 
@@ -49,9 +49,9 @@ Run `/gsd-plan-phase 13` to start planning.
 
 ## Session
 
-**Last session:** 2026-11-09T16:51:26.598Z
-**Stopped at:** Phase 13 context gathered
-**Resume file:** .planning/phases/13-deal-pricing-engine-ingestion-performance/13-CONTEXT.md
+**Last session:** 2026-11-09T18:57:53.231Z
+**Stopped at:** Completed 13-01-PLAN.md
+**Resume file:** None
 
 ## Quick Tasks Completed
 
@@ -80,6 +80,7 @@ Run `/gsd-plan-phase 13` to start planning.
 | Phase 09 P03 | 5 min | 2 tasks | 10 files |
 | Phase 09 P04 | 14 min | 3 tasks | 10 files |
 | Phase 09 P05 | 38 min | 3 tasks | 5 files |
+| Phase 13 P01 | 15 min | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -108,6 +109,7 @@ Run `/gsd-plan-phase 13` to start planning.
 - [Phase 09]: 09-03: test fixtures swept to https://hestia.aberrance.app by literal-only replacement; env.ts changed by one comment line, HESTIA_ORIGIN still required with no default
 - [Phase 09]: 09-04: first-deploy network recreate documented in docs/deployment.md and checklist step 7; only four requirement/roadmap lines reworded (D-05, D-06, D-09)
 - [Phase 09]: Hygiene check 5: legacy-name machinery generalised into a TERM_RULES table; retired-ingress allowlist is three entries and one pinned quote (funnel through here in the recurrence comment)
+- [Phase 13]: 13-01: Derives effective unit prices and regular prices for multi-buy bundles and Buy-N-Get-M promotions using half-up cent rounding and 1%-95% sanity bounds (D-01, D-02, D-03, D-04)
 
 ## Deferred Items
 
