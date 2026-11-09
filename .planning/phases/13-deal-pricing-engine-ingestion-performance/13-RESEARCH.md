@@ -498,3 +498,4 @@ export class ItemDetailLruCache {
 
 **Research date:** 2026-11-09  
 **Valid until:** 2026-12-09 (stable codebase architecture)
+
