@@ -40,12 +40,12 @@ created: "2026-11-09"
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 13-01-01 | 01 | 1 | DEAL-02 | — | Half-up cent rounding and 1%-95% discount validation threshold | unit | `pnpm --filter @hestia/service test apps/service/src/deals/price/parse-price.test.ts` | ✅ | ⬜ pending |
-| 13-01-02 | 01 | 1 | DEAL-02 | — | Mathematical derivation for bundle savings and Buy-N-Get-M | unit | `pnpm --filter @hestia/service test apps/service/src/deals/price/parse-price.test.ts` | ✅ | ⬜ pending |
-| 13-02-01 | 02 | 2 | DEAL-03 | — | Bounded worker pool (4-5 concurrent workers, 100-200ms pacing) | unit | `pnpm --filter @hestia/service test apps/service/src/deals/flipp/request-queue.test.ts` | ✅ | ⬜ pending |
-| 13-02-02 | 02 | 2 | DEAL-03 | — | Concurrent item resolution and in-memory LRU item-detail cache | unit | `pnpm --filter @hestia/service test apps/service/src/deals/flipp/flipp-deal-source.test.ts` | ✅ | ⬜ pending |
-| 13-03-01 | 03 | 3 | DEAL-01 | — | Primary sale price, inline discount badge, strikethrough original price | component | `pnpm --filter @hestia/web test apps/web/src/screens/deals/deal-card.test.tsx` | ✅ | ⬜ pending |
-| 13-03-02 | 03 | 3 | DEAL-03 | — | Adaptive 4-5s client polling with 3-minute ceiling | unit | `pnpm --filter @hestia/web test apps/web/src/screens/deals/use-refresh-poll.test.ts` | ✅ | ⬜ pending |
+| 13-01-01 | 01 | 1 | DEAL-02 | T-13-01 | Half-up cent rounding and 1%-95% discount validation threshold | unit | `pnpm --filter @hestia/service test src/deals/price/parse-price.test.ts` | ✅ | ⬜ pending |
+| 13-01-02 | 01 | 1 | DEAL-02 | T-13-02 | Mathematical derivation for bundle savings and Buy-N-Get-M | unit | `pnpm --filter @hestia/service test src/deals/price/parse-price.test.ts` | ✅ | ⬜ pending |
+| 13-02-01 | 02 | 2 | DEAL-03 | T-13-03, T-13-04 | Bounded worker pool (4-5 concurrent workers, 100-200ms pacing) | unit | `pnpm --filter @hestia/service test src/deals/flipp/request-queue.test.ts` | ✅ | ⬜ pending |
+| 13-02-02 | 02 | 2 | DEAL-03 | T-13-05 | Concurrent item resolution and in-memory LRU item-detail cache | unit | `pnpm --filter @hestia/service test src/deals/flipp/flipp-deal-source.test.ts` | ✅ | ⬜ pending |
+| 13-03-01 | 03 | 3 | DEAL-01 | T-13-07 | Primary sale price, inline discount badge, strikethrough original price | component | `pnpm --filter @hestia/web test src/screens/deals/deal-card.test.tsx` | ✅ | ⬜ pending |
+| 13-03-02 | 03 | 3 | DEAL-03 | T-13-06 | Adaptive 4-5s client polling with 3-minute ceiling | unit | `pnpm --filter @hestia/web test src/screens/deals/refresh-poll.test.ts` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
