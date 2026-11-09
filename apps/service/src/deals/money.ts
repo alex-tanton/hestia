@@ -24,12 +24,15 @@ export function divideCents(cents: number, divisor: number): number {
 }
 
 /**
- * `(original − unit) ÷ original × 100`, floored. Null when there is no original, or when it does
- * not beat the unit price — a "discount" of 0% or less is noise, not a saving.
+ * `(original − unit) ÷ original × 100`, rounded half-up and clamped to 1%–95%.
+ * Null when there is no original, or when it does not beat the unit price,
+ * or when the discount falls outside the 1%–95% sanity bounds.
  */
 export function discountPercent(unitPrice: number, originalPrice: number | null): number | null {
   if (originalPrice === null || originalPrice <= unitPrice) return null;
-  return Math.floor(((originalPrice - unitPrice) / originalPrice) * 100);
+  const pct = Math.round(((originalPrice - unitPrice) / originalPrice) * 100);
+  if (pct < 1 || pct > 95) return null;
+  return pct;
 }
 
 /** Cents as display dollars: 250 → "$2.50". Display only; never parsed back. */

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { discountPercent } from '../money.js';
 import { parsePrice, withoutImplausibleOriginal } from './parse-price.js';
 import { buildCopy, detectQualifier, formatDisplayPrice, type PriceCopy } from './price-copy.js';
 import {
@@ -41,7 +42,7 @@ describe('parsePrice: each price rule, row by row', () => {
         unitPrice: 145,
         priceUnit: 'each',
         originalPrice: 195,
-        discountPercent: 25,
+        discountPercent: 26,
         displayPrice: 'PRICE DROPS $1.45',
         conditionalPrice: false,
         conditionalReason: null,
@@ -509,7 +510,69 @@ describe('the parsers in isolation', () => {
     expect(withoutImplausibleOriginal({ ...core, originalPrice: 4790 })).toEqual({
       ...core,
       originalPrice: null,
+      discountPercent: undefined,
     });
+  });
+
+  it('discountPercent verifies half-up rounding', () => {
+    // 475 unit against 949 original: (949 - 475) / 949 = 49.947% -> rounds half-up to 50%
+    expect(discountPercent(475, 949)).toBe(50);
+    // (195 - 145) / 195 = 25.64% -> 26%
+    expect(discountPercent(145, 195)).toBe(26);
+  });
+
+  it('drops original price when equal to or less than unit price', () => {
+    expect(discountPercent(100, 100)).toBeNull();
+    expect(discountPercent(150, 100)).toBeNull();
+    expect(discountPercent(100, null)).toBeNull();
+
+    expect(
+      withoutImplausibleOriginal({ unitPrice: 100, priceUnit: 'each', originalPrice: 100 }),
+    ).toEqual({
+      unitPrice: 100,
+      priceUnit: 'each',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+    expect(
+      withoutImplausibleOriginal({ unitPrice: 150, priceUnit: 'each', originalPrice: 100 }),
+    ).toEqual({
+      unitPrice: 150,
+      priceUnit: 'each',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+  });
+
+  it('drops original price for case pricing OCR mismatch (original >= 10x unit price)', () => {
+    expect(
+      withoutImplausibleOriginal({ unitPrice: 239, priceUnit: 'lb', originalPrice: 2390 }),
+    ).toEqual({
+      unitPrice: 239,
+      priceUnit: 'lb',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+  });
+
+  it('drops original price when discount exceeds 95%', () => {
+    // 96% discount: unit 4, original 100 -> (100 - 4)/100 = 96%
+    expect(discountPercent(4, 100)).toBeNull();
+    expect(
+      withoutImplausibleOriginal({ unitPrice: 4, priceUnit: 'each', originalPrice: 100 }),
+    ).toEqual({
+      unitPrice: 4,
+      priceUnit: 'each',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+  });
+
+  it('retains valid discounts between 1% and 95%', () => {
+    expect(discountPercent(5, 100)).toBe(95);
+    expect(discountPercent(99, 100)).toBe(1);
+    const valid = { unitPrice: 50, priceUnit: 'each' as const, originalPrice: 100 };
+    expect(withoutImplausibleOriginal(valid)).toEqual(valid);
   });
 });
 
