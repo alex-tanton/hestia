@@ -82,10 +82,11 @@ describe('a deal card', () => {
 });
 
 describe('a deal image', () => {
-  it('accepts only the two hosts the CSP allows', () => {
+  it('accepts only approved CDN hosts that CSP allows', () => {
     expect(isAllowedImageUrl('https://f.wishabi.net/items/eggs.jpg')).toBe(true);
     expect(isAllowedImageUrl('https://images.wishabi.net/merchants/ht.png')).toBe(true);
-    expect(isAllowedImageUrl('https://flipp-image-retrieval.flipp.com/x.jpg')).toBe(false);
+    expect(isAllowedImageUrl('https://flipp-image-retrieval.flipp.com/x.jpg')).toBe(true);
+    expect(isAllowedImageUrl('https://attacker-flipp.com/x.jpg')).toBe(false);
     expect(isAllowedImageUrl('http://f.wishabi.net/items/eggs.jpg')).toBe(false);
     expect(isAllowedImageUrl('not a url')).toBe(false);
     expect(isAllowedImageUrl(null)).toBe(false);
