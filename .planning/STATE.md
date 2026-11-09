@@ -3,13 +3,13 @@ gsd_state_version: "1.0"
 milestone: v2.1
 milestone_name: Grocery & Deals Intelligence
 current_phase: 12
-current_phase_name: store-deal-image-delivery
-status: planning
+current_phase_name: Store & Deal Image Delivery
+status: executing
 stopped_at: Phase 12 UI-SPEC approved
-last_updated: "2026-11-09T15:17:31.110Z"
-last_activity: 2026-11-08
-last_activity_desc: Milestone v2.1 roadmap created (5 phases)
-state_head: e2074424d6351431ecc6e81f169c7b712d5a6923
+last_updated: "2026-11-09T16:09:17.388Z"
+last_activity: 2026-11-09
+last_activity_desc: Phase 12 execution started
+state_head: 0c0493bf420405610acf1efe93b3be709220527e
 progress:
   total_phases: 5
   completed_phases: 0
@@ -26,14 +26,14 @@ current_milestone: v2.1
 See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-08)
 
 **Core value:** Overhaul the grocery and deals experience with reliable image delivery, intelligent pricing & discount computation, high-performance deal syncing, barcode scanning for grocery list management, flexible meal planning with standalone items, and robust real-world test coverage.
-**Current focus:** Milestone v2.1 — Phase 12: Store & Deal Image Delivery
+**Current focus:** Phase 12 — Store & Deal Image Delivery
 
 ## Current Position
 
-Phase: 12 (store-deal-image-delivery) — READY TO EXECUTE
-Plan: —
-Status: Ready to plan Phase 12
-Last activity: 2026-11-08 — Milestone v2.1 roadmap created (5 phases)
+Phase: 12 (Store & Deal Image Delivery) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 12
+Last activity: 2026-11-09 — Phase 12 execution started
 
 ## Milestone Roadmap
 

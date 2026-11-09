@@ -44,6 +44,7 @@
 ## Phase Details
 
 ### Phase 12: Store & Deal Image Delivery
+
 **Goal**: Allow modern Flipp image CDNs and Open Food Facts image hosts across Caddy ingress, PWA Service Worker caching, and React components so store logos and deal product images render reliably without broken placeholders.
 **Depends on**: Phase 11 (previous milestone)
 **Requirements**: IMG-01, IMG-02, IMG-03
@@ -51,9 +52,13 @@
   1. Caddy `Content-Security-Policy` `img-src` header permits `*.flipp.com`, `flipp-image-retrieval.flipp.com`, `*.wishabi.com`, `*.wishabi.net`, and Open Food Facts image hosts without browser violations.
   2. PWA Service Worker intercepts and caches images from all permitted image origins cache-first with quota management.
   3. `DealImage` component and store logo views accept URLs from all allowed origins without falling back to placeholder icons.
+
 **Plans**: TBD
+- [x] 12-01-PLAN.md
+- [ ] 12-02-PLAN.md
 
 ### Phase 13: Deal Pricing Engine & Ingestion Performance
+
 **Goal**: Calculate and display primary sale price, savings percentage badges, and secondary regular prices from complex flyer text, and accelerate the deal ingestion pipeline to prevent 15+ minute stalls.
 **Depends on**: Phase 12
 **Requirements**: DEAL-01, DEAL-02, DEAL-03
@@ -61,9 +66,11 @@
   1. Deal cards show primary sale price, a discount badge (e.g. "-25%"), and strikethrough original/regular price secondary.
   2. Pricing engine mathematically parses complex flyer sale stories (e.g. "save $1.50 on 2", "2/$6.00") into correct unit price, regular price, and discount percentage when not explicitly provided.
   3. Background deal ingestion for active postal codes completes within 2 minutes instead of 15+ minutes, and new accounts see deals populate without polling timeouts.
+
 **Plans**: TBD
 
 ### Phase 14: Barcode Scanning & Grocery List Integration
+
 **Goal**: Provide a responsive camera barcode scanner with manual fallback in grocery lists, resolving products via Open Food Facts to add items and mark existing list items as purchased.
 **Depends on**: Phase 13
 **Requirements**: SCAN-01, SCAN-02, SCAN-03, SCAN-04
@@ -72,9 +79,11 @@
   2. Service resolves scanned barcodes via Open Food Facts v3 API with compliant User-Agent headers, caching results in Postgres and prompting for manual item name on cache/lookup miss.
   3. Scanning an item's barcode in a list automatically creates a new grocery item with the resolved name and brand.
   4. Scanning an item's barcode while shopping marks the corresponding item in the active list as `bought`.
+
 **Plans**: TBD
 
 ### Phase 15: Flexible Meal Planning (Custom Items & Recipes)
+
 **Goal**: Support standalone food items (e.g. banana, yogurt, snack) directly on the meal planner alongside existing recipes without requiring fake 1-ingredient recipe creation.
 **Depends on**: Phase 14
 **Requirements**: MEAL-01, MEAL-02, MEAL-03
@@ -82,9 +91,11 @@
   1. Database migration relaxes `meal_plan_entry.recipe_id NOT NULL` to allow standalone custom items with `custom_title`.
   2. User can add standalone custom food items to breakfast, lunch, or dinner slots on the meal planner via a dedicated quick-entry sheet.
   3. Placed custom food items appear cleanly on the planner grid alongside recipes and can be added directly to shopping lists via "Add to list".
+
 **Plans**: TBD
 
 ### Phase 16: Verification & Real-World Test Hardening
+
 **Goal**: Validate all new grocery, deal, and meal planning features with thorough unit tests, service integration tests, and Playwright E2E suites testing real-world data and user flows.
 **Depends on**: Phase 15
 **Requirements**: TEST-01, TEST-02, TEST-03
@@ -92,6 +103,7 @@
   1. Unit tests pass for deal pricing calculations across varied sale story patterns, discount badges, and edge cases.
   2. Service integration tests verify Open Food Facts proxy caching, error resilience, and custom meal plan entry lifecycle.
   3. Playwright E2E tests verify deal price/badge rendering, camera/manual barcode scanning flows (with mocked media stream and code injection), and custom meal item placement.
+
 **Plans**: TBD
 
 ## Progress
@@ -101,7 +113,7 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Store & Deal Image Delivery | v2.1 | 0/TBD | Not started | - |
+| 12. Store & Deal Image Delivery | v2.1 | 1/2 | In Progress | - |
 | 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 0/TBD | Not started | - |
 | 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/TBD | Not started | - |
 | 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/TBD | Not started | - |
