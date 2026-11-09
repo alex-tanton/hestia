@@ -35,7 +35,7 @@
 
 **Milestone Goal:** Overhaul the grocery and deals experience with reliable image delivery, intelligent pricing & discount computation, high-performance deal syncing, barcode scanning for grocery list management, flexible meal planning with standalone items, and robust real-world test coverage.
 
-- [ ] **Phase 12: Store & Deal Image Delivery** - Unblock modern Flipp CDNs and Open Food Facts images across Caddy CSP, Service Worker, and PWA components.
+- [x] **Phase 12: Store & Deal Image Delivery** - Unblock modern Flipp CDNs and Open Food Facts images across Caddy CSP, Service Worker, and PWA components. (completed 2026-11-09)
 - [ ] **Phase 13: Deal Pricing Engine & Ingestion Performance** - Display prominent sale prices, % off badges, and original prices while eliminating 15+ minute deal sync delays.
 - [ ] **Phase 14: Barcode Scanning & Grocery List Integration** - Camera-based scanner with Open Food Facts lookup to add and mark items bought in grocery lists.
 - [ ] **Phase 15: Flexible Meal Planning (Custom Items & Recipes)** - Support standalone food items (banana, yogurt) directly on the meal planner alongside recipes.
@@ -113,7 +113,7 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Store & Deal Image Delivery | v2.1 | 2/2 | In Progress | - |
+| 12. Store & Deal Image Delivery | v2.1 | 2/2 | Complete    | 2026-11-09 |
 | 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 0/TBD | Not started | - |
 | 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/TBD | Not started | - |
 | 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/TBD | Not started | - |

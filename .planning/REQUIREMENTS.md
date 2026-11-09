@@ -7,9 +7,9 @@
 
 ### Image Delivery
 
-- [ ] **IMG-01**: Caddy Content-Security-Policy `img-src` allows modern Flipp (`*.flipp.com`, `flipp-image-retrieval.flipp.com`, `*.wishabi.com`, `*.wishabi.net`) and Open Food Facts CDNs.
-- [ ] **IMG-02**: PWA Service Worker intercepts and caches deal images and merchant logos across all allowed Flipp and Open Food Facts domains.
-- [ ] **IMG-03**: `DealImage` component and merchant logo views permit modern Flipp and Open Food Facts origins, preventing broken placeholder fallbacks for valid images.
+- [x] **IMG-01**: Caddy Content-Security-Policy `img-src` allows modern Flipp (`*.flipp.com`, `flipp-image-retrieval.flipp.com`, `*.wishabi.com`, `*.wishabi.net`) and Open Food Facts CDNs.
+- [x] **IMG-02**: PWA Service Worker intercepts and caches deal images and merchant logos across all allowed Flipp and Open Food Facts domains.
+- [x] **IMG-03**: `DealImage` component and merchant logo views permit modern Flipp and Open Food Facts origins, preventing broken placeholder fallbacks for valid images.
 
 ### Deal Pricing & Ingestion Performance
 
@@ -60,9 +60,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| IMG-01 | Phase 12 | Pending |
-| IMG-02 | Phase 12 | Pending |
-| IMG-03 | Phase 12 | Pending |
+| IMG-01 | Phase 12 | Complete |
+| IMG-02 | Phase 12 | Complete |
+| IMG-03 | Phase 12 | Complete |
 | DEAL-01 | Phase 13 | Pending |
 | DEAL-02 | Phase 13 | Pending |
 | DEAL-03 | Phase 13 | Pending |
@@ -85,4 +85,3 @@
 ---
 *Requirements defined: 2026-11-08*
 *Last updated: 2026-11-08 after initial definition*
-
