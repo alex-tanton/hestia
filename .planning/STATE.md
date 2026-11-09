@@ -26,7 +26,7 @@ current_milestone: v2.1
 See: [.planning/PROJECT.md](file:///c:/Users/actanton/Development/Aberrance/hestia/.planning/PROJECT.md) (updated 2026-11-08)
 
 **Core value:** Overhaul the grocery and deals experience with reliable image delivery, intelligent pricing & discount computation, high-performance deal syncing, barcode scanning for grocery list management, flexible meal planning with standalone items, and robust real-world test coverage.
-**Current focus:** Phase 12 — Store & Deal Image Delivery
+**Current focus:** Phase 13 — Deal Pricing Engine & Ingestion Performance
 
 ## Current Position
 
@@ -45,7 +45,7 @@ Last activity: 2026-11-09 — Phase 12 complete, transitioned to Phase 13
 
 ## Next Action
 
-Run `/gsd-discuss-phase 12` or `/gsd-plan-phase 12` to start execution.
+Run `/gsd-plan-phase 13` to start planning.
 
 ## Session
 
