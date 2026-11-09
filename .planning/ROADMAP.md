@@ -55,7 +55,7 @@
 
 **Plans**: TBD
 - [x] 12-01-PLAN.md
-- [ ] 12-02-PLAN.md
+- [x] 12-02-PLAN.md
 
 ### Phase 13: Deal Pricing Engine & Ingestion Performance
 
@@ -113,7 +113,7 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Store & Deal Image Delivery | v2.1 | 1/2 | In Progress | - |
+| 12. Store & Deal Image Delivery | v2.1 | 2/2 | In Progress | - |
 | 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 0/TBD | Not started | - |
 | 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/TBD | Not started | - |
 | 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/TBD | Not started | - |
