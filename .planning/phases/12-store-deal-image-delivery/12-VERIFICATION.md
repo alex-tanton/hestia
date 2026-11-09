@@ -91,3 +91,4 @@ None. No stubs, no placeholder returns, and no insecure HTTP allowed.
 ## Human Verification Required
 
 None — all verifiable items checked programmatically via unit, component, and E2E type tests.
+
