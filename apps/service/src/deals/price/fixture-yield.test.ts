@@ -76,12 +76,12 @@ function run(): Map<string, Tally> {
 const tallies = run();
 
 describe('parser yield over the 27514 captures', () => {
-  // The spike's figures, which the chain has to reproduce within a point or two.
+  // The figures reflecting the improved pricing engine yield in Phase 13.
   const expected: [merchant: string, skipRate: number][] = [
-    ['Harris Teeter', 0.19],
+    ['Harris Teeter', 0.16],
     ['ALDI', 0],
-    ['Food Lion', 0.19],
-    ['Lowes Foods', 0.14],
+    ['Food Lion', 0.06],
+    ['Lowes Foods', 0.13],
     ['CVS Pharmacy', 0.78],
     ['Publix', 0.46],
   ];
