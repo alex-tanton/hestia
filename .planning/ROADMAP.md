@@ -69,7 +69,7 @@
 
 **Plans**: TBD
 - [x] 13-01-PLAN.md
-- [ ] 13-02-PLAN.md
+- [x] 13-02-PLAN.md
 - [ ] 13-03-PLAN.md
 
 ### Phase 14: Barcode Scanning & Grocery List Integration
@@ -117,7 +117,7 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. Store & Deal Image Delivery | v2.1 | 2/2 | Complete    | 2026-11-09 |
-| 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 1/3 | In Progress | - |
+| 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 2/3 | In Progress | - |
 | 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/TBD | Not started | - |
 | 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/TBD | Not started | - |
 | 16. Verification & Real-World Test Hardening | v2.1 | 0/TBD | Not started | - |

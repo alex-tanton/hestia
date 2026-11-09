@@ -15,7 +15,7 @@
 
 - [ ] **DEAL-01**: Deal cards display sale price as primary, discount percent-off badge (e.g. "-25%"), and strikethrough original/regular price as secondary.
 - [x] **DEAL-02**: Deal pricing engine parses complex flyer sale stories and pre/post price text (e.g., "save at least 98¢ on 2", "$1.50 off", "2/$6.00") to mathematically derive unit prices, original prices, and percent-off when not directly provided.
-- [ ] **DEAL-03**: Deal ingestion pipeline optimizes flyer processing (batching/concurrency and roster caching) to eliminate 15+ minute stalls for new accounts and active postal codes.
+- [x] **DEAL-03**: Deal ingestion pipeline optimizes flyer processing (batching/concurrency and roster caching) to eliminate 15+ minute stalls for new accounts and active postal codes.
 
 ### Barcode Scanning & Grocery List Management
 
@@ -65,7 +65,7 @@
 | IMG-03 | Phase 12 | Complete |
 | DEAL-01 | Phase 13 | Pending |
 | DEAL-02 | Phase 13 | Complete |
-| DEAL-03 | Phase 13 | Pending |
+| DEAL-03 | Phase 13 | Complete |
 | SCAN-01 | Phase 14 | Pending |
 | SCAN-02 | Phase 14 | Pending |
 | SCAN-03 | Phase 14 | Pending |
