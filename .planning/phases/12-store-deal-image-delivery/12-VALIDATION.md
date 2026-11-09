@@ -1,8 +1,8 @@
 ---
 phase: "12"
 slug: "store-deal-image-delivery"
-status: draft
-nyquist_compliant: false
+status: ready
+nyquist_compliant: true
 wave_0_complete: false
 created: "2026-11-09"
 ---

@@ -1,12 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.1",
-  "phases": [],
+  "milestone": "v2.1 — Grocery & Deals Intelligence",
+  "phases": [
+    {
+      "number": "12",
+      "name": "Store & Deal Image Delivery",
+      "status": "pending"
+    },
+    {
+      "number": "13",
+      "name": "Deal Pricing Engine & Ingestion Performance",
+      "status": "pending"
+    },
+    {
+      "number": "14",
+      "name": "Barcode Scanning & Grocery List Integration",
+      "status": "pending"
+    },
+    {
+      "number": "15",
+      "name": "Flexible Meal Planning (Custom Items & Recipes)",
+      "status": "pending"
+    },
+    {
+      "number": "16",
+      "name": "Verification & Real-World Test Hardening",
+      "status": "pending"
+    }
+  ],
   "next": {
-    "command": "/gsd-discuss-phase",
-    "label": "Discuss the first phase",
-    "reason": "Project initialized — plan your first phase"
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step (plan phase 12)",
+    "reason": "Phase 12 of 5 — needs a plan"
   },
-  "updated_at": "2026-11-08T22:52:08.791Z"
+  "updated_at": "2026-11-09T15:17:31.206Z"
 }
