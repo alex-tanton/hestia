@@ -57,6 +57,7 @@ export const PLANNER_PAST_WEEK_COPY = 'This week is history — placed meals are
 
 /** A deleted recipe's snapshot entry: no readiness, no link. */
 export const DELETED_RECIPE_NOTE = 'This recipe was deleted.';
+export const CUSTOM_ITEM_ADD_TO_LIST = 'Add to list';
 
 export function mealTypeLabel(mealType: 'breakfast' | 'lunch' | 'dinner'): string {
   return mealType === 'breakfast' ? 'Breakfast' : mealType === 'lunch' ? 'Lunch' : 'Dinner';
