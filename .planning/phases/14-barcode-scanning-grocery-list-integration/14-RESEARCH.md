@@ -546,12 +546,13 @@ export async function toggleTorch(stream: MediaStream, enable: boolean): Promise
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **How should ambiguous matches be resolved in "Shop & Check Off" mode?**
+1. **[RESOLVED] How should ambiguous matches be resolved in "Shop & Check Off" mode?**
    - What we know: If a scanned barcode matches a product named "Organic Whole Milk", but the shopping list contains both "Milk" and "Oat Milk", exact barcode matching may not match.
    - What's unclear: Should the app automatically check off the closest match or prompt the user?
    - Recommendation: If an item already has the identical `barcode`, match immediately. If matching by product name and multiple unbought items match, display a lightweight disambiguation bottom sheet listing the matching candidates.
+   - Resolution: Adopted recommendation per CONTEXT.md and Plans 14-02/14-03: items with matching stored barcode match immediately. When matching unbought items by normalized product name, if exactly one unbought item matches with score >= 0.8 it is marked bought immediately; if multiple unbought items match, display a lightweight disambiguation pick-list prompt listing candidate items.
 
 ---
 
