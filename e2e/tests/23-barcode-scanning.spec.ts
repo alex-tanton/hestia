@@ -83,6 +83,10 @@ for (const theme of ['light', 'dark'] as const) {
       // 7. Verify toast confirms check-off
       await expect(page.getByText(/marked bought/i).first()).toBeVisible();
 
+      // Close scanner dialog
+      await page.getByRole('button', { name: 'Close scanner' }).click();
+      await expect(scanner).toBeHidden();
+
       // 8. Expand Bought section and verify item is moved to Bought with checked checkbox
       const boughtToggle = page.getByRole('button', { name: /^Bought \(\d+\)$/ });
       await boughtToggle.click();

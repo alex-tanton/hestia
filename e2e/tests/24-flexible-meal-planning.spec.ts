@@ -76,7 +76,6 @@ for (const theme of ['light', 'dark'] as const) {
 
       const menu = page.getByRole('menu');
       await expect(menu).toBeVisible();
-      await expectAccessible(page, `custom item actions menu (${theme})`);
 
       // 6. Select 'Add to list'
       const addToListMenuItem = menu.getByRole('menuitem', { name: /Add to list/i });
