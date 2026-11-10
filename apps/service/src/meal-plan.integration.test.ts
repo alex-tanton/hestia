@@ -144,6 +144,23 @@ async function planMeal(
   return response.json<MealPlanEntry>();
 }
 
+async function planCustomItem(
+  home: Home,
+  customTitle: string,
+  plannedDate: string,
+  mealType: 'breakfast' | 'lunch' | 'dinner' = 'breakfast',
+): Promise<MealPlanEntry> {
+  const response = await as(
+    app,
+    home.user,
+    'POST',
+    `/api/households/${home.household.id}/meal-plan`,
+    { customTitle, plannedDate, mealType },
+  );
+  expectStatus(response, 201);
+  return response.json<MealPlanEntry>();
+}
+
 describe('week planner', () => {
   it('creates an entry with a readiness snapshot and lists it back by its week', async () => {
     const home = await household(app);
@@ -586,6 +603,95 @@ describe('suggestions', () => {
     );
     expectStatus(response, 200);
     expect(response.json<SuggestionsResponse>().dealsAsOf).toBeNull();
+  });
+});
+
+describe('flexible meal planning: standalone custom items (MEAL-01, MEAL-03)', () => {
+  it('places a custom food item, lists it in the week, and deletes it cleanly', async () => {
+    const home = await household(app);
+    const sunday = await currentSunday(home);
+
+    const entry = await planCustomItem(home, 'Greek Yogurt & Berries', sunday, 'breakfast');
+    expect(entry.customTitle).toBe('Greek Yogurt & Berries');
+    expect(entry.recipeId).toBeNull();
+    expect(entry.recipeTitle).toBeNull();
+    expect(entry.readinessPercent).toBeNull();
+    expect(entry.mealType).toBe('breakfast');
+
+    const week = await as(app, home.user, 'GET', `/api/households/${home.household.id}/meal-plan`);
+    expectStatus(week, 200);
+    const body = week.json<MealPlanWeekResponse>();
+    const found = body.entries.find((e) => e.id === entry.id);
+    expect(found).toBeDefined();
+    expect(found?.customTitle).toBe('Greek Yogurt & Berries');
+
+    // Delete custom item
+    expectStatus(await as(app, home.user, 'DELETE', `/api/meal-plan/${entry.id}`), 204);
+
+    const weekAfter = await as(
+      app,
+      home.user,
+      'GET',
+      `/api/households/${home.household.id}/meal-plan`,
+    );
+    expectStatus(weekAfter, 200);
+    expect(weekAfter.json<MealPlanWeekResponse>().entries.some((e) => e.id === entry.id)).toBe(
+      false,
+    );
+  });
+
+  it('adds a single custom item directly to a shopping list via POST /api/meal-plan/:id/add-to-list', async () => {
+    const home = await household(app);
+    const sunday = await currentSunday(home);
+    const entry = await planCustomItem(home, 'Organic Banana', sunday, 'lunch');
+    const list = await createList(home, 'Snack List');
+
+    const addResponse = await as(app, home.user, 'POST', `/api/meal-plan/${entry.id}/add-to-list`, {
+      listId: list.id,
+    });
+    expectStatus(addResponse, 200);
+    const updatedList = addResponse.json<ShoppingListDetail>();
+
+    const item = itemNamed(updatedList, 'Organic Banana');
+    expect(item.quantity).toBe(1);
+    expect(item.source).toBe('manual');
+    expect(item.status).toBe('needed');
+  });
+
+  it('aggregates recipe ingredients and standalone custom items on week add-to-list with duplicate avoidance', async () => {
+    const home = await household(app);
+    const sunday = await currentSunday(home);
+    const recipe = await createRecipe(home, 'Oatmeal', [{ itemName: 'Rolled Oats' }]);
+    await planMeal(home, recipe.id, sunday, 'breakfast');
+    await planCustomItem(home, 'Honey', sunday, 'breakfast');
+
+    const list = await createList(home, 'Weekly Groceries');
+
+    // First week add-to-list
+    const response = await as(
+      app,
+      home.user,
+      'POST',
+      `/api/households/${home.household.id}/meal-plan/add-to-list`,
+      { week: sunday, listId: list.id },
+    );
+    expectStatus(response, 200);
+    const firstDetail = response.json<ShoppingListDetail>();
+    expect(itemNamed(firstDetail, 'Rolled Oats')).toBeDefined();
+    expect(itemNamed(firstDetail, 'Honey')).toBeDefined();
+
+    // Second week add-to-list: should not duplicate Rolled Oats or Honey
+    const secondResponse = await as(
+      app,
+      home.user,
+      'POST',
+      `/api/households/${home.household.id}/meal-plan/add-to-list`,
+      { week: sunday, listId: list.id },
+    );
+    expectStatus(secondResponse, 200);
+    const secondDetail = secondResponse.json<ShoppingListDetail>();
+    const honeyItems = allItems(secondDetail).filter((i) => i.itemName === 'Honey');
+    expect(honeyItems.length).toBe(1);
   });
 });
 
