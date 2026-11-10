@@ -32,9 +32,9 @@
 
 ### Test & Verification Hardening
 
-- [ ] **TEST-01**: Unit tests validate mathematical price and discount calculations across varied sale story scenarios and set pricing.
-- [ ] **TEST-02**: Service integration tests validate Open Food Facts proxy caching, rate limit resilience, and custom meal plan entry persistence.
-- [ ] **TEST-03**: Playwright E2E tests validate deal price/discount display, barcode scan to add/mark-bought flows (with mocked media/code input), and custom meal item placement.
+- [x] **TEST-01**: Unit tests validate mathematical price and discount calculations across varied sale story scenarios and set pricing.
+- [x] **TEST-02**: Service integration tests validate Open Food Facts proxy caching, rate limit resilience, and custom meal plan entry persistence.
+- [x] **TEST-03**: Playwright E2E tests validate deal price/discount display, barcode scan to add/mark-bought flows (with mocked media/code input), and custom meal item placement.
 
 ## Future Requirements (Deferred)
 

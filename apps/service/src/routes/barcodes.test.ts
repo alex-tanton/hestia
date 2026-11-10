@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { bearer, makeTestApp } from '../test/fake-app.js';
 
 describe('barcode routes', () => {
@@ -10,6 +10,7 @@ describe('barcode routes', () => {
   });
 
   afterEach(async () => {
+    vi.unstubAllGlobals();
     await app.close();
   });
 
@@ -43,6 +44,8 @@ describe('barcode routes', () => {
   });
 
   it('returns 404 Problem Details when barcode product is not found', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
+
     const response = await app.inject({
       method: 'GET',
       url: '/api/barcodes/012345678905',
