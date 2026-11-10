@@ -78,3 +78,4 @@ status: complete
 - `apps/web/src/components/lists/ItemSheet.test.tsx` - Unit tests for ItemSheet draft pre-filling
 - `apps/web/src/screens/lists/ListDetailScreen.tsx` - Header toolbar button, scan handler, check-off, and Undo toast
 - `apps/web/src/screens/lists/ListDetailScreen.test.tsx` - Component tests for toolbar, scan-to-add, check-off, and Undo
+

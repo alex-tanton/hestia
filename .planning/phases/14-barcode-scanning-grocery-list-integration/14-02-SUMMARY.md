@@ -98,3 +98,4 @@ status: complete
 - `apps/web/src/lib/barcode/detector.test.ts` - Unit test suite for detector wrapper
 - `apps/web/src/components/lists/BarcodeScannerDialog.tsx` - Full-screen viewfinder and manual keypad dialog
 - `apps/web/src/components/lists/BarcodeScannerDialog.test.tsx` - Dialog component test suite
+
