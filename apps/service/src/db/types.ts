@@ -65,7 +65,7 @@ export interface AppError {
   message: string;
 }
 
-export interface BarcodeProduct {
+export interface BarcodeProducts {
   barcode: string;
   brands: string | null;
   created_at: Generated<Timestamp>;
@@ -221,13 +221,13 @@ export interface IngredientMatchOverride {
 export interface MealPlanEntry {
   added_by: Generated<string>;
   created_at: Generated<Timestamp>;
+  custom_title: string | null;
   household_id: string;
   id: Generated<string>;
   meal_type: MealType;
   planned_date: string;
   recipe_id: string | null;
   recipe_title: string | null;
-  custom_title: string | null;
 }
 
 export interface Notification {
@@ -356,7 +356,7 @@ export interface ShoppingListItem {
 
 export interface DB {
   app_error: AppError;
-  barcode_products: BarcodeProduct;
+  barcode_products: BarcodeProducts;
   bill: Bill;
   bill_payment_log: BillPaymentLog;
   chore: Chore;
