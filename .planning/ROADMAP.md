@@ -83,7 +83,10 @@
   3. Scanning an item's barcode in a list automatically creates a new grocery item with the resolved name and brand.
   4. Scanning an item's barcode while shopping marks the corresponding item in the active list as `bought`.
 
-**Plans**: TBD
+**Plans:** 3 plans
+- [ ] 14-01-PLAN.md — Schema migration, Open Food Facts proxy service, and barcode persistence
+- [ ] 14-02-PLAN.md — Barcode detection engine, sensory feedback, and scanner viewfinder dialog
+- [ ] 14-03-PLAN.md — Grocery list integration: scan-to-add and shop-and-check-off
 
 ### Phase 15: Flexible Meal Planning (Custom Items & Recipes)
 
@@ -118,6 +121,6 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 |-------|-----------|----------------|--------|-----------|
 | 12. Store & Deal Image Delivery | v2.1 | 2/2 | Complete    | 2026-11-09 |
 | 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 3/3 | Complete    | 2026-11-09 |
-| 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/TBD | Not started | - |
+| 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/3 | Ready to execute | - |
 | 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/TBD | Not started | - |
 | 16. Verification & Real-World Test Hardening | v2.1 | 0/TBD | Not started | - |
