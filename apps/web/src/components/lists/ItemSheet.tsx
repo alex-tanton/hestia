@@ -22,6 +22,7 @@ export interface ItemDraft {
   priceUnit: PriceUnit;
   merchantId: string | null;
   merchantName: string | null;
+  barcode?: string | null;
 }
 
 export interface ItemSheetProps {
@@ -29,6 +30,8 @@ export interface ItemSheetProps {
   onOpenChange: (open: boolean) => void;
   /** Editing an existing row, or adding a new one. */
   item?: ListItem | undefined;
+  /** Pre-filled draft values (e.g. from barcode scanning). */
+  initialDraft?: Partial<ItemDraft> | undefined;
   /** Stores a manual item can be assigned to. */
   stores: readonly StoreChoice[];
   onSubmit: (draft: ItemDraft) => void;
@@ -57,6 +60,7 @@ export function ItemSheet({
   open,
   onOpenChange,
   item,
+  initialDraft,
   stores,
   onSubmit,
 }: ItemSheetProps): ReactElement {
@@ -64,13 +68,20 @@ export function ItemSheet({
   const canPrice = !isEditing || item.source === 'manual';
   const { errors, setErrors, formRef } = useFieldErrors<Field>();
 
-  const [itemName, setItemName] = useState(item?.itemName ?? '');
+  const [itemName, setItemName] = useState(item?.itemName ?? initialDraft?.itemName ?? '');
   const [quantity, setQuantity] = useState(
-    item?.quantity === null ? '' : String(item?.quantity ?? ''),
+    item?.quantity === null ? '' : String(item?.quantity ?? initialDraft?.quantity ?? ''),
   );
-  const [price, setPrice] = useState(formatPriceInput(item?.priceCents ?? null));
-  const [priceUnit, setPriceUnit] = useState<PriceUnit>(item?.priceUnit ?? 'each');
-  const [merchantId, setMerchantId] = useState(item?.merchantId ?? ANYWHERE_VALUE);
+  const [price, setPrice] = useState(
+    formatPriceInput(item?.priceCents ?? initialDraft?.priceCents ?? null),
+  );
+  const [priceUnit, setPriceUnit] = useState<PriceUnit>(
+    item?.priceUnit ?? initialDraft?.priceUnit ?? 'each',
+  );
+  const [merchantId, setMerchantId] = useState(
+    item?.merchantId ?? initialDraft?.merchantId ?? ANYWHERE_VALUE,
+  );
+  const [barcode] = useState<string | null>(item?.barcode ?? initialDraft?.barcode ?? null);
 
   const handleSubmit = (event: SyntheticEvent): void => {
     event.preventDefault();
@@ -95,6 +106,7 @@ export function ItemSheet({
       priceUnit,
       merchantId: store?.merchantId ?? null,
       merchantName: store?.merchantName ?? null,
+      barcode: barcode ?? null,
     });
     onOpenChange(false);
   };
