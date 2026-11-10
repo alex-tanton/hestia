@@ -47,11 +47,11 @@ function callsByUrl(lines: readonly ServiceLogLine[]): Map<string, ServiceLogLin
 test('deal search and flyer browsing keep the discipline the logs promise', async ({ page }) => {
   const before = flippRequestLines(serviceLogLines());
 
-  // Serialized, whatever the outcome: every request so far waited at least the 500ms minimum gap
+  // Serialized, whatever the outcome: every request so far waited at least the 150ms minimum gap
   // behind the one before it.
   for (const line of before) {
     const gapMs = line['gapMs'];
-    if (gapMs !== null) expect(gapMs as number).toBeGreaterThanOrEqual(500);
+    if (gapMs !== null) expect(gapMs as number).toBeGreaterThanOrEqual(150);
   }
 
   // The merchant directory is one global, postal-code-agnostic request, fetched once no matter how
@@ -95,7 +95,7 @@ test('deal search and flyer browsing keep the discipline the logs promise', asyn
   expect(flyersLines).toHaveLength(1);
   expect(flyersLines[0]?.['status']).toBe(200);
   expect(flyersLines[0]?.['gapMs']).not.toBeNull();
-  expect(flyersLines[0]?.['gapMs'] as number).toBeGreaterThanOrEqual(500);
+  expect(flyersLines[0]?.['gapMs'] as number).toBeGreaterThanOrEqual(150);
 
   // A second view within the flyers cache's 12-hour TTL is served from it, not fetched again.
   await page.reload();

@@ -19,11 +19,11 @@ const TARGETS = {
     badge: '-16%',
   },
   dark: {
-    query: 'stouffer',
-    name: "Stouffer's Entrees",
-    salePrice: '$2.00',
-    originalPrice: '$3.00',
-    badge: '-33%',
+    query: 'sargento',
+    name: 'Sargento Balanced Breaks',
+    salePrice: '$3.49',
+    originalPrice: '$3.99',
+    badge: '-12%',
   },
 } as const;
 

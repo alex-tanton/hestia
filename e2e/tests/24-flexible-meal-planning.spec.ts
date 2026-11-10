@@ -52,10 +52,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(page.getByText('Placed Greek Yogurt.').first()).toBeVisible();
 
       // 4. Verify 'Greek Yogurt' appears on the planner grid with primary title and bullet indicator
-      const customItemEntry = page
-        .locator('div')
-        .filter({ hasText: /^Greek Yogurt$/ })
-        .first();
+      const customItemEntry = page.locator('li').filter({ hasText: 'Greek Yogurt' }).first();
       await expect(customItemEntry).toBeVisible();
       await expectAccessible(page, `planner grid with custom item placed (${theme})`);
 

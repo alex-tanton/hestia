@@ -75,9 +75,9 @@ begin
       array(select id from public.deal where postal_code = '27514'
         and external_id = '1040206686'),
       now()),
-    ('27514', 'stouffer',
+    ('27514', 'sargento',
       array(select id from public.deal where postal_code = '27514'
-        and external_id = '1039937762'),
+        and external_id = '1039540717'),
       now());
 
   -- Pre-warmed barcode cache for Journey 23 (TEST-03, D-05)
