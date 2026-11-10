@@ -19,10 +19,10 @@
 
 ### Barcode Scanning & Grocery List Management
 
-- [ ] **SCAN-01**: PWA provides a camera barcode scanner modal using the standard `BarcodeDetector` API with WASM polyfill fallback, plus a manual barcode text entry tab.
-- [ ] **SCAN-02**: Fastify service proxies and caches barcode lookups against Open Food Facts API v3 using compliant User-Agent headers, falling back gracefully to manual item naming on misses or timeouts.
-- [ ] **SCAN-03**: User can scan a barcode from a shopping list to automatically populate the item name and add it to the list.
-- [ ] **SCAN-04**: User can scan a barcode from an active shopping list to automatically match the item and mark it as `bought`.
+- [x] **SCAN-01**: PWA provides a camera barcode scanner modal using the standard `BarcodeDetector` API with WASM polyfill fallback, plus a manual barcode text entry tab.
+- [x] **SCAN-02**: Fastify service proxies and caches barcode lookups against Open Food Facts API v3 using compliant User-Agent headers, falling back gracefully to manual item naming on misses or timeouts.
+- [x] **SCAN-03**: User can scan a barcode from a shopping list to automatically populate the item name and add it to the list.
+- [x] **SCAN-04**: User can scan a barcode from an active shopping list to automatically match the item and mark it as `bought`.
 
 ### Flexible Meal Planning
 
@@ -66,10 +66,10 @@
 | DEAL-01 | Phase 13 | Complete |
 | DEAL-02 | Phase 13 | Complete |
 | DEAL-03 | Phase 13 | Complete |
-| SCAN-01 | Phase 14 | Pending |
-| SCAN-02 | Phase 14 | Pending |
-| SCAN-03 | Phase 14 | Pending |
-| SCAN-04 | Phase 14 | Pending |
+| SCAN-01 | Phase 14 | Complete |
+| SCAN-02 | Phase 14 | Complete |
+| SCAN-03 | Phase 14 | Complete |
+| SCAN-04 | Phase 14 | Complete |
 | MEAL-01 | Phase 15 | Pending |
 | MEAL-02 | Phase 15 | Pending |
 | MEAL-03 | Phase 15 | Pending |
