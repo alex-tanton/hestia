@@ -20,6 +20,7 @@ import {
 } from './problem.js';
 import { RecipeFetchError } from './recipes/fetch-recipe.js';
 import { authRoutes } from './routes/auth.js';
+import { barcodeRoutes } from './routes/barcodes.js';
 import { billRoutes } from './routes/bills.js';
 import { choreRoutes } from './routes/chores.js';
 import { dealRoutes } from './routes/deals.js';
@@ -158,6 +159,7 @@ export async function buildApp(
   const ctx = createRouteContext(deps, { origin: options.origin, ownerEmail: options.ownerEmail });
   await app.register(healthRoute, { pingDatabase: deps.pingDatabase });
   await app.register(authRoutes, { ctx });
+  await app.register(barcodeRoutes, { ctx });
   await app.register(userRoutes, { ctx });
   await app.register(householdRoutes, { ctx });
   await app.register(dealRoutes, { ctx });
