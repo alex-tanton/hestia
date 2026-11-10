@@ -5,7 +5,7 @@ import { householdFallback } from '../../components/chores/household-date-fallba
 import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
 import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';
 import { PlannerDay } from '../../components/meals/PlannerDay.tsx';
-import { RecipePickerSheet } from '../../components/meals/RecipePickerSheet.tsx';
+import { MealPlacementSheet } from '../../components/meals/MealPlacementSheet.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
@@ -92,7 +92,7 @@ function PlannerWeek({
   const entriesFor = (date: string): MealPlanEntry[] =>
     (plan.data?.entries ?? []).filter((entry) => entry.plannedDate === date);
 
-  const place = (recipeId: string, recipeTitle: string): void => {
+  const placeRecipe = (recipeId: string, recipeTitle: string): void => {
     if (placing === undefined) return;
     createEntry.mutate(
       { recipeId, plannedDate: placing.date, mealType: placing.mealType },
@@ -100,6 +100,25 @@ function PlannerWeek({
         onSuccess: () => {
           setPlacing(undefined);
           toast({ variant: 'success', message: `Placed ${recipeTitle}.` });
+        },
+        onError: (error) => {
+          toast({
+            variant: 'error',
+            message: userMessage(error, { fallback: "Couldn't place that meal. Try again." }),
+          });
+        },
+      },
+    );
+  };
+
+  const placeCustom = (customTitle: string): void => {
+    if (placing === undefined) return;
+    createEntry.mutate(
+      { customTitle, plannedDate: placing.date, mealType: placing.mealType },
+      {
+        onSuccess: () => {
+          setPlacing(undefined);
+          toast({ variant: 'success', message: `Placed ${customTitle}.` });
         },
         onError: (error) => {
           toast({
@@ -278,9 +297,10 @@ function PlannerWeek({
       {body()}
 
       {placing !== undefined && (
-        <RecipePickerSheet
+        <MealPlacementSheet
           householdId={householdId}
-          onPick={place}
+          onPickRecipe={placeRecipe}
+          onPickCustom={placeCustom}
           onOpenChange={(open) => {
             if (!open) setPlacing(undefined);
           }}

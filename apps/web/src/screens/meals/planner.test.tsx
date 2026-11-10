@@ -12,7 +12,10 @@ import {
 } from '../../test/meal-fixtures.ts';
 import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
 import { addDays, todayInTimezone, weekStart } from '../../lib/household-date.ts';
-import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';
+import {
+  CUSTOM_ITEM_ADD_TO_LIST,
+  PLANNER_PAST_WEEK_COPY,
+} from '../../components/meals/meal-copy.ts';
 import { PlannerScreen } from './PlannerScreen.tsx';
 
 const TIMEZONE = oakStreetFixture.timezone;
@@ -60,6 +63,19 @@ const deletedEntry: MealPlanEntry = {
   mealType: 'dinner',
   addedBy: profileFixture.id,
   createdAt: '2026-09-10T12:00:00.000Z',
+};
+
+const bananaEntry: MealPlanEntry = {
+  id: 'e0000010-0000-4000-8000-000000000005',
+  householdId: OAK_STREET_ID,
+  recipeId: null,
+  recipeTitle: null,
+  customTitle: 'Banana',
+  readinessPercent: null,
+  plannedDate: WEDNESDAY,
+  mealType: 'breakfast',
+  addedBy: profileFixture.id,
+  createdAt: '2026-09-20T12:00:00.000Z',
 };
 
 function weekResponse(week: string): MealPlanWeekResponse {
@@ -240,6 +256,139 @@ describe('Week planner', () => {
       expect(item).toHaveAttribute('aria-disabled', 'true');
       expect(item).toHaveTextContent('Needs a connection.');
     }
+  });
+
+  it('places a custom item by typing in the Quick Item tab', async () => {
+    const user = userEvent.setup();
+    const stub = mount(
+      baseHandlers({
+        'POST /api/households/:id/meal-plan': ({ body }) => ({
+          status: 201,
+          body: {
+            id: 'e0000010-0000-4000-8000-000000000005',
+            householdId: OAK_STREET_ID,
+            recipeId: null,
+            recipeTitle: null,
+            customTitle: 'Banana',
+            readinessPercent: null,
+            addedBy: profileFixture.id,
+            createdAt: '2026-09-27T12:00:00.000Z',
+            ...(body as object),
+          },
+        }),
+      }),
+    );
+    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
+    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    await user.click(screen.getByRole('button', { name: 'Add to breakfast' }));
+    await user.click(await screen.findByRole('tab', { name: 'Quick Item' }));
+    await user.type(screen.getByLabelText('Item name'), 'Banana');
+    await user.click(screen.getByRole('button', { name: 'Place item' }));
+    await waitFor(() => {
+      expect(
+        stub.calls.some(
+          (call) =>
+            call.path.endsWith('/meal-plan') &&
+            call.method === 'POST' &&
+            (call.body as { customTitle?: string }).customTitle === 'Banana',
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it('places a custom item using a suggestion chip', async () => {
+    const user = userEvent.setup();
+    const stub = mount(
+      baseHandlers({
+        'POST /api/households/:id/meal-plan': ({ body }) => ({
+          status: 201,
+          body: {
+            id: 'e0000010-0000-4000-8000-000000000006',
+            householdId: OAK_STREET_ID,
+            recipeId: null,
+            recipeTitle: null,
+            customTitle: 'Greek Yogurt',
+            readinessPercent: null,
+            addedBy: profileFixture.id,
+            createdAt: '2026-09-27T12:00:00.000Z',
+            ...(body as object),
+          },
+        }),
+      }),
+    );
+    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
+    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    await user.click(screen.getByRole('button', { name: 'Add to breakfast' }));
+    await user.click(await screen.findByRole('tab', { name: 'Quick Item' }));
+    await user.click(await screen.findByRole('button', { name: 'Greek Yogurt' }));
+    await waitFor(() => {
+      expect(
+        stub.calls.some(
+          (call) =>
+            call.path.endsWith('/meal-plan') &&
+            call.method === 'POST' &&
+            (call.body as { customTitle?: string }).customTitle === 'Greek Yogurt',
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it('adds a custom meal item to a list from its overflow menu', async () => {
+    const user = userEvent.setup();
+    const stub = mount(
+      baseHandlers({
+        'GET /api/households/:id/meal-plan': () => ({
+          status: 200,
+          body: { week: CURRENT_WEEK, entries: [zitiEntry, bananaEntry] },
+        }),
+        'POST /api/meal-plan/:id/add-to-list': () => ({
+          status: 200,
+          body: thisWeekDetailFixture,
+        }),
+      }),
+    );
+    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
+    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    expect(await screen.findByText('Banana')).toBeInTheDocument();
+    (await screen.findByRole('button', { name: 'More actions for Banana' })).focus();
+    await user.keyboard('{Enter}');
+    await user.click(await screen.findByRole('menuitem', { name: CUSTOM_ITEM_ADD_TO_LIST }));
+    expect(await screen.findByText('Add to which list?')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: /This Week/ }));
+    await waitFor(() => {
+      expect(
+        stub.calls.some(
+          (call) =>
+            call.method === 'POST' &&
+            call.path.includes(bananaEntry.id) &&
+            call.path.endsWith('/add-to-list'),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it('removes a custom meal item', async () => {
+    const user = userEvent.setup();
+    const stub = mount(
+      baseHandlers({
+        'GET /api/households/:id/meal-plan': () => ({
+          status: 200,
+          body: { week: CURRENT_WEEK, entries: [zitiEntry, bananaEntry] },
+        }),
+        'DELETE /api/meal-plan/:id': () => ({ status: 204 }),
+      }),
+    );
+    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
+    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    expect(await screen.findByText('Banana')).toBeInTheDocument();
+    (await screen.findByRole('button', { name: 'More actions for Banana' })).focus();
+    await user.keyboard('{Enter}');
+    await user.click(await screen.findByRole('menuitem', { name: 'Remove' }));
+    await waitFor(() => {
+      expect(
+        stub.calls.some((call) => call.method === 'DELETE' && call.path.includes(bananaEntry.id)),
+      ).toBe(true);
+    });
   });
 
   it('desktop: shows the full seven-day grid instead of day tabs', async () => {
