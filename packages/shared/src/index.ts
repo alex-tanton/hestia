@@ -1,4 +1,5 @@
 export * from './api/auth.js';
+export * from './api/barcodes.js';
 export * from './api/bills.js';
 export * from './api/chores.js';
 export * from './api/common.js';
