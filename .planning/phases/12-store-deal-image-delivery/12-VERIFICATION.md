@@ -1,6 +1,6 @@
 ---
 phase: 12-store-deal-image-delivery
-verified: 2026-11-09T16:33:00Z
+verified: 2026-11-09T23:24:00Z
 status: passed
 score: 10/10 must-haves verified
 covered_files:
@@ -18,7 +18,7 @@ covered_files:
   - packages/shared/src/images.test.ts
   - packages/shared/src/images.ts
   - packages/shared/src/index.ts
-covered_digest: "v3:sha256:da36352163615d88875c9bd10eaa089d7b008036ee950fe7ba1eb252fc1ffa4e"
+covered_digest: "v3:sha256:803080cb3d5125749aba15c75b6c3c7f7e10116ccaf9fe8ec02b4a30be980d1f"
 behavior_unverified: 0
 ---
 
