@@ -101,7 +101,11 @@
   2. User can add standalone custom food items to breakfast, lunch, or dinner slots on the meal planner via a dedicated quick-entry sheet.
   3. Placed custom food items appear cleanly on the planner grid alongside recipes and can be added directly to shopping lists via "Add to list".
 
-**Plans**: TBD
+**Plans:** 2 plans
+**Wave 1**
+- [ ] 15-01-PLAN.md — Schema migration, Kysely types, shared schemas, service persistence, and single/week list additions
+**Wave 2**
+- [ ] 15-02-PLAN.md — MealSlotEntry custom item rendering, MealPlacementSheet tabbed picker, and PlannerScreen integration
 
 ### Phase 16: Verification & Real-World Test Hardening
 
@@ -125,5 +129,5 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 | 12. Store & Deal Image Delivery | v2.1 | 2/2 | Complete    | 2026-11-09 |
 | 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 3/3 | Complete    | 2026-11-09 |
 | 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/3 | Ready to execute | - |
-| 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/TBD | Not started | - |
+| 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/2 | Ready to execute | - |
 | 16. Verification & Real-World Test Hardening | v2.1 | 0/TBD | Not started | - |
