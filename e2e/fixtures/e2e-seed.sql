@@ -70,7 +70,27 @@ begin
     ('27514', 'baby cut carrot',
       array(select id from public.deal where postal_code = '27514'
         and external_id = '1039534752'),
+      now()),
+    ('27514', 'pure pumpkin',
+      array(select id from public.deal where postal_code = '27514'
+        and external_id = '1040206686'),
+      now()),
+    ('27514', 'stouffer',
+      array(select id from public.deal where postal_code = '27514'
+        and external_id = '1039937762'),
       now());
+
+  -- Pre-warmed barcode cache for Journey 23 (TEST-03, D-05)
+  insert into public.barcode_products (barcode, product_name, brands, quantity, image_url, raw_payload)
+  values (
+    '012345678905',
+    'Organic Whole Milk',
+    'Horizon Organic',
+    '1 gal',
+    'https://images.openfoodfacts.org/1.jpg',
+    '{"status":"success","product":{"product_name":"Organic Whole Milk","brands":"Horizon Organic","quantity":"1 gal"}}'::jsonb
+  )
+  on conflict (barcode) do nothing;
 end
 $$;
 
