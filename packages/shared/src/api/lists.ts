@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { barcodeSchema } from './barcodes.js';
 import { calendarDateSchema, centsSchema, idSchema, timestampSchema } from './common.js';
 
 export const listItemStatusSchema = z.enum(['needed', 'in_cart', 'bought']);
@@ -30,6 +31,7 @@ export const listItemSchema = z.object({
   quantity: z.number().nullable(),
   quantityNote: z.string().nullable(),
   status: listItemStatusSchema,
+  barcode: z.string().nullable().optional(),
   addedBy: idSchema,
   source: listItemSourceSchema,
   merchantId: z.string().nullable(),
@@ -121,6 +123,7 @@ const manualListItemRequestSchema = z
     priceUnit: priceUnitSchema.optional(),
     merchantId: merchantIdSchema.nullish(),
     merchantName: merchantNameSchema.nullish(),
+    barcode: barcodeSchema.nullish(),
   })
   .refine(storePair, { message: STORE_PAIR_MESSAGE, path: ['merchantName'] });
 
@@ -157,6 +160,7 @@ export const updateListItemRequestSchema = z
     priceUnit: priceUnitSchema.optional(),
     merchantId: merchantIdSchema.nullable().optional(),
     merchantName: merchantNameSchema.nullable().optional(),
+    barcode: barcodeSchema.nullable().optional(),
   })
   .refine((body) => Object.values(body).some((value) => value !== undefined), {
     message: 'Change at least one field.',

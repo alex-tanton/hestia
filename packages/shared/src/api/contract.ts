@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { sessionResponseSchema, signupRequestSchema } from './auth.js';
+import { barcodeParamsSchema, barcodeProductSchema } from './barcodes.js';
 import {
   choreDetailSchema,
   choreListSchema,
@@ -852,6 +853,14 @@ export const endpoints = [
     access: 'user',
     params: favoriteStoreParamsSchema,
     response: { status: 204 },
+  },
+  {
+    method: 'GET',
+    path: '/api/barcodes/:barcode',
+    summary: 'Look up barcode product details from cache or Open Food Facts',
+    access: 'user',
+    params: barcodeParamsSchema,
+    response: { status: 200, schema: barcodeProductSchema },
   },
   {
     method: 'POST',
