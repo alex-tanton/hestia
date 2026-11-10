@@ -117,7 +117,13 @@
   2. Service integration tests verify Open Food Facts proxy caching, error resilience, and custom meal plan entry lifecycle.
   3. Playwright E2E tests verify deal price/badge rendering, camera/manual barcode scanning flows (with mocked media stream and code injection), and custom meal item placement.
 
-**Plans**: TBD
+**Plans:** 3 plans
+**Wave 1**
+- [ ] 16-01-PLAN.md — Unit test hardening (TEST-01) for pricing math edge cases and web deal card presentation
+**Wave 2**
+- [ ] 16-02-PLAN.md — Service integration test hardening (TEST-02) for Open Food Facts proxy caching, rate limiting, and custom meal plan persistence with advisory locking
+**Wave 3**
+- [ ] 16-03-PLAN.md — Playwright E2E test hardening (TEST-03) for deals pricing display, barcode scanning dialog and check-off, and flexible meal planning in light/dark themes with axe accessibility audits
 
 ## Progress
 
@@ -130,4 +136,4 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 | 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 3/3 | Complete    | 2026-11-09 |
 | 14. Barcode Scanning & Grocery List Integration | v2.1 | 3/3 | Complete | 2026-11-10 |
 | 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 2/2 | Complete | 2026-11-10 |
-| 16. Verification & Real-World Test Hardening | v2.1 | 0/TBD | Not started | - |
+| 16. Verification & Real-World Test Hardening | v2.1 | 0/3 | Not started | - |
