@@ -84,8 +84,13 @@
   4. Scanning an item's barcode while shopping marks the corresponding item in the active list as `bought`.
 
 **Plans:** 3 plans
+**Wave 1**
 - [ ] 14-01-PLAN.md — Schema migration, Open Food Facts proxy service, and barcode persistence
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 14-02-PLAN.md — Barcode detection engine, sensory feedback, and scanner viewfinder dialog
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 14-03-PLAN.md — Grocery list integration: scan-to-add and shop-and-check-off
 
 ### Phase 15: Flexible Meal Planning (Custom Items & Recipes)
