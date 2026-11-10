@@ -112,15 +112,16 @@ function PlannerWeek({
   };
 
   const remove = (entry: MealPlanEntry): void => {
+    const itemTitle = entry.customTitle ?? entry.recipeTitle ?? 'meal';
     deleteEntry.mutate(entry.id, {
       onSuccess: () => {
-        toast({ variant: 'success', message: `Removed ${entry.recipeTitle}.` });
+        toast({ variant: 'success', message: `Removed ${itemTitle}.` });
       },
       onError: (error) => {
         toast({
           variant: 'error',
           message: userMessage(error, {
-            fallback: `Couldn't remove ${entry.recipeTitle}. Try again.`,
+            fallback: `Couldn't remove ${itemTitle}. Try again.`,
           }),
         });
       },
@@ -289,8 +290,12 @@ function PlannerWeek({
       {addingMissingFor !== undefined && (
         <ListPickerSheet
           householdId={householdId}
-          title="Add missing to which list?"
-          description={addingMissingFor.recipeTitle}
+          title={
+            addingMissingFor.customTitle !== null
+              ? 'Add to which list?'
+              : 'Add missing to which list?'
+          }
+          description={addingMissingFor.customTitle ?? addingMissingFor.recipeTitle}
           isPicking={addMealToList.isPending}
           onPick={addMissing}
           onOpenChange={(open) => {

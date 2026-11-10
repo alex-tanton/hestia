@@ -42,6 +42,7 @@ const zitiOnHouseholdToday: MealPlanEntry = {
   householdId: OAK_STREET_ID,
   recipeId: bakedZitiFixture.id,
   recipeTitle: bakedZitiFixture.title,
+  customTitle: null,
   readinessPercent: 71,
   plannedDate: HOUSEHOLD_TODAY,
   mealType: 'dinner',
@@ -54,6 +55,7 @@ const saladOnBrowserToday: MealPlanEntry = {
   householdId: OAK_STREET_ID,
   recipeId: SHEET_PAN_CHICKEN_ID,
   recipeTitle: sheetPanChickenFixture.title,
+  customTitle: null,
   readinessPercent: 40,
   plannedDate: BROWSER_TODAY,
   mealType: 'dinner',
@@ -133,8 +135,8 @@ describe('the week planner, with the browser a day ahead of the household', () =
     // The browser's Sunday is next week for this household, so no tab for it exists here.
     expect(within(tabs).queryByRole('tab', { name: /Sun 10\/04/ })).toBeNull();
     expect(screen.getByText(/Week of Sun 09\/27/)).toBeInTheDocument();
-    expect(await screen.findByText(zitiOnHouseholdToday.recipeTitle)).toBeInTheDocument();
-    expect(screen.queryByText(saladOnBrowserToday.recipeTitle)).toBeNull();
+    expect(await screen.findByText(bakedZitiFixture.title)).toBeInTheDocument();
+    expect(screen.queryByText(sheetPanChickenFixture.title)).toBeNull();
   });
 });
 
@@ -144,7 +146,7 @@ describe('the week planner until the household’s zone is known', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Loading the week planner');
     expect(screen.queryByText(/Week of/)).toBeNull();
     expect(screen.queryByRole('tablist')).toBeNull();
-    expect(screen.queryByText(zitiOnHouseholdToday.recipeTitle)).toBeNull();
+    expect(screen.queryByText(bakedZitiFixture.title)).toBeNull();
   });
 
   it('shows the household error, with no week drawn, when the household fails', async () => {

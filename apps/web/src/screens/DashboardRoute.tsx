@@ -53,7 +53,7 @@ export function mealsCardState(
     total: upcoming.length,
     items: upcoming.map((entry) => ({
       id: entry.id,
-      label: entry.recipeTitle,
+      label: entry.customTitle ?? entry.recipeTitle ?? '',
       detail: `${entry.plannedDate === today ? 'Today' : 'Tomorrow'} · ${mealTypeLabel(entry.mealType)}`,
     })),
   };

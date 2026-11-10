@@ -226,7 +226,8 @@ export interface MealPlanEntry {
   meal_type: MealType;
   planned_date: string;
   recipe_id: string | null;
-  recipe_title: string;
+  recipe_title: string | null;
+  custom_title: string | null;
 }
 
 export interface Notification {

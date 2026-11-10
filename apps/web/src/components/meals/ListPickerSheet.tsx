@@ -11,7 +11,7 @@ import { SkeletonRows } from '../ui/Skeleton.tsx';
 export interface ListPickerSheetProps {
   householdId: string;
   title: string;
-  description?: string;
+  description?: string | null | undefined;
   isPicking: boolean;
   onPick: (listId: string, listName: string) => void;
   onOpenChange: (open: boolean) => void;
@@ -35,12 +35,7 @@ export function ListPickerSheet({
   const active = (lists.data ?? []).filter((list) => list.archivedAt === null);
 
   return (
-    <Sheet
-      open
-      onOpenChange={onOpenChange}
-      title={title}
-      {...(description === undefined ? {} : { description })}
-    >
+    <Sheet open onOpenChange={onOpenChange} title={title} {...(description ? { description } : {})}>
       {lists.isPending && (
         <div className="px-4">
           <SkeletonRows label="Loading lists" rows={2} />
