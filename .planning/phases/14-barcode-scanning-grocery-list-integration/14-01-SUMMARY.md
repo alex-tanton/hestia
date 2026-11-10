@@ -98,3 +98,4 @@ status: complete
 - `apps/service/src/routes/barcodes.test.ts` - Route integration tests
 - `apps/service/src/services/lists.ts` - Shopping list item barcode persistence
 - `docker/Caddyfile` - Ingress camera permissions and WASM CSP
+
