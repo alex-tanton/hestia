@@ -15,6 +15,15 @@ import { SEED } from '../support/env.ts';
  * 7. Validate WCAG 2.1 AA accessibility across planner, placement sheet, overflow menu, and shopping list in both themes.
  */
 
+const TARGETS = {
+  light: {
+    item: 'Greek Yogurt',
+  },
+  dark: {
+    item: 'Banana',
+  },
+} as const;
+
 for (const theme of ['light', 'dark'] as const) {
   test.describe(`journey 24 — flexible meal planning (${theme})`, () => {
     test.use({ colorScheme: theme });
@@ -22,6 +31,8 @@ for (const theme of ['light', 'dark'] as const) {
     test('places a quick item chip on the week planner and transfers it to the shopping list', async ({
       page,
     }) => {
+      const target = TARGETS[theme];
+
       await signIn(page, SEED.alex.email);
       await expectDashboard(page, SEED.oakStreet.name);
 
@@ -40,8 +51,8 @@ for (const theme of ['light', 'dark'] as const) {
       await sheet.getByRole('tab', { name: 'Quick Item' }).click();
       await expect(sheet.getByRole('tabpanel')).toBeVisible();
 
-      // 3. Click suggestion chip 'Greek Yogurt'
-      const chip = sheet.getByRole('button', { name: 'Greek Yogurt' });
+      // 3. Click suggestion chip
+      const chip = sheet.getByRole('button', { name: target.item });
       await expect(chip).toBeVisible();
       await chip.click();
 
@@ -49,15 +60,17 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(sheet).toBeHidden();
 
       // Verify success toast
-      await expect(page.getByText('Placed Greek Yogurt.').first()).toBeVisible();
+      await expect(page.getByText(`Placed ${target.item}.`).first()).toBeVisible();
 
-      // 4. Verify 'Greek Yogurt' appears on the planner grid with primary title and bullet indicator
-      const customItemEntry = page.locator('li').filter({ hasText: 'Greek Yogurt' }).first();
+      // 4. Verify custom item appears on the planner grid with primary title and bullet indicator
+      const customItemEntry = page.locator('li').filter({ hasText: target.item }).first();
       await expect(customItemEntry).toBeVisible();
       await expectAccessible(page, `planner grid with custom item placed (${theme})`);
 
       // 5. Open item overflow menu
-      const menuTrigger = page.getByRole('button', { name: 'More actions for Greek Yogurt' });
+      const menuTrigger = customItemEntry.getByRole('button', {
+        name: `More actions for ${target.item}`,
+      });
       await expect(menuTrigger).toBeVisible();
       await menuTrigger.click();
 
@@ -79,9 +92,9 @@ for (const theme of ['light', 'dark'] as const) {
       // Verify add-to-list toast confirmation
       await expect(page.getByText('Added to This Week.').first()).toBeVisible();
 
-      // 8. Open 'This Week' shopping list and confirm 'Greek Yogurt' exists as an item
+      // 8. Open 'This Week' shopping list and confirm item exists
       await openList(page, 'This Week');
-      const listItem = page.locator('li').filter({ hasText: 'Greek Yogurt' });
+      const listItem = page.locator('li').filter({ hasText: target.item });
       await expect(listItem.first()).toBeVisible();
       await expectAccessible(page, `shopping list containing transferred custom item (${theme})`);
     });

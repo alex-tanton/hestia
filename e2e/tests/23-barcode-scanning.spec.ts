@@ -50,7 +50,7 @@ for (const theme of ['light', 'dark'] as const) {
       // Verify ItemSheet opens with pre-populated product name
       const itemSheet = page.getByRole('dialog', { name: /Add (an )?item/i });
       await expect(itemSheet).toBeVisible();
-      const nameInput = itemSheet.getByLabel('Item name');
+      const nameInput = itemSheet.getByLabel('Item', { exact: true });
       await expect(nameInput).toHaveValue(/Organic Whole Milk/i);
       await expectAccessible(page, `item sheet from barcode resolution (${theme})`);
 
