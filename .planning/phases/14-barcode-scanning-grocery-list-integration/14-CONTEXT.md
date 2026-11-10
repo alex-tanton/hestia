@@ -95,3 +95,4 @@ None — discussion stayed within phase scope.
 
 *Phase: 14-Barcode Scanning & Grocery List Integration*
 *Context gathered: 2026-11-09*
+
