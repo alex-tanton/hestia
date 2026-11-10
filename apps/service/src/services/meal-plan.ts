@@ -204,42 +204,6 @@ export async function requireMealPlanEntryTarget(
 }
 
 /**
- * Backward compatibility helper for any caller expecting just the recipeId.
- */
-export async function requireMealPlanEntryRecipeId(
-  db: Kysely<Database>,
-  id: string,
-): Promise<string> {
-  const target = await requireMealPlanEntryTarget(db, id);
-  if (target.kind !== 'recipe') throw fail(404, 'Recipe not found.');
-  return target.recipeId;
-}
-
-/**
- * Every recipe id planned in one household's week, `recipe_id is not null` only, in no deduplicated
- * order (a recipe planned twice contributes its ingredients twice).
- */
-export async function recipeIdsForWeek(
-  db: Kysely<Database>,
-  householdId: string,
-  week: string,
-): Promise<string[]> {
-  assertSunday(week);
-  const rows = await db
-    .selectFrom('meal_plan_entry')
-    .select('recipe_id')
-    .where('household_id', '=', householdId)
-    .where('planned_date', '>=', week)
-    .where('planned_date', '<=', addDays(week, 6))
-    .where('recipe_id', 'is not', null)
-    .orderBy('planned_date')
-    .orderBy('meal_type')
-    .orderBy('created_at')
-    .execute();
-  return rows.map((row) => row.recipe_id).filter((id): id is string => id !== null);
-}
-
-/**
  * Adds all planned meals for a week to a shopping list:
  * - Recipe ingredients are aggregated via addMissingIngredientsToList.
  * - Standalone custom food items are inserted with quantity 1, source manual, and duplicate avoidance.

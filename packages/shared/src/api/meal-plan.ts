@@ -42,7 +42,6 @@ export const createRecipeEntrySchema = z.object({
   plannedDate: calendarDateSchema,
   mealType: mealTypeSchema,
 });
-export type CreateRecipeEntryRequest = z.infer<typeof createRecipeEntrySchema>;
 
 export const createCustomItemEntrySchema = z.object({
   customTitle: z
@@ -53,7 +52,6 @@ export const createCustomItemEntrySchema = z.object({
   plannedDate: calendarDateSchema,
   mealType: mealTypeSchema,
 });
-export type CreateCustomItemEntryRequest = z.infer<typeof createCustomItemEntrySchema>;
 
 /** POST /households/:id/meal-plan */
 export const createMealPlanEntryRequestSchema = z.union([

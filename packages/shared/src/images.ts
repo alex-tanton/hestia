@@ -10,8 +10,6 @@ export const ALLOWED_IMAGE_DOMAINS = [
   'openfoodfacts.org',
 ] as const;
 
-export type AllowedImageDomain = (typeof ALLOWED_IMAGE_DOMAINS)[number];
-
 /**
  * Returns true if the provided URL is a valid, secure HTTPS URL targeting an approved image CDN domain.
  * Supports exact apex domains and arbitrary dot-prefixed subdomains.

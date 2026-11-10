@@ -1,12 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  MAX_ATTEMPTS,
-  MAX_POLL_MS,
-  POLL_INTERVAL_MS,
-  refreshDelayMs,
-  useRefreshPoll,
-} from './use-refresh-poll.ts';
+import { MAX_ATTEMPTS, MAX_POLL_MS, POLL_INTERVAL_MS, useRefreshPoll } from './use-refresh-poll.ts';
 
 describe('the dormant-postal-code refetch loop', () => {
   beforeEach(() => {
@@ -17,7 +11,7 @@ describe('the dormant-postal-code refetch loop', () => {
   });
 
   it('uses a fixed 4.5s interval and 3-minute ceiling', () => {
-    expect(refreshDelayMs()).toBe(POLL_INTERVAL_MS);
+    expect(POLL_INTERVAL_MS).toBe(4_500);
     expect(POLL_INTERVAL_MS).toBe(4_500);
     expect(MAX_POLL_MS).toBe(180_000);
     expect(MAX_ATTEMPTS).toBe(40);

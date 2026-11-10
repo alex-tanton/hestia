@@ -15,7 +15,6 @@ export const barcodeSchema = z
 export const barcodeParamsSchema = z.object({
   barcode: barcodeSchema,
 });
-export type BarcodeParams = z.infer<typeof barcodeParamsSchema>;
 
 export const barcodeProductSchema = z.object({
   barcode: z.string(),

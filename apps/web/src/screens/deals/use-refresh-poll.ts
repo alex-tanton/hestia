@@ -13,10 +13,6 @@ export const POLL_INTERVAL_MS = 4_500;
 export const MAX_POLL_MS = 180_000;
 export const MAX_ATTEMPTS = Math.floor(MAX_POLL_MS / POLL_INTERVAL_MS);
 
-export function refreshDelayMs(): number {
-  return POLL_INTERVAL_MS;
-}
-
 export interface RefreshPoll {
   /** True while the poll is still waiting for the refresh to finish. */
   isPolling: boolean;
