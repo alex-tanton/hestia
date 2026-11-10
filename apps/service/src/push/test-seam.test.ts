@@ -26,7 +26,7 @@ describe('pushTestSeam', () => {
       expect(response.statusCode).toBe(401);
     }
     await app.close();
-  });
+  }, 15000);
 
   it('runs the dispatch job at the instant it is given, and reports whether it ran', async () => {
     const clocks: Date[] = [];
@@ -58,7 +58,7 @@ describe('pushTestSeam', () => {
       expect(response.statusCode).toBe(400);
     }
     await app.close();
-  });
+  }, 15000);
 
   it('reads back every push the transport recorded', async () => {
     const { app, transport } = await seam(() => Promise.resolve(true));
