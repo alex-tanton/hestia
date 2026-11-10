@@ -693,6 +693,109 @@ describe('flexible meal planning: standalone custom items (MEAL-01, MEAL-03)', (
     const honeyItems = allItems(secondDetail).filter((i) => i.itemName === 'Honey');
     expect(honeyItems.length).toBe(1);
   });
+
+  it('preserves snapshot title when recipe is deleted while coexisting custom items in the same slot remain unaffected (D-04)', async () => {
+    const home = await household(app);
+    const sunday = await currentSunday(home);
+
+    const recipeToDelete = await createRecipe(home, 'Blueberry Waffles', [
+      { itemName: 'Waffle Flour' },
+    ]);
+    const activeRecipe = await createRecipe(home, 'Scrambled Eggs', [{ itemName: 'Organic Eggs' }]);
+
+    const recipeEntry = await planMeal(home, recipeToDelete.id, sunday, 'breakfast');
+    const customEntry = await planCustomItem(home, 'Maple Syrup', sunday, 'breakfast');
+    const activeEntry = await planMeal(home, activeRecipe.id, sunday, 'breakfast');
+
+    // Delete the first recipe
+    expectStatus(await as(app, home.user, 'DELETE', `/api/recipes/${recipeToDelete.id}`), 204);
+
+    const weekResponse = await as(
+      app,
+      home.user,
+      'GET',
+      `/api/households/${home.household.id}/meal-plan?week=${sunday}`,
+    );
+    expectStatus(weekResponse, 200);
+    const entries = weekResponse.json<MealPlanWeekResponse>().entries;
+
+    // Deleted recipe entry keeps snapshot title, null recipeId, null readinessPercent
+    const deletedSnapshot = entries.find((e) => e.id === recipeEntry.id);
+    expect(deletedSnapshot).toBeDefined();
+    expect(deletedSnapshot?.recipeTitle).toBe('Blueberry Waffles');
+    expect(deletedSnapshot?.recipeId).toBeNull();
+    expect(deletedSnapshot?.readinessPercent).toBeNull();
+    expect(deletedSnapshot?.customTitle).toBeNull();
+
+    // Custom entry is unaffected
+    const customSlotItem = entries.find((e) => e.id === customEntry.id);
+    expect(customSlotItem).toBeDefined();
+    expect(customSlotItem?.customTitle).toBe('Maple Syrup');
+    expect(customSlotItem?.recipeId).toBeNull();
+    expect(customSlotItem?.recipeTitle).toBeNull();
+    expect(customSlotItem?.readinessPercent).toBeNull();
+
+    // Active recipe is unaffected
+    const activeSlotItem = entries.find((e) => e.id === activeEntry.id);
+    expect(activeSlotItem).toBeDefined();
+    expect(activeSlotItem?.recipeId).toBe(activeRecipe.id);
+    expect(activeSlotItem?.recipeTitle).toBe('Scrambled Eggs');
+
+    // Week add-to-list adds active recipe ingredients and custom items, omitting deleted recipe
+    const list = await createList(home, 'Breakfast List');
+    const addResponse = await as(
+      app,
+      home.user,
+      'POST',
+      `/api/households/${home.household.id}/meal-plan/add-to-list`,
+      { week: sunday, listId: list.id },
+    );
+    expectStatus(addResponse, 200);
+    const listDetail = addResponse.json<ShoppingListDetail>();
+
+    expect(itemNamed(listDetail, 'Maple Syrup')).toBeDefined();
+    expect(itemNamed(listDetail, 'Organic Eggs')).toBeDefined();
+    expect(allItems(listDetail).some((i) => i.itemName === 'Waffle Flour')).toBe(false);
+  });
+
+  it('handles concurrent week add-to-list requests via pg_advisory_xact_lock without duplicate items (D-04)', async () => {
+    const home = await household(app);
+    const sunday = await currentSunday(home);
+
+    const stirFry = await createRecipe(home, 'Veggie Stir Fry', [
+      { itemName: 'Snap Peas' },
+      { itemName: 'Sesame Oil' },
+    ]);
+    await planMeal(home, stirFry.id, sunday, 'dinner');
+    await planCustomItem(home, 'Jasmine Rice', sunday, 'dinner');
+
+    const list = await createList(home, 'Dinner Market');
+
+    // Run two concurrent week add-to-list requests targeting the same list
+    const [res1, res2] = await Promise.all([
+      as(app, home.user, 'POST', `/api/households/${home.household.id}/meal-plan/add-to-list`, {
+        week: sunday,
+        listId: list.id,
+      }),
+      as(app, home.user, 'POST', `/api/households/${home.household.id}/meal-plan/add-to-list`, {
+        week: sunday,
+        listId: list.id,
+      }),
+    ]);
+
+    expectStatus(res1, 200);
+    expectStatus(res2, 200);
+
+    // Fetch the final list state to verify exact item counts
+    const getList = await as(app, home.user, 'GET', `/api/lists/${list.id}`);
+    expectStatus(getList, 200);
+    const finalDetail = getList.json<ShoppingListDetail>();
+
+    const items = allItems(finalDetail);
+    expect(items.filter((i) => i.itemName === 'Snap Peas')).toHaveLength(1);
+    expect(items.filter((i) => i.itemName === 'Sesame Oil')).toHaveLength(1);
+    expect(items.filter((i) => i.itemName === 'Jasmine Rice')).toHaveLength(1);
+  });
 });
 
 describe('RLS isolation: a stranger gets 404, never 403', () => {

@@ -27,3 +27,5 @@ create policy authenticated_read on public.barcode_products
 create policy authenticated_insert on public.barcode_products
   for insert to authenticated with check (true);
 
+grant select, insert on public.barcode_products to authenticated;
+
