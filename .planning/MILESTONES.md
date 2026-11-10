@@ -1,5 +1,23 @@
 # Milestones
 
+## v2.1 Grocery & Deals Intelligence (Shipped: 2026-11-10)
+
+**Phases completed:** 5 phases, 13 plans, 12 tasks
+
+**Key accomplishments:**
+- Centralized image CDN domain definitions and strict URL validation in `@hestia/shared`, and updated Caddy CSP `img-src` headers to permit modern Flipp and Open Food Facts CDNs.
+- Expanded PWA Service Worker image caching route to intercept all allowed Flipp and Open Food Facts CDNs with a 200-entry quota, and refactored DealImage to consume centralized domain validation with fallback placeholders.
+- Delivered database schema, Open Food Facts v3 caching proxy service, authenticated Fastify barcode routes, shopping list item barcode persistence, and Caddy ingress camera permissions.
+- Delivered client-side barcode scanning engine, Web Audio sensory feedback, offline-first item matcher, and full-screen mobile camera viewfinder dialog with dual-mode toggle and manual keypad fallback.
+- Integrated barcode scanning into the live grocery list UI with dedicated toolbar access, scan-to-add metadata pre-population in `ItemSheet`, and shop-and-check-off with interactive Undo toasts.
+- Delivered schema migration, Kysely types, shared Zod schemas, service persistence, and Fastify routes for standalone custom meal plan items and shopping list export.
+- Delivered frontend components and end-to-end user workflows for placing custom food items, disambiguating entries in the week planner, and exporting standalone items to shopping lists.
+- Hardened mathematical pricing derivation unit tests in the Fastify service and deal card presentation tests in the PWA frontend.
+- Harden PostgreSQL integration tests for Open Food Facts barcode proxy caching, upstream failure resilience, and flexible meal plan concurrency with advisory locks.
+- Implemented Playwright E2E test journeys for deal pricing presentation, barcode scanner sheet add and shop check-off, and flexible meal planning across light and dark themes with WCAG 2.1 AA accessibility audits.
+
+---
+
 ## v2.0 Hestia — Domain Migration and Rebrand (Shipped: 2026-11-02)
 
 **Phases completed:** 5 phases, 23 plans, 39 tasks

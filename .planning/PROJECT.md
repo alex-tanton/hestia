@@ -9,23 +9,11 @@ Hestia is a self-hosted household-management PWA (grocery deals, shopping lists,
 **Shipped Milestones:**
 - **v1.0 — Cleanup and Hardening (2026-10-25):** 6 phases, 60 plans, 40 requirements. Test determinism, bare-clock ban, Knip baseline, bug fixes, CI ratchets.
 - **v2.0 — Hestia Domain Migration and Rebrand (2026-11-02):** 5 phases, 23 plans, 21 requirements. Custom domain `hestia.aberrance.app` via Cloudflare Tunnel, full Hestia rebrand, GoTrue magic link authentication, RFC 8292 Web Push VAPID, edge caching & WAF rate limits, documentation modularization in `docs/`.
-
-## Current Milestone: v2.1 Grocery & Deals Intelligence
-
-**Goal:** Overhaul the grocery and deals experience with reliable image delivery, intelligent pricing & discount computation, high-performance deal syncing, barcode scanning for grocery list management, flexible meal planning with standalone items, and robust real-world test coverage.
-
-**Target features:**
-- Fix missing store and item images by updating CSP and image origin allowlists across Caddy, PWA service worker, and web components.
-- Derive and display original price (secondary) and percent-off discount badge alongside primary sale price, computing discounts from sale stories when needed.
-- Accelerate deal ingestion and refresh performance to eliminate 15+ minute stalls for new accounts and active postal codes.
-- Implement camera-based barcode scanning (with manual entry fallback) and Open Food Facts lookup to add items to grocery lists.
-- Enable barcode scanning to automatically match and mark list items as purchased (`bought`).
-- Support first-class standalone items (e.g. banana, yogurt) on the meal planner without requiring a recipe.
-- Improve unit, integration, and Playwright E2E test coverage with real-world grocery and deal scenarios.
+- **v2.1 — Grocery & Deals Intelligence (2026-11-10):** 5 phases, 13 plans, 16 requirements. Flipp & Open Food Facts CDN delivery, derived original prices & discount badges, fast background deal ingestion, camera/manual barcode scanning for grocery list adding and checkout check-off, flexible meal planning with standalone custom items, and comprehensive unit, integration, and Playwright E2E test hardening with WCAG 2.1 AA accessibility audits.
 
 ## Core Value
 
-The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, and provides clean, structured documentation for developers and operators.
+The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, provides intelligent grocery deal discovery with verified barcode scanning and flexible meal planning, and maintains clean, structured documentation for developers and operators.
 
 ## Requirements
 
@@ -73,16 +61,26 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 
 ### Validated (v2.1)
 
-- ✓ **IMG-01**: Fix missing store and item images across Caddy CSP, PWA service worker, and web components for modern Flipp CDNs — Phase 12
-- ✓ **PRICE-01**: Derive and display original price (secondary) and percent-off discount badge alongside primary sale price, computing discounts from sale stories when needed — Phase 13
-- ✓ **PERF-01**: Accelerate deal ingestion and refresh performance to eliminate 15+ minute stalls for new accounts and active postal codes — Phase 13
+- ✓ **IMG-01**: Caddy CSP allows Flipp and Open Food Facts CDNs without browser violations — Phase 12
+- ✓ **IMG-02**: Service Worker caches modern Flipp and OFF image origins cache-first with quota management — Phase 12
+- ✓ **IMG-03**: DealImage and store logos accept URLs from permitted origins with fallback — Phase 12
+- ✓ **DEAL-01**: Deal cards display primary sale price, -% off badge, and secondary strikethrough original price — Phase 13
+- ✓ **DEAL-02**: Pricing engine mathematically parses complex flyer sale stories and boundary conditions — Phase 13
+- ✓ **DEAL-03**: Background deal ingestion and refresh completes under 2 minutes with worker queue — Phase 13
+- ✓ **SCAN-01**: Camera barcode scanner modal (BarcodeDetector / polyfill) and manual keypad fallback in grocery lists — Phase 14
+- ✓ **SCAN-02**: Service resolves scanned barcodes via Open Food Facts v3 proxy with caching in PostgreSQL — Phase 14
+- ✓ **SCAN-03**: Scan-to-add pre-populates ItemSheet with resolved product name and brand — Phase 14
+- ✓ **SCAN-04**: Scanning an item while shopping marks it bought with optimistic check-off and Undo toast — Phase 14
+- ✓ **MEAL-01**: Database schema relaxes recipe constraint to allow standalone custom meal items (`custom_title`) — Phase 15
+- ✓ **MEAL-02**: Meal planner provides MealPlacementSheet with Quick Item tab and 8 suggestion chips — Phase 15
+- ✓ **MEAL-03**: Standalone custom food items can be added directly to shopping lists (single and week aggregation) — Phase 15
+- ✓ **TEST-01**: Hardened unit tests validate pricing math, rounding, bounds, and accessible announcements — Phase 16
+- ✓ **TEST-02**: Service integration tests validate Open Food Facts proxy caching, error resilience, and advisory locks — Phase 16
+- ✓ **TEST-03**: Playwright E2E tests validate deals pricing, barcode scanner add/shop check-off, and flexible meals across themes with WCAG 2.1 AA audits — Phase 16
 
 ### Active
 
-- [ ] **SCAN-01**: Camera-based barcode scanner in PWA (with manual entry fallback) and Open Food Facts lookup to add items to grocery list.
-- [ ] **SCAN-02**: Barcode scanning to automatically match and mark list items as purchased (`bought`).
-- [ ] **MEAL-01**: First-class custom standalone items on meal planner without requiring a recipe.
-- [ ] **TEST-01**: Comprehensive unit, integration, and E2E test coverage for grocery, deal, and meal features.
+*(None — milestone v2.1 complete)*
 
 ### Out of Scope
 
