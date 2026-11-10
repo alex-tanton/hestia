@@ -28,12 +28,29 @@ export type PriceResult =
  * Restaurant Depot's chicken steak is "$2.39 LB" against an original of $23.90, a case price.
  * Treating it as 90% off would put a fictional saving on the screen, so the original is
  * dropped and the discount goes null.
+ *
+ * Implausible originals (originalPrice <= unitPrice, originalPrice >= 10 * unitPrice,
+ * or calculated discount > 95%) and out-of-bounds discount percentages (< 1% or > 95%)
+ * are discarded.
  */
 export function withoutImplausibleOriginal(core: PriceCore): PriceCore {
-  if (core.originalPrice !== null && core.originalPrice >= core.unitPrice * 10) {
-    return { ...core, originalPrice: null };
+  let result = core;
+  if (result.originalPrice !== null) {
+    if (
+      result.originalPrice <= result.unitPrice ||
+      result.originalPrice >= result.unitPrice * 10 ||
+      Math.round(((result.originalPrice - result.unitPrice) / result.originalPrice) * 100) > 95
+    ) {
+      result = { ...result, originalPrice: null, discountPercent: undefined };
+    }
   }
-  return core;
+  if (
+    result.discountPercent !== undefined &&
+    (result.discountPercent < 1 || result.discountPercent > 95)
+  ) {
+    result = { ...result, discountPercent: undefined };
+  }
+  return result;
 }
 
 /**
@@ -58,7 +75,9 @@ export function parsePrice(price: PriceCopy): PriceResult {
         priceUnit: core.priceUnit,
         originalPrice: core.originalPrice,
         discountPercent:
-          core.discountPercent ?? discountPercent(core.unitPrice, core.originalPrice),
+          core.originalPrice === null
+            ? null
+            : (core.discountPercent ?? discountPercent(core.unitPrice, core.originalPrice)),
         displayPrice: formatDisplayPrice(price),
         conditionalPrice: reason !== null,
         conditionalReason: reason,

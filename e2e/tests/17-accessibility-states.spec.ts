@@ -302,7 +302,7 @@ for (const theme of THEMES) {
         .getByRole('button', { name: /^Add to / })
         .first()
         .click();
-      const picker = page.getByRole('dialog', { name: 'Place which recipe?' });
+      const picker = page.getByRole('dialog', { name: /Place (meal|which recipe\?)/ });
       await expect(picker).toBeVisible();
       await expectAccessible(page, `planner, recipe picker (${theme})`);
       await picker.getByRole('button', { name: 'Close' }).click();

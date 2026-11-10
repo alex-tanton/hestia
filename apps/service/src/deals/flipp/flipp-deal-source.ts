@@ -40,10 +40,59 @@ const SKIP_RATE_WARNING = 0.4;
 /** display_type 1 and 25 are products; 5 is a banner and 7 a navigation link. */
 const PRODUCT_DISPLAY_TYPES = new Set([1, 25]);
 
+/**
+ * In-memory LRU cache for Flipp item details.
+ * Prevents redundant network requests for identical flyer items across households or runs.
+ * Bounded to 2,000 entries (<10MB heap) with a 6-hour TTL per D-07.
+ */
+export class ItemDetailLruCache {
+  private readonly maxItems: number;
+  private readonly ttlMs: number;
+  private readonly cache = new Map<string, { data: Record<string, unknown>; expiresAt: number }>();
+
+  constructor(maxItems = 2_000, ttlMs = 6 * 60 * 60 * 1_000) {
+    this.maxItems = maxItems;
+    this.ttlMs = ttlMs;
+  }
+
+  get size(): number {
+    return this.cache.size;
+  }
+
+  get(id: string, now = Date.now()): Record<string, unknown> | null {
+    const entry = this.cache.get(id);
+    if (entry === undefined) return null;
+    if (now > entry.expiresAt) {
+      this.cache.delete(id);
+      return null;
+    }
+    this.cache.delete(id);
+    this.cache.set(id, entry);
+    return entry.data;
+  }
+
+  set(id: string, data: Record<string, unknown>, now = Date.now()): void {
+    if (this.cache.has(id)) {
+      this.cache.delete(id);
+    } else if (this.cache.size >= this.maxItems) {
+      const oldest = this.cache.keys().next().value;
+      if (oldest !== undefined) {
+        this.cache.delete(oldest);
+      }
+    }
+    this.cache.set(id, { data, expiresAt: now + this.ttlMs });
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
 export interface FlippDealSourceOptions {
   queue: FlippRequestQueue;
   logger?: QueueLogger;
   now?: () => Date;
+  detailCache?: ItemDetailLruCache;
 }
 
 interface CachedFlyers {
@@ -114,6 +163,7 @@ export class FlippDealSource implements DealSource, DealSourceStats {
   /** Every flyer seen in any postal code, so `listFlyerItems` can name a flyer's merchant. */
   private readonly flyersById = new Map<string, Flyer>();
   private merchantCache: { merchants: Map<string, string>; fetchedAt: number } | null = null;
+  private readonly detailCache: ItemDetailLruCache;
   private readonly counts = new Map<string, MerchantSkipCount>();
   /**
    * In-flight coalescing: a cold cache key already being fetched hands every other caller the same
@@ -128,6 +178,7 @@ export class FlippDealSource implements DealSource, DealSourceStats {
     this.queue = options.queue;
     this.logger = options.logger;
     this.now = options.now ?? (() => new Date());
+    this.detailCache = options.detailCache ?? new ItemDetailLruCache();
   }
 
   /**
@@ -223,75 +274,97 @@ export class FlippDealSource implements DealSource, DealSourceStats {
     );
     const flyer = this.flyersById.get(flyerId);
 
+    const candidates = asArray(roster['items'])
+      .map(asRecord)
+      .filter(
+        (item) =>
+          typeof item['display_type'] === 'number' &&
+          PRODUCT_DISPLAY_TYPES.has(item['display_type']),
+      );
+
+    const results = await Promise.all(
+      candidates.map(async (item): Promise<{ deal?: NormalizedDeal; attempt?: Attempt } | null> => {
+        const externalId = asId(item['id']);
+        if (externalId === null) return null;
+        if (toCents(item['price']) === null) {
+          return { attempt: { merchantId: null, merchantName: null, skipped: 'no_price' } };
+        }
+
+        let detail = this.detailCache.get(externalId, this.now().getTime());
+        if (detail === null) {
+          try {
+            const rawRes = asRecord(
+              await this.queue.request(`${BASE_URL}/flipp/items/${encodeURIComponent(externalId)}`),
+            );
+            detail = asRecord(rawRes['item']);
+            this.detailCache.set(externalId, detail, this.now().getTime());
+          } catch (error: unknown) {
+            // A single failed detail is one skipped item, but a failure that opened the breaker ends
+            // the flyer: nothing is written, so the next run fetches it whole.
+            if (error instanceof CircuitOpenError || this.queue.isOpen) throw error;
+            return {
+              attempt: {
+                merchantId: null,
+                merchantName: null,
+                skipped: 'detail_unavailable',
+              },
+            };
+          }
+        }
+
+        const name = asText(detail['name']) ?? asText(item['name']);
+        const merchantId = asId(detail['merchant_id']) ?? flyer?.merchantId ?? null;
+        const merchantName = asText(detail['merchant']) ?? flyer?.merchantName ?? null;
+        const result = parsePrice({
+          currentPrice: toCents(detail['current_price']),
+          originalPrice: toCents(detail['original_price']),
+          prePriceText: asText(detail['pre_price_text']),
+          // Item detail calls the post-price text `price_text` ("WITH CARD", "EA").
+          postPriceText: asText(detail['price_text']),
+          saleStory: asText(detail['sale_story']),
+        });
+        const attempt: Attempt = {
+          merchantId,
+          merchantName,
+          skipped: 'skipped' in result ? result.skipped : null,
+        };
+        if ('skipped' in result || name === null || merchantId === null || merchantName === null) {
+          return { attempt };
+        }
+
+        const validFrom =
+          calendarDate(detail['valid_from']) ??
+          calendarDate(item['valid_from']) ??
+          flyer?.validFrom;
+        const validTo =
+          calendarDate(detail['valid_to']) ?? calendarDate(item['valid_to']) ?? flyer?.validTo;
+        if (validFrom === undefined || validTo === undefined) return { attempt };
+
+        const deal: NormalizedDeal = {
+          externalId,
+          name,
+          merchantId,
+          merchantName,
+          ...result.parsed,
+          // Flyer items have no category, and an upsert never replaces a non-null one with null.
+          category: null,
+          flyerId: asId(item['flyer_id']) ?? flyerId,
+          validFrom,
+          validTo,
+          imageUrl: https(detail['image_url']) ?? https(item['cutout_image_url']),
+          sourceUrl: asText(detail['ttm_url']),
+        };
+
+        return { deal, attempt };
+      }),
+    );
+
     const deals: NormalizedDeal[] = [];
     const attempts: Attempt[] = [];
-    for (const raw of asArray(roster['items'])) {
-      const item = asRecord(raw);
-      const displayType = item['display_type'];
-      if (typeof displayType !== 'number' || !PRODUCT_DISPLAY_TYPES.has(displayType)) continue;
-
-      const externalId = asId(item['id']);
-      if (externalId === null) continue;
-      if (toCents(item['price']) === null) {
-        attempts.push({ merchantId: null, merchantName: null, skipped: 'no_price' });
-        continue;
-      }
-
-      let detail: Record<string, unknown>;
-      try {
-        detail = asRecord(
-          asRecord(
-            await this.queue.request(`${BASE_URL}/flipp/items/${encodeURIComponent(externalId)}`),
-          )['item'],
-        );
-      } catch (error: unknown) {
-        // A single failed detail is one skipped item, but a failure that opened the breaker ends
-        // the flyer: nothing is written, so the next run fetches it whole.
-        if (error instanceof CircuitOpenError || this.queue.isOpen) throw error;
-        attempts.push({ merchantId: null, merchantName: null, skipped: 'detail_unavailable' });
-        continue;
-      }
-
-      const name = asText(detail['name']) ?? asText(item['name']);
-      const merchantId = asId(detail['merchant_id']) ?? flyer?.merchantId ?? null;
-      const merchantName = asText(detail['merchant']) ?? flyer?.merchantName ?? null;
-      const result = parsePrice({
-        currentPrice: toCents(detail['current_price']),
-        originalPrice: toCents(detail['original_price']),
-        prePriceText: asText(detail['pre_price_text']),
-        // Item detail calls the post-price text `price_text` ("WITH CARD", "EA").
-        postPriceText: asText(detail['price_text']),
-        saleStory: asText(detail['sale_story']),
-      });
-      attempts.push({
-        merchantId,
-        merchantName,
-        skipped: 'skipped' in result ? result.skipped : null,
-      });
-      if ('skipped' in result || name === null || merchantId === null || merchantName === null) {
-        continue;
-      }
-
-      const validFrom =
-        calendarDate(detail['valid_from']) ?? calendarDate(item['valid_from']) ?? flyer?.validFrom;
-      const validTo =
-        calendarDate(detail['valid_to']) ?? calendarDate(item['valid_to']) ?? flyer?.validTo;
-      if (validFrom === undefined || validTo === undefined) continue;
-
-      deals.push({
-        externalId,
-        name,
-        merchantId,
-        merchantName,
-        ...result.parsed,
-        // Flyer items have no category, and an upsert never replaces a non-null one with null.
-        category: null,
-        flyerId: asId(item['flyer_id']) ?? flyerId,
-        validFrom,
-        validTo,
-        imageUrl: https(detail['image_url']) ?? https(item['cutout_image_url']),
-        sourceUrl: asText(detail['ttm_url']),
-      });
+    for (const res of results) {
+      if (res === null) continue;
+      if (res.attempt !== undefined) attempts.push(res.attempt);
+      if (res.deal !== undefined) deals.push(res.deal);
     }
 
     // A flyer fetched without its postal code's flyers response, and whose every detail request

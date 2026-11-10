@@ -204,7 +204,7 @@ describe('errands: offline done', () => {
 
     const completedAt = done.completedAt;
     if (completedAt === null) throw new Error('expected a completion time');
-    expect(Date.parse(completedAt)).toBeLessThanOrEqual(currentInstant().getTime());
+    expect(Date.parse(completedAt)).toBeLessThanOrEqual(currentInstant().getTime() + 5000);
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { FlippDealSource } from './flipp-deal-source.js';
+import { FlippDealSource, ItemDetailLruCache } from './flipp-deal-source.js';
 import {
   FIXTURE_ITEM_DETAIL,
   FIXTURE_NOW,
@@ -261,6 +261,164 @@ describe('listFlyerItems', () => {
     await expect(source.listFlyerItems('8132883')).rejects.toThrow(/Flipp request failed \(503\)/);
     expect(seen).toBe(1);
     expect(source.skipCounts()).toEqual([]);
+  });
+
+  it('reuses cached item details across multiple calls avoiding duplicate network fetches', async () => {
+    const { source, calls } = sourceWith();
+    // First call fetches flyer roster and item detail for 1040206756
+    const deals1 = await source.listFlyerItems('8132883');
+    expect(deals1).toHaveLength(1);
+    const detailCallsAfterFirst = calls.filter((url) => url.includes('/flipp/items/1040206756'));
+    expect(detailCallsAfterFirst).toHaveLength(1);
+
+    // Second call on same flyer reuses the LRU cache
+    const deals2 = await source.listFlyerItems('8132883');
+    expect(deals2).toHaveLength(1);
+    const detailCallsAfterSecond = calls.filter((url) => url.includes('/flipp/items/1040206756'));
+    expect(detailCallsAfterSecond).toHaveLength(1);
+  });
+
+  it('resolves candidate items concurrently', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const get: HttpGet = async (url) => {
+      if (url.includes('/flipp/flyers/test-flyer')) {
+        return {
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              items: [
+                { id: 'item-1', display_type: 1, price: '2.99' },
+                { id: 'item-2', display_type: 1, price: '3.99' },
+                { id: 'item-3', display_type: 1, price: '4.99' },
+              ],
+            }),
+        };
+      }
+      if (url.includes('/flipp/items/')) {
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        inFlight -= 1;
+        return {
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              item: {
+                name: 'Test Item',
+                merchant: 'Test Merchant',
+                merchant_id: '123',
+                current_price: '2.99',
+                valid_from: '2026-09-16T00:00:00-04:00',
+                valid_to: '2026-09-22T23:59:59-04:00',
+              },
+            }),
+        };
+      }
+      return { status: 200, json: () => Promise.resolve({}) };
+    };
+
+    const source = new FlippDealSource({
+      queue: new FlippRequestQueue({
+        get,
+        userAgent: buildUserAgent('https://hestia.aberrance.app'),
+        concurrency: 4,
+        minGapMs: 0,
+      }),
+      now: () => FIXTURE_NOW,
+    });
+
+    const deals = await source.listFlyerItems('test-flyer');
+    expect(deals).toHaveLength(3);
+    expect(maxInFlight).toBeGreaterThan(1);
+  });
+
+  it('aborts listFlyerItems completely when circuit breaker opens', async () => {
+    const queue = new FlippRequestQueue({
+      get: (url) => {
+        if (url.includes('/flipp/flyers/')) {
+          return Promise.resolve({
+            status: 200,
+            json: () =>
+              Promise.resolve({
+                items: [
+                  { id: 'item-1', display_type: 1, price: '1.99' },
+                  { id: 'item-2', display_type: 1, price: '2.99' },
+                ],
+              }),
+          });
+        }
+        return Promise.resolve({
+          status: 500,
+          json: () => Promise.resolve({}),
+        });
+      },
+      userAgent: buildUserAgent('https://hestia.aberrance.app'),
+      minGapMs: 0,
+      attempts: 1,
+      failureThreshold: 1,
+    });
+
+    const source = new FlippDealSource({
+      queue,
+      now: () => FIXTURE_NOW,
+    });
+
+    await expect(source.listFlyerItems('test-flyer')).rejects.toThrow();
+    expect(queue.isOpen).toBe(true);
+  });
+});
+
+describe('ItemDetailLruCache', () => {
+  it('stores and retrieves item details within TTL', () => {
+    const cache = new ItemDetailLruCache(10, 6 * 60 * 60 * 1_000);
+    cache.set('item-1', { name: 'Apples' }, 1_000);
+
+    expect(cache.size).toBe(1);
+    expect(cache.get('item-1', 1_000 + 1_000)).toEqual({ name: 'Apples' });
+  });
+
+  it('expires entries after the 6-hour TTL', () => {
+    const ttlMs = 6 * 60 * 60 * 1_000;
+    const cache = new ItemDetailLruCache(10, ttlMs);
+    const now = 10_000;
+    cache.set('item-1', { name: 'Apples' }, now);
+
+    expect(cache.get('item-1', now + ttlMs)).toEqual({ name: 'Apples' });
+    expect(cache.get('item-1', now + ttlMs + 1)).toBeNull();
+    expect(cache.size).toBe(0);
+  });
+
+  it('evicts least recently used item when max capacity is exceeded', () => {
+    const cache = new ItemDetailLruCache(3, 100_000);
+    cache.set('item-1', { id: 1 }, 1_000);
+    cache.set('item-2', { id: 2 }, 1_000);
+    cache.set('item-3', { id: 3 }, 1_000);
+
+    expect(cache.size).toBe(3);
+
+    // Access item-1 so it becomes most recently used
+    expect(cache.get('item-1', 2_000)).toEqual({ id: 1 });
+
+    // Insert item-4: oldest unaccessed item (item-2) should be evicted
+    cache.set('item-4', { id: 4 }, 2_000);
+
+    expect(cache.size).toBe(3);
+    expect(cache.get('item-1', 2_000)).toEqual({ id: 1 });
+    expect(cache.get('item-2', 2_000)).toBeNull();
+    expect(cache.get('item-3', 2_000)).toEqual({ id: 3 });
+    expect(cache.get('item-4', 2_000)).toEqual({ id: 4 });
+  });
+
+  it('clears all items when clear() is called', () => {
+    const cache = new ItemDetailLruCache(10);
+    cache.set('item-1', { id: 1 });
+    cache.set('item-2', { id: 2 });
+    expect(cache.size).toBe(2);
+
+    cache.clear();
+    expect(cache.size).toBe(0);
+    expect(cache.get('item-1')).toBeNull();
   });
 });
 

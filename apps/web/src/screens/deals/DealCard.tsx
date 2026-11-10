@@ -4,7 +4,7 @@ import { Badge } from '../../components/ui/Badge.tsx';
 import { Card } from '../../components/ui/Card.tsx';
 import { formatUnitPrice } from '../../lib/money.ts';
 import { AddToList } from './AddToList.tsx';
-import { CONDITIONAL_LABEL, dealSentence, discountLabel, validityLabel } from './deal-copy.ts';
+import { CONDITIONAL_LABEL, dealSentence, validityLabel } from './deal-copy.ts';
 import { DealImage } from './DealImage.tsx';
 
 export interface DealCardProps {
@@ -44,9 +44,14 @@ export function DealCard({ householdId, deal }: DealCardProps): ReactElement {
           <p aria-hidden className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="text-h3 tabular-nums text-section">{unitPrice}</span>
             {deal.originalPrice !== null && (
-              <span className="text-body-sm tabular-nums text-muted line-through">
-                {formatUnitPrice(deal.originalPrice, deal.priceUnit)}
-              </span>
+              <>
+                {deal.discountPercent !== null && (
+                  <Badge variant="section">-{deal.discountPercent}%</Badge>
+                )}
+                <span className="text-body-sm tabular-nums text-muted line-through">
+                  {formatUnitPrice(deal.originalPrice, deal.priceUnit)}
+                </span>
+              </>
             )}
             {hasDisplayPrice && <span className="text-body-sm text-secondary">{displayPrice}</span>}
           </p>
@@ -54,9 +59,6 @@ export function DealCard({ householdId, deal }: DealCardProps): ReactElement {
       </div>
 
       <div aria-hidden className="flex flex-wrap items-center gap-2">
-        {deal.discountPercent !== null && (
-          <Badge variant="section">{discountLabel(deal.discountPercent)}</Badge>
-        )}
         {deal.conditionalPrice && deal.conditionalReason !== null && (
           <Badge variant="warning">{CONDITIONAL_LABEL[deal.conditionalReason]}</Badge>
         )}

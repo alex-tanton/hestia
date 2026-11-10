@@ -136,6 +136,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@hestia/matching':
+        specifier: workspace:*
+        version: link:../../packages/matching
       '@hestia/recurrence':
         specifier: workspace:*
         version: link:../../packages/recurrence
@@ -154,6 +157,9 @@ importers:
       '@tanstack/react-query-persist-client':
         specifier: 5.103.1
         version: 5.103.1(@tanstack/react-query@5.103.1(react@19.3.0))(react@19.3.0)
+      '@undecaf/barcode-detector-polyfill':
+        specifier: 0.9.23
+        version: 0.9.23
       idb-keyval:
         specifier: 6.2.2
         version: 6.2.2
@@ -2825,6 +2831,12 @@ packages:
     resolution: {integrity: sha512-BoC8PiO4Hkdo0TVJh9Ntxr5MxPDI7/oFsrygN5ADelFSeXG/qgNuucIGA+L5Z6JpPTE/uRfcTWtscjbUaufepQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@undecaf/barcode-detector-polyfill@0.9.23':
+    resolution: {integrity: sha512-qVr7jSUbE5a30X9dByDym2NzsqyH+MFwyFiu4QSHDQMLCImTJj/et7pEcOtGqlL4UB5J6J3d0hK4/5d4MMowYA==}
+
+  '@undecaf/zbar-wasm@0.9.16':
+    resolution: {integrity: sha512-T5PcT6g+tLScGjR4WmnRErNvfKqEc3kRg2ux14wHmIDNbvNeXa0BkFK19PRK/jb6zGy5NyWtn4ko6KeNuZc/fQ==}
+
   '@vitejs/plugin-react@6.1.1':
     resolution: {integrity: sha512-yxLaQV9gkhS8ezJqCM6+ndU7mDY6gqAg75NQ+0IjwEI8IYOmQCgkRwHKVSfWXW076DsqMo0Dk+0FK1U+M5RgFw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -3951,6 +3963,10 @@ packages:
   js-yaml@4.3.2:
     resolution: {integrity: sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==}
     hasBin: true
+
+  jschardet@3.1.4:
+    resolution: {integrity: sha512-/kmVISmrwVwtyYU40iQUOp3SUPk2dhNCMsZBQX0R1/jZ8maaXJ/oZIzUOiyOqcgtLnETFKYChbJ5iDC/eWmFHg==}
+    engines: {node: '>=0.1.90'}
 
   jscpd-darwin-arm64@5.4.1:
     resolution: {integrity: sha512-LXHVeH60C9BsozcVIMPmXWvj97KqFKbCJYmYG4hDwfwIwS1kz+uF7yiObckP6h2xo12pD88nI4XjWTB5frjZUw==}
@@ -7930,6 +7946,14 @@ snapshots:
       '@typescript-eslint/types': 8.70.0
       eslint-visitor-keys: 5.0.1
 
+  '@undecaf/barcode-detector-polyfill@0.9.23':
+    dependencies:
+      '@undecaf/zbar-wasm': 0.9.16
+
+  '@undecaf/zbar-wasm@0.9.16':
+    dependencies:
+      jschardet: 3.1.4
+
   '@vitejs/plugin-react@6.1.1(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
@@ -9153,6 +9177,8 @@ snapshots:
   js-yaml@4.3.2:
     dependencies:
       argparse: 2.0.1
+
+  jschardet@3.1.4: {}
 
   jscpd-darwin-arm64@5.4.1:
     optional: true

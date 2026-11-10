@@ -1,4 +1,5 @@
 export * from './api/auth.js';
+export * from './api/barcodes.js';
 export * from './api/bills.js';
 export * from './api/chores.js';
 export * from './api/common.js';
@@ -17,6 +18,7 @@ export * from './api/recipes.js';
 export * from './api/system.js';
 export * from './api/users.js';
 export * from './config/index.js';
+export * from './images.js';
 export * from './password.js';
 export * from './problem.js';
 export * from './scrub.js';

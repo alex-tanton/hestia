@@ -1520,6 +1520,25 @@
     "sourceUrl": null
   },
   {
+    "externalId": "1039408408",
+    "name": "Jameson Black Barrel Irish Whiskey",
+    "merchantId": "5489",
+    "merchantName": "Publix Liquors",
+    "unitPrice": 3299,
+    "priceUnit": "each",
+    "originalPrice": 3799,
+    "discountPercent": 13,
+    "displayPrice": "$37.99",
+    "conditionalPrice": false,
+    "conditionalReason": null,
+    "category": "Beverages",
+    "flyerId": "8128736",
+    "validFrom": "2026-09-17",
+    "validTo": "2026-09-23",
+    "imageUrl": "https://f.wishabi.net/page_items/433408448/1788915735/extra_large.jpg",
+    "sourceUrl": null
+  },
+  {
     "externalId": "1039408430",
     "name": "Adictivo Doble Reposado Tequila",
     "merchantId": "5489",
@@ -1555,6 +1574,25 @@
     "validFrom": "2026-09-17",
     "validTo": "2026-09-23",
     "imageUrl": "https://f.wishabi.net/page_items/433401001/1788915732/extra_large.jpg",
+    "sourceUrl": null
+  },
+  {
+    "externalId": "1039408409",
+    "name": "Jack Daniel's Single Barrel Tennessee Whiskey",
+    "merchantId": "5489",
+    "merchantName": "Publix Liquors",
+    "unitPrice": 4099,
+    "priceUnit": "each",
+    "originalPrice": 4399,
+    "discountPercent": 7,
+    "displayPrice": "$43.99",
+    "conditionalPrice": false,
+    "conditionalReason": null,
+    "category": "Beverages",
+    "flyerId": "8128736",
+    "validFrom": "2026-09-17",
+    "validTo": "2026-09-23",
+    "imageUrl": "https://f.wishabi.net/page_items/433408449/1788915735/extra_large.jpg",
     "sourceUrl": null
   }
 ]

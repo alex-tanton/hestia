@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ProblemError } from '../problem.js';
-import { addDays, assertSunday } from './meal-plan.js';
+import { addDays, assertSunday, toEntry, type EntryRow } from './meal-plan.js';
 
 /*
  * The week planner's pure logic: the Sunday-only validation and the week's date-range math, both
@@ -36,5 +36,67 @@ describe('addDays', () => {
 
   it('adds zero as a no-op', () => {
     expect(addDays('2026-10-04', 0)).toBe('2026-10-04');
+  });
+});
+
+describe('toEntry', () => {
+  it('maps custom meal item with null recipe fields and null readiness', () => {
+    const row: EntryRow = {
+      id: '00000000-0000-4000-8000-000000000001',
+      household_id: '00000000-0000-4000-8000-000000000002',
+      recipe_id: null,
+      recipe_title: null,
+      custom_title: 'Banana',
+      planned_date: '2026-11-15',
+      meal_type: 'breakfast',
+      added_by: '00000000-0000-4000-8000-000000000003',
+      created_at: '2026-11-10T12:00:00.000Z',
+      readiness_percent: null,
+    };
+    const entry = toEntry(row);
+    expect(entry.customTitle).toBe('Banana');
+    expect(entry.recipeId).toBeNull();
+    expect(entry.recipeTitle).toBeNull();
+    expect(entry.readinessPercent).toBeNull();
+  });
+
+  it('maps deleted recipe snapshot with null recipeId, intact title, and null readiness', () => {
+    const row: EntryRow = {
+      id: '00000000-0000-4000-8000-000000000001',
+      household_id: '00000000-0000-4000-8000-000000000002',
+      recipe_id: null,
+      recipe_title: 'Old Deleted Recipe',
+      custom_title: null,
+      planned_date: '2026-11-15',
+      meal_type: 'dinner',
+      added_by: '00000000-0000-4000-8000-000000000003',
+      created_at: '2026-11-10T12:00:00.000Z',
+      readiness_percent: 75,
+    };
+    const entry = toEntry(row);
+    expect(entry.customTitle).toBeNull();
+    expect(entry.recipeId).toBeNull();
+    expect(entry.recipeTitle).toBe('Old Deleted Recipe');
+    expect(entry.readinessPercent).toBeNull();
+  });
+
+  it('maps active recipe entry preserving readiness score', () => {
+    const row: EntryRow = {
+      id: '00000000-0000-4000-8000-000000000001',
+      household_id: '00000000-0000-4000-8000-000000000002',
+      recipe_id: '00000000-0000-4000-8000-000000000004',
+      recipe_title: 'Lasagna',
+      custom_title: null,
+      planned_date: '2026-11-15',
+      meal_type: 'dinner',
+      added_by: '00000000-0000-4000-8000-000000000003',
+      created_at: '2026-11-10T12:00:00.000Z',
+      readiness_percent: 92,
+    };
+    const entry = toEntry(row);
+    expect(entry.customTitle).toBeNull();
+    expect(entry.recipeId).toBe('00000000-0000-4000-8000-000000000004');
+    expect(entry.recipeTitle).toBe('Lasagna');
+    expect(entry.readinessPercent).toBe(92);
   });
 });

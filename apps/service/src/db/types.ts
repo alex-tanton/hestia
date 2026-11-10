@@ -65,6 +65,16 @@ export interface AppError {
   message: string;
 }
 
+export interface BarcodeProducts {
+  barcode: string;
+  brands: string | null;
+  created_at: Generated<Timestamp>;
+  image_url: string | null;
+  product_name: string | null;
+  quantity: string | null;
+  raw_payload: Json | null;
+}
+
 export interface Bill {
   amount: Numeric;
   anchor_date: string;
@@ -211,12 +221,13 @@ export interface IngredientMatchOverride {
 export interface MealPlanEntry {
   added_by: Generated<string>;
   created_at: Generated<Timestamp>;
+  custom_title: string | null;
   household_id: string;
   id: Generated<string>;
   meal_type: MealType;
   planned_date: string;
   recipe_id: string | null;
-  recipe_title: string;
+  recipe_title: string | null;
 }
 
 export interface Notification {
@@ -319,6 +330,7 @@ export interface ShoppingList {
 
 export interface ShoppingListItem {
   added_by: Generated<string>;
+  barcode: string | null;
   conditional_price: Generated<boolean>;
   contributing_recipe_ids: Generated<string[]>;
   created_at: Generated<Timestamp>;
@@ -344,6 +356,7 @@ export interface ShoppingListItem {
 
 export interface DB {
   app_error: AppError;
+  barcode_products: BarcodeProducts;
   bill: Bill;
   bill_payment_log: BillPaymentLog;
   chore: Chore;

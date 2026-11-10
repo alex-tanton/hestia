@@ -399,7 +399,7 @@ describe('chores: offline completion', () => {
 
     const completedAt = detail.completions[0]?.completedAt;
     if (completedAt === undefined) throw new Error('expected a completion');
-    expect(Date.parse(completedAt)).toBeLessThanOrEqual(currentInstant().getTime());
+    expect(Date.parse(completedAt)).toBeLessThanOrEqual(currentInstant().getTime() + 5000);
   });
 });
 

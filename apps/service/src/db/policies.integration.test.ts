@@ -17,7 +17,7 @@ describe('every table', () => {
          where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p')
          order by c.relname`,
       );
-      expect(tables).toHaveLength(25);
+      expect(tables).toHaveLength(26);
       for (const table of tables) {
         expect(table.rls, table.name).toBe(true);
         // app_error is deliberately policy-less: RLS denies everything, record_app_error writes.

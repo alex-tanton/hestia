@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildUserAgent,
   CircuitOpenError,
+  DEFAULT_CONCURRENCY,
   FlippRequestError,
   FlippRequestQueue,
   MIN_GAP_MS,
@@ -55,7 +56,7 @@ afterEach(() => {
 describe('the serialized request queue', () => {
   it('keeps the gap at the minimum when a timer wakes a millisecond early', async () => {
     // Node timers can fire a millisecond before the clock says the delay has passed. One sleep
-    // then leaves the gap at 499ms, which the e2e discipline check reads as a broken queue.
+    // then leaves the gap at 149ms, which the discipline check reads as a broken queue.
     let clock = 0;
     let wokeEarly = false;
     const starts: number[] = [];
@@ -79,7 +80,7 @@ describe('the serialized request queue', () => {
     expect(starts[1]! - starts[0]!).toBeGreaterThanOrEqual(MIN_GAP_MS);
   });
 
-  it('runs requests one at a time with at least a 500ms gap', async () => {
+  it('runs requests with bounded concurrency and at least a 150ms gap', async () => {
     const { queue, calls } = queueWith([200]);
     const results = Promise.all([
       queue.request('https://f/1'),
@@ -92,6 +93,39 @@ describe('the serialized request queue', () => {
 
     expect(calls.map((call) => call.url)).toEqual(['https://f/1', 'https://f/2', 'https://f/3']);
     expect(calls.map((call) => call.at)).toEqual([0, MIN_GAP_MS, MIN_GAP_MS * 2]);
+  });
+
+  it('processes up to 4 requests concurrently in parallel with overlapping in-flight executions', async () => {
+    let activeInFlight = 0;
+    let maxActive = 0;
+    const completed: string[] = [];
+    const queue = new FlippRequestQueue({
+      get: async (url) => {
+        activeInFlight += 1;
+        maxActive = Math.max(maxActive, activeInFlight);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        activeInFlight -= 1;
+        completed.push(url);
+        return { status: 200, json: () => Promise.resolve({ ok: url }) };
+      },
+      userAgent: buildUserAgent('https://hestia.aberrance.app'),
+      concurrency: DEFAULT_CONCURRENCY,
+      minGapMs: 150,
+    });
+
+    const promises = [
+      queue.request('https://f/1'),
+      queue.request('https://f/2'),
+      queue.request('https://f/3'),
+      queue.request('https://f/4'),
+      queue.request('https://f/5'),
+    ];
+
+    await vi.advanceTimersByTimeAsync(3_000);
+    await Promise.all(promises);
+
+    expect(maxActive).toBe(4);
+    expect(completed).toHaveLength(5);
   });
 
   it('sends a descriptive User-Agent naming the app and its origin', async () => {
@@ -113,7 +147,11 @@ describe('the serialized request queue', () => {
   });
 
   it('keeps running after one request fails, rather than poisoning the chain', async () => {
-    const { queue, calls } = queueWith([500, 500, 500, 200], { attempts: 3, backoffMs: 1_000 });
+    const { queue, calls } = queueWith([500, 500, 500, 200], {
+      attempts: 3,
+      backoffMs: 1_000,
+      concurrency: 1,
+    });
     const failed = queue.request('https://f/1').catch((error: unknown) => error);
     const next = queue.request('https://f/2');
 
@@ -181,6 +219,72 @@ describe('the circuit breaker', () => {
     await vi.advanceTimersByTimeAsync(5_000);
     await retried;
     expect(calls).toHaveLength(6);
+  });
+
+  it('rejects queued requests with CircuitOpenError when breaker trips', async () => {
+    const { queue, calls } = queueWith([500], {
+      attempts: 1,
+      failureThreshold: 5,
+      concurrency: 2,
+    });
+
+    const promises = [
+      queue.request('https://f/0').catch((e: unknown) => e),
+      queue.request('https://f/1').catch((e: unknown) => e),
+      queue.request('https://f/2').catch((e: unknown) => e),
+      queue.request('https://f/3').catch((e: unknown) => e),
+      queue.request('https://f/4').catch((e: unknown) => e),
+      queue.request('https://f/5').catch((e: unknown) => e),
+      queue.request('https://f/6').catch((e: unknown) => e),
+    ];
+
+    await vi.advanceTimersByTimeAsync(10_000);
+    const results = await Promise.all(promises);
+
+    expect(calls).toHaveLength(5);
+    expect(queue.isOpen).toBe(true);
+
+    for (let i = 0; i < 5; i += 1) {
+      expect(results[i]).toBeInstanceOf(FlippRequestError);
+    }
+    expect(results[5]).toBeInstanceOf(CircuitOpenError);
+    expect(results[6]).toBeInstanceOf(CircuitOpenError);
+  });
+
+  it('rejects active in-flight requests with CircuitOpenError when breaker trips during execution', async () => {
+    const queue = new FlippRequestQueue({
+      get: async (url) => {
+        if (url === 'https://f/slow') {
+          // Takes 1,000ms
+          await new Promise((resolve) => setTimeout(resolve, 1_000));
+          return { status: 200, json: () => Promise.resolve({ ok: url }) };
+        }
+        // Other calls fail immediately
+        return { status: 500, json: () => Promise.resolve({}) };
+      },
+      userAgent: buildUserAgent('https://hestia.aberrance.app'),
+      concurrency: 4,
+      minGapMs: 50,
+      attempts: 1,
+      failureThreshold: 5,
+    });
+
+    // Slow request starts at t=0
+    const slow = queue.request('https://f/slow').catch((e: unknown) => e);
+
+    // Then 5 requests fail while slow is in-flight
+    const f1 = queue.request('https://f/f1').catch((e: unknown) => e);
+    const f2 = queue.request('https://f/f2').catch((e: unknown) => e);
+    const f3 = queue.request('https://f/f3').catch((e: unknown) => e);
+    const f4 = queue.request('https://f/f4').catch((e: unknown) => e);
+    const f5 = queue.request('https://f/f5').catch((e: unknown) => e);
+
+    await vi.advanceTimersByTimeAsync(2_000);
+    await Promise.all([f1, f2, f3, f4, f5]);
+
+    expect(queue.isOpen).toBe(true);
+    const slowResult = await slow;
+    expect(slowResult).toBeInstanceOf(CircuitOpenError);
   });
 
   it('forgets earlier failures once a request succeeds', async () => {

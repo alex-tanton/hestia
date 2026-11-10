@@ -45,11 +45,16 @@ describe('divideCents', () => {
 });
 
 describe('discountPercent', () => {
-  it('floors the percentage', () => {
+  it('rounds half-up the percentage and clamps to 1-95%', () => {
     expect(discountPercent(399, 599)).toBe(33);
     expect(discountPercent(249, 499)).toBe(50);
     expect(discountPercent(200, 300)).toBe(33);
     expect(discountPercent(449, 549)).toBe(18);
+    expect(discountPercent(475, 949)).toBe(50);
+  });
+
+  it('is null when outside 1-95% range', () => {
+    expect(discountPercent(4, 100)).toBeNull(); // 96%
   });
 
   it('is null without an original, or when the original does not beat the price', () => {

@@ -18,7 +18,8 @@ export const mealPlanEntrySchema = z.object({
   id: idSchema,
   householdId: idSchema,
   recipeId: idSchema.nullable(),
-  recipeTitle: z.string(),
+  recipeTitle: z.string().nullable(),
+  customTitle: z.string().nullable(),
   readinessPercent: z.int().min(0).max(100).nullable(),
   plannedDate: calendarDateSchema,
   mealType: mealTypeSchema,
@@ -36,12 +37,27 @@ export type MealPlanWeekResponse = z.infer<typeof mealPlanWeekResponseSchema>;
 /** GET /households/:id/meal-plan?week=YYYY-MM-DD */
 export const mealPlanQuerySchema = z.object({ week: calendarDateSchema.optional() });
 
-/** POST /households/:id/meal-plan */
-export const createMealPlanEntryRequestSchema = z.object({
+export const createRecipeEntrySchema = z.object({
   recipeId: idSchema,
   plannedDate: calendarDateSchema,
   mealType: mealTypeSchema,
 });
+
+export const createCustomItemEntrySchema = z.object({
+  customTitle: z
+    .string()
+    .trim()
+    .min(1, 'Enter an item name.')
+    .max(200, 'Item name must not exceed 200 characters.'),
+  plannedDate: calendarDateSchema,
+  mealType: mealTypeSchema,
+});
+
+/** POST /households/:id/meal-plan */
+export const createMealPlanEntryRequestSchema = z.union([
+  createRecipeEntrySchema,
+  createCustomItemEntrySchema,
+]);
 export type CreateMealPlanEntryRequest = z.infer<typeof createMealPlanEntryRequestSchema>;
 
 /**

@@ -70,9 +70,14 @@ test("the CSP allows WebSockets to the stack's own host and no CORS or cookie he
 }) => {
   const page = await request.get('/');
   expect(page.status()).toBe(200);
-  expect(page.headers()['content-security-policy']).toContain(
-    `connect-src 'self' wss://${new URL(BASE_URL).host}`,
-  );
+  const csp = page.headers()['content-security-policy'] ?? '';
+  expect(csp).toContain(`connect-src 'self' wss://${new URL(BASE_URL).host}`);
+  expect(csp).toContain("img-src 'self' data:");
+  expect(csp).toContain('https://*.flipp.com');
+  expect(csp).toContain('https://flipp-image-retrieval.flipp.com');
+  expect(csp).toContain('https://*.wishabi.com');
+  expect(csp).toContain('https://*.wishabi.net');
+  expect(csp).toContain('https://*.openfoodfacts.org');
 
   const health = await request.get('/api/health');
   for (const response of [page, health]) {

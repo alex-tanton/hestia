@@ -5,7 +5,7 @@ import { householdFallback } from '../../components/chores/household-date-fallba
 import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
 import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';
 import { PlannerDay } from '../../components/meals/PlannerDay.tsx';
-import { RecipePickerSheet } from '../../components/meals/RecipePickerSheet.tsx';
+import { MealPlacementSheet } from '../../components/meals/MealPlacementSheet.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
@@ -92,7 +92,7 @@ function PlannerWeek({
   const entriesFor = (date: string): MealPlanEntry[] =>
     (plan.data?.entries ?? []).filter((entry) => entry.plannedDate === date);
 
-  const place = (recipeId: string, recipeTitle: string): void => {
+  const placeRecipe = (recipeId: string, recipeTitle: string): void => {
     if (placing === undefined) return;
     createEntry.mutate(
       { recipeId, plannedDate: placing.date, mealType: placing.mealType },
@@ -111,16 +111,36 @@ function PlannerWeek({
     );
   };
 
+  const placeCustom = (customTitle: string): void => {
+    if (placing === undefined) return;
+    createEntry.mutate(
+      { customTitle, plannedDate: placing.date, mealType: placing.mealType },
+      {
+        onSuccess: () => {
+          setPlacing(undefined);
+          toast({ variant: 'success', message: `Placed ${customTitle}.` });
+        },
+        onError: (error) => {
+          toast({
+            variant: 'error',
+            message: userMessage(error, { fallback: "Couldn't place that meal. Try again." }),
+          });
+        },
+      },
+    );
+  };
+
   const remove = (entry: MealPlanEntry): void => {
+    const itemTitle = entry.customTitle ?? entry.recipeTitle ?? 'meal';
     deleteEntry.mutate(entry.id, {
       onSuccess: () => {
-        toast({ variant: 'success', message: `Removed ${entry.recipeTitle}.` });
+        toast({ variant: 'success', message: `Removed ${itemTitle}.` });
       },
       onError: (error) => {
         toast({
           variant: 'error',
           message: userMessage(error, {
-            fallback: `Couldn't remove ${entry.recipeTitle}. Try again.`,
+            fallback: `Couldn't remove ${itemTitle}. Try again.`,
           }),
         });
       },
@@ -277,9 +297,10 @@ function PlannerWeek({
       {body()}
 
       {placing !== undefined && (
-        <RecipePickerSheet
+        <MealPlacementSheet
           householdId={householdId}
-          onPick={place}
+          onPickRecipe={placeRecipe}
+          onPickCustom={placeCustom}
           onOpenChange={(open) => {
             if (!open) setPlacing(undefined);
           }}
@@ -289,8 +310,12 @@ function PlannerWeek({
       {addingMissingFor !== undefined && (
         <ListPickerSheet
           householdId={householdId}
-          title="Add missing to which list?"
-          description={addingMissingFor.recipeTitle}
+          title={
+            addingMissingFor.customTitle !== null
+              ? 'Add to which list?'
+              : 'Add missing to which list?'
+          }
+          description={addingMissingFor.customTitle ?? addingMissingFor.recipeTitle}
           isPicking={addMealToList.isPending}
           onPick={addMissing}
           onOpenChange={(open) => {

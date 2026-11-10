@@ -10,12 +10,13 @@ import {
 } from '@hestia/shared';
 import { parse, type RouteContext } from '../http/context.js';
 import { addMissingIngredientsToList } from '../services/add-to-list.js';
+import { addListItem } from '../services/lists.js';
 import {
+  addWeekMealsToList,
   createMealPlanEntry,
   deleteMealPlanEntry,
   getMealPlanWeek,
-  recipeIdsForWeek,
-  requireMealPlanEntryRecipeId,
+  requireMealPlanEntryTarget,
 } from '../services/meal-plan.js';
 
 /**
@@ -53,12 +54,25 @@ export const mealPlanRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, {
     const { id } = parse(mealPlanEntryIdParamsSchema, request.params);
     const body = parse(addToListRequestSchema, request.body);
     return ctx.asUser(user, async (db) => {
-      const recipeId = await requireMealPlanEntryRecipeId(db, id);
-      return addMissingIngredientsToList(
+      const target = await requireMealPlanEntryTarget(db, id);
+      if (target.kind === 'recipe') {
+        return addMissingIngredientsToList(
+          db,
+          body.listId,
+          [target.recipeId],
+          user.id,
+          logDroppedCopy(request.log),
+        );
+      }
+      return addListItem(
         db,
         body.listId,
-        [recipeId],
         user.id,
+        {
+          source: 'manual',
+          itemName: target.customTitle,
+          quantity: 1,
+        },
         logDroppedCopy(request.log),
       );
     });
@@ -68,16 +82,9 @@ export const mealPlanRoutes: FastifyPluginAsync<{ ctx: RouteContext }> = (app, {
     const user = await ctx.authenticate(request);
     const { id } = parse(householdIdParamsSchema, request.params);
     const body = parse(weekAddToListRequestSchema, request.body);
-    return ctx.inHousehold(user, id, async (db) => {
-      const recipeIds = await recipeIdsForWeek(db, id, body.week);
-      return addMissingIngredientsToList(
-        db,
-        body.listId,
-        recipeIds,
-        user.id,
-        logDroppedCopy(request.log),
-      );
-    });
+    return ctx.inHousehold(user, id, (db) =>
+      addWeekMealsToList(db, id, body.listId, body.week, user.id, logDroppedCopy(request.log)),
+    );
   });
 
   return Promise.resolve();

@@ -45,6 +45,7 @@ describe('authentication', () => {
         .replace(':itemId', ID)
         .replace(':userId', ID)
         .replace(':completionId', ID)
+        .replace(':barcode', '012345678905')
         .replace(':id', ID);
       for (const headers of [
         {},

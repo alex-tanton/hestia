@@ -1,31 +1,31 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.0 — Hestia — Domain Migration and Rebrand",
+  "milestone": "v2.1 — Grocery & Deals Intelligence",
   "phases": [
     {
-      "number": "7",
-      "name": "Planning Cleanup & Documentation Restructure",
+      "number": "12",
+      "name": "Store & Deal Image Delivery",
       "status": "complete"
     },
     {
-      "number": "8",
-      "name": "Full Rebrand to Hestia",
+      "number": "13",
+      "name": "Deal Pricing Engine & Ingestion Performance",
       "status": "complete"
     },
     {
-      "number": "9",
-      "name": "Domain & Network Migration (Cloudflare Tunnel & Ingress)",
+      "number": "14",
+      "name": "Barcode Scanning & Grocery List Integration",
       "status": "complete"
     },
     {
-      "number": "10",
-      "name": "Magic Links & Transactional Email",
+      "number": "15",
+      "name": "Flexible Meal Planning (Custom Items & Recipes)",
       "status": "complete"
     },
     {
-      "number": "11",
-      "name": "Web Push & Edge Hardening",
+      "number": "16",
+      "name": "Verification & Real-World Test Hardening",
       "status": "complete"
     }
   ],
@@ -34,5 +34,5 @@
     "label": "Show progress",
     "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-11-02T16:28:02.307Z"
+  "updated_at": "2026-11-10T16:31:25.338Z"
 }

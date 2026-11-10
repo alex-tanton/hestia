@@ -3,6 +3,7 @@
  * vite-plugin-pwa injects the precache manifest into it (`injectManifest`), and nothing else is
  * cached by hand. Built with Workbox, so caching rules are written here rather than hand-rolled.
  */
+import { isAllowedImageUrl } from '@hestia/shared';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { ExpirationPlugin } from 'workbox-expiration';
 import {
@@ -61,9 +62,8 @@ registerRoute(
 );
 
 /*
- * Deal images come straight from Flipp's CDN: cache-first, 7-day expiry, 100-entry cap. These two
- * hosts are the only ones the CSP's img-src allows for images. Cross-origin responses are opaque,
- * so status 0 counts as cacheable alongside 200.
+ * Deal images come straight from approved Flipp and Open Food Facts CDNs: cache-first, 7-day expiry,
+ * 200-entry cap. Cross-origin responses are opaque, so status 0 counts as cacheable alongside 200.
  */
 // Workbox's plugin typings predate exactOptionalPropertyTypes; the plugins are valid at runtime.
 type CachePlugin = NonNullable<
@@ -71,12 +71,11 @@ type CachePlugin = NonNullable<
 >[number];
 
 registerRoute(
-  ({ url }) =>
-    url.origin === 'https://f.wishabi.net' || url.origin === 'https://images.wishabi.net',
+  ({ url }) => isAllowedImageUrl(url),
   new CacheFirst({
     cacheName: 'deal-images',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 }) as CachePlugin,
+      new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 }) as CachePlugin,
       new CacheableResponsePlugin({ statuses: [0, 200] }) as CachePlugin,
     ],
   }),

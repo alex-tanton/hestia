@@ -40,6 +40,7 @@ function toItem(row: ItemRow): ListItem {
     quantity: toNumber(row.quantity),
     quantityNote: row.quantity_note,
     status: row.status,
+    barcode: row.barcode ?? null,
     addedBy: row.added_by,
     source: row.source,
     merchantId: row.merchant_id,
@@ -255,6 +256,7 @@ interface NewItemValues {
   price_unit: ListItem['priceUnit'];
   conditional_price: boolean;
   price: string | null;
+  barcode: string | null;
 }
 
 /** The deal's own fields, copied once: a list item never holds a live reference to a deal. */
@@ -275,6 +277,7 @@ async function snapshotOfDeal(db: Kysely<Database>, dealId: string): Promise<New
     price_unit: deal.price_unit,
     conditional_price: deal.conditional_price,
     price: deal.unit_price,
+    barcode: null,
   };
 }
 
@@ -292,6 +295,7 @@ function manualValues(input: Extract<CreateListItemRequest, { source: 'manual' }
     price_unit: input.priceUnit ?? 'each',
     conditional_price: false,
     price: fromCents(input.priceCents ?? null),
+    barcode: input.barcode ?? null,
   };
 }
 
@@ -355,6 +359,7 @@ export async function updateListItem(
       ...(input.merchantId === undefined
         ? {}
         : { merchant_id: input.merchantId, merchant_name: input.merchantName ?? null }),
+      ...(input.barcode === undefined ? {} : { barcode: input.barcode }),
     })
     .where('id', '=', itemId)
     .where('list_id', '=', listId)

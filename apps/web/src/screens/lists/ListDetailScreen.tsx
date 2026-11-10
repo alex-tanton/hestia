@@ -1,6 +1,7 @@
-import { ChevronDown, ChevronRight, Pencil, ShoppingCart, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, ScanBarcode, ShoppingCart, Trash2 } from 'lucide-react';
 import { useId, useState, type ReactElement } from 'react';
 import type { ListItem, ListItemStatus, ShoppingListDetail, StoreGroup } from '@hestia/shared';
+import { BarcodeScannerDialog } from '../../components/lists/BarcodeScannerDialog.tsx';
 import { ItemSheet, type ItemDraft, type StoreChoice } from '../../components/lists/ItemSheet.tsx';
 import { ShoppingListRow } from '../../components/lists/ShoppingListRow.tsx';
 import { StoreGroupHeader } from '../../components/lists/StoreGroupHeader.tsx';
@@ -12,6 +13,8 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
 import type { OverflowMenuItem } from '../../components/ui/OverflowMenu.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
+import { useApi } from '../../lib/api/api-context.tsx';
+import { fetchBarcodeProduct } from '../../lib/api/barcode-hooks.ts';
 import { useMembers } from '../../lib/api/hooks.ts';
 import {
   useAddBoughtToPantry,
@@ -22,6 +25,7 @@ import {
   useUpdateListItem,
 } from '../../lib/api/list-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
+import { matchScannedItem } from '../../lib/barcode/matching.ts';
 import { pluralize } from '../../lib/format.ts';
 import { usePendingListWrites } from '../../lib/offline/use-write-queue.ts';
 import { useListRealtime } from '../../lib/realtime/use-list-realtime.ts';
@@ -62,6 +66,7 @@ export function ListDetailScreen({
 }: ListDetailScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
+  const api = useApi();
   const list = useShoppingList(householdId, listId);
   const members = useMembers(householdId);
   const addItem = useAddListItem(listId);
@@ -73,6 +78,8 @@ export function ListDetailScreen({
   const { changedItemIds, announcement } = useListRealtime(householdId, listId);
 
   const [isAdding, setIsAdding] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannerDraft, setScannerDraft] = useState<Partial<ItemDraft> | undefined>(undefined);
   const [editing, setEditing] = useState<ListItem>();
   const [deleting, setDeleting] = useState<ListItem>();
   const [isBoughtOpen, setIsBoughtOpen] = useState(false);
@@ -100,6 +107,110 @@ export function ListDetailScreen({
     });
   };
 
+  const executeCheckOff = (item: ListItem, scannedBarcode: string): void => {
+    updateItem.mutate({
+      kind: 'update-item',
+      householdId,
+      listId,
+      itemId: item.id,
+      itemName: item.itemName,
+      patch: {
+        status: 'bought',
+        ...(!item.barcode ? { barcode: scannedBarcode } : {}),
+      },
+    });
+
+    toast({
+      variant: 'success',
+      message: `${item.itemName} marked bought`,
+      action: {
+        label: 'Undo',
+        onAction: () => {
+          updateItem.mutate({
+            kind: 'update-item',
+            householdId,
+            listId,
+            itemId: item.id,
+            itemName: item.itemName,
+            patch: { status: 'needed' },
+          });
+        },
+      },
+    });
+  };
+
+  const handleScan = async (barcode: string, scanMode: 'add' | 'shop'): Promise<void> => {
+    if (scanMode === 'add') {
+      try {
+        const product = await fetchBarcodeProduct(api, barcode);
+        const nameParts: string[] = [];
+        if (product.brands) nameParts.push(product.brands);
+        if (product.productName) nameParts.push(product.productName);
+        const formattedName =
+          nameParts.length > 0 ? nameParts.join(' ') : (product.productName ?? barcode);
+
+        setIsScanning(false);
+        setScannerDraft({
+          itemName: formattedName,
+          barcode,
+          quantity: 1,
+        });
+        setIsAdding(true);
+      } catch {
+        setIsScanning(false);
+        setScannerDraft({
+          itemName: '',
+          barcode,
+          quantity: 1,
+        });
+        setIsAdding(true);
+        toast({
+          variant: 'info',
+          message: 'Barcode not found. Enter item details manually.',
+        });
+      }
+      return;
+    }
+
+    // Mode 'shop'
+    const unbought = (detail?.storeGroups.flatMap((g) => g.items) ?? []).filter(
+      (item) => item.status !== 'bought',
+    );
+
+    // 1. Offline exact barcode match
+    const exact = unbought.find((item) => item.barcode === barcode);
+    if (exact) {
+      executeCheckOff(exact, barcode);
+      return;
+    }
+
+    // 2. Online lookup & matching
+    let productName: string | null = null;
+    try {
+      const product = await fetchBarcodeProduct(api, barcode);
+      productName = product.productName;
+    } catch {
+      // Lookup failed or offline
+    }
+
+    const matchResult = matchScannedItem(unbought, barcode, productName);
+    if (matchResult.exactBarcodeMatch) {
+      executeCheckOff(matchResult.exactBarcodeMatch, barcode);
+    } else if (matchResult.normalizedNameMatch) {
+      executeCheckOff(matchResult.normalizedNameMatch, barcode);
+    } else if (matchResult.candidateMatches.length > 1) {
+      toast({
+        variant: 'info',
+        message: `Multiple matches found for "${productName ?? barcode}".`,
+      });
+    } else {
+      toast({
+        variant: 'info',
+        message: `${productName ?? 'Item'} is not on this list.`,
+      });
+    }
+  };
+
   const handleAdd = (draft: ItemDraft): void => {
     const id = crypto.randomUUID();
     const optimistic: ListItem = {
@@ -111,6 +222,7 @@ export function ListDetailScreen({
       quantity: draft.quantity,
       quantityNote: null,
       status: 'needed',
+      barcode: draft.barcode ?? null,
       addedBy: userId,
       source: 'manual',
       merchantId: draft.merchantId,
@@ -142,6 +254,7 @@ export function ListDetailScreen({
         priceUnit: draft.priceUnit,
         merchantId: draft.merchantId,
         merchantName: draft.merchantName,
+        barcode: draft.barcode ?? null,
       },
     });
   };
@@ -158,6 +271,7 @@ export function ListDetailScreen({
         quantity: draft.quantity,
         merchantId: draft.merchantId,
         merchantName: draft.merchantName,
+        barcode: draft.barcode ?? null,
         // A deal-sourced row keeps the deal's own snapshot; only a manual price is the user's.
         ...(item.source === 'manual'
           ? { priceCents: draft.priceCents, priceUnit: draft.priceUnit }
@@ -368,8 +482,17 @@ export function ListDetailScreen({
       )}
 
       {!isArchived && detail !== undefined && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
           {/* Add, check, uncheck, and edit are the writes that queue, so this stays available. */}
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setIsScanning(true);
+            }}
+          >
+            <ScanBarcode aria-hidden className="mr-1.5" size={18} strokeWidth={1.5} />
+            Scan barcode
+          </Button>
           <Button
             onClick={() => {
               setIsAdding(true);
@@ -394,9 +517,23 @@ export function ListDetailScreen({
       {isAdding && detail !== undefined && (
         <ItemSheet
           open
-          onOpenChange={setIsAdding}
+          onOpenChange={(open) => {
+            setIsAdding(open);
+            if (!open) setScannerDraft(undefined);
+          }}
+          initialDraft={scannerDraft}
           stores={storeChoices(detail)}
           onSubmit={handleAdd}
+        />
+      )}
+
+      {isScanning && (
+        <BarcodeScannerDialog
+          open={isScanning}
+          onOpenChange={setIsScanning}
+          onScan={(code, scanMode) => {
+            void handleScan(code, scanMode);
+          }}
         />
       )}
 

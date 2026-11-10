@@ -45,7 +45,7 @@
     "unitPrice": 145,
     "priceUnit": "each",
     "originalPrice": 195,
-    "discountPercent": 25,
+    "discountPercent": 26,
     "displayPrice": "PRICE DROPS $1.45",
     "conditionalPrice": false,
     "conditionalReason": null,

@@ -1,26 +1,9 @@
+import { isAllowedImageUrl } from '@hestia/shared';
 import { ImageOff } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { cn } from '../../lib/cn.ts';
 
-/**
- * The only image hosts the Content-Security-Policy allows: `f.wishabi.net` serves Flipp item and
- * flyer images, `images.wishabi.net` serves merchant logos. Anything else would be blocked by the
- * browser and render as a broken image, so it takes the placeholder instead — the CSP is the rule,
- * and this is the UI keeping to it.
- */
-const ALLOWED_IMAGE_ORIGINS: readonly string[] = [
-  'https://f.wishabi.net',
-  'https://images.wishabi.net',
-];
-
-export function isAllowedImageUrl(url: string | null): boolean {
-  if (url === null) return false;
-  try {
-    return ALLOWED_IMAGE_ORIGINS.includes(new URL(url).origin);
-  } catch {
-    return false;
-  }
-}
+export { isAllowedImageUrl };
 
 export interface DealImageProps {
   url: string | null;

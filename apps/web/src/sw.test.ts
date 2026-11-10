@@ -124,7 +124,7 @@ describe('the navigation route', () => {
 });
 
 describe('the deal-image route', () => {
-  it("matches only Flipp's two image hosts, cache-first with a 7-day, 100-entry cap", async () => {
+  it('matches allowed Flipp and Open Food Facts CDN hosts, cache-first with a 7-day, 200-entry cap', async () => {
     const { registerRoute } = await import('workbox-routing');
     await loadWorker();
 
@@ -134,11 +134,19 @@ describe('the deal-image route', () => {
     ];
     expect(matcher({ url: new URL('https://f.wishabi.net/flyer.jpg') })).toBe(true);
     expect(matcher({ url: new URL('https://images.wishabi.net/item.png') })).toBe(true);
+    expect(matcher({ url: new URL('https://dam.flipp.com/item.png') })).toBe(true);
+    expect(matcher({ url: new URL('https://flipp-image-retrieval.flipp.com/image.jpg') })).toBe(
+      true,
+    );
+    expect(matcher({ url: new URL('https://images.openfoodfacts.org/item.jpg') })).toBe(true);
+
     expect(matcher({ url: new URL('https://example.com/flyer.jpg') })).toBe(false);
+    expect(matcher({ url: new URL('https://attacker-flipp.com/item.png') })).toBe(false);
+    expect(matcher({ url: new URL('http://dam.flipp.com/item.png') })).toBe(false);
 
     expect(strategy.options.cacheName).toBe('deal-images');
     expect(strategy.options.plugins).toEqual([
-      { options: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 } },
+      { options: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 } },
       { options: { statuses: [0, 200] } },
     ]);
   });

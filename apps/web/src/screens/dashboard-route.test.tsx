@@ -151,6 +151,7 @@ describe('the Meals card', () => {
               householdId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
               recipeId: 'c0000099-0000-4000-8000-000000000001',
               recipeTitle: 'Baked Ziti',
+              customTitle: null,
               readinessPercent: 71,
               plannedDate: today,
               mealType: 'dinner',

@@ -1,12 +1,18 @@
 import { sql, type Kysely } from 'kysely';
+import { normalize } from '@hestia/matching';
 import type {
   CreateMealPlanEntryRequest,
   MealPlanEntry,
   MealPlanWeekResponse,
+  ShoppingListDetail,
 } from '@hestia/shared';
 import type { Database } from '../db.js';
 import { fail } from '../problem.js';
+import type { DroppedCopyReport } from '../notifications/copy.js';
+import { addMissingIngredientsToList } from './add-to-list.js';
 import { markHouseholdActive } from './households.js';
+import { recordListActivity } from './list-activity.js';
+import { detailOf, refreshed, requireList } from './lists.js';
 
 /*
  * The week planner. Every function takes a Kysely bound to the caller's withUserDb transaction, so
@@ -17,11 +23,12 @@ function iso(value: Date | string): string {
   return (value instanceof Date ? value : new Date(value)).toISOString();
 }
 
-interface EntryRow {
+export interface EntryRow {
   id: string;
   household_id: string;
   recipe_id: string | null;
-  recipe_title: string;
+  recipe_title: string | null;
+  custom_title: string | null;
   planned_date: string;
   meal_type: MealPlanEntry['mealType'];
   added_by: string;
@@ -29,13 +36,14 @@ interface EntryRow {
   readiness_percent: number | null;
 }
 
-function toEntry(row: EntryRow): MealPlanEntry {
+export function toEntry(row: EntryRow): MealPlanEntry {
   return {
     id: row.id,
     householdId: row.household_id,
     recipeId: row.recipe_id,
     recipeTitle: row.recipe_title,
-    // Null when the recipe was deleted (no recipe_id to look readiness up by) or, defensively,
+    customTitle: row.custom_title,
+    // Null when custom item or the recipe was deleted (no recipe_id to look readiness up by) or, defensively,
     // when it has never been computed.
     readinessPercent: row.recipe_id === null ? null : row.readiness_percent,
     plannedDate: row.planned_date,
@@ -54,6 +62,7 @@ function entryQuery(db: Kysely<Database>) {
       'meal_plan_entry.household_id',
       'meal_plan_entry.recipe_id',
       'meal_plan_entry.recipe_title',
+      'meal_plan_entry.custom_title',
       'meal_plan_entry.planned_date',
       'meal_plan_entry.meal_type',
       'meal_plan_entry.added_by',
@@ -131,15 +140,19 @@ export async function createMealPlanEntry(
   userId: string,
   input: CreateMealPlanEntryRequest,
 ): Promise<MealPlanEntry> {
-  const recipe = await requireHouseholdRecipe(db, householdId, input.recipeId);
+  const recipe =
+    'recipeId' in input ? await requireHouseholdRecipe(db, householdId, input.recipeId) : null;
+  const customTitle = 'customTitle' in input ? input.customTitle.trim() : null;
+
   const row = await db
     .insertInto('meal_plan_entry')
     .values({
       household_id: householdId,
-      recipe_id: recipe.id,
+      recipe_id: recipe ? recipe.id : null,
       // Snapshotted at placement time: the entry keeps this title even if the recipe is later
       // renamed or deleted.
-      recipe_title: recipe.title,
+      recipe_title: recipe ? recipe.title : null,
+      custom_title: customTitle,
       planned_date: input.plannedDate,
       meal_type: input.mealType,
       added_by: userId,
@@ -163,46 +176,111 @@ export async function deleteMealPlanEntry(db: Kysely<Database>, id: string): Pro
   await db.deleteFrom('meal_plan_entry').where('id', '=', id).execute();
 }
 
+export type MealPlanEntryTarget =
+  { kind: 'recipe'; recipeId: string } | { kind: 'custom'; customTitle: string };
+
 /**
- * The recipe id behind one planned meal, for "Add missing to list". 404s under the same message
- * whether the entry itself is not visible or its recipe has since been deleted (the planner UI
- * never offers this action for a deleted-recipe entry, so the API is equally conservative).
+ * Resolves the target behind one planned meal entry for "Add to list":
+ * either an active recipe ID or a standalone custom food title.
  */
-export async function requireMealPlanEntryRecipeId(
+export async function requireMealPlanEntryTarget(
   db: Kysely<Database>,
   id: string,
-): Promise<string> {
+): Promise<MealPlanEntryTarget> {
   const row = await db
     .selectFrom('meal_plan_entry')
-    .select(['household_id', 'recipe_id'])
+    .select(['household_id', 'recipe_id', 'custom_title'])
     .where('id', '=', id)
     .executeTakeFirst();
   if (row === undefined) throw fail(404, 'Meal plan entry not found.');
   await markHouseholdActive(db, row.household_id);
-  if (row.recipe_id === null) throw fail(404, 'Recipe not found.');
-  return row.recipe_id;
+  if (row.custom_title !== null) {
+    return { kind: 'custom', customTitle: row.custom_title };
+  }
+  if (row.recipe_id !== null) {
+    return { kind: 'recipe', recipeId: row.recipe_id };
+  }
+  throw fail(404, 'Recipe not found.');
 }
 
 /**
- * Every recipe id planned in one household's week, `recipe_id is not null` only, in no deduplicated
- * order (a recipe planned twice contributes its ingredients twice).
+ * Adds all planned meals for a week to a shopping list:
+ * - Recipe ingredients are aggregated via addMissingIngredientsToList.
+ * - Standalone custom food items are inserted with quantity 1, source manual, and duplicate avoidance.
  */
-export async function recipeIdsForWeek(
+export async function addWeekMealsToList(
   db: Kysely<Database>,
   householdId: string,
+  listId: string,
   week: string,
-): Promise<string[]> {
+  userId: string,
+  report?: DroppedCopyReport,
+): Promise<ShoppingListDetail> {
   assertSunday(week);
+  const list = await requireList(db, listId);
+
+  // Take advisory lock per list to prevent concurrent duplicate adds
+  await sql`select pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(${`add-to-list:${listId}`}, 0))`.execute(
+    db,
+  );
+
   const rows = await db
     .selectFrom('meal_plan_entry')
-    .select('recipe_id')
+    .select(['recipe_id', 'custom_title'])
     .where('household_id', '=', householdId)
     .where('planned_date', '>=', week)
     .where('planned_date', '<=', addDays(week, 6))
-    .where('recipe_id', 'is not', null)
     .orderBy('planned_date')
     .orderBy('meal_type')
     .orderBy('created_at')
     .execute();
-  return rows.map((row) => row.recipe_id).filter((id): id is string => id !== null);
+
+  const recipeIds = rows.map((r) => r.recipe_id).filter((id): id is string => id !== null);
+
+  const customTitles = rows.map((r) => r.custom_title).filter((t): t is string => t !== null);
+
+  // If there are recipes, delegate to addMissingIngredientsToList
+  if (recipeIds.length > 0) {
+    await addMissingIngredientsToList(db, listId, recipeIds, userId, report);
+  }
+
+  // If there are custom items, add them if not already on list
+  if (customTitles.length > 0) {
+    const existingItems = await db
+      .selectFrom('shopping_list_item')
+      .select('normalized_name')
+      .where('list_id', '=', listId)
+      .where('status', 'in', ['needed', 'in_cart'])
+      .execute();
+    const existingNormalized = new Set(existingItems.map((i) => i.normalized_name));
+
+    let addedCustom = 0;
+    for (const title of customTitles) {
+      const normalized = normalize(title);
+      if (existingNormalized.has(normalized)) continue;
+      existingNormalized.add(normalized);
+
+      await db
+        .insertInto('shopping_list_item')
+        .values({
+          list_id: listId,
+          added_by: userId,
+          item_name: title,
+          normalized_name: normalized,
+          quantity: 1,
+          quantity_note: null,
+          source: 'manual',
+          price_unit: 'each',
+          price: null,
+        })
+        .execute();
+      addedCustom += 1;
+    }
+
+    if (addedCustom > 0) {
+      await recordListActivity(db, list, userId, addedCustom, new Date(), report);
+    }
+  }
+
+  return detailOf(db, await refreshed(db, list));
 }
