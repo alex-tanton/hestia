@@ -397,4 +397,53 @@ describe('adding a deal after a lost response', () => {
     expect(ids[1]).not.toBe(ids[0]);
     expect(store.rows.size).toBe(2);
   });
+
+  it('renders primary sale price, strikethrough original price, discount badge, and display copy for derived multi-buy (Tracer)', () => {
+    stubFetch({});
+    const multiBuyDeal = {
+      ...eggsDeal,
+      id: 'deal-multibuy-1',
+      name: 'DiGiorno Rising Crust Pizza',
+      merchantName: 'Food Lion',
+      unitPrice: 300,
+      priceUnit: 'each' as const,
+      originalPrice: 375,
+      discountPercent: 20,
+      displayPrice: '2/$6.00 with $1.50 off on 2',
+    };
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={multiBuyDeal} />);
+
+    const salePrice = screen.getByText('$3.00');
+    expect(salePrice).toBeInTheDocument();
+    expect(salePrice).toHaveClass('text-section');
+
+    const originalPrice = screen.getByText('$3.75');
+    expect(originalPrice).toBeInTheDocument();
+    expect(originalPrice).toHaveClass('line-through', 'text-muted');
+
+    const badge = screen.getByText('-20%');
+    expect(badge).toBeInTheDocument();
+
+    expect(screen.getByText('2/$6.00 with $1.50 off on 2')).toBeInTheDocument();
+  });
+
+  it('renders card article with accessible name announcing complete deal sentence', () => {
+    stubFetch({});
+    const multiBuyDeal = {
+      ...eggsDeal,
+      id: 'deal-multibuy-2',
+      name: 'DiGiorno Rising Crust Pizza',
+      merchantName: 'Food Lion',
+      unitPrice: 300,
+      priceUnit: 'each' as const,
+      originalPrice: 375,
+      discountPercent: 20,
+      displayPrice: '2/$6.00 with $1.50 off on 2',
+    };
+    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={multiBuyDeal} />);
+
+    const article = screen.getByRole('article');
+    expect(article).toBeInTheDocument();
+    expect(article).toHaveAccessibleName(/DiGiorno Rising Crust Pizza at Food Lion/i);
+  });
 });

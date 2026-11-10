@@ -759,3 +759,223 @@ describe('derived pricing math for bundles and promotions (D-01, D-02)', () => {
     });
   });
 });
+
+describe('mathematical pricing edge cases and guardrails (TEST-01, D-01)', () => {
+  it('derives multi-buy bundle with amount off on 2 (2/$6.00 with $1.50 off on 2)', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 600,
+          originalPrice: 750,
+          prePriceText: '2/',
+          postPriceText: 'with $1.50 off on 2',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 300,
+        originalPrice: 375,
+        discountPercent: 20,
+        priceUnit: 'each',
+        displayPrice: '2/$6.00 with $1.50 off on 2',
+      },
+    });
+  });
+
+  it('parses 4 for $5.00 dividing cents to 125 each', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 500,
+          prePriceText: '4 for',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 125,
+        priceUnit: 'each',
+        displayPrice: '4 for $5.00',
+      },
+    });
+  });
+
+  it('parses 3 for $10.00 with original $12.00 using half-up rounding', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 1000,
+          originalPrice: 1200,
+          prePriceText: '3 for',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 333,
+        originalPrice: 400,
+        discountPercent: 17,
+        priceUnit: 'each',
+      },
+    });
+  });
+
+  it('derives Buy 2 Get 1 Free at currentPrice 199 with 33% discount', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 199,
+          saleStory: 'Buy 2 Get 1 Free',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 133,
+        originalPrice: 199,
+        discountPercent: 33,
+        priceUnit: 'each',
+      },
+    });
+  });
+
+  it('derives Buy 1 Get 2 Free at currentPrice 900 with 67% discount', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 900,
+          saleStory: 'Buy 1 Get 2 Free',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 300,
+        originalPrice: 900,
+        discountPercent: 67,
+        priceUnit: 'each',
+      },
+    });
+  });
+
+  it('skips Buy 1 Get 1 50% Off from buy_n_get_m parser (only free items parsed)', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 500,
+          saleStory: 'Buy 1 Get 1 50% Off',
+        }),
+      ),
+    ).toEqual({
+      skipped: 'buy_n_get_m',
+    });
+  });
+
+  it('parses minimum quantity threshold in prePriceText', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 199,
+          prePriceText: 'with min purchase of 3',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 199,
+        priceUnit: 'each',
+        displayPrice: 'with min purchase of 3 $1.99',
+      },
+    });
+  });
+
+  it('handles per-pound pricing without floating-point artifacts', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 199,
+          postPriceText: '/lb',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 199,
+        priceUnit: 'lb',
+        displayPrice: '$1.99 /lb',
+      },
+    });
+  });
+
+  it('drops original price when regular price is equal to sale price', () => {
+    expect(
+      withoutImplausibleOriginal({
+        unitPrice: 500,
+        priceUnit: 'each',
+        originalPrice: 500,
+      }),
+    ).toEqual({
+      unitPrice: 500,
+      priceUnit: 'each',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+  });
+
+  it('drops original price when regular price is less than sale price (negative discount)', () => {
+    expect(
+      withoutImplausibleOriginal({
+        unitPrice: 600,
+        priceUnit: 'each',
+        originalPrice: 500,
+      }),
+    ).toEqual({
+      unitPrice: 600,
+      priceUnit: 'each',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+  });
+
+  it('drops original price when original is 10x or greater than unit price (case price OCR anomaly)', () => {
+    expect(
+      withoutImplausibleOriginal({
+        unitPrice: 200,
+        priceUnit: 'lb',
+        originalPrice: 2000,
+      }),
+    ).toEqual({
+      unitPrice: 200,
+      priceUnit: 'lb',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+  });
+
+  it('drops original price when discount exceeds 95% guardrail', () => {
+    expect(
+      withoutImplausibleOriginal({
+        unitPrice: 4,
+        priceUnit: 'each',
+        originalPrice: 100,
+      }),
+    ).toEqual({
+      unitPrice: 4,
+      priceUnit: 'each',
+      originalPrice: null,
+      discountPercent: undefined,
+    });
+  });
+
+  it('parses FINAL PRICE with digital coupon qualifier', () => {
+    expect(
+      parsePrice(
+        copy({
+          currentPrice: 399,
+          prePriceText: 'FINAL PRICE WITH DIGITAL COUPON',
+        }),
+      ),
+    ).toMatchObject({
+      parsed: {
+        unitPrice: 399,
+        conditionalPrice: true,
+        conditionalReason: 'coupon',
+        displayPrice: 'FINAL PRICE WITH DIGITAL COUPON $3.99',
+      },
+    });
+  });
+});
