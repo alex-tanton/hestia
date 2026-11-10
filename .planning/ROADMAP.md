@@ -37,8 +37,8 @@
 
 - [x] **Phase 12: Store & Deal Image Delivery** - Unblock modern Flipp CDNs and Open Food Facts images across Caddy CSP, Service Worker, and PWA components. (completed 2026-11-09)
 - [x] **Phase 13: Deal Pricing Engine & Ingestion Performance** - Display prominent sale prices, % off badges, and original prices while eliminating 15+ minute deal sync delays. (completed 2026-11-09)
-- [ ] **Phase 14: Barcode Scanning & Grocery List Integration** - Camera-based scanner with Open Food Facts lookup to add and mark items bought in grocery lists.
-- [ ] **Phase 15: Flexible Meal Planning (Custom Items & Recipes)** - Support standalone food items (banana, yogurt) directly on the meal planner alongside recipes.
+- [x] **Phase 14: Barcode Scanning & Grocery List Integration** - Camera-based scanner with Open Food Facts lookup to add and mark items bought in grocery lists. (completed 2026-11-10)
+- [x] **Phase 15: Flexible Meal Planning (Custom Items & Recipes)** - Support standalone food items (banana, yogurt) directly on the meal planner alongside recipes. (completed 2026-11-10)
 - [ ] **Phase 16: Verification & Real-World Test Hardening** - Comprehensive unit, integration, and Playwright E2E verification of real-world grocery workflows.
 
 ## Phase Details
@@ -103,9 +103,9 @@
 
 **Plans:** 2 plans
 **Wave 1**
-- [ ] 15-01-PLAN.md — Schema migration, Kysely types, shared schemas, service persistence, and single/week list additions
+- [x] 15-01-PLAN.md — Schema migration, Kysely types, shared schemas, service persistence, and single/week list additions
 **Wave 2**
-- [ ] 15-02-PLAN.md — MealSlotEntry custom item rendering, MealPlacementSheet tabbed picker, and PlannerScreen integration
+- [x] 15-02-PLAN.md — MealSlotEntry custom item rendering, MealPlacementSheet tabbed picker, and PlannerScreen integration
 
 ### Phase 16: Verification & Real-World Test Hardening
 
@@ -128,6 +128,6 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 |-------|-----------|----------------|--------|-----------|
 | 12. Store & Deal Image Delivery | v2.1 | 2/2 | Complete    | 2026-11-09 |
 | 13. Deal Pricing Engine & Ingestion Performance | v2.1 | 3/3 | Complete    | 2026-11-09 |
-| 14. Barcode Scanning & Grocery List Integration | v2.1 | 0/3 | Ready to execute | - |
-| 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 0/2 | Ready to execute | - |
+| 14. Barcode Scanning & Grocery List Integration | v2.1 | 3/3 | Complete | 2026-11-10 |
+| 15. Flexible Meal Planning (Custom Items & Recipes) | v2.1 | 2/2 | Complete | 2026-11-10 |
 | 16. Verification & Real-World Test Hardening | v2.1 | 0/TBD | Not started | - |

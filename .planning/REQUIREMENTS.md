@@ -26,9 +26,9 @@
 
 ### Flexible Meal Planning
 
-- [ ] **MEAL-01**: Database migration relaxes `meal_plan_entry.recipe_id NOT NULL` to allow standalone custom items with `custom_title`.
-- [ ] **MEAL-02**: PWA meal planner provides a quick entry action to place standalone food items (e.g., banana, yogurt, snack) into any meal slot (breakfast, lunch, dinner).
-- [ ] **MEAL-03**: Standalone custom meal items can be added directly to shopping lists via existing "Add to list" actions.
+- [x] **MEAL-01**: Database migration relaxes `meal_plan_entry.recipe_id NOT NULL` to allow standalone custom items with `custom_title`.
+- [x] **MEAL-02**: PWA meal planner provides a quick entry action to place standalone food items (e.g., banana, yogurt, snack) into any meal slot (breakfast, lunch, dinner).
+- [x] **MEAL-03**: Standalone custom meal items can be added directly to shopping lists via existing "Add to list" actions.
 
 ### Test & Verification Hardening
 
@@ -70,9 +70,9 @@
 | SCAN-02 | Phase 14 | Complete |
 | SCAN-03 | Phase 14 | Complete |
 | SCAN-04 | Phase 14 | Complete |
-| MEAL-01 | Phase 15 | Pending |
-| MEAL-02 | Phase 15 | Pending |
-| MEAL-03 | Phase 15 | Pending |
+| MEAL-01 | Phase 15 | Complete |
+| MEAL-02 | Phase 15 | Complete |
+| MEAL-03 | Phase 15 | Complete |
 | TEST-01 | Phase 16 | Pending |
 | TEST-02 | Phase 16 | Pending |
 | TEST-03 | Phase 16 | Pending |

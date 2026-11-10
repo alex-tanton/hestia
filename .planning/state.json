@@ -16,12 +16,12 @@
     {
       "number": "14",
       "name": "Barcode Scanning & Grocery List Integration",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "15",
       "name": "Flexible Meal Planning (Custom Items & Recipes)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "16",
@@ -32,7 +32,7 @@
   "next": {
     "command": "/gsd-progress --next",
     "label": "Advance to the next step",
-    "reason": "Phase 14 of 5 · 40% · executing"
+    "reason": "Phase 15 of 5 · 40% · executing"
   },
-  "updated_at": "2026-11-10T05:33:48.463Z"
+  "updated_at": "2026-11-10T05:35:45.161Z"
 }
