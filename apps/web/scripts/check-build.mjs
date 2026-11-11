@@ -103,6 +103,18 @@ for (const { text, source } of MAGIC_LINK_COPY) {
   }
 }
 
+const FORBIDDEN_EXTERNAL_HOSTS = ['cdn.jsdelivr.net'];
+for (const [path, content] of contents) {
+  if (!path.endsWith('.js')) continue;
+  for (const host of FORBIDDEN_EXTERNAL_HOSTS) {
+    if (content.includes(host)) {
+      fail(
+        `Built JS asset ${path} references external host "${host}" (breaks strict CSP and offline scanning).`,
+      );
+    }
+  }
+}
+
 const flagState = isMagicLinkEnabled ? 'on' : 'off';
 if (failures.length > 0) {
   console.error(`Build checks failed (magic link ${flagState}):`);

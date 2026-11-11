@@ -40,6 +40,11 @@ export function BarcodeScannerDialog({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const lastScanRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
+  const onScanRef = useRef(onScan);
+
+  useEffect(() => {
+    onScanRef.current = onScan;
+  }, [onScan]);
 
   const handleModeChange = (val: string) => {
     const nextMode = val === 'add' ? 'add' : 'shop';
@@ -129,41 +134,46 @@ export function BarcodeScannerDialog({
     let canceled = false;
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
-    void createBarcodeDetector().then((detector) => {
-      if (canceled) return;
+    void createBarcodeDetector()
+      .then((detector) => {
+        if (canceled) return;
 
-      intervalId = setInterval(() => {
-        const video = videoRef.current;
-        if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+        intervalId = setInterval(() => {
+          const video = videoRef.current;
+          if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
 
-        void detector
-          .detect(video)
-          .then((barcodes) => {
-            if (canceled || barcodes.length === 0) return;
-            const code = barcodes[0]?.rawValue.trim();
-            if (!code) return;
+          void detector
+            .detect(video)
+            .then((barcodes) => {
+              if (canceled || barcodes.length === 0) return;
+              const code = barcodes[0]?.rawValue.trim();
+              if (!code) return;
 
-            // 1.8-second debounce window on identical barcode reads
-            const now = Date.now();
-            if (code === lastScanRef.current.code && now - lastScanRef.current.time < 1800) {
-              return;
-            }
+              // 1.8-second debounce window on identical barcode reads
+              const now = Date.now();
+              if (code === lastScanRef.current.code && now - lastScanRef.current.time < 1800) {
+                return;
+              }
 
-            lastScanRef.current = { code, time: now };
-            setReticleSuccess(true);
-            setTimeout(() => {
-              setReticleSuccess(false);
-            }, 400);
+              lastScanRef.current = { code, time: now };
+              setReticleSuccess(true);
+              setTimeout(() => {
+                setReticleSuccess(false);
+              }, 400);
 
-            playScanChime(true);
-            triggerScanHaptic();
-            onScan(code, mode);
-          })
-          .catch(() => {
-            // Frame analysis dropped or skipped
-          });
-      }, 180);
-    });
+              playScanChime(true);
+              triggerScanHaptic();
+              onScanRef.current(code, mode);
+            })
+            .catch(() => {
+              // Frame analysis dropped or skipped
+            });
+        }, 180);
+      })
+      .catch(() => {
+        if (canceled) return;
+        setCameraError('Unable to start the barcode scanner here. Use manual entry instead.');
+      });
 
     return () => {
       canceled = true;
@@ -171,7 +181,7 @@ export function BarcodeScannerDialog({
         clearInterval(intervalId);
       }
     };
-  }, [open, activeTab, cameraError, mode, onScan]);
+  }, [open, activeTab, cameraError, mode]);
 
   const toggleTorch = async () => {
     const stream = streamRef.current;

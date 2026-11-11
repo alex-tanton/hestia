@@ -1,7 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { BarcodeDetectorInstance, BarcodeResult } from '../../lib/barcode/detector.ts';
+import {
+  createBarcodeDetector,
+  type BarcodeDetectorInstance,
+  type BarcodeResult,
+} from '../../lib/barcode/detector.ts';
 import { BarcodeScannerDialog } from './BarcodeScannerDialog.tsx';
 
 const mockDetect = vi.fn<() => Promise<BarcodeResult[]>>();
@@ -147,5 +151,28 @@ describe('BarcodeScannerDialog', () => {
     rerender(<BarcodeScannerDialog open={false} onOpenChange={vi.fn()} onScan={vi.fn()} />);
 
     expect(mockTrackStop).toHaveBeenCalled();
+  });
+
+  it('falls back to camera error message when detector initialization rejects', async () => {
+    vi.mocked(createBarcodeDetector).mockRejectedValueOnce(new Error('WASM blocked'));
+
+    render(<BarcodeScannerDialog open={true} onOpenChange={vi.fn()} onScan={vi.fn()} />);
+
+    expect(
+      await screen.findByText(/Unable to start the barcode scanner here/i),
+    ).toBeInTheDocument();
+  });
+
+  it('does not recreate the barcode detector loop when onScan callback changes identity', async () => {
+    const { rerender } = render(
+      <BarcodeScannerDialog open={true} onOpenChange={vi.fn()} onScan={vi.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(createBarcodeDetector).toHaveBeenCalledTimes(1);
+    });
+
+    rerender(<BarcodeScannerDialog open={true} onOpenChange={vi.fn()} onScan={vi.fn()} />);
+    expect(createBarcodeDetector).toHaveBeenCalledTimes(1);
   });
 });

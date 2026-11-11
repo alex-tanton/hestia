@@ -71,13 +71,22 @@ test("the CSP allows WebSockets to the stack's own host and no CORS or cookie he
   const page = await request.get('/');
   expect(page.status()).toBe(200);
   const csp = page.headers()['content-security-policy'] ?? '';
+  const connectSrc = /connect-src\s+([^;]+)/i.exec(csp)?.[1] ?? '';
+  const imgSrc = /img-src\s+([^;]+)/i.exec(csp)?.[1] ?? '';
   expect(csp).toContain(`connect-src 'self' wss://${new URL(BASE_URL).host}`);
-  expect(csp).toContain("img-src 'self' data:");
-  expect(csp).toContain('https://*.flipp.com');
-  expect(csp).toContain('https://flipp-image-retrieval.flipp.com');
-  expect(csp).toContain('https://*.wishabi.com');
-  expect(csp).toContain('https://*.wishabi.net');
-  expect(csp).toContain('https://*.openfoodfacts.org');
+  expect(imgSrc).toContain("'self' data:");
+  for (const origin of [
+    'https://*.flipp.com',
+    'https://flipp-image-retrieval.flipp.com',
+    'https://*.wishabi.com',
+    'https://*.wishabi.net',
+    'https://*.openfoodfacts.org',
+  ]) {
+    expect(imgSrc).toContain(origin);
+    // Workbox CacheFirst in /sw.js fetches external images inside the service worker, which
+    // Chromium checks against connect-src rather than img-src.
+    expect(connectSrc).toContain(origin);
+  }
 
   const health = await request.get('/api/health');
   for (const response of [page, health]) {
@@ -109,4 +118,55 @@ test('serves static assets with immutable cache and entrypoints with no-cache', 
     expect(asset.status()).toBe(200);
     expect(asset.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
   }
+});
+
+test('active service worker fetches allowed external deal images without CSP block', async ({
+  context,
+  page,
+}) => {
+  const onePixelPng = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+    'base64',
+  );
+  await context.route('https://f.wishabi.net/**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: onePixelPng,
+    }),
+  );
+
+  const cspErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error' && /content security policy/i.test(message.text())) {
+      cspErrors.push(message.text());
+    }
+  });
+
+  await page.goto('/');
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready;
+  });
+  await page.reload();
+
+  const result = await page.evaluate(async () => {
+    const controller = Boolean(navigator.serviceWorker.controller);
+    const loaded = await new Promise<{ ok: boolean; width: number }>((resolve) => {
+      const img = document.createElement('img');
+      img.onload = () => {
+        resolve({ ok: true, width: img.naturalWidth });
+      };
+      img.onerror = () => {
+        resolve({ ok: false, width: 0 });
+      };
+      img.src = 'https://f.wishabi.net/e2e-sw-csp-check.png';
+      document.body.appendChild(img);
+    });
+    return { controller, loaded };
+  });
+
+  expect(result.controller).toBe(true);
+  expect(result.loaded).toEqual({ ok: true, width: 1 });
+  expect(cspErrors).toEqual([]);
 });

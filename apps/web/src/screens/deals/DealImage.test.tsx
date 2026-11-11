@@ -80,4 +80,17 @@ describe('DealImage component', () => {
     expect(screen.getByTestId('deal-image-placeholder')).toBeInTheDocument();
     expect(container.querySelector('img')).toBeNull();
   });
+
+  it('resets error state when url changes to a new valid image URL', () => {
+    const firstUrl = 'https://f.wishabi.net/broken.jpg';
+    const secondUrl = 'https://f.wishabi.net/recovered.jpg';
+    const { container, rerender } = render(<DealImage url={firstUrl} />);
+
+    fireEvent.error(container.querySelector('img')!);
+    expect(screen.getByTestId('deal-image-placeholder')).toBeInTheDocument();
+
+    rerender(<DealImage url={secondUrl} />);
+    expect(screen.queryByTestId('deal-image-placeholder')).toBeNull();
+    expect(container.querySelector('img')).toHaveAttribute('src', secondUrl);
+  });
 });

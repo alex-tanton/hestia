@@ -1,11 +1,30 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import type { Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 import pkg from './package.json' with { type: 'json' };
 
 // The Dashboard slate is the section-neutral color.
 const THEME_COLOR = '#475569';
+
+const ZBAR_CDN_IMPORT_RE =
+  /^https:\/\/cdn\.jsdelivr\.net\/npm\/@undecaf\/zbar-wasm@[^/]+\/dist\/main\.js$/;
+
+/**
+ * Redirects `@undecaf/barcode-detector-polyfill`'s hardcoded jsDelivr ESM import to the installed
+ * local `@undecaf/zbar-wasm` package so production builds stay CSP (`'self'`) and offline safe.
+ */
+function localZbarWasmPlugin(): Plugin {
+  return {
+    name: 'local-zbar-wasm',
+    enforce: 'pre',
+    resolveId(source, importer) {
+      if (!ZBAR_CDN_IMPORT_RE.test(source)) return null;
+      return this.resolve('@undecaf/zbar-wasm', importer, { skipSelf: true });
+    },
+  };
+}
 
 /*
  * In production one origin serves the PWA, `/api`, and `/auth/v1`, so the app only ever calls
@@ -30,7 +49,11 @@ export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   server: { proxy },
   preview: { proxy },
+  optimizeDeps: {
+    exclude: ['@undecaf/barcode-detector-polyfill', '@undecaf/zbar-wasm'],
+  },
   plugins: [
+    localZbarWasmPlugin(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -66,7 +89,7 @@ export default defineConfig({
         ],
       },
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,png,svg,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,webmanifest,wasm}'],
       },
     }),
   ],

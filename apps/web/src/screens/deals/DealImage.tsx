@@ -20,8 +20,9 @@ export interface DealImageProps {
  * repeating it would only be heard twice.
  */
 export function DealImage({ url, className }: DealImageProps): ReactElement {
-  const [hasFailed, setHasFailed] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const box = cn('shrink-0 overflow-hidden rounded-sm bg-raised', className);
+  const hasFailed = failedUrl !== null && failedUrl === (url ?? null);
 
   if (hasFailed || !isAllowedImageUrl(url)) {
     return (
@@ -39,7 +40,7 @@ export function DealImage({ url, className }: DealImageProps): ReactElement {
       decoding="async"
       className={cn(box, 'object-contain')}
       onError={() => {
-        setHasFailed(true);
+        setFailedUrl(url ?? null);
       }}
     />
   );
