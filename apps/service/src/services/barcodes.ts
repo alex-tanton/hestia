@@ -64,7 +64,7 @@ export async function lookupBarcode(
       };
     };
 
-    if (data.status !== 'success' || !data.product) {
+    if ((data.status !== 'success' && data.status !== 'success_with_warnings') || !data.product) {
       return null;
     }
 
@@ -76,7 +76,11 @@ export async function lookupBarcode(
     const productName = cleanText(data.product.product_name);
     const brands = cleanText(data.product.brands);
     const quantity = cleanText(data.product.quantity);
-    const imageUrl = cleanText(data.product.image_front_url);
+    const rawImageUrl = cleanText(data.product.image_front_url);
+    const imageUrl =
+      rawImageUrl && /^https?:\/\//i.test(rawImageUrl)
+        ? rawImageUrl.replace(/^http:\/\//i, 'https://')
+        : null;
 
     // 3. Cache in database
     await db

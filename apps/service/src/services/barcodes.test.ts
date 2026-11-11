@@ -151,6 +151,45 @@ describe('lookupBarcode service', () => {
     expect(insertNode).toBeUndefined();
   });
 
+  it('accepts success_with_warnings from Open Food Facts v3 (12-digit UPC-A normalization) and upgrades http image URLs', async () => {
+    const executedQueries: RootOperationNode[] = [];
+    const db = createMockDb((node) => {
+      executedQueries.push(node);
+      return [];
+    });
+
+    const mockResponse = {
+      status: 'success_with_warnings',
+      warnings: [{ message: { id: 'different_normalized_product_code' } }],
+      product: {
+        product_name: 'Whole Organic Milk',
+        brands: 'Horizon Organic',
+        quantity: '64 fl oz',
+        image_front_url: 'http://images.openfoodfacts.org/images/products/001/234/567/8905/1.jpg',
+      },
+    };
+
+    const fetchFn = vi.fn<typeof fetch>(() =>
+      Promise.resolve(
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    );
+
+    const result = await lookupBarcode(db, barcode, ownerEmail, fetchFn);
+
+    expect(result).toEqual({
+      barcode,
+      productName: 'Whole Organic Milk',
+      brands: 'Horizon Organic',
+      quantity: '64 fl oz',
+      imageUrl: 'https://images.openfoodfacts.org/images/products/001/234/567/8905/1.jpg',
+    });
+    expect(executedQueries.find((q) => q.kind === 'InsertQueryNode')).toBeDefined();
+  });
+
   it('handles upstream timeout gracefully by returning null without throwing', async () => {
     const db = createMockDb(() => []);
     const fetchFn = vi.fn<typeof fetch>(() => {
