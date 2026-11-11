@@ -1,7 +1,7 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.1 — Grocery & Deals Intelligence",
+  "milestone": "v3.0",
   "phases": [
     {
       "number": "12",
@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "/gsd-discuss-phase",
+    "label": "Discuss the first phase",
+    "reason": "Project initialized — plan your first phase"
   },
-  "updated_at": "2026-11-10T16:31:25.338Z"
+  "updated_at": "2026-11-11T19:32:32.021Z"
 }
