@@ -93,44 +93,44 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FND-01 | TBD | Pending |
-| FND-02 | TBD | Pending |
-| FND-03 | TBD | Pending |
-| FND-04 | TBD | Pending |
-| FND-05 | TBD | Pending |
-| NAV-01 | TBD | Pending |
-| NAV-02 | TBD | Pending |
-| NAV-03 | TBD | Pending |
-| NAV-04 | TBD | Pending |
-| DASH-01 | TBD | Pending |
-| DASH-02 | TBD | Pending |
-| AUTH-06 | TBD | Pending |
-| AUTH-07 | TBD | Pending |
-| LIST-01 | TBD | Pending |
-| LIST-02 | TBD | Pending |
-| LIST-03 | TBD | Pending |
-| DEAL-06 | TBD | Pending |
-| DEAL-07 | TBD | Pending |
-| MEAL-04 | TBD | Pending |
-| MEAL-05 | TBD | Pending |
-| MEAL-06 | TBD | Pending |
-| BILL-01 | TBD | Pending |
-| BILL-02 | TBD | Pending |
-| CHOR-01 | TBD | Pending |
-| CHOR-02 | TBD | Pending |
-| SET-01 | TBD | Pending |
-| SET-02 | TBD | Pending |
-| SET-03 | TBD | Pending |
-| VER-01 | TBD | Pending |
-| VER-02 | TBD | Pending |
-| VER-03 | TBD | Pending |
-| VER-04 | TBD | Pending |
+| FND-01 | Phase 17 | Pending |
+| FND-02 | Phase 17 | Pending |
+| FND-03 | Phase 17 | Pending |
+| FND-04 | Phase 17 | Pending |
+| FND-05 | Phase 21 | Pending |
+| NAV-01 | Phase 18 | Pending |
+| NAV-02 | Phase 18 | Pending |
+| NAV-03 | Phase 18 | Pending |
+| NAV-04 | Phase 18 | Pending |
+| DASH-01 | Phase 19 | Pending |
+| DASH-02 | Phase 19 | Pending |
+| AUTH-06 | Phase 19 | Pending |
+| AUTH-07 | Phase 19 | Pending |
+| LIST-01 | Phase 19 | Pending |
+| LIST-02 | Phase 19 | Pending |
+| LIST-03 | Phase 19 | Pending |
+| DEAL-06 | Phase 19 | Pending |
+| DEAL-07 | Phase 19 | Pending |
+| MEAL-04 | Phase 20 | Pending |
+| MEAL-05 | Phase 20 | Pending |
+| MEAL-06 | Phase 20 | Pending |
+| BILL-01 | Phase 20 | Pending |
+| BILL-02 | Phase 20 | Pending |
+| CHOR-01 | Phase 20 | Pending |
+| CHOR-02 | Phase 20 | Pending |
+| SET-01 | Phase 20 | Pending |
+| SET-02 | Phase 20 | Pending |
+| SET-03 | Phase 20 | Pending |
+| VER-01 | Phase 21 | Pending |
+| VER-02 | Phase 21 | Pending |
+| VER-03 | Phase 21 | Pending |
+| VER-04 | Phase 21 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 32 total
-- Mapped to phases: 0
-- Unmapped: 32
+- Mapped to phases: 32
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-11-11*
-*Last updated: 2026-11-11 after initial definition*
+*Last updated: 2026-11-11 after v3.0 roadmap creation*
