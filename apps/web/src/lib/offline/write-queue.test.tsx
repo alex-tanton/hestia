@@ -18,6 +18,7 @@ import {
   type StubHandler,
   WithQueue,
 } from '../../test/harness.tsx';
+import { findMdField, getMdButton, getMdCheckbox } from '../../test/md-queries.ts';
 import {
   THIS_WEEK_ID,
   WEEKEND_COOKOUT_ID,
@@ -108,7 +109,7 @@ async function openList(stubHandlers = handlers()): Promise<ReturnType<typeof cr
 }
 
 function rowOf(name: RegExp): HTMLElement {
-  const checkbox = screen.getByRole('checkbox', { name });
+  const checkbox = getMdCheckbox(name);
   const row = checkbox.closest('li');
   if (row === null) throw new Error('the row is always there');
   return row;
@@ -132,7 +133,7 @@ describe('optimistic updates and the pending affordance', () => {
     await openList();
     setOnline(false);
 
-    await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
+    await user.click(getMdCheckbox(/Broccoli/));
 
     // The row moved into the Bought group, and says it is waiting.
     const bought = await screen.findByRole('button', { name: /Bought \(4\)/ });
@@ -150,7 +151,7 @@ describe('optimistic updates and the pending affordance', () => {
   it('sends absolute values, never a toggle', async () => {
     const user = userEvent.setup();
     const stub = await openList();
-    await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
+    await user.click(getMdCheckbox(/Broccoli/));
 
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'PATCH')).toBe(true);
@@ -163,9 +164,17 @@ describe('optimistic updates and the pending affordance', () => {
     const user = userEvent.setup();
     const stub = await openList();
 
-    await user.click(screen.getByRole('button', { name: 'Add an item' }));
-    await user.type(await screen.findByLabelText('Item'), 'Milk');
-    await user.click(screen.getByRole('button', { name: 'Add item' }));
+    await user.click(getMdButton('Add an item'));
+    const itemField = await findMdField('Item');
+    const innerInput = await waitFor(() => {
+      const input = itemField.shadowRoot?.querySelector('input');
+      if (input === null || input === undefined) {
+        throw new Error('Expected shadow input inside md-outlined-text-field');
+      }
+      return input;
+    });
+    await user.type(innerInput, 'Milk');
+    await user.click(getMdButton('Add item'));
 
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'POST')).toBe(true);
@@ -191,8 +200,8 @@ describe('ordering within a scope', () => {
     );
 
     setOnline(false);
-    await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
-    await user.click(screen.getByRole('checkbox', { name: /Apples/ }));
+    await user.click(getMdCheckbox(/Broccoli/));
+    await user.click(getMdCheckbox(/Apples/));
     expect(stub.calls.filter((call) => call.method === 'PATCH')).toHaveLength(0);
 
     setOnline(true);
@@ -273,8 +282,8 @@ describe('ordering within a scope', () => {
     const user = userEvent.setup();
     await openList();
     setOnline(false);
-    await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
-    await user.click(screen.getByRole('checkbox', { name: /Apples/ }));
+    await user.click(getMdCheckbox(/Broccoli/));
+    await user.click(getMdCheckbox(/Apples/));
 
     setOnline(true);
     expect(await screen.findByText('2 changes synced.')).toBeInTheDocument();
@@ -294,11 +303,11 @@ describe('failure', () => {
       }),
     );
 
-    await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
+    await user.click(getMdCheckbox(/Broccoli/));
     expect(await screen.findByText(/Couldn.t save Broccoli/)).toBeInTheDocument();
     // The rollback is explicit: the row is back where the server last confirmed it.
     await waitFor(() => {
-      expect(screen.getByRole('checkbox', { name: /Broccoli/ })).not.toBeChecked();
+      expect(getMdCheckbox(/Broccoli/)).toHaveProperty('checked', false);
     });
     expect(screen.getByRole('button', { name: /Bought \(3\)/ })).toBeInTheDocument();
   });
@@ -315,7 +324,7 @@ describe('failure', () => {
         const { queryClient } = renderQueueProbe(status);
         await screen.findByRole('heading', { name: 'Food Lion' });
 
-        await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
+        await user.click(getMdCheckbox(/Broccoli/));
 
         await waitFor(() => {
           expect(notices).toHaveLength(1);
@@ -347,7 +356,7 @@ describe('failure', () => {
       }),
     );
 
-    await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
+    await user.click(getMdCheckbox(/Broccoli/));
     await screen.findByText(/no longer on this list/);
     expect(stub.calls.filter((call) => call.method === 'PATCH')).toHaveLength(1);
   });
@@ -629,7 +638,7 @@ describe('surviving a reload', () => {
     expect(hasPausedMutation()).toBe(false);
 
     setOnline(false);
-    await user.click(screen.getByRole('checkbox', { name: /Broccoli/ }));
+    await user.click(getMdCheckbox(/Broccoli/));
 
     await waitFor(() => {
       expect(hasPausedMutation()).toBe(true);
