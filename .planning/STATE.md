@@ -5,16 +5,16 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 17
 current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
 status: executing
-stopped_at: Completed 17-04-PLAN.md
-last_updated: "2026-11-12T08:02:18.740Z"
+stopped_at: Completed 17-05-PLAN.md
+last_updated: "2026-11-12T13:20:47.324Z"
 last_activity: 2026-11-12
 last_activity_desc: Phase 17 execution started
-state_head: dae44c10174cec0869b6311a5ea202fba000d64b
+state_head: 7526d997b1302d2cf8ca3d5de74417dd8c10b37d
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-11)
 ## Current Position
 
 Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
-Plan: 5 of 15
+Plan: 6 of 15
 Status: Ready to execute
 Last activity: 2026-11-12 — Phase 17 execution started
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17 P02 | 5m 25s | 2 tasks | 6 files |
 | Phase 17 P03 | 13m 33s | 2 tasks | 8 files |
 | Phase 17 P04 | 20 min | 2 tasks | 10 files |
+| Phase 17 P05 | 11 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,7 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 17]: Used zero-cast Reflect.set omitUndefined helper, EventTarget-backed microtask animate shim, and createHostQueries factory in md-queries.ts (17-03)
 - [Phase 17]: Kept jsdom@30.1.0 + element-internals-polyfill@3.0.2 for Material Web tests by configuring Vitest dom ssr.resolve.conditions browser + server.deps.inline and standard matchMedia/scrollTo/setValidity shims (no @vitest/browser-playwright escalation)
 - [Phase 17]: Extended useFieldErrors invalid-field focus selector to match data-aria-invalid and error host state emitted by @material/web mixinDelegatesAria
+- [Phase 17]: Rejected @material-symbols/svg-400 per user supply-chain directive; generated static icon-paths.ts from official google/material-design-icons@10ecc14790612ca8fd164e3f4ffe9c16fc50d5b7 via apps/web/scripts/generate-icon-paths.mjs (17-05)
 
 ### Pending Todos
 
@@ -92,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-12T08:02:18.694Z
-Stopped at: Completed 17-04-PLAN.md
+Last session: 2026-11-12T13:20:47.251Z
+Stopped at: Completed 17-05-PLAN.md
 Resume file: None
