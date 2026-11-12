@@ -47,6 +47,30 @@ const CLOCK_MESSAGE =
 const FORMATTER_MESSAGE =
   'A formatter given no instant formats the real clock, which the test pin does not cover: pass the instant to format(). A real-clock read needs a next-line eslint-disable with a reason (docs/testing.md).';
 
+const MD_BOUNDARY_MESSAGE =
+  'Import @material/web, lit, and @lit only inside apps/web/src/components/md/ adapters (D-12).';
+
+const MD_RESTRICTED_IMPORTS = {
+  paths: [
+    { name: '@material/web', message: MD_BOUNDARY_MESSAGE },
+    { name: 'lit', message: MD_BOUNDARY_MESSAGE },
+    { name: '@lit', message: MD_BOUNDARY_MESSAGE },
+  ],
+  patterns: [{ group: ['@material/web/*', 'lit/*', '@lit/*'], message: MD_BOUNDARY_MESSAGE }],
+};
+
+const MD_IMPORT_EXPRESSION_SELECTORS = [
+  {
+    selector: 'ImportExpression > Literal[value=/^(@material\\/web|lit|@lit)(\\/|$)/]',
+    message: MD_BOUNDARY_MESSAGE,
+  },
+  {
+    selector:
+      'ImportExpression > TemplateLiteral[quasis.0.value.raw=/^(@material\\/web|lit|@lit)(\\/|$)/]',
+    message: MD_BOUNDARY_MESSAGE,
+  },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -92,6 +116,97 @@ export default tseslint.config(
     files: ['apps/web/**/*.{ts,tsx}'],
     extends: [jsxA11y.flatConfigs.strict, reactHooks.configs.flat.recommended],
     languageOptions: { globals: globals.browser },
+    rules: {
+      'jsx-a11y/control-has-associated-label': [
+        'error',
+        {
+          labelAttributes: ['label', 'aria-label', 'aria-labelledby'],
+          controlComponents: [
+            'Button',
+            'Checkbox',
+            'Switch',
+            'MdIconButton',
+            'MdCheckbox',
+            'MdSwitch',
+          ],
+          ignoreElements: ['audio', 'canvas', 'embed', 'input', 'textarea', 'tr', 'video'],
+          ignoreRoles: [
+            'grid',
+            'listbox',
+            'menu',
+            'menubar',
+            'radiogroup',
+            'row',
+            'tablist',
+            'toolbar',
+            'tree',
+            'treegrid',
+          ],
+          includeRoles: ['alert', 'dialog'],
+          depth: 3,
+        },
+      ],
+      'jsx-a11y/label-has-associated-control': [
+        'error',
+        {
+          controlComponents: [
+            'TextField',
+            'TextAreaField',
+            'Select',
+            'DateField',
+            'TimeField',
+            'MdOutlinedTextField',
+            'MdOutlinedSelect',
+            'MdCheckbox',
+            'MdSwitch',
+          ],
+          labelAttributes: ['label'],
+          depth: 3,
+        },
+      ],
+    },
+  },
+  {
+    // Production web code never imports @material/web, lit, or @lit directly; only components/md/ adapters may.
+    files: ['apps/web/**/*.{ts,tsx}'],
+    ignores: [
+      'apps/web/src/components/md/**',
+      'apps/web/**/*.test.{ts,tsx}',
+      'apps/web/**/*.spec.{ts,tsx}',
+      'apps/web/src/test/**',
+      'apps/web/src/test-setup.ts',
+    ],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': ['error', MD_RESTRICTED_IMPORTS],
+      'no-restricted-syntax': ['error', ...MD_IMPORT_EXPRESSION_SELECTORS],
+    },
+  },
+  {
+    // MD adapters must import explicit component subpaths, never the full-library bundle or labs/*.
+    files: ['apps/web/src/components/md/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@material/web',
+              message: 'Import explicit @material/web/<component>/<file>.js subpaths instead.',
+            },
+            {
+              name: '@material/web/all.js',
+              message: 'Do not import @material/web/all.js; import explicit component entrypoints.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@material/web/labs/*', '@material/web/labs'],
+              message: 'Experimental @material/web/labs/* components are not permitted.',
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     // The service role bypasses RLS. Only main.ts and the owner CLI may build a privileged
@@ -155,6 +270,25 @@ export default tseslint.config(
         'error',
         ...CLOCK_READS.map((selector) => ({ selector, message: CLOCK_MESSAGE })),
         ...FORMATTER_READS.map((selector) => ({ selector, message: FORMATTER_MESSAGE })),
+      ],
+    },
+  },
+  {
+    // Merge test clock/formatter fences with the MD import fence so flat-config replacement never drops CLOCK_READS/FORMATTER_READS.
+    files: [
+      'apps/web/**/*.test.{ts,tsx}',
+      'apps/web/**/*.spec.{ts,tsx}',
+      'apps/web/src/test/**/*.{ts,tsx}',
+      'apps/web/src/test-setup.ts',
+    ],
+    ignores: ['apps/web/src/components/md/**'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': ['error', MD_RESTRICTED_IMPORTS],
+      'no-restricted-syntax': [
+        'error',
+        ...CLOCK_READS.map((selector) => ({ selector, message: CLOCK_MESSAGE })),
+        ...FORMATTER_READS.map((selector) => ({ selector, message: FORMATTER_MESSAGE })),
+        ...MD_IMPORT_EXPRESSION_SELECTORS,
       ],
     },
   },
