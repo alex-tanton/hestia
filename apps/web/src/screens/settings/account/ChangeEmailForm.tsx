@@ -25,7 +25,7 @@ export function ChangeEmailForm({ email }: { email: string }): ReactElement {
   const [newEmail, setNewEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [formError, setFormError] = useState<string>();
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
   const wasOpen = useRef(isOpen);
 
   // Opening swaps the trigger for the form, and closing swaps it back. Where a member's action
@@ -34,7 +34,8 @@ export function ChangeEmailForm({ email }: { email: string }): ReactElement {
   useEffect(() => {
     if (wasOpen.current === isOpen) return;
     wasOpen.current = isOpen;
-    if (isOpen) formRef.current?.querySelector('input')?.focus();
+    if (isOpen)
+      formRef.current?.querySelector<HTMLElement>('md-outlined-text-field, input')?.focus();
     else triggerRef.current?.focus();
   }, [isOpen, formRef]);
 
