@@ -66,7 +66,7 @@
   3. All icons render through `Icon.tsx` behind a single locked Material Symbols delivery contract (`@material-symbols/font-400` WOFF2 vs curated inline `@material-symbols/svg-400`) with `aria-hidden="true"`, clean Workbox precaching, and Caddy `'self'` CSP compatibility.
   4. Light-DOM and native-`<dialog>` MD3 gap primitives (`ModalBottomSheet`, persistent-until-acted-upon Undo `Snackbar`, `Card`, `ListRow`, `Badge`, `SegmentedControl`, `Skeleton`, `FormMessage`, and styled native `date`/`time` fields) pass `primitives.test.tsx` under the locked Phase 17 component test harness while Tailwind CSS continues coexisting cleanly for unmigrated screens.
 
-**Plans**: 3/15 plans executed
+**Plans**: 4/15 plans executed
 
 Plans:
 **Wave 1**
@@ -79,7 +79,7 @@ Plans:
 - [x] 17-03-PLAN.md — Configure ESLint `@material/web` import/a11y rules preserving `CLOCK_READS`/`FORMATTER_READS` test clock fences, bootstrap forced `element-internals-polyfill` in `test-setup.ts`, create `md-queries.ts`, and implement `MdTextField`/`MdButton`/`MdSelect`/`MdCheckbox` adapters (`FND-02`)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 17-04-PLAN.md — Implement `MdSwitch`/`MdRadio`/`MdDialog`/`MdMenu`/`MdTabs`/`MdProgress` adapters and execute `D-13` 5-check jsdom smoke gate (`FND-02`)
+- [x] 17-04-PLAN.md — Implement `MdSwitch`/`MdRadio`/`MdDialog`/`MdMenu`/`MdTabs`/`MdProgress` adapters and execute `D-13` 5-check jsdom smoke gate (`FND-02`)
 
 **Wave 5** *(blocked on Wave 4 completion)*
 - [ ] 17-05-PLAN.md — Execute human supply-chain gate for `@material-symbols/svg-400` sequentially after `test-setup.ts`/`D-13` and build static rounded SVG `Icon.tsx` contract (`FND-03`)
@@ -173,7 +173,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 3/15 | In Progress | - |
+| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 4/15 | In Progress | - |
 | 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 0/0 | Not started | - |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 0/0 | Not started | - |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 0/0 | Not started | - |
