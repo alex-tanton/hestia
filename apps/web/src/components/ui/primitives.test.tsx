@@ -617,12 +617,22 @@ describe('Tabs', () => {
     );
   }
 
-  it('switches panels from the keyboard', async () => {
+  it('switches panels from the keyboard with tabpanel linkage', async () => {
     render(<Harness />);
+    const sunTab = getMdTab('Sun');
+    const monTab = getMdTab('Mon');
+    await waitFor(() => {
+      expect(sunTab).toHaveProperty('active', true);
+    });
+    expect(sunTab.className).toContain('shrink-0');
+
     await userEvent.tab();
     await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: 'Mon' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText('Monday meals')).toBeVisible();
+    await waitFor(() => {
+      expect(monTab).toHaveProperty('active', true);
+    });
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Monday meals');
+    expect(screen.getByRole('tabpanel').getAttribute('aria-labelledby')).toBe(monTab.id);
   });
 
   it('scrolls the newly active tab into view, from the keyboard and not only a click', async () => {
@@ -631,42 +641,92 @@ describe('Tabs', () => {
     Element.prototype.scrollIntoView = scrollIntoView;
     try {
       render(<Harness />);
-
-      await userEvent.tab();
-      await userEvent.keyboard('{ArrowRight}');
-      expect(scrollIntoView).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(getMdTab('Sun')).toHaveProperty('active', true);
+      });
 
       scrollIntoView.mockClear();
-      await userEvent.click(screen.getByRole('tab', { name: 'Sun' }));
-      expect(scrollIntoView).toHaveBeenCalled();
+      await userEvent.tab();
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => {
+        expect(scrollIntoView).toHaveBeenCalled();
+      });
+
+      scrollIntoView.mockClear();
+      await userEvent.click(getMdTab('Sun'));
+      await waitFor(() => {
+        expect(scrollIntoView).toHaveBeenCalled();
+      });
     } finally {
       Reflect.set(Element.prototype, 'scrollIntoView', original);
     }
   });
+
+  it('falls back to the first tab on an unmatched value and handles empty items', async () => {
+    const { rerender } = render(
+      <Tabs
+        label="Day"
+        value="missing"
+        onValueChange={vi.fn()}
+        items={[
+          { value: 'sun', label: 'Sun', content: <p>Sunday meals</p> },
+          { value: 'mon', label: 'Mon', content: <p>Monday meals</p> },
+        ]}
+      />,
+    );
+    await waitFor(() => {
+      expect(getMdTab('Sun')).toHaveProperty('active', true);
+    });
+    expect(screen.getByText('Sunday meals')).toBeVisible();
+
+    rerender(<Tabs label="Day" value="" onValueChange={vi.fn()} items={[]} />);
+    expect(screen.queryByRole('tabpanel')).toBeNull();
+  });
 });
 
 describe('OverflowMenu', () => {
-  it('opens from the keyboard and runs the chosen action', async () => {
+  it('opens from the keyboard with fixed positioning, preserves order/disabledReason, and runs the chosen action', async () => {
     const onRename = vi.fn();
-    render(
+    const onDisabled = vi.fn();
+    const { container } = render(
       <OverflowMenu
         label="More actions for This Week"
         items={[
           { label: 'Rename', onSelect: onRename },
+          { label: 'Sync', onSelect: onDisabled, disabledReason: 'Needs a connection.' },
           { label: 'Delete', onSelect: vi.fn(), isDestructive: true },
         ]}
       />,
     );
+    const menu = container.querySelector('md-menu');
+    expect(menu).toHaveProperty('positioning', 'fixed');
     const trigger = getMdButton('More actions for This Week');
+    expect(menu).toHaveProperty('anchor', trigger.id);
+
     await waitFor(() => {
       expect(trigger.shadowRoot?.querySelector('button')).not.toBeNull();
     });
     trigger.shadowRoot?.querySelector('button')?.focus();
     await userEvent.keyboard('{Enter}');
-    const rename = await screen.findByRole('menuitem', { name: 'Rename' });
-    expect(rename).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(menu).toHaveProperty('open', true);
+    });
+    const rename = getMdMenuItem(/Rename/);
+    const sync = getMdMenuItem(/Sync/);
+    expect(sync).toHaveProperty('disabled', true);
+    expect(sync).toHaveTextContent('Needs a connection.');
+    await userEvent.click(sync);
+    expect(onDisabled).not.toHaveBeenCalled();
+
     await userEvent.click(rename);
     expect(onRename).toHaveBeenCalledOnce();
+  });
+
+  it('handles an empty item list cleanly', () => {
+    const { container } = render(<OverflowMenu label="Empty menu" items={[]} />);
+    expect(getMdButton('Empty menu')).toBeInTheDocument();
+    expect(container.querySelectorAll('md-menu-item')).toHaveLength(0);
   });
 });
 
@@ -700,46 +760,71 @@ describe('Sheet', () => {
 });
 
 describe('ConfirmDialog', () => {
-  it('names the consequence, starts on Cancel, and confirms', async () => {
+  it('names the consequence, starts focus on Cancel, blocks outside scrim cancel, and confirms', async () => {
     const onConfirm = vi.fn();
+    const onOpenChange = vi.fn();
     render(
       <ConfirmDialog
         open
-        onOpenChange={vi.fn()}
+        onOpenChange={onOpenChange}
         title="Delete This Week?"
         description="Its 15 items are removed permanently."
         confirmLabel="Delete"
         onConfirm={onConfirm}
       />,
     );
-    const dialog = screen.getByRole('alertdialog', { name: 'Delete This Week?' });
+    const dialog = getMdDialog('Delete This Week?');
+    expect(dialog).toHaveProperty('type', 'alert');
     expect(dialog).toHaveAccessibleDescription('Its 15 items are removed permanently.');
-    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+
+    const cancelButton = getMdButton('Cancel');
+    await waitFor(() => {
+      expect(cancelButton).toHaveFocus();
+    });
+
+    const scrimCancel = new Event('cancel', { cancelable: true });
+    act(() => {
+      dialog.dispatchEvent(scrimCancel);
+    });
+    expect(scrimCancel.defaultPrevented).toBe(true);
+    expect(onOpenChange).not.toHaveBeenCalled();
+
     await userEvent.click(getMdButton('Delete'));
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
-  it('holds the destructive action until allowed, and shows it busy while confirming', () => {
+  it('closes on Cancel and Escape, and blocks duplicate confirms while confirming', async () => {
+    const onConfirm = vi.fn();
+    const onOpenChange = vi.fn();
     const { rerender } = render(
       <ConfirmDialog
         open
-        onOpenChange={vi.fn()}
+        onOpenChange={onOpenChange}
         title="Delete Oak Street?"
         description="This deletes 4 lists, 23 recipes, and 6 chores permanently."
         confirmLabel="Delete household"
-        onConfirm={vi.fn()}
+        onConfirm={onConfirm}
         isConfirmDisabled
       />,
     );
     expect(getMdButton('Delete household')).toHaveProperty('disabled', true);
+
+    await userEvent.click(getMdButton('Cancel'));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+
+    onOpenChange.mockClear();
+    const dialog = getMdDialog('Delete Oak Street?');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+
     rerender(
       <ConfirmDialog
         open
-        onOpenChange={vi.fn()}
+        onOpenChange={onOpenChange}
         title="Delete Oak Street?"
         description="This deletes 4 lists, 23 recipes, and 6 chores permanently."
         confirmLabel="Delete household"
-        onConfirm={vi.fn()}
+        onConfirm={onConfirm}
         isConfirming
       />,
     );
@@ -747,6 +832,10 @@ describe('ConfirmDialog', () => {
     expect(
       confirmButton.getAttribute('aria-busy') ?? confirmButton.getAttribute('data-aria-busy'),
     ).not.toBeNull();
+    expect(confirmButton.querySelector('md-circular-progress')).not.toBeNull();
+    await userEvent.click(confirmButton);
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(queryMdDialog('Delete Oak Street?')).not.toBeNull();
   });
 });
 

@@ -1,16 +1,16 @@
-import { Ellipsis } from 'lucide-react';
-import { DropdownMenu } from 'radix-ui';
-import type { ReactElement, ReactNode } from 'react';
+import { useId, useState, type ReactElement, type ReactNode } from 'react';
 import { cn } from '../../lib/cn.ts';
 import { useSection } from '../../lib/section-context.tsx';
-import { Button } from './Button.tsx';
+import { MdIconButton } from '../md/MdButton.tsx';
+import { MdMenu, MdMenuItem } from '../md/MdMenu.tsx';
+import { Icon } from './Icon.tsx';
 
 export interface OverflowMenuItem {
   label: string;
   onSelect: () => void;
-  icon?: ReactNode;
-  isDestructive?: boolean;
-  isDisabled?: boolean;
+  icon?: ReactNode | undefined;
+  isDestructive?: boolean | undefined;
+  isDisabled?: boolean | undefined;
   /**
    * Why the action is unavailable ("Needs a connection."). It disables the item and sits beneath
    * the label: a row's actions live in this menu, so the one line explaining an offline-disabled
@@ -30,41 +30,64 @@ export interface OverflowMenuProps {
  */
 export function OverflowMenu({ label, items }: OverflowMenuProps): ReactElement {
   const section = useSection();
+  const anchorId = useId();
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button variant="ghost" isIconOnly aria-label={label} className="text-secondary">
-          <Ellipsis aria-hidden size={20} strokeWidth={1.5} />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          data-section={section}
-          align="end"
-          sideOffset={4}
-          className="z-50 min-w-48 rounded-md border border-border bg-base p-1 shadow-md"
-        >
-          {items.map((item) => (
-            <DropdownMenu.Item
+    <div data-section={section} className="relative inline-flex">
+      <MdIconButton
+        id={anchorId}
+        type="button"
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        className="min-h-11 min-w-11 text-[var(--md-sys-color-on-surface-variant)]"
+        onClick={() => {
+          setIsOpen((prev) => !prev);
+        }}
+      >
+        <Icon name="more_vert" />
+      </MdIconButton>
+      <MdMenu
+        anchor={anchorId}
+        positioning="fixed"
+        open={isOpen}
+        onClosed={() => {
+          setIsOpen(false);
+        }}
+      >
+        {items.map((item) => {
+          const isItemDisabled = (item.isDisabled ?? false) || item.disabledReason !== undefined;
+          return (
+            <MdMenuItem
               key={item.label}
-              disabled={(item.isDisabled ?? false) || item.disabledReason !== undefined}
-              onSelect={item.onSelect}
+              disabled={isItemDisabled}
               className={cn(
-                'flex min-h-11 cursor-default items-center gap-2 rounded-sm px-3 py-1.5 text-body outline-none select-none data-disabled:opacity-50 data-highlighted:bg-raised data-highlighted:outline-2 data-highlighted:-outline-offset-2 data-highlighted:outline-section-accent',
-                item.isDestructive ? 'text-danger' : 'text-primary',
+                'min-h-11',
+                item.isDestructive === true &&
+                  '[--md-menu-item-hover-label-text-color:var(--md-sys-color-error)] [--md-menu-item-label-text-color:var(--md-sys-color-error)] [--md-menu-item-leading-icon-color:var(--md-sys-color-error)]',
               )}
+              onClick={() => {
+                if (isItemDisabled) {
+                  return;
+                }
+                setIsOpen(false);
+                item.onSelect();
+              }}
             >
-              {item.icon}
-              <span className="flex flex-col">
-                {item.label}
-                {item.disabledReason !== undefined && (
-                  <span className="text-body-sm text-secondary">{item.disabledReason}</span>
-                )}
-              </span>
-            </DropdownMenu.Item>
-          ))}
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+              {item.icon !== undefined && (
+                <span slot="start" aria-hidden="true" className="inline-flex items-center">
+                  {item.icon}
+                </span>
+              )}
+              <span slot="headline">{item.label}</span>
+              {item.disabledReason !== undefined && (
+                <span slot="supporting-text">{item.disabledReason}</span>
+              )}
+            </MdMenuItem>
+          );
+        })}
+      </MdMenu>
+    </div>
   );
 }
