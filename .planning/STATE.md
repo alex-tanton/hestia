@@ -3,18 +3,18 @@ gsd_state_version: "1.0"
 milestone: v3.0
 milestone_name: Material Design 3 Overhaul
 current_phase: 17
-current_phase_name: md3-foundation-token-pipeline-ui-primitives
+current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
 status: executing
-stopped_at: Phase 17 UI-SPEC approved
-last_updated: "2026-11-12T03:55:50.026Z"
-last_activity: 2026-11-11
-last_activity_desc: v3.0 Material Design 3 Overhaul roadmap created (Phases 17-21)
-state_head: 3b58ee046760aba61d3888e9d42354254d6dd48f
+stopped_at: Completed 17-01-PLAN.md
+last_updated: "2026-11-12T07:08:34.507Z"
+last_activity: 2026-11-12
+last_activity_desc: Phase 17 execution started
+state_head: 9447e866d72bca49ea95cd5124eaa5170a62659c
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-11-11)
 
 ## Current Position
 
-Phase: 17 (md3-foundation-token-pipeline-ui-primitives) — READY TO EXECUTE
-Plan: 0 of 0 in current phase
+Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
+Plan: 2 of 15
 Status: Ready to execute
-Last activity: 2026-11-11 — v3.0 Material Design 3 Overhaul roadmap created (Phases 17-21)
+Last activity: 2026-11-12 — Phase 17 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -50,6 +50,11 @@ Progress: [░░░░░░░░░░] 0%
 | - | - | - | - |
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 17 P01 | 11 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -58,6 +63,8 @@ Progress: [░░░░░░░░░░] 0%
 - Standardize frontend on `@material/web@2.5.0` subpath imports wrapped with `@lit/react@1.0.8` behind `components/md/` -> `components/ui/`, plus static build-time Warm Terracotta `--md-sys-*` CSS tokens (`@material/material-color-utilities`).
 - Keep Tailwind CSS coexisting behind `components/ui/` through Phases 17-20 and defer `FND-05` dependency removal plus Knip baseline reconciliation to Phase 21 so unit and sequential E2E suites stay verifiable at every step.
 - Lock Phase 17 architectural decisions upfront before Phase 18 shell work: (1) Material Symbols delivery behind `Icon.tsx` (`@material-symbols/font-400` WOFF2 vs inline `@material-symbols/svg-400`) and (2) Vitest DOM component harness (`jsdom` + forced `element-internals-polyfill` vs `@vitest/browser-playwright`).
+- [Phase 17]: Load @material/material-color-utilities@0.4.0 via Vite SSR in apps/web/scripts/generate-tokens.mjs for deterministic LF tokens.css
+- [Phase 17]: Clamp harmonized status tokens (#15803D, #A16207, #0369A1) via Material TonalPalette (40/100/90/10 light, 80/20/30/90 dark) for >= 4.5:1 AA contrast across all 5 surfaceContainer tiers
 
 ### Pending Todos
 
@@ -75,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-12T01:45:50.316Z
-Stopped at: Phase 17 UI-SPEC approved
-Resume file: C:/Users/actanton/Development/Aberrance/hestia/.planning/phases/17-md3-foundation-token-pipeline-ui-primitives/17-UI-SPEC.md
+Last session: 2026-11-12T07:08:34.462Z
+Stopped at: Completed 17-01-PLAN.md
+Resume file: None
