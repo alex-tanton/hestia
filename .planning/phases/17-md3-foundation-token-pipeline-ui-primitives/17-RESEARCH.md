@@ -605,15 +605,16 @@ dialog.hestia-sheet[open] {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Vitest `D-13` check #3 (`<md-radio>` `setValidity` coercion) under `jsdom@30.1.0` + `element-internals-polyfill@3.0.2`:**
    - **What we know:** `<md-radio>`'s `RadioValidator` (`radio/internal/radio.js:140`, `labs/behaviors/constraint-validation.js:120`) calls `setValidity({ ...validity, customError }, ...)`.
    - **What's unclear:** Whether `element-internals-polyfill@3.0.2` accepts spreading `ValidityState` flags cleanly without throwing `TypeError` when `forceElementInternalsPolyfill()` patches `jsdom@30.1.0`.
-   - **Recommendation:** Run the 5 `D-13` smoke checks in Wave 1 of Phase 17 first before writing broad component suites; escalate to `@vitest/browser-playwright` only if check #3 (or any check 1–5) requires private internal hacks.
+   - **RESOLVED:** Execute all 5 `D-13` smoke checks in Wave 2 before rolling out `components/ui/` wrappers; keep tests on `jsdom@30.1.0` + `forceElementInternalsPolyfill()` if all 5 checks pass without private internal hacks, or pivot the `dom` Vitest project to `@vitest/browser-playwright` exclusively if check #3 (or checks #1–#5) fails.
+
 2. **Wave Rollout of Shadow DOM Wrappers vs 42 Screen Test Files (`pnpm test` green at every step):**
    - **What we know:** Replacing `Button`, `TextField`, `TextAreaField`, `Checkbox` with `<md-*>` custom elements in Phase 17 causes `751` `*ByRole` and `129` `*ByLabelText` RTL queries across 42 existing `.test.tsx` files to fail unless updated with shadow-aware helpers (`apps/web/src/test/`).
-   - **Recommendation:** Planner should include explicit scope & helper strategy in `17-PLAN.md` (either keep `test/md-queries.ts` concise under `.jscpd.json` `threshold: 5` and update affected screen tests cleanly in Phase 17, OR keep one clean wave solely updating screen tests against the new `components/ui/` wrappers so `pnpm --filter @hestia/web test:coverage` passes at Phase 17 completion).
+   - **RESOLVED:** Keep Wave 1 (`unit` node vs `dom` jsdom split) and Wave 2 (`components/md/*` + `apps/web/src/test/md-queries.ts` under `.jscpd.json` `threshold: 5`) non-breaking for existing screens, then roll out `components/ui/` wrappers and synchronize affected `.test.tsx` suites cleanly across Wave 5–6 feature batches so full `pnpm --filter @hestia/web test:coverage` passes before Phase 17 completion.
 
 ---
 
