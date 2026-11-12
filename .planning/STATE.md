@@ -5,16 +5,16 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 17
 current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
 status: executing
-stopped_at: Completed 17-06-PLAN.md
-last_updated: "2026-11-12T13:50:00.716Z"
+stopped_at: Completed 17-07-PLAN.md
+last_updated: "2026-11-12T14:31:50.316Z"
 last_activity: 2026-11-12
 last_activity_desc: Phase 17 execution started
-state_head: bf3774ee3357ca4b3d1b38340091c7678d0d692b
+state_head: 40b9c51c0450f10bc2472948d3d10afaacc65e01
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-11)
 ## Current Position
 
 Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
-Plan: 7 of 15
+Plan: 8 of 15
 Status: Ready to execute
 Last activity: 2026-11-12 — Phase 17 execution started
 
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17 P04 | 20 min | 2 tasks | 10 files |
 | Phase 17 P05 | 11 min | 2 tasks | 6 files |
 | Phase 17 P06 | 25min | 3 tasks | 10 files |
+| Phase 17 P07 | 33min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 17]: Extended useFieldErrors invalid-field focus selector to match data-aria-invalid and error host state emitted by @material/web mixinDelegatesAria
 - [Phase 17]: Rejected @material-symbols/svg-400 per user supply-chain directive; generated static icon-paths.ts from official google/material-design-icons@10ecc14790612ca8fd164e3f4ffe9c16fc50d5b7 via apps/web/scripts/generate-icon-paths.mjs (17-05)
 - [Phase 17]: Pass ariaInvalid: 'true' | undefined literal in Field/Select (zero as casts) and restrict Vitest dom resolve/ssr conditions to ['browser', 'development'] for jsdom decimal.js compatibility.
+- [Phase 17]: Deduplicate MdSwitch onInput/onChange with microtask flag and add tabIndex=0 on enabled MdCheckbox/MdSwitch hosts for jsdom user-event label/Tab compatibility
+- [Phase 17]: Handle RTL-aware Arrow/Home/End keyboard navigation in Tabs onKeyDown with event.preventDefault() to bypass jsdom :focus-within limitation without double-navigating in browsers
 
 ### Pending Todos
 
@@ -96,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-12T13:50:00.527Z
-Stopped at: Completed 17-06-PLAN.md
+Last session: 2026-11-12T14:31:50.258Z
+Stopped at: Completed 17-07-PLAN.md
 Resume file: None
