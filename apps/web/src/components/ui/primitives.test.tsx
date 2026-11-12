@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SectionProvider } from '../../lib/section-context.tsx';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import {
+  getMdAccessibleName,
   getMdButton,
   getMdCheckbox,
   getMdDialog,
@@ -30,6 +31,7 @@ import { Button } from './Button.tsx';
 import { Card } from './Card.tsx';
 import { Checkbox } from './Checkbox.tsx';
 import { ConfirmDialog } from './ConfirmDialog.tsx';
+import { DateField } from './DateField.tsx';
 import { TextAreaField, TextField } from './Field.tsx';
 import { ListRow } from './ListRow.tsx';
 import { OverflowMenu } from './OverflowMenu.tsx';
@@ -38,6 +40,7 @@ import { Select } from './Select.tsx';
 import { Sheet } from './Sheet.tsx';
 import { SkeletonRows } from './Skeleton.tsx';
 import { Tabs } from './Tabs.tsx';
+import { TimeField } from './TimeField.tsx';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -45,85 +48,288 @@ afterEach(() => {
 });
 
 describe('Button', () => {
-  it.each(['primary', 'secondary', 'ghost', 'destructive'] as const)(
-    'renders the %s variant as an enabled button',
-    (variant) => {
-      render(<Button variant={variant}>Save</Button>);
-      expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
-    },
-  );
-
-  it('fires onClick by keyboard', async () => {
-    const onClick = vi.fn();
-    render(<Button onClick={onClick}>Save</Button>);
-    await userEvent.tab();
-    expect(screen.getByRole('button', { name: 'Save' })).toHaveFocus();
-    await userEvent.keyboard('{Enter}');
-    expect(onClick).toHaveBeenCalledOnce();
+  it.each([
+    ['primary', 'MD-FILLED-BUTTON'],
+    ['secondary', 'MD-OUTLINED-BUTTON'],
+    ['ghost', 'MD-TEXT-BUTTON'],
+    ['destructive', 'MD-FILLED-BUTTON'],
+  ] as const)('renders the %s variant as an enabled %s', async (variant, tagName) => {
+    render(<Button variant={variant}>Save</Button>);
+    const button = getMdButton('Save');
+    expect(button.tagName).toBe(tagName);
+    expect(button).toHaveProperty('type', 'button');
+    expect(button).toHaveProperty('disabled', false);
+    expect(button).toHaveProperty('softDisabled', false);
+    await waitFor(() => {
+      const inner = button.shadowRoot?.querySelector('button');
+      expect(inner).not.toBeNull();
+      expect(inner).toBeEnabled();
+    });
   });
 
-  it('is busy and ignores presses while loading', async () => {
+  it('renders icon-only buttons on md-icon-button', () => {
+    render(
+      <Button variant="ghost" isIconOnly aria-label="Remove row">
+        <span aria-hidden="true">×</span>
+      </Button>,
+    );
+    const button = getMdButton('Remove row');
+    expect(button.tagName).toBe('MD-ICON-BUTTON');
+    expect(getMdAccessibleName(button)).toBe('Remove row');
+  });
+
+  it('delegates focus from a host ref and activates on click and keyboard', async () => {
+    const onClick = vi.fn();
+    function FocusHarness(): ReactElement {
+      const ref = useRef<HTMLElement>(null);
+      return (
+        <div>
+          <Button ref={ref} onClick={onClick}>
+            Save
+          </Button>
+          <button type="button" onClick={() => ref.current?.focus()}>
+            Focus save
+          </button>
+        </div>
+      );
+    }
+
+    render(<FocusHarness />);
+    const button = getMdButton('Save');
+    await userEvent.click(screen.getByRole('button', { name: 'Focus save' }));
+    expect(button).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await userEvent.click(button);
+    expect(onClick).toHaveBeenCalledTimes(2);
+  });
+
+  it('is busy via softDisabled and ignores presses while loading', async () => {
     const onClick = vi.fn();
     render(
       <Button isLoading onClick={onClick}>
         Save
       </Button>,
     );
-    const button = screen.getByRole('button', { name: 'Save' });
-    expect(button).toHaveAttribute('aria-busy', 'true');
-    expect(button).toHaveAttribute('aria-disabled', 'true');
+    const button = getMdButton('Save');
+    expect(button.querySelector('md-circular-progress')).not.toBeNull();
+    expect(button).toHaveProperty('disabled', false);
+    expect(button).toHaveProperty('softDisabled', true);
+    expect(
+      button.getAttribute('aria-busy') ?? button.getAttribute('data-aria-busy'),
+    ).not.toBeNull();
+    await waitFor(() => {
+      const inner = button.shadowRoot?.querySelector('button');
+      expect(inner).toHaveAttribute('aria-disabled', 'true');
+    });
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it('is disabled when disabled', () => {
+  it('uses hard disabled separately from softDisabled when disabled', async () => {
     render(<Button disabled>Save</Button>);
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    const button = getMdButton('Save');
+    expect(button).toHaveProperty('disabled', true);
+    expect(button).toHaveProperty('softDisabled', false);
+    await waitFor(() => {
+      const inner = button.shadowRoot?.querySelector('button');
+      expect(inner).toBeDisabled();
+    });
   });
 
-  it('stays focusable and explains itself when unavailable offline', async () => {
+  it('stays focusable with softDisabled and explains itself when unavailable offline', async () => {
     const onClick = vi.fn();
     render(
       <Button disabledReason="Needs a connection." onClick={onClick}>
         Invite
       </Button>,
     );
-    const button = screen.getByRole('button', { name: 'Invite' });
+    const button = getMdButton('Invite');
+    expect(button).toHaveProperty('disabled', false);
+    expect(button).toHaveProperty('softDisabled', true);
     expect(button).toHaveAccessibleDescription('Needs a connection.');
-    expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('Needs a connection.')).toBeVisible();
-    await userEvent.tab();
+    await waitFor(() => {
+      const inner = button.shadowRoot?.querySelector('button');
+      expect(inner).toHaveAttribute('aria-disabled', 'true');
+    });
+    button.focus();
     expect(button).toHaveFocus();
     await userEvent.keyboard('{Enter}');
+    await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
   });
 });
 
 describe('TextField and TextAreaField', () => {
-  it('labels the input and shows the hint as its description', () => {
-    render(<TextField label="Password" hint="At least 8 characters" />);
-    expect(screen.getByLabelText('Password')).toHaveAccessibleDescription('At least 8 characters');
+  it('labels the host and forwards placeholder, type, autoComplete, and className', async () => {
+    render(
+      <TextField
+        label="Password"
+        type="password"
+        placeholder="Enter password"
+        autoComplete="current-password"
+        hint="At least 8 characters"
+        className="max-w-sm"
+      />,
+    );
+    const field = getMdField('Password');
+    expect(field.tagName).toBe('MD-OUTLINED-TEXT-FIELD');
+    expect(field).toHaveProperty('type', 'password');
+    expect(field).toHaveProperty('placeholder', 'Enter password');
+    expect(field).toHaveProperty('autocomplete', 'current-password');
+    expect(field).toHaveProperty('supportingText', 'At least 8 characters');
+    expect(field).toHaveClass('max-w-sm');
+    await waitFor(() => {
+      expect(field.shadowRoot?.querySelector('input')).toHaveAttribute('type', 'password');
+    });
   });
 
-  it('links an error to its field, marks it invalid, and announces it', () => {
-    render(<TextField label="Password" error="That password is too common. Choose another." />);
-    const input = screen.getByLabelText('Password');
-    expect(input).toBeInvalid();
-    expect(input).toHaveAccessibleDescription('That password is too common. Choose another.');
-    expect(screen.getByRole('alert')).toHaveTextContent('That password is too common.');
+  it('delegates focus from a ref and works with useFieldErrors', async () => {
+    function Harness(): ReactElement {
+      const fieldRef = useRef<HTMLElement>(null);
+      const { errors, setErrors, formRef } = useFieldErrors<'password'>();
+      return (
+        <form
+          ref={formRef}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            setErrors({ password: 'That password is too common. Choose another.' });
+          }}
+        >
+          <TextField ref={fieldRef} label="Password" error={errors.password} />
+          <button type="submit">Submit</button>
+          <button type="button" onClick={() => fieldRef.current?.focus()}>
+            Focus password
+          </button>
+        </form>
+      );
+    }
+
+    render(<Harness />);
+    const field = getMdField('Password');
+    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(field).toHaveProperty('error', true);
+    expect(field).toHaveProperty('errorText', 'That password is too common. Choose another.');
+    await waitFor(() => {
+      const alert = field.shadowRoot
+        ?.querySelector('md-outlined-field')
+        ?.shadowRoot?.querySelector('[role="alert"]');
+      expect(alert).not.toBeNull();
+      expect(alert).toHaveTextContent('That password is too common. Choose another.');
+      expect(field.shadowRoot?.querySelector('input')).toHaveAttribute('aria-invalid', 'true');
+      expect(field).toHaveFocus();
+    });
+    expect(field.shadowRoot?.activeElement?.tagName).toBe('INPUT');
+
+    screen.getByRole('button', { name: 'Submit' }).focus();
+    await userEvent.click(screen.getByRole('button', { name: 'Focus password' }));
+    expect(field).toHaveFocus();
   });
 
-  it('disables the field with an inline reason', () => {
+  it('disables TextAreaField with an inline reason and default rows', async () => {
     render(<TextAreaField label="Instructions" disabledReason="Needs a connection." />);
-    const textarea = screen.getByLabelText('Instructions');
-    expect(textarea).toBeDisabled();
-    expect(textarea).toHaveAccessibleDescription('Needs a connection.');
+    const textarea = getMdField('Instructions');
+    expect(textarea.tagName).toBe('MD-OUTLINED-TEXT-FIELD');
+    expect(textarea).toHaveProperty('type', 'textarea');
+    expect(textarea).toHaveProperty('rows', 4);
+    expect(textarea).toHaveProperty('disabled', true);
+    expect(textarea).toHaveProperty('supportingText', 'Needs a connection.');
+    await waitFor(() => {
+      expect(textarea.shadowRoot?.querySelector('textarea')).toBeDisabled();
+    });
   });
 
-  it('accepts typing', async () => {
-    render(<TextField label="Household name" />);
-    await userEvent.type(screen.getByLabelText('Household name'), 'Oak Street');
-    expect(screen.getByLabelText('Household name')).toHaveValue('Oak Street');
+  it('accepts typing, empty values, maxLength, and onKeyDown', async () => {
+    const onKeyDown = vi.fn();
+    function TypingHarness(): ReactElement {
+      const [value, setValue] = useState('');
+      return (
+        <TextField
+          label="Household name"
+          type="email"
+          maxLength={20}
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value);
+          }}
+          onKeyDown={onKeyDown}
+        />
+      );
+    }
+
+    render(<TypingHarness />);
+    const field = getMdField('Household name');
+    expect(field).toHaveProperty('type', 'email');
+    expect(field).toHaveProperty('maxLength', 20);
+    await waitFor(() => {
+      expect(field.shadowRoot?.querySelector('input')).not.toBeNull();
+    });
+    const innerInput = field.shadowRoot?.querySelector('input');
+    if (innerInput === null || innerInput === undefined) {
+      throw new Error('Expected shadow input inside md-outlined-text-field');
+    }
+    await userEvent.type(innerInput, 'Oak Street');
+    expect(field).toHaveProperty('value', 'Oak Street');
+    await userEvent.keyboard('{Enter}');
+    expect(onKeyDown).toHaveBeenCalled();
+    fireEvent.input(innerInput, { target: { value: '' } });
+    expect(field).toHaveProperty('value', '');
+  });
+});
+
+describe('DateField and TimeField', () => {
+  it('renders native date and time pickers at 56px height and forwards className', () => {
+    const onDateChange = vi.fn();
+    const onTimeChange = vi.fn();
+    render(
+      <div>
+        <DateField
+          label="Due date"
+          value="2026-10-14"
+          className="w-40"
+          onChange={(e) => {
+            onDateChange(e.target.value);
+          }}
+        />
+        <TimeField
+          label="Reminder time"
+          value="09:30"
+          className="w-40"
+          error="Pick a future time"
+          onChange={(e) => {
+            onTimeChange(e.target.value);
+          }}
+        />
+        <TextField label="Delegated date" type="date" className="w-44" />
+        <TextField label="Delegated time" type="time" className="w-44" />
+      </div>,
+    );
+
+    const dateInput = screen.getByLabelText('Due date');
+    expect(dateInput.tagName).toBe('INPUT');
+    expect(dateInput).toHaveAttribute('type', 'date');
+    expect(dateInput).toHaveClass('min-h-14');
+    expect(dateInput.closest('.w-40')).not.toBeNull();
+    fireEvent.change(dateInput, { target: { value: '2026-10-15' } });
+    expect(onDateChange).toHaveBeenCalledWith('2026-10-15');
+
+    const timeInput = screen.getByLabelText('Reminder time');
+    expect(timeInput.tagName).toBe('INPUT');
+    expect(timeInput).toHaveAttribute('type', 'time');
+    expect(timeInput).toBeInvalid();
+    expect(timeInput).toHaveAccessibleDescription('Pick a future time');
+    expect(timeInput).toHaveClass('min-h-14');
+    expect(timeInput.closest('.w-40')).not.toBeNull();
+    fireEvent.change(timeInput, { target: { value: '10:00' } });
+    expect(onTimeChange).toHaveBeenCalledWith('10:00');
+
+    expect(screen.getByLabelText('Delegated date')).toHaveAttribute('type', 'date');
+    expect(screen.getByLabelText('Delegated date').closest('.w-44')).not.toBeNull();
+    expect(screen.getByLabelText('Delegated time')).toHaveAttribute('type', 'time');
+    expect(screen.getByLabelText('Delegated time').closest('.w-44')).not.toBeNull();
   });
 });
 
@@ -133,9 +339,17 @@ describe('Select', () => {
     { value: 'America/Chicago', label: 'America/Chicago' },
   ];
 
-  function Harness(): ReactElement {
-    const [value, setValue] = useState('America/New_York');
-    return <Select label="Timezone" options={options} value={value} onValueChange={setValue} />;
+  function Harness({
+    selectOptions = options,
+    initialValue = 'America/New_York',
+  }: {
+    selectOptions?: readonly { value: string; label: string }[];
+    initialValue?: string;
+  }): ReactElement {
+    const [value, setValue] = useState(initialValue);
+    return (
+      <Select label="Timezone" options={selectOptions} value={value} onValueChange={setValue} />
+    );
   }
 
   it('uses the native picker on touch devices', async () => {
@@ -147,15 +361,41 @@ describe('Select', () => {
     render(<Harness />);
     const select = screen.getByRole('combobox', { name: 'Timezone' });
     expect(select.tagName).toBe('SELECT');
+    expect(select).toHaveClass('min-h-14');
     await userEvent.selectOptions(select, 'America/Chicago');
     expect(select).toHaveValue('America/Chicago');
   });
 
-  it('uses the Radix listbox with a fine pointer', () => {
+  it('uses md-outlined-select with menuPositioning="fixed" on fine pointer and updates on change', async () => {
     render(<Harness />);
-    const trigger = screen.getByRole('combobox', { name: 'Timezone' });
-    expect(trigger.tagName).toBe('BUTTON');
-    expect(trigger).toHaveTextContent('America/New_York');
+    const select = getMdSelect('Timezone');
+    expect(select.tagName).toBe('MD-OUTLINED-SELECT');
+    expect(select).toHaveProperty('menuPositioning', 'fixed');
+
+    await waitFor(() => {
+      expect(select).toHaveProperty('value', 'America/New_York');
+    });
+
+    const optionTexts = Array.from(select.querySelectorAll('md-select-option')).map((option) =>
+      option.textContent.trim(),
+    );
+    expect(optionTexts).toEqual(['America/New_York', 'America/Chicago']);
+
+    act(() => {
+      Reflect.set(select, 'value', 'America/Chicago');
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(select).toHaveProperty('value', 'America/Chicago');
+  });
+
+  it('renders cleanly with empty options or an unmatched value', () => {
+    const { rerender } = render(<Harness selectOptions={[]} initialValue="" />);
+    const emptySelect = getMdSelect('Timezone');
+    expect(emptySelect.querySelectorAll('md-select-option')).toHaveLength(0);
+    expect(emptySelect).toHaveProperty('value', '');
+
+    rerender(<Harness selectOptions={options} initialValue="Pacific/Auckland" />);
+    expect(getMdSelect('Timezone').querySelectorAll('md-select-option')).toHaveLength(2);
   });
 });
 
@@ -330,7 +570,11 @@ describe('OverflowMenu', () => {
         ]}
       />,
     );
-    await userEvent.tab();
+    const trigger = getMdButton('More actions for This Week');
+    await waitFor(() => {
+      expect(trigger.shadowRoot?.querySelector('button')).not.toBeNull();
+    });
+    trigger.shadowRoot?.querySelector('button')?.focus();
     await userEvent.keyboard('{Enter}');
     const rename = await screen.findByRole('menuitem', { name: 'Rename' });
     expect(rename).toBeInTheDocument();
@@ -384,7 +628,7 @@ describe('ConfirmDialog', () => {
     const dialog = screen.getByRole('alertdialog', { name: 'Delete This Week?' });
     expect(dialog).toHaveAccessibleDescription('Its 15 items are removed permanently.');
     expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
-    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await userEvent.click(getMdButton('Delete'));
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
@@ -400,7 +644,7 @@ describe('ConfirmDialog', () => {
         isConfirmDisabled
       />,
     );
-    expect(screen.getByRole('button', { name: 'Delete household' })).toBeDisabled();
+    expect(getMdButton('Delete household')).toHaveProperty('disabled', true);
     rerender(
       <ConfirmDialog
         open
@@ -412,10 +656,10 @@ describe('ConfirmDialog', () => {
         isConfirming
       />,
     );
-    expect(screen.getByRole('button', { name: 'Delete household' })).toHaveAttribute(
-      'aria-busy',
-      'true',
-    );
+    const confirmButton = getMdButton('Delete household');
+    expect(
+      confirmButton.getAttribute('aria-busy') ?? confirmButton.getAttribute('data-aria-busy'),
+    ).not.toBeNull();
   });
 });
 

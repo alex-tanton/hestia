@@ -328,6 +328,7 @@ export function TextField({
   }
 
   const isInvalid = Boolean(error);
+  const ariaInvalid: 'true' | undefined = isInvalid ? 'true' : undefined;
   const resolvedValue = value ?? defaultValue;
 
   const mdProps = omitUndefined({
@@ -352,7 +353,7 @@ export function TextField({
     error: isInvalid,
     errorText: error ?? '',
     supportingText: disabledReason ?? hint ?? '',
-    'aria-invalid': isInvalid || undefined,
+    'aria-invalid': ariaInvalid,
     onInput: handleValueEvent,
     onChange: handleValueEvent,
   });
@@ -388,6 +389,7 @@ export function TextAreaField({
 }: TextAreaFieldProps): ReactElement {
   const { refProps, handleValueEvent } = useMdFieldControl(ref, onChange);
   const isInvalid = Boolean(error);
+  const ariaInvalid: 'true' | undefined = isInvalid ? 'true' : undefined;
   const resolvedValue = value ?? defaultValue;
 
   const mdProps = omitUndefined({
@@ -412,7 +414,7 @@ export function TextAreaField({
     error: isInvalid,
     errorText: error ?? '',
     supportingText: disabledReason ?? hint ?? '',
-    'aria-invalid': isInvalid || undefined,
+    'aria-invalid': ariaInvalid,
     onInput: handleValueEvent,
     onChange: handleValueEvent,
   });

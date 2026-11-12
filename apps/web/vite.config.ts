@@ -118,11 +118,11 @@ export default defineConfig({
       {
         extends: true,
         resolve: {
-          conditions: ['browser', 'development', 'import', 'module', 'default'],
+          conditions: ['browser', 'development'],
         },
         ssr: {
           resolve: {
-            conditions: ['browser', 'development', 'import', 'module', 'default'],
+            conditions: ['browser', 'development'],
           },
         },
         test: {
