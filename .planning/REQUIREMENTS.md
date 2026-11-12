@@ -12,7 +12,7 @@ Requirements for the Material Design 3 UI overhaul. Each maps to roadmap phases.
 - [ ] **FND-01**: Generate build-time Warm Terracotta light and dark `--md-sys-*` CSS tokens (`@material/material-color-utilities` `SchemeTonalSpot` + `MaterialDynamicColors` + harmonized semantic status roles) with WCAG AA contrast verified across all five `surfaceContainer*` tiers in `tokens.test.ts`, replacing `[data-section]` color ramps.
 - [ ] **FND-02**: Isolate all `@material/web@2.5.0` custom elements behind typed React 19 `@lit/react` wrappers (`components/md/` -> `components/ui/`) enforcing strict subpath imports, `exactOptionalPropertyTypes` normalization, `onInput`/`onChange`, `md-switch` `selected`, `md-dialog` `closed` state sync, `soft-disabled` guards, `useFieldErrors` host `aria-invalid` forwarding, explicit `Switch`/`Checkbox` labels, `positioning="fixed"` on menus/selects, and ESLint `no-restricted-imports` + `jsx-a11y` rules.
 - [ ] **FND-03**: Lock and implement the Material Symbols delivery contract behind `Icon.tsx` (`@material-symbols/font-400` WOFF2 vs curated inline `@material-symbols/svg-400`) with `aria-hidden="true"` and clean Workbox + Caddy `'self'` CSP compatibility.
-- [ ] **FND-04**: Provide minimal light-DOM and native-`<dialog>` MD3 gap primitives (`ModalBottomSheet`, persistent-until-acted-upon Undo `Snackbar`, `Card`, `ListRow`, `Badge`, `SegmentedControl`, `Skeleton`, `FormMessage`, and styled native `date`/`time` fields).
+- [x] **FND-04**: Provide minimal light-DOM and native-`<dialog>` MD3 gap primitives (`ModalBottomSheet`, persistent-until-acted-upon Undo `Snackbar`, `Card`, `ListRow`, `Badge`, `SegmentedControl`, `Skeleton`, `FormMessage`, and styled native `date`/`time` fields).
 - [ ] **FND-05**: Remove `tailwindcss`, `@tailwindcss/vite`, `radix-ui`, `lucide-react`, and legacy Tailwind CSS/config cleanly once all screens migrate.
 
 ### Navigation & Application Shell
@@ -96,7 +96,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FND-01 | Phase 17 | Pending |
 | FND-02 | Phase 17 | Pending |
 | FND-03 | Phase 17 | Pending |
-| FND-04 | Phase 17 | Pending |
+| FND-04 | Phase 17 | Complete |
 | FND-05 | Phase 21 | Pending |
 | NAV-01 | Phase 18 | Pending |
 | NAV-02 | Phase 18 | Pending |
