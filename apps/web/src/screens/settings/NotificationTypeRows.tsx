@@ -5,7 +5,7 @@ import {
   type NotificationPreference,
   type ProfileResponse,
 } from '@hestia/shared';
-import { Checkbox } from '../../components/ui/Checkbox.tsx';
+import { Switch } from '../../components/ui/Switch.tsx';
 import { EmptyState } from '../../components/states/StateBlocks.tsx';
 import { IOS_INSTALL_MESSAGE } from '../onboarding/InstallStep.tsx';
 import {
@@ -42,15 +42,12 @@ export function PreferenceRow({
   const describedBy = isOnline ? hintId : `${hintId} ${reasonId}`;
   return (
     <div className="flex flex-col gap-1">
-      <Checkbox
-        role="switch"
+      <Switch
         label={label}
         checked={checked}
         disabled={!isOnline}
         aria-describedby={describedBy}
-        onChange={(event) => {
-          onChange(event.target.checked);
-        }}
+        onCheckedChange={onChange}
       />
       <p id={hintId} className="pl-9 text-body-sm text-secondary">
         {hint}

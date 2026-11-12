@@ -39,6 +39,7 @@ import { SegmentedControl } from './SegmentedControl.tsx';
 import { Select } from './Select.tsx';
 import { Sheet } from './Sheet.tsx';
 import { SkeletonRows } from './Skeleton.tsx';
+import { Switch } from './Switch.tsx';
 import { Tabs } from './Tabs.tsx';
 import { TimeField } from './TimeField.tsx';
 
@@ -400,24 +401,110 @@ describe('Select', () => {
 });
 
 describe('Checkbox', () => {
-  it('is a real checkbox whose whole in-list row toggles it', async () => {
-    render(<Checkbox variant="in-list" label="Chicken thighs" detail={<span>$2.49/lb</span>} />);
-    const checkbox = screen.getByRole('checkbox', { name: /Chicken thighs/ });
+  it('renders md-checkbox with a 44px row target and emits CheckboxChangeEvent + onCheckedChange', async () => {
+    const handleChange = vi.fn();
+    const handleCheckedChange = vi.fn();
+    const { container } = render(
+      <Checkbox
+        variant="in-list"
+        label="Chicken thighs"
+        detail={<span>$2.49/lb</span>}
+        onChange={handleChange}
+        onCheckedChange={handleCheckedChange}
+      />,
+    );
+    const checkbox = getMdCheckbox(/Chicken thighs/);
+    const labelEl = container.querySelector('label');
+    expect(labelEl?.className).toContain('min-h-11');
+    expect(labelEl?.className).toContain('px-4');
+
+    await waitFor(() => {
+      expect(checkbox.shadowRoot?.querySelector('input')).not.toBeNull();
+    });
+    expect(labelEl?.control).toBe(checkbox);
     await userEvent.click(screen.getByText('$2.49/lb'));
-    expect(checkbox).toBeChecked();
+    expect(checkbox).toHaveProperty('checked', true);
+    expect(handleCheckedChange).toHaveBeenCalledWith(true);
+    expect(handleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: { checked: true },
+        currentTarget: { checked: true },
+      }),
+    );
   });
 
-  it('toggles with Space and respects disabled', async () => {
-    render(
+  it('forwards indeterminate, respects disabled, and preserves min-h-11 for icon-only labels', async () => {
+    const handleCheckedChange = vi.fn();
+    const { container } = render(
       <>
-        <Checkbox label="Milk" />
-        <Checkbox label="Bread" disabled />
+        <Checkbox label="Select all" indeterminate />
+        <Checkbox label="Bread" disabled onCheckedChange={handleCheckedChange} />
+        <Checkbox label="" aria-label="Mark milk done" />
       </>,
     );
-    await userEvent.tab();
-    await userEvent.keyboard(' ');
-    expect(screen.getByRole('checkbox', { name: 'Milk' })).toBeChecked();
-    expect(screen.getByRole('checkbox', { name: 'Bread' })).toBeDisabled();
+    expect(getMdCheckbox('Select all')).toHaveProperty('indeterminate', true);
+
+    const disabledCheckbox = getMdCheckbox('Bread');
+    expect(disabledCheckbox).toHaveProperty('disabled', true);
+    await userEvent.click(disabledCheckbox);
+    expect(handleCheckedChange).not.toHaveBeenCalled();
+
+    const iconOnly = getMdCheckbox('Mark milk done');
+    expect(iconOnly.closest('label')?.className).toContain('min-h-11');
+    expect(container.querySelectorAll('md-checkbox')).toHaveLength(3);
+  });
+});
+
+describe('Switch', () => {
+  it('renders md-switch with selected state, 44px target, and normalized onCheckedChange', async () => {
+    const handleCheckedChange = vi.fn();
+    function Harness(): ReactElement {
+      const [enabled, setEnabled] = useState(false);
+      return (
+        <Switch
+          variant="in-list"
+          label="New bills"
+          detail={<span>Notify when a household bill is added</span>}
+          checked={enabled}
+          aria-describedby="bills-help"
+          onCheckedChange={(next) => {
+            setEnabled(next);
+            handleCheckedChange(next);
+          }}
+        />
+      );
+    }
+
+    const { container } = render(<Harness />);
+    const toggle = getMdSwitch(/New bills/);
+    const labelEl = container.querySelector('label');
+    expect(labelEl?.className).toContain('min-h-11');
+    expect(labelEl?.className).toContain('px-4');
+    expect(toggle).toHaveProperty('selected', false);
+    expect(toggle.getAttribute('aria-describedby')).toBe('bills-help');
+
+    await userEvent.click(toggle);
+    expect(toggle).toHaveProperty('selected', true);
+    expect(handleCheckedChange).toHaveBeenCalledTimes(1);
+    expect(handleCheckedChange).toHaveBeenLastCalledWith(true);
+
+    // Verify input-only normalization also fires onCheckedChange.
+    Object.defineProperty(toggle, 'selected', { value: false, configurable: true, writable: true });
+    fireEvent.input(toggle);
+    expect(handleCheckedChange).toHaveBeenCalledTimes(2);
+    expect(handleCheckedChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('respects disabled on Switch', async () => {
+    const handleCheckedChange = vi.fn();
+    render(
+      <Switch label="Offline toggle" checked disabled onCheckedChange={handleCheckedChange} />,
+    );
+    const toggle = getMdSwitch('Offline toggle');
+    expect(toggle).toHaveProperty('selected', true);
+    expect(toggle).toHaveProperty('disabled', true);
+    await userEvent.click(toggle);
+    expect(handleCheckedChange).not.toHaveBeenCalled();
   });
 });
 
