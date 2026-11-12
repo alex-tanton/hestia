@@ -5,16 +5,16 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 17
 current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
 status: executing
-stopped_at: Completed 17-09-PLAN.md
-last_updated: "2026-11-12T15:10:09.639Z"
+stopped_at: Completed 17-10-PLAN.md
+last_updated: "2026-11-12T15:32:31.440Z"
 last_activity: 2026-11-12
 last_activity_desc: Phase 17 execution started
-state_head: e6fe8ffbc1029a4a36557619dcad6ae6cbfff1bc
+state_head: 89c9c7af08383fcdf45bcacc89101952d779a621
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 8
+  completed_plans: 10
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-11)
 ## Current Position
 
 Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
-Plan: 10 of 15
+Plan: 11 of 15
 Status: Ready to execute
 Last activity: 2026-11-12 — Phase 17 execution started
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17 P07 | 33min | 3 tasks | 10 files |
 | Phase 17 P08 | 24min | 2 tasks | 9 files |
 | Phase 17 P09 | 10min | 2 tasks | 8 files |
+| Phase 17 P10 | 19 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,7 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 17]: Snackbar uses single-slot FIFO ToastProvider with 4000ms non-action duration and persistent error/Undo
 - [Phase 17]: Replaced Radix ToggleGroup in SegmentedControl with light-DOM role=radiogroup and button[role=radio] implementing roving Arrow/Home/End focus, RTL support, scrollIntoView, and locked active selection
 - [Phase 17]: Upgraded Card (.hestia-card, surfaceContainerLow/surfaceContainer, elevation-1, no overflow-hidden), ListRow (min-h-12, optional slot omission), Badge/FormMessage/CopyButton (Icon.tsx), and Skeleton (surface-container-highest)
+- [Phase 17]: browser.ts openMenu resolves MdIconButton hosts via findMdButton and focuses the inner shadow <button> before dispatching Enter
 
 ### Pending Todos
 
@@ -105,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-12T15:10:09.579Z
-Stopped at: Completed 17-09-PLAN.md
+Last session: 2026-11-12T15:32:31.378Z
+Stopped at: Completed 17-10-PLAN.md
 Resume file: None
