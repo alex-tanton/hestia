@@ -66,7 +66,7 @@
   3. All icons render through `Icon.tsx` behind a single locked Material Symbols delivery contract (`@material-symbols/font-400` WOFF2 vs curated inline `@material-symbols/svg-400`) with `aria-hidden="true"`, clean Workbox precaching, and Caddy `'self'` CSP compatibility.
   4. Light-DOM and native-`<dialog>` MD3 gap primitives (`ModalBottomSheet`, persistent-until-acted-upon Undo `Snackbar`, `Card`, `ListRow`, `Badge`, `SegmentedControl`, `Skeleton`, `FormMessage`, and styled native `date`/`time` fields) pass `primitives.test.tsx` under the locked Phase 17 component test harness while Tailwind CSS continues coexisting cleanly for unmigrated screens.
 
-**Plans**: 5/15 plans executed
+**Plans**: 6/15 plans executed
 
 Plans:
 **Wave 1**
@@ -85,7 +85,7 @@ Plans:
 - [x] 17-05-PLAN.md — Execute human supply-chain gate for `@material-symbols/svg-400` sequentially after `test-setup.ts`/`D-13` and build static rounded SVG `Icon.tsx` contract (`FND-03`)
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 17-06-PLAN.md — Upgrade `Button`, `Field`, `Select` (coarse native + fixed fine menu) and add light-DOM 56px `DateField` and `TimeField` primitives (`FND-02`, `FND-04`)
+- [x] 17-06-PLAN.md — Upgrade `Button`, `Field`, `Select` (coarse native + fixed fine menu) and add light-DOM 56px `DateField` and `TimeField` primitives (`FND-02`, `FND-04`)
 
 **Wave 7** *(blocked on Wave 6 completion)*
 - [ ] 17-07-PLAN.md — Add `Switch`, upgrade `Checkbox` (`CheckboxChangeEvent`), migrate `NotificationTypeRows` directly to `<Switch>`, and upgrade `ConfirmDialog`, `OverflowMenu`, and `Tabs` (`FND-02`, `FND-04`)
@@ -173,7 +173,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 5/15 | In Progress | - |
+| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 6/15 | In Progress | - |
 | 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 0/0 | Not started | - |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 0/0 | Not started | - |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 0/0 | Not started | - |
