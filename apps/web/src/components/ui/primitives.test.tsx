@@ -34,6 +34,7 @@ import { ConfirmDialog } from './ConfirmDialog.tsx';
 import { DateField } from './DateField.tsx';
 import { TextAreaField, TextField } from './Field.tsx';
 import { ListRow } from './ListRow.tsx';
+import { ModalBottomSheet } from './ModalBottomSheet.tsx';
 import { OverflowMenu } from './OverflowMenu.tsx';
 import { SegmentedControl } from './SegmentedControl.tsx';
 import { Select } from './Select.tsx';
@@ -747,15 +748,62 @@ describe('Sheet', () => {
     );
   }
 
-  it('opens as a dialog in the section color and returns focus to its trigger on close', async () => {
+  it('opens via native showModal in the section color and returns focus to its trigger on Escape', async () => {
+    const showModalSpy = vi.spyOn(HTMLDialogElement.prototype, 'showModal');
     render(<Harness />);
     const trigger = screen.getByRole('button', { name: 'Add errand' });
     await userEvent.click(trigger);
+
+    expect(showModalSpy).toHaveBeenCalledTimes(1);
     const dialog = await screen.findByRole('dialog', { name: 'Add errand' });
+    expect(dialog.tagName).toBe('DIALOG');
     expect(dialog).toHaveAttribute('data-section', 'chores');
+
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(trigger).toHaveFocus();
+    showModalSpy.mockRestore();
+  });
+
+  it('dismisses via the Close icon button and restores trigger focus', async () => {
+    render(<Harness />);
+    const trigger = screen.getByRole('button', { name: 'Add errand' });
+    await userEvent.click(trigger);
+
+    await screen.findByRole('dialog', { name: 'Add errand' });
+    await userEvent.click(getMdButton('Close'));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(trigger).toHaveFocus();
+  });
+
+  it('handles Safari backdrop fallback without closing on zero-rect stubs and resets returnValue', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <ModalBottomSheet open onOpenChange={onOpenChange} title="Filters">
+        <p>Filter options</p>
+      </ModalBottomSheet>,
+    );
+
+    const dialog = screen.getByRole('dialog', { name: 'Filters' });
+    expect(dialog).toBeInstanceOf(HTMLDialogElement);
+
+    // Zero-rect stub should NOT trigger fallback backdrop dismissal.
+    fireEvent.pointerDown(dialog, { clientX: 10, clientY: 10, isPrimary: true, button: 0 });
+    fireEvent.pointerUp(dialog, { clientX: 10, clientY: 10, isPrimary: true, button: 0 });
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    // Non-zero rect: pointerdown + pointerup outside dialog rect triggers dismissal.
+    vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 400, 320, 400));
+    fireEvent.pointerDown(dialog, { clientX: 100, clientY: 100, isPrimary: true, button: 0 });
+    fireEvent.pointerUp(dialog, { clientX: 100, clientY: 100, isPrimary: true, button: 0 });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+
+    if (dialog instanceof HTMLDialogElement) {
+      dialog.returnValue = 'dismissed';
+      fireEvent(dialog, new Event('close'));
+      expect(dialog.returnValue).toBe('');
+    }
   });
 });
 
