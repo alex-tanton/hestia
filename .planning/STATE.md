@@ -5,16 +5,16 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 17
 current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
 status: executing
-stopped_at: Completed 17-02-PLAN.md
-last_updated: "2026-11-12T07:18:25.528Z"
+stopped_at: Completed 17-03-PLAN.md
+last_updated: "2026-11-12T07:37:33.883Z"
 last_activity: 2026-11-12
 last_activity_desc: Phase 17 execution started
-state_head: 2b6c138bd285170b68c5771d4bd660da273b8b65
+state_head: aeb09a7a99ebd565097464bb36b3678b8320dbf0
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-11)
 ## Current Position
 
 Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
-Plan: 3 of 15
+Plan: 4 of 15
 Status: Ready to execute
 Last activity: 2026-11-12 — Phase 17 execution started
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 |------|----------|-------|-------|
 | Phase 17 P01 | 11 min | 2 tasks | 5 files |
 | Phase 17 P02 | 5m 25s | 2 tasks | 6 files |
+| Phase 17 P03 | 13m 33s | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 17]: Removed legacy palette ramps and [data-section] selectors from index.css; bridged all 32 @theme inline tokens plus --md-focus-ring-color onto --md-sys-*
 - [Phase 17]: Split Vitest test.projects into unit (node, extends: false) and dom (jsdom, extends: true) with explicit 6-file DOM_UNIT_TS_TESTS list preserving 84/80/77/85 thresholds
 - [Phase 17]: Encoded Warm Terracotta PWA icon background as 3-byte RGB [0x8e, 0x4c, 0x32] to match colour type 2 PNG encoder
+- [Phase 17]: Preserved jsx-a11y default ignoreElements/ignoreRoles/includeRoles on control-has-associated-label while banning @material/web, lit, and @lit outside components/md/ and retaining test CLOCK_READS/FORMATTER_READS (17-03)
+- [Phase 17]: Used zero-cast Reflect.set omitUndefined helper, EventTarget-backed microtask animate shim, and createHostQueries factory in md-queries.ts (17-03)
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-12T07:18:25.481Z
-Stopped at: Completed 17-02-PLAN.md
+Last session: 2026-11-12T07:37:33.840Z
+Stopped at: Completed 17-03-PLAN.md
 Resume file: None
