@@ -147,3 +147,4 @@ None - no external service configuration required.
 - Verified all 6 modified files and `17-10-SUMMARY.md` exist on disk.
 - Verified Task 1 (`51b4059`) and Task 2 (`89c9c7a`) commits exist as ancestors of `HEAD` with zero file deletions.
 - Verified all 5 Vitest `dom` suites (62/62 tests), `typecheck`, `pnpm lint`, Prettier on all 6 modified files, and `pnpm jscpd` passed after the final edit.
+
