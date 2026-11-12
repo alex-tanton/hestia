@@ -120,9 +120,21 @@ export default defineConfig({
         resolve: {
           conditions: ['browser', 'development', 'import', 'module', 'default'],
         },
+        ssr: {
+          resolve: {
+            conditions: ['browser', 'development', 'import', 'module', 'default'],
+          },
+        },
         test: {
           name: 'dom',
           environment: 'jsdom',
+          server: {
+            deps: {
+              // Inline @material/web and Lit packages so Vitest applies the 'browser' export
+              // condition instead of Node's default 'node' condition (where isServer === true).
+              inline: [/@material\/web/, /^@lit\//, /^lit(?:-|$|\/)/],
+            },
+          },
           include: ['src/**/*.test.tsx', ...DOM_UNIT_TS_TESTS],
           setupFiles: ['src/test-setup.ts', '../../test/clock-setup.mjs'],
         },

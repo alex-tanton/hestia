@@ -7,6 +7,40 @@ import { afterEach, vi } from 'vitest';
 // jsdom 30 defines a partial attachInternals that lacks form/validity hooks needed by MD3.
 forceElementInternalsPolyfill();
 
+// element-internals-polyfill@3.0.2 checks `validityState[key] !== false`, treating omitted
+// (`undefined`) flags from @material/web's RadioValidator as invalid without a message.
+if (typeof ElementInternals !== 'undefined') {
+  const descriptor = Object.getOwnPropertyDescriptor(ElementInternals.prototype, 'setValidity');
+  const originalSetValidity: unknown = descriptor?.value;
+  if (typeof originalSetValidity === 'function') {
+    ElementInternals.prototype.setValidity = function setValidity(
+      this: ElementInternals,
+      flags: ValidityStateFlags = {},
+      message?: string,
+      anchor?: HTMLElement,
+    ): void {
+      const normalized: ValidityStateFlags = {};
+      for (const [key, value] of Object.entries(flags)) {
+        Reflect.set(normalized, key, Boolean(value));
+      }
+      Reflect.apply(originalSetValidity, this, [normalized, message, anchor]);
+    };
+  }
+}
+
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query: string): MediaQueryList => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(() => false),
+  });
+}
+
 // The service worker registration is a build-time virtual module; component tests never
 // register a worker, so it reports that no update is waiting.
 vi.mock('virtual:pwa-register/react', () => ({
@@ -108,6 +142,7 @@ if (typeof HTMLDialogElement !== 'undefined') {
 }
 
 window.scrollTo = vi.fn();
+Element.prototype.scrollTo = () => undefined;
 Element.prototype.scrollIntoView = () => undefined;
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.releasePointerCapture = () => undefined;
