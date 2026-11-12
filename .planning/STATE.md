@@ -5,16 +5,16 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 17
 current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
 status: executing
-stopped_at: Completed 17-07-PLAN.md
-last_updated: "2026-11-12T14:31:50.316Z"
+stopped_at: Completed 17-08-PLAN.md
+last_updated: "2026-11-12T14:57:53.221Z"
 last_activity: 2026-11-12
 last_activity_desc: Phase 17 execution started
-state_head: 40b9c51c0450f10bc2472948d3d10afaacc65e01
+state_head: 07a01954c8fa46be05d8e9d92e9d2616e74bf690
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-11)
 ## Current Position
 
 Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
-Plan: 8 of 15
+Plan: 9 of 15
 Status: Ready to execute
 Last activity: 2026-11-12 — Phase 17 execution started
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17 P05 | 11 min | 2 tasks | 6 files |
 | Phase 17 P06 | 25min | 3 tasks | 10 files |
 | Phase 17 P07 | 33min | 3 tasks | 10 files |
+| Phase 17 P08 | 24min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 17]: Pass ariaInvalid: 'true' | undefined literal in Field/Select (zero as casts) and restrict Vitest dom resolve/ssr conditions to ['browser', 'development'] for jsdom decimal.js compatibility.
 - [Phase 17]: Deduplicate MdSwitch onInput/onChange with microtask flag and add tabIndex=0 on enabled MdCheckbox/MdSwitch hosts for jsdom user-event label/Tab compatibility
 - [Phase 17]: Handle RTL-aware Arrow/Home/End keyboard navigation in Tabs onKeyDown with event.preventDefault() to bypass jsdom :focus-within limitation without double-navigating in browsers
+- [Phase 17]: ModalBottomSheet delegates Sheet via useState trigger element and native dialog useEffect keydown/pointer fallback
+- [Phase 17]: Snackbar uses single-slot FIFO ToastProvider with 4000ms non-action duration and persistent error/Undo
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-12T14:31:50.258Z
-Stopped at: Completed 17-07-PLAN.md
+Last session: 2026-11-12T14:57:53.160Z
+Stopped at: Completed 17-08-PLAN.md
 Resume file: None
