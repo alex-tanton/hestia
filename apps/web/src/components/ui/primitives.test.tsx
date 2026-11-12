@@ -31,18 +31,21 @@ import { Button } from './Button.tsx';
 import { Card } from './Card.tsx';
 import { Checkbox } from './Checkbox.tsx';
 import { ConfirmDialog } from './ConfirmDialog.tsx';
+import { CopyButton } from './CopyButton.tsx';
 import { DateField } from './DateField.tsx';
 import { TextAreaField, TextField } from './Field.tsx';
+import { FormMessage } from './FormMessage.tsx';
 import { ListRow } from './ListRow.tsx';
 import { ModalBottomSheet } from './ModalBottomSheet.tsx';
 import { OverflowMenu } from './OverflowMenu.tsx';
 import { SegmentedControl } from './SegmentedControl.tsx';
 import { Select } from './Select.tsx';
 import { Sheet } from './Sheet.tsx';
-import { SkeletonRows } from './Skeleton.tsx';
+import { Skeleton, SkeletonRows } from './Skeleton.tsx';
 import { Switch } from './Switch.tsx';
 import { Tabs } from './Tabs.tsx';
 import { TimeField } from './TimeField.tsx';
+import { ToastProvider } from './Toast.tsx';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -510,62 +513,138 @@ describe('Switch', () => {
 });
 
 describe('Badge and Card', () => {
-  it('pairs the danger badge with an icon and its word', () => {
+  it('pairs the danger badge with an aria-hidden SVG icon, nowrap, and error container tokens', () => {
     const { container } = render(<Badge variant="danger">Overdue</Badge>);
-    expect(screen.getByText('Overdue')).toBeInTheDocument();
-    expect(container.querySelector('svg')).not.toBeNull();
+    const badge = screen.getByText('Overdue');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass('whitespace-nowrap');
+    expect(badge).toHaveClass('bg-[var(--md-sys-color-error-container)]');
+    const svg = container.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('labels the personal badge "Personal" with the user icon', () => {
+  it('labels the personal badge "Personal" with the person SVG icon', () => {
     const { container } = render(<Badge variant="personal" />);
-    expect(screen.getByText('Personal')).toBeInTheDocument();
-    expect(container.querySelector('svg')).not.toBeNull();
+    const badge = screen.getByText('Personal');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass('whitespace-nowrap');
+    expect(badge).toHaveClass('bg-[var(--md-sys-color-surface-container-high)]');
+    const svg = container.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it.each(['neutral', 'section', 'warning'] as const)('renders the %s badge text', (variant) => {
+  it.each([
+    ['neutral', 'bg-[var(--md-sys-color-surface-container-high)]'],
+    ['section', 'bg-[var(--md-sys-color-secondary-container)]'],
+    ['warning', 'bg-[var(--md-sys-color-warning-container)]'],
+  ] as const)('renders the %s badge with tonal container styling', (variant, tokenClass) => {
     render(<Badge variant={variant}>Coupon</Badge>);
-    expect(screen.getByText('Coupon')).toBeInTheDocument();
+    const badge = screen.getByText('Coupon');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass('whitespace-nowrap');
+    expect(badge).toHaveClass(tokenClass);
   });
 
-  it('adds elevation only to raised cards', () => {
+  it('renders borderless tonal Card surfaces without overflow clipping and adds elevation only to raised cards', () => {
     render(
       <>
-        <Card data-testid="flat">Flat</Card>
-        <Card data-testid="raised" variant="raised">
+        <Card data-testid="flat" as="section">
+          Flat
+        </Card>
+        <Card data-testid="raised" variant="raised" as="article">
           Raised
         </Card>
       </>,
     );
-    expect(screen.getByTestId('flat')).not.toHaveClass('shadow-sm');
-    expect(screen.getByTestId('raised')).toHaveClass('shadow-sm');
+    const flat = screen.getByTestId('flat');
+    const raised = screen.getByTestId('raised');
+    expect(flat.tagName).toBe('SECTION');
+    expect(flat).toHaveClass('hestia-card', 'bg-[var(--md-sys-color-surface-container-low)]');
+    expect(flat).not.toHaveClass('shadow-[var(--md-sys-elevation-1)]');
+    expect(flat).not.toHaveClass('overflow-hidden');
+
+    expect(raised.tagName).toBe('ARTICLE');
+    expect(raised).toHaveClass(
+      'hestia-card',
+      'bg-[var(--md-sys-color-surface-container)]',
+      'shadow-[var(--md-sys-elevation-1)]',
+    );
+    expect(raised).not.toHaveClass('overflow-hidden');
   });
 });
 
-describe('SkeletonRows', () => {
-  it('announces loading at once but shows rows only after 200ms', () => {
+describe('Skeleton and SkeletonRows', () => {
+  it('announces loading at once with surface-container-highest blocks after 200ms', () => {
     vi.useFakeTimers();
-    render(<SkeletonRows label="Loading bills" />);
-    expect(screen.getByRole('status')).toHaveTextContent('Loading bills');
+    const { container } = render(
+      <>
+        <Skeleton className="h-4 w-24" />
+        <SkeletonRows label="Loading bills" />
+      </>,
+    );
+    expect(container.querySelector('.w-24')).toHaveClass(
+      'bg-[var(--md-sys-color-surface-container-highest)]',
+    );
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Loading bills');
+    expect(status).toHaveAttribute('aria-busy', 'true');
     expect(screen.queryAllByTestId('skeleton-row')).toHaveLength(0);
     act(() => {
       vi.advanceTimersByTime(200);
     });
-    expect(screen.getAllByTestId('skeleton-row')).toHaveLength(3);
+    const rows = screen.getAllByTestId('skeleton-row');
+    expect(rows).toHaveLength(3);
+    expect(rows[0]?.querySelector('span')).toHaveClass(
+      'bg-[var(--md-sys-color-surface-container-highest)]',
+    );
+  });
+
+  it('renders 0 skeleton rows when rows is 0', () => {
+    vi.useFakeTimers();
+    render(<SkeletonRows label="Loading empty list" rows={0} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Loading empty list');
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.queryAllByTestId('skeleton-row')).toHaveLength(0);
   });
 });
 
 describe('ListRow', () => {
-  it('is a static row without onSelect and a button with it', async () => {
+  it('is a static row without onSelect, a min-h-12 button with it, and omits undefined slots cleanly', async () => {
     const onSelect = vi.fn();
-    render(
+    const { container } = render(
       <>
         <ListRow title="Static" />
-        <ListRow title="Rivera Family" description="2 members" onSelect={onSelect} isCurrent />
+        <ListRow
+          title="Very long household title that truncates cleanly"
+          description="Wrapping multi-line description copy"
+          leading={<span data-testid="lead">L</span>}
+          trailing={<span data-testid="trail">T</span>}
+          onSelect={onSelect}
+          isCurrent
+        />
       </>,
     );
     expect(screen.queryByRole('button', { name: /Static/ })).toBeNull();
-    const row = screen.getByRole('button', { name: /Rivera Family/ });
+    const staticRow = screen.getByText('Static').closest('div');
+    expect(staticRow).toHaveClass('min-h-12');
+    expect(staticRow).not.toHaveClass('overflow-hidden');
+    // Only the title column span + inner title span exist when leading/description/trailing are omitted.
+    expect(staticRow?.children).toHaveLength(1);
+
+    const row = screen.getByRole('button', { name: /Very long household title/ });
     expect(row).toHaveAttribute('aria-current', 'true');
+    expect(row).toHaveClass('min-h-12');
+    expect(row).not.toHaveClass('overflow-hidden');
+    const titleEl = screen.getByText('Very long household title that truncates cleanly');
+    expect(titleEl).toHaveClass('truncate');
+    expect(titleEl.parentElement).toHaveClass('min-w-0', 'flex-1');
+    expect(container.querySelector('[data-testid="lead"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="trail"]')).toBeInTheDocument();
+
     await userEvent.click(row);
     expect(onSelect).toHaveBeenCalledOnce();
   });
@@ -580,6 +659,7 @@ describe('SegmentedControl', () => {
         segments={[
           { value: 'a', label: 'Bills' },
           { value: 'b', label: 'Subscriptions' },
+          { value: 'c', label: 'Archive' },
         ]}
         value={value}
         onValueChange={setValue}
@@ -587,18 +667,110 @@ describe('SegmentedControl', () => {
     );
   }
 
-  it('moves with arrow keys, selects with Enter, and never clears the selection', async () => {
-    render(<Harness />);
-    const bills = screen.getByRole('radio', { name: 'Bills' });
-    const subscriptions = screen.getByRole('radio', { name: 'Subscriptions' });
-    await userEvent.tab();
-    expect(bills).toHaveFocus();
-    await userEvent.keyboard('{ArrowRight}');
-    expect(subscriptions).toHaveFocus();
-    await userEvent.keyboard('{Enter}');
-    expect(subscriptions).toBeChecked();
-    await userEvent.keyboard('{Enter}');
-    expect(subscriptions).toBeChecked();
+  it('moves with roving arrow/Home/End keys, selects with Enter, scrolls active into view, and never clears selection', async () => {
+    const scrollIntoView = vi.fn();
+    const original: unknown = Reflect.get(Element.prototype, 'scrollIntoView');
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      render(<Harness />);
+      const radiogroup = screen.getByRole('radiogroup', { name: 'Bills sections' });
+      expect(radiogroup).toHaveClass('overflow-x-auto');
+
+      const bills = screen.getByRole('radio', { name: 'Bills' });
+      const subscriptions = screen.getByRole('radio', { name: 'Subscriptions' });
+      const archive = screen.getByRole('radio', { name: 'Archive' });
+
+      expect(bills).toHaveClass('shrink-0');
+      expect(bills.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+      expect(subscriptions.querySelector('svg')).toBeNull();
+
+      await userEvent.tab();
+      expect(bills).toHaveFocus();
+      await userEvent.keyboard('{ArrowRight}');
+      expect(subscriptions).toHaveFocus();
+      expect(subscriptions).toHaveAttribute('tabindex', '0');
+      expect(bills).toHaveAttribute('tabindex', '-1');
+
+      await userEvent.keyboard('{End}');
+      expect(archive).toHaveFocus();
+      await userEvent.keyboard('{Home}');
+      expect(bills).toHaveFocus();
+      await userEvent.keyboard('{ArrowLeft}');
+      expect(archive).toHaveFocus();
+
+      scrollIntoView.mockClear();
+      await userEvent.keyboard('{Enter}');
+      expect(archive).toBeChecked();
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest' });
+
+      // Activating or clicking the already-selected segment leaves it selected.
+      await userEvent.keyboard('{Enter}');
+      expect(archive).toBeChecked();
+      await userEvent.click(archive);
+      expect(archive).toBeChecked();
+    } finally {
+      Reflect.set(Element.prototype, 'scrollIntoView', original);
+    }
+  });
+});
+
+describe('FormMessage', () => {
+  it('renders an empty alert region when undefined and preserves <div role="alert"><p> with Icon when set', () => {
+    const { container, rerender } = render(<FormMessage message={undefined} />);
+    const alert = screen.getByRole('alert');
+    expect(alert.querySelector('p')).toBeNull();
+
+    rerender(<FormMessage message="That password is too common. Choose another." />);
+    const paragraph = alert.querySelector('p');
+    expect(paragraph).not.toBeNull();
+    expect(paragraph).toHaveTextContent('That password is too common. Choose another.');
+    expect(paragraph?.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('.max-w-\\[70ch\\]')).toHaveTextContent(
+      'That password is too common. Choose another.',
+    );
+  });
+});
+
+describe('CopyButton', () => {
+  it('copies text via md-outlined-button with Icon and shows confirmation or clipboard error snackbar', async () => {
+    const writeText = vi.fn<(_text: string) => Promise<void>>().mockResolvedValue(undefined);
+    const originalDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+    try {
+      render(
+        <ToastProvider>
+          <CopyButton
+            label="Copy invite link"
+            value="https://hestia.test/join/abc"
+            confirmation="Invite link copied."
+          />
+        </ToastProvider>,
+      );
+
+      const button = getMdButton('Copy invite link');
+      expect(button.tagName).toBe('MD-OUTLINED-BUTTON');
+      expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+
+      await userEvent.click(button);
+      expect(writeText).toHaveBeenCalledWith('https://hestia.test/join/abc');
+      expect(await screen.findByRole('status')).toHaveTextContent('Invite link copied.');
+      await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+      writeText.mockRejectedValueOnce(new Error('Clipboard blocked'));
+      await userEvent.click(button);
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Could not copy. Select the text and copy it by hand.',
+      );
+    } finally {
+      if (originalDescriptor !== undefined) {
+        Object.defineProperty(navigator, 'clipboard', originalDescriptor);
+      } else {
+        Reflect.deleteProperty(navigator, 'clipboard');
+      }
+    }
   });
 });
 
