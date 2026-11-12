@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "icons": "node scripts/generate-icons.mjs",
+    "icon-paths": "node scripts/generate-icon-paths.mjs",
     "tokens": "node scripts/generate-tokens.mjs"
   },
   "dependencies": {
