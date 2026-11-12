@@ -5,16 +5,16 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 17
 current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
 status: executing
-stopped_at: Completed 17-01-PLAN.md
-last_updated: "2026-11-12T07:08:34.507Z"
+stopped_at: Completed 17-02-PLAN.md
+last_updated: "2026-11-12T07:18:25.528Z"
 last_activity: 2026-11-12
 last_activity_desc: Phase 17 execution started
-state_head: 9447e866d72bca49ea95cd5124eaa5170a62659c
+state_head: 2b6c138bd285170b68c5771d4bd660da273b8b65
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-11)
 ## Current Position
 
 Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
-Plan: 2 of 15
+Plan: 3 of 15
 Status: Ready to execute
 Last activity: 2026-11-12 — Phase 17 execution started
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 17 P01 | 11 min | 2 tasks | 5 files |
+| Phase 17 P02 | 5m 25s | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,9 @@ Progress: [░░░░░░░░░░] 0%
 - Lock Phase 17 architectural decisions upfront before Phase 18 shell work: (1) Material Symbols delivery behind `Icon.tsx` (`@material-symbols/font-400` WOFF2 vs inline `@material-symbols/svg-400`) and (2) Vitest DOM component harness (`jsdom` + forced `element-internals-polyfill` vs `@vitest/browser-playwright`).
 - [Phase 17]: Load @material/material-color-utilities@0.4.0 via Vite SSR in apps/web/scripts/generate-tokens.mjs for deterministic LF tokens.css
 - [Phase 17]: Clamp harmonized status tokens (#15803D, #A16207, #0369A1) via Material TonalPalette (40/100/90/10 light, 80/20/30/90 dark) for >= 4.5:1 AA contrast across all 5 surfaceContainer tiers
+- [Phase 17]: Removed legacy palette ramps and [data-section] selectors from index.css; bridged all 32 @theme inline tokens plus --md-focus-ring-color onto --md-sys-*
+- [Phase 17]: Split Vitest test.projects into unit (node, extends: false) and dom (jsdom, extends: true) with explicit 6-file DOM_UNIT_TS_TESTS list preserving 84/80/77/85 thresholds
+- [Phase 17]: Encoded Warm Terracotta PWA icon background as 3-byte RGB [0x8e, 0x4c, 0x32] to match colour type 2 PNG encoder
 
 ### Pending Todos
 
@@ -82,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-12T07:08:34.462Z
-Stopped at: Completed 17-01-PLAN.md
+Last session: 2026-11-12T07:18:25.481Z
+Stopped at: Completed 17-02-PLAN.md
 Resume file: None

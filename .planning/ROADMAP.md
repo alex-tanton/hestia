@@ -66,14 +66,14 @@
   3. All icons render through `Icon.tsx` behind a single locked Material Symbols delivery contract (`@material-symbols/font-400` WOFF2 vs curated inline `@material-symbols/svg-400`) with `aria-hidden="true"`, clean Workbox precaching, and Caddy `'self'` CSP compatibility.
   4. Light-DOM and native-`<dialog>` MD3 gap primitives (`ModalBottomSheet`, persistent-until-acted-upon Undo `Snackbar`, `Card`, `ListRow`, `Badge`, `SegmentedControl`, `Skeleton`, `FormMessage`, and styled native `date`/`time` fields) pass `primitives.test.tsx` under the locked Phase 17 component test harness while Tailwind CSS continues coexisting cleanly for unmigrated screens.
 
-**Plans**: 1/15 plans executed
+**Plans**: 2/15 plans executed
 
 Plans:
 **Wave 1**
 - [x] 17-01-PLAN.md — Install vetted foundation packages (`@material/web`, `@lit/react`, `material-color-utilities`, `element-internals-polyfill`), generate Warm Terracotta `tokens.css`, and verify AA contrast across all 5 elevation tiers in `tokens.test.ts` (`FND-01`)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 17-02-PLAN.md — Map all `@theme inline` custom properties (including `--overlay`) cleanly in `index.css`, update `index.html`/launcher icons to Warm Terracotta chrome, and split Vitest `unit` (`node`) vs `dom` (`jsdom`, routing 6 browser/RTL `.test.ts` suites cleanly) (`FND-01`)
+- [x] 17-02-PLAN.md — Map all `@theme inline` custom properties (including `--overlay`) cleanly in `index.css`, update `index.html`/launcher icons to Warm Terracotta chrome, and split Vitest `unit` (`node`) vs `dom` (`jsdom`, routing 6 browser/RTL `.test.ts` suites cleanly) (`FND-01`)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 17-03-PLAN.md — Configure ESLint `@material/web` import/a11y rules preserving `CLOCK_READS`/`FORMATTER_READS` test clock fences, bootstrap forced `element-internals-polyfill` in `test-setup.ts`, create `md-queries.ts`, and implement `MdTextField`/`MdButton`/`MdSelect`/`MdCheckbox` adapters (`FND-02`)
@@ -173,7 +173,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 1/15 | In Progress | - |
+| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 2/15 | In Progress | - |
 | 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 0/0 | Not started | - |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 0/0 | Not started | - |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 0/0 | Not started | - |
