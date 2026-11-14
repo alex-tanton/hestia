@@ -2,6 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
+import { getMdButton } from '../../test/md-queries.ts';
 import { deepHealthFixture, profileFixture } from '../../test/fixtures.ts';
 import { Component as SystemHealthRoute } from './SystemHealthRoute.tsx';
 import { SystemHealthScreen } from './SystemHealthScreen.tsx';
@@ -37,7 +38,7 @@ describe('System health', () => {
     expect(screen.getByText('Newest backup')).toBeInTheDocument();
     expect(screen.getByText('TypeError at /api/households/:param')).toBeInTheDocument();
     expect(screen.getByText('No refresh has run since the service started.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
+    expect(getMdButton('Refresh')).toBeInTheDocument();
   });
 
   it('never asks for system health when the caller is not the owner', async () => {
