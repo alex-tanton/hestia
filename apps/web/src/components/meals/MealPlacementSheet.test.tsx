@@ -1,10 +1,25 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OAK_STREET_ID } from '../../test/fixtures.ts';
 import { createFetchStub, renderScreen, type StubHandler } from '../../test/harness.tsx';
 import { recipeListResponseFixture, suggestionsFixture } from '../../test/meal-fixtures.ts';
+import { findMdField, getMdButton, getMdField, getMdTab } from '../../test/md-queries.ts';
 import { MealPlacementSheet, QUICK_SUGGESTIONS } from './MealPlacementSheet.tsx';
+
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
 
 describe('MealPlacementSheet', () => {
   let handlers: Record<string, StubHandler>;
@@ -44,11 +59,8 @@ describe('MealPlacementSheet', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Place meal' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Recipe' })).toHaveAttribute('data-state', 'active');
-    expect(screen.getByRole('tab', { name: 'Quick Item' })).toHaveAttribute(
-      'data-state',
-      'inactive',
-    );
+    expect(getMdTab('Recipe')).toHaveProperty('active', true);
+    expect(getMdTab('Quick Item')).toHaveProperty('active', false);
 
     // Recipes should load in the list
     const recipeItem = await screen.findByRole('button', {
@@ -74,15 +86,17 @@ describe('MealPlacementSheet', () => {
       />,
     );
 
-    await user.click(screen.getByRole('tab', { name: 'Quick Item' }));
-    expect(screen.getByRole('tab', { name: 'Quick Item' })).toHaveAttribute('data-state', 'active');
+    await user.click(getMdTab('Quick Item'));
+    await waitFor(() => {
+      expect(getMdTab('Quick Item')).toHaveProperty('active', true);
+    });
 
-    expect(screen.getByLabelText('Item name')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Place item' })).toBeDisabled();
+    expect(getMdField('Item name')).toBeInTheDocument();
+    expect(getMdButton('Place item')).toBeDisabled();
 
     // Verify all suggestion chips are present
     for (const suggestion of QUICK_SUGGESTIONS) {
-      expect(screen.getByRole('button', { name: suggestion })).toBeInTheDocument();
+      expect(getMdButton(suggestion)).toBeInTheDocument();
     }
   });
 
@@ -99,12 +113,12 @@ describe('MealPlacementSheet', () => {
       />,
     );
 
-    await user.click(screen.getByRole('tab', { name: 'Quick Item' }));
+    await user.click(getMdTab('Quick Item'));
 
-    const input = screen.getByLabelText('Item name');
-    await user.type(input, 'Greek Yogurt');
+    const input = await findFieldInput('Item name');
+    fireEvent.input(input, { target: { value: 'Greek Yogurt' } });
 
-    const placeBtn = screen.getByRole('button', { name: 'Place item' });
+    const placeBtn = getMdButton('Place item');
     expect(placeBtn).toBeEnabled();
 
     await user.click(placeBtn);
@@ -124,10 +138,11 @@ describe('MealPlacementSheet', () => {
       />,
     );
 
-    await user.click(screen.getByRole('tab', { name: 'Quick Item' }));
+    await user.click(getMdTab('Quick Item'));
 
-    const input = screen.getByLabelText('Item name');
-    await user.type(input, 'Scrambled Eggs{Enter}');
+    const input = await findFieldInput('Item name');
+    fireEvent.input(input, { target: { value: 'Scrambled Eggs' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(onPickCustom).toHaveBeenCalledWith('Scrambled Eggs');
   });
@@ -145,9 +160,9 @@ describe('MealPlacementSheet', () => {
       />,
     );
 
-    await user.click(screen.getByRole('tab', { name: 'Quick Item' }));
+    await user.click(getMdTab('Quick Item'));
 
-    await user.click(screen.getByRole('button', { name: 'Banana' }));
+    await user.click(getMdButton('Banana'));
     expect(onPickCustom).toHaveBeenCalledWith('Banana');
   });
 
@@ -164,12 +179,13 @@ describe('MealPlacementSheet', () => {
       />,
     );
 
-    await user.click(screen.getByRole('tab', { name: 'Quick Item' }));
+    await user.click(getMdTab('Quick Item'));
 
-    const input = screen.getByLabelText('Item name');
-    await user.type(input, '   {Enter}');
+    const input = await findFieldInput('Item name');
+    fireEvent.input(input, { target: { value: '   ' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(screen.getByRole('button', { name: 'Place item' })).toBeDisabled();
+    expect(getMdButton('Place item')).toBeDisabled();
     expect(onPickCustom).not.toHaveBeenCalled();
   });
 });

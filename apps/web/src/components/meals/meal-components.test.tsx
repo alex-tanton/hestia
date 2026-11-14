@@ -1,9 +1,17 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState, type ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import type { MealPlanEntry } from '@hestia/shared';
+import { openMenu } from '../../test/browser.ts';
+import {
+  findMdMenuItem,
+  getMdButton,
+  getMdField,
+  queryMdField,
+  queryMdMenuItem,
+} from '../../test/md-queries.ts';
 import {
   blankIngredient,
   IngredientEditor,
@@ -85,16 +93,18 @@ describe('IngredientEditor', () => {
 
   it('shows the row error once showErrors is true', () => {
     render(<IngredientEditor ingredients={[blankIngredient()]} onChange={vi.fn()} showErrors />);
-    expect(screen.getByText('Enter an ingredient.')).toBeInTheDocument();
+    const itemField = getMdField('Item');
+    expect(itemField).toHaveProperty('error', true);
+    expect(itemField).toHaveProperty('errorText', 'Enter an ingredient.');
   });
 
   it('adds and removes rows', async () => {
     const user = userEvent.setup();
     render(<ControlledEditor initial={[]} />);
-    await user.click(screen.getByRole('button', { name: 'Add ingredient' }));
-    expect(screen.getByLabelText('Item')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Remove ingredient 1' }));
-    expect(screen.queryByLabelText('Item')).toBeNull();
+    await user.click(getMdButton('Add ingredient'));
+    expect(getMdField('Item')).toBeInTheDocument();
+    await user.click(getMdButton('Remove ingredient 1'));
+    expect(queryMdField('Item')).toBeNull();
   });
 
   it('converts a row to the shared IngredientInput shape, dropping an invalid quantity', () => {
@@ -183,11 +193,9 @@ describe('MealSlotEntry and PlannerDay', () => {
         onRemove={vi.fn()}
       />,
     );
-    (await screen.findByRole('button', { name: /More actions/ })).focus();
-    await user.keyboard('{Enter}');
-    const menu = await screen.findByRole('menu');
-    expect(within(menu).queryByRole('menuitem', { name: 'Add missing to list' })).toBeNull();
-    expect(within(menu).getByRole('menuitem', { name: 'Remove' })).toBeInTheDocument();
+    await openMenu(user, /More actions/);
+    expect(queryMdMenuItem('Add missing to list')).toBeNull();
+    expect(await findMdMenuItem('Remove')).toBeInTheDocument();
   });
 
   it('a past week hides the overflow menu and the add affordance entirely', () => {
