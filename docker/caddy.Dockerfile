@@ -3,7 +3,7 @@
 # docker-compose.yml); tagged with the commit SHA by scripts/deploy.sh, so the PWA, routing, and
 # headers roll back together.
 
-FROM node:24.21.0-bookworm-slim AS build
+FROM node:24.22.2-bookworm-slim AS build
 ENV CI=true HUSKY=0
 RUN corepack enable
 WORKDIR /repo
@@ -26,7 +26,7 @@ RUN --mount=type=cache,id=hestia-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store --filter @hestia/web... \
  && pnpm --filter @hestia/web build
 
-FROM caddy:2.11.7-alpine
+FROM caddy:2.11.8-alpine
 ARG HESTIA_REVISION=dev
 LABEL org.opencontainers.image.revision=$HESTIA_REVISION
 COPY docker/Caddyfile /etc/caddy/Caddyfile
