@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
+import { getMdButton } from '../../test/md-queries.ts';
 import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
 import {
   misoSoupFixture,
@@ -125,7 +126,7 @@ describe('Deal-matched suggestions', () => {
       }),
     });
     expect(await screen.findByText(SUGGESTIONS_EMPTY_COPY)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Add a recipe' }));
+    await user.click(getMdButton('Add a recipe'));
   });
 
   it('no deals available: names it and offers retry, distinct from having no recipes', async () => {
@@ -136,7 +137,7 @@ describe('Deal-matched suggestions', () => {
       }),
     });
     expect(await screen.findByText(SUGGESTIONS_NO_DEALS_COPY)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(getMdButton('Try again')).toBeInTheDocument();
   });
 
   it('all recipes at 0%: shown normally, ranked by title rather than treated as empty', async () => {

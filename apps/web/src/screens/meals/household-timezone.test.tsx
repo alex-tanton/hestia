@@ -1,9 +1,16 @@
 import { onlineManager } from '@tanstack/react-query';
-import { configure, screen, within } from '@testing-library/react';
+import { configure, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MealPlanEntry } from '@hestia/shared';
 import { stubCoarsePointer } from '../../test/browser.ts';
+import {
+  findMdButton,
+  findMdField,
+  findMdTab,
+  queryMdField,
+  queryMdTab,
+} from '../../test/md-queries.ts';
 import { ALEX_ID, OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { queryKeys } from '../../lib/api/keys.ts';
 import { emptyDealSearch } from '../../test/deal-fixtures.ts';
@@ -110,6 +117,20 @@ function mountRecipe(household: StubHandler = okHousehold): void {
   });
 }
 
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
+
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(PINNED_INSTANT);
@@ -127,13 +148,10 @@ afterEach(() => {
 describe('the week planner, with the browser a day ahead of the household', () => {
   it('opens on the household’s today and reads the week from the household’s Sunday', async () => {
     mountPlanner();
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    expect(within(tabs).getByRole('tab', { name: /Sat 10\/03/ })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    const activeTab = await findMdTab(/Sat 10\/03/);
+    expect(activeTab).toHaveProperty('active', true);
     // The browser's Sunday is next week for this household, so no tab for it exists here.
-    expect(within(tabs).queryByRole('tab', { name: /Sun 10\/04/ })).toBeNull();
+    expect(queryMdTab(/Sun 10\/04/)).toBeNull();
     expect(screen.getByText(/Week of Sun 09\/27/)).toBeInTheDocument();
     expect(await screen.findByText(bakedZitiFixture.title)).toBeInTheDocument();
     expect(screen.queryByText(sheetPanChickenFixture.title)).toBeNull();
@@ -145,7 +163,7 @@ describe('the week planner until the household’s zone is known', () => {
     mountPlanner(() => new Promise(() => undefined));
     expect(await screen.findByRole('status')).toHaveTextContent('Loading the week planner');
     expect(screen.queryByText(/Week of/)).toBeNull();
-    expect(screen.queryByRole('tablist')).toBeNull();
+    expect(queryMdTab()).toBeNull();
     expect(screen.queryByText(bakedZitiFixture.title)).toBeNull();
   });
 
@@ -153,7 +171,7 @@ describe('the week planner until the household’s zone is known', () => {
     mountPlanner(() => ({ status: 500, body: problemBody(500, 'Internal Server Error') }));
     expect(await screen.findByText("Couldn't load the household. Try again.")).toBeInTheDocument();
     expect(screen.queryByText(/Week of/)).toBeNull();
-    expect(screen.queryByRole('tablist')).toBeNull();
+    expect(queryMdTab()).toBeNull();
   });
 });
 
@@ -162,18 +180,19 @@ describe('Place on week planner, with the browser a day ahead of the household',
     const user = userEvent.setup();
     mountRecipe();
     await screen.findByRole('heading', { level: 1, name: sheetPanChickenFixture.title });
-    await user.click(await screen.findByRole('button', { name: /Place on week planner/ }));
-    expect(await screen.findByLabelText('Date')).toHaveValue(HOUSEHOLD_TODAY);
+    await user.click(await findMdButton(/Place on week planner/));
+    const input = await findFieldInput('Date');
+    expect(input).toHaveValue(HOUSEHOLD_TODAY);
   });
 
   it('is a disabled skeleton until the household’s zone is known, and opens no sheet', async () => {
     const user = userEvent.setup();
     mountRecipe(() => new Promise(() => undefined));
     await screen.findByRole('heading', { level: 1, name: sheetPanChickenFixture.title });
-    const button = await screen.findByRole('button', { name: /Place on week planner/ });
+    const button = await findMdButton(/Place on week planner/);
     expect(button).toBeDisabled();
     expect(screen.queryByText(/Loading the household/)).toBeNull();
     await user.click(button);
-    expect(screen.queryByLabelText('Date')).toBeNull();
+    expect(queryMdField('Date')).toBeNull();
   });
 });
