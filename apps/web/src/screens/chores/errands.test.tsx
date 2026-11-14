@@ -1,6 +1,6 @@
 import { onlineManager } from '@tanstack/react-query';
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import userEvent, { type UserEvent } from '@testing-library/user-event';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BANNED_GAMIFICATION_WORDS,
@@ -9,7 +9,16 @@ import {
   OFFLINE_ACTION_REASON,
   allChoreCopyStrings,
 } from '../../components/chores/chore-copy.ts';
-import { setOnline, stubCoarsePointer } from '../../test/browser.ts';
+import { openMenu, setOnline, stubCoarsePointer } from '../../test/browser.ts';
+import {
+  findMdButton,
+  findMdCheckbox,
+  findMdDialog,
+  findMdField,
+  findMdMenuItem,
+  getMdAccessibleName,
+  getMdButton,
+} from '../../test/md-queries.ts';
 import {
   ALEX_ID,
   OAK_STREET_ID,
@@ -62,10 +71,27 @@ function mount(
   return stub;
 }
 
-/** Radix opens a menu on its trigger's keyboard activation, which is how a keyboard user opens it. */
-async function openMenu(user: UserEvent, trigger: HTMLElement): Promise<void> {
-  trigger.focus();
-  await user.keyboard('{Enter}');
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
+
+function getAllMdButtons(name: string): HTMLElement[] {
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'md-filled-button, md-outlined-button, md-text-button, md-icon-button, md-elevated-button, md-filled-tonal-button, button',
+    ),
+  );
+  return candidates.filter((el) => getMdAccessibleName(el) === name);
 }
 
 /** The open list, which sits above the collapsed done group. */
@@ -134,7 +160,7 @@ describe('Errands list', () => {
   it('empty first run: says what this holds and offers the first errand', async () => {
     mount({ 'GET /api/households/:id/errands': () => ({ status: 200, body: [] }) });
     expect(await screen.findByText(ERRANDS_EMPTY_COPY)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Add an errand' })).toHaveLength(2);
+    expect(getAllMdButtons('Add an errand')).toHaveLength(2);
   });
 
   it('nothing open says so, without celebrating', async () => {
@@ -165,7 +191,7 @@ describe('Errands list', () => {
       },
     });
     expect(await screen.findByText("Couldn't load errands. Try again.")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await userEvent.click(getMdButton('Try again'));
     expect(
       await screen.findByRole('button', { name: /^Return Amazon package/ }),
     ).toBeInTheDocument();
@@ -179,9 +205,7 @@ describe('Errands list', () => {
         return { status: 200, body: { ...birthdayCardFixture, status: 'done' } };
       },
     });
-    await userEvent.click(
-      await screen.findByRole('checkbox', { name: 'Mark Buy birthday card as done' }),
-    );
+    await userEvent.click(await findMdCheckbox('Mark Buy birthday card as done'));
     await waitFor(() => {
       expect(patched).toHaveLength(1);
     });
@@ -194,15 +218,12 @@ describe('Errands list', () => {
       'DELETE /api/errands/:id': () => ({ status: 204 }),
     });
     const user = userEvent.setup();
-    await openMenu(
-      user,
-      await screen.findByRole('button', { name: 'More actions for Buy birthday card' }),
-    );
-    await user.click(await screen.findByRole('menuitem', { name: /Delete/ }));
-    const dialog = await screen.findByRole('alertdialog', { name: 'Delete this errand?' });
+    await openMenu(user, 'More actions for Buy birthday card');
+    await user.click(await findMdMenuItem(/Delete/));
+    const dialog = await findMdDialog('Delete this errand?');
     expect(within(dialog).getByText('Delete Buy birthday card?')).toBeInTheDocument();
     expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(false);
-    await user.click(within(dialog).getByRole('button', { name: 'Delete errand' }));
+    await user.click(getMdButton('Delete errand', { container: dialog }));
     await waitFor(() => {
       expect(stub.calls.find((call) => call.method === 'DELETE')?.path).toMatch(
         new RegExp(`/api/errands/${BIRTHDAY_CARD_ID}$`),
@@ -215,10 +236,13 @@ describe('Errand quick-add and edit sheet', () => {
   it('name is required', async () => {
     mount();
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Add an errand' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Add an errand' });
-    await user.click(within(dialog).getByRole('button', { name: 'Save errand' }));
-    expect(await within(dialog).findByText('Enter a name.')).toBeInTheDocument();
+    await user.click(await findMdButton('Add an errand'));
+    const dialog = await findMdDialog('Add an errand');
+    await user.click(getMdButton('Save errand', { container: dialog }));
+    const nameField = await findMdField('Name', { container: dialog });
+    await waitFor(() => {
+      expect(nameField).toHaveProperty('errorText', 'Enter a name.');
+    });
   });
 
   it('quick-add with only a name sends no due date and no assignee', async () => {
@@ -237,10 +261,11 @@ describe('Errand quick-add and edit sheet', () => {
       },
     });
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Add an errand' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Add an errand' });
-    await user.type(within(dialog).getByLabelText('Name'), 'Post card');
-    await user.click(within(dialog).getByRole('button', { name: 'Save errand' }));
+    await user.click(await findMdButton('Add an errand'));
+    const dialog = await findMdDialog('Add an errand');
+    const nameInput = await findFieldInput('Name', dialog);
+    fireEvent.input(nameInput, { target: { value: 'Post card' } });
+    await user.click(getMdButton('Save errand', { container: dialog }));
     await waitFor(() => {
       expect(posted).toHaveLength(1);
     });
@@ -256,14 +281,16 @@ describe('Errand quick-add and edit sheet', () => {
       },
     });
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Add an errand' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Add an errand' });
-    await user.type(within(dialog).getByLabelText('Name'), 'Mail package');
-    fireEvent.change(within(dialog).getByLabelText('Due date'), {
+    await user.click(await findMdButton('Add an errand'));
+    const dialog = await findMdDialog('Add an errand');
+    const nameInput = await findFieldInput('Name', dialog);
+    fireEvent.input(nameInput, { target: { value: 'Mail package' } });
+    const dueInput = await findFieldInput('Due date', dialog);
+    fireEvent.change(dueInput, {
       target: { value: '2026-10-01' },
     });
     await user.selectOptions(within(dialog).getByLabelText('Assigned to'), SAM_ID);
-    await user.click(within(dialog).getByRole('button', { name: 'Save errand' }));
+    await user.click(getMdButton('Save errand', { container: dialog }));
     await waitFor(() => {
       expect(posted).toHaveLength(1);
     });
@@ -280,14 +307,15 @@ describe('Errand quick-add and edit sheet', () => {
     });
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: /^Return Amazon package/ }));
-    const dialog = await screen.findByRole('dialog', { name: 'Edit errand' });
-    expect(within(dialog).getByLabelText('Name')).toHaveValue('Return Amazon package');
+    const dialog = await findMdDialog('Edit errand');
+    const nameField = await findMdField('Name', { container: dialog });
+    expect(nameField).toHaveProperty('value', 'Return Amazon package');
     expect(within(dialog).getByLabelText('Due date')).toHaveValue('2026-09-29');
     expect(within(dialog).getByLabelText('Assigned to')).toHaveValue(ALEX_ID);
 
-    await user.clear(within(dialog).getByLabelText('Name'));
-    await user.type(within(dialog).getByLabelText('Name'), 'Return package');
-    await user.click(within(dialog).getByRole('button', { name: 'Save errand' }));
+    const nameInput = await findFieldInput('Name', dialog);
+    fireEvent.input(nameInput, { target: { value: 'Return package' } });
+    await user.click(getMdButton('Save errand', { container: dialog }));
     await waitFor(() => {
       expect(patched).toHaveLength(1);
     });
@@ -302,7 +330,7 @@ describe('Errand quick-add and edit sheet', () => {
     mount();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: /^Buy birthday card/ }));
-    const dialog = await screen.findByRole('dialog', { name: 'Edit errand' });
+    const dialog = await findMdDialog('Edit errand');
     expect(within(dialog).getByLabelText('Due date')).toHaveValue('');
     expect(within(dialog).getByLabelText('Assigned to')).toHaveDisplayValue('Unassigned');
   });
@@ -314,15 +342,10 @@ describe('Errands offline', () => {
     await screen.findByRole('button', { name: /^Return Amazon package/ });
     setOnline(false);
 
-    const checkbox = await screen.findByRole('checkbox', {
-      name: 'Mark Buy birthday card as done',
-    });
-    expect(checkbox).toBeEnabled();
+    const checkbox = await findMdCheckbox('Mark Buy birthday card as done');
+    expect(checkbox).not.toHaveProperty('disabled', true);
     expect(screen.getAllByText(OFFLINE_ACTION_REASON).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: 'Add an errand' })[0]).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    expect(getAllMdButtons('Add an errand')[0]).toHaveProperty('softDisabled', true);
     expect(screen.getByRole('button', { name: /^Return Amazon package/ })).toBeInTheDocument();
   });
 });

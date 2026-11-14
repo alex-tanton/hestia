@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PENDING_CLASSES, PENDING_ROW_LABEL } from '../../components/lists/PendingMark.tsx';
 import { queryKeys } from '../../lib/api/keys.ts';
 import { setOnline } from '../../test/browser.ts';
+import { findMdButton, getMdButton } from '../../test/md-queries.ts';
 import {
   OAK_STREET_ID,
   oakStreetFixture,
@@ -61,7 +62,7 @@ function mountList(extra: Readonly<Record<string, StubHandler>> = {}): {
 
 /** The row for the trash chore, once the list and the household are both cached. */
 async function loadedRow(queryClient: QueryClient): Promise<HTMLElement> {
-  const done = await screen.findByRole('button', { name: DONE_LABEL });
+  const done = await findMdButton(DONE_LABEL);
   await waitFor(() => {
     expect(queryClient.getQueryData(queryKeys.household(OAK_STREET_ID))).toBeDefined();
   });
@@ -95,7 +96,7 @@ describe('a chore completed offline', () => {
     const row = await loadedRow(queryClient);
 
     setOnline(false);
-    await user.click(screen.getByRole('button', { name: DONE_LABEL }));
+    await user.click(getMdButton(DONE_LABEL));
 
     await waitFor(() => {
       expect(within(row).getByText(PENDING_ROW_LABEL)).toBeInTheDocument();
@@ -110,7 +111,15 @@ describe('a chore completed offline', () => {
     await loadedRow(queryClient);
 
     setOnline(false);
-    await user.click(screen.getByRole('button', { name: DONE_LABEL }));
+    await user.click(getMdButton(DONE_LABEL));
+    await waitFor(() => {
+      expect(
+        queryClient
+          .getMutationCache()
+          .getAll()
+          .some((m) => m.state.isPaused),
+      ).toBe(true);
+    });
     setOnline(true);
 
     await waitFor(() => {
@@ -125,6 +134,7 @@ describe('a chore completed offline', () => {
       occurrenceDate: takeOutTrashFixture.dueDate,
       doneAt: DONE_AT,
     });
+    await user.click(await screen.findByRole('button', { name: 'Dismiss' }));
     expect(await screen.findByText('1 change synced.')).toBeInTheDocument();
   });
 
@@ -134,8 +144,8 @@ describe('a chore completed offline', () => {
     const row = await loadedRow(queryClient);
 
     setOnline(false);
-    await user.click(screen.getByRole('button', { name: DONE_LABEL }));
-    await user.click(await screen.findByRole('button', { name: 'Undo' }));
+    await user.click(getMdButton(DONE_LABEL));
+    await user.click(await findMdButton('Undo'));
 
     await waitFor(() => {
       expect(within(row).queryByText(PENDING_ROW_LABEL)).toBeNull();
@@ -158,9 +168,18 @@ describe('a chore completed offline', () => {
     const row = await loadedRow(queryClient);
 
     setOnline(false);
-    await user.click(screen.getByRole('button', { name: DONE_LABEL }));
+    await user.click(getMdButton(DONE_LABEL));
+    await waitFor(() => {
+      expect(
+        queryClient
+          .getMutationCache()
+          .getAll()
+          .some((m) => m.state.isPaused),
+      ).toBe(true);
+    });
     setOnline(true);
 
+    await user.click(await screen.findByRole('button', { name: 'Dismiss' }));
     const message = "1 change couldn't be saved. The chore or errand is no longer available.";
     const notice = await screen.findByText(message);
     expect(screen.getAllByText(message)).toHaveLength(1);
