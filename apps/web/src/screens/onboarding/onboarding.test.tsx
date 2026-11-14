@@ -6,6 +6,14 @@ import { createAuthStub, problemBody, renderScreen, stubFetch } from '../../test
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { merchantsResponse } from '../../test/deal-fixtures.ts';
 import { AuthError, SIGN_IN_FAILED_MESSAGE } from '../../lib/auth/auth-client.ts';
+import {
+  findMdCheckbox,
+  findMdField,
+  getMdButton,
+  getMdCheckbox,
+  getMdField,
+  queryMdField,
+} from '../../test/md-queries.ts';
 import { FavoriteStoresStep } from './FavoriteStoresStep.tsx';
 import { CreateHouseholdStep } from './CreateHouseholdStep.tsx';
 import { ForgotPasswordScreen } from './ForgotPasswordScreen.tsx';
@@ -15,6 +23,15 @@ import { Component as JoinRoute } from './JoinRoute.tsx';
 import { RESET_LINK_EXPIRED_MESSAGE, SetPasswordScreen } from './SetPasswordScreen.tsx';
 import { SignInScreen } from './SignInScreen.tsx';
 import { SignUpScreen } from './SignUpScreen.tsx';
+
+async function findFieldInput(name: string): Promise<HTMLElement> {
+  const field = await findMdField(name);
+  return waitFor(() => {
+    const input = field.shadowRoot?.querySelector('input');
+    if (!input) throw new Error(`Expected shadow input for ${name}`);
+    return input;
+  });
+}
 
 // The invite link is read from the URL fragment once, at module load (lib/url-hash.ts); mocking
 // the module is the only way a test controls what a fresh `/join` visit saw. `hashHasAuthError`
@@ -31,8 +48,8 @@ afterEach(() => {
 describe('sign in', () => {
   it('labels both fields and offers the forgot-password route', () => {
     renderScreen(<SignInScreen />);
-    expect(screen.getByLabelText('Email')).toBeInTheDocument();
-    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(getMdField('Email')).toBeInTheDocument();
+    expect(getMdField('Password')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Forgot password?' })).toBeInTheDocument();
   });
 
@@ -40,11 +57,11 @@ describe('sign in', () => {
     const user = userEvent.setup();
     renderScreen(<SignInScreen />);
 
-    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    await user.click(getMdButton('Sign in'));
 
-    expect(await screen.findByText('Enter your email address.')).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByLabelText('Email')).toHaveFocus();
+      expect(getMdField('Email')).toHaveProperty('errorText', 'Enter your email address.');
+      expect(getMdField('Email')).toHaveFocus();
     });
   });
 
@@ -54,9 +71,9 @@ describe('sign in', () => {
     auth.signIn = vi.fn(() => Promise.reject(new AuthError(SIGN_IN_FAILED_MESSAGE)));
     renderScreen(<SignInScreen />, { auth });
 
-    await user.type(screen.getByLabelText('Email'), 'alex@example.com');
-    await user.type(screen.getByLabelText('Password'), 'wrong-password');
-    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    await user.type(await findFieldInput('Email'), 'alex@example.com');
+    await user.type(await findFieldInput('Password'), 'wrong-password');
+    await user.click(getMdButton('Sign in'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(SIGN_IN_FAILED_MESSAGE);
   });
@@ -68,12 +85,14 @@ describe('sign up', () => {
     const auth = createAuthStub({ status: 'signed-out', userId: null });
     renderScreen(<SignUpScreen />, { auth });
 
-    await user.type(screen.getByLabelText('Display name'), 'Alex Rivera');
-    await user.type(screen.getByLabelText('Email'), 'alex@example.com');
-    await user.type(screen.getByLabelText('Password'), 'password1');
-    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    await user.type(await findFieldInput('Display name'), 'Alex Rivera');
+    await user.type(await findFieldInput('Email'), 'alex@example.com');
+    await user.type(await findFieldInput('Password'), 'password1');
+    await user.click(getMdButton('Create account'));
 
-    expect(await screen.findByText(COMMON_PASSWORD_MESSAGE)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(getMdField('Password')).toHaveProperty('errorText', COMMON_PASSWORD_MESSAGE);
+    });
     expect(auth.signUp).not.toHaveBeenCalled();
   });
 
@@ -82,12 +101,14 @@ describe('sign up', () => {
     const auth = createAuthStub({ status: 'signed-out', userId: null });
     renderScreen(<SignUpScreen />, { auth });
 
-    await user.type(screen.getByLabelText('Display name'), 'Alex Rivera');
-    await user.type(screen.getByLabelText('Email'), 'alex@example.com');
-    await user.type(screen.getByLabelText('Password'), 'short');
-    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    await user.type(await findFieldInput('Display name'), 'Alex Rivera');
+    await user.type(await findFieldInput('Email'), 'alex@example.com');
+    await user.type(await findFieldInput('Password'), 'short');
+    await user.click(getMdButton('Create account'));
 
-    expect(await screen.findByText('Use at least 8 characters.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(getMdField('Password')).toHaveProperty('errorText', 'Use at least 8 characters.');
+    });
     expect(auth.signUp).not.toHaveBeenCalled();
   });
 
@@ -96,12 +117,12 @@ describe('sign up', () => {
     const auth = createAuthStub({ status: 'signed-out', userId: null });
     renderScreen(<SignUpScreen />, { auth });
 
-    expect(screen.getByText('At least 8 characters')).toBeInTheDocument();
+    expect(getMdField('Password')).toHaveProperty('supportingText', 'At least 8 characters');
 
-    await user.type(screen.getByLabelText('Display name'), 'Alex Rivera');
-    await user.type(screen.getByLabelText('Email'), 'alex@example.com');
-    await user.type(screen.getByLabelText('Password'), 'hestia-seed-pass-2026');
-    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    await user.type(await findFieldInput('Display name'), 'Alex Rivera');
+    await user.type(await findFieldInput('Email'), 'alex@example.com');
+    await user.type(await findFieldInput('Password'), 'hestia-seed-pass-2026');
+    await user.click(getMdButton('Create account'));
 
     await waitFor(() => {
       expect(auth.signUp).toHaveBeenCalledWith(
@@ -121,7 +142,7 @@ describe('forgot password', () => {
     expect(
       screen.getByText('Ask your server owner for a reset link. They can create one for you.'),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(queryMdField()).toBeNull();
   });
 });
 
@@ -131,9 +152,9 @@ describe('set a new password', () => {
     const stub = stubFetch({ 'POST /api/users/me/password': () => ({ status: 204 }) });
     renderScreen(<SetPasswordScreen />);
 
-    expect(screen.queryByLabelText('Current password')).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText('New password'), 'hestia-seed-pass-2026');
-    await user.click(screen.getByRole('button', { name: 'Set password' }));
+    expect(queryMdField('Current password')).toBeNull();
+    await user.type(await findFieldInput('New password'), 'hestia-seed-pass-2026');
+    await user.click(getMdButton('Set password'));
 
     await waitFor(() => {
       expect(stub.calls).toContainEqual({
@@ -154,8 +175,8 @@ describe('set a new password', () => {
     });
     renderScreen(<SetPasswordScreen />);
 
-    await user.type(screen.getByLabelText('New password'), 'hestia-seed-pass-2026');
-    await user.click(screen.getByRole('button', { name: 'Set password' }));
+    await user.type(await findFieldInput('New password'), 'hestia-seed-pass-2026');
+    await user.click(getMdButton('Set password'));
 
     expect(await screen.findByText(RESET_LINK_EXPIRED_MESSAGE)).toBeInTheDocument();
   });
@@ -174,11 +195,13 @@ describe('creating a household', () => {
     const stub = stubFetch({});
     renderScreen(<CreateHouseholdStep onCreated={() => undefined} />);
 
-    await user.type(screen.getByLabelText('Household name'), 'Oak Street');
-    await user.type(screen.getByLabelText('ZIP code'), '275');
-    await user.click(screen.getByRole('button', { name: 'Create household' }));
+    await user.type(await findFieldInput('Household name'), 'Oak Street');
+    await user.type(await findFieldInput('ZIP code'), '275');
+    await user.click(getMdButton('Create household'));
 
-    expect(await screen.findByText('Enter a five-digit ZIP code.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(getMdField('ZIP code')).toHaveProperty('errorText', 'Enter a five-digit ZIP code.');
+    });
     expect(stub.calls).toHaveLength(0);
   });
 
@@ -190,9 +213,9 @@ describe('creating a household', () => {
     });
     renderScreen(<CreateHouseholdStep onCreated={onCreated} />);
 
-    await user.type(screen.getByLabelText('Household name'), 'Oak Street');
-    await user.type(screen.getByLabelText('ZIP code'), '27514');
-    await user.click(screen.getByRole('button', { name: 'Create household' }));
+    await user.type(await findFieldInput('Household name'), 'Oak Street');
+    await user.type(await findFieldInput('ZIP code'), '27514');
+    await user.click(getMdButton('Create household'));
 
     await waitFor(() => {
       expect(onCreated).toHaveBeenCalled();
@@ -214,8 +237,8 @@ describe('joining a household', () => {
     });
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
 
-    await user.type(screen.getByLabelText('Invite code'), 'o-i l9kr4t');
-    await user.click(screen.getByRole('button', { name: 'Join household' }));
+    await user.type(await findFieldInput('Invite code'), 'o-i l9kr4t');
+    await user.click(getMdButton('Join household'));
 
     await waitFor(() => {
       expect(stub.calls[0]?.body).toEqual({ tokenOrCode: '0119KR4T' });
@@ -232,8 +255,8 @@ describe('joining a household', () => {
     });
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
 
-    await user.type(screen.getByLabelText('Invite code'), '9XKR4TZ2');
-    await user.click(screen.getByRole('button', { name: 'Join household' }));
+    await user.type(await findFieldInput('Invite code'), '9XKR4TZ2');
+    await user.click(getMdButton('Join household'));
 
     expect(
       await screen.findByText('This invite has expired. Ask for a new link or code.'),
@@ -250,8 +273,8 @@ describe('joining a household', () => {
     });
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
 
-    await user.type(screen.getByLabelText('Invite code'), '9XKR4TZ2');
-    await user.click(screen.getByRole('button', { name: 'Join household' }));
+    await user.type(await findFieldInput('Invite code'), '9XKR4TZ2');
+    await user.click(getMdButton('Join household'));
 
     expect(
       await screen.findByText("That code doesn't match an invite. Check it and try again."),
@@ -285,13 +308,13 @@ describe('joining a household', () => {
 
     // The status message gave way to the form, so focus follows rather than falling back to the
     // document.
-    expect(await screen.findByLabelText('Invite code')).toHaveFocus();
+    expect(await findMdField('Invite code')).toHaveFocus();
   });
 
   it('leaves focus alone on an ordinary visit, which starts on the form', async () => {
     stubFetch({});
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
-    expect(await screen.findByLabelText('Invite code')).not.toHaveFocus();
+    expect(await findMdField('Invite code')).not.toHaveFocus();
   });
 });
 
@@ -323,9 +346,9 @@ describe('the rest of onboarding', () => {
     });
     renderScreen(<FavoriteStoresStep onDone={onDone} />);
 
-    const publix = await screen.findByRole('checkbox', { name: /Publix/ });
-    expect(publix).not.toBeChecked();
-    expect(screen.getByRole('checkbox', { name: /Harris Teeter/ })).toBeChecked();
+    const publix = await findMdCheckbox(/Publix/);
+    expect(publix).toHaveProperty('checked', false);
+    expect(getMdCheckbox(/Harris Teeter/)).toHaveProperty('checked', true);
 
     await user.click(publix);
     await waitFor(() => {
@@ -336,7 +359,7 @@ describe('the rest of onboarding', () => {
       merchantName: 'Publix',
     });
 
-    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(getMdButton('Continue'));
     expect(onDone).toHaveBeenCalled();
   });
 
@@ -347,6 +370,6 @@ describe('the rest of onboarding', () => {
     renderScreen(<InstallStep onDone={() => undefined} />);
 
     expect(screen.getByText(IOS_INSTALL_MESSAGE)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Go to Hestia' })).toBeInTheDocument();
+    expect(getMdButton('Go to Hestia')).toBeInTheDocument();
   });
 });
