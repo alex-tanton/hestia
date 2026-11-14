@@ -1,7 +1,16 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { formatCalendarDate } from '../../lib/format.ts';
 import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import {
+  findMdDialog,
+  findMdField,
+  findMdMenuItem,
+  getMdButton,
+  getMdMenuItem,
+  queryMdMenuItem,
+} from '../../test/md-queries.ts';
 import {
   billDetailFixture,
   dukeEnergyFixture,
@@ -17,6 +26,20 @@ import {
   type StubHandler,
 } from '../../test/harness.tsx';
 import { BillDetailScreen } from './BillDetailScreen.tsx';
+
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
 
 function baseHandlers(
   extra: Readonly<Record<string, StubHandler>> = {},
@@ -67,6 +90,7 @@ describe('Bill detail', () => {
   });
 
   it('shows a skipped occurrence without an amount, and offers no edit for it', async () => {
+    const user = userEvent.setup();
     mount(
       baseHandlers({
         'GET /api/bills/:id': () => ({
@@ -80,9 +104,9 @@ describe('Bill detail', () => {
       }),
     );
     expect(await screen.findByText(/Skipped/)).toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole('button', { name: /More actions for the/ }));
-    expect(screen.queryByRole('menuitem', { name: 'Edit' })).toBeNull();
-    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
+    await openMenu(user, /More actions for the/);
+    expect(queryMdMenuItem('Edit')).toBeNull();
+    expect(getMdMenuItem('Delete')).toBeInTheDocument();
   });
 
   it('empty: no payments recorded yet', async () => {
@@ -104,7 +128,7 @@ describe('Bill detail', () => {
       }),
     );
     expect(await screen.findByText("Couldn't load this bill. Try again.")).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Back to bills' })).toBeInTheDocument();
+    expect(getMdButton('Back to bills')).toBeInTheDocument();
   });
 
   it('offline with nothing cached: a dedicated offline state', () => {
@@ -117,8 +141,8 @@ describe('Bill detail', () => {
     mount();
     await screen.findByText('$142.30');
     setOnline(false);
-    const edit = screen.getByRole('button', { name: 'Edit bill' });
-    expect(edit).toHaveAttribute('aria-disabled', 'true');
+    const edit = getMdButton('Edit bill');
+    expect(edit).toHaveProperty('softDisabled', true);
     const reasonId = edit.getAttribute('aria-describedby');
     expect(document.getElementById(reasonId ?? '')).toHaveTextContent('Needs a connection.');
   });
@@ -135,10 +159,10 @@ describe('Bill detail', () => {
     );
     await screen.findByText('$142.30');
     await openMenu(user, 'More actions for Duke Energy');
-    await user.click(await screen.findByRole('menuitem', { name: 'Archive' }));
-    const dialog = await screen.findByRole('alertdialog', { name: 'Archive this bill?' });
+    await user.click(await findMdMenuItem('Archive'));
+    const dialog = await findMdDialog('Archive this bill?');
     expect(dialog).toHaveTextContent('Archive Duke Energy?');
-    await user.click(within(dialog).getByRole('button', { name: 'Archive bill' }));
+    await user.click(getMdButton('Archive bill', { container: dialog }));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.path === `/api/bills/${dukeEnergyFixture.id}/archive`),
@@ -151,10 +175,10 @@ describe('Bill detail', () => {
     const stub = mount(baseHandlers({ 'DELETE /api/bills/:id': () => ({ status: 204 }) }));
     await screen.findByText('$142.30');
     await openMenu(user, 'More actions for Duke Energy');
-    await user.click(await screen.findByRole('menuitem', { name: 'Delete' }));
-    const dialog = await screen.findByRole('alertdialog', { name: 'Delete this bill?' });
+    await user.click(await findMdMenuItem('Delete'));
+    const dialog = await findMdDialog('Delete this bill?');
     expect(dialog).toHaveTextContent('Its payment history is removed with it.');
-    await user.click(within(dialog).getByRole('button', { name: 'Delete bill' }));
+    await user.click(getMdButton('Delete bill', { container: dialog }));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -176,14 +200,14 @@ describe('Bill detail', () => {
       }),
     );
     await screen.findByText('$142.30');
-    const items = screen.getAllByRole('button', { name: /More actions for the/ });
-    items[0]!.focus();
-    await user.keyboard('{Enter}');
-    await user.click(await screen.findByRole('menuitem', { name: 'Edit' }));
-    const amountField = await screen.findByLabelText('Amount paid');
-    await user.clear(amountField);
-    await user.type(amountField, '150.00');
-    await user.click(screen.getByRole('button', { name: 'Save payment' }));
+    await openMenu(
+      user,
+      `More actions for the ${formatCalendarDate(payment.occurrenceDate)} payment`,
+    );
+    await user.click(await findMdMenuItem('Edit'));
+    const amountInput = await findFieldInput('Amount paid');
+    fireEvent.input(amountInput, { target: { value: '150.00' } });
+    await user.click(getMdButton('Save payment'));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'PATCH' && call.path.includes('/payments/')),
