@@ -2,52 +2,52 @@
 gsd_state_version: "1.0"
 milestone: v3.0
 milestone_name: Material Design 3 Overhaul
-current_phase: 17
-current_phase_name: MD3 Foundation, Token Pipeline & UI Primitives
-status: executing
-stopped_at: Completed 17-10-PLAN.md
-last_updated: "2026-11-12T15:32:31.440Z"
-last_activity: 2026-11-12
-last_activity_desc: Phase 17 execution started
-state_head: 89c9c7af08383fcdf45bcacc89101952d779a621
+current_phase: 18
+current_phase_name: Adaptive MD3 Navigation Shell & Route Chrome
+status: ready
+stopped_at: Completed Phase 17 (17-15-PLAN.md release verification gate)
+last_updated: "2026-11-14T18:51:00.000Z"
+last_activity: 2026-11-14
+last_activity_desc: Completed Phase 17 (MD3 Foundation, Token Pipeline & UI Primitives)
+state_head: 392a1c0cb1f41d39986bfa332b702ecf0a6d0ca0
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 15
-  completed_plans: 10
-  percent: 0
+  completed_plans: 15
+  percent: 20
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-11)
+See: .planning/PROJECT.md (updated 2026-11-14)
 
 **Core value:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified Warm Terracotta tonal theming, restructured navigation, and clear flow of control.
-**Current focus:** Phase 17 — MD3 Foundation, Token Pipeline & UI Primitives
+**Current focus:** Phase 18 — Adaptive MD3 Navigation Shell & Route Chrome
 
 ## Current Position
 
-Phase: 17 (MD3 Foundation, Token Pipeline & UI Primitives) — EXECUTING
-Plan: 11 of 15
-Status: Ready to execute
-Last activity: 2026-11-12 — Phase 17 execution started
+Phase: 18 (Adaptive MD3 Navigation Shell & Route Chrome) — READY TO PLAN
+Plan: 0 of TBD
+Status: Ready to plan
+Last activity: 2026-11-14 — Completed Phase 17 release verification gate
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: -
+- Total plans completed: 15
+- Average duration: ~15 min
+- Total execution time: ~3.7 hrs
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| Phase 17 | 15 | ~225 min | ~15 min |
 
 *Updated after each plan completion*
 **Per-Plan Metrics:**
@@ -64,6 +64,11 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17 P08 | 24min | 2 tasks | 9 files |
 | Phase 17 P09 | 10min | 2 tasks | 8 files |
 | Phase 17 P10 | 19 min | 2 tasks | 6 files |
+| Phase 17 P11 | 22 min | 2 tasks | 8 files |
+| Phase 17 P12 | 26 min | 2 tasks | 9 files |
+| Phase 17 P13 | 18 min | 2 tasks | 7 files |
+| Phase 17 P14 | 24 min | 2 tasks | 8 files |
+| Phase 17 P15 | 20 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 

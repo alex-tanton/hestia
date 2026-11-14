@@ -47,7 +47,7 @@
 
 **Milestone Goal:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified Warm Terracotta tonal theming, restructured navigation, and clear flow of control.
 
-- [ ] **Phase 17: MD3 Foundation, Token Pipeline & UI Primitives** - Warm Terracotta light/dark `--md-sys-*` tokens, `@material/web` React 19 interop wrappers (`components/md/` -> `components/ui/`), Material Symbols `Icon` contract, and light-DOM/native-`<dialog>` gap primitives (with Tailwind CSS coexisting behind `components/ui/`).
+- [x] **Phase 17: MD3 Foundation, Token Pipeline & UI Primitives** (15/15 plans) — completed 2026-11-14
 - [ ] **Phase 18: Adaptive MD3 Navigation Shell & Route Chrome** - Window Size Class `NavigationBar` (`<600px`) and `NavigationRail` (`>=600px`), scroll-aware Small Top App Bar owning each screen's single `<h1>`, MD3 Primary Tabs, conditional `HouseholdSwitcher`, and consolidated Meals/Lists routing.
 - [ ] **Phase 19: Entry, Dashboard & Grocery Ecosystem Screens** - Overhaul Onboarding, Auth, Dashboard, Shared State blocks, Lists, Pantry, Barcode Scanner, Deals, and Flyers onto uncluttered tonal MD3 surfaces with progressive chip filtering and persistent Undo Snackbars.
 - [ ] **Phase 20: Meals, Bills, Chores & Settings Screens** - Overhaul Meal Planner/Recipes, Bills/Subscriptions, Chores/Errands, and Settings/System Health/Departure using MD3 lists, Full-Screen/Centered dialogs for dense forms, `<md-switch>` controls, zero 1-item overflow menus, and a categorized Settings hub.
@@ -66,7 +66,7 @@
   3. All icons render through `Icon.tsx` behind a single locked Material Symbols delivery contract (`@material-symbols/font-400` WOFF2 vs curated inline `@material-symbols/svg-400`) with `aria-hidden="true"`, clean Workbox precaching, and Caddy `'self'` CSP compatibility.
   4. Light-DOM and native-`<dialog>` MD3 gap primitives (`ModalBottomSheet`, persistent-until-acted-upon Undo `Snackbar`, `Card`, `ListRow`, `Badge`, `SegmentedControl`, `Skeleton`, `FormMessage`, and styled native `date`/`time` fields) pass `primitives.test.tsx` under the locked Phase 17 component test harness while Tailwind CSS continues coexisting cleanly for unmigrated screens.
 
-**Plans**: 10/15 plans executed
+**Plans**: 15/15 plans executed
 
 Plans:
 **Wave 1**
@@ -100,13 +100,13 @@ Plans:
 - [x] 17-10-PLAN.md — Update shared `browser.ts` (`openMenu`) and synchronize `shell`, `dashboard`, `write-queue`, `realtime`, and `about-sign-out` tests (`FND-02`, `FND-04`)
 
 **Wave 11** *(blocked on Wave 10 completion)*
-- [ ] 17-11-PLAN.md — Synchronize Settings (`departure`, `notification-types`, `settings`, `system-health`), Onboarding (`magic-link`, `onboarding`), and `dashboard-route` tests (`FND-02`, `FND-04`)
-- [ ] 17-12-PLAN.md — Synchronize Lists (`BarcodeScannerDialog`, `ItemSheet`, `ListDetailScreen`, `lists`) and Bills (`bill-detail`, `bills-index`, `household-timezone`, `subscriptions`) tests (`FND-02`, `FND-04`)
-- [ ] 17-13-PLAN.md — Synchronize Chores, Errands, and Deals `.test.tsx` suites to `md-queries.ts` (`FND-02`, `FND-04`)
-- [ ] 17-14-PLAN.md — Synchronize Meals component and screen `.test.tsx` suites to `md-queries.ts` (`FND-02`, `FND-04`)
+- [x] 17-11-PLAN.md — Synchronize Settings (`departure`, `notification-types`, `settings`, `system-health`), Onboarding (`magic-link`, `onboarding`), and `dashboard-route` tests (`FND-02`, `FND-04`)
+- [x] 17-12-PLAN.md — Synchronize Lists (`BarcodeScannerDialog`, `ItemSheet`, `ListDetailScreen`, `lists`) and Bills (`bill-detail`, `bills-index`, `household-timezone`, `subscriptions`) tests (`FND-02`, `FND-04`)
+- [x] 17-13-PLAN.md — Synchronize Chores, Errands, and Deals `.test.tsx` suites to `md-queries.ts` (`FND-02`, `FND-04`)
+- [x] 17-14-PLAN.md — Synchronize Meals component and screen `.test.tsx` suites to `md-queries.ts` (`FND-02`, `FND-04`)
 
 **Wave 12** *(blocked on Wave 11 completion)*
-- [ ] 17-15-PLAN.md — Reconcile Knip baseline and pass release verification gates (`84/80/77/85` `test:coverage`, `<= 200 KB` build, `0` WOFF2 precache, JSCPD, `audit-prod`, LF hygiene) (`FND-01`–`FND-04`)
+- [x] 17-15-PLAN.md — Reconcile Knip baseline and pass release verification gates (`84/80/77/85` `test:coverage`, `<= 200 KB` build, `0` WOFF2 precache, JSCPD, `audit-prod`, LF hygiene) (`FND-01`–`FND-04`)
 
 **UI hint**: yes
 
