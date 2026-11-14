@@ -102,6 +102,13 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    modulePreload: {
+      resolveDependencies(_filename, deps) {
+        return deps.filter((dep) => !dep.includes('Button'));
+      },
+    },
+  },
   test: {
     globalSetup: ['../../test/global-tz.mjs'],
     testTimeout: 15_000,

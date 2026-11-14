@@ -16,7 +16,7 @@ Hestia is a self-hosted household-management PWA (grocery deals, shopping lists,
 **Goal:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified warm tonal theming, restructured navigation, and clear flow of control.
 
 **Target features:**
-- Clean MD3 stack and token foundation (`@material/web`, `@material/material-color-utilities` from a warm Hearth terracotta/amber seed color, Material Symbols), removing Tailwind CSS, Radix UI, and Lucide in favor of clean MD3 CSS tokens and minimal MD3-spec wrappers where `@material/web` lacks a primitive (e.g., Navigation Bar/Rail, Bottom Sheet)
+- Clean MD3 stack and token foundation (`@material/web`, `@material/material-color-utilities` from a warm Hestia terracotta/amber seed color, Material Symbols), removing Tailwind CSS, Radix UI, and Lucide in favor of clean MD3 CSS tokens and minimal MD3-spec wrappers where `@material/web` lacks a primitive (e.g., Navigation Bar/Rail, Bottom Sheet)
 - Restructured top-level destinations, sub-views, and responsive shell around MD3 Navigation Bar (mobile), Navigation Rail (desktop), and unified Top App Bar, including streamlined Dashboard and unified Auth, Onboarding, and Settings
 - Minimal, uncluttered redesign of every screen using MD3 tonal surface elevation and whitespace instead of boxed cards/heavy dividers, progressive disclosure/overflow menus for secondary actions, flattened nested tabs/sheets, and removal of low-value visual noise
 - Updated unit, component, and Playwright E2E test suites plus WCAG 2.1 AA audits, Knip, JSCPD, and build checks passing against the new MD3 UI
@@ -90,7 +90,7 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 
 ### Active
 
-- [ ] **MD3-FOUNDATION**: Replace Tailwind CSS, Radix UI, and Lucide with `@material/web`, `@material/material-color-utilities` (warm Hearth terracotta/amber seed palette for light & dark), Material Symbols, and minimal MD3-spec wrappers only where `@material/web` lacks coverage
+- [ ] **MD3-FOUNDATION**: Replace Tailwind CSS, Radix UI, and Lucide with `@material/web`, `@material/material-color-utilities` (warm Hestia terracotta/amber seed palette for light & dark), Material Symbols, and minimal MD3-spec wrappers only where `@material/web` lacks coverage
 - [ ] **MD3-NAV-SHELL**: Restructure top-level destinations, sub-views, and responsive shell using MD3 Navigation Bar (mobile), Navigation Rail (desktop), and unified Top App Bar, flattening nested tabs/sheets and bringing Auth, Onboarding, and Settings into the unified MD3 design
 - [ ] **MD3-SCREENS**: Overhaul all application screens (Dashboard, Lists/Deals/Flyers/Pantry, Meals/Recipes/Suggestions, Bills/Subscriptions, Chores/Errands, Onboarding/Auth, Settings/System Health) for minimal, clutter-free MD3 visual hierarchy and improved flow of control
 - [ ] **MD3-VERIFY**: Update frontend unit, component, and Playwright E2E suites plus WCAG 2.1 AA audits and CI gates (`check-build`, Knip, JSCPD, typecheck, lint) to pass on the overhauled MD3 frontend
@@ -131,7 +131,7 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 | Bounded 4-worker pool with 150ms pacing & 2,000-item LRU cache for Flipp | Eliminates 15-minute ingestion serialization bottleneck while respecting upstream limits | Validated — Phase 13 |
 | Anchor primary sale price with inline discount badge & single-price fallback | Highlights real savings cleanly without duplicate badges or zero/null discount confusion | Validated — Phase 13 |
 | Standardize entire frontend on Google Material Design 3 (`@material/web`, Material Symbols, `@material/material-color-utilities`) and remove Tailwind/Radix/Lucide | Enforces visual consistency, clean configuration, and native MD3 interaction patterns across all pages | — Pending |
-| Unified warm Hearth terracotta/amber MD3 tonal palette replacing per-pillar color ramps | Eliminates visual fragmentation across sections while preserving calm light/dark hierarchy | — Pending |
+| Unified warm Hestia terracotta/amber MD3 tonal palette replacing per-pillar color ramps | Eliminates visual fragmentation across sections while preserving calm light/dark hierarchy | — Pending |
 | Restructure top-level destinations and sub-views around MD3 navigation and minimal clutter | Improves flow of control and reduces nested tabs, card borders, and multi-step sheet friction | — Pending |
 
 ## Evolution
