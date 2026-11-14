@@ -337,9 +337,7 @@ export const queryMdField: MdHostQueries['query'] = fieldQueries.query;
 export const getMdField: MdHostQueries['get'] = fieldQueries.get;
 export const findMdField: MdHostQueries['find'] = fieldQueries.find;
 
-export const queryMdSelect: MdHostQueries['query'] = selectQueries.query;
 export const getMdSelect: MdHostQueries['get'] = selectQueries.get;
-export const findMdSelect: MdHostQueries['find'] = selectQueries.find;
 
 export const queryMdCheckbox: MdHostQueries['query'] = checkboxQueries.query;
 export const getMdCheckbox: MdHostQueries['get'] = checkboxQueries.get;
