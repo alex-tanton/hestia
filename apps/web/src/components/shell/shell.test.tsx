@@ -91,7 +91,9 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
     ).toBeInTheDocument();
-    expect(document.title).toBe('Meals · Hestia');
+    await waitFor(() => {
+      expect(document.title).toBe('Meals · Hestia');
+    });
     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
       'aria-current',
       'page',

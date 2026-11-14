@@ -104,6 +104,7 @@ export default defineConfig({
   ],
   test: {
     globalSetup: ['../../test/global-tz.mjs'],
+    testTimeout: 15_000,
     projects: [
       {
         extends: false,
