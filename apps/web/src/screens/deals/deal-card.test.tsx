@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
+import { findMdButton, getMdButton } from '../../test/md-queries.ts';
 import { createFetchStub, renderScreen, type StubHandler, stubFetch } from '../../test/harness.tsx';
 import { OAK_STREET_ID, SAM_ID } from '../../test/fixtures.ts';
 import {
@@ -137,9 +138,7 @@ describe('adding a deal to a list', () => {
     });
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
 
-    await user.click(
-      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
-    );
+    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
 
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'POST')).toBe(true);
@@ -164,7 +163,7 @@ describe('adding a deal to a list', () => {
     });
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
 
-    await user.click(await screen.findByRole('button', { name: 'Add Broccoli Crowns to a list' }));
+    await user.click(await findMdButton('Add Broccoli Crowns to a list'));
 
     const sheet = await screen.findByRole('dialog');
     expect(within(sheet).getByText('Add to which list?')).toBeInTheDocument();
@@ -183,12 +182,10 @@ describe('adding a deal to a list', () => {
     stubFetch({ 'GET /api/households/:id/lists': () => ({ status: 200, body: [] }) });
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
 
-    await user.click(
-      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
-    );
+    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
     const sheet = await screen.findByRole('dialog');
     expect(within(sheet).getByText(/No lists yet/)).toBeInTheDocument();
-    expect(within(sheet).getByRole('button', { name: 'Go to Lists' })).toBeInTheDocument();
+    expect(getMdButton('Go to Lists', { container: sheet })).toBeInTheDocument();
   });
 });
 
@@ -236,12 +233,11 @@ describe('adding a deal after a lost response', () => {
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    const add = await screen.findByRole('button', {
-      name: "Add Egg-Land's Best Extra Large Eggs to a list",
-    });
+    const add = await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list");
 
     await user.click(add);
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     await user.click(add);
     expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
 
@@ -259,9 +255,7 @@ describe('adding a deal after a lost response', () => {
       'POST /api/lists/:id/items': store.insert,
     });
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    const add = await screen.findByRole('button', {
-      name: "Add Egg-Land's Best Extra Large Eggs to a list",
-    });
+    const add = await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list");
 
     await user.click(add);
     await waitFor(() => {
@@ -284,13 +278,14 @@ describe('adding a deal after a lost response', () => {
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
-    const add = await screen.findByRole('button', { name: 'Add Broccoli Crowns to a list' });
+    const add = await findMdButton('Add Broccoli Crowns to a list');
 
     await user.click(add);
     await user.click(
       within(await screen.findByRole('dialog')).getByRole('button', { name: /This Week/ }),
     );
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
 
     await user.click(add);
     await user.click(
@@ -313,7 +308,7 @@ describe('adding a deal after a lost response', () => {
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
     renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
-    const add = await screen.findByRole('button', { name: 'Add Broccoli Crowns to a list' });
+    const add = await findMdButton('Add Broccoli Crowns to a list');
     const addTo = async (listName: RegExp): Promise<void> => {
       await user.click(add);
       await user.click(
@@ -323,8 +318,10 @@ describe('adding a deal after a lost response', () => {
 
     await addTo(/This Week/);
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     await addTo(/Weekend Cookout/);
     expect(await screen.findByText('Added to Weekend Cookout.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     await addTo(/This Week/);
     expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
 
@@ -343,9 +340,7 @@ describe('adding a deal after a lost response', () => {
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
     const first = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    await user.click(
-      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
-    );
+    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
 
     // A filter change, paging, or leaving and coming back unmounts the card. The page keeps its one
@@ -355,9 +350,7 @@ describe('adding a deal after a lost response', () => {
       queryClient: first.queryClient,
       auth: first.auth,
     });
-    await user.click(
-      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
-    );
+    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
     expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
 
     const ids = idsPostedTo(stub, thisWeekList.id);
@@ -374,9 +367,7 @@ describe('adding a deal after a lost response', () => {
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
     const first = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    await user.click(
-      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
-    );
+    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
 
     // Alex signs out and Sam signs in without a reload, so the page's one QueryClient carries over.
@@ -387,9 +378,7 @@ describe('adding a deal after a lost response', () => {
       queryClient: first.queryClient,
       auth: first.auth,
     });
-    await user.click(
-      await screen.findByRole('button', { name: "Add Egg-Land's Best Extra Large Eggs to a list" }),
-    );
+    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
     expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
 
     const ids = idsPostedTo(stub, thisWeekList.id);

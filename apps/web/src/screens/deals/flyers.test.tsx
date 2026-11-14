@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getMdButton } from '../../test/md-queries.ts';
 import {
   problemBody,
   renderScreen,
@@ -137,7 +138,7 @@ describe('browsing flyers', () => {
     expect(
       await screen.findByText("Couldn't reach the store data, and there is nothing saved to show."),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add items by hand' })).toBeInTheDocument();
+    expect(getMdButton('Add items by hand')).toBeInTheDocument();
   });
 
   it('offers browse-all when no favorite store has an active flyer', async () => {
@@ -150,7 +151,7 @@ describe('browsing flyers', () => {
     expect(
       await screen.findByText('No active flyers at your favorite stores this week.'),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Browse all stores' }));
+    await user.click(getMdButton('Browse all stores'));
     await waitFor(() => {
       expect(created.calls.some((call) => call.path.includes('scope=all'))).toBe(true);
     });
@@ -163,7 +164,7 @@ describe('browsing flyers', () => {
 
     await user.click(await screen.findByRole('radio', { name: 'All stores' }));
     expect(await screen.findByText('No stores found near 27514.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Change the postal code' })).toBeInTheDocument();
+    expect(getMdButton('Change the postal code')).toBeInTheDocument();
   });
 
   it('says browsing needs a connection when offline', async () => {
@@ -225,7 +226,7 @@ describe("one flyer's items", () => {
     });
 
     expect(await screen.findByText('Page 1 of 3')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Next/ }));
+    await user.click(getMdButton(/Next/));
     await waitFor(() => {
       expect(created.calls.some((call) => call.path.includes('page=2'))).toBe(true);
     });
