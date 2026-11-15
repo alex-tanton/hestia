@@ -1,15 +1,27 @@
-import { Search } from 'lucide-react';
 import { useMemo, useState, type ReactElement, type SyntheticEvent } from 'react';
 import { useNavigate } from 'react-router';
-import type { DealScope, DealSort } from '@hestia/shared';
+import type { Deal, DealScope, DealSort } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
+import { ModalBottomSheet } from '../../components/ui/ModalBottomSheet.tsx';
 import { OfflineState } from '../../components/states/StateBlocks.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
+import { MdFilterChip } from '../../components/md/MdFilterChip.tsx';
 import { SegmentedControl } from '../../components/ui/SegmentedControl.tsx';
 import { Select } from '../../components/ui/Select.tsx';
-import { useDealSearch, useMerchants, type DealSearchParams } from '../../lib/api/deals.ts';
+import { useToast } from '../../components/ui/Toast.tsx';
+import {
+  useAddDealToList,
+  useDealSearch,
+  useMerchants,
+  useShoppingLists,
+  type DealSearchParams,
+} from '../../lib/api/deals.ts';
+import { useDeleteListItem } from '../../lib/api/list-hooks.ts';
+import { userMessage } from '../../lib/api/problem.ts';
 import { parsePriceInput } from '../../lib/money.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
+import { AddToListSheet } from './AddToListSheet.tsx';
 import { DealResults } from './DealResults.tsx';
 import { DealsFrame, useActiveHousehold } from './deals-frame.tsx';
 import { FavoritesPrompt } from './FavoriteStores.tsx';
@@ -44,10 +56,12 @@ const INITIAL: DealSearchParams = {
 /**
  * Deal search: keyword search across the stores near the household's postal
  * code, scoped to favorites by default with browse-all one tap away. Results are `DealCard`s, 50 to
- * a page.
+ * a page. Features MD3 Search Bar, SegmentedControl, quick filter chips, FilterModalBottomSheet,
+ * and a single lifted AddToListSheet with smart 1-list addition.
  */
 export function DealSearchScreen(): ReactElement {
   const navigate = useNavigate();
+  const toast = useToast();
   const isOnline = useOnlineStatus();
   const { householdId, postalCode } = useActiveHousehold();
 
@@ -56,9 +70,20 @@ export function DealSearchScreen(): ReactElement {
   const [maxInput, setMaxInput] = useState('');
   const [priceError, setPriceError] = useState<string>();
   const [applied, setApplied] = useState<DealSearchParams>(INITIAL);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+
+  // Lifted AddToListSheet state
+  const [dealToAdd, setDealToAdd] = useState<Deal | null>(null);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [addedDealInfo, setAddedDealInfo] = useState<{ listId: string; itemId: string } | null>(
+    null,
+  );
 
   const merchants = useMerchants(isOnline ? householdId : undefined);
   const results = useDealSearch(isOnline ? householdId : undefined, applied);
+  const lists = useShoppingLists(isOnline ? householdId : undefined);
+  const addToList = useAddDealToList(householdId ?? '');
+  const deleteItem = useDeleteListItem(householdId ?? '', addedDealInfo?.listId ?? '');
 
   const storeOptions = useMemo(() => {
     const rows = merchants.data?.merchants ?? [];
@@ -70,11 +95,6 @@ export function DealSearchScreen(): ReactElement {
     ];
   }, [merchants.data, applied.scope]);
 
-  /*
-   * A deal's category is Flipp's own `_L2`, and the service has no catalogue of them to offer, so
-   * the filter lists the categories present in the results the search returned, plus whichever
-   * one is applied.
-   */
   const categoryOptions = useMemo(() => {
     const found = new Set((results.data?.deals ?? []).map((deal) => deal.category ?? ''));
     found.delete('');
@@ -91,6 +111,11 @@ export function DealSearchScreen(): ReactElement {
     applied.category !== undefined ||
     applied.minPriceCents !== undefined ||
     applied.maxPriceCents !== undefined;
+
+  const activeFilterCount =
+    (applied.stores.length > 0 ? 1 : 0) +
+    (applied.category !== undefined ? 1 : 0) +
+    (applied.minPriceCents !== undefined || applied.maxPriceCents !== undefined ? 1 : 0);
 
   const change = (patch: Partial<DealSearchParams>): void => {
     setApplied((current) => ({ ...current, ...patch, page: 1 }));
@@ -132,6 +157,42 @@ export function DealSearchScreen(): ReactElement {
     });
   };
 
+  const handleAddDeal = (deal: Deal): void => {
+    const activeLists = (lists.data ?? []).filter((l) => l.archivedAt === null);
+    const list = activeLists[0];
+    if (activeLists.length === 1 && list !== undefined) {
+      addToList.mutate(
+        { listId: list.id, dealId: deal.id },
+        {
+          onSuccess: (data) => {
+            setAddedDealInfo({ listId: list.id, itemId: data.id });
+            toast({
+              variant: 'success',
+              message: `Added '${deal.name}' to ${list.name}`,
+              action: {
+                label: 'Undo',
+                onAction: () => {
+                  if (data.id) {
+                    deleteItem.mutate(data.id);
+                  }
+                },
+              },
+            });
+          },
+          onError: (error) => {
+            toast({
+              variant: 'error',
+              message: userMessage(error, { fallback: `Could not add ${deal.name}. Try again.` }),
+            });
+          },
+        },
+      );
+    } else {
+      setDealToAdd(deal);
+      setIsAddSheetOpen(true);
+    }
+  };
+
   if (!isOnline) {
     return (
       <DealsFrame>
@@ -144,22 +205,28 @@ export function DealSearchScreen(): ReactElement {
     <DealsFrame>
       <div className="flex flex-col gap-4">
         <form role="search" noValidate className="flex flex-col gap-3" onSubmit={handleSubmit}>
-          <TextField
-            label="Search deals"
-            type="search"
-            name="q"
-            enterKeyHint="search"
-            placeholder="chicken, milk, cereal"
-            value={draftQuery}
-            onChange={(event) => {
-              setDraftQuery(event.target.value);
-            }}
-          />
-          <Button type="submit" className="self-start">
-            <Search aria-hidden size={20} strokeWidth={1.5} />
-            Search
-          </Button>
+          {/* MD3 Search Bar */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <TextField
+                label="Search deals"
+                type="search"
+                name="q"
+                enterKeyHint="search"
+                placeholder="chicken, milk, cereal"
+                value={draftQuery}
+                onChange={(event) => {
+                  setDraftQuery(event.target.value);
+                }}
+              />
+            </div>
+            <Button type="submit" className="shrink-0">
+              <Icon name="search" size={20} />
+              Search
+            </Button>
+          </div>
 
+          {/* Scope SegmentedControl */}
           <SegmentedControl
             label="Store scope"
             segments={SCOPE_SEGMENTS}
@@ -168,6 +235,32 @@ export function DealSearchScreen(): ReactElement {
               change({ scope: value as DealScope, stores: [] });
             }}
           />
+
+          {/* Quick filter chips row */}
+          <div
+            className="flex items-center gap-2 overflow-x-auto pb-1"
+            aria-label="Quick deal filter chips"
+          >
+            <MdFilterChip
+              selected={activeFilterCount > 0}
+              onClick={() => {
+                setIsFilterSheetOpen(true);
+              }}
+            >
+              {`All filters${activeFilterCount > 0 ? ` (${String(activeFilterCount)})` : ''}`}
+            </MdFilterChip>
+            {categoryOptions.slice(1, 4).map((cat) => (
+              <MdFilterChip
+                key={cat.value}
+                selected={applied.category === cat.value}
+                onClick={() => {
+                  change({ category: applied.category === cat.value ? undefined : cat.value });
+                }}
+              >
+                {cat.label}
+              </MdFilterChip>
+            ))}
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
@@ -220,6 +313,52 @@ export function DealSearchScreen(): ReactElement {
             </Button>
           )}
         </form>
+
+        {/* FilterModalBottomSheet for rich mobile filtering */}
+        <ModalBottomSheet
+          open={isFilterSheetOpen}
+          onOpenChange={setIsFilterSheetOpen}
+          title="Filter deals"
+          description="Narrow deals by store, category, and price range"
+        >
+          <div className="flex flex-col gap-4 px-4 pb-4">
+            <Select
+              label="Modal Store"
+              options={storeOptions}
+              value={applied.stores[0] ?? ANY_STORE}
+              onValueChange={(value) => {
+                change({ stores: value === ANY_STORE ? [] : [value] });
+              }}
+            />
+            <Select
+              label="Modal Category"
+              options={categoryOptions}
+              value={applied.category ?? ANY_CATEGORY}
+              onValueChange={(value) => {
+                change({ category: value === ANY_CATEGORY ? undefined : value });
+              }}
+            />
+            <div className="flex justify-between gap-2 pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  clearFilters();
+                  setIsFilterSheetOpen(false);
+                }}
+              >
+                Clear deal filters
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setIsFilterSheetOpen(false);
+                }}
+              >
+                Apply filters
+              </Button>
+            </div>
+          </div>
+        </ModalBottomSheet>
 
         {merchants.data && !hasFavorites && householdId !== undefined && (
           <FavoritesPrompt householdId={householdId} postalCode={postalCode} />
@@ -288,10 +427,24 @@ export function DealSearchScreen(): ReactElement {
               onPageChange={(page) => {
                 setApplied((current) => ({ ...current, page }));
               }}
+              onAddDeal={handleAddDeal}
             />
           )
         )}
       </div>
+
+      {/* Lifted screen-level AddToListSheet */}
+      {householdId !== undefined && (
+        <AddToListSheet
+          open={isAddSheetOpen}
+          onOpenChange={(open) => {
+            setIsAddSheetOpen(open);
+            if (!open) setDealToAdd(null);
+          }}
+          deal={dealToAdd}
+          householdId={householdId}
+        />
+      )}
     </DealsFrame>
   );
 }

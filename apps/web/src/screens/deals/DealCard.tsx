@@ -9,9 +9,9 @@ import { CONDITIONAL_LABEL, dealSentence, validityLabel } from './deal-copy.ts';
 import { DealImage } from './DealImage.tsx';
 
 export interface DealCardProps {
-  householdId?: string;
+  householdId?: string | undefined;
   deal: Deal;
-  onAdd?: (deal: Deal) => void;
+  onAdd?: ((deal: Deal) => void) | undefined;
 }
 
 /**
