@@ -295,7 +295,7 @@ describe('Chores list', () => {
       },
     });
 
-    await userEvent.click(await findMdButton('Mark Take out trash done'));
+    await userEvent.click(await findMdButton(/Mark (done, )?Take out trash/));
 
     expect(
       await screen.findByText('Take out trash done. Jordan Blake is next.'),
@@ -331,7 +331,7 @@ describe('Chores list', () => {
       },
     });
 
-    await userEvent.click(await findMdButton('Mark Take out trash done'));
+    await userEvent.click(await findMdButton(/Mark (done, )?Take out trash/));
     await userEvent.click(await screen.findByRole('button', { name: 'Undo' }));
 
     expect(await screen.findByRole('link', { name: /^Take out trash/ })).toHaveTextContent(
@@ -359,7 +359,7 @@ describe('Chores list', () => {
         },
       }),
     });
-    await userEvent.click(await findMdButton('Mark Water plants done'));
+    await userEvent.click(await findMdButton(/Mark (done, )?Water plants/));
     expect(await screen.findByRole('button', { name: 'Undo' })).toBeInTheDocument();
 
     act(() => {
@@ -381,7 +381,7 @@ describe('Chores list', () => {
 
     setOnline(false);
 
-    const done = await findMdButton('Mark Take out trash done');
+    const done = await findMdButton(/Mark (done, )?Take out trash/);
     expect(done).toHaveProperty('softDisabled', false);
     expect(screen.getAllByText(OFFLINE_ACTION_REASON).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /^Take out trash/ })).toBeInTheDocument();

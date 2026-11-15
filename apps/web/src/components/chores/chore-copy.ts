@@ -10,7 +10,8 @@ import { addDays, weekStart } from '../../lib/household-date.ts';
 
 export const OFFLINE_ACTION_REASON = 'Needs a connection.';
 
-export const CHORES_EMPTY_COPY = 'No chores yet. Add one to start tracking what needs doing.';
+export const CHORES_EMPTY_COPY =
+  'Track recurring household tasks, share rotations, and know whose turn it is next.';
 export const ERRANDS_EMPTY_COPY = 'No errands yet. Add one to keep track of it.';
 export const ERRANDS_ALL_DONE_COPY = 'Nothing open. Everything is done.';
 
