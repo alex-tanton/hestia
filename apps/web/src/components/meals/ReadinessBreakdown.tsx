@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import type { MatchOverride, RecipeDetail } from '@hestia/shared';
+import { Card } from '../ui/Card.tsx';
 import { IngredientRow } from './IngredientRow.tsx';
 import { readinessSentence } from './meal-copy.ts';
 import { ReadinessRing } from './RecipeCard.tsx';
@@ -12,9 +13,7 @@ export interface ReadinessBreakdownProps {
 }
 
 /**
- * `ReadinessBreakdown`: per-ingredient bucket, what it matched,
- * and the inline correction. The ring is decorative (`aria-hidden`); the sentence beside it is what
- * a screen reader hears.
+ * ReadinessBreakdown tonal card displaying pantry/deal readiness and per-ingredient matches per D-06.
  */
 export function ReadinessBreakdown({
   householdId,
@@ -29,17 +28,17 @@ export function ReadinessBreakdown({
     readiness?.breakdown.find((entry) => entry.ingredientId === ingredientId);
 
   return (
-    <section aria-labelledby="readiness-heading" className="flex flex-col gap-3">
+    <Card variant="flat" className="flex flex-col gap-3 p-4">
       <div className="flex items-center gap-3">
         <ReadinessRing percent={readiness?.readinessPercent ?? 0} />
         <div className="flex flex-col">
-          <h2 id="readiness-heading" className="text-h2 text-primary">
+          <h2 id="readiness-heading" className="text-title-medium font-semibold text-primary">
             Readiness
           </h2>
           <p className="text-body text-secondary">{readinessSentence(ready, total)}</p>
         </div>
       </div>
-      <ul className="flex flex-col rounded-md border border-border">
+      <ul className="flex flex-col divide-y divide-[var(--md-sys-color-outline-variant)] rounded-md border border-[var(--md-sys-color-outline-variant)]">
         {recipe.ingredients.map((ingredient) => (
           <IngredientRow
             key={ingredient.id}
@@ -52,6 +51,6 @@ export function ReadinessBreakdown({
           />
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }
