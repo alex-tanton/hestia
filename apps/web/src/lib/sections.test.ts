@@ -19,11 +19,7 @@ describe('navigation config', () => {
       'Flyers',
       'Pantry',
     ]);
-    expect(PILLARS.meals.subTabs.map((tab) => tab.label)).toEqual([
-      'Planner',
-      'Recipes',
-      'Suggestions',
-    ]);
+    expect(PILLARS.meals.subTabs.map((tab) => tab.label)).toEqual(['Planner', 'Recipes']);
     expect(PILLARS.bills.subTabs.map((tab) => tab.label)).toEqual(['Bills', 'Subscriptions']);
     expect(PILLARS.chores.subTabs.map((tab) => tab.label)).toEqual(['Chores', 'Errands']);
     for (const pillar of Object.values(PILLARS)) {
