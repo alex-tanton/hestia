@@ -25,7 +25,7 @@ export function NavigationBar(): ReactElement {
               <NavLink
                 to={tab.path}
                 end={tab.path === '/'}
-                className="group flex flex-col items-center justify-center gap-1 py-1 text-center outline-none"
+                className="group flex flex-col items-center justify-center gap-1 py-1 text-center outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:rounded-lg"
               >
                 {({ isActive }) => (
                   <>
