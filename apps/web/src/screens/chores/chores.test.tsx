@@ -414,7 +414,7 @@ describe('Chore detail', () => {
       'GET /api/chores/:id': () => ({ status: 200, body: takeOutTrashDetailFixture }),
     });
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Take out trash' }),
+      await screen.findByRole('heading', { level: 2, name: 'Take out trash' }),
     ).toBeInTheDocument();
     expect(screen.getByText('Every week')).toBeInTheDocument();
     const dates = within(sectionOf('Next three dates'));
@@ -444,7 +444,7 @@ describe('Chore detail', () => {
       'GET /api/chores/:id': () => ({ status: 200, body: takeOutTrashDetailFixture }),
       'DELETE /api/chores/:id/completions/:completionId': () => ({ status: 204 }),
     });
-    await screen.findByRole('heading', { level: 1, name: 'Take out trash' });
+    await screen.findByRole('heading', { level: 2, name: 'Take out trash' });
 
     const user = userEvent.setup();
     const menus = getAllMdButtons('More actions for this completion');
@@ -484,7 +484,7 @@ describe('Chore detail', () => {
     mountDetail({
       'GET /api/chores/:id': () => ({ status: 200, body: takeOutTrashDetailFixture }),
     });
-    await screen.findByRole('heading', { level: 1, name: 'Take out trash' });
+    await screen.findByRole('heading', { level: 2, name: 'Take out trash' });
     setOnline(false);
     const markDone = await findMdButton('Mark done');
     expect(markDone).toHaveProperty('softDisabled', false);
