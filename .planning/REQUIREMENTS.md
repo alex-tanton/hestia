@@ -31,8 +31,8 @@ Requirements for the Material Design 3 UI overhaul. Each maps to roadmap phases.
 
 ### Grocery Lists, Pantry, Deals & Flyers
 
-- [ ] **LIST-01**: Overhaul `ListsIndexScreen`, `ListDetailScreen`, `ArchivedListsScreen`, and `PantryScreen` with borderless `<md-list>` + `<md-checkbox>`, `<md-fab>` creation actions, `ListNameSheet` converted to basic `<md-dialog>`, and Top App Bar overflow actions (`Archived`, `Add bought to pantry`).
-- [ ] **LIST-02**: Standardize `ListDetailScreen` with tonal `StoreGroupHeader` subheaders, `ItemSheet` Modal Bottom Sheet, and a unified MD3 collapsible `Bought (N)` section.
+- [x] **LIST-01**: Overhaul `ListsIndexScreen`, `ListDetailScreen`, `ArchivedListsScreen`, and `PantryScreen` with borderless `<md-list>` + `<md-checkbox>`, `<md-fab>` creation actions, `ListNameSheet` converted to basic `<md-dialog>`, and Top App Bar overflow actions (`Archived`, `Add bought to pantry`).
+- [x] **LIST-02**: Standardize `ListDetailScreen` with tonal `StoreGroupHeader` subheaders, `ItemSheet` Modal Bottom Sheet, and a unified MD3 collapsible `Bought (N)` section.
 - [ ] **LIST-03**: Restyle `BarcodeScannerDialog` as a dark-scheme MD3 Full-Screen Dialog preserving camera `BarcodeDetector`/WASM polyfill, flashlight, manual code entry, `Add to list | Mark bought` Segmented Button, and persistent Undo Snackbar feedback.
 - [ ] **DEAL-06**: Collapse `DealSearchScreen` filters behind an MD3 Search Bar, `Favorites | All stores` Segmented Button, and `<md-filter-chip>` row opening a Filter Modal Bottom Sheet, paired with a compact tonal `DealFreshness` banner.
 - [ ] **DEAL-07**: Simplify `DealCard` (photo, title, store/dates, bold price, single `-X%` tonal badge, `+ Add` icon button), lift a single shared `AddToListSheet` per screen, and present `FlyersScreen` / `FlyerItemsScreen` in 2–4 column elevated MD3 cards.
@@ -106,8 +106,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-02 | Phase 19 | Pending |
 | AUTH-06 | Phase 19 | Complete |
 | AUTH-07 | Phase 19 | Complete |
-| LIST-01 | Phase 19 | Pending |
-| LIST-02 | Phase 19 | Pending |
+| LIST-01 | Phase 19 | Complete |
+| LIST-02 | Phase 19 | Complete |
 | LIST-03 | Phase 19 | Pending |
 | DEAL-06 | Phase 19 | Pending |
 | DEAL-07 | Phase 19 | Pending |
