@@ -202,9 +202,16 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
+**Wave 1**
 - [ ] 21-01-PLAN.md — Dependency Pruning & Semantic CSS Architecture (`FND-05`)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 21-02-PLAN.md — Vitest Suites & Coverage Threshold Ratchet (`VER-01`)
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 21-03-PLAN.md — Playwright E2E Locator Modernization & Animation Suppression (`VER-02`)
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 21-04-PLAN.md — Accessibility Audits, Knip Baseline & CI Ratchets (`VER-03`, `VER-04`)
 
 ## Progress
