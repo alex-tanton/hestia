@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
-import { findMdButton, findMdField, getMdButton } from '../../test/md-queries.ts';
+import { findMdButton, findMdDialog, findMdField, getMdButton } from '../../test/md-queries.ts';
 import {
   dukeEnergyFixture,
   spectrumInternetFixture,
@@ -235,7 +235,7 @@ describe('Bills dashboard', () => {
     );
     await screen.findByText('Duke Energy');
     await user.click(getMdButton('Add a bill'));
-    const form = await screen.findByRole('dialog', { name: 'Add a bill' });
+    const form = await findMdDialog(/Add (a )?bill/i);
     const nameInput = await findFieldInput('Name', form);
     fireEvent.input(nameInput, { target: { value: 'Trash pickup' } });
     const amountInput = await findFieldInput('Amount', form);
@@ -278,7 +278,7 @@ describe('Bills dashboard', () => {
     );
     await screen.findByText('Duke Energy');
     await user.click(getMdButton('Add a bill'));
-    const form = await screen.findByRole('dialog', { name: 'Add a bill' });
+    const form = await findMdDialog(/Add (a )?bill/i);
     await user.click(await screen.findByRole('radio', { name: 'Personal' }));
     const nameInput = await findFieldInput('Name', form);
     fireEvent.input(nameInput, { target: { value: 'Car Insurance' } });
