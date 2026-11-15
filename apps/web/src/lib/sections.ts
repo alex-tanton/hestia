@@ -24,8 +24,6 @@ export interface Tab {
 
 export interface Pillar extends Tab {
   id: PillarId;
-  /** The one line the coming-soon state shows. */
-  comingSoon: string;
   /** The first entry is the tab's root. */
   subTabs: readonly SubTab[];
 }
@@ -43,7 +41,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     label: 'Lists',
     path: '/lists',
     icon: ShoppingCart,
-    comingSoon: "Shared shopping lists built from this week's deals at your stores.",
     subTabs: [
       { label: 'Lists', path: '/lists' },
       { label: 'Deals', path: '/lists/deals' },
@@ -56,7 +53,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     label: 'Meals',
     path: '/meals',
     icon: UtensilsCrossed,
-    comingSoon: "Plan the week's meals around what's on sale and in your pantry.",
     subTabs: [
       { label: 'Planner', path: '/meals' },
       { label: 'Recipes', path: '/meals/recipes' },
@@ -68,7 +64,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     label: 'Bills',
     path: '/bills',
     icon: Receipt,
-    comingSoon: 'Track bills and subscriptions and see what is due each week.',
     subTabs: [
       { label: 'Bills', path: '/bills' },
       { label: 'Subscriptions', path: '/bills/subscriptions' },
@@ -79,7 +74,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     label: 'Chores',
     path: '/chores',
     icon: ClipboardCheck,
-    comingSoon: 'Keep recurring chores and one-off errands on a shared schedule.',
     subTabs: [
       { label: 'Chores', path: '/chores' },
       { label: 'Errands', path: '/chores/errands' },

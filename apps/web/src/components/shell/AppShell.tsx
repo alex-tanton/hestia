@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { SectionProvider } from '../../lib/section-context.tsx';
 import {
   PILLARS,
   RELEASED_PILLARS,
@@ -88,7 +87,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
   }, [title]);
 
   return (
-    <SectionProvider section={section} className="min-h-dvh bg-base text-primary">
+    <div className="min-h-dvh bg-base text-primary">
       <ToastProvider>
         <WriteQueue />
         <a
@@ -114,7 +113,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
         <NavigationBar />
         <NavigationRail />
       </ToastProvider>
-    </SectionProvider>
+    </div>
   );
 }
 

@@ -1,5 +1,4 @@
 import type { ReactElement } from 'react';
-import { SectionProvider } from '../../lib/section-context.tsx';
 import { useActiveHousehold } from '../deals/deals-frame.tsx';
 import { FavoriteStoresPanel } from '../deals/FavoriteStores.tsx';
 
@@ -13,13 +12,11 @@ export function FavoriteStoresStep({ onDone }: { onDone: () => void }): ReactEle
   const { householdId, postalCode } = useActiveHousehold();
 
   return (
-    <SectionProvider section="lists">
-      <FavoriteStoresPanel
-        householdId={householdId}
-        postalCode={postalCode}
-        showPostalCodeAction={false}
-        onDone={onDone}
-      />
-    </SectionProvider>
+    <FavoriteStoresPanel
+      householdId={householdId}
+      postalCode={postalCode}
+      showPostalCodeAction={false}
+      onDone={onDone}
+    />
   );
 }

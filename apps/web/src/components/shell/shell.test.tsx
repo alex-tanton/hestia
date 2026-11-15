@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { createFetchStub, renderApp } from '../../test/harness.tsx';
 import { findMdButton, getMdButton } from '../../test/md-queries.ts';
-import { useSection } from '../../lib/section-context.tsx';
 import { PillarScreen } from '../../screens/PillarScreen.tsx';
 import { HouseholdSwitcher, type HouseholdSummary } from './HouseholdSwitcher.tsx';
 import { OFFLINE_MESSAGE, OfflineBanner } from './OfflineBanner.tsx';
@@ -166,26 +165,6 @@ describe('titleForPath', () => {
     ['/bills/subscriptions', 'Subscriptions'],
   ])('%s → %s', (path, title) => {
     expect(titleForPath(path)).toBe(title);
-  });
-});
-
-describe('section context', () => {
-  function SectionProbe(): ReactElement {
-    return <output>{useSection()}</output>;
-  }
-
-  it('comes from the route for the shell', async () => {
-    openPath('/bills', { 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) });
-    await screen.findByRole('radiogroup', { name: 'Bills sections' }, { timeout: 5000 });
-    expect(screen.getByRole('main').closest('[data-section]')).toHaveAttribute(
-      'data-section',
-      'bills',
-    );
-  });
-
-  it('defaults to the dashboard outside any provider', () => {
-    render(<SectionProbe />);
-    expect(screen.getByRole('status')).toHaveTextContent('dashboard');
   });
 });
 

@@ -1,6 +1,5 @@
 import { useId, useState, type ReactElement, type ReactNode } from 'react';
 import { cn } from '../../lib/cn.ts';
-import { useSection } from '../../lib/section-context.tsx';
 import { MdIconButton } from '../md/MdButton.tsx';
 import { MdMenu, MdMenuItem } from '../md/MdMenu.tsx';
 import { Icon } from './Icon.tsx';
@@ -29,12 +28,11 @@ export interface OverflowMenuProps {
  * The "More" menu: the single-pointer alternative to every swipe action (WCAG 2.5.1).
  */
 export function OverflowMenu({ label, items }: OverflowMenuProps): ReactElement {
-  const section = useSection();
   const anchorId = useId();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div data-section={section} className="relative inline-flex">
+    <div className="relative inline-flex">
       <MdIconButton
         id={anchorId}
         type="button"
