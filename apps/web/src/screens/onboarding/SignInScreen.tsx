@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { useAuthClient } from '../../lib/api/api-context.tsx';
@@ -53,81 +54,87 @@ export function SignInScreen(): ReactElement {
 
   return (
     <OnboardingLayout title="Sign in">
-      <form
-        ref={formRef}
-        noValidate
-        className="flex flex-col gap-4"
-        onSubmit={(event) => {
-          void handleSubmit(event);
-        }}
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
       >
-        <TextField
-          label="Email"
-          type="email"
-          name="email"
-          autoComplete="email"
-          value={email}
-          error={errors.email}
-          onChange={(event) => {
-            setEmail(event.target.value);
+        <form
+          ref={formRef}
+          noValidate
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            void handleSubmit(event);
           }}
-        />
-        <TextField
-          label="Password"
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          value={password}
-          error={errors.password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
-        />
-        <FormMessage message={formError} />
-        <Button
-          type="submit"
-          isLoading={isSubmitting}
-          disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
         >
-          Sign in
-        </Button>
-      </form>
-      <div className="flex flex-col gap-2 text-body-sm">
-        {/*
-         * Magic link option with 'or' divider and secondary button.
-         * The flag is a build-time constant, so with it off this option is folded out of the build.
-         */}
-        {import.meta.env.HESTIA_PUBLIC_MAGIC_LINK_ENABLED === 'true' && (
-          <>
-            <div className="relative my-3 flex items-center justify-center">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-input" />
+          <TextField
+            label="Email"
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={email}
+            error={errors.email}
+            onChange={(event) => {
+              setEmail(event.target.value);
+            }}
+          />
+          <TextField
+            label="Password"
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            value={password}
+            error={errors.password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+            }}
+          />
+          <FormMessage message={formError} />
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={isSubmitting}
+            disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
+          >
+            Sign in
+          </Button>
+        </form>
+        <div className="flex flex-col gap-2 text-body-sm">
+          {/*
+           * Magic link option with 'or' divider and secondary button.
+           * The flag is a build-time constant, so with it off this option is folded out of the build.
+           */}
+          {import.meta.env.HESTIA_PUBLIC_MAGIC_LINK_ENABLED === 'true' && (
+            <>
+              <div className="relative my-3 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-[var(--md-sys-color-outline-variant)]" />
+                </div>
+                <span className="relative bg-[var(--md-sys-color-surface-container)] px-2 text-body-sm text-[var(--md-sys-color-on-surface-variant)] uppercase">
+                  or
+                </span>
               </div>
-              <span className="relative bg-base px-2 text-body-sm text-secondary uppercase">
-                or
-              </span>
-            </div>
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={() => {
-                void navigate('/sign-in/link');
-              }}
-            >
-              Email me a sign-in link
-            </Button>
-          </>
-        )}
-        <Link to="/forgot-password" className="font-semibold text-section">
-          Forgot password?
-        </Link>
-        <p className="text-secondary">
-          New here?{' '}
-          <Link to="/sign-up" className="font-semibold text-section">
-            Create an account
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => {
+                  void navigate('/sign-in/link');
+                }}
+              >
+                Email me a sign-in link
+              </Button>
+            </>
+          )}
+          <Link to="/forgot-password" className="font-semibold text-[var(--md-sys-color-primary)]">
+            Forgot password?
           </Link>
-        </p>
-      </div>
+          <p className="text-[var(--md-sys-color-on-surface-variant)]">
+            New here?{' '}
+            <Link to="/sign-up" className="font-semibold text-[var(--md-sys-color-primary)]">
+              Create an account
+            </Link>
+          </p>
+        </div>
+      </Card>
     </OnboardingLayout>
   );
 }
