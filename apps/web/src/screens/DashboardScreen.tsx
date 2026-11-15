@@ -29,9 +29,10 @@ const CARDS: Readonly<Record<PillarId, (props: PillarCardProps) => ReactElement>
 };
 
 /**
- * This Week: four cards in a fixed order — Bills, Shopping, Meals, Chores — each rendering on its
- * own as its data arrives. When every *shipped* pillar is empty, a single first-run panel replaces
- * those pillars' cards; the unshipped pillars' placeholders are unaffected and stay in place.
+ * This Week: responsive 1-2 column grid (1 col on mobile <600px, 2 col on md: >=600px).
+ * When every *shipped* pillar is empty, a single first-run hero panel replaces those
+ * pillars' cards spanning col-span-full; the unshipped pillars' placeholders are unaffected
+ * and stay in place.
  */
 export function DashboardScreen({
   bills,
@@ -52,7 +53,7 @@ export function DashboardScreen({
     shipped.length > 0 && shipped.every((pillar) => states[pillar]?.status === 'empty');
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {ORDER.map((pillar) => {
         if (isFirstRun && releasedPillars.has(pillar)) {
           return pillar === shipped[0] ? <DashboardFirstRun key="first-run" /> : null;

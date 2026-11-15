@@ -69,7 +69,10 @@ describe('the Shopping card', () => {
     expect(
       await screen.findByRole('heading', { level: 2, name: FIRST_RUN_HEADING }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Create a list' })).toHaveAttribute('href', '/lists');
+    expect(screen.getByRole('link', { name: /create a shopping list/i })).toHaveAttribute(
+      'href',
+      '/lists',
+    );
     // Bills and Chores both shipped and are empty, so they fold into the same first-run panel
     // rather than rendering their own "Nothing due" cards.
     expect(screen.queryByRole('region', { name: /^Bills/ })).toBeNull();
