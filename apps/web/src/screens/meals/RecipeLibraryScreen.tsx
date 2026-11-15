@@ -1,7 +1,7 @@
-import { UtensilsCrossed } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useSearchParams } from 'react-router';
 import type { RecipeDetail } from '@hestia/shared';
+import { MdFab } from '../../components/md/MdFab.tsx';
 import { MdFilterChip } from '../../components/md/MdFilterChip.tsx';
 import { RecipeCard } from '../../components/meals/RecipeCard.tsx';
 import {
@@ -16,8 +16,8 @@ import {
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
-import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { Select } from '../../components/ui/Select.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
@@ -34,7 +34,7 @@ const SORT_OPTIONS: { value: LibrarySort; label: string }[] = [
   { value: 'readiness', label: 'Readiness' },
 ];
 
-/** Searchable list, readiness on each card, sort by recent/title/readiness. */
+/** Searchable recipe library with MD3 search bar, filter chips, tonal RecipeCards, and floating FAB. */
 export function RecipeLibraryScreen({ householdId }: { householdId: string }): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
@@ -46,9 +46,11 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
   const [sort, setSort] = useState<LibrarySort>('recent');
   const [isAdding, setIsAdding] = useState(false);
 
-  const filterReady = searchParams.get('filter') === 'ready';
+  const filterParam = searchParams.get('filter');
+  const filterReady = filterParam === 'ready';
+  const filterOnSale = filterParam === 'sale';
 
-  const handleToggleFilter = (): void => {
+  const handleToggleFilterReady = (): void => {
     setPage(1);
     const next = new URLSearchParams(searchParams);
     if (filterReady) {
@@ -56,6 +58,24 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
     } else {
       next.set('filter', 'ready');
     }
+    setSearchParams(next, { replace: true });
+  };
+
+  const handleToggleFilterSale = (): void => {
+    setPage(1);
+    const next = new URLSearchParams(searchParams);
+    if (filterOnSale) {
+      next.delete('filter');
+    } else {
+      next.set('filter', 'sale');
+    }
+    setSearchParams(next, { replace: true });
+  };
+
+  const handleClearFilters = (): void => {
+    setSearch('');
+    const next = new URLSearchParams(searchParams);
+    next.delete('filter');
     setSearchParams(next, { replace: true });
   };
 
@@ -69,10 +89,14 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
   const query = search.trim().toLowerCase();
   const matches =
     query === '' ? merged : merged.filter((recipe) => recipe.title.toLowerCase().includes(query));
-  const readyMatches = filterReady
-    ? matches.filter((r) => r.inPantryCount > 0 || r.onSaleCount > 0)
-    : matches;
-  const sorted = sortRecipes(readyMatches, sort);
+
+  let filtered = matches;
+  if (filterReady) {
+    filtered = filtered.filter((r) => r.inPantryCount > 0 || r.onSaleCount > 0);
+  } else if (filterOnSale) {
+    filtered = filtered.filter((r) => r.onSaleCount > 0);
+  }
+  const sorted = sortRecipes(filtered, sort);
 
   function body(): ReactElement {
     if (recipes.isPending && recipes.fetchStatus === 'paused') {
@@ -93,49 +117,41 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
       );
     }
     if (merged.length === 0) {
-      return (
+      return !offlineReason ? (
         <EmptyState
-          icon={UtensilsCrossed}
+          icon="restaurant"
+          heading="No recipes yet"
           message={RECIPE_LIBRARY_EMPTY_COPY}
           action={{
-            label: 'Add a recipe',
+            label: 'Add recipe',
             onAction: () => {
               setIsAdding(true);
             },
           }}
         />
-      );
-    }
-    if (filterReady && readyMatches.length === 0) {
-      return (
-        <Card className="flex flex-col items-center gap-3 p-6 text-center bg-surface-container-low">
-          <h2 className="text-heading font-semibold text-primary">No matching recipes</h2>
-          <p className="text-body text-secondary max-w-md">
-            No recipes have ingredients currently in your pantry or on sale. Try clearing the filter
-            or adding ingredients to your pantry.
-          </p>
-          <Button variant="secondary" onClick={handleToggleFilter}>
-            Clear recipe filter
-          </Button>
-        </Card>
+      ) : (
+        <EmptyState
+          icon="restaurant"
+          heading="No recipes yet"
+          message={RECIPE_LIBRARY_EMPTY_COPY}
+        />
       );
     }
     if (sorted.length === 0) {
       return (
         <EmptyState
-          icon={UtensilsCrossed}
+          icon="restaurant"
+          heading="No matching recipes"
           message={RECIPE_LIBRARY_NO_MATCH_COPY}
           action={{
-            label: 'Clear search',
-            onAction: () => {
-              setSearch('');
-            },
+            label: 'Clear recipe filter',
+            onAction: handleClearFilters,
           }}
         />
       );
     }
     return (
-      <ul className="flex flex-col gap-3">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {sorted.map((recipe) => (
           <li key={recipe.id}>
             <RecipeCard
@@ -155,6 +171,7 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
 
   return (
     <section className="flex flex-col gap-4">
+      {/* Search and filters bar per MEAL-06 and UI-SPEC */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <TextField
@@ -164,10 +181,6 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
-              // Search filters only the loaded page (the recipes endpoint has no search of its own to
-              // filter server-side), so a new search
-              // always starts back at page 1 rather than silently searching wherever the reader
-              // happened to have paged to.
               setPage(1);
             }}
           />
@@ -179,9 +192,14 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
               setSort(value as LibrarySort);
             }}
           />
-          <MdFilterChip selected={filterReady} onClick={handleToggleFilter}>
-            On sale / Ready now
-          </MdFilterChip>
+          <div className="flex items-center gap-2">
+            <MdFilterChip selected={filterReady} onClick={handleToggleFilterReady}>
+              Ready now
+            </MdFilterChip>
+            <MdFilterChip selected={filterOnSale} onClick={handleToggleFilterSale}>
+              On sale
+            </MdFilterChip>
+          </div>
         </div>
         <Button
           disabledReason={offlineReason}
@@ -189,7 +207,7 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
             setIsAdding(true);
           }}
         >
-          Add a recipe
+          Add recipe
         </Button>
       </div>
 
@@ -204,10 +222,6 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
 
       {body()}
 
-      {/* Recipe libraries paginate at 50, the same as
-          deals and flyer items — so a household past the first page can still reach every recipe,
-          not just search within whichever 50 happened to load first. Null below the page-1 seed
-          data's single page, same as deal search. */}
       {recipes.data && (
         <Pagination
           page={recipes.data.page}
@@ -216,6 +230,22 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
           hasMore={recipes.data.hasMore}
           onPageChange={setPage}
         />
+      )}
+
+      {/* Floating Action Button for mobile & desktop fast create per MEAL-06 */}
+      {!offlineReason && (
+        <div className="fixed right-6 bottom-6 z-20">
+          <MdFab
+            aria-label="Add recipe"
+            onClick={() => {
+              setIsAdding(true);
+            }}
+          >
+            <span slot="icon">
+              <Icon name="add" size={24} />
+            </span>
+          </MdFab>
+        </div>
       )}
 
       {isAdding && (

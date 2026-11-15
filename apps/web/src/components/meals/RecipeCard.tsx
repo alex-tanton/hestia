@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 import { pluralize } from '../../lib/format.ts';
+import { Card } from '../ui/Card.tsx';
 import { breakdownLine, readinessSentence } from './meal-copy.ts';
 
 export interface ReadinessRingProps {
@@ -10,9 +11,7 @@ export interface ReadinessRingProps {
 
 /**
  * The readiness percentage ring. Purely decorative — `aria-hidden`, because the text carries
- * the meaning — the percentage is also drawn as text inside it, so sighted users get the number
- * without relying on the arc's length alone, and the surrounding card carries the announced
- * sentence separately.
+ * the meaning — the percentage is also drawn as text inside it.
  */
 export function ReadinessRing({ percent, size = 44 }: ReadinessRingProps): ReactElement {
   const radius = (size - 4) / 2;
@@ -33,7 +32,7 @@ export function ReadinessRing({ percent, size = 44 }: ReadinessRingProps): React
         r={radius}
         fill="none"
         strokeWidth={4}
-        className="stroke-border"
+        className="stroke-[var(--md-sys-color-surface-container-highest)]"
       />
       <circle
         cx={center}
@@ -45,7 +44,7 @@ export function ReadinessRing({ percent, size = 44 }: ReadinessRingProps): React
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         transform={`rotate(-90 ${String(center)} ${String(center)})`}
-        className="stroke-section-accent transition-[stroke-dashoffset] duration-150 ease-out motion-reduce:transition-none"
+        className="stroke-[var(--md-sys-color-primary)] transition-[stroke-dashoffset] duration-150 ease-out motion-reduce:transition-none"
       />
       <text
         x="50%"
@@ -53,7 +52,7 @@ export function ReadinessRing({ percent, size = 44 }: ReadinessRingProps): React
         textAnchor="middle"
         dominantBaseline="central"
         fontSize={size / 4}
-        className="fill-primary font-semibold"
+        className="fill-[var(--md-sys-color-on-surface)] font-semibold"
       >
         {percent}%
       </text>
@@ -70,9 +69,11 @@ export interface RecipeCardProps {
   toBuyCount: number;
   /** Suggestions do not carry servings (the API's `Suggestion` shape has none); library cards do. */
   servings?: number | null;
+  prepTimeMinutes?: number | null;
+  cookTimeMinutes?: number | null;
 }
 
-/** A recipe card, used in the library and in suggestions. */
+/** Tonal MD3 RecipeCard using Card variant="flat" (surfaceContainerLow) per MEAL-06. */
 export function RecipeCard({
   recipeId,
   title,
@@ -81,28 +82,36 @@ export function RecipeCard({
   inPantryCount,
   toBuyCount,
   servings,
+  prepTimeMinutes,
+  cookTimeMinutes,
 }: RecipeCardProps): ReactElement {
   const total = onSaleCount + inPantryCount + toBuyCount;
   const ready = onSaleCount + inPantryCount;
+  const totalTime = (prepTimeMinutes ?? 0) + (cookTimeMinutes ?? 0);
+
   return (
-    <Link
-      to={`/meals/recipes/${recipeId}`}
-      className="flex items-center gap-3 rounded-md border border-border bg-base p-4 transition-colors duration-150 ease-out hover:bg-raised"
+    <Card
+      variant="flat"
+      className="p-0 transition-colors duration-150 ease-out hover:bg-[var(--md-sys-color-surface-container)]"
     >
-      <ReadinessRing percent={readinessPercent} />
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="sr-only">{readinessSentence(ready, total)}</span>
-        {/* The library and suggestions screens have no section heading above the card list, so
-            this is the page's next heading after its h1 — axe's heading-order check wants no
-            level skipped. */}
-        <h2 className="truncate text-h3 text-primary">{title}</h2>
-        <span className="text-body-sm text-secondary">
-          {breakdownLine(onSaleCount, inPantryCount, toBuyCount)}
+      <Link to={`/meals/recipes/${recipeId}`} className="flex items-center gap-3 p-4">
+        <ReadinessRing percent={readinessPercent} />
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="sr-only">{readinessSentence(ready, total)}</span>
+          <h2 className="truncate text-title-medium font-semibold text-[var(--md-sys-color-on-surface)]">
+            {title}
+          </h2>
+          <span className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+            {breakdownLine(onSaleCount, inPantryCount, toBuyCount)}
+          </span>
+          <div className="flex items-center gap-2 pt-0.5 text-caption text-[var(--md-sys-color-on-surface-variant)]">
+            {servings !== null && servings !== undefined && (
+              <span>{pluralize(servings, 'serving')}</span>
+            )}
+            {totalTime > 0 && <span>• {totalTime} min</span>}
+          </div>
         </span>
-        {servings !== null && servings !== undefined && (
-          <span className="text-caption text-muted">{pluralize(servings, 'serving')}</span>
-        )}
-      </span>
-    </Link>
+      </Link>
+    </Card>
   );
 }
