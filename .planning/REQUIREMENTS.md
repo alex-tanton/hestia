@@ -24,8 +24,8 @@ Requirements for the Material Design 3 UI overhaul. Each maps to roadmap phases.
 
 ### Dashboard, Onboarding & Auth
 
-- [ ] **DASH-01**: Redesign `Dashboard` (`This Week`) as a 1–2 column grid of borderless tonal cards (`surfaceContainerLow`, max 3 `<md-list-item>` rows per card, `error` reserved strictly for overdue alerts) plus a tonal `DashboardFirstRun` hero card.
-- [ ] **DASH-02**: Unify `EmptyState`, `ErrorState`, and `OfflineState` blocks using MD3 tonal containers, Material Symbols, and MD3 typography.
+- [x] **DASH-01**: Redesign `Dashboard` (`This Week`) as a 1–2 column grid of borderless tonal cards (`surfaceContainerLow`, max 3 `<md-list-item>` rows per card, `error` reserved strictly for overdue alerts) plus a tonal `DashboardFirstRun` hero card.
+- [x] **DASH-02**: Unify `EmptyState`, `ErrorState`, and `OfflineState` blocks using MD3 tonal containers, Material Symbols, and MD3 typography.
 - [x] **AUTH-06**: Redesign all auth screens (`/sign-in`, `/sign-up`, `/sign-in/link`, `/sign-in/code`, `/forgot-password`, `/set-password`) as centered tonal Surface Container cards (`max-w-[440px]`) with `<md-outlined-text-field>` and MD3 buttons, preserving `MAGIC_LINK_COPY` and `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` gating.
 - [x] **AUTH-07**: Redesign `OnboardingLayout`, household `Create`/`Join` steps, and `InstallStep` using tonal MD3 action cards, single-field `<md-outlined-text-field>` inputs, and clear guidance cards.
 
@@ -39,19 +39,19 @@ Requirements for the Material Design 3 UI overhaul. Each maps to roadmap phases.
 
 ### Meals & Recipes
 
-- [ ] **MEAL-04**: De-clutter `PlannerScreen` by removing triple-stacked mobile chrome in favor of a compact Week Switcher, Day Anchor Pills, and a 7-day vertical `<md-list>` agenda on Compact/Medium (`<840px`) plus a 7-column tonal card board on Expanded (`>=840px`).
-- [ ] **MEAL-05**: Overhaul `MealPlacementSheet` and `PlaceOnPlannerSheet` as Modal Bottom Sheets featuring a Segmented Button meal-slot selector, `<md-outlined-text-field>` custom entry, `<md-suggestion-chip>` strip for `QUICK_SUGGESTIONS`, and `<md-list>` recipe picker.
-- [ ] **MEAL-06**: Overhaul `RecipeLibraryScreen` (Search Bar + `<md-filter-chip>` `"Ready now"`/`"On sale"` + tonal `RecipeCard`s), `RecipeDetailScreen` (tonal `ReadinessBreakdown`, clean `<md-list>` `IngredientRow` actions, tabbed `MatchToSheet` `Pantry | Deals`, `ListPickerSheet`), and `RecipeForm` as a Full-Screen/Centered Dialog with borderless `IngredientEditor`.
+- [x] **MEAL-04**: De-clutter `PlannerScreen` by removing triple-stacked mobile chrome in favor of a compact Week Switcher, Day Anchor Pills, and a 7-day vertical `<md-list>` agenda on Compact/Medium (`<840px`) plus a 7-column tonal card board on Expanded (`>=840px`).
+- [x] **MEAL-05**: Overhaul `MealPlacementSheet` and `PlaceOnPlannerSheet` as Modal Bottom Sheets featuring a Segmented Button meal-slot selector, `<md-outlined-text-field>` custom entry, `<md-suggestion-chip>` strip for `QUICK_SUGGESTIONS`, and `<md-list>` recipe picker.
+- [x] **MEAL-06**: Overhaul `RecipeLibraryScreen` (Search Bar + `<md-filter-chip>` `"Ready now"`/`"On sale"` + tonal `RecipeCard`s), `RecipeDetailScreen` (tonal `ReadinessBreakdown`, clean `<md-list>` `IngredientRow` actions, tabbed `MatchToSheet` `Pantry | Deals`, `ListPickerSheet`), and `RecipeForm` as a Full-Screen/Centered Dialog with borderless `IngredientEditor`.
 
 ### Bills, Chores & Settings
 
-- [ ] **BILL-01**: Overhaul `BillsIndexScreen` (`<md-list>` sections `Overdue`/`Upcoming`/`Inactive`, `<md-fab>`, zero 1-item overflow menus via consolidated `BillRow` actions) and `SubscriptionsScreen` (tonal Hero Card + borderless `<md-list>`).
-- [ ] **BILL-02**: Overhaul `BillDetailScreen` (Top App Bar `Edit` + multi-item `OverflowMenu`, tonal summary card, `<md-list>` `PaymentHistory` with direct `Delete` icon on skipped rows, `PaymentEditSheet` Modal Bottom Sheet) and Full-Screen Dialog / pushed `BillForm` using `<md-switch>` toggles.
-- [ ] **CHOR-01**: Overhaul `ChoresListScreen` (`<md-list>`, quick `Done` tonal icon button, `<md-fab>`), `ChoreDetailScreen` (single `<h1>`, direct `Edit` icon button, direct `Delete` icon on latest `CompletionHistory` entry), and `ChoreFormScreen` (single `<h1>`, `<md-switch>`, tonal `<md-list>` `RotationEditor`).
-- [ ] **CHOR-02**: Overhaul `ErrandsListScreen` (`<md-list>` + `<md-checkbox>`, direct trailing `Delete` icon with persistent Undo Snackbar, `<md-fab>`, `ErrandSheet` Modal Bottom Sheet, and unified collapsible `Completed` section matching `Bought`).
-- [ ] **SET-01**: Replace `SettingsScreen`'s 6-section stacked form wall with a categorized `<md-list>` hub opening focused sheets/dialogs or sub-views (`Account`, `Households & Invites`, `Household Preferences & Stores`, `Notifications`, `About & System Health`).
-- [ ] **SET-02**: Convert `NotificationTypeRows` checkboxes to real `<md-switch>` controls with a tonal device guidance banner, and modernize `FavoriteStores` with `<md-filter-chip>` selected pills and an `<md-list>` picker.
-- [ ] **SET-03**: Redesign `SystemHealthScreen` as a borderless `<md-list>` diagnostic panel and `DepartureScreen` as a single-column progressive flow (`ReassignmentList` `<md-outlined-select>`, tonal `RotationNotes`, `error`-styled `<md-dialog>` delete confirmation).
+- [x] **BILL-01**: Overhaul `BillsIndexScreen` (`<md-list>` sections `Overdue`/`Upcoming`/`Inactive`, `<md-fab>`, zero 1-item overflow menus via consolidated `BillRow` actions) and `SubscriptionsScreen` (tonal Hero Card + borderless `<md-list>`).
+- [x] **BILL-02**: Overhaul `BillDetailScreen` (Top App Bar `Edit` + multi-item `OverflowMenu`, tonal summary card, `<md-list>` `PaymentHistory` with direct `Delete` icon on skipped rows, `PaymentEditSheet` Modal Bottom Sheet) and Full-Screen Dialog / pushed `BillForm` using `<md-switch>` toggles.
+- [x] **CHOR-01**: Overhaul `ChoresListScreen` (`<md-list>`, quick `Done` tonal icon button, `<md-fab>`), `ChoreDetailScreen` (single `<h1>`, direct `Edit` icon button, direct `Delete` icon on latest `CompletionHistory` entry), and `ChoreFormScreen` (single `<h1>`, `<md-switch>`, tonal `<md-list>` `RotationEditor`).
+- [x] **CHOR-02**: Overhaul `ErrandsListScreen` (`<md-list>` + `<md-checkbox>`, direct trailing `Delete` icon with persistent Undo Snackbar, `<md-fab>`, `ErrandSheet` Modal Bottom Sheet, and unified collapsible `Completed` section matching `Bought`).
+- [x] **SET-01**: Replace `SettingsScreen`'s 6-section stacked form wall with a categorized `<md-list>` hub opening focused sheets/dialogs or sub-views (`Account`, `Households & Invites`, `Household Preferences & Stores`, `Notifications`, `About & System Health`).
+- [x] **SET-02**: Convert `NotificationTypeRows` checkboxes to real `<md-switch>` controls with a tonal device guidance banner, and modernize `FavoriteStores` with `<md-filter-chip>` selected pills and an `<md-list>` picker.
+- [x] **SET-03**: Redesign `SystemHealthScreen` as a borderless `<md-list>` diagnostic panel and `DepartureScreen` as a single-column progressive flow (`ReassignmentList` `<md-outlined-select>`, tonal `RotationNotes`, `error`-styled `<md-dialog>` delete confirmation).
 
 ### Verification & Quality Gates
 
@@ -102,8 +102,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-02 | Phase 18 | Complete |
 | NAV-03 | Phase 18 | Complete |
 | NAV-04 | Phase 18 | Complete |
-| DASH-01 | Phase 19 | Pending |
-| DASH-02 | Phase 19 | Pending |
+| DASH-01 | Phase 19 | Complete |
+| DASH-02 | Phase 19 | Complete |
 | AUTH-06 | Phase 19 | Complete |
 | AUTH-07 | Phase 19 | Complete |
 | LIST-01 | Phase 19 | Complete |
@@ -111,16 +111,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LIST-03 | Phase 19 | Complete |
 | DEAL-06 | Phase 19 | Complete |
 | DEAL-07 | Phase 19 | Complete |
-| MEAL-04 | Phase 20 | Pending |
-| MEAL-05 | Phase 20 | Pending |
-| MEAL-06 | Phase 20 | Pending |
-| BILL-01 | Phase 20 | Pending |
-| BILL-02 | Phase 20 | Pending |
-| CHOR-01 | Phase 20 | Pending |
-| CHOR-02 | Phase 20 | Pending |
-| SET-01 | Phase 20 | Pending |
-| SET-02 | Phase 20 | Pending |
-| SET-03 | Phase 20 | Pending |
+| MEAL-04 | Phase 20 | Complete |
+| MEAL-05 | Phase 20 | Complete |
+| MEAL-06 | Phase 20 | Complete |
+| BILL-01 | Phase 20 | Complete |
+| BILL-02 | Phase 20 | Complete |
+| CHOR-01 | Phase 20 | Complete |
+| CHOR-02 | Phase 20 | Complete |
+| SET-01 | Phase 20 | Complete |
+| SET-02 | Phase 20 | Complete |
+| SET-03 | Phase 20 | Complete |
 | VER-01 | Phase 21 | Pending |
 | VER-02 | Phase 21 | Pending |
 | VER-03 | Phase 21 | Pending |

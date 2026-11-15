@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v3.0
 milestone_name: Material Design 3 Overhaul
-current_phase: 20
-current_phase_name: meals-bills-chores-settings-screens
-status: executing
-stopped_at: Phase 20 UI-SPEC approved
-last_updated: "2026-11-15T16:50:02.889Z"
+current_phase: 21
+current_phase_name: Legacy Stack Cleanup & Full Verification
+status: planning
+stopped_at: Phase 20 complete, ready to plan Phase 21
+last_updated: "2026-11-15T20:42:41.762Z"
 last_activity: 2026-11-15
-last_activity_desc: Phase 19 complete, transitioned to Phase 20
-state_head: dddb2f0f60fad6650aa324b0d8e8f2905c040a58
+last_activity_desc: Phase 20 complete, transitioned to Phase 21
+state_head: 5dda9fd7103e0cf8c73f8a922fa732539cb95a24
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 27
-  completed_plans: 23
-  percent: 40
+  completed_plans: 27
+  percent: 60
 ---
 
 # Project State
@@ -25,21 +25,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-15)
 
 **Core value:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified Warm Terracotta tonal theming, restructured navigation, and clear flow of control.
-**Current focus:** Phase 20 — Meals, Bills, Chores & Settings Screens
+**Current focus:** Phase 21 — Legacy Stack Cleanup & Full Verification
 
 ## Current Position
 
-Phase: 20 (meals-bills-chores-settings-screens) — READY TO EXECUTE
+Phase: 21 — Legacy Stack Cleanup & Full Verification
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-11-15 — Phase 19 complete, transitioned to Phase 20
+Status: Ready to plan
+Last activity: 2026-11-15 — Phase 20 complete, transitioned to Phase 21
 
-Progress: [████░░░░░░] 40%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28
+- Total plans completed: 32
 - Average duration: ~15 min
 - Total execution time: ~4.0 hrs
 
@@ -51,6 +51,7 @@ Progress: [████░░░░░░] 40%
 | 18 | 3 | - | - |
 | Phase 19 | 5 | ~85 min | ~17 min |
 | 19 | 5 | - | - |
+| 20 | 4 | - | - |
 
 *Updated after each plan completion*
 **Per-Plan Metrics:**
@@ -145,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-15T16:08:57.264Z
-Stopped at: Phase 20 UI-SPEC approved
-Resume file: .planning/phases/20-meals-bills-chores-settings-screens/20-UI-SPEC.md
+Last session: 2026-11-15T20:43:00.000Z
+Stopped at: Phase 20 complete, ready to plan Phase 21
+Resume file: None

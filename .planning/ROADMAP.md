@@ -50,7 +50,7 @@
 - [x] **Phase 17: MD3 Foundation, Token Pipeline & UI Primitives** (15/15 plans) — completed 2026-11-14
 - [x] **Phase 18: Adaptive MD3 Navigation Shell & Route Chrome** - Window Size Class `NavigationBar` (`<600px`) and `NavigationRail` (`>=600px`), scroll-aware Small Top App Bar owning each screen's single `<h1>`, MD3 Primary Tabs, conditional `HouseholdSwitcher`, and consolidated Meals/Lists routing. (completed 2026-11-14)
 - [x] **Phase 19: Entry, Dashboard & Grocery Ecosystem Screens** - Overhaul Onboarding, Auth, Dashboard, Shared State blocks, Lists, Pantry, Barcode Scanner, Deals, and Flyers onto uncluttered tonal MD3 surfaces with progressive chip filtering and persistent Undo Snackbars. (completed 2026-11-15)
-- [ ] **Phase 20: Meals, Bills, Chores & Settings Screens** - Overhaul Meal Planner/Recipes, Bills/Subscriptions, Chores/Errands, and Settings/System Health/Departure using MD3 lists, Full-Screen/Centered dialogs for dense forms, `<md-switch>` controls, zero 1-item overflow menus, and a categorized Settings hub.
+- [x] **Phase 20: Meals, Bills, Chores & Settings Screens** - Overhaul Meal Planner/Recipes, Bills/Subscriptions, Chores/Errands, and Settings/System Health/Departure using MD3 lists, Full-Screen/Centered dialogs for dense forms, `<md-switch>` controls, zero 1-item overflow menus, and a categorized Settings hub. (completed 2026-11-15)
 - [ ] **Phase 21: Legacy Stack Cleanup & Full Verification** - Remove Tailwind CSS, Radix UI, and Lucide cleanly after all screens migrate, reconcile Knip baselines, and verify Vitest coverage, 24 Playwright E2E specs, light/dark WCAG 2.1 AA audits, shell budget, Caddy CSP, and CI hygiene gates.
 
 ## Phase Details
@@ -178,13 +178,14 @@ Plans:
   3. Users complete rotating chores and ad-hoc errands via `<md-list>` rows with direct quick-action/delete icons (no 1-item overflow menus), persistent Undo Snackbars, single-`<h1>` `ChoreDetailScreen`/`ChoreFormScreen` with tonal `RotationEditor`, `ErrandSheet` Modal Bottom Sheet, and a unified collapsible `Completed` section matching `Bought`.
   4. Users configure account, households, invites, preferences, favorite stores (`<md-filter-chip>` + `<md-list>` picker), and notifications (`<md-switch>` controls + tonal device guidance banner) from a categorized `<md-list>` Settings hub, review diagnostics in a borderless `SystemHealthScreen`, and execute household departure or deletion in a progressive `DepartureScreen` flow with `error`-styled confirmation dialog.
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 20-01-PLAN.md — Meals & Recipes: De-cluttered PlannerScreen, Modal Bottom Sheets, and Responsive RecipeForm Dialog (`MEAL-04`, `MEAL-05`, `MEAL-06`)
-- [ ] 20-02-PLAN.md — Bills & Subscriptions: BillsIndexScreen, Spend Hero Card, Direct Row Actions, and Responsive BillForm Dialog (`BILL-01`, `BILL-02`)
-- [ ] 20-03-PLAN.md — Chores & Errands: ChoresListScreen, Next-Assignee Undo Toast, RotationEditor, and Collapsible Errands (`CHOR-01`, `CHOR-02`)
-- [ ] 20-04-PLAN.md — Settings Hub, Diagnostics & Departure: Categorized Settings Hub, Notification Switches, Store Chips, and Progressive Departure (`SET-01`, `SET-02`, `SET-03`)
+- [x] 20-01-PLAN.md — Meals & Recipes: De-cluttered PlannerScreen, Modal Bottom Sheets, and Responsive RecipeForm Dialog (`MEAL-04`, `MEAL-05`, `MEAL-06`)
+- [x] 20-02-PLAN.md — Bills & Subscriptions: BillsIndexScreen, Spend Hero Card, Direct Row Actions, and Responsive BillForm Dialog (`BILL-01`, `BILL-02`)
+- [x] 20-03-PLAN.md — Chores & Errands: ChoresListScreen, Next-Assignee Undo Toast, RotationEditor, and Collapsible Errands (`CHOR-01`, `CHOR-02`)
+- [x] 20-04-PLAN.md — Settings Hub, Diagnostics & Departure: Categorized Settings Hub, Notification Switches, Store Chips, and Progressive Departure (`SET-01`, `SET-02`, `SET-03`)
+
 **UI hint**: yes
 
 ### Phase 21: Legacy Stack Cleanup & Full Verification
@@ -210,5 +211,5 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 | 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 10/15 | In Progress | - |
 | 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 3/3 | Complete    | 2026-11-14 |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 5/5 | Complete    | 2026-11-15 |
-| 20. Meals, Bills, Chores & Settings Screens | v3.0 | 0/0 | Not started | - |
+| 20. Meals, Bills, Chores & Settings Screens | v3.0 | 4/4 | Complete    | 2026-11-15 |
 | 21. Legacy Stack Cleanup & Full Verification | v3.0 | 0/0 | Not started | - |
