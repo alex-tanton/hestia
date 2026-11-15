@@ -1,10 +1,11 @@
 ---
 phase: "18"
 slug: "adaptive-md3-navigation-shell-route-chrome"
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: "2026-11-15"
+reviewed_at: "2026-11-15T00:32:38Z"
 ---
 
 # Phase 18 — UI Design Contract: Adaptive MD3 Navigation Shell & Route Chrome
