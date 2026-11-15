@@ -97,7 +97,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
           Skip to main content
         </a>
         <div className="min-[600px]:pl-20">
-          <header className="sticky top-0 z-20 pt-[env(safe-area-inset-top)]">
+          <header className="sticky top-0 z-20 bg-surface pt-[env(safe-area-inset-top)]">
             <TopBar title={title} switcher={switcher} chrome={chrome} />
             <OfflineBanner />
             {updatePrompt}
