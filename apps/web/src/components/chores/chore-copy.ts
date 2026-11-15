@@ -162,6 +162,38 @@ export function deleteErrandConfirmation(errand: { name: string }): string {
 }
 
 /**
+ * Extracts optional store/category tag formatted as `[Store] Title` or `Title [Store]`.
+ */
+export function parseErrandStore(name: string): { title: string; store?: string | undefined } {
+  const prefixMatch = /^\[([^\]]+)\]\s*(.*)$/.exec(name);
+  if (prefixMatch) {
+    const store = prefixMatch[1]?.trim();
+    const rawTitle = prefixMatch[2]?.trim();
+    const title = rawTitle && rawTitle.length > 0 ? rawTitle : name;
+    return { title, ...(store ? { store } : {}) };
+  }
+  const suffixMatch = /^(.*?)\s*\[([^\]]+)\]$/.exec(name);
+  if (suffixMatch !== null) {
+    const rawSuffixTitle = suffixMatch[1]?.trim();
+    if (rawSuffixTitle) {
+      const store = suffixMatch[2]?.trim();
+      return { title: rawSuffixTitle, ...(store ? { store } : {}) };
+    }
+  }
+  return { title: name };
+}
+
+/**
+ * Formats errand title with optional store/category tag as `[Store] Title`.
+ */
+export function formatErrandName(title: string, store?: string): string {
+  const trimmedStore = store?.trim();
+  const trimmedTitle = title.trim();
+  if (!trimmedStore) return trimmedTitle;
+  return `[${trimmedStore}] ${trimmedTitle}`;
+}
+
+/**
  * Words this pillar's own copy must never use. Used by the copy-audit test to scan every
  * chore/errand string this module exports.
  */

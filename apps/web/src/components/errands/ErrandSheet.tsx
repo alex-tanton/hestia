@@ -1,13 +1,13 @@
 import { useState, type ReactElement } from 'react';
 import type { Errand, Member } from '@hestia/shared';
-import { UNASSIGNED_LABEL } from '../chores/chore-copy.ts';
+import { UNASSIGNED_LABEL, formatErrandName, parseErrandStore } from '../chores/chore-copy.ts';
 import { useCreateErrand, useUpdateErrand } from '../../lib/api/chore-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { FormMessage } from '../ui/FormMessage.tsx';
 import { TextField } from '../ui/Field.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Select } from '../ui/Select.tsx';
-import { Sheet } from '../ui/Sheet.tsx';
+import { ModalBottomSheet } from '../ui/ModalBottomSheet.tsx';
 
 /** Radix options need a non-empty value; "Unassigned" is mapped back to `null` on save. */
 const UNASSIGNED_VALUE = 'unassigned';
@@ -23,7 +23,7 @@ export interface ErrandSheetProps {
 }
 
 /**
- * Quick-add via a bottom sheet (name, optional due date, optional
+ * Quick-add via an MD3 ModalBottomSheet (name, optional store tag, optional due date, optional
  * assignee); tapping an errand opens the same sheet, prefilled, for editing.
  */
 export function ErrandSheet({
@@ -34,7 +34,11 @@ export function ErrandSheet({
   onSaved,
   disabledReason,
 }: ErrandSheetProps): ReactElement {
-  const [name, setName] = useState(errand?.name ?? '');
+  const isEditing = errand !== undefined;
+  const parsed = isEditing ? parseErrandStore(errand.name) : { title: '', store: undefined };
+
+  const [name, setName] = useState(parsed.title);
+  const [store, setStore] = useState(parsed.store ?? '');
   const [dueDate, setDueDate] = useState(errand?.dueDate ?? '');
   const [assignedTo, setAssignedTo] = useState(errand?.assignedTo ?? '');
   const [nameError, setNameError] = useState<string>();
@@ -47,14 +51,16 @@ export function ErrandSheet({
   const handleSave = (): void => {
     setNameError(undefined);
     setFormError(undefined);
-    const trimmed = name.trim();
-    if (trimmed === '') {
+    const trimmedName = name.trim();
+    if (trimmedName === '') {
       setNameError('Enter a name.');
       return;
     }
 
+    const fullName = formatErrandName(trimmedName, store);
+
     const body = {
-      name: trimmed,
+      name: fullName,
       dueDate: dueDate === '' ? null : dueDate,
       assignedTo: assignedTo === '' ? null : assignedTo,
     };
@@ -87,14 +93,15 @@ export function ErrandSheet({
   };
 
   return (
-    <Sheet
+    <ModalBottomSheet
       open
       onOpenChange={onOpenChange}
       title={errand === undefined ? 'Add an errand' : 'Edit errand'}
+      description="Quick errand or shopping stop around town."
     >
       <form
         noValidate
-        className="flex flex-col gap-3 px-4"
+        className="flex flex-col gap-3 px-4 pb-4"
         onSubmit={(event) => {
           event.preventDefault();
           handleSave();
@@ -107,6 +114,15 @@ export function ErrandSheet({
           disabledReason={disabledReason}
           onChange={(event) => {
             setName(event.target.value);
+          }}
+        />
+        <TextField
+          label="Store or category"
+          hint="Optional (e.g. Hardware, Pharmacy)"
+          value={store}
+          disabledReason={disabledReason}
+          onChange={(event) => {
+            setStore(event.target.value);
           }}
         />
         <TextField
@@ -132,9 +148,9 @@ export function ErrandSheet({
           }}
         />
         <FormMessage message={formError} />
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           <Button type="submit" isLoading={isSaving} disabledReason={disabledReason}>
-            Save errand
+            {isEditing ? 'Save errand' : 'Create errand'}
           </Button>
           <Button
             variant="ghost"
@@ -146,6 +162,6 @@ export function ErrandSheet({
           </Button>
         </div>
       </form>
-    </Sheet>
+    </ModalBottomSheet>
   );
 }
