@@ -30,6 +30,7 @@ export interface BillFormProps {
   bill?: Bill | undefined;
   onSubmit: (draft: BillDraft, visibility: BillVisibility) => void;
   isSaving?: boolean;
+  initialIsSubscription?: boolean;
 }
 
 const RECURRENCE_OPTIONS: readonly { value: string; label: string }[] = [
@@ -71,6 +72,7 @@ export function BillForm({
   bill,
   onSubmit,
   isSaving = false,
+  initialIsSubscription = false,
 }: BillFormProps): ReactElement {
   const isEditing = bill !== undefined;
   const { errors, setErrors, formRef } = useFieldErrors<Field>();
@@ -88,7 +90,9 @@ export function BillForm({
     String(bill?.reminderDaysBefore ?? 3),
   );
   const [autopay, setAutopay] = useState(bill?.autopay ?? false);
-  const [isSubscription, setIsSubscription] = useState(bill?.isSubscription ?? false);
+  const [isSubscription, setIsSubscription] = useState(
+    bill?.isSubscription ?? initialIsSubscription,
+  );
 
   const parsedInterval = Number.parseInt(interval, 10);
   const preview = recurrencePreviewSentence({

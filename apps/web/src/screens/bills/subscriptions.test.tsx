@@ -60,6 +60,8 @@ describe('Subscriptions', () => {
   it('populated: shows the total and each row, sorted by monthly cost, from the API response', async () => {
     mount();
     expect(await screen.findByText('$86.98')).toBeInTheDocument();
+    expect(screen.getByText('Total per month')).toBeInTheDocument();
+    expect(screen.getByText('across 2 active services')).toBeInTheDocument();
     const rows = screen.getAllByRole('listitem');
     expect(rows).toHaveLength(2);
     // Spectrum Internet ($74.99/mo) outranks Spotify ($11.99/mo) — order comes straight from the
@@ -71,6 +73,9 @@ describe('Subscriptions', () => {
     expect(rows[1]).toHaveTextContent('Personal');
     expect(rows[1]).toHaveTextContent('$11.99/mo');
     expect(rows[1]).toHaveTextContent('$143.88/yr');
+
+    // Floating MdFab present per BILL-01
+    expect(getMdButton('Add subscription')).toBeInTheDocument();
   });
 
   it('empty: no subscriptions tracked, total reads zero', async () => {
@@ -82,8 +87,15 @@ describe('Subscriptions', () => {
         }),
       }),
     );
-    expect(await screen.findByText('No subscriptions tracked yet.')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'No subscriptions tracked yet' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Keep track of recurring services and monthly spending in one simple view.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('$0.00')).toBeInTheDocument();
+    expect(screen.getByText('across 0 active services')).toBeInTheDocument();
+    expect(getMdButton('Add subscription')).toBeInTheDocument();
   });
 
   it('error: states what failed and retries', async () => {
