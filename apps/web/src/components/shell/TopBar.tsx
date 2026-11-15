@@ -36,16 +36,18 @@ export function TopBar({ title, switcher, chrome }: TopBarProps): ReactElement {
       <h1 className="min-w-0 flex-1 truncate text-center text-h3 text-primary lg:text-left">
         {title}
       </h1>
-      <Link
-        to="/settings"
-        aria-label="Settings"
-        className={cn(
-          BUTTON_BASE,
-          'shrink-0 text-secondary hover:bg-raised hover:text-primary active:bg-section-tint',
-        )}
-      >
-        <Settings aria-hidden size={20} strokeWidth={1.5} />
-      </Link>
+      <div className="flex shrink-0 items-center min-[600px]:hidden">
+        <Link
+          to="/settings"
+          aria-label="Settings"
+          className={cn(
+            BUTTON_BASE,
+            'shrink-0 text-secondary hover:bg-raised hover:text-primary active:bg-section-tint',
+          )}
+        >
+          <Settings aria-hidden size={20} strokeWidth={1.5} />
+        </Link>
+      </div>
     </div>
   );
 }
