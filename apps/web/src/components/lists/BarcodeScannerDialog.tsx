@@ -1,18 +1,30 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { cn } from '../../lib/cn.ts';
 import { createBarcodeDetector } from '../../lib/barcode/detector.ts';
 import { playScanChime, triggerScanHaptic } from '../../lib/barcode/feedback.ts';
+import { MdFilterChip } from '../md/MdFilterChip.tsx';
 import { Button } from '../ui/Button.tsx';
+import { TextField } from '../ui/Field.tsx';
 import { Icon } from '../ui/Icon.tsx';
+import { ModalBottomSheet } from '../ui/ModalBottomSheet.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
+import { useToast } from '../ui/Toast.tsx';
+
+export interface ScannedItemDetails {
+  name?: string | undefined;
+  category?: string | undefined;
+}
 
 export interface BarcodeScannerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onScan: (barcode: string, mode: 'add' | 'shop') => void;
+  onScan: (barcode: string, mode: 'add' | 'shop', details?: ScannedItemDetails) => void;
+  onUndoLastScan?: (() => void) | undefined;
+  isKnownBarcode?: ((barcode: string) => boolean) | undefined;
 }
 
 const STORAGE_KEY = 'hestia.scanner_mode';
+const CATEGORIES = ['Produce', 'Dairy', 'Bakery', 'Pantry', 'Frozen', 'Meat', 'Household'] as const;
 
 function getInitialMode(): 'add' | 'shop' {
   if (typeof window === 'undefined') return 'shop';
@@ -28,7 +40,10 @@ export function BarcodeScannerDialog({
   open,
   onOpenChange,
   onScan,
+  onUndoLastScan,
+  isKnownBarcode,
 }: BarcodeScannerDialogProps): ReactElement | null {
+  const toast = useToast();
   const [mode, setMode] = useState<'add' | 'shop'>(getInitialMode);
   const [activeTab, setActiveTab] = useState<'camera' | 'manual'>('camera');
   const [torchOn, setTorchOn] = useState(false);
@@ -37,14 +52,62 @@ export function BarcodeScannerDialog({
   const [manualInput, setManualInput] = useState('');
   const [cameraError, setCameraError] = useState<string | null>(null);
 
+  // Session state (D-14, D-16)
+  const [, setScannedCount] = useState(0);
+  const scannedCountRef = useRef(0);
+  const [, setSessionItems] = useState<
+    { code: string; mode: 'add' | 'shop'; details?: ScannedItemDetails | undefined }[]
+  >([]);
+  const [unknownBarcode, setUnknownBarcode] = useState<string | null>(null);
+  const [unknownName, setUnknownName] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const lastScanRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
   const onScanRef = useRef(onScan);
+  const onUndoLastScanRef = useRef(onUndoLastScan);
+  const isKnownBarcodeRef = useRef(isKnownBarcode);
 
   useEffect(() => {
     onScanRef.current = onScan;
   }, [onScan]);
+
+  useEffect(() => {
+    onUndoLastScanRef.current = onUndoLastScan;
+  }, [onUndoLastScan]);
+
+  useEffect(() => {
+    isKnownBarcodeRef.current = isKnownBarcode;
+  }, [isKnownBarcode]);
+
+  const handleUndoLastScan = useCallback(() => {
+    scannedCountRef.current = Math.max(0, scannedCountRef.current - 1);
+    setScannedCount(scannedCountRef.current);
+    setSessionItems((prev) => prev.slice(0, -1));
+    onUndoLastScanRef.current?.();
+  }, []);
+
+  const commitScan = useCallback(
+    (code: string, details?: ScannedItemDetails) => {
+      onScanRef.current(code, mode, details);
+      setSessionItems((prev) => [...prev, { code, mode, details }]);
+      scannedCountRef.current += 1;
+      const nextCount = scannedCountRef.current;
+      setScannedCount(nextCount);
+      toast({
+        variant: 'success',
+        message: `Added ${String(nextCount)} items`,
+        action: {
+          label: 'Undo last',
+          onAction: () => {
+            handleUndoLastScan();
+          },
+        },
+      });
+    },
+    [mode, toast, handleUndoLastScan],
+  );
 
   const handleModeChange = (val: string) => {
     const nextMode = val === 'add' ? 'add' : 'shop';
@@ -129,7 +192,7 @@ export function BarcodeScannerDialog({
 
   // Frame Analysis Detection Loop (T-14-04 / LIST-03)
   useEffect(() => {
-    if (!open || activeTab !== 'camera' || cameraError) return;
+    if (!open || activeTab !== 'camera' || cameraError || unknownBarcode !== null) return;
 
     let canceled = false;
     let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -163,7 +226,14 @@ export function BarcodeScannerDialog({
 
               playScanChime(true);
               triggerScanHaptic();
-              onScanRef.current(code, mode);
+
+              const isKnown = isKnownBarcodeRef.current ? isKnownBarcodeRef.current(code) : true;
+
+              if (!isKnown) {
+                setUnknownBarcode(code);
+              } else {
+                commitScan(code);
+              }
             })
             .catch(() => {
               // Frame analysis dropped or skipped
@@ -181,7 +251,7 @@ export function BarcodeScannerDialog({
         clearInterval(intervalId);
       }
     };
-  }, [open, activeTab, cameraError, mode]);
+  }, [open, activeTab, cameraError, mode, unknownBarcode, commitScan]);
 
   // Handle Escape key navigation
   useEffect(() => {
@@ -235,8 +305,25 @@ export function BarcodeScannerDialog({
 
     playScanChime(true);
     triggerScanHaptic();
-    onScan(trimmed, mode);
+
+    const isKnown = isKnownBarcodeRef.current ? isKnownBarcodeRef.current(trimmed) : true;
+    if (!isKnown) {
+      setUnknownBarcode(trimmed);
+    } else {
+      commitScan(trimmed);
+    }
     setManualInput('');
+  };
+
+  const handleSaveUnknown = () => {
+    if (!unknownBarcode) return;
+    commitScan(unknownBarcode, {
+      name: unknownName.trim(),
+      category: selectedCategory ?? undefined,
+    });
+    setUnknownBarcode(null);
+    setUnknownName('');
+    setSelectedCategory(null);
   };
 
   if (!open) return null;
@@ -378,19 +465,15 @@ export function BarcodeScannerDialog({
           <div className="w-full max-w-sm flex-1 flex flex-col justify-between p-6 pt-20 z-10">
             <div className="flex flex-col gap-4">
               <div className="text-center">
-                <label htmlFor="manual-barcode-input" className="text-body-sm text-neutral-400">
-                  Enter Barcode (UPC / EAN)
-                </label>
-                <input
-                  id="manual-barcode-input"
-                  type="text"
+                <TextField
+                  label="Barcode number"
+                  name="barcode"
                   inputMode="numeric"
                   value={manualInput}
                   onChange={(e) => {
-                    setManualInput(e.target.value.replace(/[^0-9A-Za-z_-]/g, '').slice(0, 32));
+                    const val = (e.target as HTMLInputElement).value;
+                    setManualInput(val.replace(/[^0-9A-Za-z_-]/g, '').slice(0, 32));
                   }}
-                  placeholder="000000000000"
-                  className="w-full mt-2 text-center text-3xl font-mono tracking-widest bg-neutral-900 border border-neutral-700 rounded-lg py-3 px-4 text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--md-sys-color-primary)]"
                 />
               </div>
 
@@ -439,7 +522,7 @@ export function BarcodeScannerDialog({
               <Button
                 variant="primary"
                 disabled={manualInput.trim().length < 3}
-                aria-label="Find & Mark Bought"
+                aria-label="Submit barcode number"
                 onClick={handleManualSubmit}
                 className="w-full h-12 text-body font-semibold"
               >
@@ -449,6 +532,66 @@ export function BarcodeScannerDialog({
           </div>
         )}
       </div>
+
+      {/* In-HUD Quick Naming Bottom Sheet (D-14) */}
+      <ModalBottomSheet
+        open={unknownBarcode !== null}
+        onOpenChange={(sheetOpen) => {
+          if (!sheetOpen) {
+            setUnknownBarcode(null);
+            setUnknownName('');
+            setSelectedCategory(null);
+          }
+        }}
+        title="Name this item"
+        description="Add details for this unrecognized barcode"
+      >
+        <div className="flex flex-col gap-4 py-2">
+          <TextField
+            label="Item name"
+            name="name"
+            value={unknownName}
+            onChange={(e) => {
+              setUnknownName((e.target as HTMLInputElement).value);
+            }}
+          />
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-label-sm font-semibold text-[var(--md-sys-color-on-surface-variant)]">
+              Category
+            </span>
+            <div className="flex flex-wrap gap-2 py-1">
+              {CATEGORIES.map((cat) => (
+                <MdFilterChip
+                  key={cat}
+                  selected={selectedCategory === cat}
+                  onClick={() => {
+                    setSelectedCategory((prev) => (prev === cat ? null : cat));
+                  }}
+                >
+                  {cat}
+                </MdFilterChip>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setUnknownBarcode(null);
+                setUnknownName('');
+                setSelectedCategory(null);
+              }}
+            >
+              Skip
+            </Button>
+            <Button variant="primary" disabled={!unknownName.trim()} onClick={handleSaveUnknown}>
+              Save and resume scanning
+            </Button>
+          </div>
+        </div>
+      </ModalBottomSheet>
     </dialog>
   );
 }
