@@ -1,7 +1,7 @@
 ---
 phase: 20-meals-bills-chores-settings-screens
 verified: 2026-11-15T19:35:00Z
-status: human_needed
+status: passed
 score: 24/24 must-haves verified
 covered_files:
   - .planning/phases/20-meals-bills-chores-settings-screens/20-01-PLAN.md
@@ -252,16 +252,19 @@ human_verification:
 ### Human Verification Required
 
 ### 1. Responsive Layout Breakpoints for PlannerScreen (<840px vs >=840px)
+
 **Test:** Open `/meals` on desktop browser and resize window width across 840px.
 **Expected:** At `<840px`, compact Week Switcher with horizontal Day Anchor Pills (`<md-tabs>`) and scheduled-only vertical agenda renders; at `>=840px`, transitions smoothly into 7-column tonal card board.
 **Why human:** CSS media query breakpoint transitions and grid layout visual appearance require real browser rendering.
 
 ### 2. Responsive Dialog Canvas (<600px Full-Screen vs >=600px Centered Modal)
+
 **Test:** Trigger `RecipeForm` ("Add recipe"), `BillForm` ("Add bill"), or `ChoreForm` ("Add chore") on mobile (<600px) and desktop (>=600px).
 **Expected:** On viewports `<600px`, dialogs fill the full viewport canvas with top-anchored action header; on viewports `>=600px`, dialogs render centered with `max-w-[720px]` and rounded-2xl tonal container.
 **Why human:** Native top-layer `<dialog>` stacking and CSS media query modal presentation require browser inspection.
 
 ### 3. Modal Bottom Sheet Dismissal and Touch Ergonomics
+
 **Test:** Open `MealPlacementSheet`, `PlaceOnPlannerSheet`, `PaymentEditSheet`, or `ErrandSheet` on a touch device.
 **Expected:** Sheet animates from viewport bottom over dim scrim; dragging downward or tapping the backdrop dismisses cleanly without locking scroll.
 **Why human:** Touch drag gestures, momentum physics, and backdrop tap handling require interactive touch testing.
