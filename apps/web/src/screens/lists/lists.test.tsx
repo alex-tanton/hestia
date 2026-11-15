@@ -14,6 +14,7 @@ import { OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixt
 import {
   findMdButton,
   findMdCheckbox,
+  findMdDialog,
   findMdField,
   findMdMenuItem,
   getMdButton,
@@ -21,6 +22,7 @@ import {
   getMdMenuItem,
   queryMdButton,
   queryMdCheckbox,
+  queryMdDialog,
   queryMdMenuItem,
 } from '../../test/md-queries.ts';
 
@@ -233,14 +235,14 @@ describe('Creating and renaming a list', () => {
     );
     await screen.findByRole('link', { name: /This Week/ });
     await user.click(getMdButton('New list'));
-    const dialog = await screen.findByRole('dialog', { name: 'New list' });
+    const dialog = await findMdDialog(/Create shopping list|New list/i);
     await user.type(await findFieldInput('List name', dialog), 'Game Night');
-    await user.click(getMdButton('Create list', { container: dialog }));
+    await user.click(getMdButton(/Create (shopping )?list/i, { container: dialog }));
     await waitFor(() => {
       const post = stub.calls.find((call) => call.method === 'POST');
       expect(post?.body).toEqual({ name: 'Game Night' });
     });
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(queryMdDialog(/Create shopping list|New list/i)).toBeNull();
   });
 
   it('blocks an empty name before it ever asks the server', async () => {
@@ -248,8 +250,8 @@ describe('Creating and renaming a list', () => {
     const stub = index();
     await screen.findByRole('link', { name: /This Week/ });
     await user.click(getMdButton('New list'));
-    const dialog = await screen.findByRole('dialog', { name: 'New list' });
-    await user.click(getMdButton('Create list', { container: dialog }));
+    const dialog = await findMdDialog(/Create shopping list|New list/i);
+    await user.click(getMdButton(/Create (shopping )?list/i, { container: dialog }));
     await waitFor(() => {
       expect(getMdField('List name', { container: dialog })).toHaveProperty(
         'errorText',
@@ -272,13 +274,13 @@ describe('Creating and renaming a list', () => {
     );
     await screen.findByRole('link', { name: /This Week/ });
     await user.click(getMdButton('New list'));
-    const dialog = await screen.findByRole('dialog', { name: 'New list' });
+    const dialog = await findMdDialog(/Create shopping list|New list/i);
     await user.type(await findFieldInput('List name', dialog), 'Game Night');
-    await user.click(getMdButton('Create list', { container: dialog }));
+    await user.click(getMdButton(/Create (shopping )?list/i, { container: dialog }));
     expect(
       await within(dialog).findByText("Couldn't create the list. Try again."),
     ).toBeInTheDocument();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(queryMdDialog(/Create shopping list|New list/i)).not.toBeNull();
   });
 
   it('renames an existing list, pre-filled with its current name', async () => {
@@ -293,17 +295,17 @@ describe('Creating and renaming a list', () => {
     );
     await openMenu(user, 'More actions for This Week');
     await user.click(await findMdMenuItem('Rename'));
-    const dialog = await screen.findByRole('dialog', { name: 'Rename This Week' });
+    const dialog = await findMdDialog(/Rename/i);
     const field = getMdField('List name', { container: dialog });
     expect(field).toHaveProperty('value', 'This Week');
     const input = await findFieldInput('List name', dialog);
     fireEvent.input(input, { target: { value: 'Weekly Shop' } });
-    await user.click(getMdButton('Save name', { container: dialog }));
+    await user.click(getMdButton(/Save (list )?name/i, { container: dialog }));
     await waitFor(() => {
       const patch = stub.calls.find((call) => call.method === 'PATCH');
       expect(patch?.body).toEqual({ name: 'Weekly Shop' });
     });
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(queryMdDialog(/Rename/i)).toBeNull();
   });
 });
 

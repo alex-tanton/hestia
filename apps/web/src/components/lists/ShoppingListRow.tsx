@@ -1,17 +1,17 @@
-import { PenLine, Store, Tag, UtensilsCrossed, type LucideIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
 import type { ListItem, ListItemSource } from '@hestia/shared';
 import { cn } from '../../lib/cn.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Checkbox } from '../ui/Checkbox.tsx';
+import { Icon, type IconName } from '../ui/Icon.tsx';
 import { OverflowMenu, type OverflowMenuItem } from '../ui/OverflowMenu.tsx';
 import { ItemPrice, speakItemPrice } from './ItemPrice.tsx';
 import { PENDING_CLASSES, PendingMark } from './PendingMark.tsx';
 
-const SOURCE_ICONS: Record<ListItemSource, LucideIcon> = {
-  manual: PenLine,
-  from_deal: Tag,
-  from_recipe: UtensilsCrossed,
+const SOURCE_ICONS: Record<ListItemSource, IconName> = {
+  manual: 'edit',
+  from_deal: 'sell',
+  from_recipe: 'restaurant',
 };
 
 const SOURCE_WORDS: Record<ListItemSource, string> = {
@@ -60,7 +60,6 @@ export function ShoppingListRow({
   onToggleBought,
   menuItems = [],
 }: ShoppingListRowProps): ReactElement {
-  const SourceIcon = SOURCE_ICONS[item.source];
   const quantity = quantityText(item);
   const addedBy = memberNames.get(item.addedBy);
   const isBought = item.status === 'bought';
@@ -82,7 +81,8 @@ export function ShoppingListRow({
   return (
     <li
       className={cn(
-        'flex items-center gap-1 border-b border-border last:border-b-0',
+        'flex min-h-[48px] items-center justify-between gap-3 px-4 py-3 transition-all duration-200',
+        isBought && 'opacity-60 bg-[var(--md-sys-color-surface-container-low)]',
         isPending && PENDING_CLASSES,
         // A brief tint marks what another member just changed; it fades with the 2s timer.
         isChanged && 'bg-section-tint',
@@ -94,22 +94,30 @@ export function ShoppingListRow({
         checked={isBought}
         aria-label={spoken}
         disabled={isReadOnly}
+        onCheckedChange={(checked) => {
+          onToggleBought(checked);
+        }}
         onChange={(event) => {
           onToggleBought(event.target.checked);
         }}
         label={
           <span className="flex min-w-0 flex-col gap-0.5">
             <span
-              className={cn('truncate text-body', isBought ? 'text-secondary' : 'text-primary')}
+              className={cn(
+                'truncate text-body-md select-none transition-all duration-200',
+                isBought
+                  ? 'line-through text-[var(--md-sys-color-on-surface-variant)]'
+                  : 'text-[var(--md-sys-color-on-surface)]',
+              )}
             >
               {item.itemName}
             </span>
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-secondary">
-              <SourceIcon aria-hidden size={16} strokeWidth={1.5} className="shrink-0" />
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label-md text-[var(--md-sys-color-on-surface-variant)]">
+              <Icon name={SOURCE_ICONS[item.source]} size={16} className="shrink-0" />
               {quantity !== undefined && <span className="tabular-nums">{quantity}</span>}
               {showStore && (
                 <span className="inline-flex items-center gap-1">
-                  <Store aria-hidden size={16} strokeWidth={1.5} />
+                  <Icon name="storefront" size={16} />
                   {item.merchantName ?? 'Anywhere'}
                 </span>
               )}
