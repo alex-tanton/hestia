@@ -441,13 +441,13 @@ export function EmptyState({ icon, heading, message, action, layout = 'page' }: 
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **How should quick item additions interact with list grouping if no store is selected?**
-   - *Recommendation:* Follow established pattern in `ListDetailScreen.tsx` — items without a store group automatically under the "Anywhere" tonal store group header at the bottom.
+   - **RESOLVED:** Follow established pattern in `ListDetailScreen.tsx` — items without a store group automatically under the "Anywhere" tonal store group header at the bottom.
 
 2. **Should offline scanning queue barcodes when offline?**
-   - *Recommendation:* Yes, queue scanned barcodes into the offline write queue via `usePendingListWrites`, matching the existing offline queue behavior.
+   - **RESOLVED:** Yes, queue scanned barcodes into the offline write queue via `usePendingListWrites`, matching the existing offline queue behavior.
 
 ---
 
