@@ -50,42 +50,64 @@ afterEach(() => {
 describe('app shell', () => {
   it('has a skip link, banner, main, and a labelled main navigation', async () => {
     openPath('/');
-    expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
+    const headings = await screen.findAllByRole('heading', { level: 1 });
+    expect(headings).toHaveLength(1);
+    expect(headings[0]).toHaveTextContent('This Week');
     const skip = screen.getByRole('link', { name: 'Skip to main content' });
     expect(skip).toHaveAttribute('href', '#main');
     expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
-    expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings');
+    const navs = screen.getAllByRole('navigation', { name: 'Main' });
+    expect(navs).toHaveLength(2);
+    const settingsLinks = screen.getAllByRole('link', { name: 'Settings' });
+    expect(settingsLinks).toHaveLength(2);
+    expect(settingsLinks.some((link) => link.closest('nav') !== null)).toBe(true);
+    expect(settingsLinks.some((link) => link.closest('nav') === null)).toBe(true);
     expect(document.title).toBe('This Week · Hestia');
   });
 
   it('shows the five tabs in order with the active one marked aria-current', async () => {
     openPath('/');
-    const nav = await screen.findByRole('navigation', { name: 'Main' });
-    const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual([
+    const [navBar, navRail] = await screen.findAllByRole('navigation', { name: 'Main' });
+    if (!navBar || !navRail) throw new Error('Missing navigation landmarks');
+    const barLinks = within(navBar).getAllByRole('link');
+    expect(barLinks.map((link) => link.textContent)).toEqual([
       'Dashboard',
       'Lists',
       'Meals',
       'Bills',
       'Chores',
     ]);
-    expect(within(nav).getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
+    expect(within(navBar).getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    expect(within(nav).getByRole('link', { name: 'Lists' })).not.toHaveAttribute('aria-current');
+    expect(within(navBar).getByRole('link', { name: 'Lists' })).not.toHaveAttribute('aria-current');
+
+    const railLinks = within(navRail).getAllByRole('link');
+    expect(railLinks.map((link) => link.textContent)).toEqual([
+      'Dashboard',
+      'Lists',
+      'Meals',
+      'Bills',
+      'Chores',
+      'Settings',
+    ]);
+    expect(within(navRail).getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('moves through the tab bar by keyboard and opens a tab with Enter', async () => {
     openPath('/');
-    const nav = await screen.findByRole('navigation', { name: 'Main' });
-    within(nav).getByRole('link', { name: 'Dashboard' }).focus();
+    const [navBar] = await screen.findAllByRole('navigation', { name: 'Main' });
+    if (!navBar) throw new Error('Missing navigation bar');
+    within(navBar).getByRole('link', { name: 'Dashboard' }).focus();
     await userEvent.tab();
-    expect(within(nav).getByRole('link', { name: 'Lists' })).toHaveFocus();
+    expect(within(navBar).getByRole('link', { name: 'Lists' })).toHaveFocus();
     await userEvent.tab();
-    expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveFocus();
+    expect(within(navBar).getByRole('link', { name: 'Meals' })).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     // The Meals module is a lazy chunk, so its first load can outlast the default find timeout.
     expect(
@@ -94,7 +116,7 @@ describe('app shell', () => {
     await waitFor(() => {
       expect(document.title).toBe('Meals · Hestia');
     });
-    expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
+    expect(within(navBar).getByRole('link', { name: 'Meals' })).toHaveAttribute(
       'aria-current',
       'page',
     );
