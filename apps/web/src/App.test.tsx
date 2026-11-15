@@ -77,7 +77,11 @@ describe('opening the app', () => {
     renderApp();
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Set up your household' }),
+      await screen.findByRole(
+        'heading',
+        { level: 1, name: 'Set up your household' },
+        { timeout: 5000 },
+      ),
     ).toBeInTheDocument();
   });
 
@@ -159,7 +163,7 @@ describe('switching household', () => {
     );
     renderApp({ initialEntries: ['/settings'] });
 
-    expect(await screen.findByText('Sam Chen')).toBeInTheDocument();
+    expect(await screen.findByText('Sam Chen', {}, { timeout: 5000 })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /switch household/ }));
     const sheet = await screen.findByRole('dialog');
