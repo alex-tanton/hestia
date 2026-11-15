@@ -92,3 +92,12 @@ dialog.hestia-sheet::backdrop {
 .hestia-native-field[data-invalid='true'] {
   border: 2px solid var(--md-sys-color-error);
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

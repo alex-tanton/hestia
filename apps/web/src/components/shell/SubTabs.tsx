@@ -1,24 +1,38 @@
 import type { ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { activeSubTab, type Pillar } from '../../lib/sections.ts';
-import { SegmentedControl } from '../ui/SegmentedControl.tsx';
+import { MdPrimaryTab, MdTabs } from '../md/MdTabs.tsx';
 
-/** The segmented control directly below the top bar that switches a tab's sections. */
+/** The primary tabs directly below the top bar that switch a pillar's sections. */
 export function SubTabs({ pillar }: { pillar: Pillar }): ReactElement {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const current = activeSubTab(pillar, pathname) ?? pillar.subTabs[0];
+  const activeIndex = pillar.subTabs.findIndex((t) => t.path === current?.path);
 
   return (
-    <nav aria-label={`${pillar.label} sections`}>
-      <SegmentedControl
-        label={`${pillar.label} sections`}
-        segments={pillar.subTabs.map((tab) => ({ value: tab.path, label: tab.label }))}
-        value={current?.path ?? ''}
-        onValueChange={(path) => {
-          void navigate(path);
+    <nav aria-label={`${pillar.label} sections`} className="overflow-x-auto no-scrollbar">
+      <MdTabs
+        activeTabIndex={activeIndex >= 0 ? activeIndex : 0}
+        onChange={(event) => {
+          const target = event.target as { activeTabIndex?: number } | null;
+          const currentTarget = event.currentTarget as { activeTabIndex?: number } | null;
+          const tabIndex = currentTarget?.activeTabIndex ?? target?.activeTabIndex;
+          if (typeof tabIndex === 'number') {
+            const nextTab = pillar.subTabs[tabIndex];
+            if (nextTab && nextTab.path !== pathname) {
+              void navigate(nextTab.path);
+              window.scrollTo(0, 0);
+            }
+          }
         }}
-      />
+      >
+        {pillar.subTabs.map((tab) => (
+          <MdPrimaryTab key={tab.path} aria-label={tab.label}>
+            {tab.label}
+          </MdPrimaryTab>
+        ))}
+      </MdTabs>
     </nav>
   );
 }
