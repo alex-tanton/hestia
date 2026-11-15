@@ -5,17 +5,17 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 18
 current_phase_name: Adaptive MD3 Navigation Shell & Route Chrome
 status: executing
-stopped_at: Phase 18 UI-SPEC approved
-last_updated: "2026-11-15T01:38:04.148Z"
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-11-15T02:08:52.356Z"
 last_activity: 2026-11-14
-last_activity_desc: Completed Phase 17 (MD3 Foundation, Token Pipeline & UI Primitives)
-state_head: 7d385638643807b10c53550d9d2cc0ffab5ab815
+last_activity_desc: Phase 18 execution started
+state_head: cbc320d4b2e4886cb8869f5a73d45628696ca34e
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 18
-  completed_plans: 15
-  percent: 0
+  completed_plans: 16
+  percent: 20
 ---
 
 # Project State
@@ -29,12 +29,12 @@ See: .planning/PROJECT.md (updated 2026-11-14)
 
 ## Current Position
 
-Phase: 18 (Adaptive MD3 Navigation Shell & Route Chrome) — READY TO EXECUTE
-Plan: 0 of TBD
+Phase: 18 (Adaptive MD3 Navigation Shell & Route Chrome) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-11-14 — Completed Phase 17 release verification gate
+Last activity: 2026-11-14 — Phase 18 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17 P13 | 18 min | 2 tasks | 7 files |
 | Phase 17 P14 | 24 min | 2 tasks | 8 files |
 | Phase 17 P15 | 20 min | 3 tasks | 6 files |
+| Phase 18 P01 | 18m | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 17]: Replaced Radix ToggleGroup in SegmentedControl with light-DOM role=radiogroup and button[role=radio] implementing roving Arrow/Home/End focus, RTL support, scrollIntoView, and locked active selection
 - [Phase 17]: Upgraded Card (.hestia-card, surfaceContainerLow/surfaceContainer, elevation-1, no overflow-hidden), ListRow (min-h-12, optional slot omission), Badge/FormMessage/CopyButton (Icon.tsx), and Skeleton (surface-container-highest)
 - [Phase 17]: browser.ts openMenu resolves MdIconButton hosts via findMdButton and focuses the inner shadow <button> before dispatching Enter
+- [Phase 18]: Use Material Symbols with filled variants for active destination icons and outlined for inactive
+- [Phase 18]: Keep mobile Settings icon button in TopBar for <600px and bottom-pinned destination in NavigationRail for >=600px
+- [Phase 18]: Maintain single-h1 strictly in TopBar while demoting detail/form screen body headings to h2
 
 ### Pending Todos
 
@@ -112,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-15T00:33:59.904Z
-Stopped at: Phase 18 UI-SPEC approved
-Resume file: .planning/phases/18-adaptive-md3-navigation-shell-route-chrome/18-UI-SPEC.md
+Last session: 2026-11-15T02:08:45.779Z
+Stopped at: Completed 18-01-PLAN.md
+Resume file: None
