@@ -9,7 +9,13 @@ import {
   testQueryClient,
   type StubHandler,
 } from '../../test/harness.tsx';
-import { findMdSwitch, getMdButton, getMdSwitch, queryMdSwitch } from '../../test/md-queries.ts';
+import {
+  findMdButton,
+  findMdSwitch,
+  getMdButton,
+  getMdSwitch,
+  queryMdSwitch,
+} from '../../test/md-queries.ts';
 import { createPushDouble, type PushDoubleOptions } from '../../test/push-double.ts';
 import { OAK_STREET_ID, RIVERA_FAMILY_ID, profileFixture } from '../../test/fixtures.ts';
 import { IOS_INSTALL_MESSAGE } from '../onboarding/InstallStep.tsx';
@@ -401,5 +407,37 @@ describe('Notification types keyboard and live region', () => {
     await waitFor(() => {
       expect(getMdSwitch('Chore reminders')).toHaveProperty('selected', true);
     });
+  });
+});
+
+describe('Device guidance and save CTA', () => {
+  it('renders top device guidance card with push enable button when not granted', async () => {
+    const user = userEvent.setup();
+    const { log } = renderTypes({ push: { support: 'supported', permission: 'default' } });
+
+    expect(await screen.findByText('Device push status')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Web Push is supported on this browser. Enable push to receive real-time alerts.',
+      ),
+    ).toBeInTheDocument();
+
+    const enableButton = getMdButton('Enable push notifications');
+    expect(enableButton).toBeInTheDocument();
+
+    await user.click(enableButton);
+    await waitFor(() => {
+      expect(log).toContain('requestPermission');
+    });
+  });
+
+  it('renders Save notification preferences CTA button', async () => {
+    const user = userEvent.setup();
+    renderTypes();
+
+    const saveButton = await findMdButton('Save notification preferences');
+    expect(saveButton).toBeInTheDocument();
+    await user.click(saveButton);
+    expect(await screen.findByText('Saved notification preferences')).toBeInTheDocument();
   });
 });

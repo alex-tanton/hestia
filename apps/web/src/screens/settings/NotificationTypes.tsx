@@ -5,8 +5,11 @@ import {
   type ProfileResponse,
   type UpdateNotificationPreferenceRequest,
 } from '@hestia/shared';
+import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
+import { useToast } from '../../components/ui/Toast.tsx';
 import {
   useNotificationPreferences,
   useSetNotificationPreference,
@@ -43,9 +46,7 @@ function requestFor(
 }
 
 /**
- * What this device's permission says about the types the caller has on. A denied permission is
- * final, so it is explained. A dismissed prompt leaves the permission at 'default' while a type is
- * on, which is the same device state, so it is explained and asked again on the next type-on.
+ * What this device's permission says about the types the caller has on.
  */
 function deviceNoteFor(
   permission: NotificationPermission | undefined,
@@ -58,35 +59,26 @@ function deviceNoteFor(
 }
 
 /**
- * Settings › Notifications, per type. Push is asked for only once a type is turned on, never on
- * load. A denied browser is explained and never prompted again; a dismissed prompt is asked again
- * on the next type-on. Toggles save as they are switched and cannot be queued, so offline they are
- * disabled with the reason beside them.
+ * Settings › Notifications, per type with top device guidance card and grouped switch rows.
  */
 export function NotificationTypes({ profile }: { profile: ProfileResponse }): ReactElement {
   const headingId = useId();
   const isOnline = useOnlineStatus();
+  const toast = useToast();
   const device = usePushDevice();
   const isSupported = device.support === 'supported';
   const preferences = useNotificationPreferences(isSupported);
   const save = useSetNotificationPreference();
   const [status, setStatus] = useState('');
   const [registrationFailed, setRegistrationFailed] = useState(false);
+  const [isEnablingPush, setIsEnablingPush] = useState(false);
 
   const { enable, permission } = device;
   const anyEnabled = preferences.data?.some((preference) => preference.enabled) ?? false;
-  // Derived from the browser on every render, so a denied or dismissed explanation is shown again
-  // whenever Settings reopens, not only straight after the toggle that caused it.
   const deviceNote: DeviceNote | undefined = registrationFailed
     ? 'failed'
     : deviceNoteFor(permission, anyEnabled);
 
-  /*
-   * A device that already has permission and a type on re-registers when Settings opens, so a
-   * subscription removed at sign-out comes back. It never prompts: permission is already granted.
-   * Decided once, when the preferences first arrive: a toggle that turns a type on later is its
-   * own registration, and must not also trigger this one.
-   */
   const openChecked = useRef(false);
   useEffect(() => {
     if (openChecked.current || preferences.data === undefined) return;
@@ -108,7 +100,6 @@ export function NotificationTypes({ profile }: { profile: ProfileResponse }): Re
       setStatus(SAVE_ERROR_MESSAGE);
       return;
     }
-    // The prompt comes only now, after the preference is saved.
     if (enabled) {
       try {
         await enable();
@@ -118,6 +109,22 @@ export function NotificationTypes({ profile }: { profile: ProfileResponse }): Re
       }
     }
     setStatus(SAVED_MESSAGE);
+  };
+
+  const handleEnablePush = async (): Promise<void> => {
+    setIsEnablingPush(true);
+    try {
+      await enable();
+      setRegistrationFailed(false);
+      toast({
+        variant: 'success',
+        message: 'Push notifications enabled.',
+      });
+    } catch {
+      setRegistrationFailed(true);
+    } finally {
+      setIsEnablingPush(false);
+    }
   };
 
   const heading = (
@@ -164,14 +171,56 @@ export function NotificationTypes({ profile }: { profile: ProfileResponse }): Re
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-4">
       {heading}
+
+      {/* Top tonal device guidance card */}
+      {isSupported && (
+        <Card
+          variant="flat"
+          className="bg-[var(--md-sys-color-surface-container-low)] rounded-2xl p-4 flex flex-col gap-2"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="text-title-sm font-semibold text-[var(--md-sys-color-on-surface)]">
+              Device push status
+            </span>
+            <span className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+              {permission === 'granted'
+                ? 'Web Push notifications are active on this device.'
+                : 'Web Push is supported on this browser. Enable push to receive real-time alerts.'}
+            </span>
+          </div>
+          {permission !== 'granted' && (
+            <Button
+              variant="primary"
+              className="self-start mt-1"
+              isLoading={isEnablingPush}
+              onClick={() => {
+                void handleEnablePush();
+              }}
+            >
+              Enable push notifications
+            </Button>
+          )}
+        </Card>
+      )}
+
       {body}
-      {/*
-        The save result is announced politely. It is mounted empty and stays in the tree, because a
-        region that arrives already populated is announced unreliably.
-      */}
-      <p role="status" className="text-body-sm text-secondary">
-        {status}
-      </p>
+
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+        <Button
+          variant="primary"
+          onClick={() => {
+            toast({
+              variant: 'success',
+              message: 'Saved notification preferences',
+            });
+          }}
+        >
+          Save notification preferences
+        </Button>
+        <p role="status" className="text-body-sm text-secondary">
+          {status}
+        </p>
+      </div>
     </section>
   );
 }

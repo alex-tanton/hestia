@@ -5,6 +5,7 @@ import {
   type NotificationPreference,
   type ProfileResponse,
 } from '@hestia/shared';
+import { Card } from '../../components/ui/Card.tsx';
 import { Switch } from '../../components/ui/Switch.tsx';
 import { EmptyState } from '../../components/states/StateBlocks.tsx';
 import { IOS_INSTALL_MESSAGE } from '../onboarding/InstallStep.tsx';
@@ -73,7 +74,30 @@ function copyFor(
   };
 }
 
-/** The toggles, one per type, with the weekly nudge repeated for each household. */
+const PILLARS: readonly { title: string; types: readonly string[] }[] = [
+  {
+    title: 'Bills',
+    types: ['bill_due'],
+  },
+  {
+    title: 'Chores',
+    types: ['chore_due', 'chore_rotation'],
+  },
+  {
+    title: 'Deals & Flyers',
+    types: ['flyer_refresh'],
+  },
+  {
+    title: 'Meals & Recipes',
+    types: ['meal_reminder', 'weekly_meal_nudge'],
+  },
+  {
+    title: 'Lists',
+    types: ['list_activity'],
+  },
+];
+
+/** The toggles, grouped cleanly by pillar in tonal cards. */
 export function PreferenceList({
   preferences,
   profile,
@@ -88,26 +112,47 @@ export function PreferenceList({
   if (preferences.length === 0) {
     return <EmptyState icon={Bell} message={NOTIFICATION_TYPES_EMPTY} />;
   }
+
+  const grouped = PILLARS.map((pillar) => ({
+    title: pillar.title,
+    items: preferences.filter((pref) => pillar.types.includes(pref.type)),
+  })).filter((group) => group.items.length > 0);
+
+  const knownTypes = PILLARS.flatMap((p) => p.types);
+  const others = preferences.filter((pref) => !knownTypes.includes(pref.type));
+  if (others.length > 0) {
+    grouped.push({ title: 'Other alerts', items: others });
+  }
+
   return (
-    <ul className="flex flex-col gap-5">
-      {preferences.map((preference) => {
-        const key = `${preference.type}:${preference.householdId ?? ''}`;
-        const copy = copyFor(preference, profile);
-        return (
-          <li key={key}>
-            <PreferenceRow
-              label={copy.label}
-              hint={copy.hint}
-              checked={preference.enabled}
-              isOnline={isOnline}
-              onChange={(enabled) => {
-                onToggle(preference, enabled);
-              }}
-            />
-          </li>
-        );
-      })}
-    </ul>
+    <div className="flex flex-col gap-4">
+      {grouped.map((group) => (
+        <Card key={group.title} variant="flat" className="flex flex-col gap-3">
+          <h4 className="text-title-sm font-semibold text-[var(--md-sys-color-on-surface)]">
+            {group.title}
+          </h4>
+          <ul className="flex flex-col gap-4">
+            {group.items.map((preference) => {
+              const key = `${preference.type}:${preference.householdId ?? ''}`;
+              const copy = copyFor(preference, profile);
+              return (
+                <li key={key}>
+                  <PreferenceRow
+                    label={copy.label}
+                    hint={copy.hint}
+                    checked={preference.enabled}
+                    isOnline={isOnline}
+                    onChange={(enabled) => {
+                      onToggle(preference, enabled);
+                    }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      ))}
+    </div>
   );
 }
 
