@@ -1,22 +1,14 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import { findMdButton, findMdField, getMdButton } from '../../test/md-queries.ts';
 import {
-  findMdButton,
-  findMdDialog,
-  findMdField,
-  findMdMenuItem,
-  getMdButton,
-} from '../../test/md-queries.ts';
-import {
-  billFixture,
   dukeEnergyFixture,
   spectrumInternetFixture,
   spotifyFixture,
 } from '../../test/bills-fixtures.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
-import { addDays, todayInTimezone } from '../../lib/household-date.ts';
 import {
   createFetchStub,
   problemBody,
@@ -62,22 +54,27 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
 
 registerBrowserStubs();
 
-describe('groupBills (Overdue / This week / Later)', () => {
+describe('groupBills (Overdue / Upcoming / Inactive)', () => {
   it('sorts an overdue bill into Overdue regardless of how far past due it is', () => {
-    const groups = groupBills([dukeEnergyFixture], '2026-10-03');
+    const groups = groupBills([dukeEnergyFixture]);
     expect(groups.overdue).toEqual([dukeEnergyFixture]);
-    expect(groups.thisWeek).toEqual([]);
-    expect(groups.later).toEqual([]);
+    expect(groups.upcoming).toEqual([]);
+    expect(groups.inactive).toEqual([]);
   });
 
-  it('sorts a bill due on or before the end of this week into This week', () => {
-    const groups = groupBills([spectrumInternetFixture], '2026-10-04');
-    expect(groups.thisWeek).toEqual([spectrumInternetFixture]);
+  it('sorts an active non-overdue bill into Upcoming', () => {
+    const groups = groupBills([spectrumInternetFixture]);
+    expect(groups.upcoming).toEqual([spectrumInternetFixture]);
+    expect(groups.overdue).toEqual([]);
+    expect(groups.inactive).toEqual([]);
   });
 
-  it('sorts a bill due after the end of this week into Later', () => {
-    const groups = groupBills([spotifyFixture], '2026-10-04');
-    expect(groups.later).toEqual([spotifyFixture]);
+  it('sorts an archived bill into Inactive', () => {
+    const archived = { ...spotifyFixture, archivedAt: '2026-10-01T00:00:00.000Z' };
+    const groups = groupBills([archived]);
+    expect(groups.inactive).toEqual([archived]);
+    expect(groups.overdue).toEqual([]);
+    expect(groups.upcoming).toEqual([]);
   });
 });
 
@@ -87,30 +84,12 @@ describe('Bills dashboard', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Loading your bills');
   });
 
-  it('populated: groups by Overdue, This week, and Later, with badges and money formatted from cents', async () => {
-    const today = todayInTimezone(oakStreetFixture.timezone);
-    const thisWeekBill = billFixture({
-      id: '30000001-0000-4000-8000-000000000001',
-      name: 'Spectrum Internet',
-      amountCents: 7_499,
-      autopay: true,
-      isSubscription: true,
-      currentOccurrenceDate: today,
-    });
-    const laterBill = billFixture({
-      id: '30000002-0000-4000-8000-000000000002',
-      name: 'Spotify',
-      amountCents: 1_199,
-      householdId: null,
-      visibility: 'personal',
-      isSubscription: true,
-      currentOccurrenceDate: addDays(today, 30),
-    });
+  it('populated: groups by Overdue and Upcoming, with badges, money formatted, FAB, and zero overflow menus', async () => {
     mount(
       baseHandlers({
         'GET /api/households/:id/bills': () => ({
           status: 200,
-          body: [dukeEnergyFixture, thisWeekBill, laterBill],
+          body: [dukeEnergyFixture, spectrumInternetFixture, spotifyFixture],
         }),
       }),
     );
@@ -121,21 +100,28 @@ describe('Bills dashboard', () => {
     expect(duke).toHaveTextContent('$142.30');
     expect(duke).toHaveTextContent('Overdue');
 
-    const thisWeekGroup = screen.getByRole('heading', { name: 'This week' }).closest('section');
-    expect(within(thisWeekGroup!).getByText('Spectrum Internet')).toBeInTheDocument();
-    expect(within(thisWeekGroup!).getByText('Autopay')).toBeInTheDocument();
+    const upcomingGroup = screen.getByRole('heading', { name: 'Upcoming' }).closest('section');
+    expect(within(upcomingGroup!).getByText('Spectrum Internet')).toBeInTheDocument();
+    expect(within(upcomingGroup!).getAllByText('Autopay').length).toBeGreaterThan(0);
 
-    const laterGroup = screen.getByRole('heading', { name: 'Later' }).closest('section');
-    const spotify = within(laterGroup!).getByText('Spotify').closest('a');
+    const spotify = within(upcomingGroup!).getByText('Spotify').closest('a');
     expect(spotify).toHaveTextContent('Personal');
+
+    // Zero 1-item overflow menus exist on rows per BILL-01
+    expect(screen.queryByRole('button', { name: /More actions for/ })).toBeNull();
+    // Floating action button MdFab present per BILL-01
+    expect(getMdButton('Add bill')).toBeInTheDocument();
   });
 
   it('empty: first run explains Hestia tracks bills but never pays them', async () => {
     mount(baseHandlers({ 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) }));
-    const emptyNotice = await screen.findByText(/Hestia tracks what you owe and when/);
+    expect(
+      await screen.findByRole('heading', { name: 'No bills tracked yet' }),
+    ).toBeInTheDocument();
+    const emptyNotice = screen.getByText(/Hestia tracks what you owe and when/);
     expect(emptyNotice).toBeInTheDocument();
     const emptyContainer = emptyNotice.parentElement!;
-    expect(getMdButton('Add a bill', { container: emptyContainer })).toBeInTheDocument();
+    expect(getMdButton('Add bill', { container: emptyContainer })).toBeInTheDocument();
   });
 
   it('error: states what failed and retries', async () => {
@@ -173,14 +159,15 @@ describe('Bills dashboard', () => {
     expect(pay).toHaveProperty('softDisabled', true);
   });
 
-  it('pay: records a payment for the current occurrence', async () => {
+  it('pay: records a payment for the current occurrence and provides undo', async () => {
     const user = userEvent.setup();
+    const paymentId = '40000001-0000-4000-8000-000000000001';
     const stub = mount(
       baseHandlers({
         'POST /api/bills/:id/pay': () => ({
           status: 201,
           body: {
-            id: '40000001-0000-4000-8000-000000000001',
+            id: paymentId,
             billId: dukeEnergyFixture.id,
             occurrenceDate: dukeEnergyFixture.currentOccurrenceDate,
             paidDate: '2026-10-01',
@@ -190,6 +177,10 @@ describe('Bills dashboard', () => {
             recordedBy: profileFixture.id,
             createdAt: '2026-10-01T12:00:00.000Z',
           },
+        }),
+        'DELETE /api/bills/:id/payments/:paymentId': () => ({
+          status: 204,
+          body: undefined,
         }),
       }),
     );
@@ -203,45 +194,17 @@ describe('Bills dashboard', () => {
         ),
       ).toBe(true);
     });
-    expect(await screen.findByText('Marked Duke Energy paid.')).toBeInTheDocument();
-  });
+    expect(await screen.findByText('Marked Duke Energy as paid.')).toBeInTheDocument();
 
-  it('skip: confirms by naming the bill and the date before writing anything', async () => {
-    const user = userEvent.setup();
-    const stub = mount(
-      baseHandlers({
-        'POST /api/bills/:id/skip': () => ({
-          status: 201,
-          body: {
-            id: '40000002-0000-4000-8000-000000000002',
-            billId: dukeEnergyFixture.id,
-            occurrenceDate: dukeEnergyFixture.currentOccurrenceDate,
-            paidDate: null,
-            amountPaidCents: null,
-            isAuto: false,
-            isSkipped: true,
-            recordedBy: profileFixture.id,
-            createdAt: '2026-10-01T12:00:00.000Z',
-          },
-        }),
-      }),
-    );
-    await screen.findByText('Duke Energy');
-    await openMenu(user, 'More actions for Duke Energy');
-    await user.click(await findMdMenuItem('Skip'));
-
-    const dialog = await findMdDialog('Skip this bill?');
-    expect(dialog).toHaveTextContent(
-      "Skip the 09/26/2026 Duke Energy bill? It won't be marked paid.",
-    );
-    expect(stub.calls.some((call) => call.path.includes('/skip'))).toBe(false);
-
-    await user.click(getMdButton('Skip bill', { container: dialog }));
+    // Clicking Undo triggers payment deletion
+    const undoButton = screen.getByRole('button', { name: 'Undo' });
+    await user.click(undoButton);
     await waitFor(() => {
       expect(
         stub.calls.some(
           (call) =>
-            call.method === 'POST' && call.path === `/api/bills/${dukeEnergyFixture.id}/skip`,
+            call.method === 'DELETE' &&
+            call.path === `/api/bills/${dukeEnergyFixture.id}/payments/${paymentId}`,
         ),
       ).toBe(true);
     });
@@ -272,13 +235,14 @@ describe('Bills dashboard', () => {
     );
     await screen.findByText('Duke Energy');
     await user.click(getMdButton('Add a bill'));
-    const nameInput = await findFieldInput('Name');
+    const form = await screen.findByRole('dialog', { name: 'Add a bill' });
+    const nameInput = await findFieldInput('Name', form);
     fireEvent.input(nameInput, { target: { value: 'Trash pickup' } });
-    const amountInput = await findFieldInput('Amount');
+    const amountInput = await findFieldInput('Amount', form);
     fireEvent.input(amountInput, { target: { value: '24.00' } });
-    const dueDateInput = await findFieldInput('First due date');
+    const dueDateInput = await findFieldInput('First due date', form);
     fireEvent.input(dueDateInput, { target: { value: '2026-11-01' } });
-    await user.click(getMdButton('Add bill'));
+    await user.click(getMdButton('Add bill', { container: form }));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -314,14 +278,15 @@ describe('Bills dashboard', () => {
     );
     await screen.findByText('Duke Energy');
     await user.click(getMdButton('Add a bill'));
+    const form = await screen.findByRole('dialog', { name: 'Add a bill' });
     await user.click(await screen.findByRole('radio', { name: 'Personal' }));
-    const nameInput = await findFieldInput('Name');
+    const nameInput = await findFieldInput('Name', form);
     fireEvent.input(nameInput, { target: { value: 'Car Insurance' } });
-    const amountInput = await findFieldInput('Amount');
+    const amountInput = await findFieldInput('Amount', form);
     fireEvent.input(amountInput, { target: { value: '128.00' } });
-    const dueDateInput = await findFieldInput('First due date');
+    const dueDateInput = await findFieldInput('First due date', form);
     fireEvent.input(dueDateInput, { target: { value: '2026-11-01' } });
-    await user.click(getMdButton('Add bill'));
+    await user.click(getMdButton('Add bill', { container: form }));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'POST' && call.path === '/api/users/me/bills'),

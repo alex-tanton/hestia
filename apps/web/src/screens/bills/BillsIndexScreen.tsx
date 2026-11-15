@@ -1,50 +1,46 @@
-import { Receipt } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import type { Bill, BillVisibility } from '@hestia/shared';
 import { BillForm, type BillDraft } from '../../components/bills/BillForm.tsx';
 import { BillRow } from '../../components/bills/BillRow.tsx';
-import {
-  BILLS_LIST_EMPTY_COPY,
-  OFFLINE_ACTION_REASON,
-  skipBillConfirmation,
-} from '../../components/bills/bills-copy.ts';
-import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
+import { OFFLINE_ACTION_REASON } from '../../components/bills/bills-copy.ts';
+import { MdFab } from '../../components/md/MdFab.tsx';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
-import { useHousehold } from '../../lib/api/hooks.ts';
 import {
   useBills,
   useCreateHouseholdBill,
   useCreatePersonalBill,
+  useDeleteBillPayment,
   usePayBill,
-  useSkipBill,
 } from '../../lib/api/bills-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
-import { addDays, todayInTimezone, weekStart } from '../../lib/household-date.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
 
 export interface BillGroups {
   overdue: Bill[];
-  thisWeek: Bill[];
-  later: Bill[];
+  upcoming: Bill[];
+  inactive: Bill[];
 }
 
 /**
- * Grouped as Overdue, This week (through Saturday, household
- * timezone), then Later. A bill's own `isOverdue` flag already accounts for its occurrence being
- * in the past, so grouping needs only that flag and a same-or-before comparison against the end
- * of the current week — no second overdue check is possible here.
+ * Group bills by urgency into Overdue, Upcoming, and Inactive per BILL-01.
+ * Archived bills are sorted into Inactive; overdue active bills into Overdue;
+ * remaining active bills into Upcoming.
  */
-export function groupBills(bills: readonly Bill[], weekEnd: string): BillGroups {
-  const groups: BillGroups = { overdue: [], thisWeek: [], later: [] };
+export function groupBills(bills: readonly Bill[]): BillGroups {
+  const groups: BillGroups = { overdue: [], upcoming: [], inactive: [] };
   for (const bill of bills) {
-    if (bill.isOverdue) groups.overdue.push(bill);
-    else if (bill.currentOccurrenceDate <= weekEnd) groups.thisWeek.push(bill);
-    else groups.later.push(bill);
+    if (bill.archivedAt !== null) {
+      groups.inactive.push(bill);
+    } else if (bill.isOverdue) {
+      groups.overdue.push(bill);
+    } else {
+      groups.upcoming.push(bill);
+    }
   }
   return groups;
 }
@@ -56,16 +52,14 @@ export interface BillsIndexScreenProps {
 export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
-  const household = useHousehold(householdId);
   const bills = useBills(householdId);
   const createHousehold = useCreateHouseholdBill(householdId);
   const createPersonal = useCreatePersonalBill(householdId);
   const payBill = usePayBill(householdId);
-  const skipBill = useSkipBill(householdId);
+  const deletePayment = useDeleteBillPayment(householdId);
 
   const [isAdding, setIsAdding] = useState(false);
   const [payingId, setPayingId] = useState<string>();
-  const [skipping, setSkipping] = useState<Bill>();
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
 
@@ -93,8 +87,17 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
         onSettled: () => {
           setPayingId(undefined);
         },
-        onSuccess: () => {
-          toast({ variant: 'success', message: `Marked ${bill.name} paid.` });
+        onSuccess: (payment) => {
+          toast({
+            variant: 'success',
+            message: `Marked ${bill.name} as paid.`,
+            action: {
+              label: 'Undo',
+              onAction: () => {
+                deletePayment.mutate({ billId: bill.id, paymentId: payment.id });
+              },
+            },
+          });
         },
         onError: (error) => {
           toast({
@@ -106,24 +109,6 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
         },
       },
     );
-  };
-
-  const confirmSkip = (): void => {
-    if (skipping === undefined) return;
-    const { id, name } = skipping;
-    skipBill.mutate(id, {
-      onSuccess: () => {
-        setSkipping(undefined);
-        toast({ variant: 'success', message: `Skipped ${name}.` });
-      },
-      onError: (error) => {
-        setSkipping(undefined);
-        toast({
-          variant: 'error',
-          message: userMessage(error, { fallback: `Couldn't skip ${name}. Try again.` }),
-        });
-      },
-    });
   };
 
   function body(): ReactElement {
@@ -148,10 +133,11 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
     if (data.length === 0) {
       return (
         <EmptyState
-          icon={Receipt}
-          message={BILLS_LIST_EMPTY_COPY}
+          icon="receipt_long"
+          heading="No bills tracked yet"
+          message="Hestia tracks what you owe and when. It never touches your bank account or pays bills automatically."
           action={{
-            label: 'Add a bill',
+            label: 'Add bill',
             onAction: () => {
               setIsAdding(true);
             },
@@ -160,22 +146,20 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
       );
     }
 
-    // "This week" runs to the household's Saturday, so the groups wait for the household's zone.
-    const timezone = household.data?.timezone;
-    if (timezone === undefined) return householdFallback(household, 'Loading your bills');
-    const today = todayInTimezone(timezone);
-    const weekEnd = addDays(weekStart(today), 6);
-    const { overdue, thisWeek, later } = groupBills(data, weekEnd);
+    const { overdue, upcoming, inactive } = groupBills(data);
 
     const renderGroup = (title: string, group: Bill[]): ReactElement | null => {
       if (group.length === 0) return null;
       const headingId = `bill-group-${title.toLowerCase().replace(/\s+/g, '-')}`;
       return (
         <section key={title} aria-labelledby={headingId} className="flex flex-col gap-2">
-          <h2 id={headingId} className="text-h3 text-primary">
+          <h2
+            id={headingId}
+            className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]"
+          >
             {title}
           </h2>
-          <ul className="flex flex-col rounded-md border border-border">
+          <ul className="flex flex-col divide-y divide-[var(--md-sys-color-outline-variant)]">
             {group.map((bill) => (
               <BillRow
                 key={bill.id}
@@ -185,9 +169,6 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
                 onPay={() => {
                   handlePay(bill);
                 }}
-                onSkip={() => {
-                  setSkipping(bill);
-                }}
               />
             ))}
           </ul>
@@ -196,10 +177,10 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
     };
 
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         {renderGroup('Overdue', overdue)}
-        {renderGroup('This week', thisWeek)}
-        {renderGroup('Later', later)}
+        {renderGroup('Upcoming', upcoming)}
+        {renderGroup('Inactive', inactive)}
       </div>
     );
   }
@@ -228,6 +209,21 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
 
       {body()}
 
+      {!offlineReason && (
+        <div className="fixed right-6 bottom-6 z-20">
+          <MdFab
+            aria-label="Add bill"
+            onClick={() => {
+              setIsAdding(true);
+            }}
+          >
+            <span slot="icon">
+              <Icon name="add" size={24} />
+            </span>
+          </MdFab>
+        </div>
+      )}
+
       {isAdding && (
         <BillForm
           open
@@ -236,18 +232,6 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
           onSubmit={handleCreate}
         />
       )}
-
-      <ConfirmDialog
-        open={skipping !== undefined}
-        onOpenChange={(open) => {
-          if (!open) setSkipping(undefined);
-        }}
-        title="Skip this bill?"
-        description={skipping === undefined ? '' : skipBillConfirmation(skipping)}
-        confirmLabel="Skip bill"
-        isConfirming={skipBill.isPending}
-        onConfirm={confirmSkip}
-      />
     </section>
   );
 }
