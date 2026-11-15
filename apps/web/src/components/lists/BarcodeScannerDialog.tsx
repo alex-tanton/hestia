@@ -259,6 +259,10 @@ export function BarcodeScannerDialog({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
+        if (unknownBarcode !== null) {
+          setUnknownBarcode(null);
+          return;
+        }
         onOpenChange(false);
       }
     };
@@ -266,7 +270,7 @@ export function BarcodeScannerDialog({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onOpenChange]);
+  }, [open, onOpenChange, unknownBarcode]);
 
   const toggleTorch = async () => {
     const stream = streamRef.current;

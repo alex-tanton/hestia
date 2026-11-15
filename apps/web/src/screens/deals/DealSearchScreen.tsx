@@ -53,6 +53,8 @@ const INITIAL: DealSearchParams = {
   page: 1,
 };
 
+const ALL_DEAL_CATEGORIES = new Set<string>();
+
 /**
  * Deal search: keyword search across the stores near the household's postal
  * code, scoped to favorites by default with browse-all one tap away. Results are `DealCard`s, 50 to
@@ -75,15 +77,11 @@ export function DealSearchScreen(): ReactElement {
   // Lifted AddToListSheet state
   const [dealToAdd, setDealToAdd] = useState<Deal | null>(null);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-  const [addedDealInfo, setAddedDealInfo] = useState<{ listId: string; itemId: string } | null>(
-    null,
-  );
-
   const merchants = useMerchants(isOnline ? householdId : undefined);
   const results = useDealSearch(isOnline ? householdId : undefined, applied);
   const lists = useShoppingLists(isOnline ? householdId : undefined);
   const addToList = useAddDealToList(householdId ?? '');
-  const deleteItem = useDeleteListItem(householdId ?? '', addedDealInfo?.listId ?? '');
+  const deleteItem = useDeleteListItem(householdId ?? '');
 
   const storeOptions = useMemo(() => {
     const rows = merchants.data?.merchants ?? [];
@@ -96,12 +94,14 @@ export function DealSearchScreen(): ReactElement {
   }, [merchants.data, applied.scope]);
 
   const categoryOptions = useMemo(() => {
-    const found = new Set((results.data?.deals ?? []).map((deal) => deal.category ?? ''));
-    found.delete('');
+    for (const deal of results.data?.deals ?? []) {
+      if (deal.category) ALL_DEAL_CATEGORIES.add(deal.category);
+    }
+    const found = new Set(ALL_DEAL_CATEGORIES);
     if (applied.category !== undefined) found.add(applied.category);
     return [
       { value: ANY_CATEGORY, label: 'Any category' },
-      ...[...found].sort().map((category) => ({ value: category, label: category })),
+      ...[...found].sort().map((cat) => ({ value: cat, label: cat })),
     ];
   }, [results.data, applied.category]);
 
@@ -165,7 +165,6 @@ export function DealSearchScreen(): ReactElement {
         { listId: list.id, dealId: deal.id },
         {
           onSuccess: (data) => {
-            setAddedDealInfo({ listId: list.id, itemId: data.id });
             toast({
               variant: 'success',
               message: `Added '${deal.name}' to ${list.name}`,
@@ -173,7 +172,7 @@ export function DealSearchScreen(): ReactElement {
                 label: 'Undo',
                 onAction: () => {
                   if (data.id) {
-                    deleteItem.mutate(data.id);
+                    deleteItem.mutate({ listId: list.id, itemId: data.id });
                   }
                 },
               },

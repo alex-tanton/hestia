@@ -109,15 +109,33 @@ export function ListDetailScreen({
   };
 
   /** Every item write sends absolute values, never a toggle. */
-  const setStatus = (item: ListItem, status: ListItemStatus): void => {
-    updateItem.mutate({
-      kind: 'update-item',
-      householdId,
-      listId,
-      itemId: item.id,
-      itemName: item.itemName,
-      patch: { status },
-    });
+  const setStatus = (item: ListItem, status: ListItemStatus, shouldToast = isOnline): void => {
+    updateItem.mutate(
+      {
+        kind: 'update-item',
+        householdId,
+        listId,
+        itemId: item.id,
+        itemName: item.itemName,
+        patch: { status },
+      },
+      {
+        onSuccess: () => {
+          if (status === 'bought' && shouldToast) {
+            toast({
+              variant: 'success',
+              message: `Marked '${item.itemName}' as bought`,
+              action: {
+                label: 'Undo',
+                onAction: () => {
+                  setStatus(item, 'needed');
+                },
+              },
+            });
+          }
+        },
+      },
+    );
   };
 
   const executeCheckOff = (item: ListItem, scannedBarcode: string): void => {
@@ -349,21 +367,7 @@ export function ListDetailScreen({
       isChanged={changedItemIds.has(item.id)}
       isReadOnly={isArchived}
       onToggleBought={(isBought) => {
-        if (isBought) {
-          setStatus(item, 'bought');
-          toast({
-            variant: 'success',
-            message: `Marked '${item.itemName}' as bought`,
-            action: {
-              label: 'Undo',
-              onAction: () => {
-                setStatus(item, 'needed');
-              },
-            },
-          });
-        } else {
-          setStatus(item, 'needed');
-        }
+        setStatus(item, isBought ? 'bought' : 'needed');
       }}
       menuItems={isArchived ? [] : menuFor(item)}
     />

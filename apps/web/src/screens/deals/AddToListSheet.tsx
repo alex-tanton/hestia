@@ -35,14 +35,12 @@ export function AddToListSheet({
   const [quantity, setQuantity] = useState(1);
   const lists = useShoppingLists(isOnline ? householdId : undefined);
   const addToList = useAddDealToList(householdId);
-  const [selectedListId, setSelectedListId] = useState<string | null>(null);
-  const deleteItem = useDeleteListItem(householdId, selectedListId ?? '');
+  const deleteItem = useDeleteListItem(householdId);
 
   const active = (lists.data ?? []).filter((list) => list.archivedAt === null);
 
   const handleSelect = (list: { id: string; name: string }): void => {
     if (!deal) return;
-    setSelectedListId(list.id);
     onOpenChange(false);
     const payload: { listId: string; dealId: string; quantity?: number } = {
       listId: list.id,
@@ -61,7 +59,7 @@ export function AddToListSheet({
             label: 'Undo',
             onAction: () => {
               if (data.id) {
-                deleteItem.mutate(data.id);
+                deleteItem.mutate({ listId: list.id, itemId: data.id });
               }
             },
           },

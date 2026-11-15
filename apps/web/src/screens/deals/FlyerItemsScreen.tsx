@@ -31,6 +31,8 @@ const SORT_OPTIONS = [
  * It is a pushed screen, so the top bar carries a back control to the flyer list it came from.
  * Shares the screen-level lifted AddToListSheet with smart 1-list addition (D-20, DEAL-07).
  */
+const FLYER_CATEGORY_CACHE = new Map<string, Set<string>>();
+
 export function FlyerItemsScreen(): ReactElement {
   const navigate = useNavigate();
   const toast = useToast();
@@ -44,13 +46,9 @@ export function FlyerItemsScreen(): ReactElement {
   // Lifted AddToListSheet state
   const [dealToAdd, setDealToAdd] = useState<Deal | null>(null);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-  const [addedDealInfo, setAddedDealInfo] = useState<{ listId: string; itemId: string } | null>(
-    null,
-  );
-
   const lists = useShoppingLists(isOnline ? householdId : undefined);
   const addToList = useAddDealToList(householdId ?? '');
-  const deleteItem = useDeleteListItem(householdId ?? '', addedDealInfo?.listId ?? '');
+  const deleteItem = useDeleteListItem(householdId ?? '');
 
   // The flyer list hands its merchant name along, so the pushed screen can name itself without a
   // request of its own; a direct visit falls back to the neutral title.
@@ -63,14 +61,22 @@ export function FlyerItemsScreen(): ReactElement {
   const items = useFlyerItems(isOnline ? householdId : undefined, flyerId, params);
 
   const categoryOptions = useMemo(() => {
-    const found = new Set((items.data?.deals ?? []).map((deal) => deal.category ?? ''));
-    found.delete('');
+    const flyerKey = flyerId ?? 'default';
+    let cached = FLYER_CATEGORY_CACHE.get(flyerKey);
+    if (!cached) {
+      cached = new Set<string>();
+      FLYER_CATEGORY_CACHE.set(flyerKey, cached);
+    }
+    for (const deal of items.data?.deals ?? []) {
+      if (deal.category) cached.add(deal.category);
+    }
+    const found = new Set(cached);
     if (category !== undefined) found.add(category);
     return [
       { value: ANY_CATEGORY, label: 'Any category' },
-      ...[...found].sort().map((value) => ({ value, label: value })),
+      ...[...found].sort().map((val) => ({ value: val, label: val })),
     ];
-  }, [items.data, category]);
+  }, [flyerId, items.data, category]);
 
   const handleAddDeal = (deal: Deal): void => {
     const activeLists = (lists.data ?? []).filter((l) => l.archivedAt === null);
@@ -80,7 +86,6 @@ export function FlyerItemsScreen(): ReactElement {
         { listId: list.id, dealId: deal.id },
         {
           onSuccess: (data) => {
-            setAddedDealInfo({ listId: list.id, itemId: data.id });
             toast({
               variant: 'success',
               message: `Added '${deal.name}' to ${list.name}`,
@@ -88,7 +93,7 @@ export function FlyerItemsScreen(): ReactElement {
                 label: 'Undo',
                 onAction: () => {
                   if (data.id) {
-                    deleteItem.mutate(data.id);
+                    deleteItem.mutate({ listId: list.id, itemId: data.id });
                   }
                 },
               },

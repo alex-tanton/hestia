@@ -1,4 +1,4 @@
-import { useState, type ReactElement, type SyntheticEvent } from 'react';
+import { useMemo, useState, type ReactElement, type SyntheticEvent } from 'react';
 import { itemNameSchema, type ListItem, type PriceUnit } from '@hestia/shared';
 import { formatPriceInput, parsePriceInput, parseQuantityInput } from '../../lib/price-input.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
@@ -66,6 +66,16 @@ export function ItemSheet({
   const canPrice = !isEditing || item.source === 'manual';
   const { errors, setErrors, formRef } = useFieldErrors<Field>();
 
+  const availableStores = useMemo(() => {
+    const list = [...stores];
+    const initialId = item?.merchantId ?? initialDraft?.merchantId;
+    const initialName = item?.merchantName ?? initialDraft?.merchantName;
+    if (initialId && initialName && !list.some((s) => s.merchantId === initialId)) {
+      list.push({ merchantId: initialId, merchantName: initialName });
+    }
+    return list;
+  }, [stores, item, initialDraft]);
+
   const [itemName, setItemName] = useState(item?.itemName ?? initialDraft?.itemName ?? '');
   const [quantity, setQuantity] = useState(
     item?.quantity === null ? '' : String(item?.quantity ?? initialDraft?.quantity ?? ''),
@@ -95,14 +105,22 @@ export function ItemSheet({
     setErrors(next);
     if (Object.keys(next).length > 0 || !name.success) return;
 
-    const store = stores.find((choice) => choice.merchantId === merchantId);
+    const store = availableStores.find((choice) => choice.merchantId === merchantId);
+    const isAnywhere = merchantId === ANYWHERE_VALUE;
+    const resolvedMerchantId = isAnywhere
+      ? null
+      : (store?.merchantId ?? item?.merchantId ?? initialDraft?.merchantId ?? merchantId);
+    const resolvedMerchantName = isAnywhere
+      ? null
+      : (store?.merchantName ?? item?.merchantName ?? initialDraft?.merchantName ?? null);
+
     onSubmit({
       itemName: name.data,
       quantity: parsedQuantity.quantity ?? null,
-      priceCents: canPrice ? (parsedPrice.cents ?? null) : item.priceCents,
+      priceCents: canPrice ? (parsedPrice.cents ?? null) : (item.priceCents ?? null),
       priceUnit,
-      merchantId: store?.merchantId ?? null,
-      merchantName: store?.merchantName ?? null,
+      merchantId: resolvedMerchantId,
+      merchantName: resolvedMerchantName,
       barcode: barcode ?? null,
     });
     onOpenChange(false);
@@ -188,7 +206,7 @@ export function ItemSheet({
             >
               Anywhere
             </MdFilterChip>
-            {stores.map((store) => (
+            {availableStores.map((store) => (
               <MdFilterChip
                 key={store.merchantId}
                 selected={merchantId === store.merchantId}
