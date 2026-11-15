@@ -24,9 +24,9 @@ export function SubTabs({ pillar }: { pillar: Pillar }): ReactElement {
             eventWithDetail.detail?.activeTabIndex ??
             currentTarget?.activeTabIndex ??
             target?.activeTabIndex;
-          if (typeof tabIndex === 'number') {
+          if (typeof tabIndex === 'number' && tabIndex !== activeIndex) {
             const nextTab = pillar.subTabs[tabIndex];
-            if (nextTab && nextTab.path !== pathname) {
+            if (nextTab) {
               void navigate(nextTab.path);
               window.scrollTo(0, 0);
             }
