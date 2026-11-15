@@ -1,23 +1,26 @@
-import { ChevronDown, ChevronRight, Pencil, ScanBarcode, ShoppingCart, Trash2 } from 'lucide-react';
 import { useId, useState, type ReactElement } from 'react';
+import { useNavigate } from 'react-router';
 import type { ListItem, ListItemStatus, ShoppingListDetail, StoreGroup } from '@hestia/shared';
 import { BarcodeScannerDialog } from '../../components/lists/BarcodeScannerDialog.tsx';
 import { ItemSheet, type ItemDraft, type StoreChoice } from '../../components/lists/ItemSheet.tsx';
 import { ShoppingListRow } from '../../components/lists/ShoppingListRow.tsx';
 import { StoreGroupHeader } from '../../components/lists/StoreGroupHeader.tsx';
+import { SyncToPantrySheet } from '../../components/lists/SyncToPantrySheet.tsx';
+import { MdFab } from '../../components/md/MdFab.tsx';
 import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
-import type { OverflowMenuItem } from '../../components/ui/OverflowMenu.tsx';
+import { TextField } from '../../components/ui/Field.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
+import { OverflowMenu, type OverflowMenuItem } from '../../components/ui/OverflowMenu.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
 import { useApi } from '../../lib/api/api-context.tsx';
 import { fetchBarcodeProduct } from '../../lib/api/barcode-hooks.ts';
 import { useMembers } from '../../lib/api/hooks.ts';
 import {
-  useAddBoughtToPantry,
   useAddListItem,
   useDeleteListItem,
   useSetListArchived,
@@ -26,7 +29,6 @@ import {
 } from '../../lib/api/list-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { matchScannedItem } from '../../lib/barcode/matching.ts';
-import { pluralize } from '../../lib/format.ts';
 import { usePendingListWrites } from '../../lib/offline/use-write-queue.ts';
 import { useListRealtime } from '../../lib/realtime/use-list-realtime.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
@@ -65,6 +67,7 @@ export function ListDetailScreen({
   userId,
 }: ListDetailScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
+  const navigate = useNavigate();
   const toast = useToast();
   const api = useApi();
   const list = useShoppingList(householdId, listId);
@@ -72,28 +75,38 @@ export function ListDetailScreen({
   const addItem = useAddListItem(listId);
   const updateItem = useUpdateListItem(listId);
   const deleteItem = useDeleteListItem(householdId, listId);
-  const addBoughtToPantry = useAddBoughtToPantry(householdId, listId);
   const setArchived = useSetListArchived(householdId);
   const pending = usePendingListWrites(listId);
   const { changedItemIds, announcement } = useListRealtime(householdId, listId);
 
+  const [quickAddName, setQuickAddName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isSyncToPantryOpen, setIsSyncToPantryOpen] = useState(false);
   const [scannerDraft, setScannerDraft] = useState<Partial<ItemDraft> | undefined>(undefined);
   const [editing, setEditing] = useState<ListItem>();
   const [deleting, setDeleting] = useState<ListItem>();
   const [isBoughtOpen, setIsBoughtOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const boughtPanelId = useId();
 
   const detail = list.data;
   const isArchived = detail?.archivedAt != null;
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
 
-  useScreenChrome({ title: detail?.name ?? 'List', backTo: '/lists', backLabel: 'Lists' });
+  useScreenChrome({
+    title: detail?.name ?? 'List',
+    backTo: '/lists',
+    backLabel: 'Lists',
+  });
 
   const memberNames = new Map(
     (members.data ?? []).map((member) => [member.userId, member.displayName]),
   );
+
+  const toggleGroup = (key: string): void => {
+    setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   /** Every item write sends absolute values, never a toggle. */
   const setStatus = (item: ListItem, status: ListItemStatus): void => {
@@ -259,6 +272,21 @@ export function ListDetailScreen({
     });
   };
 
+  const handleQuickAdd = (): void => {
+    const trimmed = quickAddName.trim();
+    if (!trimmed) return;
+    handleAdd({
+      itemName: trimmed,
+      quantity: null,
+      priceCents: null,
+      priceUnit: 'each',
+      merchantId: null,
+      merchantName: null,
+      barcode: null,
+    });
+    setQuickAddName('');
+  };
+
   const handleEdit = (item: ListItem, draft: ItemDraft): void => {
     updateItem.mutate({
       kind: 'update-item',
@@ -286,7 +314,7 @@ export function ListDetailScreen({
       : [
           {
             label: item.status === 'in_cart' ? 'Move out of cart' : 'Move to cart',
-            icon: <ShoppingCart aria-hidden size={20} strokeWidth={1.5} />,
+            icon: <Icon name="shopping_cart" size={20} />,
             onSelect: () => {
               setStatus(item, item.status === 'in_cart' ? 'needed' : 'in_cart');
             },
@@ -294,14 +322,14 @@ export function ListDetailScreen({
         ]),
     {
       label: 'Edit',
-      icon: <Pencil aria-hidden size={20} strokeWidth={1.5} />,
+      icon: <Icon name="edit" size={20} />,
       onSelect: () => {
         setEditing(item);
       },
     },
     {
       label: 'Delete',
-      icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
+      icon: <Icon name="delete" size={20} />,
       isDestructive: true,
       // Deleting an item is not one of the four queueable writes.
       disabledReason: offlineReason,
@@ -321,24 +349,48 @@ export function ListDetailScreen({
       isChanged={changedItemIds.has(item.id)}
       isReadOnly={isArchived}
       onToggleBought={(isBought) => {
-        setStatus(item, isBought ? 'bought' : 'needed');
+        if (isBought) {
+          setStatus(item, 'bought');
+          toast({
+            variant: 'success',
+            message: `Marked '${item.itemName}' as bought`,
+            action: {
+              label: 'Undo',
+              onAction: () => {
+                setStatus(item, 'needed');
+              },
+            },
+          });
+        } else {
+          setStatus(item, 'needed');
+        }
       }}
       menuItems={isArchived ? [] : menuFor(item)}
     />
   );
 
   const renderGroup = (group: StoreGroup, index: number): ReactElement => {
+    const groupKey = group.merchantId ?? 'anywhere';
     const headingId = `store-group-${String(index)}`;
+    const isCollapsed = Boolean(collapsedGroups[groupKey]);
     return (
-      <section key={group.merchantId ?? 'anywhere'} aria-labelledby={headingId}>
+      <section key={groupKey} aria-labelledby={headingId} className="flex flex-col">
         {/*
          * Any queued write can move any subtotal — checking an item off takes it out of its
          * group, and an edit can move it to another store — and the client never recomputes
          * money, so while writes are queued every group says its figure is the last one the
          * server sent rather than letting one of them be quietly wrong.
          */}
-        <StoreGroupHeader group={group} headingId={headingId} isPending={pending.size > 0} />
-        <ul>{group.items.map((item) => renderRow(item, false))}</ul>
+        <StoreGroupHeader
+          group={group}
+          headingId={headingId}
+          isPending={pending.size > 0}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={() => {
+            toggleGroup(groupKey);
+          }}
+        />
+        {!isCollapsed && <ul>{group.items.map((item) => renderRow(item, false))}</ul>}
       </section>
     );
   };
@@ -365,7 +417,7 @@ export function ListDetailScreen({
     if (!hasItems) {
       return (
         <EmptyState
-          icon={ShoppingCart}
+          icon="shopping_cart"
           message={LIST_EMPTY_COPY}
           {...(isArchived
             ? {}
@@ -388,61 +440,33 @@ export function ListDetailScreen({
         {isAllBought && <p className="text-body text-secondary">{ALL_BOUGHT_COPY}</p>}
 
         {detail.storeGroups.length > 0 && (
-          <div className="overflow-hidden rounded-md border border-border">
-            {detail.storeGroups.map(renderGroup)}
-          </div>
+          <div className="flex flex-col gap-2">{detail.storeGroups.map(renderGroup)}</div>
         )}
 
         {detail.bought.length > 0 && (
-          /*
-           * Bought items collapse to a dimmed group rather than disappearing. The dimming is the
-           * muted text token and the recessed surface, not an opacity: blending text toward its
-           * background is what drops a contrast ratio under 4.5:1, and WCAG AA is an acceptance
-           * criterion.
-           */
-          <div className="rounded-md border border-border bg-raised">
-            <div className="flex items-center justify-between gap-2 bg-raised px-2 py-1">
+          <div className="rounded-md bg-[var(--md-sys-color-surface-container-low)]">
+            <div className="flex items-center justify-between gap-2 px-3 py-2">
               <button
                 type="button"
                 aria-expanded={isBoughtOpen}
                 aria-controls={boughtPanelId}
-                className="flex min-h-11 flex-1 items-center gap-2 px-2 text-h3 text-secondary"
+                className="flex min-h-11 flex-1 items-center gap-2 text-title-sm font-semibold text-[var(--md-sys-color-on-surface-variant)]"
                 onClick={() => {
                   setIsBoughtOpen((open) => !open);
                 }}
               >
-                {isBoughtOpen ? (
-                  <ChevronDown aria-hidden size={20} strokeWidth={1.5} />
-                ) : (
-                  <ChevronRight aria-hidden size={20} strokeWidth={1.5} />
-                )}
-                {`Bought (${String(detail.bought.length)})`}
+                <Icon name={isBoughtOpen ? 'expand_more' : 'chevron_right'} size={20} />
+                <span>{`Bought (${String(detail.bought.length)})`}</span>
               </button>
               {!isArchived && (
                 <Button
                   variant="ghost"
                   disabledReason={offlineReason}
-                  isLoading={addBoughtToPantry.isPending}
                   onClick={() => {
-                    addBoughtToPantry.mutate(undefined, {
-                      onSuccess: (items) => {
-                        toast({
-                          variant: 'success',
-                          message: `Added ${pluralize(items.length, 'item')} to the pantry.`,
-                        });
-                      },
-                      onError: (error) => {
-                        toast({
-                          variant: 'error',
-                          message: userMessage(error, {
-                            fallback: "Couldn't add these to the pantry. Try again.",
-                          }),
-                        });
-                      },
-                    });
+                    setIsSyncToPantryOpen(true);
                   }}
                 >
-                  Add bought items to pantry
+                  Add bought to pantry
                 </Button>
               )}
             </div>
@@ -456,7 +480,7 @@ export function ListDetailScreen({
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 pb-16">
       {/*
        * In the tree before it has anything to say, because a live region that arrives already
        * populated is announced unreliably.
@@ -482,24 +506,72 @@ export function ListDetailScreen({
       )}
 
       {!isArchived && detail !== undefined && (
-        <div className="flex justify-end gap-2">
-          {/* Add, check, uncheck, and edit are the writes that queue, so this stays available. */}
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setIsScanning(true);
-            }}
-          >
-            <ScanBarcode aria-hidden className="mr-1.5" size={18} strokeWidth={1.5} />
-            Scan barcode
-          </Button>
-          <Button
-            onClick={() => {
-              setIsAdding(true);
-            }}
-          >
-            Add an item
-          </Button>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <TextField
+                label="Add an item..."
+                name="quickAddItem"
+                value={quickAddName}
+                onChange={(e) => {
+                  setQuickAddName(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleQuickAdd();
+                  }
+                }}
+              />
+            </div>
+            <Button
+              variant="primary"
+              disabledReason={offlineReason}
+              onClick={handleQuickAdd}
+              aria-label="Add grocery item"
+            >
+              <Icon name="add" size={20} />
+            </Button>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsScanning(true);
+              }}
+            >
+              <Icon name="barcode_scanner" size={18} className="mr-1.5" />
+              Scan barcode
+            </Button>
+            <Button
+              onClick={() => {
+                setIsAdding(true);
+              }}
+            >
+              Add an item
+            </Button>
+            <OverflowMenu
+              label="More actions for this list"
+              items={[
+                {
+                  label: 'Archived lists',
+                  onSelect: () => {
+                    void navigate('/lists/archived');
+                  },
+                },
+                ...(detail.bought.length > 0
+                  ? [
+                      {
+                        label: 'Add bought to pantry',
+                        onSelect: () => {
+                          setIsSyncToPantryOpen(true);
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </div>
         </div>
       )}
 
@@ -513,6 +585,22 @@ export function ListDetailScreen({
       )}
 
       {body()}
+
+      {!isArchived && detail !== undefined && (
+        <div className="fixed bottom-6 right-6 z-20">
+          <MdFab
+            aria-label="Add grocery item"
+            onClick={() => {
+              setScannerDraft(undefined);
+              setIsAdding(true);
+            }}
+          >
+            <span slot="icon">
+              <Icon name="add" size={24} />
+            </span>
+          </MdFab>
+        </div>
+      )}
 
       {isAdding && detail !== undefined && (
         <ItemSheet
@@ -534,6 +622,16 @@ export function ListDetailScreen({
           onScan={(code, scanMode) => {
             void handleScan(code, scanMode);
           }}
+        />
+      )}
+
+      {isSyncToPantryOpen && detail !== undefined && (
+        <SyncToPantrySheet
+          open={isSyncToPantryOpen}
+          onOpenChange={setIsSyncToPantryOpen}
+          householdId={householdId}
+          listId={listId}
+          boughtItems={detail.bought}
         />
       )}
 

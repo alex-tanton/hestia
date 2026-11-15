@@ -97,9 +97,6 @@ export function ShoppingListRow({
         onCheckedChange={(checked) => {
           onToggleBought(checked);
         }}
-        onChange={(event) => {
-          onToggleBought(event.target.checked);
-        }}
         label={
           <span className="flex min-w-0 flex-col gap-0.5">
             <span

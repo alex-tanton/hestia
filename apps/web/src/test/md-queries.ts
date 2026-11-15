@@ -42,6 +42,7 @@ const BUTTON_SELECTOR = [
   'md-filled-icon-button',
   'md-filled-tonal-icon-button',
   'md-outlined-icon-button',
+  'md-fab',
   'button',
 ].join(', ');
 

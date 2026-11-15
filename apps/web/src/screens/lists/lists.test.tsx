@@ -390,7 +390,7 @@ describe('Shopping list detail', () => {
       }),
     );
     expect(await screen.findByText(ALL_BOUGHT_COPY)).toBeInTheDocument();
-    expect(getMdButton('Add bought items to pantry')).toBeInTheDocument();
+    expect(getMdButton(/Add bought( items)? to pantry/i)).toBeInTheDocument();
   });
 
   it('archived: read-only, with an unarchive action and no add', async () => {
