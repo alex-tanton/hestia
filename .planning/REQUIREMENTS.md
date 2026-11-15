@@ -26,8 +26,8 @@ Requirements for the Material Design 3 UI overhaul. Each maps to roadmap phases.
 
 - [ ] **DASH-01**: Redesign `Dashboard` (`This Week`) as a 1–2 column grid of borderless tonal cards (`surfaceContainerLow`, max 3 `<md-list-item>` rows per card, `error` reserved strictly for overdue alerts) plus a tonal `DashboardFirstRun` hero card.
 - [ ] **DASH-02**: Unify `EmptyState`, `ErrorState`, and `OfflineState` blocks using MD3 tonal containers, Material Symbols, and MD3 typography.
-- [ ] **AUTH-06**: Redesign all auth screens (`/sign-in`, `/sign-up`, `/sign-in/link`, `/sign-in/code`, `/forgot-password`, `/set-password`) as centered tonal Surface Container cards (`max-w-[440px]`) with `<md-outlined-text-field>` and MD3 buttons, preserving `MAGIC_LINK_COPY` and `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` gating.
-- [ ] **AUTH-07**: Redesign `OnboardingLayout`, household `Create`/`Join` steps, and `InstallStep` using tonal MD3 action cards, single-field `<md-outlined-text-field>` inputs, and clear guidance cards.
+- [x] **AUTH-06**: Redesign all auth screens (`/sign-in`, `/sign-up`, `/sign-in/link`, `/sign-in/code`, `/forgot-password`, `/set-password`) as centered tonal Surface Container cards (`max-w-[440px]`) with `<md-outlined-text-field>` and MD3 buttons, preserving `MAGIC_LINK_COPY` and `HESTIA_PUBLIC_MAGIC_LINK_ENABLED` gating.
+- [x] **AUTH-07**: Redesign `OnboardingLayout`, household `Create`/`Join` steps, and `InstallStep` using tonal MD3 action cards, single-field `<md-outlined-text-field>` inputs, and clear guidance cards.
 
 ### Grocery Lists, Pantry, Deals & Flyers
 
@@ -104,8 +104,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-04 | Phase 18 | Complete |
 | DASH-01 | Phase 19 | Pending |
 | DASH-02 | Phase 19 | Pending |
-| AUTH-06 | Phase 19 | Pending |
-| AUTH-07 | Phase 19 | Pending |
+| AUTH-06 | Phase 19 | Complete |
+| AUTH-07 | Phase 19 | Complete |
 | LIST-01 | Phase 19 | Pending |
 | LIST-02 | Phase 19 | Pending |
 | LIST-03 | Phase 19 | Pending |
