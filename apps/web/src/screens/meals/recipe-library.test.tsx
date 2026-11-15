@@ -236,6 +236,41 @@ describe('Recipe library', () => {
     expect(getMdButton('Previous')).toBeDisabled();
   });
 
+  it('toggling the readiness filter returns to page 1', async () => {
+    const user = userEvent.setup();
+    mount(
+      baseHandlers({
+        'GET /api/households/:id/recipes': (request) => {
+          const page = Number(request.query.get('page') ?? '1');
+          if (page === 2) {
+            return {
+              status: 200,
+              body: { recipes: [bakedZitiFixture], page: 2, pageSize: 1, total: 2, hasMore: false },
+            };
+          }
+          return {
+            status: 200,
+            body: {
+              recipes: [sheetPanChickenFixture],
+              page: 1,
+              pageSize: 1,
+              total: 2,
+              hasMore: true,
+            },
+          };
+        },
+      }),
+    );
+    await screen.findByText(/Sheet Pan Chicken/);
+    await user.click(getMdButton('Next'));
+    await screen.findByText(bakedZitiFixture.title);
+
+    const filterChip = screen.getByText('On sale / Ready now');
+    await user.click(filterChip);
+    await screen.findByText(/Sheet Pan Chicken/);
+    expect(getMdButton('Previous')).toBeDisabled();
+  });
+
   it('add flow: choose manual entry, fill it in, and save', async () => {
     const user = userEvent.setup();
     const stub = mount(

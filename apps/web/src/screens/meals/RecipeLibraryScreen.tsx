@@ -49,6 +49,7 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
   const filterReady = searchParams.get('filter') === 'ready';
 
   const handleToggleFilter = (): void => {
+    setPage(1);
     const next = new URLSearchParams(searchParams);
     if (filterReady) {
       next.delete('filter');
