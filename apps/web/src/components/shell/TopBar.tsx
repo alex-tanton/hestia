@@ -1,8 +1,6 @@
-import { ChevronLeft, Settings } from 'lucide-react';
-import type { ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { Link } from 'react-router';
-import { BUTTON_BASE } from '../ui/Button.tsx';
-import { cn } from '../../lib/cn.ts';
+import { Icon } from '../ui/Icon.tsx';
 import { HouseholdSwitcher, type HouseholdSwitcherProps } from './HouseholdSwitcher.tsx';
 import type { ScreenChrome } from './screen-chrome.tsx';
 
@@ -13,39 +11,49 @@ export interface TopBarProps {
   chrome?: ScreenChrome | undefined;
 }
 
-/** Chrome: household switcher, screen title, settings. */
+/** Small Top App Bar (64px) with scroll-aware tonal tint and single-h1 hierarchy. */
 export function TopBar({ title, switcher, chrome }: TopBarProps): ReactElement {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = (): void => {
+      setIsScrolled(window.scrollY > 4);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
   return (
-    <div className="flex min-h-14 items-center gap-2 px-2">
-      <div className="flex max-w-[45%] min-w-0 shrink-0 items-center">
+    <div
+      className={`flex h-16 items-center gap-3 px-4 transition-colors duration-200 ${
+        isScrolled ? 'bg-surface-container' : 'bg-surface'
+      }`}
+    >
+      <div className="flex shrink-0 items-center">
         {chrome ? (
           <Link
             to={chrome.backTo}
-            className={cn(
-              BUTTON_BASE,
-              'gap-1 px-2 text-secondary hover:bg-raised hover:text-primary',
-            )}
+            aria-label={chrome.backLabel ? `Back to ${chrome.backLabel}` : 'Back'}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-secondary hover:bg-surface-container-high"
           >
-            <ChevronLeft aria-hidden size={20} strokeWidth={1.5} className="shrink-0" />
-            <span className="truncate">{chrome.backLabel ?? 'Back'}</span>
+            <Icon name="arrow_back" size={24} />
           </Link>
         ) : (
           <HouseholdSwitcher {...switcher} />
         )}
       </div>
-      <h1 className="min-w-0 flex-1 truncate text-center text-h3 text-primary lg:text-left">
-        {title}
-      </h1>
+
+      <h1 className="min-w-0 flex-1 truncate text-heading font-semibold text-primary">{title}</h1>
+
       <div className="flex shrink-0 items-center min-[600px]:hidden">
         <Link
           to="/settings"
           aria-label="Settings"
-          className={cn(
-            BUTTON_BASE,
-            'shrink-0 text-secondary hover:bg-raised hover:text-primary active:bg-section-tint',
-          )}
+          className="flex h-10 w-10 items-center justify-center rounded-full text-secondary hover:bg-surface-container-high"
         >
-          <Settings aria-hidden size={20} strokeWidth={1.5} />
+          <Icon name="settings" size={24} />
         </Link>
       </div>
     </div>
