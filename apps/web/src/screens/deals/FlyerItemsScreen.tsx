@@ -1,11 +1,20 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
-import type { DealSort } from '@hestia/shared';
+import type { Deal, DealSort } from '@hestia/shared';
 import { OfflineState } from '../../components/states/StateBlocks.tsx';
 import { Select } from '../../components/ui/Select.tsx';
+import { useToast } from '../../components/ui/Toast.tsx';
 import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';
-import { useFlyerItems, type FlyerItemsParams } from '../../lib/api/deals.ts';
+import {
+  useAddDealToList,
+  useFlyerItems,
+  useShoppingLists,
+  type FlyerItemsParams,
+} from '../../lib/api/deals.ts';
+import { useDeleteListItem } from '../../lib/api/list-hooks.ts';
+import { userMessage } from '../../lib/api/problem.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
+import { AddToListSheet } from './AddToListSheet.tsx';
 import { DealResults } from './DealResults.tsx';
 import { DealsFrame, useActiveHousehold } from './deals-frame.tsx';
 import { FLYERS_OFFLINE_MESSAGE } from './FlyersScreen.tsx';
@@ -20,18 +29,28 @@ const SORT_OPTIONS = [
 /**
  * One flyer's items, in the same `DealCard` list with category filtering.
  * It is a pushed screen, so the top bar carries a back control to the flyer list it came from.
- *
- * A flyer-items request never fetches from Flipp inline, so an empty answer with `refreshing` is
- * the no-cache state, and the results appear when the queued background refresh finishes.
+ * Shares the screen-level lifted AddToListSheet with smart 1-list addition (D-20, DEAL-07).
  */
 export function FlyerItemsScreen(): ReactElement {
   const navigate = useNavigate();
+  const toast = useToast();
   const isOnline = useOnlineStatus();
   const { flyerId } = useParams<{ flyerId: string }>();
   const { householdId } = useActiveHousehold();
   const [category, setCategory] = useState<string>();
   const [sort, setSort] = useState<DealSort>('relevance');
   const [page, setPage] = useState(1);
+
+  // Lifted AddToListSheet state
+  const [dealToAdd, setDealToAdd] = useState<Deal | null>(null);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [addedDealInfo, setAddedDealInfo] = useState<{ listId: string; itemId: string } | null>(
+    null,
+  );
+
+  const lists = useShoppingLists(isOnline ? householdId : undefined);
+  const addToList = useAddDealToList(householdId ?? '');
+  const deleteItem = useDeleteListItem(householdId ?? '', addedDealInfo?.listId ?? '');
 
   // The flyer list hands its merchant name along, so the pushed screen can name itself without a
   // request of its own; a direct visit falls back to the neutral title.
@@ -52,6 +71,42 @@ export function FlyerItemsScreen(): ReactElement {
       ...[...found].sort().map((value) => ({ value, label: value })),
     ];
   }, [items.data, category]);
+
+  const handleAddDeal = (deal: Deal): void => {
+    const activeLists = (lists.data ?? []).filter((l) => l.archivedAt === null);
+    const list = activeLists[0];
+    if (activeLists.length === 1 && list !== undefined) {
+      addToList.mutate(
+        { listId: list.id, dealId: deal.id },
+        {
+          onSuccess: (data) => {
+            setAddedDealInfo({ listId: list.id, itemId: data.id });
+            toast({
+              variant: 'success',
+              message: `Added '${deal.name}' to ${list.name}`,
+              action: {
+                label: 'Undo',
+                onAction: () => {
+                  if (data.id) {
+                    deleteItem.mutate(data.id);
+                  }
+                },
+              },
+            });
+          },
+          onError: (error) => {
+            toast({
+              variant: 'error',
+              message: userMessage(error, { fallback: `Could not add ${deal.name}. Try again.` }),
+            });
+          },
+        },
+      );
+    } else {
+      setDealToAdd(deal);
+      setIsAddSheetOpen(true);
+    }
+  };
 
   if (!isOnline) {
     return (
@@ -114,9 +169,23 @@ export function FlyerItemsScreen(): ReactElement {
               },
             }}
             onPageChange={setPage}
+            onAddDeal={handleAddDeal}
           />
         )}
       </div>
+
+      {/* Lifted screen-level AddToListSheet */}
+      {householdId !== undefined && (
+        <AddToListSheet
+          open={isAddSheetOpen}
+          onOpenChange={(open) => {
+            setIsAddSheetOpen(open);
+            if (!open) setDealToAdd(null);
+          }}
+          deal={dealToAdd}
+          householdId={householdId}
+        />
+      )}
     </DealsFrame>
   );
 }

@@ -1,9 +1,10 @@
-import { Newspaper } from 'lucide-react';
-import { useCallback, useState, type ReactElement } from 'react';
+import { useCallback, useState, type ComponentType, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router';
 import type { DealScope, Flyer } from '@hestia/shared';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+import { Badge } from '../../components/ui/Badge.tsx';
 import { Card } from '../../components/ui/Card.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { SegmentedControl } from '../../components/ui/SegmentedControl.tsx';
 import { useFlyers } from '../../lib/api/deals.ts';
 import { pluralize } from '../../lib/format.ts';
@@ -27,9 +28,13 @@ export function flyerPath(flyer: Pick<Flyer, 'flyerId'>): string {
   return `/lists/flyers/${encodeURIComponent(flyer.flyerId)}`;
 }
 
+function NewspaperIcon({ className }: { className?: string | undefined }): ReactElement {
+  return <Icon name="newspaper" size={48} className={className} />;
+}
+
 /**
- * Browse flyers: every active flyer near the household's postal code, with
- * merchant, validity dates, and item count. Tapping one opens its items.
+ * Browse flyers: presents store catalogs in a 2-4 column elevated MD3 card grid
+ * with merchant logo, cover preview thumbnail, valid dates, and item count badge (D-20, DEAL-07).
  */
 export function FlyersScreen(): ReactElement {
   const navigate = useNavigate();
@@ -37,6 +42,7 @@ export function FlyersScreen(): ReactElement {
   const { householdId, postalCode } = useActiveHousehold();
   const [scope, setScope] = useState<DealScope>('favorites');
   const flyers = useFlyers(isOnline ? householdId : undefined, scope);
+
   // TanStack Query memoizes `refetch`, so the poll's wait is not restarted by every render.
   const { refetch: runRefetch } = flyers;
   const refetch = useCallback(() => {
@@ -102,7 +108,7 @@ export function FlyersScreen(): ReactElement {
 
             {rows.length === 0 && !flyers.data.refreshing && (
               <EmptyState
-                icon={Newspaper}
+                icon={NewspaperIcon as ComponentType<{ className?: string }>}
                 message={
                   scope === 'favorites'
                     ? 'No active flyers at your favorite stores this week.'
@@ -119,27 +125,36 @@ export function FlyersScreen(): ReactElement {
             )}
 
             {rows.length > 0 && (
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {rows.map((flyer) => (
                   <li key={flyer.flyerId}>
-                    <Card className="h-full p-0">
+                    <Card
+                      as="article"
+                      variant="raised"
+                      className="flex h-full cursor-pointer flex-col overflow-hidden bg-[var(--md-sys-color-surface-container)] p-0 transition-shadow hover:shadow-md"
+                    >
                       <Link
                         to={flyerPath(flyer)}
                         state={{ merchantName: flyer.merchantName }}
-                        className="flex min-h-11 items-center gap-3 rounded-md p-4 hover:bg-raised active:bg-section-tint"
+                        className="flex h-full flex-col focus:outline-none"
                       >
-                        <DealImage url={flyer.logoUrl ?? flyer.thumbnailUrl} className="size-12" />
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate text-h3 text-primary">
+                        <div className="aspect-[4/3] w-full overflow-hidden bg-[var(--md-sys-color-surface-container-highest)]">
+                          <DealImage
+                            url={flyer.thumbnailUrl ?? flyer.logoUrl}
+                            className="size-full object-cover"
+                          />
+                        </div>
+                        <div className="flex flex-1 flex-col gap-1 p-3">
+                          <span className="truncate text-title-md font-semibold text-on-surface">
                             {flyer.merchantName}
                           </span>
-                          <span className="text-body-sm text-secondary">
+                          <span className="text-label-sm text-on-surface-variant">
                             {validityLabel(flyer)}
                           </span>
-                          <span className="text-caption tabular-nums text-muted">
-                            {pluralize(flyer.itemCount, 'item')}
-                          </span>
-                        </span>
+                          <div className="mt-auto pt-1">
+                            <Badge variant="neutral">{pluralize(flyer.itemCount, 'item')}</Badge>
+                          </div>
+                        </div>
                       </Link>
                     </Card>
                   </li>
