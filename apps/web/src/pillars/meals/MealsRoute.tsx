@@ -5,7 +5,6 @@ import { PillarScreen } from '../../screens/PillarScreen.tsx';
 import { PlannerScreen } from '../../screens/meals/PlannerScreen.tsx';
 import { RecipeDetailScreen } from '../../screens/meals/RecipeDetailScreen.tsx';
 import { RecipeLibraryScreen } from '../../screens/meals/RecipeLibraryScreen.tsx';
-import { SuggestionsScreen } from '../../screens/meals/SuggestionsScreen.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 
 /** A pushed detail screen reads its own id, so the route element stays a thin wrapper. */
@@ -16,8 +15,8 @@ function RecipeDetailRoute({ householdId }: { householdId: string }): ReactEleme
 }
 
 /**
- * The Meals tab. The sub-tab roots — Planner, Recipes, Suggestions — sit inside `PillarScreen`,
- * which draws the segmented control; a recipe's detail renders without it, since the top bar has
+ * The Meals tab. The sub-tab roots — Planner and Recipes — sit inside `PillarScreen`,
+ * which draws the MD3 primary tabs; a recipe's detail renders without it, since the top bar has
  * already swapped the switcher for a back control (the same split `ListsRoute` uses for a list's
  * own detail).
  */
@@ -51,14 +50,7 @@ export function Component(): ReactElement {
           </PillarScreen>
         }
       />
-      <Route
-        path="suggestions"
-        element={
-          <PillarScreen pillar="meals">
-            <SuggestionsScreen householdId={householdId} />
-          </PillarScreen>
-        }
-      />
+      <Route path="suggestions" element={<Navigate to="/meals/recipes?filter=ready" replace />} />
       <Route path="recipes/:recipeId" element={<RecipeDetailRoute householdId={householdId} />} />
       <Route path="*" element={<Navigate to="/meals" replace />} />
     </Routes>

@@ -1,3 +1,4 @@
+import type { Recipe } from '@hestia/shared';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -9,7 +10,7 @@ import {
   getMdButton,
   getMdField,
 } from '../../test/md-queries.ts';
-import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
+import { ALEX_ID, OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
 import {
   bakedZitiFixture,
   grilledCheeseFixture,
@@ -41,10 +42,13 @@ function baseHandlers(
   };
 }
 
-function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
+function mount(
+  handlers = baseHandlers(),
+  initialEntries = ['/'],
+): ReturnType<typeof createFetchStub> {
   const stub = createFetchStub(handlers);
   vi.stubGlobal('fetch', stub.fetch);
-  renderScreen(<RecipeLibraryScreen householdId={OAK_STREET_ID} />);
+  renderScreen(<RecipeLibraryScreen householdId={OAK_STREET_ID} />, { initialEntries });
   return stub;
 }
 
@@ -324,5 +328,109 @@ describe('Recipe library', () => {
       ),
     ).toBeInTheDocument();
     expect(await findMdField('Title')).toHaveProperty('value', 'Partial Recipe');
+  });
+
+  it('filter chip: toggles readiness filter to restrict recipes having pantry or sale items', async () => {
+    const plainRiceRecipe: Recipe = {
+      id: 'c0000001-0000-4000-8000-000000000099',
+      householdId: OAK_STREET_ID,
+      title: 'Plain Rice',
+      sourceUrl: null,
+      instructions: null,
+      servings: 2,
+      createdBy: ALEX_ID,
+      createdAt: '2026-09-15T12:00:00.000Z',
+    };
+
+    mount(
+      baseHandlers({
+        'GET /api/households/:id/recipes': () => ({
+          status: 200,
+          body: {
+            ...recipeListResponseFixture,
+            recipes: [...recipeListResponseFixture.recipes, plainRiceRecipe],
+          },
+        }),
+      }),
+    );
+
+    await screen.findByText(/Sheet Pan Chicken/);
+    expect(screen.getByText('Plain Rice')).toBeInTheDocument();
+
+    const chip = document.querySelector('md-filter-chip');
+    expect(chip).not.toBeNull();
+    if (!chip) return;
+
+    fireEvent.click(chip);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Plain Rice')).toBeNull();
+    });
+    expect(screen.getByText(/Sheet Pan Chicken/)).toBeInTheDocument();
+
+    fireEvent.click(chip);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plain Rice')).toBeInTheDocument();
+    });
+  });
+
+  it('filter empty: displays empty state card and clears filter when clicked', async () => {
+    const user = userEvent.setup();
+    const plainRiceRecipe: Recipe = {
+      id: 'c0000001-0000-4000-8000-000000000099',
+      householdId: OAK_STREET_ID,
+      title: 'Plain Rice',
+      sourceUrl: null,
+      instructions: null,
+      servings: 2,
+      createdBy: ALEX_ID,
+      createdAt: '2026-09-15T12:00:00.000Z',
+    };
+
+    mount(
+      baseHandlers({
+        'GET /api/households/:id/recipes': () => ({
+          status: 200,
+          body: {
+            recipes: [plainRiceRecipe],
+            page: 1,
+            pageSize: 50,
+            total: 1,
+            hasMore: false,
+          },
+        }),
+        'GET /api/households/:id/suggestions': () => ({
+          status: 200,
+          body: {
+            recipes: [
+              {
+                recipeId: plainRiceRecipe.id,
+                title: plainRiceRecipe.title,
+                readinessPercent: 0,
+                onSaleCount: 0,
+                inPantryCount: 0,
+                toBuyCount: 3,
+              },
+            ],
+            dealsAsOf: null,
+          },
+        }),
+      }),
+      ['/meals/recipes?filter=ready'],
+    );
+
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'No matching recipes' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/No recipes have ingredients currently in your pantry or on sale/),
+    ).toBeInTheDocument();
+
+    const clearButton = getMdButton('Clear recipe filter');
+    await user.click(clearButton);
+
+    expect(await screen.findByText('Plain Rice')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'No matching recipes' })).toBeNull();
   });
 });

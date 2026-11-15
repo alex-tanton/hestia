@@ -50,9 +50,6 @@ export function deleteRecipeConfirmation(recipe: Pick<Recipe, 'title'>): string 
   return `Delete ${recipe.title}? Planned meals keep its name.`;
 }
 
-export const SUGGESTIONS_EMPTY_COPY = 'No recipes yet. Add one to see what you can make this week.';
-export const SUGGESTIONS_NO_DEALS_COPY = "Suggestions need this week's deals.";
-
 export const PLANNER_PAST_WEEK_COPY = 'This week is history — placed meals are read-only.';
 
 /** A deleted recipe's snapshot entry: no readiness, no link. */

@@ -56,7 +56,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     subTabs: [
       { label: 'Planner', path: '/meals' },
       { label: 'Recipes', path: '/meals/recipes' },
-      { label: 'Suggestions', path: '/meals/suggestions' },
     ],
   },
   bills: {
