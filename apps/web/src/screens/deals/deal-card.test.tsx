@@ -14,6 +14,7 @@ import {
   weekendCookoutList,
 } from '../../test/deal-fixtures.ts';
 import { DealCard } from './DealCard.tsx';
+import { AddToListSheet } from './AddToListSheet.tsx';
 import { isAllowedImageUrl } from './DealImage.tsx';
 
 afterEach(() => {
@@ -94,6 +95,25 @@ describe('a deal card', () => {
       "Stouffer's Entrees Stouffer's Entrees at Lowes Foods, $2.00 each, marked FINAL PRICE 2/$4.00, was $3.00 each, 33% off, with a digital coupon, valid 09/23/2026 – 09/29/2026.",
     );
   });
+
+  it('renders compact 72x72 photo dimension, bold price, and invokes onAdd callback when tapped', async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    const { container } = renderScreen(
+      <DealCard householdId={OAK_STREET_ID} deal={eggsDeal} onAdd={onAdd} />,
+    );
+
+    const thumbnail = container.querySelector('.size-\\[72px\\]');
+    expect(thumbnail).toBeInTheDocument();
+
+    const unitPrice = screen.getByText('$2.50');
+    expect(unitPrice).toHaveClass('text-title-md', 'font-semibold', 'tabular-nums');
+
+    const addButton = await findMdButton(`Add ${eggsDeal.name} to shopping list`);
+    expect(addButton).toBeInTheDocument();
+    await user.click(addButton);
+    expect(onAdd).toHaveBeenCalledWith(eggsDeal);
+  });
 });
 
 describe('a deal image', () => {
@@ -129,16 +149,24 @@ describe('a deal image', () => {
   });
 });
 
-describe('adding a deal to a list', () => {
+describe('adding a deal to a list via AddToListSheet', () => {
   it('sends the deal id and nothing else, never a price', async () => {
     const user = userEvent.setup();
     const stub = stubFetch({
       'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
       'POST /api/lists/:id/items': () => ({ status: 201, body: {} }),
     });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+    );
 
-    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
+    const listButton = await screen.findByRole('button', { name: /This Week/ });
+    await user.click(listButton);
 
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'POST')).toBe(true);
@@ -149,7 +177,9 @@ describe('adding a deal to a list', () => {
     expect(Object.keys(body).toSorted()).toEqual(['dealId', 'id', 'source']);
     expect(body['source']).toBe('from_deal');
     expect(body['dealId']).toBe(eggsDeal.id);
-    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+    expect(
+      await screen.findByText(`Added '${eggsDeal.name}' to ${thisWeekList.name}`),
+    ).toBeInTheDocument();
   });
 
   it('asks which list when the household keeps more than one', async () => {
@@ -161,13 +191,19 @@ describe('adding a deal to a list', () => {
       }),
       'POST /api/lists/:id/items': () => ({ status: 201, body: {} }),
     });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
-
-    await user.click(await findMdButton('Add Broccoli Crowns to a list'));
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={broccoliDeal}
+      />,
+    );
 
     const sheet = await screen.findByRole('dialog');
     expect(within(sheet).getByText('Add to which list?')).toBeInTheDocument();
-    await user.click(within(sheet).getByRole('button', { name: /Weekend Cookout/ }));
+    const listBtn = await within(sheet).findByRole('button', { name: /Weekend Cookout/ });
+    await user.click(listBtn);
 
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'POST')).toBe(true);
@@ -178,23 +214,23 @@ describe('adding a deal to a list', () => {
   });
 
   it('routes to Lists rather than dead-ending when there is no list yet', async () => {
-    const user = userEvent.setup();
     stubFetch({ 'GET /api/households/:id/lists': () => ({ status: 200, body: [] }) });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+    );
 
-    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
     const sheet = await screen.findByRole('dialog');
-    expect(within(sheet).getByText(/No lists yet/)).toBeInTheDocument();
+    expect(await within(sheet).findByText(/No lists yet/)).toBeInTheDocument();
     expect(getMdButton('Go to Lists', { container: sheet })).toBeInTheDocument();
   });
 });
 
 describe('adding a deal after a lost response', () => {
-  /**
-   * The server's `shopping_list_item` rows by id: `on conflict (id) do nothing` keeps the first
-   * row an id lands, whatever list a later request names, so a row's value is the list it landed
-   * on.
-   */
   function itemStore(): { rows: Map<string, string>; insert: StubHandler } {
     const rows = new Map<string, string>();
     const insert: StubHandler = ({ body, params }) => {
@@ -205,7 +241,6 @@ describe('adding a deal after a lost response', () => {
     return { rows, insert };
   }
 
-  /** A `POST /api/lists/:id/items` handler whose chosen calls land and then lose their response. */
   function losingResponses(
     store: ReturnType<typeof itemStore>,
     lost: readonly number[],
@@ -214,7 +249,6 @@ describe('adding a deal after a lost response', () => {
     return (request) => {
       posts += 1;
       const response = store.insert(request);
-      // The request lands, but the response never reaches the browser: fetch rejects.
       if (lost.includes(posts)) throw new TypeError('Failed to fetch');
       return response;
     };
@@ -232,14 +266,23 @@ describe('adding a deal after a lost response', () => {
       'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    const add = await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list");
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+    );
+    const selectList = await screen.findByRole('button', { name: /This Week/ });
 
-    await user.click(add);
+    await user.click(selectList);
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
-    await user.click(add);
-    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+    await user.click(selectList);
+    expect(
+      await screen.findByText(`Added '${eggsDeal.name}' to ${thisWeekList.name}`),
+    ).toBeInTheDocument();
 
     const ids = idsPostedTo(stub, thisWeekList.id);
     expect(ids).toHaveLength(2);
@@ -254,14 +297,21 @@ describe('adding a deal after a lost response', () => {
       'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
       'POST /api/lists/:id/items': store.insert,
     });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    const add = await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list");
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+    );
+    const selectList = await screen.findByRole('button', { name: /This Week/ });
 
-    await user.click(add);
+    await user.click(selectList);
     await waitFor(() => {
       expect(store.rows.size).toBe(1);
     });
-    await user.click(add);
+    await user.click(selectList);
     await waitFor(() => {
       expect(store.rows.size).toBe(2);
     });
@@ -277,23 +327,29 @@ describe('adding a deal after a lost response', () => {
       }),
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
-    const add = await findMdButton('Add Broccoli Crowns to a list');
-
-    await user.click(add);
-    await user.click(
-      within(await screen.findByRole('dialog')).getByRole('button', { name: /This Week/ }),
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={broccoliDeal}
+      />,
     );
+
+    const dialog = await screen.findByRole('dialog');
+    const thisWeekBtn = await within(dialog).findByRole('button', { name: /This Week/ });
+    await user.click(thisWeekBtn);
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
 
-    await user.click(add);
-    await user.click(
-      within(await screen.findByRole('dialog')).getByRole('button', { name: /Weekend Cookout/ }),
-    );
-    expect(await screen.findByText('Added to Weekend Cookout.')).toBeInTheDocument();
+    const weekendCookoutBtn = await within(dialog).findByRole('button', {
+      name: /Weekend Cookout/,
+    });
+    await user.click(weekendCookoutBtn);
+    expect(
+      await screen.findByText(`Added '${broccoliDeal.name}' to ${weekendCookoutList.name}`),
+    ).toBeInTheDocument();
 
-    // Both lists hold the deal: a reused id would have been swallowed by `on conflict (id)`.
     expect(new Set(store.rows.values())).toEqual(new Set([thisWeekList.id, weekendCookoutList.id]));
   });
 
@@ -307,51 +363,74 @@ describe('adding a deal after a lost response', () => {
       }),
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={broccoliDeal} />);
-    const add = await findMdButton('Add Broccoli Crowns to a list');
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={broccoliDeal}
+      />,
+    );
+    const dialog = await screen.findByRole('dialog');
     const addTo = async (listName: RegExp): Promise<void> => {
-      await user.click(add);
-      await user.click(
-        within(await screen.findByRole('dialog')).getByRole('button', { name: listName }),
-      );
+      const btn = await within(dialog).findByRole('button', { name: listName });
+      await user.click(btn);
     };
 
     await addTo(/This Week/);
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     await addTo(/Weekend Cookout/);
-    expect(await screen.findByText('Added to Weekend Cookout.')).toBeInTheDocument();
+    expect(
+      await screen.findByText(`Added '${broccoliDeal.name}' to ${weekendCookoutList.name}`),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     await addTo(/This Week/);
-    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+    expect(
+      await screen.findByText(`Added '${broccoliDeal.name}' to ${thisWeekList.name}`),
+    ).toBeInTheDocument();
 
-    // The retry of the first add reuses its id, so This Week holds the deal once.
     const toThisWeek = idsPostedTo(stub, thisWeekList.id);
     expect(toThisWeek).toHaveLength(2);
     expect(toThisWeek[1]).toBe(toThisWeek[0]);
     expect([...store.rows.values()].filter((listId) => listId === thisWeekList.id)).toHaveLength(1);
   });
 
-  it('sends the same item id after the card unmounts, so the deal lands once', async () => {
+  it('sends the same item id after the sheet unmounts, so the deal lands once', async () => {
     const user = userEvent.setup();
     const store = itemStore();
     const stub = stubFetch({
       'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
-    const first = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
+    const first = renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+    );
+    await user.click(await screen.findByRole('button', { name: /This Week/ }));
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
 
-    // A filter change, paging, or leaving and coming back unmounts the card. The page keeps its one
-    // QueryClient and its session, so the fresh card shares both with the first.
     first.unmount();
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />, {
-      queryClient: first.queryClient,
-      auth: first.auth,
-    });
-    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
-    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+      {
+        queryClient: first.queryClient,
+        auth: first.auth,
+      },
+    );
+    await user.click(await screen.findByRole('button', { name: /This Week/ }));
+    expect(
+      await screen.findByText(`Added '${eggsDeal.name}' to ${thisWeekList.name}`),
+    ).toBeInTheDocument();
 
     const ids = idsPostedTo(stub, thisWeekList.id);
     expect(ids).toHaveLength(2);
@@ -366,20 +445,36 @@ describe('adding a deal after a lost response', () => {
       'GET /api/households/:id/lists': () => ({ status: 200, body: [thisWeekList] }),
       'POST /api/lists/:id/items': losingResponses(store, [1]),
     });
-    const first = renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />);
-    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
+    const first = renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+    );
+    await user.click(await screen.findByRole('button', { name: /This Week/ }));
     expect(await screen.findByText(OFFLINE_MESSAGE)).toBeInTheDocument();
 
-    // Alex signs out and Sam signs in without a reload, so the page's one QueryClient carries over.
     first.unmount();
     first.auth.setState({ status: 'signed-out', userId: null });
     first.auth.setState({ status: 'signed-in', userId: SAM_ID });
-    renderScreen(<DealCard householdId={OAK_STREET_ID} deal={eggsDeal} />, {
-      queryClient: first.queryClient,
-      auth: first.auth,
-    });
-    await user.click(await findMdButton("Add Egg-Land's Best Extra Large Eggs to a list"));
-    expect(await screen.findByText('Added to This Week.')).toBeInTheDocument();
+    renderScreen(
+      <AddToListSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        householdId={OAK_STREET_ID}
+        deal={eggsDeal}
+      />,
+      {
+        queryClient: first.queryClient,
+        auth: first.auth,
+      },
+    );
+    await user.click(await screen.findByRole('button', { name: /This Week/ }));
+    expect(
+      await screen.findByText(`Added '${eggsDeal.name}' to ${thisWeekList.name}`),
+    ).toBeInTheDocument();
 
     const ids = idsPostedTo(stub, thisWeekList.id);
     expect(ids).toHaveLength(2);
