@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
+import { Card } from '../../components/ui/Card.tsx';
 import { OnboardingLayout } from './OnboardingLayout.tsx';
 
 /**
@@ -19,9 +20,14 @@ export function ForgotPasswordScreen(): ReactElement {
         },
       }}
     >
-      <p className="max-w-[70ch] text-body text-secondary">
-        Ask your server owner for a reset link. They can create one for you.
-      </p>
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
+      >
+        <p className="max-w-[70ch] text-body-md text-body text-[var(--md-sys-color-on-surface-variant)]">
+          Ask your server owner for a reset link. They can create one for you.
+        </p>
+      </Card>
     </OnboardingLayout>
   );
 }
