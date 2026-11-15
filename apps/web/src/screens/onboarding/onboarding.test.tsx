@@ -197,7 +197,7 @@ describe('creating a household', () => {
 
     await user.type(await findFieldInput('Household name'), 'Oak Street');
     await user.type(await findFieldInput('ZIP code'), '275');
-    await user.click(getMdButton('Create household'));
+    await user.click(getMdButton('Create household group'));
 
     await waitFor(() => {
       expect(getMdField('ZIP code')).toHaveProperty('errorText', 'Enter a five-digit ZIP code.');
@@ -215,7 +215,7 @@ describe('creating a household', () => {
 
     await user.type(await findFieldInput('Household name'), 'Oak Street');
     await user.type(await findFieldInput('ZIP code'), '27514');
-    await user.click(getMdButton('Create household'));
+    await user.click(getMdButton('Create household group'));
 
     await waitFor(() => {
       expect(onCreated).toHaveBeenCalled();
@@ -238,7 +238,7 @@ describe('joining a household', () => {
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
 
     await user.type(await findFieldInput('Invite code'), 'o-i l9kr4t');
-    await user.click(getMdButton('Join household'));
+    await user.click(getMdButton('Join household group'));
 
     await waitFor(() => {
       expect(stub.calls[0]?.body).toEqual({ tokenOrCode: '0119KR4T' });
@@ -256,7 +256,7 @@ describe('joining a household', () => {
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
 
     await user.type(await findFieldInput('Invite code'), '9XKR4TZ2');
-    await user.click(getMdButton('Join household'));
+    await user.click(getMdButton('Join household group'));
 
     expect(
       await screen.findByText('This invite has expired. Ask for a new link or code.'),
@@ -274,7 +274,7 @@ describe('joining a household', () => {
     renderScreen(<JoinHouseholdStep onJoined={() => undefined} />);
 
     await user.type(await findFieldInput('Invite code'), '9XKR4TZ2');
-    await user.click(getMdButton('Join household'));
+    await user.click(getMdButton('Join household group'));
 
     expect(
       await screen.findByText("That code doesn't match an invite. Check it and try again."),
