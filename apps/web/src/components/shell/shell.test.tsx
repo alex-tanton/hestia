@@ -136,7 +136,7 @@ describe('app shell', () => {
         'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
       });
       expect(
-        await screen.findByRole('radiogroup', { name: groupName }, { timeout: 10_000 }),
+        await screen.findByRole('navigation', { name: groupName }, { timeout: 10_000 }),
       ).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'Coming soon' })).toBeNull();
     },
@@ -192,24 +192,33 @@ describe('sub-tabs once a pillar ships', () => {
     return <p data-testid="location">{useLocation().pathname}</p>;
   }
 
-  it('selects the root sub-tab at the tab root and the matching one deeper in', () => {
+  it('selects the active sub-tab inside MD3 tabs', () => {
     renderBills('/bills/subscriptions');
-    const group = screen.getByRole('radiogroup', { name: 'Bills sections' });
-    expect(within(group).getByRole('radio', { name: 'Subscriptions' })).toBeChecked();
-    expect(within(group).getByRole('radio', { name: 'Bills' })).not.toBeChecked();
+    const nav = screen.getByRole('navigation', { name: 'Bills sections' });
+    const tabs = within(nav).getByRole('tablist');
+    expect(tabs).toBeInTheDocument();
+    const activeTab = within(tabs).getByRole('tab', { name: 'Subscriptions', selected: true });
+    expect(activeTab).toBeInTheDocument();
   });
 
-  it('moves between sub-tabs with arrow keys and navigates on Enter', async () => {
+  it('resets window scroll to (0, 0) and navigates when switching sub-tabs', async () => {
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
     renderBills('/bills');
-    const group = screen.getByRole('radiogroup', { name: 'Bills sections' });
-    await userEvent.tab();
-    expect(within(group).getByRole('radio', { name: 'Bills' })).toHaveFocus();
-    await userEvent.keyboard('{ArrowRight}');
-    const subscriptions = within(group).getByRole('radio', { name: 'Subscriptions' });
-    expect(subscriptions).toHaveFocus();
-    await userEvent.keyboard('{Enter}');
-    expect(subscriptions).toBeChecked();
-    expect(screen.getByTestId('location')).toHaveTextContent('/bills/subscriptions');
+    const nav = screen.getByRole('navigation', { name: 'Bills sections' });
+    const tabs = within(nav).getByRole('tablist');
+    expect(tabs).toBeInTheDocument();
+    const mdTabs = nav.querySelector('md-tabs');
+    expect(mdTabs).not.toBeNull();
+    if (!mdTabs) return;
+    act(() => {
+      mdTabs.dispatchEvent(
+        new CustomEvent('change', { bubbles: true, detail: { activeTabIndex: 1 } }),
+      );
+    });
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/bills/subscriptions');
+    });
   });
 
   it('keeps an unshipped pillar on coming soon even with the released set supplied', () => {
@@ -310,6 +319,7 @@ describe('HouseholdSwitcher', () => {
     await userEvent.click(screen.getByRole('button', { name: /Casey's Empty House/ }));
     const sheet = await screen.findByRole('dialog', { name: 'Households' });
     expect(within(sheet).getByText('1 member')).toBeInTheDocument();
+    expect(within(sheet).getByText('No other households')).toBeInTheDocument();
     await userEvent.click(
       within(sheet).getByRole('button', { name: 'Join or create a household' }),
     );

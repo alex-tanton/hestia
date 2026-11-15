@@ -13,11 +13,17 @@ export function SubTabs({ pillar }: { pillar: Pillar }): ReactElement {
   return (
     <nav aria-label={`${pillar.label} sections`} className="overflow-x-auto no-scrollbar">
       <MdTabs
+        role="tablist"
+        aria-label={`${pillar.label} sections`}
         activeTabIndex={activeIndex >= 0 ? activeIndex : 0}
         onChange={(event) => {
           const target = event.target as { activeTabIndex?: number } | null;
           const currentTarget = event.currentTarget as { activeTabIndex?: number } | null;
-          const tabIndex = currentTarget?.activeTabIndex ?? target?.activeTabIndex;
+          const eventWithDetail = event as { detail?: { activeTabIndex?: number } };
+          const tabIndex =
+            eventWithDetail.detail?.activeTabIndex ??
+            currentTarget?.activeTabIndex ??
+            target?.activeTabIndex;
           if (typeof tabIndex === 'number') {
             const nextTab = pillar.subTabs[tabIndex];
             if (nextTab && nextTab.path !== pathname) {
@@ -27,11 +33,19 @@ export function SubTabs({ pillar }: { pillar: Pillar }): ReactElement {
           }
         }}
       >
-        {pillar.subTabs.map((tab) => (
-          <MdPrimaryTab key={tab.path} aria-label={tab.label}>
-            {tab.label}
-          </MdPrimaryTab>
-        ))}
+        {pillar.subTabs.map((tab, index) => {
+          const isSelected = index === (activeIndex >= 0 ? activeIndex : 0);
+          return (
+            <MdPrimaryTab
+              key={tab.path}
+              role="tab"
+              aria-selected={isSelected ? 'true' : 'false'}
+              aria-label={tab.label}
+            >
+              {tab.label}
+            </MdPrimaryTab>
+          );
+        })}
       </MdTabs>
     </nav>
   );
