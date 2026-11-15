@@ -3,10 +3,11 @@ import { itemNameSchema, type ListItem, type PriceUnit } from '@hestia/shared';
 import { formatPriceInput, parsePriceInput, parseQuantityInput } from '../../lib/price-input.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import { firstIssue } from '../../lib/validation.ts';
+import { MdFilterChip } from '../md/MdFilterChip.tsx';
 import { Button } from '../ui/Button.tsx';
 import { TextField } from '../ui/Field.tsx';
+import { ModalBottomSheet } from '../ui/ModalBottomSheet.tsx';
 import { Select } from '../ui/Select.tsx';
-import { Sheet } from '../ui/Sheet.tsx';
 
 export const ANYWHERE_VALUE = '';
 
@@ -50,11 +51,8 @@ function toPriceUnit(value: string): PriceUnit {
 }
 
 /**
- * The quick-add and edit sheet. Price is editable only for a manual item: a deal-sourced row
- * carries the deal's own snapshot, which the client must never invent.
- *
- * The fields start from `item`, so a caller opening it for a different row gives it a `key` and
- * gets a fresh form rather than the last row's values.
+ * The quick-add and edit sheet using ModalBottomSheet with horizontal tonal chip strip
+ * of favorite/recent stores and full details.
  */
 export function ItemSheet({
   open,
@@ -101,7 +99,6 @@ export function ItemSheet({
     onSubmit({
       itemName: name.data,
       quantity: parsedQuantity.quantity ?? null,
-      // A deal-sourced row keeps the snapshot the service took; only a manual price is the user's.
       priceCents: canPrice ? (parsedPrice.cents ?? null) : item.priceCents,
       priceUnit,
       merchantId: store?.merchantId ?? null,
@@ -112,12 +109,18 @@ export function ItemSheet({
   };
 
   return (
-    <Sheet
+    <ModalBottomSheet
       open={open}
       onOpenChange={onOpenChange}
       title={isEditing ? `Edit ${item.itemName}` : 'Add an item'}
+      description="Enter item details, quantity, price, and store assignment"
     >
-      <form ref={formRef} noValidate className="flex flex-col gap-3 px-4" onSubmit={handleSubmit}>
+      <form
+        ref={formRef}
+        noValidate
+        className="flex flex-col gap-4 px-4 pb-6"
+        onSubmit={handleSubmit}
+      >
         <TextField
           label="Item"
           name="itemName"
@@ -165,20 +168,65 @@ export function ItemSheet({
             />
           </>
         )}
-        <Select
-          label="Store"
-          name="merchantId"
-          options={[
-            { value: ANYWHERE_VALUE, label: 'Anywhere' },
-            ...stores.map((store) => ({ value: store.merchantId, label: store.merchantName })),
-          ]}
-          value={merchantId}
-          onValueChange={setMerchantId}
-        />
-        <Button type="submit" className="mt-1">
-          {isEditing ? 'Save item' : 'Add item'}
-        </Button>
+        <div
+          className="flex flex-col gap-1.5"
+          role="group"
+          aria-labelledby="item-sheet-store-label"
+        >
+          <span
+            id="item-sheet-store-label"
+            className="text-label-md text-[var(--md-sys-color-on-surface-variant)]"
+          >
+            Store
+          </span>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <MdFilterChip
+              selected={merchantId === ANYWHERE_VALUE}
+              onClick={() => {
+                setMerchantId(ANYWHERE_VALUE);
+              }}
+            >
+              Anywhere
+            </MdFilterChip>
+            {stores.map((store) => (
+              <MdFilterChip
+                key={store.merchantId}
+                selected={merchantId === store.merchantId}
+                onClick={() => {
+                  setMerchantId(store.merchantId);
+                }}
+              >
+                {store.merchantName}
+              </MdFilterChip>
+            ))}
+          </div>
+          {stores.length > 3 && (
+            <Select
+              label="All stores"
+              name="merchantId"
+              options={[
+                { value: ANYWHERE_VALUE, label: 'Anywhere' },
+                ...stores.map((store) => ({ value: store.merchantId, label: store.merchantName })),
+              ]}
+              value={merchantId}
+              onValueChange={setMerchantId}
+            />
+          )}
+        </div>
+        <div className="flex justify-end gap-2 pt-2 border-t border-[var(--md-sys-color-outline-variant)]">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onOpenChange(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit">
+            {isEditing ? 'Save item' : 'Add item'}
+          </Button>
+        </div>
       </form>
-    </Sheet>
+    </ModalBottomSheet>
   );
 }
