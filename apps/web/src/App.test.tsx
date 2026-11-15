@@ -163,7 +163,7 @@ describe('switching household', () => {
     );
     renderApp({ initialEntries: ['/settings'] });
 
-    expect(await screen.findByText('Sam Chen', {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByText('Households & Invites')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /switch household/ }));
     const sheet = await screen.findByRole('dialog');
@@ -179,7 +179,7 @@ describe('switching household', () => {
 
     // The switch returns every tab to its root.
     expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
-    expect(screen.queryByText('Sam Chen')).not.toBeInTheDocument();
+    expect(screen.queryByText('Households & Invites')).not.toBeInTheDocument();
   });
 
   it('removes every household-scoped query, so no stale household can be read', async () => {

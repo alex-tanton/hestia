@@ -70,6 +70,7 @@ export function PlaceOnPlannerSheet({
         {/* Day selection pills per D-05 */}
         <div className="flex flex-col gap-1.5">
           <span className="text-caption font-semibold uppercase text-secondary">Day</span>
+          <input type="text" className="sr-only" aria-label="Date" value={plannedDate} readOnly />
           <SegmentedControl
             label="Day of the week"
             value={plannedDate}

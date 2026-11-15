@@ -37,6 +37,22 @@ export function SettingsScreen(): ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
+      {profile.data.displayName && (
+        <div className="flex items-center gap-3 px-2">
+          <div className="flex size-12 items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-semibold text-title-medium">
+            {profile.data.displayName.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <span className="font-semibold text-body-large text-[var(--md-sys-color-on-surface)] truncate">
+              {profile.data.displayName}
+            </span>
+            <span className="text-body-small text-[var(--md-sys-color-on-surface-variant)] truncate">
+              {profile.data.email}
+            </span>
+          </div>
+        </div>
+      )}
+
       <Card variant="flat" className="p-0 overflow-hidden">
         <ul className="flex flex-col divide-y divide-[var(--md-sys-color-outline-variant)]">
           <li className="px-4">

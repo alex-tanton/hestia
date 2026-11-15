@@ -32,7 +32,7 @@ export function PlannerDay({
   entries,
   isReadOnly,
   offlineReason,
-  isDesktop = false,
+  isDesktop = true,
   onAdd,
   onAddMissing,
   onRemove,

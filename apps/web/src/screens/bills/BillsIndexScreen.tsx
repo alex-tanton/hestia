@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button.tsx';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
+import { useHousehold } from '../../lib/api/hooks.ts';
 import {
   useBills,
   useCreateHouseholdBill,
@@ -52,6 +53,7 @@ export interface BillsIndexScreenProps {
 export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
+  const household = useHousehold(householdId);
   const bills = useBills(householdId);
   const createHousehold = useCreateHouseholdBill(householdId);
   const createPersonal = useCreatePersonalBill(householdId);
@@ -117,7 +119,17 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
         <OfflineState message="Your bills sync when you reconnect. What you have already opened stays readable." />
       );
     }
-    if (bills.isPending) return <SkeletonRows label="Loading your bills" />;
+    if (bills.isPending || household.isPending) return <SkeletonRows label="Loading your bills" />;
+    if (household.isError) {
+      return (
+        <ErrorState
+          message="Couldn't load the household. Try again."
+          onRetry={() => {
+            void household.refetch();
+          }}
+        />
+      );
+    }
     if (bills.isError && bills.data === undefined) {
       return (
         <ErrorState
