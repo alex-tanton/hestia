@@ -199,7 +199,13 @@ Plans:
   3. All 24 Playwright E2E specs pass sequentially using MD3 semantic locators with zero functional regressions across offline queues, barcode scanning, deals/flyers, meals, bills, chores, auth, and household departure, and light/dark WCAG 2.1 AA audits (`17-accessibility-states.spec.ts` + `e2e/support/axe.ts` `{ subtree: true }`) pass across all routes.
   4. All build and CI ratchets pass: `check-build.mjs` (`<= 200 KB` gzipped shell budget + `MAGIC_LINK_COPY`), Caddy `'self'` CSP + Workbox offline precaching, `pnpm lint`, `pnpm typecheck`, `pnpm knip` + `scripts/check-knip-baseline.mjs`, `pnpm jscpd`, `audit-prod.mjs`, and `scripts/check-repo-hygiene.mjs` (LF endings, zero legacy tokens).
 
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 21-01-PLAN.md — Dependency Pruning & Semantic CSS Architecture (`FND-05`)
+- [ ] 21-02-PLAN.md — Vitest Suites & Coverage Threshold Ratchet (`VER-01`)
+- [ ] 21-03-PLAN.md — Playwright E2E Locator Modernization & Animation Suppression (`VER-02`)
+- [ ] 21-04-PLAN.md — Accessibility Audits, Knip Baseline & CI Ratchets (`VER-03`, `VER-04`)
 
 ## Progress
 
@@ -212,4 +218,4 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 | 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 3/3 | Complete    | 2026-11-14 |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 5/5 | Complete    | 2026-11-15 |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 4/4 | Complete    | 2026-11-15 |
-| 21. Legacy Stack Cleanup & Full Verification | v3.0 | 0/0 | Not started | - |
+| 21. Legacy Stack Cleanup & Full Verification | v3.0 | 0/4 | Not started | - |
