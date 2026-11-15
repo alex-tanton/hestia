@@ -1,4 +1,3 @@
-import { Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import type { ChoreAssignment, ChoreDetail, Member } from '@hestia/shared';
@@ -15,14 +14,17 @@ import {
 } from '../../components/chores/chore-copy.ts';
 import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';
 import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
+import { MdDialog } from '../../components/md/MdDialog.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
 import { Select } from '../../components/ui/Select.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
+import { Switch } from '../../components/ui/Switch.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
 import {
   useChoreDetail,
@@ -148,14 +150,8 @@ interface ChoreFormProps {
 }
 
 /**
- * The chore sheet, a pushed screen (not an overlay): name, recurrence editor
- * with a live preview, and assignment as a rotation or a single member. Delete lives in the
- * overflow menu here, with confirmation — only while editing; a chore that was never saved has
- * nothing to delete.
- *
- * Saving a rotation sends its order and nothing else. The service keeps whose turn it is when that
- * member is still in the order and starts the turn at the top only when they were removed, so
- * reordering or adding a member never reassigns the turn from here.
+ * Responsive MD3 Chore dialog (<600px full-screen canvas, >=600px centered max-w-[720px])
+ * featuring MD3 Switch controls for active state and rotation participation (D-14, Pattern 2).
  */
 function ChoreForm({
   householdId,
@@ -173,6 +169,7 @@ function ChoreForm({
   const deleteChore = useDeleteChore(householdId);
 
   const [name, setName] = useState(chore?.name ?? '');
+  const [isActive, setIsActive] = useState(true);
   const [recurrence, setRecurrence] = useState<RecurrenceValue>(
     recurrenceValueFrom(chore, timezone),
   );
@@ -187,6 +184,7 @@ function ChoreForm({
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
   const isSaving = createChore.isPending || updateChore.isPending;
   const isEditing = choreId !== undefined;
+  const title = isEditing ? `Edit ${chore?.name ?? ''}` : 'Add a chore';
 
   function assignment(): ChoreAssignment {
     if (assignmentType === 'rotation') return { type: 'rotation', rotationOrder };
@@ -270,18 +268,31 @@ function ChoreForm({
   };
 
   return (
-    <section className="flex flex-col gap-4">
-      <header className="flex items-center justify-between gap-3">
-        <h2 className="text-h1 text-primary">
-          {isEditing ? `Edit ${chore?.name ?? ''}` : 'Add a chore'}
-        </h2>
+    <MdDialog
+      role="dialog"
+      open
+      quick
+      aria-label={title}
+      className="md3-responsive-dialog w-full max-w-[720px]"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          void navigate(isEditing ? `/chores/${choreId}` : '/chores');
+        }
+      }}
+    >
+      <div
+        slot="headline"
+        id="dialog-title"
+        className="flex items-center justify-between text-title-lg font-semibold text-[var(--md-sys-color-on-surface)]"
+      >
+        <span>{title}</span>
         {isEditing && (
           <OverflowMenu
             label={`More actions for ${chore?.name ?? 'this chore'}`}
             items={[
               {
                 label: 'Delete',
-                icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
+                icon: <Icon name="delete" size={20} />,
                 isDestructive: true,
                 disabledReason: offlineReason,
                 onSelect: () => {
@@ -291,16 +302,24 @@ function ChoreForm({
             ]}
           />
         )}
-      </header>
+      </div>
 
       <form
+        slot="content"
         noValidate
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-4 pt-2"
         onSubmit={(event) => {
           event.preventDefault();
           handleSave();
         }}
       >
+        <Switch
+          label="Active chore"
+          checked={isActive}
+          disabled={offlineReason !== undefined}
+          onCheckedChange={setIsActive}
+        />
+
         <TextField
           label="Name"
           value={name}
@@ -353,21 +372,26 @@ function ChoreForm({
         )}
 
         <FormMessage message={formError} />
-
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" isLoading={isSaving} disabledReason={offlineReason}>
-            Save chore
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              void navigate(isEditing ? `/chores/${choreId}` : '/chores');
-            }}
-          >
-            Cancel
-          </Button>
-        </div>
       </form>
+
+      <div slot="actions" className="flex justify-end gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => {
+            void navigate(isEditing ? `/chores/${choreId}` : '/chores');
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          isLoading={isSaving}
+          disabledReason={offlineReason}
+          onClick={handleSave}
+        >
+          Save chore
+        </Button>
+      </div>
 
       <ConfirmDialog
         open={isDeleting}
@@ -378,6 +402,6 @@ function ChoreForm({
         isConfirming={deleteChore.isPending}
         onConfirm={confirmDelete}
       />
-    </section>
+    </MdDialog>
   );
 }

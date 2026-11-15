@@ -1,10 +1,10 @@
-import { Pencil } from 'lucide-react';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import { CompletionHistory } from '../../components/chores/CompletionHistory.tsx';
 import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import {
   OFFLINE_ACTION_REASON,
+  deleteChoreConfirmation,
   describeRecurrence,
   memberName,
 } from '../../components/chores/chore-copy.ts';
@@ -12,11 +12,19 @@ import { useChoreCompletion } from '../../components/chores/use-chore-completion
 import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
+import { Badge } from '../../components/ui/Badge.tsx';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
-import { useChoreDetail, useDeleteChoreCompletion } from '../../lib/api/chore-hooks.ts';
+import {
+  useChoreDetail,
+  useDeleteChore,
+  useDeleteChoreCompletion,
+} from '../../lib/api/chore-hooks.ts';
 import { useHousehold, useMembers } from '../../lib/api/hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { formatCalendarDate } from '../../lib/format.ts';
@@ -29,10 +37,9 @@ export interface ChoreDetailScreenProps {
 }
 
 /**
- * Chore detail: recurrence summary, the next three dates, rotation order,
- * and completion history. Completing shows the toast ("Take out trash done. Sam is next.") with
- * Undo for 5 seconds; Undo deletes the fresh completion, which reverts the rotation and next-due
- * display once the query refetches.
+ * Chore detail: single <h1> in Top App Bar, tonal summary card, direct Edit action,
+ * overflow menu for destructive deletion, and completion history with direct delete
+ * and persistent Undo feedback (CHOR-01).
  */
 export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
@@ -42,6 +49,7 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
   const timezone = household.data?.timezone;
 
   const chore = useChoreDetail(householdId, choreId);
+  const deleteChore = useDeleteChore(householdId);
   const members = useMembers(householdId);
   const memberList = members.data ?? [];
   const { completeChore, pendingChoreIds, completeReason } = useChoreCompletion(
@@ -49,6 +57,8 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
     memberList,
   );
   const deleteCompletion = useDeleteChoreCompletion(householdId);
+
+  const [isDeletingChore, setIsDeletingChore] = useState(false);
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
 
@@ -94,6 +104,18 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
     deleteCompletion.mutate(
       { choreId, completionId },
       {
+        onSuccess: () => {
+          toast({
+            variant: 'success',
+            message: 'Removed completion',
+            action: {
+              label: 'Undo',
+              onAction: () => {
+                completeChore(data);
+              },
+            },
+          });
+        },
         onError: (error) => {
           toast({
             variant: 'error',
@@ -106,6 +128,30 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
     );
   };
 
+  const confirmDeleteChore = (): void => {
+    deleteChore.mutate(choreId, {
+      onSuccess: () => {
+        setIsDeletingChore(false);
+        toast({ variant: 'success', message: `Deleted ${data.name}.` });
+        void navigate('/chores');
+      },
+      onError: (error) => {
+        setIsDeletingChore(false);
+        toast({
+          variant: 'error',
+          message: userMessage(error, { fallback: `Couldn't delete ${data.name}. Try again.` }),
+        });
+      },
+    });
+  };
+
+  const currentAssigneeName =
+    data.rotationOrder !== null
+      ? memberName(memberList, data.currentTurn)
+      : data.assignedTo !== null
+        ? memberName(memberList, data.assignedTo)
+        : 'Unassigned';
+
   return (
     <section className="flex flex-col gap-4">
       {chore.isError && (
@@ -117,27 +163,57 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
         />
       )}
 
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-h1 text-primary">{data.name}</h2>
-          <p className="text-body-sm text-secondary">
-            {describeRecurrence(data.recurrenceUnit, data.interval)}
-          </p>
-        </div>
-        <OverflowMenu
-          label={`More actions for ${data.name}`}
-          items={[
-            {
-              label: 'Edit',
-              icon: <Pencil aria-hidden size={20} strokeWidth={1.5} />,
-              disabledReason: offlineReason,
-              onSelect: () => {
+      {/* Tonal Summary Card per CHOR-01 */}
+      <Card
+        variant="flat"
+        className="p-4 flex flex-col gap-3 rounded-2xl bg-[var(--md-sys-color-surface-container-low)]"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-title-lg font-semibold text-[var(--md-sys-color-on-surface)]">
+                {data.name}
+              </h2>
+              {data.isOverdue && <Badge variant="danger">Overdue</Badge>}
+            </div>
+            <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+              {describeRecurrence(data.recurrenceUnit, data.interval)}
+            </p>
+            <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+              {data.rotationOrder !== null ? `${currentAssigneeName}'s turn` : currentAssigneeName}
+              {' · '}
+              {`Due ${formatCalendarDate(data.dueDate)}`}
+            </p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="secondary"
+              disabledReason={offlineReason}
+              onClick={() => {
                 void navigate(`/chores/${choreId}/edit`);
-              },
-            },
-          ]}
-        />
-      </header>
+              }}
+              aria-label="Edit chore"
+            >
+              <Icon name="edit" size={20} />
+              Edit chore
+            </Button>
+            <OverflowMenu
+              label={`More actions for ${data.name}`}
+              items={[
+                {
+                  label: 'Delete',
+                  icon: <Icon name="delete" size={20} />,
+                  isDestructive: true,
+                  disabledReason: offlineReason,
+                  onSelect: () => {
+                    setIsDeletingChore(true);
+                  },
+                },
+              ]}
+            />
+          </div>
+        </div>
+      </Card>
 
       <Button
         isLoading={pendingChoreIds.has(choreId)}
@@ -149,11 +225,14 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
         Mark done
       </Button>
 
-      <section aria-labelledby="next-dates-heading" className="flex flex-col gap-1">
-        <h2 id="next-dates-heading" className="text-h2 text-primary">
+      <section aria-labelledby="next-dates-heading" className="flex flex-col gap-2">
+        <h2
+          id="next-dates-heading"
+          className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]"
+        >
           Next three dates
         </h2>
-        <ul className="text-body text-primary">
+        <ul className="text-body-sm text-[var(--md-sys-color-on-surface-variant)] flex flex-col gap-1 pl-4 list-disc">
           {data.previewDates.map((date) => (
             <li key={date}>{formatCalendarDate(date)}</li>
           ))}
@@ -161,23 +240,29 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
       </section>
 
       {data.rotationOrder !== null && (
-        <section aria-labelledby="rotation-heading" className="flex flex-col gap-1">
-          <h2 id="rotation-heading" className="text-h2 text-primary">
+        <section aria-labelledby="rotation-heading" className="flex flex-col gap-2">
+          <h2
+            id="rotation-heading"
+            className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]"
+          >
             Rotation order
           </h2>
-          <ol className="flex flex-col gap-1">
+          <ol className="flex flex-col gap-1 text-body-sm text-[var(--md-sys-color-on-surface)]">
             {data.rotationOrder.map((userId, index) => {
               const label = memberName(memberList, userId);
               const isCurrent = userId === data.currentTurn;
               const isNext = userId === data.nextTurn;
               return (
-                <li key={`${userId}-${String(index)}`} className="text-body text-primary">
-                  {`${String(index + 1)}. ${label}`}
+                <li key={`${userId}-${String(index)}`}>
+                  <span className="font-medium">{`${String(index + 1)}. ${label}`}</span>
                   {isCurrent && (
-                    <span className="text-body-sm text-secondary"> · current turn</span>
+                    <span className="text-[var(--md-sys-color-on-surface-variant)]">
+                      {' '}
+                      · current turn
+                    </span>
                   )}
                   {!isCurrent && isNext && (
-                    <span className="text-body-sm text-secondary"> · next</span>
+                    <span className="text-[var(--md-sys-color-on-surface-variant)]"> · next</span>
                   )}
                 </li>
               );
@@ -194,6 +279,16 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
         isDeleting={deleteCompletion.isPending}
         disabledReason={offlineReason}
         onDeleteCompletion={handleDeleteCompletion}
+      />
+
+      <ConfirmDialog
+        open={isDeletingChore}
+        onOpenChange={setIsDeletingChore}
+        title="Delete chore?"
+        description={deleteChoreConfirmation(data)}
+        confirmLabel="Delete chore"
+        isConfirming={deleteChore.isPending}
+        onConfirm={confirmDeleteChore}
       />
     </section>
   );

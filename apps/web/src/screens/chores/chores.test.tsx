@@ -6,7 +6,6 @@ import type { Chore, ChoreDetail } from '@hestia/shared';
 import {
   BANNED_GAMIFICATION_WORDS,
   CHORES_EMPTY_COPY,
-  DELETE_COMPLETION_CONFIRMATION,
   OFFLINE_ACTION_REASON,
   ROTATION_REQUIRED_ERROR,
   allChoreCopyStrings,
@@ -439,7 +438,7 @@ describe('Chore detail', () => {
     expect(vacuumCommonAreasDetailFixture.completions[0]?.completedBy).toBe(CASEY_ID);
   });
 
-  it('only the most recent completion can be deleted, and deleting asks first', async () => {
+  it('only the most recent completion can be deleted, with persistent Undo toast', async () => {
     const stub = mountDetail({
       'GET /api/chores/:id': () => ({ status: 200, body: takeOutTrashDetailFixture }),
       'DELETE /api/chores/:id/completions/:completionId': () => ({ status: 204 }),
@@ -447,16 +446,10 @@ describe('Chore detail', () => {
     await screen.findByRole('heading', { level: 2, name: 'Take out trash' });
 
     const user = userEvent.setup();
-    const menus = getAllMdButtons('More actions for this completion');
-    expect(menus).toHaveLength(1);
-    await openMenu(user, menus[0]!);
-    await user.click(await findMdMenuItem(/Delete/));
+    const deleteBtn = await findMdButton('Delete completion');
+    expect(deleteBtn).toBeInTheDocument();
+    await user.click(deleteBtn);
 
-    const dialog = await findMdDialog('Delete this completion?');
-    expect(within(dialog).getByText(DELETE_COMPLETION_CONFIRMATION)).toBeInTheDocument();
-    expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(false);
-
-    await userEvent.click(getMdButton('Delete completion', { container: dialog }));
     await waitFor(() => {
       expect(stub.calls.find((call) => call.method === 'DELETE')?.path).toMatch(
         new RegExp(
@@ -464,6 +457,8 @@ describe('Chore detail', () => {
         ),
       );
     });
+    expect(await screen.findByText('Removed completion')).toBeInTheDocument();
+    expect(await findMdButton('Undo')).toBeInTheDocument();
   });
 
   it('Mark done completes the chore with the same toast as the list', async () => {
