@@ -163,7 +163,7 @@ Plans:
 - [x] 19-04-PLAN.md — Barcode Scanner Dark HUD: full-screen dialog, continuous batch scanning, and in-HUD naming (`LIST-03`)
 
 **Wave 5** *(blocked on Wave 3 completion)*
-- [ ] 19-05-PLAN.md — Deals, Lifted AddToListSheet & Flyers: compact DealCards, lifted AddToListSheet, and elevated flyer grid (`DEAL-06`, `DEAL-07`)
+- [x] 19-05-PLAN.md — Deals, Lifted AddToListSheet & Flyers: compact DealCards, lifted AddToListSheet, and elevated flyer grid (`DEAL-06`, `DEAL-07`)
 
 **UI hint**: yes
 

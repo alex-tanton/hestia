@@ -5,17 +5,17 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 19
 current_phase_name: Entry, Dashboard & Grocery Ecosystem Screens
 status: executing
-stopped_at: Completed 19-04-PLAN.md
-last_updated: "2026-11-15T11:22:00.000Z"
+stopped_at: Completed 19-05-PLAN.md
+last_updated: "2026-11-15T11:45:00.000Z"
 last_activity: 2026-11-15
-last_activity_desc: Phase 19 Plan 04 complete
-state_head: 11b8e48
+last_activity_desc: Phase 19 Plan 05 complete
+state_head: cb643e7
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 23
-  completed_plans: 22
-  percent: 22
+  completed_plans: 23
+  percent: 24
 ---
 
 # Project State
@@ -30,18 +30,18 @@ See: .planning/PROJECT.md (updated 2026-11-14)
 ## Current Position
 
 Phase: 19 (Entry, Dashboard & Grocery Ecosystem Screens) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
-Last activity: 2026-11-15 — Phase 19 Plan 04 complete
+Last activity: 2026-11-15 — Phase 19 Plan 05 complete
 
-Progress: [██░░░░░░░░] 22%
+Progress: [███░░░░░░░] 24%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
+- Total plans completed: 23
 - Average duration: ~15 min
-- Total execution time: ~3.7 hrs
+- Total execution time: ~4.0 hrs
 
 **By Phase:**
 
@@ -49,6 +49,7 @@ Progress: [██░░░░░░░░] 22%
 |-------|-------|-------|----------|
 | Phase 17 | 15 | ~225 min | ~15 min |
 | 18 | 3 | - | - |
+| Phase 19 | 5 | ~85 min | ~17 min |
 
 *Updated after each plan completion*
 **Per-Plan Metrics:**
@@ -76,6 +77,7 @@ Progress: [██░░░░░░░░] 22%
 | Phase 19-entry-dashboard-grocery-ecosystem-screens P19-02 | 15m | 3 tasks | 12 files |
 | Phase 19 P03 | 18m | 3 tasks | 12 files |
 | Phase 19 P04 | 15m | 2 tasks | 2 files |
+| Phase 19 P05 | 20m | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -122,6 +124,9 @@ Progress: [██░░░░░░░░] 22%
 - [Phase 19]: Implemented SyncToPantrySheet with prefilled storage locations and estimated shelf life
 - [Phase 19]: Organized PantryScreen with storage location chips (All, Fridge, Freezer, Pantry) and expiry status badges
 - [Phase 19]: Restyled BarcodeScannerDialog as an MD3 dark-scheme full-screen dialog with top-bar actions, corner-bracket reticle, in-HUD naming ModalBottomSheet, and single-slot persistent Undo snackbar queue
+- [Phase 19]: Formatted DealCard on mobile (<600px) as single-column horizontal card with 72x72 photo, bold price, tonal discount badge, and circular + Add button (19-05)
+- [Phase 19]: Lifted shared AddToListSheet to screen level with smart 1-list immediate addition paired with persistent Undo Snackbar (19-05)
+- [Phase 19]: Overhauled DealSearchScreen with MD3 search bar, SegmentedControl, quick filter chips, and FilterModalBottomSheet; presented FlyersScreen in 2-4 column elevated MD3 card grid (19-05)
 
 ### Pending Todos
 
