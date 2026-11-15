@@ -160,7 +160,7 @@ describe('titleForPath', () => {
     ['/lists', 'Lists'],
     // A shipped pillar names its sub-tab; an unshipped one shows only its tab label.
     ['/lists/pantry', 'Pantry'],
-    ['/meals/suggestions', 'Suggestions'],
+    ['/meals/recipes', 'Recipes'],
     // A shipped pillar names its sub-tab, so a deep link into Subscriptions shows that, not Bills.
     ['/bills/subscriptions', 'Subscriptions'],
   ])('%s → %s', (path, title) => {
