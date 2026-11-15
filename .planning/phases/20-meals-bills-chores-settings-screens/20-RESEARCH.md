@@ -491,9 +491,10 @@ export function BillRow({ bill, onPay, onDelete }: BillRowProps): ReactElement {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Settings Hub About Section:**
+   - RESOLVED: Keep minimal version & sign-out at bottom of /settings hub while deep diagnostics move to /settings/system-health
    - *What we know:* `AboutSection` currently displays server version, Git commit hash, and sign-out button.
    - *Recommendation:* Keep the minimal version & sign-out information anchored at the bottom of the `/settings` hub, while deep diagnostics move to `/settings/system-health`.
 
