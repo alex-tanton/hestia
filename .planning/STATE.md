@@ -5,16 +5,16 @@ milestone_name: Material Design 3 Overhaul
 current_phase: 18
 current_phase_name: Adaptive MD3 Navigation Shell & Route Chrome
 status: executing
-stopped_at: Completed 18-01-PLAN.md
-last_updated: "2026-11-15T02:08:52.356Z"
+stopped_at: Completed 18-02-PLAN.md
+last_updated: "2026-11-15T02:54:43.077Z"
 last_activity: 2026-11-14
 last_activity_desc: Phase 18 execution started
-state_head: cbc320d4b2e4886cb8869f5a73d45628696ca34e
+state_head: 9f5882c3f701ac56ee610f5dbe4a95ec2d08043d
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
   percent: 20
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-14)
 ## Current Position
 
 Phase: 18 (Adaptive MD3 Navigation Shell & Route Chrome) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-11-14 — Phase 18 execution started
 
@@ -70,6 +70,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 17 P14 | 24 min | 2 tasks | 8 files |
 | Phase 17 P15 | 20 min | 3 tasks | 6 files |
 | Phase 18 P01 | 18m | 3 tasks | 8 files |
+| Phase 18 P02 | 35m | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,10 @@ Progress: [██░░░░░░░░] 20%
 - [Phase 18]: Use Material Symbols with filled variants for active destination icons and outlined for inactive
 - [Phase 18]: Keep mobile Settings icon button in TopBar for <600px and bottom-pinned destination in NavigationRail for >=600px
 - [Phase 18]: Maintain single-h1 strictly in TopBar while demoting detail/form screen body headings to h2
+- [Phase 18]: Migrate SubTabs to MD3 Primary Tabs with explicit ARIA roles (role=tablist / role=tab) and aria-selected for robust accessibility and testing support
+- [Phase 18]: Reset scroll position with window.scrollTo(0, 0) when switching pillar sub-tabs
+- [Phase 18]: Replace custom Popover/dialog in HouseholdSwitcher with ModalBottomSheet, adding single-household guidance copy ('No other households') and fixed 112x20px skeleton pill
+- [Phase 18]: Completely purge SectionProvider and SubSectionComingSoon from the codebase to eliminate legacy section context
 
 ### Pending Todos
 
@@ -116,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-15T02:08:45.779Z
-Stopped at: Completed 18-01-PLAN.md
+Last session: 2026-11-15T02:54:27.000Z
+Stopped at: Completed 18-02-PLAN.md
 Resume file: None
