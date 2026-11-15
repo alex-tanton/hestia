@@ -292,7 +292,7 @@ describe('Week planner', () => {
     await user.click(await findMdTab('Quick Item'));
     const input = await findFieldInput('Item name');
     fireEvent.input(input, { target: { value: 'Banana' } });
-    await user.click(getMdButton('Place item'));
+    await user.click(getMdButton('Save meal placement'));
     await waitFor(() => {
       expect(
         stub.calls.some(

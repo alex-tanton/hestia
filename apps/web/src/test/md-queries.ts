@@ -59,7 +59,7 @@ const CHECKBOX_SELECTOR = 'md-checkbox, input[type="checkbox"]:not([role="switch
 const SWITCH_SELECTOR = 'md-switch, button[role="switch"], input[type="checkbox"][role="switch"]';
 const DIALOG_SELECTOR = 'md-dialog, dialog, [role="dialog"], [role="alertdialog"]';
 const MENU_ITEM_SELECTOR = 'md-menu-item, [role="menuitem"]';
-const TAB_SELECTOR = 'md-primary-tab, md-secondary-tab, [role="tab"]';
+const TAB_SELECTOR = 'md-primary-tab, md-secondary-tab, [role="tab"], [role="radio"]';
 
 function normalizeText(value: string | null | undefined): string {
   return value?.replace(/\s+/g, ' ').trim() ?? '';

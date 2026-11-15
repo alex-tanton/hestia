@@ -91,6 +91,11 @@ export function SegmentedControl({
         return (
           <button
             key={segment.value}
+            ref={(node) => {
+              if (node) {
+                (node as HTMLElement & { active?: boolean }).active = isSelected;
+              }
+            }}
             type="button"
             role="radio"
             aria-checked={isSelected}
