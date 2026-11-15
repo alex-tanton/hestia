@@ -193,7 +193,7 @@ describe('Week planner', () => {
     );
     await user.click(await findMdTab(/Wed/));
     await screen.findByRole('link', { name: /Baked Ziti/ });
-    await user.click(getMdButton('Add to breakfast'));
+    await user.click(await findMdButton(/Plan meal for Wed/));
     await user.click(await findMdButton(/Grilled Cheese and Tomato Soup/));
     await waitFor(() => {
       expect(
@@ -258,7 +258,7 @@ describe('Week planner', () => {
     expect(getMdButton("Add week's missing to list")).toHaveProperty('softDisabled', true);
     const user = userEvent.setup();
     await user.click(getMdTab(/Wed/));
-    expect(getMdButton('Add to breakfast')).toHaveProperty('softDisabled', true);
+    expect(getMdButton(/Plan meal for Wed/)).toHaveProperty('softDisabled', true);
     await openMenu(user, 'More actions for Baked Ziti');
     for (const label of ['Add missing to list', 'Remove']) {
       const item = getMdMenuItem(new RegExp(`^${label}`));
@@ -288,7 +288,7 @@ describe('Week planner', () => {
       }),
     );
     await user.click(await findMdTab(/Wed/));
-    await user.click(getMdButton('Add to breakfast'));
+    await user.click(await findMdButton(/Plan meal for Wed/));
     await user.click(await findMdTab('Quick Item'));
     const input = await findFieldInput('Item name');
     fireEvent.input(input, { target: { value: 'Banana' } });
@@ -326,7 +326,7 @@ describe('Week planner', () => {
       }),
     );
     await user.click(await findMdTab(/Wed/));
-    await user.click(getMdButton('Add to breakfast'));
+    await user.click(await findMdButton(/Plan meal for Wed/));
     await user.click(await findMdTab('Quick Item'));
     await user.click(await findMdButton('Greek Yogurt'));
     await waitFor(() => {
@@ -393,11 +393,31 @@ describe('Week planner', () => {
         stub.calls.some((call) => call.method === 'DELETE' && call.path.includes(bananaEntry.id)),
       ).toBe(true);
     });
+    expect(await screen.findByText('Removed meal from planner')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
   });
 
-  it('desktop: shows the full seven-day grid instead of day tabs', async () => {
+  it('mobile: renders empty state when entire week has zero meals', async () => {
+    mount(
+      baseHandlers({
+        'GET /api/households/:id/meal-plan': () => ({
+          status: 200,
+          body: { week: CURRENT_WEEK, entries: [] },
+        }),
+      }),
+    );
+    expect(await screen.findByText('No meals planned this week')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Plan upcoming meals, reuse favorites, or generate ideas based on pantry inventory and store deals.',
+      ),
+    ).toBeInTheDocument();
+    expect(getMdButton('Plan meal')).toBeInTheDocument();
+  });
+
+  it('desktop: shows the full seven-column grid with slot subsections and add affordances', async () => {
     vi.stubGlobal('matchMedia', (query: string) => ({
-      matches: query === '(min-width: 1024px)',
+      matches: query === '(min-width: 840px)' || query === '(min-width: 1024px)',
       addEventListener: () => undefined,
       removeEventListener: () => undefined,
     }));
@@ -405,5 +425,9 @@ describe('Week planner', () => {
     await screen.findByText(/Week of/);
     expect(queryMdTab()).toBeNull();
     expect(await screen.findByRole('link', { name: /Baked Ziti/ })).toBeInTheDocument();
+    const firstDay = document.getElementById(`planner-day-${CURRENT_WEEK}`);
+    expect(
+      getMdButton('Add to breakfast', { container: firstDay ?? undefined }),
+    ).toBeInTheDocument();
   });
 });

@@ -43,6 +43,7 @@ const BUTTON_SELECTOR = [
   'md-filled-tonal-icon-button',
   'md-outlined-icon-button',
   'md-fab',
+  'md-suggestion-chip',
   'button',
 ].join(', ');
 
