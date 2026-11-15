@@ -1,10 +1,10 @@
-import { ChevronRight, TriangleAlert } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 import { PILLARS, type PillarId } from '../../lib/sections.ts';
 import { ErrorBoundary } from '../states/ErrorBoundary.tsx';
 import { ErrorState } from '../states/StateBlocks.tsx';
 import { Card } from '../ui/Card.tsx';
+import { Icon, type IconName } from '../ui/Icon.tsx';
 import { SkeletonRows } from '../ui/Skeleton.tsx';
 
 export interface DashboardItem {
@@ -31,95 +31,151 @@ export interface DashboardCardProps {
 /** Up to three items plus a remainder count. */
 export const DASHBOARD_ITEM_LIMIT = 3;
 
-function CardBody({ title, state }: { title: string; state: DashboardCardState }): ReactElement {
+/** Sort items by urgency: overdue first, then preserving existing order. */
+export function sortPillarItems(items: readonly DashboardItem[]): DashboardItem[] {
+  return [...items].sort((a, b) => {
+    if (a.isOverdue && !b.isOverdue) return -1;
+    if (!a.isOverdue && b.isOverdue) return 1;
+    return 0;
+  });
+}
+
+function pillarIcon(pillar: PillarId): IconName {
+  switch (pillar) {
+    case 'bills':
+      return 'receipt_long';
+    case 'lists':
+      return 'shopping_cart';
+    case 'meals':
+      return 'restaurant';
+    case 'chores':
+      return 'checklist';
+  }
+}
+
+function CardBody({
+  title,
+  pillar,
+  state,
+}: {
+  title: string;
+  pillar: PillarId;
+  state: DashboardCardState;
+}): ReactElement {
+  const { path } = PILLARS[pillar];
+
   switch (state.status) {
     case 'placeholder':
-      return <p className="text-body-sm text-muted">Coming soon</p>;
+      return (
+        <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">Coming soon</p>
+      );
     case 'loading':
       return <SkeletonRows label={`Loading ${title.toLowerCase()}`} />;
     case 'error':
       return (
         <div className="relative z-10">
-          <ErrorState message={state.message} onRetry={state.onRetry} />
+          <ErrorState message={state.message} onRetry={state.onRetry} layout="card" />
         </div>
       );
     case 'empty':
-      return <p className="text-body-sm text-secondary">{state.message}</p>;
+      return (
+        <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+          {state.message}
+        </p>
+      );
     case 'populated': {
-      const shown = state.items.slice(0, DASHBOARD_ITEM_LIMIT);
+      const sorted = sortPillarItems(state.items);
+      const shown = sorted.slice(0, DASHBOARD_ITEM_LIMIT);
       const remainder = state.total - shown.length;
       return (
-        <>
+        <div className="flex flex-col gap-2">
           <ul className="flex flex-col gap-2">
             {shown.map((item) => (
-              <li key={item.id} className="flex items-baseline justify-between gap-3 text-body">
+              <li key={item.id} className="flex items-center justify-between gap-3 text-body-sm">
                 <span className="flex min-w-0 items-center gap-1.5">
                   {item.isOverdue && (
-                    <TriangleAlert
-                      aria-hidden
+                    <Icon
+                      name="error"
                       size={16}
-                      strokeWidth={2}
-                      className="shrink-0 self-center text-danger-accent"
+                      className="shrink-0 text-[var(--md-sys-color-error)]"
                     />
                   )}
                   <span
-                    className={item.isOverdue ? 'truncate text-danger' : 'truncate text-primary'}
+                    className={
+                      item.isOverdue
+                        ? 'truncate font-semibold text-[var(--md-sys-color-error)]'
+                        : 'truncate text-[var(--md-sys-color-on-surface)]'
+                    }
                   >
                     {item.label}
-                    {item.isOverdue && <span className="text-body-sm"> · Overdue</span>}
+                    {item.isOverdue && <span className="font-normal"> · Overdue</span>}
                   </span>
                 </span>
                 {item.detail && (
-                  <span className="shrink-0 text-body-sm text-secondary tabular-nums">
+                  <span className="shrink-0 text-body-sm text-[var(--md-sys-color-on-surface-variant)] tabular-nums">
                     {item.detail}
                   </span>
                 )}
               </li>
             ))}
           </ul>
-          {remainder > 0 && <p className="mt-2 text-body-sm text-secondary">+{remainder} more</p>}
-        </>
+          {remainder > 0 && (
+            <div className="pt-2 border-t border-[var(--md-sys-color-surface-container)]">
+              <Link
+                to={path}
+                className="inline-block text-label-md font-medium text-[var(--md-sys-color-primary)] hover:underline"
+              >
+                +{remainder} more in {title}
+              </Link>
+            </div>
+          )}
+        </div>
       );
     }
   }
 }
 
 /**
- * One This Week card. It carries its own section context, so its header takes its pillar's
- * color, and its own error boundary, so a failure stays inside the card. A placeholder is muted and
- * not a link: an unshipped pillar offers nothing to tap.
+ * One This Week card. Rendered as a borderless flat tonal card with variant="flat"
+ * and surfaceContainerLow background token. Header title is a direct link to the pillar
+ * path (preventing stretched-link collision with interactive footer links).
  */
 export function DashboardCard({ pillar, title, state }: DashboardCardProps): ReactElement {
-  const { icon: Icon, path } = PILLARS[pillar];
+  const { path } = PILLARS[pillar];
   const isPlaceholder = state.status === 'placeholder';
   const headingId = `dashboard-card-${pillar}`;
 
   return (
     <Card
       as="section"
-      variant={isPlaceholder ? 'flat' : 'raised'}
+      variant="flat"
       aria-labelledby={headingId}
-      className={
-        isPlaceholder
-          ? 'bg-raised'
-          : 'relative transition-colors duration-150 ease-out hover:border-input'
-      }
+      className="flex flex-col gap-3 p-4 bg-[var(--md-sys-color-surface-container-low)]"
     >
-      <h2 id={headingId} className="mb-3 text-h3 text-section">
+      <h2
+        id={headingId}
+        className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]"
+      >
         {isPlaceholder ? (
-          <span className="flex items-center gap-2">
-            <Icon aria-hidden size={20} strokeWidth={1.5} className="text-section-accent" />
+          <span className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
+            <Icon
+              name={pillarIcon(pillar)}
+              size={20}
+              className="text-[var(--md-sys-color-on-surface-variant)]"
+            />
             {title}
           </span>
         ) : (
-          // The stretched link makes the whole card the tap target for its section.
           <Link
             to={path}
-            className="flex items-center gap-2 after:absolute after:inset-0 after:rounded-md"
+            className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)] hover:text-[var(--md-sys-color-primary)]"
           >
-            <Icon aria-hidden size={20} strokeWidth={1.5} className="text-section-accent" />
+            <Icon
+              name={pillarIcon(pillar)}
+              size={20}
+              className="text-[var(--md-sys-color-primary)]"
+            />
             <span className="flex-1">{title}</span>
-            <ChevronRight aria-hidden size={20} strokeWidth={1.5} className="text-muted" />
           </Link>
         )}
       </h2>
@@ -129,11 +185,12 @@ export function DashboardCard({ pillar, title, state }: DashboardCardProps): Rea
             <ErrorState
               message={`Something went wrong loading ${title.toLowerCase()}. Try again, or reload.`}
               onRetry={reset}
+              layout="card"
             />
           </div>
         )}
       >
-        <CardBody title={title} state={state} />
+        <CardBody title={title} pillar={pillar} state={state} />
       </ErrorBoundary>
     </Card>
   );
