@@ -121,7 +121,18 @@ Plans:
   3. Pillar sub-views switch via MD3 Primary Tabs (`<md-tabs>` / `<md-primary-tab>`), `HouseholdSwitcher` sheet access renders only when `households.length > 1`, and `SectionProvider` plus dead `SubSectionComingSoon` routes in `ListsRoute.tsx` are removed.
   4. `Meals` presents two consolidated sub-tabs (`Planner | Recipes`) with `"On sale / Ready now"` filtering surfaced via `<md-filter-chip>` on `Recipes` and `/meals/suggestions` redirecting cleanly to `/meals/recipes`.
 
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+**Wave 1**
+- [ ] 18-01-PLAN.md — Adaptive MD3 shell (`NavigationBar` `<600px` & `NavigationRail` `>=600px`), Active Indicator Pill, fluid main canvas, scroll-aware Top App Bar single-`<h1>`, and pushed screen heading demotions (`NAV-01`, `NAV-02`)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 18-02-PLAN.md — MD3 Primary Tabs (`<md-tabs>`), scroll-to-top reset, `HouseholdSwitcher` `ModalBottomSheet` with single-membership copy, and atomic deletion of `SectionProvider` and dead routes (`NAV-03`)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 18-03-PLAN.md — Consolidated Meals routing (`/meals/suggestions` redirect), `MdFilterChip` wrapper, and `"On sale / Ready now"` recipe library filtering (`NAV-04`)
+
 **UI hint**: yes
 
 ### Phase 19: Entry, Dashboard & Grocery Ecosystem Screens
@@ -174,7 +185,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 10/15 | In Progress | - |
-| 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 0/0 | Not started | - |
+| 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 0/3 | Not started | - |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 0/0 | Not started | - |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 0/0 | Not started | - |
 | 21. Legacy Stack Cleanup & Full Verification | v3.0 | 0/0 | Not started | - |
