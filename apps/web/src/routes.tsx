@@ -92,6 +92,18 @@ export function createRoutes(): RouteObject[] {
                 { path: 'chores/*', lazy: () => import('./pillars/chores/ChoresRoute.tsx') },
                 { path: 'settings', lazy: () => import('./screens/settings/SettingsRoute.tsx') },
                 {
+                  path: 'settings/account',
+                  lazy: () => import('./screens/settings/AccountRoute.tsx'),
+                },
+                {
+                  path: 'settings/households',
+                  lazy: () => import('./screens/settings/HouseholdsRoute.tsx'),
+                },
+                {
+                  path: 'settings/notifications',
+                  lazy: () => import('./screens/settings/NotificationsRoute.tsx'),
+                },
+                {
                   path: 'settings/system-health',
                   lazy: () => import('./screens/settings/SystemHealthRoute.tsx'),
                 },
