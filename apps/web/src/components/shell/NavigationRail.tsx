@@ -13,10 +13,7 @@ const TAB_ICONS: Record<SectionId, IconName> = {
 
 export function NavigationRail(): ReactElement {
   return (
-    <nav
-      aria-label="Main"
-      className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col items-center justify-between border-r border-border bg-surface py-4 min-[600px]:flex"
-    >
+    <nav aria-label="Main" className="nav-rail">
       <div className="flex w-full flex-col items-center gap-3">
         {/* Top spacer / brand anchor */}
         <div className="flex h-12 w-12 items-center justify-center" />

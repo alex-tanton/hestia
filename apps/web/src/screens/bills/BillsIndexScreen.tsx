@@ -164,7 +164,7 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
       if (group.length === 0) return null;
       const headingId = `bill-group-${title.toLowerCase().replace(/\s+/g, '-')}`;
       return (
-        <section key={title} aria-labelledby={headingId} className="flex flex-col gap-2">
+        <section key={title} aria-labelledby={headingId} className="bills-section-group">
           <h2
             id={headingId}
             className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]"
@@ -189,7 +189,7 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
     };
 
     return (
-      <div className="flex flex-col gap-6">
+      <div className="bills-container">
         {renderGroup('Overdue', overdue)}
         {renderGroup('Upcoming', upcoming)}
         {renderGroup('Inactive', inactive)}
@@ -198,7 +198,7 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="bills-container">
       <div className="flex justify-end">
         <Button
           disabledReason={offlineReason}

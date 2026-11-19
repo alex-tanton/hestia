@@ -13,10 +13,7 @@ const TAB_ICONS: Record<SectionId, IconName> = {
 
 export function NavigationBar(): ReactElement {
   return (
-    <nav
-      aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-30 flex h-20 min-h-[80px] items-center justify-around bg-surface-container pb-[env(safe-area-inset-bottom)] min-[600px]:hidden"
-    >
+    <nav aria-label="Main" className="nav-bar">
       <ul className="flex w-full items-center justify-around px-2">
         {TABS.map((tab) => {
           const iconName = TAB_ICONS[tab.id];

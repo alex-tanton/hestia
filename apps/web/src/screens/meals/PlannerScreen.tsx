@@ -234,7 +234,7 @@ function PlannerWeek({
 
     if (isDesktop) {
       return (
-        <div className="grid grid-cols-7 items-start gap-3">
+        <div className="meal-board-grid">
           {dates.map((date) => (
             <PlannerDay key={date} {...dayProps(date)} isDesktop />
           ))}
@@ -246,7 +246,7 @@ function PlannerWeek({
     const isWeekEmpty = totalWeekEntries === 0;
 
     return (
-      <div className="flex flex-col gap-4">
+      <div className="planner-agenda">
         {/* Horizontal Day Anchor Pills */}
         <div className="overflow-x-auto pb-1">
           <MdTabs
@@ -303,7 +303,7 @@ function PlannerWeek({
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="planner-agenda">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <nav aria-label="Week" className="flex items-center gap-2">
           <Button
