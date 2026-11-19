@@ -37,7 +37,7 @@ export function NavigationBar(): ReactElement {
                     </div>
                     <span
                       className={`text-label truncate ${
-                        isActive ? 'font-semibold text-primary' : 'font-normal text-secondary'
+                        isActive ? 'font-semibold text-primary' : 'font-normal'
                       }`}
                     >
                       {tab.label}

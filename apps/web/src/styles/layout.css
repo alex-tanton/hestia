@@ -65,6 +65,12 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.nav-bar a,
+.nav-rail a {
+  color: var(--md-sys-color-on-surface);
+  text-decoration: none;
+}
+
 .nav-rail {
   display: none;
   position: fixed;
@@ -104,5 +110,29 @@
   .shell-content {
     max-width: 1200px;
     padding-inline: 2rem;
+  }
+}
+
+.toast-container {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  z-index: 100;
+  padding-inline: 1rem;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+
+.toast-container > * {
+  pointer-events: auto;
+}
+
+@media (min-width: 600px) {
+  .toast-container {
+    left: 5rem;
+    right: 0;
+    bottom: 1.5rem;
+    justify-content: center;
   }
 }

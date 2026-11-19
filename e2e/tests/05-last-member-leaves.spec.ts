@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectSignedIn, openSettings, signIn } from '../support/app.ts';
+import { expectSignedIn, openHouseholdSettings, signIn } from '../support/app.ts';
 import { expectAccessible } from '../support/axe.ts';
 import { queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
@@ -34,7 +34,7 @@ test('the household goes only after the typed name, and the personal bill stays'
   expect(householdCount(SEED.emptyHouse.name)).toBe(1);
 
   await signIn(page, SEED.casey.email);
-  await openSettings(page);
+  await openHouseholdSettings(page);
   await page.getByRole('button', { name: `Leave ${SEED.emptyHouse.name}` }).click();
 
   await expect(page.getByRole('heading', { name: 'Leave household', level: 1 })).toBeVisible();

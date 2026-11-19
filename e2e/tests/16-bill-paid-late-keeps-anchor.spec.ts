@@ -179,7 +179,10 @@ for (const theme of ['light', 'dark'] as const) {
         .click();
       await expect(page.getByText(`Archived ${f.name}.`).first()).toBeVisible();
       expect(await householdBillIds(request, token, householdId)).not.toContain(billId);
-      await page.getByRole('radio', { name: 'Bills' }).first().click();
+      await page
+        .getByRole('navigation', { name: 'Main' })
+        .getByRole('link', { name: 'Bills' })
+        .click();
       await expect(page.getByRole('link', { name: new RegExp(`^${f.name}`) })).toHaveCount(0);
     });
   });
