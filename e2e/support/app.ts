@@ -38,15 +38,31 @@ export async function signIn(
 }
 
 export async function openSettings(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'Settings' }).click();
-  await expect(page.getByRole('heading', { name: 'My Households' })).toBeVisible();
+  await page.getByRole('link', { name: 'Settings' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
+}
+
+/** Navigates to the pushed Households & Invites settings sub-route. */
+export async function openHouseholdSettings(page: Page): Promise<void> {
+  await openSettings(page);
+  await page.getByRole('button', { name: /Households & Invites/ }).click();
+  await expect(page.getByRole('heading', { name: 'Households', level: 1 })).toBeVisible();
 }
 
 /** Opens the switcher sheet and moves to another household. */
 export async function switchHousehold(page: Page, householdName: string): Promise<void> {
+  const switchButton = switcher(page);
+  if (!(await switchButton.isVisible())) {
+    const back = page.getByRole('link', { name: /Back/ });
+    if (await back.isVisible()) {
+      await back.click();
+    } else {
+      await page.goto('/');
+    }
+  }
   await switcher(page).click();
   const sheet = page.getByRole('dialog', { name: 'Households' });
-  await sheet.getByRole('button', { name: householdName }).click();
+  await sheet.getByRole('button', { name: new RegExp(householdName) }).click();
   await expect(sheet).toBeHidden();
 }
 

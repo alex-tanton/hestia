@@ -8,7 +8,7 @@ import { TEST_CONFIG } from '@hestia/shared';
 import { parseEnvFile, runNames } from './run-identity.ts';
 
 /** The repository root, from this file's location. */
-export const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+export const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]+$/, '');
 
 /*
  * One run's identity is fixed once per process tree. This module is first loaded by the Playwright
