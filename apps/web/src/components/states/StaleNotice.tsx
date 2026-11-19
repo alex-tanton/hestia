@@ -1,7 +1,7 @@
-import { RotateCw } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { formatDateTime } from '../../lib/format.ts';
 import { Button } from '../ui/Button.tsx';
+import { Icon } from '../ui/Icon.tsx';
 
 /**
  * Stale-over-empty: where a cache exists and a fetch fails, the cached content stays on screen with
@@ -21,7 +21,7 @@ export function StaleNotice({
         {`Couldn't refresh. Showing what synced as of ${formatDateTime(new Date(updatedAt).toISOString())}.`}
       </span>
       <Button variant="ghost" className="px-2" onClick={onRetry}>
-        <RotateCw aria-hidden size={20} strokeWidth={1.5} />
+        <Icon name="refresh" size={18} />
         Try again
       </Button>
     </p>

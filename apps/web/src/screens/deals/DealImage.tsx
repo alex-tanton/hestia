@@ -1,7 +1,7 @@
 import { isAllowedImageUrl } from '@hestia/shared';
-import { ImageOff } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { cn } from '../../lib/cn.ts';
+import { Icon } from '../../components/ui/Icon.tsx';
 
 export { isAllowedImageUrl };
 
@@ -27,7 +27,7 @@ export function DealImage({ url, className }: DealImageProps): ReactElement {
   if (hasFailed || !isAllowedImageUrl(url)) {
     return (
       <span data-testid="deal-image-placeholder" className={cn(box, 'grid place-items-center')}>
-        <ImageOff aria-hidden size={20} strokeWidth={1.5} className="text-muted" />
+        <Icon name="hide_image" size={20} className="text-muted" />
       </span>
     );
   }

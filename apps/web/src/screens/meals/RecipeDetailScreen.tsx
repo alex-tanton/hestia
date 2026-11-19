@@ -1,4 +1,3 @@
-import { CalendarPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import type { RecipeDetail } from '@hestia/shared';
@@ -11,6 +10,7 @@ import { ErrorState, OfflineState } from '../../components/states/StateBlocks.ts
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
 import { Skeleton, SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
@@ -143,7 +143,7 @@ export function RecipeDetailScreen({
           items={[
             {
               label: 'Edit',
-              icon: <Pencil aria-hidden size={20} strokeWidth={1.5} />,
+              icon: <Icon name="edit" size={20} />,
               disabledReason: offlineReason,
               onSelect: () => {
                 setIsEditing(true);
@@ -151,7 +151,7 @@ export function RecipeDetailScreen({
             },
             {
               label: 'Delete',
-              icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
+              icon: <Icon name="delete" size={20} />,
               isDestructive: true,
               disabledReason: offlineReason,
               onSelect: () => {
@@ -185,7 +185,7 @@ export function RecipeDetailScreen({
               setIsPlannerOpen(true);
             }}
           >
-            <CalendarPlus aria-hidden size={20} strokeWidth={1.5} />
+            <Icon name="calendar_add_on" size={20} />
             Place on week planner
           </Button>
         )}

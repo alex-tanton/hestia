@@ -1,6 +1,6 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Button } from '../../components/ui/Button.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 
 export interface PaginationProps {
   page: number;
@@ -30,7 +30,7 @@ export function Pagination({
           onPageChange(page - 1);
         }}
       >
-        <ChevronLeft aria-hidden size={20} strokeWidth={1.5} />
+        <Icon name="chevron_left" size={20} />
         Previous
       </Button>
       <p aria-live="polite" className="text-body-sm tabular-nums text-secondary">
@@ -44,7 +44,7 @@ export function Pagination({
         }}
       >
         Next
-        <ChevronRight aria-hidden size={20} strokeWidth={1.5} />
+        <Icon name="chevron_right" size={20} />
       </Button>
     </nav>
   );

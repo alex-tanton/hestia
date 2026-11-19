@@ -1,10 +1,10 @@
-import { LogOut } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import type { Membership } from '@hestia/shared';
 import { Badge } from '../../components/ui/Badge.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { ErrorState } from '../../components/states/StateBlocks.tsx';
 import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
@@ -129,7 +129,7 @@ export function HouseholdCard({
           openDeparture(currentUserId);
         }}
       >
-        <LogOut aria-hidden size={20} strokeWidth={1.5} />
+        <Icon name="logout" size={20} />
         Leave {membership.name}
       </Button>
     </Card>

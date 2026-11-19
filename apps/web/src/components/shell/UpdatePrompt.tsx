@@ -1,7 +1,7 @@
-import { RefreshCw, X } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '../ui/Button.tsx';
+import { Icon } from '../ui/Icon.tsx';
 
 export interface UpdateAvailableProps {
   isVisible: boolean;
@@ -22,7 +22,7 @@ export function UpdateAvailable({
     <div role="status">
       {isVisible && (
         <div className="flex items-center gap-2 border-b border-border bg-raised py-1 pr-1 pl-4">
-          <RefreshCw aria-hidden size={20} strokeWidth={1.5} className="shrink-0 text-secondary" />
+          <Icon name="refresh" size={20} className="shrink-0 text-secondary" />
           <p className="flex-1 text-body-sm text-secondary">Update available.</p>
           <Button variant="ghost" onClick={onUpdate}>
             Reload
@@ -34,7 +34,7 @@ export function UpdateAvailable({
             onClick={onDismiss}
             className="text-secondary"
           >
-            <X aria-hidden size={20} strokeWidth={1.5} />
+            <Icon name="close" size={20} />
           </Button>
         </div>
       )}

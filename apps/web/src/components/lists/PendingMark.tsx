@@ -1,5 +1,5 @@
-import { Clock } from 'lucide-react';
 import type { ReactElement } from 'react';
+import { Icon } from '../ui/Icon.tsx';
 
 export const PENDING_ROW_LABEL = 'Waiting to sync';
 export const PENDING_SUBTOTAL_LABEL = 'Subtotal updates when your changes sync.';
@@ -19,7 +19,7 @@ export const PENDING_CLASSES = 'border-l-4 border-l-section-accent';
 export function PendingMark({ label = PENDING_ROW_LABEL }: { label?: string }): ReactElement {
   return (
     <span className="inline-flex shrink-0 items-center text-secondary">
-      <Clock aria-hidden size={16} strokeWidth={2} />
+      <Icon name="schedule" size={18} />
       <span className="sr-only">{label}</span>
     </span>
   );

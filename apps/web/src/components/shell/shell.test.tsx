@@ -220,15 +220,6 @@ describe('sub-tabs once a pillar ships', () => {
       expect(screen.getByTestId('location')).toHaveTextContent('/bills/subscriptions');
     });
   });
-
-  it('keeps an unshipped pillar on coming soon even with the released set supplied', () => {
-    render(
-      <MemoryRouter initialEntries={['/chores']}>
-        <PillarScreen pillar="chores" releasedPillars={released} />
-      </MemoryRouter>,
-    );
-    expect(screen.getByRole('heading', { name: 'Coming soon' })).toBeInTheDocument();
-  });
 });
 
 describe('OfflineBanner', () => {

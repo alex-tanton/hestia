@@ -1,4 +1,3 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import type { MealPlanEntry, MealType } from '@hestia/shared';
 import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
@@ -9,6 +8,7 @@ import { MealPlacementSheet } from '../../components/meals/MealPlacementSheet.ts
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { MdPrimaryTab, MdTabs } from '../../components/md/MdTabs.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
@@ -314,7 +314,7 @@ function PlannerWeek({
               setWeek((current) => addDays(current, -7));
             }}
           >
-            <ChevronLeft aria-hidden size={20} strokeWidth={1.5} />
+            <Icon name="chevron_left" size={20} />
           </Button>
           <span className="text-body-sm text-secondary">
             Week of {dayLabel(week)}
@@ -339,7 +339,7 @@ function PlannerWeek({
               setWeek((current) => addDays(current, 7));
             }}
           >
-            <ChevronRight aria-hidden size={20} strokeWidth={1.5} />
+            <Icon name="chevron_right" size={20} />
           </Button>
         </nav>
         {!isReadOnly && (

@@ -1,4 +1,3 @@
-import { Plus, Store } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import type { Merchant } from '@hestia/shared';
@@ -127,7 +126,7 @@ export function FavoriteStores({
   if (rows.length === 0) {
     return (
       <EmptyState
-        icon={Store}
+        icon="storefront"
         message={noStoresMessage(postalCode)}
         {...(showPostalCodeAction
           ? {
@@ -213,7 +212,7 @@ export function FavoriteStores({
             setIsPickerOpen(true);
           }}
         >
-          <Plus aria-hidden size={18} strokeWidth={2} />
+          <Icon name="add" size={18} />
           Add store
         </Button>
       </div>
@@ -296,12 +295,7 @@ export function FavoritesPrompt({ householdId, postalCode }: FavoriteStoresProps
   return (
     <div className="flex flex-col items-start gap-2 rounded-md border border-border bg-section-tint p-3">
       <p className="flex items-start gap-2 text-body-sm text-secondary">
-        <Store
-          aria-hidden
-          size={20}
-          strokeWidth={1.5}
-          className="mt-px shrink-0 text-section-accent"
-        />
+        <Icon name="storefront" size={20} className="mt-px shrink-0 text-section-accent" />
         <span className="max-w-[70ch]">No favorite stores yet. Showing every store near you.</span>
       </p>
       <Button

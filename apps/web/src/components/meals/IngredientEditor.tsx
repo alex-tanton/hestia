@@ -1,8 +1,8 @@
-import { Plus, Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import type { IngredientInput, ParsedIngredient, RecipeIngredient } from '@hestia/shared';
 import { Button } from '../ui/Button.tsx';
 import { TextField } from '../ui/Field.tsx';
+import { Icon } from '../ui/Icon.tsx';
 
 /** A row's controlled-input form of an ingredient; `quantity` stays text until save time. */
 export interface EditableIngredient {
@@ -100,7 +100,7 @@ export function IngredientEditor({
       <div className="flex items-center justify-between">
         <h3 className="text-title-small font-semibold text-primary">Ingredients</h3>
         <Button type="button" variant="ghost" className="px-2" onClick={handleAppendRow}>
-          <Plus aria-hidden size={16} strokeWidth={1.5} />
+          <Icon name="add" size={18} />
           Add ingredient
         </Button>
       </div>
@@ -159,7 +159,7 @@ export function IngredientEditor({
                     onChange(ingredients.filter((candidate) => candidate.key !== row.key));
                   }}
                 >
-                  <Trash2 aria-hidden size={16} strokeWidth={1.5} />
+                  <Icon name="delete" size={18} />
                 </Button>
               </div>
             </li>

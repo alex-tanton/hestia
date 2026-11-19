@@ -1,4 +1,3 @@
-import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent, type ReactElement } from 'react';
 import type { Member } from '@hestia/shared';
 import { ROTATION_EMPTY_COPY } from './chore-copy.ts';
@@ -180,7 +179,7 @@ export function RotationEditor({
                   }}
                   className="inline-flex min-h-11 min-w-11 shrink-0 cursor-grab items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
                 >
-                  <GripVertical aria-hidden size={20} strokeWidth={1.5} />
+                  <Icon name="drag_indicator" size={20} />
                 </button>
                 <div
                   className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-label-md font-medium text-[var(--md-sys-color-on-primary-container)]"
@@ -202,7 +201,7 @@ export function RotationEditor({
                     move(index, -1);
                   }}
                 >
-                  <ArrowUp aria-hidden size={18} strokeWidth={1.5} />
+                  <Icon name="arrow_upward" size={18} />
                 </Button>
                 <Button
                   variant="ghost"
@@ -215,7 +214,7 @@ export function RotationEditor({
                     move(index, 1);
                   }}
                 >
-                  <ArrowDown aria-hidden size={18} strokeWidth={1.5} />
+                  <Icon name="arrow_downward" size={18} />
                 </Button>
                 <Button
                   variant="ghost"
@@ -228,7 +227,7 @@ export function RotationEditor({
                     remove(index);
                   }}
                 >
-                  <Trash2 aria-hidden size={18} strokeWidth={1.5} />
+                  <Icon name="delete" size={18} />
                 </Button>
               </div>
             </li>

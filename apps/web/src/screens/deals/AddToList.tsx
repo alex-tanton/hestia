@@ -1,9 +1,9 @@
-import { Plus } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import type { Deal } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
 import { ErrorState } from '../../components/states/StateBlocks.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { ListRow } from '../../components/ui/ListRow.tsx';
 import { Sheet } from '../../components/ui/Sheet.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
@@ -72,7 +72,7 @@ export function AddToList({ householdId, deal }: AddToListProps): ReactElement {
         aria-label={`Add ${deal.name} to a list`}
         onClick={handleClick}
       >
-        <Plus aria-hidden size={20} strokeWidth={1.5} />
+        <Icon name="add" size={20} />
         Add to list
       </Button>
 

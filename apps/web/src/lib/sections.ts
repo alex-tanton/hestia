@@ -1,12 +1,3 @@
-import {
-  ClipboardCheck,
-  LayoutDashboard,
-  Receipt,
-  ShoppingCart,
-  UtensilsCrossed,
-  type LucideIcon,
-} from 'lucide-react';
-
 export type SectionId = 'dashboard' | 'lists' | 'meals' | 'bills' | 'chores';
 export type PillarId = Exclude<SectionId, 'dashboard'>;
 
@@ -19,7 +10,6 @@ export interface Tab {
   id: SectionId;
   label: string;
   path: string;
-  icon: LucideIcon;
 }
 
 export interface Pillar extends Tab {
@@ -32,7 +22,6 @@ export const DASHBOARD_TAB: Tab = {
   id: 'dashboard',
   label: 'Dashboard',
   path: '/',
-  icon: LayoutDashboard,
 };
 
 export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
@@ -40,7 +29,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     id: 'lists',
     label: 'Lists',
     path: '/lists',
-    icon: ShoppingCart,
     subTabs: [
       { label: 'Lists', path: '/lists' },
       { label: 'Deals', path: '/lists/deals' },
@@ -52,7 +40,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     id: 'meals',
     label: 'Meals',
     path: '/meals',
-    icon: UtensilsCrossed,
     subTabs: [
       { label: 'Planner', path: '/meals' },
       { label: 'Recipes', path: '/meals/recipes' },
@@ -62,7 +49,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     id: 'bills',
     label: 'Bills',
     path: '/bills',
-    icon: Receipt,
     subTabs: [
       { label: 'Bills', path: '/bills' },
       { label: 'Subscriptions', path: '/bills/subscriptions' },
@@ -72,7 +58,6 @@ export const PILLARS: Readonly<Record<PillarId, Pillar>> = {
     id: 'chores',
     label: 'Chores',
     path: '/chores',
-    icon: ClipboardCheck,
     subTabs: [
       { label: 'Chores', path: '/chores' },
       { label: 'Errands', path: '/chores/errands' },

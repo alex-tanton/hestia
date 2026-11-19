@@ -1,8 +1,8 @@
-import { Activity, LogOut } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button.tsx';
 import { Card } from '../../components/ui/Card.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { ListRow } from '../../components/ui/ListRow.tsx';
 import { useApi, useAuthClient } from '../../lib/api/api-context.tsx';
 import { removeDeviceSubscription } from '../../lib/push/device-subscription.ts';
@@ -41,7 +41,7 @@ export function AboutSection({ isServerOwner }: { isServerOwner: boolean }): Rea
               <ListRow
                 title="System health"
                 description="Job freshness, recent errors, and the newest backup"
-                leading={<Activity aria-hidden size={20} strokeWidth={1.5} />}
+                leading={<Icon name="monitoring" size={20} />}
                 onSelect={() => {
                   void navigate('/settings/system-health');
                 }}
@@ -56,7 +56,7 @@ export function AboutSection({ isServerOwner }: { isServerOwner: boolean }): Rea
             void signOut();
           }}
         >
-          <LogOut aria-hidden size={20} strokeWidth={1.5} />
+          <Icon name="logout" size={20} />
           Sign out
         </Button>
       </Card>

@@ -1,4 +1,3 @@
-import { Ticket } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import type { CreatedInvite } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
@@ -113,7 +112,7 @@ export function InvitesSection({ householdId }: { householdId: string }): ReactE
       )}
       {invites.data?.length === 0 && (
         <EmptyState
-          icon={Ticket}
+          icon="confirmation_number"
           message="No invites are outstanding. Create one to add someone to this household."
         />
       )}
