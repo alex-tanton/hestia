@@ -42,6 +42,27 @@ function rowFor(page: Page, text: string): Locator {
   return page.locator('#main li:not(:has(li))').filter({ hasText: text });
 }
 
+async function ensureCompletedErrandsOpen(page: Page): Promise<void> {
+  const completedToggle = page.getByRole('button', { name: /^Completed \(\d+\)/ });
+  const summary = page.getByText(/(\d+ completed|completed$)/i).or(completedToggle);
+  if (await completedToggle.isVisible()) {
+    if ((await completedToggle.getAttribute('aria-expanded')) !== 'true') {
+      await completedToggle.click();
+    }
+  } else {
+    const details = page.locator('details');
+    if (await details.isVisible()) {
+      await details.evaluate((el: HTMLDetailsElement) => {
+        el.open = true;
+      });
+    }
+    await summary
+      .first()
+      .click()
+      .catch(() => undefined);
+  }
+}
+
 /** Light run only: the online completion, the labels, and the history it leaves behind. */
 async function onlineSteps(page: Page): Promise<void> {
   // Household-timezone labels: "today" and "in 2 days" are counted in Oak Street's zone, so they
@@ -79,25 +100,7 @@ async function onlineSteps(page: Page): Promise<void> {
     'Overdue 2 days',
   );
   await page.getByRole('checkbox', { name: 'Mark Return Amazon package as done' }).click();
-  const completedToggle = page.getByRole('button', { name: /^Completed \(\d+\)/ });
-  const summary = page.getByText(/(\d+ completed|completed$)/i).or(completedToggle);
-  await expect(summary.first()).toBeVisible();
-  if (await completedToggle.isVisible()) {
-    if ((await completedToggle.getAttribute('aria-expanded')) !== 'true') {
-      await completedToggle.click();
-    }
-  } else {
-    const details = page.locator('details');
-    if (await details.isVisible()) {
-      await details.evaluate((el: HTMLDetailsElement) => {
-        el.open = true;
-      });
-    }
-    await summary
-      .first()
-      .click()
-      .catch(() => undefined);
-  }
+  await ensureCompletedErrandsOpen(page);
   // Scoped to this errand's row: journey 15 has already completed another one today, with the same words.
   await expect(
     page
@@ -130,6 +133,7 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
 
   await subTabs.getByText('Errands', { exact: true }).click();
   await page.getByRole('checkbox', { name: `Mark ${errand} as done` }).click();
+  await ensureCompletedErrandsOpen(page);
   // The done box shows at once and the row is marked while it waits; its checkbox is held until the
   // write lands, so the errand is not toggled again offline.
   await expect(page.getByRole('checkbox', { name: `Mark ${errand} as open` })).toBeChecked();
@@ -146,6 +150,7 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
   await page.reload();
   await expect(rowFor(page, chore)).toContainText(PENDING);
   await subTabs.getByText('Errands', { exact: true }).click();
+  await ensureCompletedErrandsOpen(page);
   await expect(rowFor(page, errand)).toContainText(PENDING);
 
   await page.context().setOffline(false);
