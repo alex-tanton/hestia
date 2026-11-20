@@ -100,10 +100,9 @@ export async function reassign(page: Page, itemName: string, memberName: string)
     return;
   }
   await select.click();
-  const option = select
-    .locator('md-select-option')
-    .filter({ hasText: memberName })
-    .or(select.getByRole('option', { name: memberName }))
+  const option = page
+    .getByRole('option', { name: memberName })
+    .or(select.locator('md-select-option').filter({ hasText: memberName }))
     .first();
   await option.click();
 }

@@ -126,7 +126,9 @@ for (const theme of ['light', 'dark'] as const) {
           await moreFridge.click();
           await page.getByRole('menuitem', { name: 'Edit' }).click();
         }
-        await expect(page.getByRole('heading', { name: /^Edit Deep clean fridge/ })).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: /^Edit Deep clean fridge/ }).first(),
+        ).toBeVisible();
 
         const samUp = page.getByRole('button', { name: 'Move Sam Chen up' });
         await samUp.focus();
