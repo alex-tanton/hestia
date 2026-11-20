@@ -43,34 +43,26 @@ function rowFor(page: Page, text: string): Locator {
 }
 
 async function ensureCompletedErrandsOpen(page: Page): Promise<void> {
-  const completedToggle = page.getByRole('button', { name: /^Completed \(\d+\)/ });
-  const details = page.locator('details');
-  const summary = page
-    .locator('details summary')
-    .or(page.getByText(/(\d+ completed|completed$)/i))
-    .or(completedToggle);
+  const toggle = page
+    .getByRole('button', { name: /^Completed \(\d+\)/ })
+    .or(page.locator('details summary'));
 
-  // Wait for the completed toggle or summary to mount after state update
-  await expect(summary.first())
+  await expect(toggle.first())
     .toBeVisible({ timeout: 10000 })
     .catch(() => undefined);
 
-  if (await completedToggle.isVisible()) {
-    if ((await completedToggle.getAttribute('aria-expanded')) !== 'true') {
-      await completedToggle.click();
-    }
-  } else {
-    const detailsCount = await details.count();
-    if (detailsCount > 0) {
-      await details
-        .evaluateAll((els: HTMLElement[]) => {
-          for (const el of els) {
-            if ('open' in el) (el as HTMLDetailsElement).open = true;
-          }
-        })
-        .catch(() => undefined);
-    }
-    await summary
+  const isDetailsOpen = await page
+    .locator('details')
+    .evaluate((el: HTMLDetailsElement) => el.open)
+    .catch(() => false);
+  const isButtonExpanded = await page
+    .getByRole('button', { name: /^Completed \(\d+\)/ })
+    .getAttribute('aria-expanded')
+    .then((v) => v === 'true')
+    .catch(() => false);
+
+  if (!isDetailsOpen && !isButtonExpanded) {
+    await toggle
       .first()
       .click()
       .catch(() => undefined);
