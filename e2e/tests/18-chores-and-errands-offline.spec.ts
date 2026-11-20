@@ -44,17 +44,31 @@ function rowFor(page: Page, text: string): Locator {
 
 async function ensureCompletedErrandsOpen(page: Page): Promise<void> {
   const completedToggle = page.getByRole('button', { name: /^Completed \(\d+\)/ });
-  const summary = page.getByText(/(\d+ completed|completed$)/i).or(completedToggle);
+  const details = page.locator('details');
+  const summary = page
+    .locator('details summary')
+    .or(page.getByText(/(\d+ completed|completed$)/i))
+    .or(completedToggle);
+
+  // Wait for the completed toggle or summary to mount after state update
+  await expect(summary.first())
+    .toBeVisible({ timeout: 10000 })
+    .catch(() => undefined);
+
   if (await completedToggle.isVisible()) {
     if ((await completedToggle.getAttribute('aria-expanded')) !== 'true') {
       await completedToggle.click();
     }
   } else {
-    const details = page.locator('details');
-    if (await details.isVisible()) {
-      await details.evaluate((el: HTMLDetailsElement) => {
-        el.open = true;
-      });
+    const detailsCount = await details.count();
+    if (detailsCount > 0) {
+      await details
+        .evaluateAll((els: HTMLElement[]) => {
+          for (const el of els) {
+            if ('open' in el) (el as HTMLDetailsElement).open = true;
+          }
+        })
+        .catch(() => undefined);
     }
     await summary
       .first()
