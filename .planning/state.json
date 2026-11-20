@@ -6,7 +6,7 @@
     {
       "number": "17",
       "name": "MD3 Foundation, Token Pipeline & UI Primitives",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "18",
@@ -26,13 +26,13 @@
     {
       "number": "21",
       "name": "Legacy Stack Cleanup & Full Verification",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 21 of 5 · 60% · executing"
+    "command": "/gsd-audit-milestone",
+    "label": "Audit milestone completion",
+    "reason": "All 5 phases of Milestone v3.0 complete"
   },
-  "updated_at": "2026-11-15T23:36:25.245Z"
+  "updated_at": "2026-11-20T02:15:00.000Z"
 }

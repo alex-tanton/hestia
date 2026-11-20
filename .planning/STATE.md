@@ -4,18 +4,18 @@ milestone: v3.0
 milestone_name: Material Design 3 Overhaul
 current_phase: 21
 current_phase_name: Legacy Stack Cleanup & Full Verification
-status: executing
-stopped_at: Plan 21-03 completed; advancing to Plan 21-04
-last_updated: "2026-11-20T01:05:00.000Z"
+status: complete
+stopped_at: Phase 21 Plan 21-04 completed; all 5 phases of Milestone v3.0 complete
+last_updated: "2026-11-20T02:15:00.000Z"
 last_activity: 2026-11-20
-last_activity_desc: Phase 21 Plan 21-03 completed (E2E journeys verified)
-state_head: f7cc6f082e6d98cb82bbba7ca3ea5cb6ce013143
+last_activity_desc: Phase 21 Plan 21-04 completed (WCAG 2.1 AA audits, knip baseline, CI ratchets passed)
+state_head: 22d36d3fdf6c638f32279bbecbc5f8f5ea0f0550
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 5
   total_plans: 31
-  completed_plans: 30
-  percent: 97
+  completed_plans: 31
+  percent: 100
 ---
 
 # Project State
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-15)
 
 **Core value:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified Warm Terracotta tonal theming, restructured navigation, and clear flow of control.
-**Current focus:** Phase 21 — Legacy Stack Cleanup & Full Verification
+**Current focus:** Phase 21 — Legacy Stack Cleanup & Full Verification (COMPLETE)
 
 ## Current Position
 
-Phase: 21 (Legacy Stack Cleanup & Full Verification) — EXECUTING
-Plan: 4 of 4 (Plan 21-04 next)
-Status: Executing Phase 21 (Wave 4)
-Last activity: 2026-11-20 — Plan 21-03 completed; advancing to Plan 21-04 (Release Verification Gates)
+Phase: 21 (Legacy Stack Cleanup & Full Verification) — COMPLETE
+Plan: 4 of 4 (Plan 21-04 completed)
+Status: Complete (Milestone v3.0 all phases complete)
+Last activity: 2026-11-20 — Plan 21-04 completed (Release Verification Gates)
 
-Progress: [█████████░] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -80,6 +80,10 @@ Progress: [█████████░] 97%
 | Phase 19 P03 | 18m | 3 tasks | 12 files |
 | Phase 19 P04 | 15m | 2 tasks | 2 files |
 | Phase 19 P05 | 20m | 3 tasks | 11 files |
+| Phase 21 P01 | 20m | 3 tasks | 14 files |
+| Phase 21 P02 | 15m | 3 tasks | 8 files |
+| Phase 21 P03 | 45m | 3 tasks | 25 files |
+| Phase 21 P04 | 25m | 3 tasks | 8 files |
 
 ## Accumulated Context
 

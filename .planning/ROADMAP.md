@@ -51,7 +51,7 @@
 - [x] **Phase 18: Adaptive MD3 Navigation Shell & Route Chrome** - Window Size Class `NavigationBar` (`<600px`) and `NavigationRail` (`>=600px`), scroll-aware Small Top App Bar owning each screen's single `<h1>`, MD3 Primary Tabs, conditional `HouseholdSwitcher`, and consolidated Meals/Lists routing. (completed 2026-11-14)
 - [x] **Phase 19: Entry, Dashboard & Grocery Ecosystem Screens** - Overhaul Onboarding, Auth, Dashboard, Shared State blocks, Lists, Pantry, Barcode Scanner, Deals, and Flyers onto uncluttered tonal MD3 surfaces with progressive chip filtering and persistent Undo Snackbars. (completed 2026-11-15)
 - [x] **Phase 20: Meals, Bills, Chores & Settings Screens** - Overhaul Meal Planner/Recipes, Bills/Subscriptions, Chores/Errands, and Settings/System Health/Departure using MD3 lists, Full-Screen/Centered dialogs for dense forms, `<md-switch>` controls, zero 1-item overflow menus, and a categorized Settings hub. (completed 2026-11-15)
-- [ ] **Phase 21: Legacy Stack Cleanup & Full Verification** - Remove Tailwind CSS, Radix UI, and Lucide cleanly after all screens migrate, reconcile Knip baselines, and verify Vitest coverage, 24 Playwright E2E specs, light/dark WCAG 2.1 AA audits, shell budget, Caddy CSP, and CI hygiene gates.
+- [x] **Phase 21: Legacy Stack Cleanup & Full Verification** - Remove Tailwind CSS, Radix UI, and Lucide cleanly after all screens migrate, reconcile Knip baselines, and verify Vitest coverage, 24 Playwright E2E specs, light/dark WCAG 2.1 AA audits, shell budget, Caddy CSP, and CI hygiene gates. (completed 2026-11-20)
 
 ## Phase Details
 
@@ -199,7 +199,7 @@ Plans:
   3. All 24 Playwright E2E specs pass sequentially using MD3 semantic locators with zero functional regressions across offline queues, barcode scanning, deals/flyers, meals, bills, chores, auth, and household departure, and light/dark WCAG 2.1 AA audits (`17-accessibility-states.spec.ts` + `e2e/support/axe.ts` `{ subtree: true }`) pass across all routes.
   4. All build and CI ratchets pass: `check-build.mjs` (`<= 200 KB` gzipped shell budget + `MAGIC_LINK_COPY`), Caddy `'self'` CSP + Workbox offline precaching, `pnpm lint`, `pnpm typecheck`, `pnpm knip` + `scripts/check-knip-baseline.mjs`, `pnpm jscpd`, `audit-prod.mjs`, and `scripts/check-repo-hygiene.mjs` (LF endings, zero legacy tokens).
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans executed
 
 Plans:
 **Wave 1**
@@ -212,7 +212,7 @@ Plans:
 - [x] 21-03-PLAN.md — Playwright E2E Locator Modernization & Animation Suppression (`VER-02`)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 21-04-PLAN.md — Accessibility Audits, Knip Baseline & CI Ratchets (`VER-03`, `VER-04`)
+- [x] 21-04-PLAN.md — Accessibility Audits, Knip Baseline & CI Ratchets (`VER-03`, `VER-04`)
 
 ## Progress
 
@@ -221,8 +221,8 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 10/15 | In Progress | - |
+| 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 15/15 | Complete    | 2026-11-14 |
 | 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 3/3 | Complete    | 2026-11-14 |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 5/5 | Complete    | 2026-11-15 |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 4/4 | Complete    | 2026-11-15 |
-| 21. Legacy Stack Cleanup & Full Verification | v3.0 | 2/4 | In Progress | - |
+| 21. Legacy Stack Cleanup & Full Verification | v3.0 | 4/4 | Complete    | 2026-11-20 |
