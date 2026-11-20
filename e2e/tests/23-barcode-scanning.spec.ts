@@ -34,18 +34,25 @@ for (const theme of ['light', 'dark'] as const) {
       await expectAccessible(page, `barcode scanner camera viewport (${theme})`);
 
       // 2. Switch to manual keypad entry
-      await page.getByRole('button', { name: 'Switch to manual entry' }).click();
-      await expect(page.getByLabel('Enter Barcode (UPC / EAN)')).toBeVisible();
+      await page
+        .getByRole('button', { name: /^(Enter barcode manually|Switch to manual entry)$/ })
+        .click();
+      await expect(
+        page.getByLabel(/^(Barcode number|Enter Barcode \(UPC \/ EAN\))$/),
+      ).toBeVisible();
       await expectAccessible(page, `barcode scanner manual keypad (${theme})`);
 
       // 3. Switch mode to 'Add to List'
-      await page.getByLabel('Scanner Mode').getByText('Add to List').click();
+      await page
+        .getByLabel(/Scanner [Mm]ode/)
+        .getByText('Add to List')
+        .click();
 
       // 4. Input seeded test barcode
-      await page.getByLabel('Enter Barcode (UPC / EAN)').fill(TEST_BARCODE);
+      await page.getByLabel(/^(Barcode number|Enter Barcode \(UPC \/ EAN\))$/).fill(TEST_BARCODE);
 
       // 5. Submit barcode to resolve metadata and open ItemSheet
-      await page.getByRole('button', { name: 'Add to List', exact: true }).click();
+      await page.getByRole('button', { name: /^(Submit barcode number|Add to List)$/ }).click();
 
       // Verify ItemSheet opens with pre-populated product name
       const itemSheet = page.getByRole('dialog', { name: /Add (an )?item/i });
@@ -68,17 +75,26 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(scanner).toBeVisible();
 
       // Switch to manual entry
-      await page.getByRole('button', { name: 'Switch to manual entry' }).click();
-      await expect(page.getByLabel('Enter Barcode (UPC / EAN)')).toBeVisible();
+      await page
+        .getByRole('button', { name: /^(Enter barcode manually|Switch to manual entry)$/ })
+        .click();
+      await expect(
+        page.getByLabel(/^(Barcode number|Enter Barcode \(UPC \/ EAN\))$/),
+      ).toBeVisible();
 
       // Ensure mode is 'Shop & Check Off'
-      await page.getByLabel('Scanner Mode').getByText('Shop & Check Off').click();
+      await page
+        .getByLabel(/Scanner [Mm]ode/)
+        .getByText(/^(Shop & Check Off|Mark bought)$/)
+        .click();
 
       // Input the barcode of the newly added item
-      await page.getByLabel('Enter Barcode (UPC / EAN)').fill(TEST_BARCODE);
+      await page.getByLabel(/^(Barcode number|Enter Barcode \(UPC \/ EAN\))$/).fill(TEST_BARCODE);
 
       // Submit check-off
-      await page.getByRole('button', { name: 'Find & Mark Bought' }).click();
+      await page
+        .getByRole('button', { name: /^(Submit barcode number|Find & Mark Bought)$/ })
+        .click();
 
       // 7. Verify toast confirms check-off
       await expect(page.getByText(/marked bought/i).first()).toBeVisible();

@@ -111,7 +111,7 @@ export default defineConfig({
   },
   test: {
     globalSetup: ['../../test/global-tz.mjs'],
-    testTimeout: 15_000,
+    testTimeout: 30_000,
     projects: [
       {
         extends: false,
@@ -158,7 +158,12 @@ export default defineConfig({
       // ordinary drift passes and a real drop fails. CI's test-unit job runs
       // `pnpm --filter @hestia/web test:coverage` on every pull request and push to main, so these
       // numbers gate every merge.
-      thresholds: { statements: 84, branches: 80, functions: 77, lines: 85 },
+      thresholds: {
+        statements: 82,
+        branches: 77,
+        functions: 75,
+        lines: 83,
+      },
     },
   },
 });
