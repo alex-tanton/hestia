@@ -456,7 +456,7 @@ for (const theme of THEMES) {
       const editor = page.getByRole('dialog', { name: /^Edit / });
       await expect(editor).toBeVisible();
       await expectAccessible(page, `recipe edit form (${theme})`);
-      const closeEditor = page.getByRole('button', { name: /^(Close|Cancel)$/ });
+      const closeEditor = page.getByRole('button', { name: /^(Close|Cancel)$/ }).first();
       await closeEditor.click();
       await expect(editor).toBeHidden();
 
