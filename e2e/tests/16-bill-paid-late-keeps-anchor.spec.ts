@@ -70,7 +70,7 @@ for (const theme of ['light', 'dark'] as const) {
 
       // Create a monthly household bill anchored on the 10th, three months back, with autopay off.
       await page.getByRole('button', { name: 'Add a bill' }).click();
-      const sheet = page.getByRole('dialog', { name: 'Add a bill' }).first();
+      const sheet = page.getByRole('dialog', { name: /Add (a )?bill/i }).first();
       await expect(sheet).toBeVisible();
       const nameInput = sheet
         .getByLabel('Name')

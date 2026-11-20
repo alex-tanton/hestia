@@ -119,7 +119,7 @@ for (const theme of ['light', 'dark'] as const) {
         const moreFridge = page.getByRole('button', {
           name: 'More actions for Deep clean fridge',
         });
-        await expect(editBtn.or(moreFridge)).toBeVisible();
+        await expect(editBtn.or(moreFridge).first()).toBeVisible();
         if (await editBtn.isVisible()) {
           await editBtn.click();
         } else {
@@ -195,7 +195,7 @@ for (const theme of ['light', 'dark'] as const) {
       const moreHvac = page.getByRole('button', {
         name: 'More actions for Replace HVAC filter',
       });
-      await expect(editHvac.or(moreHvac)).toBeVisible();
+      await expect(editHvac.or(moreHvac).first()).toBeVisible();
       if (await editHvac.isVisible()) {
         await editHvac.click();
       } else {
