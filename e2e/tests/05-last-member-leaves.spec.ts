@@ -46,7 +46,7 @@ test('the household goes only after the typed name, and the personal bill stays'
   await page.getByRole('button', { name: 'Delete household and leave' }).click();
   const dialog = page.getByRole('alertdialog', { name: `Delete ${SEED.emptyHouse.name}?` });
   await expect(dialog).toBeVisible();
-  const confirm = dialog.getByRole('button', { name: /^Delete household( group)?$/ });
+  const confirm = page.getByRole('button', { name: /^Delete household( group)?$/ });
   await expect(confirm).toBeDisabled();
   await expectAccessible(page, 'household deletion confirmation');
 
