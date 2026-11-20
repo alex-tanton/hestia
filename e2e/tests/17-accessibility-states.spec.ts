@@ -445,14 +445,13 @@ for (const theme of THEMES) {
       await page.locator('a[href*="/meals/recipes/"]').first().click();
       await expect(page).toHaveURL(/\/meals\/recipes\/[^/]+$/);
       const moreRecipe = page.getByRole('button', { name: /^More actions for / }).first();
+      const editRecipe = page.getByRole('button', { name: 'Edit recipe' });
+      await expect(moreRecipe.or(editRecipe)).toBeVisible();
       if (await moreRecipe.isVisible()) {
         await moreRecipe.click();
         await page.getByRole('menuitem', { name: 'Edit' }).click();
       } else {
-        const editRecipe = page.getByRole('button', { name: 'Edit recipe' });
-        if (await editRecipe.isVisible()) {
-          await editRecipe.click();
-        }
+        await editRecipe.click();
       }
       const editor = page.getByRole('dialog', { name: /^Edit / });
       await expect(editor).toBeVisible();
@@ -461,15 +460,22 @@ for (const theme of THEMES) {
       await closeEditor.click();
       await expect(editor).toBeHidden();
 
+      await expect(moreRecipe.or(editRecipe)).toBeVisible();
       if (await moreRecipe.isVisible()) {
         await moreRecipe.click();
+        await page.getByRole('menuitem', { name: 'Delete' }).click();
       } else {
-        await page
-          .getByRole('button', { name: /^More actions for / })
-          .first()
-          .click();
+        const deleteRecipeBtn = page.getByRole('button', { name: 'Delete recipe' });
+        if (await deleteRecipeBtn.isVisible()) {
+          await deleteRecipeBtn.click();
+        } else {
+          await page
+            .getByRole('button', { name: /^More actions for / })
+            .first()
+            .click();
+          await page.getByRole('menuitem', { name: 'Delete' }).click();
+        }
       }
-      await page.getByRole('menuitem', { name: 'Delete' }).click();
       const recipe = page.getByRole('alertdialog', { name: 'Delete this recipe?' });
       await expect(recipe).toBeVisible();
       await expectAccessible(page, `delete recipe dialog (${theme})`);

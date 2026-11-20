@@ -79,11 +79,18 @@ async function onlineSteps(page: Page): Promise<void> {
   await page.getByRole('checkbox', { name: 'Mark Return Amazon package as done' }).click();
   const summary = page.getByText(/completed$/);
   await expect(summary).toBeVisible();
-  const details = page.locator('details');
-  if (await details.isVisible()) {
-    await details.evaluate((el: HTMLDetailsElement) => {
-      el.open = true;
-    });
+  const completedToggle = page.getByRole('button', { name: /^Completed \(\d+\)/ });
+  if (await completedToggle.isVisible()) {
+    if ((await completedToggle.getAttribute('aria-expanded')) !== 'true') {
+      await completedToggle.click();
+    }
+  } else {
+    const details = page.locator('details');
+    if (await details.isVisible()) {
+      await details.evaluate((el: HTMLDetailsElement) => {
+        el.open = true;
+      });
+    }
   }
   // Scoped to this errand's row: journey 15 has already completed another one today, with the same words.
   await expect(

@@ -94,13 +94,18 @@ export async function switchHousehold(page: Page, householdName: string): Promis
 /** Picks a member in one of the departure preview's reassignment selects. */
 export async function reassign(page: Page, itemName: string, memberName: string): Promise<void> {
   const select = page.getByRole('combobox', { name: itemName });
-  await select.click();
-  const option = select.getByRole('option', { name: memberName });
-  if (await option.isVisible()) {
-    await option.click();
-  } else {
-    await page.getByRole('option', { name: memberName }).first().click();
+  const isNative = await select.evaluate((el) => el.tagName.toLowerCase() === 'select');
+  if (isNative) {
+    await select.selectOption({ label: memberName });
+    return;
   }
+  await select.click();
+  const option = select
+    .locator('md-select-option')
+    .filter({ hasText: memberName })
+    .or(select.getByRole('option', { name: memberName }))
+    .first();
+  await option.click();
 }
 
 /** Opens a list from the Lists index by name. */
