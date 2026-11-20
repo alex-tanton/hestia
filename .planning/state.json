@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-audit-milestone",
-    "label": "Audit milestone completion",
-    "reason": "All 5 phases of Milestone v3.0 complete"
+    "command": "/gsd-progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-11-20T02:15:00.000Z"
+  "updated_at": "2026-11-20T16:31:27.087Z"
 }

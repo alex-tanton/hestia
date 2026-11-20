@@ -1,5 +1,31 @@
 # Milestones
 
+## v3.0 Material Design 3 Overhaul (Shipped: 2026-11-20)
+
+**Phases completed:** 5 phases, 31 plans, 41 tasks
+**Closeout type:** Override closeout (Phase 17 unverified report / UAT gap accepted as owner override)
+**Known verification overrides:** 1 newly acknowledged, 0 carried forward from a prior close (see STATE.md Deferred Items)
+
+### Known Gaps
+- Phase 17: Formal verification report was not generated (`17-VERIFICATION.md` missing). Requirements FND-01, FND-02, and FND-03 carried forward as unverified in formal traceability chain; automated verification in `17-UAT.md` (25/25 tests) passed.
+
+**Key accomplishments:**
+- ESLint `@material/web`/`lit`/`@lit` boundary and `jsx-a11y` rules preserving test clock checks, forced `element-internals-polyfill` + jsdom shims, DRY `md-queries.ts`, zero-cast `omitUndefined`, and `@lit/react` adapters for text fields, buttons, selects, and checkboxes.
+- Completed the remaining six `@material/web@2.5.0` `@lit/react@1.0.8` adapters (`MdSwitch`, `MdRadio`, `MdDialog`, `MdMenu`, `MdTabs`, `MdProgress`) and verified all five `D-13` smoke checks in `jsdom@30.1.0` without escalating to `@vitest/browser-playwright`.
+- Established Hestia's Material Symbols Rounded inline SVG registry (`Icon.tsx` + `icon-paths.ts`) from Google's official `google/material-design-icons` repository (`10ecc14790612ca8fd164e3f4ffe9c16fc50d5b7`) with zero third-party icon packages, zero WOFF2 font weight, and zero raw HTML injection.
+- Upgraded `Button`, `TextField`, `TextAreaField`, and `Select` onto `components/md/` adapters with 56px native `DateField`/`TimeField` framing, widened `HTMLElement` refs in form callers, and zero `as` casts.
+- Added `Switch`, upgraded `Checkbox`, `ConfirmDialog`, `OverflowMenu`, and `Tabs` onto `@material/web` adapters via `components/md/`, migrated `NotificationTypeRows`, and updated shadow-DOM initial focus selectors in 3 screens with zero `as` casts.
+- Replaced Radix Dialog and Radix Toast with native top-layer `<dialog>.showModal()` (`ModalBottomSheet` + `gap-primitives.css`) and a single-slot FIFO `Snackbar` queue with persistent `Undo`/error semantics, updating `primitives.test.tsx`, `Toast.test.tsx`, and `chores.test.tsx` for MD3 Shadow DOM and `D-11`.
+- Upgraded all 7 remaining light-DOM `components/ui/` primitives (`Card`, `ListRow`, `Badge`, `SegmentedControl`, `Skeleton`, `FormMessage`, `CopyButton`) onto Warm Terracotta MD3 tonal tokens and `Icon.tsx`, eliminating all `lucide-react` and `radix-ui` imports from `apps/web/src/components/ui/` and verifying all 7 in `primitives.test.tsx`.
+- Updated `browser.ts` `openMenu` onto `md-queries.ts` `findMdButton` with inner shadow button focus, and synchronized all 5 core infrastructure test suites (62/62 tests passing) onto MD3 Shadow DOM host queries with zero fake ARIA roles.
+- Synchronized all 7 Settings, Onboarding, and Dashboard-route test suites (128/128 tests passing) onto `apps/web/src/test/md-queries.ts` Shadow DOM queries with zero production screen modifications.
+- Synchronized all 8 Lists and Bills test suites (81/81 tests passing across 4 Lists suites and 4 Bills suites) onto `apps/web/src/test/md-queries.ts` Shadow DOM queries with zero production screen modifications.
+- Synchronized all 9 Chores, Errands, and Deals test suites (91/91 tests passing across 5 Chores/Errands suites and 4 Deals suites) onto `apps/web/src/test/md-queries.ts` Shadow DOM queries with zero production screen modifications.
+- Synchronized all 8 Meal component and screen test suites (78/78 tests passing across 3 Meal component suites and 5 Meal screen suites) onto `apps/web/src/test/md-queries.ts` Shadow DOM queries with zero production screen modifications.
+- Centered 440px MD3 surfaceContainer cards with floating-label TextFields, exact magic-link copy preservation, and Material Symbols navigation across all authentication and onboarding screens.
+
+---
+
 ## v2.1 Grocery & Deals Intelligence (Shipped: 2026-11-10)
 
 **Phases completed:** 5 phases, 13 plans, 12 tasks
