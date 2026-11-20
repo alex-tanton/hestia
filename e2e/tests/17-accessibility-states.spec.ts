@@ -497,7 +497,7 @@ for (const theme of THEMES) {
       const chore = page.getByRole('alertdialog', { name: 'Delete this chore?' });
       await expect(chore).toBeVisible();
       await expectAccessible(page, `delete chore dialog (${theme})`);
-      const cancelChore = page.getByRole('button', { name: 'Cancel' });
+      const cancelChore = page.getByRole('button', { name: 'Cancel' }).last();
       if (await cancelChore.isVisible()) {
         await cancelChore.click();
       } else {
