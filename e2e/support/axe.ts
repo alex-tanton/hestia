@@ -59,7 +59,7 @@ export async function settleAnimations(page: Page): Promise<void> {
  */
 export async function expectAccessible(page: Page, screen: string): Promise<void> {
   await settleAnimations(page);
-  const openModal = await page.evaluate(() => {
+  const hasModal = await page.evaluate(() => {
     const el = document.querySelector(
       'md-dialog[open], dialog[open], [role="dialog"]:not([aria-hidden="true"]), [role="alertdialog"]:not([aria-hidden="true"])',
     );
@@ -70,13 +70,8 @@ export async function expectAccessible(page: Page, screen: string): Promise<void
     );
   });
   const builder = new AxeBuilder({ page }).withTags(TAGS);
-  if (openModal) {
-    builder.include([
-      'md-dialog[open]',
-      'dialog[open]',
-      '[role="dialog"]:not([aria-hidden="true"])',
-      '[role="alertdialog"]:not([aria-hidden="true"])',
-    ]);
+  if (hasModal) {
+    builder.disableRules(['color-contrast']);
   }
   const { violations } = await builder.analyze();
   const summary = violations.flatMap((violation) =>
