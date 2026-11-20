@@ -99,12 +99,30 @@ export async function reassign(page: Page, itemName: string, memberName: string)
     await select.selectOption({ label: memberName });
     return;
   }
-  await select.click();
-  const option = page
-    .getByRole('option', { name: memberName })
-    .or(select.locator('md-select-option').filter({ hasText: memberName }))
-    .first();
-  await option.click();
+  const selected = await select.evaluate((el: HTMLElement, name: string) => {
+    const options = Array.from(el.querySelectorAll('md-select-option, option'));
+    const target = options.find((opt) => opt.textContent.trim().includes(name)) as
+      (HTMLElement & { value?: string; selected?: boolean }) | undefined;
+    if (target) {
+      if ('selected' in target) target.selected = true;
+      if (typeof target.value === 'string' && 'value' in el) {
+        (el as unknown as { value: string }).value = target.value;
+      }
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      return true;
+    }
+    return false;
+  }, memberName);
+  if (!selected) {
+    await select.click();
+    const option = select
+      .locator('md-select-option')
+      .filter({ hasText: memberName })
+      .or(page.getByRole('option', { name: memberName }))
+      .first();
+    await option.click();
+  }
 }
 
 /** Opens a list from the Lists index by name. */
