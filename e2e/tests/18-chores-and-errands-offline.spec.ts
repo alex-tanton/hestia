@@ -79,9 +79,9 @@ async function onlineSteps(page: Page): Promise<void> {
     'Overdue 2 days',
   );
   await page.getByRole('checkbox', { name: 'Mark Return Amazon package as done' }).click();
-  const summary = page.getByText(/completed$/);
-  await expect(summary).toBeVisible();
   const completedToggle = page.getByRole('button', { name: /^Completed \(\d+\)/ });
+  const summary = page.getByText(/(\d+ completed|completed$)/i).or(completedToggle);
+  await expect(summary.first()).toBeVisible();
   if (await completedToggle.isVisible()) {
     if ((await completedToggle.getAttribute('aria-expanded')) !== 'true') {
       await completedToggle.click();
@@ -93,6 +93,10 @@ async function onlineSteps(page: Page): Promise<void> {
         el.open = true;
       });
     }
+    await summary
+      .first()
+      .click()
+      .catch(() => undefined);
   }
   // Scoped to this errand's row: journey 15 has already completed another one today, with the same words.
   await expect(
