@@ -38,8 +38,10 @@ export function Switch({
   onCheckedChange,
 }: SwitchProps): ReactElement {
   const generatedId = useId();
+  const labelId = useId();
   const controlId = id ?? generatedId;
   const sawInputRef = useRef(false);
+  const effectiveAriaLabel = ariaLabel ?? (typeof label === 'string' ? label : undefined);
 
   const emitCheckedChange = (target: EventTarget | null): void => {
     const nextSelected = readSwitchSelected(target);
@@ -75,7 +77,7 @@ export function Switch({
       )}
     >
       <span className="flex min-h-6 min-w-0 flex-1 flex-col">
-        <span>{label}</span>
+        <span id={labelId}>{label}</span>
         {detail !== undefined && (
           <span className="text-[0.8125rem] leading-[1.125rem] text-[var(--md-sys-color-on-surface-variant)]">
             {detail}
@@ -92,7 +94,8 @@ export function Switch({
           {...omitUndefined({
             name,
             tabIndex: disabled === true ? undefined : 0,
-            'aria-label': ariaLabel,
+            'aria-label': effectiveAriaLabel,
+            'aria-labelledby': effectiveAriaLabel ? undefined : labelId,
             'aria-describedby': ariaDescribedBy,
           })}
         />

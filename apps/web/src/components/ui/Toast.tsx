@@ -67,7 +67,7 @@ export function Snackbar({ variant, message, action, onDismiss }: SnackbarProps)
       role={isError ? 'alert' : 'status'}
       aria-atomic="true"
       className={cn(
-        'pointer-events-auto mx-auto flex w-full max-w-[70ch] items-center gap-3 rounded-[var(--md-sys-shape-corner-extra-small)] py-1.5 pr-1.5 pl-4 shadow-[var(--md-sys-elevation-level3)]',
+        'pointer-events-auto relative z-10 mx-auto flex w-full max-w-[70ch] items-center gap-3 rounded-[var(--md-sys-shape-corner-extra-small)] py-1.5 pr-1.5 pl-4 shadow-[var(--md-sys-elevation-level3)]',
         isError
           ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
           : 'bg-[var(--md-sys-color-inverse-surface)] text-[var(--md-sys-color-inverse-on-surface)]',
@@ -149,12 +149,7 @@ export function ToastProvider({ children }: { children: ReactNode }): ReactEleme
     <ToastContext value={show}>
       {children}
       {/* Bottom-anchored above the tab bar; the sidebar layout has no bottom bar to clear. */}
-      <div
-        className={cn(
-          'pointer-events-none fixed inset-x-0 z-50 px-4',
-          'bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:bottom-4',
-        )}
-      >
+      <div className="toast-container">
         {active !== null && (
           <Snackbar
             key={active.id}

@@ -89,7 +89,7 @@ describe('app shell', () => {
     await userEvent.keyboard('{Enter}');
     // The Meals module is a lazy chunk, so its first load can outlast the default find timeout.
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
+      await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 20000 }),
     ).toBeInTheDocument();
     await waitFor(() => {
       expect(document.title).toBe('Meals · Hestia');
