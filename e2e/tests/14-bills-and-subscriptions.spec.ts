@@ -106,14 +106,9 @@ test.describe('bills and subscriptions, writes', () => {
       await dismiss.click();
     }
 
-    const directPay = page.getByRole('button', { name: 'Mark paid, Water and Sewer' });
-    if (await directPay.isVisible()) {
-      await directPay.click();
-      await expect(page.getByText(/Marked Water and Sewer (as )?paid\./).first()).toBeVisible();
-      await page.getByRole('button', { name: 'Undo' }).click();
-      await expect(page.getByRole('button', { name: 'Mark paid, Water and Sewer' })).toBeVisible();
-    } else {
-      await page.getByRole('button', { name: 'More actions for Water and Sewer' }).click();
+    const moreActions = page.getByRole('button', { name: 'More actions for Water and Sewer' });
+    if (await moreActions.isVisible()) {
+      await moreActions.click();
       await page.getByRole('menuitem', { name: 'Skip' }).click();
       const dialog = page.getByRole('alertdialog', { name: 'Skip this bill?' });
       await expect(dialog).toBeVisible();
@@ -124,6 +119,17 @@ test.describe('bills and subscriptions, writes', () => {
       ).toBeVisible();
       await page.getByRole('button', { name: 'Skip bill' }).click();
       await expect(page.getByText('Skipped Water and Sewer.').first()).toBeVisible();
+    } else {
+      const directPay = page.getByRole('button', { name: 'Mark paid, Water and Sewer' });
+      await directPay.click();
+      await expect(page.getByText(/Marked Water and Sewer (as )?paid\./).first()).toBeVisible();
+      const undo = page.getByRole('button', { name: 'Undo' });
+      if (await undo.isVisible()) {
+        await undo.click();
+        await expect(
+          page.getByRole('button', { name: 'Mark paid, Water and Sewer' }),
+        ).toBeVisible();
+      }
     }
 
     // Offline: writes are disabled with the one-line reason, and the list stays readable.

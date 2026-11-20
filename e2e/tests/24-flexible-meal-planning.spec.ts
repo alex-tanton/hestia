@@ -52,7 +52,12 @@ for (const theme of ['light', 'dark'] as const) {
       if (await quickItemRadio.isVisible()) {
         await quickItemRadio.click();
       } else {
-        await sheet.getByRole('tab', { name: 'Quick Item' }).click();
+        const tab = sheet.getByRole('tab', { name: 'Quick Item' });
+        if (await tab.isVisible()) {
+          await tab.click();
+        } else {
+          await sheet.locator('md-primary-tab, [role="tab"]', { hasText: 'Quick Item' }).click();
+        }
         await expect(sheet.getByRole('tabpanel')).toBeVisible();
       }
 
