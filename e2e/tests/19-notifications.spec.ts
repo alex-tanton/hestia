@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import {
   expectDashboard,
-  openSettings,
+  openNotificationSettings,
   signIn,
   switchHousehold,
   switcher,
@@ -150,7 +150,7 @@ test.describe('notifications — meal reminder with the push double (light)', ()
     await switchHousehold(page, SEED.riveraFamily.name);
     await expect(switcher(page)).toHaveText(new RegExp(SEED.riveraFamily.name));
 
-    await openSettings(page);
+    await openNotificationSettings(page);
     const mealReminders = page.getByRole('switch', { name: 'Meal reminders' });
     await expect(mealReminders).not.toBeChecked();
     await mealReminders.click();
@@ -215,7 +215,7 @@ for (const theme of ['light', 'dark'] as const) {
     test('the settings screen with a notification type on passes axe', async ({ page }) => {
       await signIn(page, SEED.alex.email);
       await expectDashboard(page, SEED.oakStreet.name);
-      await openSettings(page);
+      await openNotificationSettings(page);
       await expect(page.getByRole('switch', { name: 'Meal reminders' })).toBeChecked();
       await expectAccessible(page, `notification settings (${theme})`);
     });

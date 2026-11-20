@@ -171,82 +171,84 @@ export function RecipeLibraryScreen({ householdId }: { householdId: string }): R
 
   return (
     <section className="flex flex-col gap-4">
-      {/* Search and filters bar per MEAL-06 and UI-SPEC */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <TextField
-            label="Search recipes"
-            type="search"
-            className="min-w-60"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-          />
-          <Select
-            label="Sort by"
-            options={SORT_OPTIONS}
-            value={sort}
-            onValueChange={(value) => {
-              setSort(value as LibrarySort);
-            }}
-          />
-          <div className="flex items-center gap-2">
-            <MdFilterChip selected={filterReady} onClick={handleToggleFilterReady}>
-              Ready now
-            </MdFilterChip>
-            <MdFilterChip selected={filterOnSale} onClick={handleToggleFilterSale}>
-              On sale
-            </MdFilterChip>
+      <div aria-hidden={isAdding || undefined} inert={isAdding} className="flex flex-col gap-4">
+        {/* Search and filters bar per MEAL-06 and UI-SPEC */}
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <TextField
+              label="Search recipes"
+              type="search"
+              className="min-w-60"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
+            />
+            <Select
+              label="Sort by"
+              options={SORT_OPTIONS}
+              value={sort}
+              onValueChange={(value) => {
+                setSort(value as LibrarySort);
+              }}
+            />
+            <div className="flex items-center gap-2">
+              <MdFilterChip selected={filterReady} onClick={handleToggleFilterReady}>
+                Ready now
+              </MdFilterChip>
+              <MdFilterChip selected={filterOnSale} onClick={handleToggleFilterSale}>
+                On sale
+              </MdFilterChip>
+            </div>
           </div>
-        </div>
-        <Button
-          disabledReason={offlineReason}
-          onClick={() => {
-            setIsAdding(true);
-          }}
-        >
-          Add recipe
-        </Button>
-      </div>
-
-      {recipes.isError && recipes.data !== undefined && (
-        <StaleNotice
-          updatedAt={recipes.dataUpdatedAt}
-          onRetry={() => {
-            void recipes.refetch();
-          }}
-        />
-      )}
-
-      {body()}
-
-      {recipes.data && (
-        <Pagination
-          page={recipes.data.page}
-          pageSize={recipes.data.pageSize}
-          total={recipes.data.total}
-          hasMore={recipes.data.hasMore}
-          onPageChange={setPage}
-        />
-      )}
-
-      {/* Floating Action Button for mobile & desktop fast create per MEAL-06 */}
-      {!offlineReason && (
-        <div className="fixed right-6 bottom-6 z-20">
-          <MdFab
-            aria-label="Add recipe"
+          <Button
+            disabledReason={offlineReason}
             onClick={() => {
               setIsAdding(true);
             }}
           >
-            <span slot="icon">
-              <Icon name="add" size={24} />
-            </span>
-          </MdFab>
+            Add recipe
+          </Button>
         </div>
-      )}
+
+        {recipes.isError && recipes.data !== undefined && (
+          <StaleNotice
+            updatedAt={recipes.dataUpdatedAt}
+            onRetry={() => {
+              void recipes.refetch();
+            }}
+          />
+        )}
+
+        {body()}
+
+        {recipes.data && (
+          <Pagination
+            page={recipes.data.page}
+            pageSize={recipes.data.pageSize}
+            total={recipes.data.total}
+            hasMore={recipes.data.hasMore}
+            onPageChange={setPage}
+          />
+        )}
+
+        {/* Floating Action Button for mobile & desktop fast create per MEAL-06 */}
+        {!offlineReason && (
+          <div className="fixed right-6 bottom-6 z-20">
+            <MdFab
+              aria-label="Add recipe"
+              onClick={() => {
+                setIsAdding(true);
+              }}
+            >
+              <span slot="icon">
+                <Icon name="add" size={24} />
+              </span>
+            </MdFab>
+          </div>
+        )}
+      </div>
 
       {isAdding && (
         <RecipeForm

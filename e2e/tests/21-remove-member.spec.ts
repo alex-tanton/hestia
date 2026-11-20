@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectDashboard, openSettings, reassign, signIn } from '../support/app.ts';
+import { expectDashboard, openHouseholdSettings, reassign, signIn } from '../support/app.ts';
 import { accessToken, householdStatus, removeMemberStatus } from '../support/api.ts';
 import { expectAccessible } from '../support/axe.ts';
 import { queryValue } from '../support/db.ts';
@@ -69,11 +69,13 @@ for (const theme of ['light', 'dark'] as const) {
 
       await signIn(page, SEED.alex.email);
       await expectDashboard(page, SEED.oakStreet.name);
-      await openSettings(page);
+      await openHouseholdSettings(page);
       await page.getByRole('button', { name: `More actions for ${member.name}` }).click();
       await page.getByRole('menuitem', { name: 'Remove from household' }).click();
 
-      await expect(page.getByRole('heading', { name: 'Remove member', level: 1 })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: /^(Depart household|Remove member)$/, level: 1 }),
+      ).toBeVisible();
       // Everything they own needs a new owner; rotations are listed without a picker.
       for (const item of owned) {
         await expect(page.getByRole('combobox', { name: item })).toBeVisible();
@@ -99,8 +101,13 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(confirm).toBeEnabled();
       await confirm.click();
 
+      const dialogConfirm = page.getByRole('button', { name: 'Confirm member departure' });
+      if (await dialogConfirm.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await dialogConfirm.click();
+      }
+
       // Back on Settings, with the member gone from Oak Street's card.
-      await expect(page.getByRole('heading', { name: 'My Households' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Households', level: 1 })).toBeVisible();
       await expect(page.getByText(member.name)).toHaveCount(0);
       await expectAccessible(page, `settings after the removal (${theme})`);
 

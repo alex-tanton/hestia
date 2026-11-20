@@ -2,7 +2,9 @@ import { randomBytes } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
 import {
   expectDashboard,
-  openSettings,
+  openAccountSettings,
+  openHouseholdSettings,
+  openNotificationSettings,
   signIn,
   switcher,
   waitForServiceWorker,
@@ -93,11 +95,6 @@ async function signUpWithoutHousehold(page: Page, name: string): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Set up your household' })).toBeVisible();
 }
 
-async function openNotificationSettings(page: Page): Promise<void> {
-  await openSettings(page);
-  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible();
-}
-
 for (const theme of THEMES) {
   test.describe(`accessibility states (${theme})`, () => {
     test.use({ colorScheme: theme });
@@ -178,7 +175,7 @@ for (const theme of THEMES) {
 
     test('account forms open in settings', async ({ page }) => {
       await signIn(page, SEED.alex.email);
-      await openSettings(page);
+      await openAccountSettings(page);
       await page.getByRole('button', { name: 'Change email' }).click();
       await page.getByRole('button', { name: 'Change password' }).click();
       await expect(page.getByLabel('Current password').first()).toBeVisible();
@@ -195,7 +192,7 @@ for (const theme of THEMES) {
     test('last-member departure and household deletion dialog, cancelled', async ({ page }) => {
       const account = FIRST_RUN[theme];
       await signIn(page, account.email);
-      await openSettings(page);
+      await openHouseholdSettings(page);
       await page.getByRole('button', { name: `Leave ${account.household}` }).click();
       await expect(page.getByRole('heading', { name: 'You are the last member' })).toBeVisible();
       await expectAccessible(page, `last member, first run (${theme})`);

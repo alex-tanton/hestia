@@ -49,6 +49,20 @@ export async function openHouseholdSettings(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Households', level: 1 })).toBeVisible();
 }
 
+/** Navigates to the pushed Account settings sub-route. */
+export async function openAccountSettings(page: Page): Promise<void> {
+  await openSettings(page);
+  await page.getByRole('button', { name: /^Account/ }).click();
+  await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeVisible();
+}
+
+/** Navigates to the pushed Notifications settings sub-route. */
+export async function openNotificationSettings(page: Page): Promise<void> {
+  await openSettings(page);
+  await page.getByRole('button', { name: /^Notifications/ }).click();
+  await expect(page.getByRole('heading', { name: 'Notifications', level: 1 })).toBeVisible();
+}
+
 /** Opens the switcher sheet and moves to another household. */
 export async function switchHousehold(page: Page, householdName: string): Promise<void> {
   const switchButton = switcher(page);
@@ -68,8 +82,9 @@ export async function switchHousehold(page: Page, householdName: string): Promis
 
 /** Picks a member in one of the departure preview's reassignment selects. */
 export async function reassign(page: Page, itemName: string, memberName: string): Promise<void> {
-  await page.getByRole('combobox', { name: itemName }).click();
-  await page.getByRole('option', { name: memberName }).click();
+  const select = page.getByRole('combobox', { name: itemName });
+  await select.click();
+  await page.getByRole('option', { name: memberName, selected: false }).click();
 }
 
 /** Opens a list from the Lists index by name. */
