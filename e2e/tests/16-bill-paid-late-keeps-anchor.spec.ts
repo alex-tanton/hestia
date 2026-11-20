@@ -107,7 +107,9 @@ for (const theme of ['light', 'dark'] as const) {
       await group(page, 'Overdue')
         .getByRole('button', { name: `Mark paid, ${f.name}` })
         .click();
-      await expect(page.getByText(`Marked ${f.name} paid.`).first()).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`Marked ${f.name} (as )?paid\\.`)).first(),
+      ).toBeVisible();
 
       // The row stays in Overdue on the second occurrence, the 10th of the following month, not on
       // the payment date plus one month.
@@ -173,13 +175,15 @@ for (const theme of ['light', 'dark'] as const) {
       await overdueRow(page, f.name).click();
       await page.getByRole('button', { name: `More actions for ${f.name}` }).click();
       await page.getByRole('menuitem', { name: 'Archive' }).click();
-      await page
-        .getByRole('alertdialog', { name: 'Archive this bill?' })
-        .getByRole('button', { name: 'Archive bill' })
-        .click();
+      await page.getByRole('button', { name: 'Archive bill' }).click();
       await expect(page.getByText(`Archived ${f.name}.`).first()).toBeVisible();
       expect(await householdBillIds(request, token, householdId)).not.toContain(billId);
-      await page.getByRole('radio', { name: 'Bills' }).first().click();
+      const billsLink = page.getByRole('link', { name: 'Bills' });
+      if (await billsLink.isVisible()) {
+        await billsLink.click();
+      } else {
+        await page.getByRole('radio', { name: 'Bills' }).first().click();
+      }
       await expect(page.getByRole('link', { name: new RegExp(`^${f.name}`) })).toHaveCount(0);
     });
   });

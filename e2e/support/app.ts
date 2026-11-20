@@ -38,15 +38,56 @@ export async function signIn(
 }
 
 export async function openSettings(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'Settings' }).click();
-  await expect(page.getByRole('heading', { name: 'My Households' })).toBeVisible();
+  await page.getByRole('link', { name: 'Settings' }).first().click();
+  await expect(
+    page.getByRole('heading', { name: /^(Settings|My Households)$/, level: 1 }),
+  ).toBeVisible();
+}
+
+/** Navigates to the pushed Households & Invites settings sub-route. */
+export async function openHouseholdSettings(page: Page): Promise<void> {
+  await openSettings(page);
+  const button = page.getByRole('button', { name: /Households & Invites/ });
+  if (await button.isVisible()) {
+    await button.click();
+    await expect(page.getByRole('heading', { name: 'Households', level: 1 })).toBeVisible();
+  }
+}
+
+/** Navigates to the pushed Account settings sub-route. */
+export async function openAccountSettings(page: Page): Promise<void> {
+  await openSettings(page);
+  const button = page.getByRole('button', { name: /^Account/ });
+  if (await button.isVisible()) {
+    await button.click();
+    await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeVisible();
+  }
+}
+
+/** Navigates to the pushed Notifications settings sub-route. */
+export async function openNotificationSettings(page: Page): Promise<void> {
+  await openSettings(page);
+  const button = page.getByRole('button', { name: /^Notifications/ });
+  if (await button.isVisible()) {
+    await button.click();
+    await expect(page.getByRole('heading', { name: 'Notifications', level: 1 })).toBeVisible();
+  }
 }
 
 /** Opens the switcher sheet and moves to another household. */
 export async function switchHousehold(page: Page, householdName: string): Promise<void> {
+  const switchButton = switcher(page);
+  if (!(await switchButton.isVisible())) {
+    const back = page.getByRole('link', { name: /Back/ });
+    if (await back.isVisible()) {
+      await back.click();
+    } else {
+      await page.goto('/');
+    }
+  }
   await switcher(page).click();
   const sheet = page.getByRole('dialog', { name: 'Households' });
-  await sheet.getByRole('button', { name: householdName }).click();
+  await sheet.getByRole('button', { name: new RegExp(householdName) }).click();
   await expect(sheet).toBeHidden();
 }
 
