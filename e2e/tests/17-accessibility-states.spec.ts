@@ -102,7 +102,7 @@ for (const theme of THEMES) {
       await page.goto('/sign-in');
       await page.getByRole('button', { name: 'Sign in' }).click();
       const emailInput = page.getByLabel('Email');
-      const emailError = page.getByText(COPY.signInEmail);
+      const emailError = page.getByText(COPY.signInEmail).first();
       if (await emailError.isVisible()) {
         await expect(emailError).toBeVisible();
       } else {
@@ -410,6 +410,7 @@ for (const theme of THEMES) {
       await signIn(page, SEED.alex.email);
 
       await page.goto('/bills');
+      await expect(page.getByRole('heading', { name: 'Bills', level: 1 })).toBeVisible();
       const moreBills = page.getByRole('button', { name: /^More actions for / }).first();
       if (await moreBills.isVisible()) {
         await moreBills.click();
@@ -429,7 +430,10 @@ for (const theme of THEMES) {
         }
       } else {
         await page.getByRole('link', { name: /^Duke Energy/ }).click();
-        await page.getByRole('button', { name: /^More actions for / }).click();
+        await page
+          .getByRole('button', { name: /^More actions for / })
+          .first()
+          .click();
         await page.getByRole('menuitem', { name: 'Archive' }).click();
         const archive = page.getByRole('alertdialog', { name: 'Archive this bill?' });
         await expect(archive).toBeVisible();
@@ -440,7 +444,7 @@ for (const theme of THEMES) {
       await page.goto('/meals/recipes');
       await page.locator('a[href*="/meals/recipes/"]').first().click();
       await expect(page).toHaveURL(/\/meals\/recipes\/[^/]+$/);
-      const moreRecipe = page.getByRole('button', { name: /^More actions for / });
+      const moreRecipe = page.getByRole('button', { name: /^More actions for / }).first();
       if (await moreRecipe.isVisible()) {
         await moreRecipe.click();
         await page.getByRole('menuitem', { name: 'Edit' }).click();
@@ -460,7 +464,10 @@ for (const theme of THEMES) {
       if (await moreRecipe.isVisible()) {
         await moreRecipe.click();
       } else {
-        await page.getByRole('button', { name: /^More actions for / }).click();
+        await page
+          .getByRole('button', { name: /^More actions for / })
+          .first()
+          .click();
       }
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       const recipe = page.getByRole('alertdialog', { name: 'Delete this recipe?' });

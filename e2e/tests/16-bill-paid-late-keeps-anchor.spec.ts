@@ -70,13 +70,33 @@ for (const theme of ['light', 'dark'] as const) {
 
       // Create a monthly household bill anchored on the 10th, three months back, with autopay off.
       await page.getByRole('button', { name: 'Add a bill' }).click();
-      const sheet = page.getByRole('dialog', { name: 'Add a bill' });
-      await sheet.getByLabel('Name').fill(f.name);
-      await sheet.getByLabel('Amount').fill('64.20');
+      const sheet = page.getByRole('dialog', { name: 'Add a bill' }).first();
+      await expect(sheet).toBeVisible();
+      const nameInput = sheet
+        .getByLabel('Name')
+        .or(sheet.locator('md-outlined-text-field[label="Name"]'))
+        .or(page.getByLabel('Name'))
+        .first();
+      await nameInput.fill(f.name);
+      const amountInput = sheet
+        .getByLabel('Amount')
+        .or(sheet.locator('md-outlined-text-field[label="Amount"]'))
+        .or(page.getByLabel('Amount'))
+        .first();
+      await amountInput.fill('64.20');
       await sheet.getByRole('combobox', { name: 'Repeats' }).click();
-      await page.getByRole('option', { name: 'Monthly' }).click();
-      await sheet.getByLabel('Every').fill('1');
-      await sheet.getByLabel('First due date').fill(f.first);
+      await page.getByRole('option', { name: 'Monthly' }).first().click();
+      const everyInput = sheet
+        .getByLabel('Every')
+        .or(sheet.locator('md-outlined-text-field[label="Every"]'))
+        .or(page.getByLabel('Every'))
+        .first();
+      await everyInput.fill('1');
+      const dateInput = sheet
+        .getByLabel('First due date')
+        .or(sheet.locator('input[type="date"]'))
+        .first();
+      await dateInput.fill(f.first);
       // The sheet's preview runs the anchored rule forward from the anchor.
       await expect(sheet).toContainText(
         `Next due dates: ${shown(f.first)}, ${shown(f.second)}, and ${shown(f.third)}.`,
