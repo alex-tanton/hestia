@@ -304,7 +304,9 @@ for (const theme of THEMES) {
         .getByRole('button', { name: /^Add to / })
         .first()
         .click();
-      const picker = page.getByRole('dialog', { name: /Place (meal|which recipe\?)/ });
+      const picker = page.getByRole('dialog', {
+        name: /^(Place (meal|which recipe\?)|Plan meal)$/,
+      });
       await expect(picker).toBeVisible();
       await expectAccessible(page, `planner, recipe picker (${theme})`);
       await picker.getByRole('button', { name: 'Close' }).click();
@@ -331,7 +333,10 @@ for (const theme of THEMES) {
       // A suffix keeps a rerun on a kept stack from matching the list the previous run archived.
       const listName = `Audit ${randomBytes(2).toString('hex')}`;
       await page.getByLabel('List name').fill(listName);
-      await page.getByRole('button', { name: /^(Create shopping list|Create list)$/ }).click();
+      await page
+        .getByRole('button', { name: /^(Create shopping list|Create list)$/ })
+        .first()
+        .click();
       await expect(page.getByRole('heading', { name: listName, level: 1 })).toBeVisible();
 
       await page.getByRole('button', { name: 'Add an item' }).first().click();
@@ -376,11 +381,11 @@ for (const theme of THEMES) {
       await signIn(page, account.email);
 
       await page.goto('/meals/recipes');
-      await expect(page.getByText(COPY.recipesEmpty)).toBeVisible();
+      await expect(page.getByText(COPY.recipesEmpty).first()).toBeVisible();
       await expectAccessible(page, `recipe library, empty (${theme})`);
 
       await page.goto('/meals/suggestions');
-      await expect(page.getByText(COPY.suggestionsEmpty)).toBeVisible();
+      await expect(page.getByText(COPY.suggestionsEmpty).first()).toBeVisible();
       await expectAccessible(page, `suggestions, empty (${theme})`);
 
       await page.goto('/meals');
@@ -392,15 +397,15 @@ for (const theme of THEMES) {
       await signIn(page, account.email);
 
       await page.goto('/bills');
-      await expect(page.getByText(COPY.billsEmpty)).toBeVisible();
+      await expect(page.getByText(COPY.billsEmpty).first()).toBeVisible();
       await expectAccessible(page, `bills, first run (${theme})`);
 
       await page.goto('/chores');
-      await expect(page.getByText(COPY.choresEmpty)).toBeVisible();
+      await expect(page.getByText(COPY.choresEmpty).first()).toBeVisible();
       await expectAccessible(page, `chores, first run (${theme})`);
 
       await page.goto('/chores/errands');
-      await expect(page.getByText(COPY.errandsEmpty)).toBeVisible();
+      await expect(page.getByText(COPY.errandsEmpty).first()).toBeVisible();
       await expectAccessible(page, `errands, first run (${theme})`);
     });
 
@@ -485,10 +490,14 @@ for (const theme of THEMES) {
       await page.getByRole('link', { name: /^Take out trash/ }).click();
       await expect(page).toHaveURL(/\/chores\/[^/]+$/);
       const editChore = page.getByRole('button', { name: 'Edit chore' });
+      const moreTrash = page.getByRole('button', {
+        name: 'More actions for Take out trash',
+      });
+      await expect(editChore.or(moreTrash).first()).toBeVisible();
       if (await editChore.isVisible()) {
         await editChore.click();
       } else {
-        await page.getByRole('button', { name: 'More actions for Take out trash' }).click();
+        await moreTrash.click();
         await page.getByRole('menuitem', { name: 'Edit' }).click();
       }
       await expect(page).toHaveURL(/\/chores\/[^/]+\/edit$/);

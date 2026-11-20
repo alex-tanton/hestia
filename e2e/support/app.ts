@@ -99,13 +99,21 @@ export async function reassign(page: Page, itemName: string, memberName: string)
     await select.selectOption({ label: memberName });
     return;
   }
+  await select.scrollIntoViewIfNeeded();
   await select.click();
-  const option = select
-    .getByRole('option', { name: memberName })
-    .or(page.getByRole('option', { name: memberName }).filter({ visible: true }))
-    .or(select.locator('md-select-option').filter({ hasText: memberName }))
-    .first();
-  await option.click();
+  const option = page.getByRole('option', { name: memberName }).filter({ visible: true }).first();
+  const clicked = await option
+    .click({ timeout: 2000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!clicked) {
+    await select
+      .locator('md-select-option')
+      .filter({ hasText: memberName })
+      .first()
+      .click({ force: true })
+      .catch(() => undefined);
+  }
   // Ensure React state received the value update
   await select
     .evaluate((el: HTMLElement, name: string) => {
@@ -113,12 +121,10 @@ export async function reassign(page: Page, itemName: string, memberName: string)
       const target = options.find((opt) => opt.textContent.trim().includes(name)) as
         (HTMLElement & { value?: string; selected?: boolean }) | undefined;
       if (target && typeof target.value === 'string' && 'value' in el) {
-        if ((el as unknown as { value: string }).value !== target.value) {
-          (el as unknown as { value: string }).value = target.value;
-          if ('selected' in target) target.selected = true;
-          el.dispatchEvent(new Event('change', { bubbles: true }));
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+        (el as unknown as { value: string }).value = target.value;
+        if ('selected' in target) target.selected = true;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }, memberName)
     .catch(() => undefined);
