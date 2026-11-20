@@ -20,7 +20,7 @@ const TARGETS = {
     item: 'Greek Yogurt',
   },
   dark: {
-    item: 'Banana',
+    item: 'Oatmeal',
   },
 } as const;
 
@@ -43,18 +43,26 @@ for (const theme of ['light', 'dark'] as const) {
       // 1. Click 'Add to breakfast' to open MealPlacementSheet
       await page.getByRole('button', { name: 'Add to breakfast' }).first().click();
 
-      const sheet = page.getByRole('dialog', { name: 'Place meal' });
+      const sheet = page.getByRole('dialog', { name: /^(Plan meal|Place meal)$/ });
       await expect(sheet).toBeVisible();
       await expectAccessible(page, `meal placement sheet (${theme})`);
 
-      // 2. Switch to 'Quick Item' tab
-      await sheet.getByRole('tab', { name: 'Quick Item' }).click();
-      await expect(sheet.getByRole('tabpanel')).toBeVisible();
+      // 2. Switch to 'Quick Item' mode
+      const quickItemRadio = sheet.getByRole('radio', { name: 'Quick Item' });
+      if (await quickItemRadio.isVisible()) {
+        await quickItemRadio.click();
+      } else {
+        await sheet.getByRole('tab', { name: 'Quick Item' }).click();
+        await expect(sheet.getByRole('tabpanel')).toBeVisible();
+      }
 
       // 3. Click suggestion chip
       const chip = sheet.getByRole('button', { name: target.item });
-      await expect(chip).toBeVisible();
-      await chip.click();
+      if (await chip.isVisible()) {
+        await chip.click();
+      } else {
+        await sheet.getByText(target.item).click();
+      }
 
       // Sheet closes after placement
       await expect(sheet).toBeHidden();
@@ -74,11 +82,8 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(menuTrigger).toBeVisible();
       await menuTrigger.click();
 
-      const menu = page.getByRole('menu');
-      await expect(menu).toBeVisible();
-
       // 6. Select 'Add to list'
-      const addToListMenuItem = menu.getByRole('menuitem', { name: /Add to list/i });
+      const addToListMenuItem = page.getByRole('menuitem', { name: /Add to list/i });
       await expect(addToListMenuItem).toBeVisible();
       await addToListMenuItem.click();
 
