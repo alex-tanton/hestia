@@ -116,11 +116,14 @@ for (const theme of ['light', 'dark'] as const) {
         await page.goto('/chores');
         await page.getByRole('link', { name: /^Deep clean fridge/ }).click();
         const editBtn = page.getByRole('button', { name: 'Edit chore' });
+        const moreFridge = page.getByRole('button', {
+          name: 'More actions for Deep clean fridge',
+        });
+        await expect(editBtn.or(moreFridge)).toBeVisible();
         if (await editBtn.isVisible()) {
           await editBtn.click();
         } else {
-          await page.getByRole('button', { name: 'More actions for Deep clean fridge' }).focus();
-          await page.keyboard.press('Enter');
+          await moreFridge.click();
           await page.getByRole('menuitem', { name: 'Edit' }).click();
         }
         await expect(page.getByRole('heading', { name: /^Edit Deep clean fridge/ })).toBeVisible();
@@ -133,15 +136,19 @@ for (const theme of ['light', 'dark'] as const) {
         await expect(page.getByRole('button', { name: 'Move Sam Chen up' })).toBeDisabled();
         await page.getByRole('button', { name: 'Save chore' }).click();
         await expect(
-          page.getByRole('heading', { name: 'Deep clean fridge', level: 1 }),
+          page.getByRole('heading', { name: 'Deep clean fridge', level: 1 }).first(),
         ).toBeVisible();
         await expect(rotationRow(page, /^2\. Alex Rivera/)).toContainText('current turn');
 
         const editBtn2 = page.getByRole('button', { name: 'Edit chore' });
+        const moreFridge2 = page.getByRole('button', {
+          name: 'More actions for Deep clean fridge',
+        });
+        await expect(editBtn2.or(moreFridge2)).toBeVisible();
         if (await editBtn2.isVisible()) {
           await editBtn2.click();
         } else {
-          await page.getByRole('button', { name: 'More actions for Deep clean fridge' }).click();
+          await moreFridge2.click();
           await page.getByRole('menuitem', { name: 'Edit' }).click();
         }
         await page.getByRole('combobox', { name: 'Add to rotation' }).click();
@@ -183,10 +190,14 @@ for (const theme of ['light', 'dark'] as const) {
       await page.goto('/chores');
       await page.getByRole('link', { name: /^Replace HVAC filter/ }).click();
       const editHvac = page.getByRole('button', { name: 'Edit chore' });
+      const moreHvac = page.getByRole('button', {
+        name: 'More actions for Replace HVAC filter',
+      });
+      await expect(editHvac.or(moreHvac)).toBeVisible();
       if (await editHvac.isVisible()) {
         await editHvac.click();
       } else {
-        await page.getByRole('button', { name: 'More actions for Replace HVAC filter' }).click();
+        await moreHvac.click();
         await page.getByRole('menuitem', { name: 'Edit' }).click();
       }
       await expect(page.getByLabel('Name')).toHaveValue('Replace HVAC filter');

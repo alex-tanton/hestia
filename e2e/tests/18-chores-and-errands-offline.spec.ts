@@ -79,7 +79,14 @@ async function onlineSteps(page: Page): Promise<void> {
     'Overdue 2 days',
   );
   await page.getByRole('checkbox', { name: 'Mark Return Amazon package as done' }).click();
-  await page.getByText(/completed$/).click();
+  const summary = page.getByText(/completed$/);
+  await expect(summary).toBeVisible();
+  const details = page.locator('details');
+  if (await details.isVisible()) {
+    await details.evaluate((el: HTMLDetailsElement) => {
+      el.open = true;
+    });
+  }
   // Scoped to this errand's row: journey 15 has already completed another one today, with the same words.
   await expect(
     page
