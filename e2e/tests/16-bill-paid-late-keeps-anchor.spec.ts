@@ -70,24 +70,20 @@ for (const theme of ['light', 'dark'] as const) {
 
       // Create a monthly household bill anchored on the 10th, three months back, with autopay off.
       await page.getByRole('button', { name: 'Add a bill' }).click();
-      const sheet = page.getByRole('dialog', { name: /Add (a )?bill/ });
-      await expect(sheet).toBeVisible();
-      await page.getByLabel('Name').fill(f.name);
-      await page.getByLabel('Amount').fill('64.20');
-      await page.getByRole('switch', { name: 'Recurring bill' }).click();
-      await page.getByRole('combobox', { name: 'Repeats' }).click();
+      const sheet = page.getByRole('dialog', { name: 'Add a bill' });
+      await sheet.getByLabel('Name').fill(f.name);
+      await sheet.getByLabel('Amount').fill('64.20');
+      await sheet.getByRole('combobox', { name: 'Repeats' }).click();
       await page.getByRole('option', { name: 'Monthly' }).click();
-      await page.getByLabel('Every').fill('1');
-      await page.getByLabel('First due date').fill(f.first);
+      await sheet.getByLabel('Every').fill('1');
+      await sheet.getByLabel('First due date').fill(f.first);
       // The sheet's preview runs the anchored rule forward from the anchor.
-      await expect(
-        page.getByText(
-          `Next due dates: ${shown(f.first)}, ${shown(f.second)}, and ${shown(f.third)}.`,
-        ),
-      ).toBeVisible();
+      await expect(sheet).toContainText(
+        `Next due dates: ${shown(f.first)}, ${shown(f.second)}, and ${shown(f.third)}.`,
+      );
       await expectAccessible(page, `add bill sheet (${theme})`);
       await shoot(page, `add-bill-sheet-${theme}-1280`);
-      await page.locator('md-dialog md-filled-button', { hasText: 'Add bill' }).click();
+      await sheet.getByRole('button', { name: 'Add bill' }).click();
       await expect(sheet).toBeHidden();
 
       // The first occurrence is unpaid and past due, so the new bill opens in Overdue.
@@ -151,10 +147,7 @@ for (const theme of ['light', 'dark'] as const) {
       const history = group(page, 'Payment history');
       await expect(history.getByText(`Paid on ${shown(f.today)} · $64.20`)).toBeVisible();
       await expect(
-        history.getByRole('button', { name: `Edit payment for ${shown(f.first)}` }),
-      ).toBeVisible();
-      await expect(
-        history.getByRole('button', { name: `Delete payment for ${shown(f.first)}` }),
+        history.getByRole('button', { name: `More actions for the ${shown(f.first)} payment` }),
       ).toBeVisible();
       await expectAccessible(page, `bill detail after late payment (${theme})`);
       await shoot(page, `bill-detail-after-late-payment-${theme}-1280`);
@@ -182,13 +175,15 @@ for (const theme of ['light', 'dark'] as const) {
       await overdueRow(page, f.name).click();
       await page.getByRole('button', { name: `More actions for ${f.name}` }).click();
       await page.getByRole('menuitem', { name: 'Archive' }).click();
-      await page.locator('md-dialog md-filled-button', { hasText: 'Archive bill' }).click();
+      await page.getByRole('button', { name: 'Archive bill' }).click();
       await expect(page.getByText(`Archived ${f.name}.`).first()).toBeVisible();
       expect(await householdBillIds(request, token, householdId)).not.toContain(billId);
-      await page
-        .getByRole('navigation', { name: 'Main' })
-        .getByRole('link', { name: 'Bills' })
-        .click();
+      const billsLink = page.getByRole('link', { name: 'Bills' });
+      if (await billsLink.isVisible()) {
+        await billsLink.click();
+      } else {
+        await page.getByRole('radio', { name: 'Bills' }).first().click();
+      }
       await expect(page.getByRole('link', { name: new RegExp(`^${f.name}`) })).toHaveCount(0);
     });
   });

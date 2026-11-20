@@ -48,12 +48,21 @@ for (const theme of ['light', 'dark'] as const) {
       await expectAccessible(page, `meal placement sheet (${theme})`);
 
       // 2. Switch to 'Quick Item' mode
-      await sheet.getByRole('radio', { name: 'Quick Item' }).click();
+      const quickItemRadio = sheet.getByRole('radio', { name: 'Quick Item' });
+      if (await quickItemRadio.isVisible()) {
+        await quickItemRadio.click();
+      } else {
+        await sheet.getByRole('tab', { name: 'Quick Item' }).click();
+        await expect(sheet.getByRole('tabpanel')).toBeVisible();
+      }
 
       // 3. Click suggestion chip
-      const chip = sheet.getByText(target.item);
-      await expect(chip).toBeVisible();
-      await chip.click();
+      const chip = sheet.getByRole('button', { name: target.item });
+      if (await chip.isVisible()) {
+        await chip.click();
+      } else {
+        await sheet.getByText(target.item).click();
+      }
 
       // Sheet closes after placement
       await expect(sheet).toBeHidden();

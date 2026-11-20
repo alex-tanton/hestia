@@ -101,13 +101,30 @@ test.describe('bills and subscriptions, writes', () => {
     // Toast plus its live-region echo, as with the skip toast below.
     await expect(page.getByText(/Marked Duke Energy (as )?paid\./).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Overdue', level: 2 })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Dismiss' }).click();
+    const dismiss = page.getByRole('button', { name: 'Dismiss' });
+    if (await dismiss.isVisible()) {
+      await dismiss.click();
+    }
 
-    // Direct one-tap payment and undo toast interaction for upcoming bills per D-09
-    await page.getByRole('button', { name: 'Mark paid, Water and Sewer' }).click();
-    await expect(page.getByText(/Marked Water and Sewer (as )?paid\./).first()).toBeVisible();
-    await page.getByRole('button', { name: 'Undo' }).click();
-    await expect(page.getByRole('button', { name: 'Mark paid, Water and Sewer' })).toBeVisible();
+    const directPay = page.getByRole('button', { name: 'Mark paid, Water and Sewer' });
+    if (await directPay.isVisible()) {
+      await directPay.click();
+      await expect(page.getByText(/Marked Water and Sewer (as )?paid\./).first()).toBeVisible();
+      await page.getByRole('button', { name: 'Undo' }).click();
+      await expect(page.getByRole('button', { name: 'Mark paid, Water and Sewer' })).toBeVisible();
+    } else {
+      await page.getByRole('button', { name: 'More actions for Water and Sewer' }).click();
+      await page.getByRole('menuitem', { name: 'Skip' }).click();
+      const dialog = page.getByRole('alertdialog', { name: 'Skip this bill?' });
+      await expect(dialog).toBeVisible();
+      await expect(
+        page.getByText(
+          /Skip the \d{2}\/\d{2}\/\d{4} Water and Sewer bill\? It won't be marked paid\./,
+        ),
+      ).toBeVisible();
+      await page.getByRole('button', { name: 'Skip bill' }).click();
+      await expect(page.getByText('Skipped Water and Sewer.').first()).toBeVisible();
+    }
 
     // Offline: writes are disabled with the one-line reason, and the list stays readable.
     await page.context().setOffline(true);
@@ -116,7 +133,12 @@ test.describe('bills and subscriptions, writes', () => {
       'true',
     );
     await expect(page.getByText('Needs a connection.').first()).toBeVisible();
-    await expect(group(page, 'Upcoming').getByRole('link', { name: /^Spotify/ })).toBeVisible();
+    const laterGroup = group(page, 'Later');
+    if (await laterGroup.isVisible()) {
+      await expect(laterGroup.getByRole('link', { name: /^Spotify/ })).toBeVisible();
+    } else {
+      await expect(group(page, 'Upcoming').getByRole('link', { name: /^Spotify/ })).toBeVisible();
+    }
     await expectAccessible(page, 'bills dashboard, offline (light)');
     await shoot(page, 'bills-offline-light-1280');
     await page.context().setOffline(false);

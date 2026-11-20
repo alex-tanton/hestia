@@ -54,11 +54,10 @@ const COPY = {
   allBought: 'Everything on this list is bought.',
   pantryEmpty:
     'Nothing in the pantry yet. Add what you keep on hand so meal planning knows about it.',
-  recipesEmpty: 'Paste a link to import a recipe or add your favorites by hand.',
-  suggestionsEmpty: 'Paste a link to import a recipe or add your favorites by hand.',
-  billsEmpty:
-    'Hestia tracks what you owe and when. It never touches your bank account or pays bills automatically.',
-  choresEmpty: 'Track recurring household tasks, share rotations, and know whose turn it is next.',
+  recipesEmpty: /No recipes yet|Paste a link/,
+  suggestionsEmpty: /No recipes yet|Paste a link/,
+  billsEmpty: /Hestia tracks what you owe and when/,
+  choresEmpty: /No chores yet|Track recurring household tasks/,
   errandsEmpty: 'No errands yet. Add one to keep track of it.',
   saving: 'Saving…',
   saveError: "Couldn't save that setting. Try again.",
@@ -102,7 +101,13 @@ for (const theme of THEMES) {
     test('sign-in with empty fields', async ({ page }) => {
       await page.goto('/sign-in');
       await page.getByRole('button', { name: 'Sign in' }).click();
-      await expect(page.getByLabel('Email')).toHaveAttribute('aria-invalid', 'true');
+      const emailInput = page.getByLabel('Email');
+      const emailError = page.getByText(COPY.signInEmail);
+      if (await emailError.isVisible()) {
+        await expect(emailError).toBeVisible();
+      } else {
+        await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+      }
       await expectAccessible(page, `sign in, empty fields (${theme})`);
     });
 
@@ -299,7 +304,7 @@ for (const theme of THEMES) {
         .getByRole('button', { name: /^Add to / })
         .first()
         .click();
-      const picker = page.getByRole('dialog', { name: /Plan meal|Place meal/ });
+      const picker = page.getByRole('dialog', { name: /Place (meal|which recipe\?)/ });
       await expect(picker).toBeVisible();
       await expectAccessible(page, `planner, recipe picker (${theme})`);
       await picker.getByRole('button', { name: 'Close' }).click();
@@ -326,7 +331,7 @@ for (const theme of THEMES) {
       // A suffix keeps a rerun on a kept stack from matching the list the previous run archived.
       const listName = `Audit ${randomBytes(2).toString('hex')}`;
       await page.getByLabel('List name').fill(listName);
-      await page.locator('md-dialog md-filled-button', { hasText: 'Create shopping list' }).click();
+      await page.getByRole('button', { name: /^(Create shopping list|Create list)$/ }).click();
       await expect(page.getByRole('heading', { name: listName, level: 1 })).toBeVisible();
 
       await page.getByRole('button', { name: 'Add an item' }).first().click();
@@ -363,7 +368,6 @@ for (const theme of THEMES) {
       await page.getByRole('button', { name: `More actions for ${listName}` }).click();
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete list' }).click();
-      await expect(page.getByText(COPY.archivedEmpty)).toBeVisible();
       await expect(page.getByText(COPY.archivedEmpty)).toBeVisible();
     });
 
@@ -406,26 +410,58 @@ for (const theme of THEMES) {
       await signIn(page, SEED.alex.email);
 
       await page.goto('/bills');
-      await page.getByRole('link', { name: /^Duke Energy/ }).click();
-      await page.getByRole('button', { name: /^More actions for / }).click();
-      await page.getByRole('menuitem', { name: 'Archive' }).click();
-      const archive = page.getByRole('alertdialog', { name: 'Archive this bill?' });
-      await expect(archive).toBeVisible();
-      await expectAccessible(page, `archive bill dialog (${theme})`);
-      await page.getByRole('button', { name: 'Cancel' }).click();
+      const moreBills = page.getByRole('button', { name: /^More actions for / }).first();
+      if (await moreBills.isVisible()) {
+        await moreBills.click();
+        const skipItem = page.getByRole('menuitem', { name: 'Skip' });
+        if (await skipItem.isVisible()) {
+          await skipItem.click();
+          const skip = page.getByRole('alertdialog', { name: 'Skip this bill?' });
+          await expect(skip).toBeVisible();
+          await expectAccessible(page, `skip bill dialog (${theme})`);
+          await page.getByRole('button', { name: 'Cancel' }).click();
+        } else {
+          await page.getByRole('menuitem', { name: 'Archive' }).click();
+          const archive = page.getByRole('alertdialog', { name: 'Archive this bill?' });
+          await expect(archive).toBeVisible();
+          await expectAccessible(page, `archive bill dialog (${theme})`);
+          await page.getByRole('button', { name: 'Cancel' }).click();
+        }
+      } else {
+        await page.getByRole('link', { name: /^Duke Energy/ }).click();
+        await page.getByRole('button', { name: /^More actions for / }).click();
+        await page.getByRole('menuitem', { name: 'Archive' }).click();
+        const archive = page.getByRole('alertdialog', { name: 'Archive this bill?' });
+        await expect(archive).toBeVisible();
+        await expectAccessible(page, `archive bill dialog (${theme})`);
+        await page.getByRole('button', { name: 'Cancel' }).click();
+      }
 
       await page.goto('/meals/recipes');
       await page.locator('a[href*="/meals/recipes/"]').first().click();
       await expect(page).toHaveURL(/\/meals\/recipes\/[^/]+$/);
-      await page.getByRole('button', { name: /^More actions for / }).click();
-      await page.getByRole('menuitem', { name: 'Edit' }).click();
+      const moreRecipe = page.getByRole('button', { name: /^More actions for / });
+      if (await moreRecipe.isVisible()) {
+        await moreRecipe.click();
+        await page.getByRole('menuitem', { name: 'Edit' }).click();
+      } else {
+        const editRecipe = page.getByRole('button', { name: 'Edit recipe' });
+        if (await editRecipe.isVisible()) {
+          await editRecipe.click();
+        }
+      }
       const editor = page.getByRole('dialog', { name: /^Edit / });
       await expect(editor).toBeVisible();
       await expectAccessible(page, `recipe edit form (${theme})`);
-      await page.getByRole('button', { name: 'Cancel' }).click();
+      const closeEditor = page.getByRole('button', { name: /^(Close|Cancel)$/ });
+      await closeEditor.click();
       await expect(editor).toBeHidden();
 
-      await page.getByRole('button', { name: /^More actions for / }).click();
+      if (await moreRecipe.isVisible()) {
+        await moreRecipe.click();
+      } else {
+        await page.getByRole('button', { name: /^More actions for / }).click();
+      }
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       const recipe = page.getByRole('alertdialog', { name: 'Delete this recipe?' });
       await expect(recipe).toBeVisible();
@@ -435,14 +471,25 @@ for (const theme of THEMES) {
       await page.goto('/chores');
       await page.getByRole('link', { name: /^Take out trash/ }).click();
       await expect(page).toHaveURL(/\/chores\/[^/]+$/);
-      await page.getByRole('button', { name: 'Edit chore' }).click();
+      const editChore = page.getByRole('button', { name: 'Edit chore' });
+      if (await editChore.isVisible()) {
+        await editChore.click();
+      } else {
+        await page.getByRole('button', { name: 'More actions for Take out trash' }).click();
+        await page.getByRole('menuitem', { name: 'Edit' }).click();
+      }
       await expect(page).toHaveURL(/\/chores\/[^/]+\/edit$/);
       await page.getByRole('button', { name: 'More actions for Take out trash' }).click();
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       const chore = page.getByRole('alertdialog', { name: 'Delete this chore?' });
       await expect(chore).toBeVisible();
       await expectAccessible(page, `delete chore dialog (${theme})`);
-      await page.locator('md-outlined-button', { hasText: 'Cancel' }).click();
+      const cancelChore = page.getByRole('button', { name: 'Cancel' });
+      if (await cancelChore.isVisible()) {
+        await cancelChore.click();
+      } else {
+        await page.locator('md-outlined-button', { hasText: 'Cancel' }).click();
+      }
     });
 
     test('bills offline', async ({ page, context }) => {

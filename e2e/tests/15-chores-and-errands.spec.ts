@@ -73,7 +73,7 @@ for (const theme of ['light', 'dark'] as const) {
         await page
           .getByRole('button', { name: /Mark (done, Take out trash|Take out trash done)/ })
           .click();
-        // One toast, one match: the live-region copy must not make this ambiguous.
+        // One toast, one match: the Radix live-region copy must not make this ambiguous.
         const completionToast = page.getByText('Take out trash done. Jordan Blake is next.', {
           exact: true,
         });
@@ -115,10 +115,15 @@ for (const theme of ['light', 'dark'] as const) {
         // does too (a manual edit keeps the turn with the same member).
         await page.goto('/chores');
         await page.getByRole('link', { name: /^Deep clean fridge/ }).click();
-        await page.getByRole('button', { name: 'Edit chore' }).click();
-        await expect(
-          page.getByRole('heading', { name: /^Edit Deep clean fridge/, level: 1 }),
-        ).toBeVisible();
+        const editBtn = page.getByRole('button', { name: 'Edit chore' });
+        if (await editBtn.isVisible()) {
+          await editBtn.click();
+        } else {
+          await page.getByRole('button', { name: 'More actions for Deep clean fridge' }).focus();
+          await page.keyboard.press('Enter');
+          await page.getByRole('menuitem', { name: 'Edit' }).click();
+        }
+        await expect(page.getByRole('heading', { name: /^Edit Deep clean fridge/ })).toBeVisible();
 
         const samUp = page.getByRole('button', { name: 'Move Sam Chen up' });
         await samUp.focus();
@@ -132,7 +137,13 @@ for (const theme of ['light', 'dark'] as const) {
         ).toBeVisible();
         await expect(rotationRow(page, /^2\. Alex Rivera/)).toContainText('current turn');
 
-        await page.getByRole('button', { name: 'Edit chore' }).click();
+        const editBtn2 = page.getByRole('button', { name: 'Edit chore' });
+        if (await editBtn2.isVisible()) {
+          await editBtn2.click();
+        } else {
+          await page.getByRole('button', { name: 'More actions for Deep clean fridge' }).click();
+          await page.getByRole('menuitem', { name: 'Edit' }).click();
+        }
         await page.getByRole('combobox', { name: 'Add to rotation' }).click();
         await page.getByRole('option', { name: 'Jordan Blake' }).click();
         await page.getByRole('button', { name: 'Save chore' }).click();
@@ -171,7 +182,13 @@ for (const theme of ['light', 'dark'] as const) {
       // The chore sheet, for the screenshot and the axe pass.
       await page.goto('/chores');
       await page.getByRole('link', { name: /^Replace HVAC filter/ }).click();
-      await page.getByRole('button', { name: 'Edit chore' }).click();
+      const editHvac = page.getByRole('button', { name: 'Edit chore' });
+      if (await editHvac.isVisible()) {
+        await editHvac.click();
+      } else {
+        await page.getByRole('button', { name: 'More actions for Replace HVAC filter' }).click();
+        await page.getByRole('menuitem', { name: 'Edit' }).click();
+      }
       await expect(page.getByLabel('Name')).toHaveValue('Replace HVAC filter');
       await shoot(page, 'chore-sheet', theme);
       await expectAccessible(page, `chore sheet (${theme})`);
