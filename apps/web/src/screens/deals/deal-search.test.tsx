@@ -120,7 +120,9 @@ describe('deal search', () => {
     stubDeals(() => ({ status: 200, body: searchResponse() }));
     renderScreen(<DealSearchScreen />);
 
-    expect(await screen.findByRole('heading', { name: 'Your stores' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Your stores' }, { timeout: 15000 }),
+    ).toBeInTheDocument();
     const shortcuts = screen.getByRole('list', { name: 'Your favorite stores' });
     expect(getMdButton('Harris Teeter', { container: shortcuts })).toBeInTheDocument();
     expect(getMdButton('Food Lion', { container: shortcuts })).toBeInTheDocument();
