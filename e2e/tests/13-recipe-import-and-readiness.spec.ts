@@ -99,10 +99,10 @@ async function createList(page: Page, name: string): Promise<void> {
   const sheet = page.getByRole('dialog', { name: /^(New list|Create shopping list)$/ });
   await expect(sheet).toBeVisible();
   await page.getByLabel('List name').fill(name);
-  await page
-    .locator('md-filled-button', { hasText: 'Create shopping list' })
-    .or(page.getByRole('button', { name: /^(Create shopping list|Create list)$/ }))
-    .first()
+  await sheet
+    .getByRole('button', { name: /^(Create shopping list|Create list)$/ })
+    .or(sheet.locator('md-filled-button'))
+    .last()
     .click();
   // ListNameSheet's onCreated navigates straight to the new (empty) list.
   await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
