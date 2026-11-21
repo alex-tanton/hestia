@@ -146,7 +146,7 @@ for (const theme of ['light', 'dark'] as const) {
         const moreFridge2 = page.getByRole('button', {
           name: 'More actions for Deep clean fridge',
         });
-        await expect(editBtn2.or(moreFridge2)).toBeVisible();
+        await expect(editBtn2.or(moreFridge2).first()).toBeVisible();
         if (await editBtn2.isVisible()) {
           await editBtn2.click();
         } else {
