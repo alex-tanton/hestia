@@ -335,8 +335,9 @@ for (const theme of THEMES) {
       await page.getByLabel('List name').fill(listName);
       await page
         .locator('md-dialog, dialog, form')
-        .locator('button')
-        .filter({ hasText: /^(Create shopping list|Create list)$/ })
+        .getByRole('button', { name: /^(Create shopping list|Create list)$/ })
+        .or(page.locator('md-dialog, dialog').locator('md-filled-button'))
+        .or(page.getByRole('button', { name: /^(Create shopping list|Create list)$/ }))
         .last()
         .click();
       await expect(page.getByRole('heading', { name: listName, level: 1 })).toBeVisible();
