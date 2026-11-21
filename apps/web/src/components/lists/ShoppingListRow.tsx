@@ -82,7 +82,7 @@ export function ShoppingListRow({
     <li
       className={cn(
         'flex min-h-[48px] items-center justify-between gap-3 px-4 py-3 transition-all duration-200',
-        isBought && 'opacity-60 bg-[var(--md-sys-color-surface-container-low)]',
+        isBought && 'bg-[var(--md-sys-color-surface-container-low)]',
         isPending && PENDING_CLASSES,
         // A brief tint marks what another member just changed; it fades with the 2s timer.
         isChanged && 'bg-section-tint',

@@ -95,16 +95,18 @@ export function BarcodeScannerDialog({
       scannedCountRef.current += 1;
       const nextCount = scannedCountRef.current;
       setScannedCount(nextCount);
-      toast({
-        variant: 'success',
-        message: `Added ${String(nextCount)} items`,
-        action: {
-          label: 'Undo last',
-          onAction: () => {
-            handleUndoLastScan();
+      if (onUndoLastScanRef.current) {
+        toast({
+          variant: 'success',
+          message: `Added ${String(nextCount)} items`,
+          action: {
+            label: 'Undo last',
+            onAction: () => {
+              handleUndoLastScan();
+            },
           },
-        },
-      });
+        });
+      }
     },
     [mode, toast, handleUndoLastScan],
   );
@@ -336,7 +338,8 @@ export function BarcodeScannerDialog({
     <dialog
       open
       aria-label="Barcode scanner"
-      className="fixed inset-0 z-50 flex size-full flex-col bg-[#1A110E] text-[#FFF8F6] outline-none overflow-hidden m-0 p-0 max-w-none max-h-none border-0 select-none"
+      style={{ zIndex: 50 }}
+      className="barcode-scanner-dialog fixed inset-0 z-50 flex size-full flex-col bg-[#1A110E] text-[#FFF8F6] outline-none overflow-hidden m-0 p-0 max-w-none max-h-none border-0 select-none"
     >
       {/* Top action bar: back/close, torch */}
       <div className="absolute top-0 inset-x-0 flex items-center justify-between p-4 z-10 bg-gradient-to-b from-black/60 to-transparent">
@@ -445,7 +448,7 @@ export function BarcodeScannerDialog({
                   label="Scanner mode"
                   segments={[
                     { value: 'add', label: 'Add to List' },
-                    { value: 'shop', label: 'Mark bought' },
+                    { value: 'shop', label: 'Shop & Check Off' },
                   ]}
                   value={mode}
                   onValueChange={handleModeChange}
@@ -468,6 +471,15 @@ export function BarcodeScannerDialog({
           /* Manual Keypad Entry Tab (D-15) */
           <div className="w-full max-w-sm flex-1 flex flex-col justify-between p-6 pt-20 z-10">
             <div className="flex flex-col gap-4">
+              <SegmentedControl
+                label="Scanner mode"
+                segments={[
+                  { value: 'add', label: 'Add to List' },
+                  { value: 'shop', label: 'Shop & Check Off' },
+                ]}
+                value={mode}
+                onValueChange={handleModeChange}
+              />
               <div className="text-center">
                 <TextField
                   label="Barcode number"
