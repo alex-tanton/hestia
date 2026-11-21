@@ -86,7 +86,7 @@ export function PlannerDay({
                   ))}
                 </ul>
               ) : (
-                <span className="py-1 text-caption italic text-secondary/60">Empty</span>
+                <span className="py-1 text-caption italic text-secondary">Empty</span>
               )}
             </div>
           );
