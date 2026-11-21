@@ -39,7 +39,7 @@ function errandStatus(name: string): string {
  * wrapping a row would match the same text as well.
  */
 function rowFor(page: Page, text: string): Locator {
-  return page.locator('#main li:not(:has(li))').filter({ hasText: text });
+  return page.locator('#main').getByRole('listitem').filter({ hasText: text }).first();
 }
 
 async function ensureCompletedErrandsOpen(page: Page): Promise<void> {
