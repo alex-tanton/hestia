@@ -86,7 +86,9 @@ async function onlineSteps(page: Page): Promise<void> {
   await expect(page.getByRole('link', { name: /^Clean bathroom/ })).toContainText('in 2 days');
 
   // Completing a rotating chore passes its turn on: Jordan had Clean bathroom, and Alex is next.
-  await page.getByRole('button', { name: 'Mark Clean bathroom done' }).click();
+  await page
+    .getByRole('button', { name: /Mark (done, Clean bathroom|Clean bathroom done)/ })
+    .click();
   await expect(
     page.getByText('Clean bathroom done. Alex Rivera is next.', { exact: true }),
   ).toHaveCount(1);
@@ -132,12 +134,16 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
   await page.goto('/chores/errands');
   await expect(page.getByRole('checkbox', { name: new RegExp(`^Mark ${errand}`) })).toBeVisible();
   await subTabs.getByText('Chores', { exact: true }).click();
-  await expect(page.getByRole('button', { name: `Mark ${chore} done` })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: new RegExp(`Mark (done, ${chore}|${chore} done)`) }),
+  ).toBeVisible();
   // Precached before the loss of network, so the reload below has an app shell to serve.
   await waitForServiceWorker(page);
   await page.context().setOffline(true);
 
-  await page.getByRole('button', { name: `Mark ${chore} done` }).click();
+  await page
+    .getByRole('button', { name: new RegExp(`Mark (done, ${chore}|${chore} done)`) })
+    .click();
   await expect(rowFor(page, chore)).toContainText(PENDING);
 
   await subTabs.getByText('Errands', { exact: true }).click();
