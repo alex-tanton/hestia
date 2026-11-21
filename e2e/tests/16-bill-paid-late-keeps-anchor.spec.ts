@@ -70,7 +70,7 @@ for (const theme of ['light', 'dark'] as const) {
 
       // Create a monthly household bill anchored on the 10th, three months back, with autopay off.
       await page.getByRole('button', { name: 'Add a bill' }).click();
-      const sheet = page.getByRole('dialog').first();
+      const sheet = page.getByRole('dialog').or(page.locator('md-dialog')).first();
       await expect(sheet).toBeVisible();
       const nameInput = sheet
         .getByLabel('Name')
@@ -84,13 +84,19 @@ for (const theme of ['light', 'dark'] as const) {
         .or(page.getByLabel('Amount'))
         .first();
       await amountInput.fill('64.20');
-      const repeatsSelect = sheet.getByRole('combobox', { name: 'Repeats' });
+      const repeatsSelect = sheet
+        .getByRole('combobox', { name: 'Repeats' })
+        .or(page.getByRole('combobox', { name: 'Repeats' }))
+        .first();
       if (await repeatsSelect.isHidden().catch(() => true)) {
-        await sheet
-          .getByText('Recurring bill')
-          .or(page.getByText('Recurring bill'))
-          .first()
-          .click();
+        const recurringSwitch = sheet
+          .getByRole('switch', { name: 'Recurring bill' })
+          .or(sheet.locator('label', { hasText: 'Recurring bill' }).locator('md-switch'))
+          .or(page.getByRole('switch', { name: 'Recurring bill' }))
+          .first();
+        if (await recurringSwitch.isVisible().catch(() => false)) {
+          await recurringSwitch.click();
+        }
       }
       await repeatsSelect.click();
       await page.getByRole('option', { name: 'Monthly' }).first().click();
