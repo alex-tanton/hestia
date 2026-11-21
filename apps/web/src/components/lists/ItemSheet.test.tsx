@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { ListItem } from '@hestia/shared';
+import { getMdButton, getMdField } from '../../test/md-queries.ts';
 import { ItemSheet } from './ItemSheet.tsx';
 
 function fakeItem(overrides: Partial<ListItem> = {}): ListItem {
@@ -58,13 +59,13 @@ describe('ItemSheet', () => {
       />,
     );
 
-    const nameInput = screen.getByLabelText<HTMLInputElement>(/^item/i);
-    expect(nameInput.value).toBe('Organic Whole Milk');
+    const nameField = getMdField(/^item/i);
+    expect(nameField).toHaveProperty('value', 'Organic Whole Milk');
 
-    const quantityInput = screen.getByLabelText<HTMLInputElement>(/^quantity/i);
-    expect(quantityInput.value).toBe('2');
+    const quantityField = getMdField(/^quantity/i);
+    expect(quantityField).toHaveProperty('value', '2');
 
-    const submitBtn = screen.getByRole('button', { name: /add item/i });
+    const submitBtn = getMdButton(/add item/i);
     await user.click(submitBtn);
 
     expect(onSubmit).toHaveBeenCalledWith({
@@ -99,10 +100,10 @@ describe('ItemSheet', () => {
       />,
     );
 
-    const nameInput = screen.getByLabelText<HTMLInputElement>(/^item/i);
-    expect(nameInput.value).toBe('Sourdough Bread');
+    const nameField = getMdField(/^item/i);
+    expect(nameField).toHaveProperty('value', 'Sourdough Bread');
 
-    const submitBtn = screen.getByRole('button', { name: /save item/i });
+    const submitBtn = getMdButton(/save item/i);
     await user.click(submitBtn);
 
     expect(onSubmit).toHaveBeenCalledWith(
@@ -128,10 +129,12 @@ describe('ItemSheet', () => {
       />,
     );
 
-    const submitBtn = screen.getByRole('button', { name: /add item/i });
+    const submitBtn = getMdButton(/add item/i);
     await user.click(submitBtn);
 
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByText(/enter a name/i)).toBeInTheDocument();
+    const nameField = getMdField(/^item/i);
+    expect(nameField).toHaveProperty('error', true);
+    expect(nameField).toHaveProperty('errorText', expect.stringMatching(/enter a name/i));
   });
 });

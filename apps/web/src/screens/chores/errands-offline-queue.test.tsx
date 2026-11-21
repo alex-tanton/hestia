@@ -6,6 +6,7 @@ import { OFFLINE_ACTION_REASON } from '../../components/chores/chore-copy.ts';
 import { PENDING_CLASSES, PENDING_ROW_LABEL } from '../../components/lists/PendingMark.tsx';
 import { queryKeys } from '../../lib/api/keys.ts';
 import { setOnline } from '../../test/browser.ts';
+import { findMdCheckbox, getMdCheckbox } from '../../test/md-queries.ts';
 import {
   RETURN_PACKAGE_ID,
   errandListFixture,
@@ -56,7 +57,7 @@ function mountErrands(extra: Readonly<Record<string, StubHandler>> = {}): {
 }
 
 async function loadedRow(queryClient: QueryClient): Promise<HTMLElement> {
-  const checkbox = await screen.findByRole('checkbox', { name: DONE_CHECKBOX });
+  const checkbox = await findMdCheckbox(DONE_CHECKBOX);
   await waitFor(() => {
     expect(queryClient.getQueryData(queryKeys.household(OAK_STREET_ID))).toBeDefined();
   });
@@ -89,14 +90,15 @@ describe('an errand marked done offline', () => {
     const row = await loadedRow(queryClient);
 
     setOnline(false);
-    await user.click(screen.getByRole('checkbox', { name: DONE_CHECKBOX }));
+    await user.click(getMdCheckbox(DONE_CHECKBOX));
 
     await waitFor(() => {
       expect(within(row).getByText(PENDING_ROW_LABEL)).toBeInTheDocument();
       expect(row.className).toContain(PENDING_CLASSES);
-      expect(
-        screen.getByRole('checkbox', { name: `Mark ${returnPackageFixture.name} as open` }),
-      ).toBeChecked();
+      expect(getMdCheckbox(`Mark ${returnPackageFixture.name} as open`)).toHaveProperty(
+        'checked',
+        true,
+      );
     });
     expect(patchCalls(stub)).toHaveLength(0);
   });
@@ -107,7 +109,15 @@ describe('an errand marked done offline', () => {
     await loadedRow(queryClient);
 
     setOnline(false);
-    await user.click(screen.getByRole('checkbox', { name: DONE_CHECKBOX }));
+    await user.click(getMdCheckbox(DONE_CHECKBOX));
+    await waitFor(() => {
+      expect(
+        queryClient
+          .getMutationCache()
+          .getAll()
+          .some((m) => m.state.isPaused),
+      ).toBe(true);
+    });
     setOnline(true);
 
     await waitFor(() => {
@@ -128,10 +138,8 @@ describe('an errand marked done offline', () => {
     // Done errands sit in the collapsed section; opening it is what a member does to reach one.
     await user.click(await screen.findByText(/completed$/));
 
-    const reopen = await screen.findByRole('checkbox', {
-      name: 'Mark Replace porch light bulb as open',
-    });
-    expect(reopen).toBeDisabled();
+    const reopen = await findMdCheckbox('Mark Replace porch light bulb as open');
+    expect(reopen).toHaveProperty('disabled', true);
     expect(reopen).toHaveAccessibleDescription(OFFLINE_ACTION_REASON);
   });
 });

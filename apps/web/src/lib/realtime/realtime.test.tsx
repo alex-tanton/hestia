@@ -16,6 +16,7 @@ import {
   listItem,
   thisWeekDetailFixture,
 } from '../../test/list-fixtures.ts';
+import { findMdCheckbox, getMdCheckbox, queryMdCheckbox } from '../../test/md-queries.ts';
 import { REALTIME_HIGHLIGHT_MS } from './use-list-realtime.ts';
 
 /*
@@ -115,7 +116,7 @@ describe('another member’s change', () => {
     });
 
     // The new row arrives from the refetch, with the server's recomputed subtotal.
-    expect(await screen.findByRole('checkbox', { name: /Milk/ })).toBeInTheDocument();
+    expect(await findMdCheckbox(/Milk/)).toBeInTheDocument();
     expect(listFetches(stub)).toBe(before + 1);
     expect(screen.getByRole('region', { name: 'Food Lion' })).toHaveTextContent('$22.25');
   });
@@ -145,16 +146,14 @@ describe('another member’s change', () => {
     act(() => {
       realtime.open.get(THIS_WEEK_ID)?.onItemChange(broccoli.id);
     });
-    const row = screen.getByRole('checkbox', { name: /Broccoli/ }).closest('li');
+    const row = getMdCheckbox(/Broccoli/).closest('li');
     expect(row?.className).toContain('bg-section-tint');
 
     act(() => {
       vi.advanceTimersByTime(REALTIME_HIGHLIGHT_MS + 10);
     });
     await waitFor(() => {
-      expect(
-        screen.getByRole('checkbox', { name: /Broccoli/ }).closest('li')?.className,
-      ).not.toContain('bg-section-tint');
+      expect(getMdCheckbox(/Broccoli/).closest('li')?.className).not.toContain('bg-section-tint');
     });
   });
 
@@ -174,7 +173,7 @@ describe('another member’s change', () => {
       ),
     };
     const { realtime, stub } = open([thisWeekDetailFixture, withoutBroccoli]);
-    await screen.findByRole('checkbox', { name: /Broccoli/ });
+    await findMdCheckbox(/Broccoli/);
     const before = listFetches(stub);
 
     // A delete arrives only as the list row's own `updated_at` change.
@@ -183,7 +182,7 @@ describe('another member’s change', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByRole('checkbox', { name: /Broccoli/ })).toBeNull();
+      expect(queryMdCheckbox(/Broccoli/)).toBeNull();
     });
     expect(listFetches(stub)).toBe(before + 1);
     expect(

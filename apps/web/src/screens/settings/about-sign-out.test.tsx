@@ -1,7 +1,8 @@
-import { screen, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createAuthStub, createFetchStub, renderScreen } from '../../test/harness.tsx';
+import { getMdButton } from '../../test/md-queries.ts';
 import { TEST_DEVICE_SUBSCRIPTION, createPushDouble } from '../../test/push-double.ts';
 import { AboutSection } from './AboutSection.tsx';
 
@@ -45,7 +46,7 @@ describe('Sign out removes this device', () => {
     const user = userEvent.setup();
     const { auth, log, stub, onLine } = renderAbout({ online: true });
 
-    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    await user.click(getMdButton('Sign out'));
 
     await waitFor(() => {
       expect(auth.signOut).toHaveBeenCalledOnce();
@@ -63,7 +64,7 @@ describe('Sign out removes this device', () => {
     const user = userEvent.setup();
     const { auth, log, stub, onLine } = renderAbout({ online: false });
 
-    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    await user.click(getMdButton('Sign out'));
 
     await waitFor(() => {
       expect(auth.signOut).toHaveBeenCalledOnce();

@@ -1,0 +1,94 @@
+/* Top-layer dialog sheet, forced-colors hairlines, and native date/time framing primitives. */
+
+dialog.hestia-sheet {
+  inset: auto 0 0;
+  margin-inline: auto;
+  width: 100%;
+  max-width: 640px;
+  max-height: 85dvh;
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface);
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: var(--md-sys-elevation-1);
+}
+
+dialog.hestia-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog.hestia-sheet:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.hestia-sheet::backdrop {
+  background: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.hestia-sheet {
+    opacity: 0;
+    transform: translateY(100%);
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  dialog.hestia-sheet[open] {
+    opacity: 1;
+    transform: translateY(0);
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+  }
+
+  dialog.hestia-sheet::backdrop {
+    background-color: transparent;
+    transition-property: background-color, display, overlay;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  dialog.hestia-sheet[open]::backdrop {
+    background-color: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent);
+
+    @starting-style {
+      background-color: transparent;
+    }
+  }
+}
+
+@media (forced-colors: active) {
+  dialog.hestia-sheet[open],
+  .hestia-card {
+    border: 1px solid CanvasText;
+  }
+}
+
+.hestia-native-field {
+  min-height: 56px;
+  border-radius: var(--md-sys-shape-corner-extra-small, 4px);
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 1px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+
+.hestia-native-field:focus-within {
+  border: 2px solid var(--md-sys-color-primary);
+  outline: none;
+}
+
+.hestia-native-field[data-invalid='true'] {
+  border: 2px solid var(--md-sys-color-error);
+}

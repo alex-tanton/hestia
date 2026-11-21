@@ -9,6 +9,7 @@ import {
   testQueryClient,
   type StubHandler,
 } from '../../test/harness.tsx';
+import { findMdSwitch, getMdButton, getMdSwitch, queryMdSwitch } from '../../test/md-queries.ts';
 import { createPushDouble, type PushDoubleOptions } from '../../test/push-double.ts';
 import { OAK_STREET_ID, RIVERA_FAMILY_ID, profileFixture } from '../../test/fixtures.ts';
 import { IOS_INSTALL_MESSAGE } from '../onboarding/InstallStep.tsx';
@@ -117,25 +118,23 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
         extra: { 'GET /api/users/me/notification-preferences': () => new Promise(() => undefined) },
       });
       expect(screen.getByText(NOTIFICATION_TYPES_LOADING)).toBeInTheDocument();
-      expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+      expect(queryMdSwitch()).toBeNull();
     });
 
     it('lists every type with its effective value, and the weekly nudge once per household', async () => {
       renderTypes();
 
-      expect(await screen.findByRole('switch', { name: 'Bill reminders' })).toBeChecked();
-      expect(screen.getByRole('switch', { name: 'Chore reminders' })).not.toBeChecked();
-      expect(screen.getByRole('switch', { name: 'New weekly ads' })).not.toBeChecked();
-      expect(screen.getByRole('switch', { name: 'Plan next week: Oak Street' })).not.toBeChecked();
-      expect(screen.getByRole('switch', { name: 'Plan next week: Rivera Family' })).toBeChecked();
-      expect(screen.getAllByRole('switch')).toHaveLength(8);
+      expect(await findMdSwitch('Bill reminders')).toHaveProperty('selected', true);
+      expect(getMdSwitch('Chore reminders')).toHaveProperty('selected', false);
+      expect(getMdSwitch('New weekly ads')).toHaveProperty('selected', false);
+      expect(getMdSwitch('Plan next week: Oak Street')).toHaveProperty('selected', false);
+      expect(getMdSwitch('Plan next week: Rivera Family')).toHaveProperty('selected', true);
+      expect(document.querySelectorAll('md-switch')).toHaveLength(8);
     });
 
     it('gives each toggle its description, linked to it', async () => {
       renderTypes();
-      expect(
-        await screen.findByRole('switch', { name: 'Bill reminders' }),
-      ).toHaveAccessibleDescription(
+      expect(await findMdSwitch('Bill reminders')).toHaveAccessibleDescription(
         'Before a bill is due, and on its due date while it is unpaid.',
       );
     });
@@ -167,9 +166,9 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
       });
 
       expect(await screen.findByText(NOTIFICATION_TYPES_LOAD_ERROR)).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Try again' }));
+      await user.click(getMdButton('Try again'));
 
-      expect(await screen.findByRole('switch', { name: 'Bill reminders' })).toBeInTheDocument();
+      expect(await findMdSwitch('Bill reminders')).toBeInTheDocument();
       expect(stub.calls.filter((call) => call.method === 'GET')).toHaveLength(2);
     });
 
@@ -190,9 +189,9 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
       queryClient.setQueryData(queryKeys.notificationPreferences, PREFERENCES);
       renderTypes({ queryClient });
 
-      const toggle = await screen.findByRole('switch', { name: 'Bill reminders' });
-      expect(toggle).toBeDisabled();
-      expect(toggle).toBeChecked();
+      const toggle = await findMdSwitch('Bill reminders');
+      expect(toggle).toHaveProperty('disabled', true);
+      expect(toggle).toHaveProperty('selected', true);
       expect(toggle).toHaveAccessibleDescription(
         `Before a bill is due, and on its due date while it is unpaid. ${WRITE_NEEDS_CONNECTION}`,
       );
@@ -203,13 +202,13 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
     it('says unsupported browsers cannot take push, and hides the toggles', () => {
       renderTypes({ push: { support: 'unsupported' } });
       expect(screen.getByText(UNSUPPORTED_MESSAGE)).toBeInTheDocument();
-      expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+      expect(queryMdSwitch()).toBeNull();
     });
 
     it('shows the install sequence on iOS before the app is on the home screen', () => {
       renderTypes({ push: { support: 'ios-not-installed' } });
       expect(screen.getByText(IOS_INSTALL_MESSAGE)).toBeInTheDocument();
-      expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+      expect(queryMdSwitch()).toBeNull();
     });
   });
 
@@ -229,12 +228,12 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
         },
       });
 
-      await user.click(await screen.findByRole('switch', { name: 'Chore reminders' }));
+      await user.click(await findMdSwitch('Chore reminders'));
       expect(screen.getByRole('status')).toHaveTextContent(SAVING_MESSAGE);
 
       release?.();
       expect(await screen.findByText(SAVED_MESSAGE)).toBeInTheDocument();
-      expect(screen.getByRole('switch', { name: 'Chore reminders' })).toBeChecked();
+      expect(getMdSwitch('Chore reminders')).toHaveProperty('selected', true);
     });
 
     it('keeps the toggle where the server left it when the save fails', async () => {
@@ -248,21 +247,21 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
         },
       });
 
-      await user.click(await screen.findByRole('switch', { name: 'Chore reminders' }));
+      await user.click(await findMdSwitch('Chore reminders'));
 
       expect(await screen.findByText(SAVE_ERROR_MESSAGE)).toBeInTheDocument();
-      expect(screen.getByRole('switch', { name: 'Chore reminders' })).not.toBeChecked();
+      expect(getMdSwitch('Chore reminders')).toHaveProperty('selected', false);
     });
 
     it('sends the household only for the weekly nudge', async () => {
       const user = userEvent.setup();
       const { stub } = renderTypes();
 
-      await user.click(await screen.findByRole('switch', { name: 'Plan next week: Oak Street' }));
+      await user.click(await findMdSwitch('Plan next week: Oak Street'));
       await waitFor(() => {
-        expect(screen.getByRole('switch', { name: 'Plan next week: Oak Street' })).toBeChecked();
+        expect(getMdSwitch('Plan next week: Oak Street')).toHaveProperty('selected', true);
       });
-      await user.click(screen.getByRole('switch', { name: 'Chore reminders' }));
+      await user.click(getMdSwitch('Chore reminders'));
 
       const patches = stub.calls.filter((call) => call.method === 'PATCH');
       expect(patches.map((call) => call.body)).toStrictEqual([
@@ -275,7 +274,7 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
   describe('push permission', () => {
     it('does not prompt on load, before any type is turned on', async () => {
       const { log } = renderTypes({ push: { permission: 'default' } });
-      await screen.findByRole('switch', { name: 'Bill reminders' });
+      await findMdSwitch('Bill reminders');
       expect(log).toStrictEqual([]);
     });
 
@@ -283,7 +282,7 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
       const user = userEvent.setup();
       const { log } = renderTypes({ push: { permission: 'default', answer: 'granted' } });
 
-      await user.click(await screen.findByRole('switch', { name: 'Chore reminders' }));
+      await user.click(await findMdSwitch('Chore reminders'));
 
       await waitFor(() => {
         expect(log).toContain('POST');
@@ -300,7 +299,7 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
       const user = userEvent.setup();
       const { log } = renderTypes({ push: { permission: 'default' } });
 
-      await user.click(await screen.findByRole('switch', { name: 'Bill reminders' }));
+      await user.click(await findMdSwitch('Bill reminders'));
       expect(await screen.findByText(SAVED_MESSAGE)).toBeInTheDocument();
 
       expect(log).toStrictEqual(['PATCH']);
@@ -310,7 +309,7 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
       const user = userEvent.setup();
       const { log } = renderTypes({ push: { permission: 'denied' } });
 
-      await user.click(await screen.findByRole('switch', { name: 'Chore reminders' }));
+      await user.click(await findMdSwitch('Chore reminders'));
 
       expect(await screen.findByText(DEVICE_MESSAGES.denied)).toBeInTheDocument();
       expect(
@@ -323,7 +322,7 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
       const user = userEvent.setup();
       const { log } = renderTypes({ push: { permission: 'default', answer: 'default' } });
 
-      await user.click(await screen.findByRole('switch', { name: 'Chore reminders' }));
+      await user.click(await findMdSwitch('Chore reminders'));
 
       expect(await screen.findByText(DEVICE_MESSAGES.dismissed)).toBeInTheDocument();
       expect(log).not.toContain('POST');
@@ -333,11 +332,11 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
       const user = userEvent.setup();
       const { log } = renderTypes({ push: { permission: 'default', answer: 'default' } });
 
-      await user.click(await screen.findByRole('switch', { name: 'Chore reminders' }));
+      await user.click(await findMdSwitch('Chore reminders'));
       await waitFor(() => {
         expect(log.filter((entry) => entry === 'requestPermission')).toHaveLength(1);
       });
-      await user.click(screen.getByRole('switch', { name: 'Meal reminders' }));
+      await user.click(getMdSwitch('Meal reminders'));
 
       await waitFor(() => {
         expect(log.filter((entry) => entry === 'requestPermission')).toHaveLength(2);
@@ -379,7 +378,7 @@ describe.each(THEMES)('Notification types in the %s theme', (theme) => {
 describe('Notification types keyboard and live region', () => {
   it('keeps the save result region mounted and empty until something happens', async () => {
     renderTypes();
-    await screen.findByRole('switch', { name: 'Bill reminders' });
+    await findMdSwitch('Bill reminders');
 
     const region = screen.getByRole('status');
     expect(region).toBeEmptyDOMElement();
@@ -390,12 +389,17 @@ describe('Notification types keyboard and live region', () => {
     const user = userEvent.setup();
     renderTypes();
 
-    const chore = await screen.findByRole('switch', { name: 'Chore reminders' });
-    chore.focus();
+    const chore = await findMdSwitch('Chore reminders');
+    const target = await waitFor(() => {
+      const input = chore.shadowRoot?.querySelector('input');
+      if (!input) throw new Error('Expected shadow input inside md-switch');
+      return input;
+    });
+    target.focus();
     await user.keyboard(' ');
 
     await waitFor(() => {
-      expect(screen.getByRole('switch', { name: 'Chore reminders' })).toBeChecked();
+      expect(getMdSwitch('Chore reminders')).toHaveProperty('selected', true);
     });
   });
 });

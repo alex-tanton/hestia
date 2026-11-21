@@ -7,6 +7,7 @@ import { setOnline } from '../../test/browser.ts';
 import { ALEX_ID, OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import { createFetchStub, renderScreen, type StubHandler, WithQueue } from '../../test/harness.tsx';
 import { listItem, THIS_WEEK_ID } from '../../test/list-fixtures.ts';
+import { findMdButton, findMdField, getMdButton } from '../../test/md-queries.ts';
 import { ListDetailScreen } from './ListDetailScreen.tsx';
 
 vi.mock('../../components/lists/BarcodeScannerDialog.tsx', () => ({
@@ -156,10 +157,10 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
   it('renders "Scan barcode" button in header toolbar beside "Add an item"', async () => {
     renderDetail();
 
-    const scanBtn = await screen.findByRole('button', { name: /scan barcode/i });
+    const scanBtn = await findMdButton(/scan barcode/i);
     expect(scanBtn).toBeInTheDocument();
 
-    const addBtn = screen.getByRole('button', { name: 'Add an item' });
+    const addBtn = getMdButton('Add an item');
     expect(addBtn).toBeInTheDocument();
   });
 
@@ -167,7 +168,7 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
     const user = userEvent.setup();
     renderDetail();
 
-    const scanBtn = await screen.findByRole('button', { name: /scan barcode/i });
+    const scanBtn = await findMdButton(/scan barcode/i);
     await user.click(scanBtn);
 
     expect(screen.getByTestId('mock-scanner-dialog')).toBeInTheDocument();
@@ -183,7 +184,7 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
       }),
     });
 
-    const scanBtn = await screen.findByRole('button', { name: /scan barcode/i });
+    const scanBtn = await findMdButton(/scan barcode/i);
     await user.click(scanBtn);
 
     // Trigger mock scan in Add mode
@@ -195,11 +196,11 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
       expect(screen.queryByTestId('mock-scanner-dialog')).not.toBeInTheDocument();
     });
 
-    const itemInput = await screen.findByLabelText<HTMLInputElement>(/^item/i);
-    expect(itemInput.value).toBe('Horizon Organic Whole Milk');
+    const itemInput = await findMdField(/^item/i);
+    expect(itemInput).toHaveProperty('value', 'Horizon Organic Whole Milk');
 
     // Submit pre-filled sheet
-    const submitBtn = screen.getByRole('button', { name: /add item/i });
+    const submitBtn = getMdButton(/add item/i);
     await user.click(submitBtn);
 
     await waitFor(() => {
@@ -231,7 +232,7 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
       }),
     });
 
-    const scanBtn = await screen.findByRole('button', { name: /scan barcode/i });
+    const scanBtn = await findMdButton(/scan barcode/i);
     await user.click(scanBtn);
 
     // Trigger mock scan in Shop mode
@@ -254,7 +255,7 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
 
     // Toast displays marked bought with Undo button
     expect(await screen.findByText(/marked bought/i)).toBeInTheDocument();
-    const undoBtn = screen.getByRole('button', { name: 'Undo' });
+    const undoBtn = getMdButton('Undo');
 
     // Click Undo
     await user.click(undoBtn);
@@ -276,7 +277,7 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
     const user = userEvent.setup();
     renderDetail();
 
-    const scanBtn = await screen.findByRole('button', { name: /scan barcode/i });
+    const scanBtn = await findMdButton(/scan barcode/i);
     await user.click(scanBtn);
 
     const triggerUnknownBtn = screen.getByRole('button', { name: 'Trigger Unknown Shop' });

@@ -1,8 +1,19 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { MealPlanEntry, MealPlanWeekResponse } from '@hestia/shared';
-import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import {
+  findMdButton,
+  findMdField,
+  findMdMenuItem,
+  findMdTab,
+  getMdButton,
+  getMdMenuItem,
+  getMdTab,
+  queryMdButton,
+  queryMdTab,
+} from '../../test/md-queries.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
 import {
@@ -119,6 +130,20 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
 
 registerBrowserStubs();
 
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
+
 describe('Week planner', () => {
   it('loading: announces it with skeletons', () => {
     mount(
@@ -130,8 +155,7 @@ describe('Week planner', () => {
   it("lists a slot's placed recipes, since it may hold more than one", async () => {
     const user = userEvent.setup();
     mount();
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    await user.click(await findMdTab(/Wed/));
     expect(await screen.findByRole('link', { name: /Baked Ziti/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Greek Salad/ })).toBeInTheDocument();
   });
@@ -139,14 +163,13 @@ describe('Week planner', () => {
   it("a deleted recipe's entry shows the snapshot title with no readiness and no link, and is read-only", async () => {
     const user = userEvent.setup();
     mount();
-    await user.click(await screen.findByRole('button', { name: 'Previous week' }));
+    await user.click(await findMdButton('Previous week'));
     expect(await screen.findByText(PLANNER_PAST_WEEK_COPY)).toBeInTheDocument();
-    const tabs = screen.getByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Tue/ }));
+    await user.click(await findMdTab(/Tue/));
     const title = await screen.findByText('Mushroom Stroganoff');
     expect(title).toHaveClass('text-secondary');
     expect(screen.queryByRole('link', { name: /Mushroom Stroganoff/ })).toBeNull();
-    expect(screen.queryByRole('button', { name: /More actions/ })).toBeNull();
+    expect(queryMdButton(/More actions/)).toBeNull();
     expect(screen.queryByText(/Add to dinner/)).toBeNull();
   });
 
@@ -168,11 +191,10 @@ describe('Week planner', () => {
         }),
       }),
     );
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    await user.click(await findMdTab(/Wed/));
     await screen.findByRole('link', { name: /Baked Ziti/ });
-    await user.click(screen.getByRole('button', { name: 'Add to breakfast' }));
-    await user.click(await screen.findByRole('button', { name: /Grilled Cheese and Tomato Soup/ }));
+    await user.click(getMdButton('Add to breakfast'));
+    await user.click(await findMdButton(/Grilled Cheese and Tomato Soup/));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.path.endsWith('/meal-plan') && call.method === 'POST'),
@@ -183,11 +205,9 @@ describe('Week planner', () => {
   it('removes a placed meal', async () => {
     const user = userEvent.setup();
     const stub = mount(baseHandlers({ 'DELETE /api/meal-plan/:id': () => ({ status: 204 }) }));
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
-    (await screen.findByRole('button', { name: 'More actions for Baked Ziti' })).focus();
-    await user.keyboard('{Enter}');
-    await user.click(await screen.findByRole('menuitem', { name: 'Remove' }));
+    await user.click(await findMdTab(/Wed/));
+    await openMenu(user, 'More actions for Baked Ziti');
+    await user.click(await findMdMenuItem('Remove'));
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(true);
     });
@@ -200,12 +220,10 @@ describe('Week planner', () => {
         'POST /api/meal-plan/:id/add-to-list': () => ({ status: 200, body: thisWeekDetailFixture }),
       }),
     );
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
-    (await screen.findByRole('button', { name: 'More actions for Baked Ziti' })).focus();
-    await user.keyboard('{Enter}');
-    await user.click(await screen.findByRole('menuitem', { name: 'Add missing to list' }));
-    await user.click(await screen.findByRole('button', { name: /This Week/ }));
+    await user.click(await findMdTab(/Wed/));
+    await openMenu(user, 'More actions for Baked Ziti');
+    await user.click(await findMdMenuItem('Add missing to list'));
+    await user.click(await findMdButton(/This Week/));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'POST' && call.path.endsWith('/add-to-list')),
@@ -223,9 +241,9 @@ describe('Week planner', () => {
         }),
       }),
     );
-    await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(screen.getByRole('button', { name: "Add week's missing to list" }));
-    await user.click(await screen.findByRole('button', { name: /This Week/ }));
+    await findMdTab(/Sun/);
+    await user.click(getMdButton("Add week's missing to list"));
+    await user.click(await findMdButton(/This Week/));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'POST' && call.path.endsWith('/add-to-list')),
@@ -235,25 +253,16 @@ describe('Week planner', () => {
 
   it('offline: disables placing, removing, and the week action, without hiding them', async () => {
     mount();
-    await screen.findByRole('tablist', { name: 'Day of the week' });
+    await findMdTab(/Sun/);
     setOnline(false);
-    expect(screen.getByRole('button', { name: "Add week's missing to list" })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    const tabs = screen.getByRole('tablist', { name: 'Day of the week' });
+    expect(getMdButton("Add week's missing to list")).toHaveProperty('softDisabled', true);
     const user = userEvent.setup();
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
-    expect(screen.getByRole('button', { name: 'Add to breakfast' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    (await screen.findByRole('button', { name: 'More actions for Baked Ziti' })).focus();
-    await user.keyboard('{Enter}');
-    const menu = await screen.findByRole('menu');
+    await user.click(getMdTab(/Wed/));
+    expect(getMdButton('Add to breakfast')).toHaveProperty('softDisabled', true);
+    await openMenu(user, 'More actions for Baked Ziti');
     for (const label of ['Add missing to list', 'Remove']) {
-      const item = within(menu).getByRole('menuitem', { name: new RegExp(`^${label}`) });
-      expect(item).toHaveAttribute('aria-disabled', 'true');
+      const item = getMdMenuItem(new RegExp(`^${label}`));
+      expect(item).toHaveProperty('disabled', true);
       expect(item).toHaveTextContent('Needs a connection.');
     }
   });
@@ -278,12 +287,12 @@ describe('Week planner', () => {
         }),
       }),
     );
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
-    await user.click(screen.getByRole('button', { name: 'Add to breakfast' }));
-    await user.click(await screen.findByRole('tab', { name: 'Quick Item' }));
-    await user.type(screen.getByLabelText('Item name'), 'Banana');
-    await user.click(screen.getByRole('button', { name: 'Place item' }));
+    await user.click(await findMdTab(/Wed/));
+    await user.click(getMdButton('Add to breakfast'));
+    await user.click(await findMdTab('Quick Item'));
+    const input = await findFieldInput('Item name');
+    fireEvent.input(input, { target: { value: 'Banana' } });
+    await user.click(getMdButton('Place item'));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -316,11 +325,10 @@ describe('Week planner', () => {
         }),
       }),
     );
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
-    await user.click(screen.getByRole('button', { name: 'Add to breakfast' }));
-    await user.click(await screen.findByRole('tab', { name: 'Quick Item' }));
-    await user.click(await screen.findByRole('button', { name: 'Greek Yogurt' }));
+    await user.click(await findMdTab(/Wed/));
+    await user.click(getMdButton('Add to breakfast'));
+    await user.click(await findMdTab('Quick Item'));
+    await user.click(await findMdButton('Greek Yogurt'));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -347,14 +355,12 @@ describe('Week planner', () => {
         }),
       }),
     );
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    await user.click(await findMdTab(/Wed/));
     expect(await screen.findByText('Banana')).toBeInTheDocument();
-    (await screen.findByRole('button', { name: 'More actions for Banana' })).focus();
-    await user.keyboard('{Enter}');
-    await user.click(await screen.findByRole('menuitem', { name: CUSTOM_ITEM_ADD_TO_LIST }));
+    await openMenu(user, 'More actions for Banana');
+    await user.click(await findMdMenuItem(CUSTOM_ITEM_ADD_TO_LIST));
     expect(await screen.findByText('Add to which list?')).toBeInTheDocument();
-    await user.click(await screen.findByRole('button', { name: /This Week/ }));
+    await user.click(await findMdButton(/This Week/));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -378,12 +384,10 @@ describe('Week planner', () => {
         'DELETE /api/meal-plan/:id': () => ({ status: 204 }),
       }),
     );
-    const tabs = await screen.findByRole('tablist', { name: 'Day of the week' });
-    await user.click(within(tabs).getByRole('tab', { name: /Wed/ }));
+    await user.click(await findMdTab(/Wed/));
     expect(await screen.findByText('Banana')).toBeInTheDocument();
-    (await screen.findByRole('button', { name: 'More actions for Banana' })).focus();
-    await user.keyboard('{Enter}');
-    await user.click(await screen.findByRole('menuitem', { name: 'Remove' }));
+    await openMenu(user, 'More actions for Banana');
+    await user.click(await findMdMenuItem('Remove'));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'DELETE' && call.path.includes(bananaEntry.id)),
@@ -399,7 +403,7 @@ describe('Week planner', () => {
     }));
     mount();
     await screen.findByText(/Week of/);
-    expect(screen.queryByRole('tablist')).toBeNull();
+    expect(queryMdTab()).toBeNull();
     expect(await screen.findByRole('link', { name: /Baked Ziti/ })).toBeInTheDocument();
   });
 });

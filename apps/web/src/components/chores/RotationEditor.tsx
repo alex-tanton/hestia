@@ -73,7 +73,20 @@ export function RotationEditor({
     for (const selector of candidates) {
       const target = container.querySelector<HTMLElement>(selector);
       if (target !== null && !(target as HTMLButtonElement).disabled) {
-        target.focus();
+        const focusTarget = (): void => {
+          if (!target.isConnected) return;
+          const innerControl = target.shadowRoot?.querySelector<HTMLElement>('button, a');
+          if (innerControl !== null && innerControl !== undefined) {
+            innerControl.focus();
+          } else {
+            target.focus();
+          }
+        };
+        if ('updateComplete' in target && target.updateComplete instanceof Promise) {
+          void target.updateComplete.then(focusTarget);
+        } else {
+          focusTarget();
+        }
         return;
       }
     }

@@ -1,21 +1,16 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import type { MealPlanEntry } from '@hestia/shared';
+import { openMenu } from '../../test/browser.ts';
+import { findMdMenuItem, queryMdButton, queryMdMenuItem } from '../../test/md-queries.ts';
 import { MealSlotEntry } from './MealSlotEntry.tsx';
 import { CUSTOM_ITEM_ADD_TO_LIST, DELETED_RECIPE_NOTE } from './meal-copy.ts';
 
 function withRouter(ui: ReactElement): void {
   render(<MemoryRouter>{ui}</MemoryRouter>);
-}
-
-async function openMenu(user: ReturnType<typeof userEvent.setup>, name: string | RegExp) {
-  const trigger = await screen.findByRole('button', { name });
-  trigger.focus();
-  await user.keyboard('{Enter}');
-  return screen.findByRole('menu');
 }
 
 describe('MealSlotEntry', () => {
@@ -91,11 +86,11 @@ describe('MealSlotEntry', () => {
       />,
     );
 
-    const menu = await openMenu(user, 'More actions for Greek Yogurt & Honey');
-    const addToList = within(menu).getByRole('menuitem', { name: CUSTOM_ITEM_ADD_TO_LIST });
+    await openMenu(user, 'More actions for Greek Yogurt & Honey');
+    const addToList = await findMdMenuItem(CUSTOM_ITEM_ADD_TO_LIST);
     expect(addToList).toBeInTheDocument();
 
-    const remove = within(menu).getByRole('menuitem', { name: 'Remove' });
+    const remove = await findMdMenuItem('Remove');
     expect(remove).toBeInTheDocument();
 
     await user.click(addToList);
@@ -133,8 +128,8 @@ describe('MealSlotEntry', () => {
       />,
     );
 
-    const menu = await openMenu(user, 'More actions for Baked Ziti');
-    expect(within(menu).getByRole('menuitem', { name: 'Add missing to list' })).toBeInTheDocument();
+    await openMenu(user, 'More actions for Baked Ziti');
+    expect(await findMdMenuItem('Add missing to list')).toBeInTheDocument();
   });
 
   it('renders deleted recipe snapshot in text-secondary with deleted note and omits add to list', async () => {
@@ -155,9 +150,9 @@ describe('MealSlotEntry', () => {
     expect(title).toHaveClass('text-secondary');
     expect(screen.getByText(DELETED_RECIPE_NOTE)).toHaveClass('sr-only');
 
-    const menu = await openMenu(user, 'More actions for Deleted Pasta Carbonara');
-    expect(within(menu).queryByRole('menuitem', { name: /Add.*to list/ })).toBeNull();
-    expect(within(menu).getByRole('menuitem', { name: 'Remove' })).toBeInTheDocument();
+    await openMenu(user, 'More actions for Deleted Pasta Carbonara');
+    expect(queryMdMenuItem(/Add.*to list/)).toBeNull();
+    expect(await findMdMenuItem('Remove')).toBeInTheDocument();
   });
 
   it('hides overflow menu completely in read-only mode', () => {
@@ -171,7 +166,7 @@ describe('MealSlotEntry', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: /More actions/ })).toBeNull();
+    expect(queryMdButton(/More actions/)).toBeNull();
   });
 
   it('disables overflow menu items when offlineReason is provided', async () => {
@@ -187,12 +182,10 @@ describe('MealSlotEntry', () => {
       />,
     );
 
-    const menu = await openMenu(user, 'More actions for Greek Yogurt & Honey');
-    const addToList = within(menu).getByRole('menuitem', {
-      name: new RegExp(CUSTOM_ITEM_ADD_TO_LIST),
-    });
-    expect(addToList).toHaveAttribute('aria-disabled', 'true');
-    const remove = within(menu).getByRole('menuitem', { name: /Remove/ });
-    expect(remove).toHaveAttribute('aria-disabled', 'true');
+    await openMenu(user, 'More actions for Greek Yogurt & Honey');
+    const addToList = await findMdMenuItem(new RegExp(CUSTOM_ITEM_ADD_TO_LIST));
+    expect(addToList).toHaveProperty('disabled', true);
+    const remove = await findMdMenuItem(/Remove/);
+    expect(remove).toHaveProperty('disabled', true);
   });
 });

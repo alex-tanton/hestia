@@ -3,6 +3,7 @@ import { configure, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Errand } from '@hestia/shared';
 import { registerHouseholdClock } from '../../test/browser.ts';
+import { getMdButton, queryMdButton } from '../../test/md-queries.ts';
 import {
   OAK_STREET_ID,
   oakStreetFixture,
@@ -51,7 +52,7 @@ function stubWith(
 }
 
 function rowOfDoneButton(name: string): HTMLElement {
-  const row = screen.getByRole('button', { name: `Mark ${name} done` }).closest('li');
+  const row = getMdButton(`Mark ${name} done`).closest('li');
   if (row === null) throw new Error('the row is always there');
   return row;
 }
@@ -100,9 +101,7 @@ describe('household dates, with the device a day ahead', () => {
     expect(
       await screen.findByText(/household's details sync when you reconnect/),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: `Mark ${takeOutTrashFixture.name} done` }),
-    ).toBeNull();
+    expect(queryMdButton(`Mark ${takeOutTrashFixture.name} done`)).toBeNull();
   });
 
   it('shows the chores list’s error, not dated rows, when the household cannot load', async () => {
@@ -115,8 +114,6 @@ describe('household dates, with the device a day ahead', () => {
     renderScreen(<ChoresListScreen householdId={OAK_STREET_ID} />);
 
     expect(await screen.findByText("Couldn't load the household. Try again.")).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: `Mark ${takeOutTrashFixture.name} done` }),
-    ).toBeNull();
+    expect(queryMdButton(`Mark ${takeOutTrashFixture.name} done`)).toBeNull();
   });
 });

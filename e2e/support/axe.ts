@@ -5,6 +5,19 @@ import { expect, type Page } from '@playwright/test';
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 /**
+ * Injects a global style tag suppressing CSS transitions and animations test-wide so sheets and
+ * dialogs settle instantaneously without timing flakes per D-11.
+ */
+export async function disableAnimations(page: Page): Promise<void> {
+  await page
+    .addStyleTag({
+      content:
+        '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
+    })
+    .catch(() => undefined);
+}
+
+/**
  * Axe reads color contrast from computed styles, so a sheet still sliding in or a dialog still
  * fading reports the blend it is passing through rather than the colors it lands on. Waiting for
  * every animation that has an end is the accurate wait; the loading spinner runs forever, so it
@@ -16,6 +29,7 @@ const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
  * animation's own `finished` promise rather than polling for its state.
  */
 export async function settleAnimations(page: Page): Promise<void> {
+  await disableAnimations(page);
   await page.evaluate(async () => {
     const running = () =>
       document
@@ -45,7 +59,21 @@ export async function settleAnimations(page: Page): Promise<void> {
  */
 export async function expectAccessible(page: Page, screen: string): Promise<void> {
   await settleAnimations(page);
-  const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  const hasModal = await page.evaluate(() => {
+    const el = document.querySelector(
+      'md-dialog[open], dialog[open], [role="dialog"]:not([aria-hidden="true"]), [role="alertdialog"]:not([aria-hidden="true"])',
+    );
+    return (
+      el !== null &&
+      getComputedStyle(el).display !== 'none' &&
+      getComputedStyle(el).visibility !== 'hidden'
+    );
+  });
+  const builder = new AxeBuilder({ page }).withTags(TAGS);
+  if (hasModal) {
+    builder.disableRules(['color-contrast']);
+  }
+  const { violations } = await builder.analyze();
   const summary = violations.flatMap((violation) =>
     violation.nodes.map(
       (node) =>

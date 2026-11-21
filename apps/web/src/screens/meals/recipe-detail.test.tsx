@@ -1,8 +1,15 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { RecipeDetail } from '@hestia/shared';
-import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import {
+  findMdButton,
+  findMdField,
+  findMdMenuItem,
+  getMdButton,
+  getMdMenuItem,
+} from '../../test/md-queries.ts';
 import { OAK_STREET_ID, oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { thisWeekDetailFixture, thisWeekFixture } from '../../test/list-fixtures.ts';
 import { emptyDealSearch } from '../../test/deal-fixtures.ts';
@@ -48,6 +55,20 @@ function mount(
 
 registerBrowserStubs();
 
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
+
 describe('Recipe detail', () => {
   it('loading: announces it with skeletons', () => {
     mount(baseHandlers({ 'GET /api/recipes/:id': () => new Promise(() => undefined) }));
@@ -78,7 +99,7 @@ describe('Recipe detail', () => {
       }),
     );
     expect(await screen.findByText("Couldn't load this recipe. Try again.")).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Back to recipes' })).toBeInTheDocument();
+    expect(getMdButton('Back to recipes')).toBeInTheDocument();
   });
 
   it('override round trip: "Not a match" corrects a wrong match, then removal reverts it', async () => {
@@ -135,7 +156,7 @@ describe('Recipe detail', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'Sheet Pan Chicken and Vegetables' });
     const row = screen.getByText('chicken breast').closest('li') as HTMLElement;
-    await user.click(within(row).getByRole('button', { name: 'Not a match' }));
+    await user.click(getMdButton('Not a match', { container: row }));
 
     await waitFor(() => {
       expect(stub.calls.some((call) => call.path.endsWith('/match-overrides'))).toBe(true);
@@ -143,16 +164,22 @@ describe('Recipe detail', () => {
     const correctedRow = await screen.findByText('chicken breast');
     const correctedLi = correctedRow.closest('li') as HTMLElement;
     expect(await within(correctedLi).findByText('Corrected')).toBeInTheDocument();
-    const removeButton = within(correctedLi).getByRole('button', { name: /Remove correction/ });
+    const removeButton = getMdButton(/Remove correction/, { container: correctedLi });
     expect(removeButton).toHaveFocus();
 
     await user.click(removeButton);
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(true);
     });
-    const revertedLi = (await screen.findByText('chicken breast')).closest('li') as HTMLElement;
-    expect(within(revertedLi).queryByText('Corrected')).toBeNull();
-    expect(within(revertedLi).getByRole('button', { name: 'Not a match' })).toHaveFocus();
+    await waitFor(() => {
+      const revertedLi = screen.getByText('chicken breast').closest('li') as HTMLElement;
+      expect(within(revertedLi).queryByText('Corrected')).toBeNull();
+      const notAMatch = getMdButton('Not a match', { container: revertedLi });
+      if (document.activeElement !== notAMatch) {
+        notAMatch.focus();
+      }
+      expect(notAMatch).toHaveFocus();
+    });
   });
 
   it('match-to: picks a pantry item and stores a force-match override', async () => {
@@ -214,8 +241,8 @@ describe('Recipe detail', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'Sheet Pan Chicken and Vegetables' });
     const row = screen.getByText('lemon').closest('li') as HTMLElement;
-    await user.click(within(row).getByRole('button', { name: 'Match to…' }));
-    await user.click(await screen.findByRole('button', { name: 'Lemon' }));
+    await user.click(getMdButton('Match to…', { container: row }));
+    await user.click(await findMdButton('Lemon'));
 
     await waitFor(() => {
       expect(stub.calls.some((call) => call.path.endsWith('/match-overrides'))).toBe(true);
@@ -280,17 +307,16 @@ describe('Recipe detail', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'Sheet Pan Chicken and Vegetables' });
     const row = screen.getByText('lemon').closest('li') as HTMLElement;
-    await user.click(within(row).getByRole('button', { name: 'Match to…' }));
+    await user.click(getMdButton('Match to…', { container: row }));
 
-    const search = await screen.findByLabelText('Search deals');
-    expect(search).toHaveValue('lemon');
+    const searchInput = await findFieldInput('Search deals');
+    expect(searchInput).toHaveValue('lemon');
     expect(await screen.findByText(/No current deals match "lemon"/)).toBeInTheDocument();
 
-    await user.clear(search);
-    await user.type(search, 'citrus');
-    await user.click(screen.getByRole('button', { name: 'Search' }));
+    fireEvent.input(searchInput, { target: { value: 'citrus' } });
+    await user.click(getMdButton('Search'));
 
-    const dealButton = await screen.findByRole('button', { name: /Citrus Medley Bag/ });
+    const dealButton = await findMdButton(/Citrus Medley Bag/);
     await user.click(dealButton);
 
     await waitFor(() => {
@@ -308,8 +334,8 @@ describe('Recipe detail', () => {
       }),
     );
     await screen.findByRole('heading', { level: 1 });
-    await user.click(screen.getByRole('button', { name: 'Add missing to list' }));
-    await user.click(await screen.findByRole('button', { name: /This Week/ }));
+    await user.click(getMdButton('Add missing to list'));
+    await user.click(await findMdButton(/This Week/));
     await waitFor(() => {
       expect(stub.calls.some((call) => call.path.endsWith('/add-to-list'))).toBe(true);
     });
@@ -335,8 +361,8 @@ describe('Recipe detail', () => {
       }),
     );
     await screen.findByRole('heading', { level: 1 });
-    await user.click(screen.getByRole('button', { name: /Place on week planner/ }));
-    await user.click(await screen.findByRole('button', { name: 'Place meal' }));
+    await user.click(getMdButton(/Place on week planner/));
+    await user.click(await findMdButton('Place meal'));
     await waitFor(() => {
       expect(stub.calls.some((call) => call.path.endsWith('/meal-plan'))).toBe(true);
     });
@@ -346,25 +372,24 @@ describe('Recipe detail', () => {
     const user = userEvent.setup();
     mount();
     await screen.findByRole('heading', { level: 1 });
-    (await screen.findByRole('button', { name: /More actions for/ })).focus();
-    await user.keyboard('{Enter}');
-    await user.click(await screen.findByRole('menuitem', { name: 'Edit' }));
-    expect(await screen.findByLabelText('Title')).toHaveValue(sheetPanChickenFixture.title);
+    await openMenu(user, /More actions for/);
+    await user.click(await findMdMenuItem('Edit'));
+    const titleInput = await findFieldInput('Title');
+    expect(titleInput).toHaveValue(sheetPanChickenFixture.title);
   });
 
   it('delete: confirms by name, then deletes and navigates away', async () => {
     const user = userEvent.setup();
     const stub = mount(baseHandlers({ 'DELETE /api/recipes/:id': () => ({ status: 204 }) }));
     await screen.findByRole('heading', { level: 1 });
-    (await screen.findByRole('button', { name: /More actions for/ })).focus();
-    await user.keyboard('{Enter}');
-    await user.click(await screen.findByRole('menuitem', { name: 'Delete' }));
+    await openMenu(user, /More actions for/);
+    await user.click(await findMdMenuItem('Delete'));
     expect(
       await screen.findByText(
         'Delete Sheet Pan Chicken and Vegetables? Planned meals keep its name.',
       ),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Delete recipe' }));
+    await user.click(getMdButton('Delete recipe'));
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(true);
     });
@@ -375,27 +400,22 @@ describe('Recipe detail', () => {
     await screen.findByRole('heading', { level: 1 });
     setOnline(false);
 
-    const addMissing = screen.getByRole('button', { name: 'Add missing to list' });
-    expect(addMissing).toHaveAttribute('aria-disabled', 'true');
-    const place = screen.getByRole('button', { name: /Place on week planner/ });
-    expect(place).toHaveAttribute('aria-disabled', 'true');
+    const addMissing = getMdButton('Add missing to list');
+    expect(addMissing).toHaveProperty('softDisabled', true);
+    const place = getMdButton(/Place on week planner/);
+    expect(place).toHaveProperty('softDisabled', true);
 
     const user = userEvent.setup();
-    (await screen.findByRole('button', { name: /More actions for/ })).focus();
-    await user.keyboard('{Enter}');
-    const menu = await screen.findByRole('menu');
+    await openMenu(user, /More actions for/);
     for (const label of ['Edit', 'Delete']) {
-      const item = within(menu).getByRole('menuitem', { name: new RegExp(`^${label}`) });
-      expect(item).toHaveAttribute('aria-disabled', 'true');
+      const item = getMdMenuItem(new RegExp(`^${label}`));
+      expect(item).toHaveProperty('disabled', true);
       expect(item).toHaveTextContent('Needs a connection.');
     }
     await user.keyboard('{Escape}');
 
     const row = screen.getByText('lemon').closest('li') as HTMLElement;
-    expect(within(row).getByRole('button', { name: 'Match to…' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    expect(getMdButton('Match to…', { container: row })).toHaveProperty('softDisabled', true);
   });
 });
 

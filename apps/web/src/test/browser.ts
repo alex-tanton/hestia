@@ -1,7 +1,8 @@
 import { onlineManager } from '@tanstack/react-query';
-import { act, screen } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import type { UserEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { findMdButton, type TextMatcher } from './md-queries.ts';
 
 /*
  * The browser state a component test controls: whether the device is online, and whether the
@@ -65,9 +66,18 @@ export function registerHouseholdClock(instant: Date): void {
   });
 }
 
-/** Opens an overflow menu from the keyboard, as the lists tests do: a pointer click does not open a Radix menu under jsdom. */
-export async function openMenu(user: UserEvent, triggerName: string): Promise<void> {
-  const trigger = await screen.findByRole('button', { name: triggerName });
-  trigger.focus();
+/** Opens an overflow menu from the keyboard on its MdIconButton trigger host. */
+export async function openMenu(user: UserEvent, triggerName: TextMatcher): Promise<void> {
+  const trigger = await findMdButton(triggerName);
+  const target = trigger.tagName.includes('-')
+    ? await waitFor(() => {
+        const button = trigger.shadowRoot?.querySelector('button');
+        if (button === null || button === undefined) {
+          throw new Error(`Expected shadow button inside <${trigger.localName}>`);
+        }
+        return button;
+      })
+    : trigger;
+  target.focus();
   await user.keyboard('{Enter}');
 }

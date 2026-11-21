@@ -4,7 +4,15 @@ import { useDelayedVisible } from '../../lib/use-delayed-visible.ts';
 
 /** One placeholder block. Static, not shimmering: no decorative animation. */
 export function Skeleton({ className }: { className?: string }): ReactElement {
-  return <span aria-hidden className={cn('block rounded-sm bg-border', className)} />;
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'block rounded-[var(--md-sys-shape-corner-extra-small)] bg-[var(--md-sys-color-surface-container-highest)] motion-reduce:transition-none',
+        className,
+      )}
+    />
+  );
 }
 
 export interface SkeletonRowsProps {

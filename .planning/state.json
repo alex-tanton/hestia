@@ -1,38 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v2.1 — Grocery & Deals Intelligence",
+  "milestone": "v3.0 — Material Design 3 Overhaul",
   "phases": [
     {
-      "number": "12",
-      "name": "Store & Deal Image Delivery",
-      "status": "complete"
+      "number": "17",
+      "name": "MD3 Foundation, Token Pipeline & UI Primitives",
+      "status": "in_progress"
     },
     {
-      "number": "13",
-      "name": "Deal Pricing Engine & Ingestion Performance",
-      "status": "complete"
+      "number": "18",
+      "name": "Adaptive MD3 Navigation Shell & Route Chrome",
+      "status": "pending"
     },
     {
-      "number": "14",
-      "name": "Barcode Scanning & Grocery List Integration",
-      "status": "complete"
+      "number": "19",
+      "name": "Entry, Dashboard & Grocery Ecosystem Screens",
+      "status": "pending"
     },
     {
-      "number": "15",
-      "name": "Flexible Meal Planning (Custom Items & Recipes)",
-      "status": "complete"
+      "number": "20",
+      "name": "Meals, Bills, Chores & Settings Screens",
+      "status": "pending"
     },
     {
-      "number": "16",
-      "name": "Verification & Real-World Test Hardening",
-      "status": "complete"
+      "number": "21",
+      "name": "Legacy Stack Cleanup & Full Verification",
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "/gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 17 of 5 · 0% · executing"
   },
-  "updated_at": "2026-11-10T16:31:25.338Z"
+  "updated_at": "2026-11-12T15:32:27.500Z"
 }

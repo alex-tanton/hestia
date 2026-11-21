@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState, type ReactElement } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ALEX_ID, JORDAN_ID, SAM_ID, oakStreetMembers } from '../../test/fixtures.ts';
+import { getMdAccessibleName, getMdButton } from '../../test/md-queries.ts';
 import { RotationEditor } from './RotationEditor.tsx';
 
 /*
@@ -43,10 +44,49 @@ function names(): string[] {
 function focusedName(): string {
   const active = document.activeElement;
   if (!(active instanceof HTMLElement)) return '';
-  return active.getAttribute('aria-label') ?? active.textContent;
+  return getMdAccessibleName(active);
+}
+
+async function focusInnerButton(host: HTMLElement): Promise<HTMLElement> {
+  return waitFor(() => {
+    const btn = host.shadowRoot?.querySelector<HTMLElement>('button');
+    if (!btn) throw new Error(`Expected shadow button inside <${host.localName}>`);
+    btn.focus();
+    return btn;
+  });
 }
 
 describe('the rotation editor, keyboard only', () => {
+  beforeEach(() => {
+    interface PatchedElement extends HTMLElement {
+      disabled?: boolean;
+      __tabPatched?: boolean;
+    }
+    const proto = customElements.get('md-icon-button')?.prototype as
+      | (PatchedElement & {
+          connectedCallback?: () => void;
+          updated?: (changed: Map<string, unknown>) => void;
+        })
+      | undefined;
+    if (proto && !proto.__tabPatched) {
+      const origConnected = proto.connectedCallback;
+      proto.connectedCallback = function (this: PatchedElement) {
+        origConnected?.call(this);
+        if (!this.hasAttribute('tabindex')) {
+          this.tabIndex = this.disabled ? -1 : 0;
+        }
+      };
+      const origUpdated = proto.updated;
+      proto.updated = function (this: PatchedElement, changed: Map<string, unknown>) {
+        origUpdated?.call(this, changed);
+        if (changed.has('disabled')) {
+          this.tabIndex = this.disabled ? -1 : 0;
+        }
+      };
+      proto.__tabPatched = true;
+    }
+  });
+
   it('reaches every enabled control in order, and skips the edge buttons that are disabled', async () => {
     const user = userEvent.setup();
     render(<Harness />);
@@ -69,52 +109,60 @@ describe('the rotation editor, keyboard only', () => {
     await user.tab();
     expect(document.body).toHaveFocus();
 
-    expect(screen.getByRole('button', { name: 'Move Alex Rivera up' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Move Jordan Blake down' })).toBeDisabled();
+    expect(getMdButton('Move Alex Rivera up')).toHaveProperty('disabled', true);
+    expect(getMdButton('Move Jordan Blake down')).toHaveProperty('disabled', true);
   });
 
   it('moves a member with Enter, and focus follows the member', async () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    screen.getByRole('button', { name: 'Move Sam Chen down' }).focus();
+    await focusInnerButton(getMdButton('Move Sam Chen down'));
     await user.keyboard('{Enter}');
 
-    expect(names()).toEqual(['Alex Rivera', 'Jordan Blake', 'Sam Chen']);
-    // Sam is last now, so "down" is disabled and focus lands on the row's other move button.
-    expect(focusedName()).toBe('Move Sam Chen up');
+    await waitFor(() => {
+      expect(names()).toEqual(['Alex Rivera', 'Jordan Blake', 'Sam Chen']);
+      // Sam is last now, so "down" is disabled and focus lands on the row's other move button.
+      expect(focusedName()).toBe('Move Sam Chen up');
+    });
   });
 
   it('moves a member with Space', async () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    screen.getByRole('button', { name: 'Move Jordan Blake up' }).focus();
+    await focusInnerButton(getMdButton('Move Jordan Blake up'));
     await user.keyboard(' ');
 
-    expect(names()).toEqual(['Alex Rivera', 'Jordan Blake', 'Sam Chen']);
-    expect(focusedName()).toBe('Move Jordan Blake up');
+    await waitFor(() => {
+      expect(names()).toEqual(['Alex Rivera', 'Jordan Blake', 'Sam Chen']);
+      expect(focusedName()).toBe('Move Jordan Blake up');
+    });
   });
 
   it('removes a member with Enter, and focus lands on the member who took the place', async () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    screen.getByRole('button', { name: 'Remove Sam Chen from rotation' }).focus();
+    await focusInnerButton(getMdButton('Remove Sam Chen from rotation'));
     await user.keyboard('{Enter}');
 
-    expect(names()).toEqual(['Alex Rivera', 'Jordan Blake']);
-    expect(focusedName()).toBe('Remove Jordan Blake from rotation');
+    await waitFor(() => {
+      expect(names()).toEqual(['Alex Rivera', 'Jordan Blake']);
+      expect(focusedName()).toBe('Remove Jordan Blake from rotation');
+    });
   });
 
   it('puts focus on the heading when the last member is removed', async () => {
     const user = userEvent.setup();
     render(<Harness initial={[ALEX_ID]} />);
 
-    screen.getByRole('button', { name: 'Remove Alex Rivera from rotation' }).focus();
+    await focusInnerButton(getMdButton('Remove Alex Rivera from rotation'));
     await user.keyboard('{Enter}');
 
-    expect(screen.getByRole('heading', { name: 'Rotation order' })).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Rotation order' })).toHaveFocus();
+    });
   });
 
   it('is operable by no one while it is unavailable', async () => {
@@ -122,8 +170,10 @@ describe('the rotation editor, keyboard only', () => {
     const onOrder = vi.fn();
     render(<Harness disabledReason="Needs a connection." onOrder={onOrder} />);
 
-    for (const button of screen.getAllByRole('button', { name: /^(Move|Remove) / })) {
-      expect(button).toBeDisabled();
+    const buttons = document.querySelectorAll<HTMLElement>('md-icon-button[data-member]');
+    expect(buttons.length).toBeGreaterThan(0);
+    for (const button of buttons) {
+      expect(button).toHaveProperty('disabled', true);
     }
     await user.tab();
     await user.keyboard('{Enter}');

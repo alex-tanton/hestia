@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { createFetchStub, renderApp } from '../../test/harness.tsx';
+import { findMdButton, getMdButton } from '../../test/md-queries.ts';
 import { useSection } from '../../lib/section-context.tsx';
 import { PillarScreen } from '../../screens/PillarScreen.tsx';
 import { HouseholdSwitcher, type HouseholdSummary } from './HouseholdSwitcher.tsx';
@@ -88,9 +89,11 @@ describe('app shell', () => {
     await userEvent.keyboard('{Enter}');
     // The Meals module is a lazy chunk, so its first load can outlast the default find timeout.
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 5000 }),
+      await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 20000 }),
     ).toBeInTheDocument();
-    expect(document.title).toBe('Meals · Hestia');
+    await waitFor(() => {
+      expect(document.title).toBe('Meals · Hestia');
+    });
     expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -248,9 +251,9 @@ describe('UpdateAvailable', () => {
     rerender(<UpdateAvailable isVisible onUpdate={onUpdate} onDismiss={onDismiss} />);
     expect(screen.getByText('Update available.')).toBeVisible();
     expect(onUpdate).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Reload' }));
+    await userEvent.click(getMdButton('Reload'));
     expect(onUpdate).toHaveBeenCalledOnce();
-    await userEvent.click(screen.getByRole('button', { name: 'Dismiss update notice' }));
+    await userEvent.click(await findMdButton('Dismiss update notice'));
     expect(onDismiss).toHaveBeenCalledOnce();
   });
 });

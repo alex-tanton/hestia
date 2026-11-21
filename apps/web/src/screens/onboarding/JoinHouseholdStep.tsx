@@ -46,7 +46,11 @@ export function JoinHouseholdStep({ autoToken, onJoined }: JoinHouseholdStepProp
   useEffect(() => {
     if (wasRedeeming.current === isRedeemingLink) return;
     wasRedeeming.current = isRedeemingLink;
-    if (!isRedeemingLink) formRef.current?.querySelector('input')?.focus();
+    if (!isRedeemingLink) {
+      formRef.current
+        ?.querySelector<HTMLElement>('md-outlined-text-field, input, textarea')
+        ?.focus();
+    }
   }, [isRedeemingLink, formRef]);
 
   useEffect(() => {

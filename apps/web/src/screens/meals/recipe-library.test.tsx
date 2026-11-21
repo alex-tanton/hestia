@@ -1,7 +1,14 @@
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { registerBrowserStubs, setOnline } from '../../test/browser.ts';
+import {
+  findMdButton,
+  findMdField,
+  getMdAccessibleName,
+  getMdButton,
+  getMdField,
+} from '../../test/md-queries.ts';
 import { OAK_STREET_ID, profileFixture } from '../../test/fixtures.ts';
 import {
   bakedZitiFixture,
@@ -43,6 +50,29 @@ function mount(handlers = baseHandlers()): ReturnType<typeof createFetchStub> {
 
 registerBrowserStubs();
 
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
+
+function getAllMdButtons(name: string): HTMLElement[] {
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'md-filled-button, md-outlined-button, md-text-button, md-icon-button, md-elevated-button, md-filled-tonal-button, button',
+    ),
+  );
+  return candidates.filter((el) => getMdAccessibleName(el) === name);
+}
+
 describe('Recipe library', () => {
   it('loading: announces it with skeletons', () => {
     mount(baseHandlers({ 'GET /api/households/:id/recipes': () => new Promise(() => undefined) }));
@@ -72,17 +102,18 @@ describe('Recipe library', () => {
       }),
     );
     expect(await screen.findByText(RECIPE_LIBRARY_EMPTY_COPY)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Add a recipe' })[0]).toBeInTheDocument();
+    expect(getAllMdButtons('Add a recipe')[0]).toBeInTheDocument();
   });
 
   it('filtered empty: different copy, with a clear-search action', async () => {
     const user = userEvent.setup();
     mount();
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.type(screen.getByLabelText('Search recipes'), 'zzzzz');
+    const searchInput = await findFieldInput('Search recipes');
+    fireEvent.input(searchInput, { target: { value: 'zzzzz' } });
     expect(await screen.findByText(RECIPE_LIBRARY_NO_MATCH_COPY)).toBeInTheDocument();
     expect(screen.queryByText(RECIPE_LIBRARY_EMPTY_COPY)).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+    await user.click(getMdButton('Clear search'));
     expect(await screen.findByText(/Sheet Pan Chicken/)).toBeInTheDocument();
   });
 
@@ -96,7 +127,7 @@ describe('Recipe library', () => {
         }),
       }),
     );
-    await user.click(await screen.findByRole('button', { name: 'Try again' }));
+    await user.click(await findMdButton('Try again'));
     await waitFor(() => {
       expect(stub.calls.filter((call) => call.path.includes('/recipes')).length).toBeGreaterThan(1);
     });
@@ -106,8 +137,8 @@ describe('Recipe library', () => {
     mount();
     await screen.findByText(/Sheet Pan Chicken/);
     setOnline(false);
-    const add = screen.getByRole('button', { name: 'Add a recipe' });
-    expect(add).toHaveAttribute('aria-disabled', 'true');
+    const add = getMdButton('Add a recipe');
+    expect(add).toHaveProperty('softDisabled', true);
     const reasonId = add.getAttribute('aria-describedby');
     expect(document.getElementById(reasonId ?? '')).toHaveTextContent('Needs a connection.');
   });
@@ -157,7 +188,7 @@ describe('Recipe library', () => {
     await screen.findByText(/Sheet Pan Chicken/);
     expect(screen.queryByText(bakedZitiFixture.title)).toBeNull();
 
-    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(getMdButton('Next'));
 
     await screen.findByText(bakedZitiFixture.title);
     expect(screen.queryByText(/Sheet Pan Chicken/)).toBeNull();
@@ -192,12 +223,13 @@ describe('Recipe library', () => {
       }),
     );
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(getMdButton('Next'));
     await screen.findByText(bakedZitiFixture.title);
 
-    await user.type(screen.getByLabelText('Search recipes'), 'chicken');
+    const searchInput = await findFieldInput('Search recipes');
+    fireEvent.input(searchInput, { target: { value: 'chicken' } });
     await screen.findByText(/Sheet Pan Chicken/);
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(getMdButton('Previous')).toBeDisabled();
   });
 
   it('add flow: choose manual entry, fill it in, and save', async () => {
@@ -211,12 +243,14 @@ describe('Recipe library', () => {
       }),
     );
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(screen.getAllByRole('button', { name: 'Add a recipe' })[0]!);
-    await user.click(await screen.findByRole('button', { name: 'Enter by hand' }));
-    await user.type(await screen.findByLabelText('Title'), 'Weeknight Tacos');
+    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(await findMdButton('Enter by hand'));
+    const titleInput = await findFieldInput('Title');
+    fireEvent.input(titleInput, { target: { value: 'Weeknight Tacos' } });
     // Entering by hand seeds one blank ingredient row already.
-    await user.type(screen.getByLabelText('Item'), 'ground beef');
-    await user.click(screen.getByRole('button', { name: 'Save recipe' }));
+    const itemInput = await findFieldInput('Item');
+    fireEvent.input(itemInput, { target: { value: 'ground beef' } });
+    await user.click(getMdButton('Save recipe'));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'POST' && call.path.endsWith('/recipes')),
@@ -228,12 +262,14 @@ describe('Recipe library', () => {
     const user = userEvent.setup();
     mount();
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(screen.getAllByRole('button', { name: 'Add a recipe' })[0]!);
-    await user.click(await screen.findByRole('button', { name: 'Enter by hand' }));
-    await user.type(await screen.findByLabelText('Title'), 'Untitled Dish');
+    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(await findMdButton('Enter by hand'));
+    const titleInput = await findFieldInput('Title');
+    fireEvent.input(titleInput, { target: { value: 'Untitled Dish' } });
     // Entering by hand seeds one blank ingredient row, left blank here on purpose.
-    await user.click(screen.getByRole('button', { name: 'Save recipe' }));
-    expect(await screen.findByText('Enter an ingredient.')).toBeInTheDocument();
+    await user.click(getMdButton('Save recipe'));
+    expect(getMdField('Item')).toHaveProperty('error', true);
+    expect(getMdField('Item')).toHaveProperty('errorText', 'Enter an ingredient.');
   });
 
   it('parse-failed: falls back to the manual form, prefilled with the typed URL', async () => {
@@ -247,12 +283,16 @@ describe('Recipe library', () => {
       }),
     );
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(screen.getAllByRole('button', { name: 'Add a recipe' })[0]!);
-    await user.click(await screen.findByRole('button', { name: 'Paste a link' }));
-    await user.type(screen.getByLabelText('Recipe URL'), 'https://example.test/bad-page');
-    await user.click(screen.getByRole('button', { name: 'Parse' }));
+    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(await findMdButton('Paste a link'));
+    const urlInput = await findFieldInput('Recipe URL');
+    fireEvent.input(urlInput, { target: { value: 'https://example.test/bad-page' } });
+    await user.click(getMdButton('Parse'));
     expect(await screen.findByText("Couldn't read that page. Add it by hand?")).toBeInTheDocument();
-    expect(await screen.findByLabelText('Source URL')).toHaveValue('https://example.test/bad-page');
+    expect(await findMdField('Source URL')).toHaveProperty(
+      'value',
+      'https://example.test/bad-page',
+    );
   });
 
   it('parse-incomplete: flags missing fields rather than saving silently', async () => {
@@ -273,15 +313,16 @@ describe('Recipe library', () => {
       }),
     );
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(screen.getAllByRole('button', { name: 'Add a recipe' })[0]!);
-    await user.click(await screen.findByRole('button', { name: 'Paste a link' }));
-    await user.type(screen.getByLabelText('Recipe URL'), 'https://example.test/partial');
-    await user.click(screen.getByRole('button', { name: 'Parse' }));
+    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(await findMdButton('Paste a link'));
+    const urlInput = await findFieldInput('Recipe URL');
+    fireEvent.input(urlInput, { target: { value: 'https://example.test/partial' } });
+    await user.click(getMdButton('Parse'));
     expect(
       await screen.findByText(
         "That page didn't have everything. Fill in what's missing before saving.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Title')).toHaveValue('Partial Recipe');
+    expect(await findMdField('Title')).toHaveProperty('value', 'Partial Recipe');
   });
 });

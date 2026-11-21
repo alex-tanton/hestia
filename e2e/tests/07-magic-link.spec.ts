@@ -23,7 +23,7 @@ test('uninvited email address is rejected without dispatching email', async ({ p
   await purgeMailbox('uninvited');
   await page.goto('/sign-in/link');
   await page.getByLabel('Email').fill('uninvited@example.com');
-  await page.getByRole('button', { name: 'Send sign-in link' }).click();
+  await page.getByRole('button', { name: /^(Email|Send) sign-in link$/ }).click();
 
   await expect(
     page.getByText('No account found with this email. Ask your household admin for an invite.'),
@@ -44,7 +44,7 @@ test('valid user receives OTP email and signs in with 6-digit code', async ({ pa
   await purgeMailbox(SEED.alex.email);
   await page.goto('/sign-in/link');
   await page.getByLabel('Email').fill(SEED.alex.email);
-  await page.getByRole('button', { name: 'Send sign-in link' }).click();
+  await page.getByRole('button', { name: /^(Email|Send) sign-in link$/ }).click();
 
   await page.getByRole('button', { name: 'Enter the code' }).click();
   await expect(page).toHaveURL(/\/sign-in\/code$/);
@@ -55,7 +55,7 @@ test('valid user receives OTP email and signs in with 6-digit code', async ({ pa
 
   const code = extractOtpCode(email);
   await page.getByLabel('6-digit code').fill(code);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.getByRole('button', { name: /^(Verify sign-in code|Sign in)$/ }).click();
 
   await expectDashboard(page, 'Oak Street');
 });
@@ -63,13 +63,13 @@ test('valid user receives OTP email and signs in with 6-digit code', async ({ pa
 test('invalid OTP code displays error message', async ({ page }) => {
   await page.goto('/sign-in/link');
   await page.getByLabel('Email').fill(SEED.jordan.email);
-  await page.getByRole('button', { name: 'Send sign-in link' }).click();
+  await page.getByRole('button', { name: /^(Email|Send) sign-in link$/ }).click();
 
   await page.getByRole('button', { name: 'Enter the code' }).click();
   await expect(page).toHaveURL(/\/sign-in\/code$/);
 
   await page.getByLabel('6-digit code').fill('000000');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.getByRole('button', { name: /^(Verify sign-in code|Sign in)$/ }).click();
 
   await expect(
     page.getByText('That code is incorrect or has expired. Ask for a new one.'),
@@ -84,7 +84,7 @@ test('valid user signs in directly via confirmation link in email', async ({ bro
   try {
     await fresh.goto('/sign-in/link');
     await fresh.getByLabel('Email').fill(SEED.sam.email);
-    await fresh.getByRole('button', { name: 'Send sign-in link' }).click();
+    await fresh.getByRole('button', { name: /^(Email|Send) sign-in link$/ }).click();
 
     const email = await waitForLatestEmail(SEED.sam.email);
     const confirmationUrl = extractConfirmationUrl(email);
@@ -99,7 +99,7 @@ test('valid user signs in directly via confirmation link in email', async ({ bro
 test('resend code button enforces 30-second cooldown timer', async ({ page }) => {
   await page.goto('/sign-in/link');
   await page.getByLabel('Email').fill(SEED.casey.email);
-  await page.getByRole('button', { name: 'Send sign-in link' }).click();
+  await page.getByRole('button', { name: /^(Email|Send) sign-in link$/ }).click();
 
   await page.getByRole('button', { name: 'Enter the code' }).click();
   await expect(page).toHaveURL(/\/sign-in\/code$/);

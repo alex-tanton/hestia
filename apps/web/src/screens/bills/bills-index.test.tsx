@@ -3,6 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import {
+  findMdButton,
+  findMdDialog,
+  findMdField,
+  findMdMenuItem,
+  getMdButton,
+} from '../../test/md-queries.ts';
+import {
   billFixture,
   dukeEnergyFixture,
   spectrumInternetFixture,
@@ -17,6 +24,20 @@ import {
   type StubHandler,
 } from '../../test/harness.tsx';
 import { BillsIndexScreen, groupBills } from './BillsIndexScreen.tsx';
+
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
 
 function baseHandlers(
   extra: Readonly<Record<string, StubHandler>> = {},
@@ -111,8 +132,10 @@ describe('Bills dashboard', () => {
 
   it('empty: first run explains Hestia tracks bills but never pays them', async () => {
     mount(baseHandlers({ 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) }));
-    expect(await screen.findByText(/Hestia tracks what you owe and when/)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Add a bill' })[0]).toBeInTheDocument();
+    const emptyNotice = await screen.findByText(/Hestia tracks what you owe and when/);
+    expect(emptyNotice).toBeInTheDocument();
+    const emptyContainer = emptyNotice.parentElement!;
+    expect(getMdButton('Add a bill', { container: emptyContainer })).toBeInTheDocument();
   });
 
   it('error: states what failed and retries', async () => {
@@ -125,7 +148,7 @@ describe('Bills dashboard', () => {
         }),
       }),
     );
-    await user.click(await screen.findByRole('button', { name: 'Try again' }));
+    await user.click(await findMdButton('Try again'));
     await waitFor(() => {
       expect(stub.calls.filter((call) => call.path.includes('/bills')).length).toBeGreaterThan(1);
     });
@@ -141,13 +164,13 @@ describe('Bills dashboard', () => {
     mount();
     await screen.findByText('Duke Energy');
     setOnline(false);
-    const add = screen.getByRole('button', { name: 'Add a bill' });
-    expect(add).toHaveAttribute('aria-disabled', 'true');
+    const add = getMdButton('Add a bill');
+    expect(add).toHaveProperty('softDisabled', true);
     const reasonId = add.getAttribute('aria-describedby');
     expect(document.getElementById(reasonId ?? '')).toHaveTextContent('Needs a connection.');
 
-    const pay = screen.getAllByRole('button', { name: /^Mark paid/ })[0]!;
-    expect(pay).toHaveAttribute('aria-disabled', 'true');
+    const pay = getMdButton('Mark paid, Duke Energy');
+    expect(pay).toHaveProperty('softDisabled', true);
   });
 
   it('pay: records a payment for the current occurrence', async () => {
@@ -171,7 +194,7 @@ describe('Bills dashboard', () => {
       }),
     );
     await screen.findByText('Duke Energy');
-    await user.click(screen.getAllByRole('button', { name: /^Mark paid/ })[0]!);
+    await user.click(getMdButton('Mark paid, Duke Energy'));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -205,15 +228,15 @@ describe('Bills dashboard', () => {
     );
     await screen.findByText('Duke Energy');
     await openMenu(user, 'More actions for Duke Energy');
-    await user.click(await screen.findByRole('menuitem', { name: 'Skip' }));
+    await user.click(await findMdMenuItem('Skip'));
 
-    const dialog = await screen.findByRole('alertdialog', { name: 'Skip this bill?' });
+    const dialog = await findMdDialog('Skip this bill?');
     expect(dialog).toHaveTextContent(
       "Skip the 09/26/2026 Duke Energy bill? It won't be marked paid.",
     );
     expect(stub.calls.some((call) => call.path.includes('/skip'))).toBe(false);
 
-    await user.click(within(dialog).getByRole('button', { name: 'Skip bill' }));
+    await user.click(getMdButton('Skip bill', { container: dialog }));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -248,11 +271,14 @@ describe('Bills dashboard', () => {
       }),
     );
     await screen.findByText('Duke Energy');
-    await user.click(screen.getAllByRole('button', { name: 'Add a bill' })[0]!);
-    await user.type(await screen.findByLabelText('Name'), 'Trash pickup');
-    await user.type(screen.getByLabelText('Amount'), '24.00');
-    fireEvent.change(screen.getByLabelText('First due date'), { target: { value: '2026-11-01' } });
-    await user.click(screen.getByRole('button', { name: 'Add bill' }));
+    await user.click(getMdButton('Add a bill'));
+    const nameInput = await findFieldInput('Name');
+    fireEvent.input(nameInput, { target: { value: 'Trash pickup' } });
+    const amountInput = await findFieldInput('Amount');
+    fireEvent.input(amountInput, { target: { value: '24.00' } });
+    const dueDateInput = await findFieldInput('First due date');
+    fireEvent.input(dueDateInput, { target: { value: '2026-11-01' } });
+    await user.click(getMdButton('Add bill'));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -287,12 +313,15 @@ describe('Bills dashboard', () => {
       }),
     );
     await screen.findByText('Duke Energy');
-    await user.click(screen.getAllByRole('button', { name: 'Add a bill' })[0]!);
+    await user.click(getMdButton('Add a bill'));
     await user.click(await screen.findByRole('radio', { name: 'Personal' }));
-    await user.type(screen.getByLabelText('Name'), 'Car Insurance');
-    await user.type(screen.getByLabelText('Amount'), '128.00');
-    fireEvent.change(screen.getByLabelText('First due date'), { target: { value: '2026-11-01' } });
-    await user.click(screen.getByRole('button', { name: 'Add bill' }));
+    const nameInput = await findFieldInput('Name');
+    fireEvent.input(nameInput, { target: { value: 'Car Insurance' } });
+    const amountInput = await findFieldInput('Amount');
+    fireEvent.input(amountInput, { target: { value: '128.00' } });
+    const dueDateInput = await findFieldInput('First due date');
+    fireEvent.input(dueDateInput, { target: { value: '2026-11-01' } });
+    await user.click(getMdButton('Add bill'));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'POST' && call.path === '/api/users/me/bills'),

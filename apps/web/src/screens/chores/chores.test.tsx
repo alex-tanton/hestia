@@ -1,5 +1,5 @@
 import { onlineManager } from '@tanstack/react-query';
-import { act, configure, screen, waitFor, within } from '@testing-library/react';
+import { act, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Chore, ChoreDetail } from '@hestia/shared';
@@ -44,6 +44,15 @@ import {
   type StubHandler,
   WithQueue,
 } from '../../test/harness.tsx';
+import {
+  findMdButton,
+  findMdDialog,
+  findMdField,
+  findMdMenuItem,
+  getMdAccessibleName,
+  getMdButton,
+  getMdField,
+} from '../../test/md-queries.ts';
 import { addDays } from '../../lib/household-date.ts';
 import { ChoreDetailScreen } from './ChoreDetailScreen.tsx';
 import { ChoreFormScreen } from './ChoreFormScreen.tsx';
@@ -124,10 +133,37 @@ function sectionOf(heading: string): HTMLElement {
   return section;
 }
 
-/** Radix opens a menu on its trigger's keyboard activation, which is how a keyboard user opens it. */
+/** OverflowMenu opens from keyboard activation on the inner shadow button of MdIconButton. */
 async function openMenu(user: UserEvent, trigger: HTMLElement): Promise<void> {
-  trigger.focus();
+  await waitFor(() => {
+    expect(trigger.shadowRoot?.querySelector('button')).not.toBeNull();
+  });
+  const innerButton = trigger.shadowRoot?.querySelector('button');
+  if (innerButton === null || innerButton === undefined) {
+    throw new Error('Expected shadow button inside md-icon-button');
+  }
+  innerButton.focus();
   await user.keyboard('{Enter}');
+}
+
+function getAllMdButtons(name: string): HTMLElement[] {
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'md-filled-button, md-outlined-button, md-text-button, md-icon-button, md-elevated-button, md-filled-tonal-button, button',
+    ),
+  );
+  return candidates.filter((el) => getMdAccessibleName(el) === name);
+}
+
+async function getShadowInput(field: HTMLElement): Promise<HTMLInputElement> {
+  await waitFor(() => {
+    expect(field.shadowRoot?.querySelector('input')).not.toBeNull();
+  });
+  const input = field.shadowRoot?.querySelector('input');
+  if (input === null || input === undefined) {
+    throw new Error('Expected shadow input inside md-outlined-text-field');
+  }
+  return input;
 }
 
 function groupOf(heading: string): string[] {
@@ -160,7 +196,7 @@ describe('Chores list', () => {
   it('first run: an empty household says what this holds and offers the first chore', async () => {
     mountList({ 'GET /api/households/:id/chores': () => ({ status: 200, body: [] }) });
     expect(await screen.findByText(CHORES_EMPTY_COPY)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Add a chore' })).toHaveLength(2);
+    expect(getAllMdButtons('Add a chore')).toHaveLength(2);
   });
 
   it('error: says what failed and retries in place', async () => {
@@ -174,7 +210,7 @@ describe('Chores list', () => {
       },
     });
     expect(await screen.findByText("Couldn't load chores. Try again.")).toBeInTheDocument();
-    const retry = screen.getByRole('button', { name: 'Try again' });
+    const retry = getMdButton('Try again');
     await userEvent.click(retry);
     expect(await screen.findByRole('link', { name: /^Take out trash/ })).toBeInTheDocument();
   });
@@ -259,7 +295,7 @@ describe('Chores list', () => {
       },
     });
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Mark Take out trash done' }));
+    await userEvent.click(await findMdButton('Mark Take out trash done'));
 
     expect(
       await screen.findByText('Take out trash done. Jordan Blake is next.'),
@@ -295,7 +331,7 @@ describe('Chores list', () => {
       },
     });
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Mark Take out trash done' }));
+    await userEvent.click(await findMdButton('Mark Take out trash done'));
     await userEvent.click(await screen.findByRole('button', { name: 'Undo' }));
 
     expect(await screen.findByRole('link', { name: /^Take out trash/ })).toHaveTextContent(
@@ -305,7 +341,7 @@ describe('Chores list', () => {
     expect(undo?.path).toMatch(new RegExp(`/api/chores/${TAKE_OUT_TRASH_ID}/completions/`));
   });
 
-  it('the completion toast holds Undo for five seconds, then lets it go', async () => {
+  it('the completion snackbar keeps Undo visible persistently until dismissed', async () => {
     vi.useRealTimers();
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.setSystemTime(new Date('2026-09-27T16:00:00.000Z'));
@@ -323,17 +359,15 @@ describe('Chores list', () => {
         },
       }),
     });
-    await userEvent.click(await screen.findByRole('button', { name: 'Mark Water plants done' }));
+    await userEvent.click(await findMdButton('Mark Water plants done'));
     expect(await screen.findByRole('button', { name: 'Undo' })).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(4500);
+      vi.advanceTimersByTime(5500);
     });
     expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
 
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
     });
@@ -347,14 +381,13 @@ describe('Chores list', () => {
 
     setOnline(false);
 
-    const done = await screen.findByRole('button', { name: 'Mark Take out trash done' });
-    expect(done).not.toHaveAttribute('aria-disabled', 'true');
+    const done = await findMdButton('Mark Take out trash done');
+    expect(done).toHaveProperty('softDisabled', false);
     expect(screen.getAllByText(OFFLINE_ACTION_REASON).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /^Take out trash/ })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Add a chore' })[0]).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    const addButton = getAllMdButtons('Add a chore')[0];
+    expect(addButton).toHaveProperty('softDisabled', true);
+    expect(addButton).toHaveAccessibleDescription(OFFLINE_ACTION_REASON);
   });
 
   it('copy: no gamification words in any chore string the screens render or export', async () => {
@@ -414,16 +447,16 @@ describe('Chore detail', () => {
     await screen.findByRole('heading', { level: 1, name: 'Take out trash' });
 
     const user = userEvent.setup();
-    const menus = screen.getAllByRole('button', { name: 'More actions for this completion' });
+    const menus = getAllMdButtons('More actions for this completion');
     expect(menus).toHaveLength(1);
     await openMenu(user, menus[0]!);
-    await user.click(await screen.findByRole('menuitem', { name: /Delete/ }));
+    await user.click(await findMdMenuItem(/Delete/));
 
-    const dialog = await screen.findByRole('alertdialog', { name: 'Delete this completion?' });
+    const dialog = await findMdDialog('Delete this completion?');
     expect(within(dialog).getByText(DELETE_COMPLETION_CONFIRMATION)).toBeInTheDocument();
     expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(false);
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete completion' }));
+    await userEvent.click(getMdButton('Delete completion', { container: dialog }));
     await waitFor(() => {
       expect(stub.calls.find((call) => call.method === 'DELETE')?.path).toMatch(
         new RegExp(
@@ -441,7 +474,7 @@ describe('Chore detail', () => {
         body: { ...takeOutTrashDetailFixture, currentTurn: JORDAN_ID },
       }),
     });
-    await userEvent.click(await screen.findByRole('button', { name: 'Mark done' }));
+    await userEvent.click(await findMdButton('Mark done'));
     expect(
       await screen.findByText('Take out trash done. Jordan Blake is next.'),
     ).toBeInTheDocument();
@@ -453,8 +486,8 @@ describe('Chore detail', () => {
     });
     await screen.findByRole('heading', { level: 1, name: 'Take out trash' });
     setOnline(false);
-    const markDone = await screen.findByRole('button', { name: 'Mark done' });
-    expect(markDone).not.toHaveAttribute('aria-disabled', 'true');
+    const markDone = await findMdButton('Mark done');
+    expect(markDone).toHaveProperty('softDisabled', false);
   });
 });
 
@@ -462,14 +495,26 @@ describe('Chore sheet', () => {
   it('name is required and the interval must be a whole number of 1 or more', async () => {
     mountForm({});
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Save chore' }));
-    expect(await screen.findByText('Enter a name.')).toBeInTheDocument();
+    const save = await findMdButton('Save chore');
+    await waitFor(() => {
+      expect(save.shadowRoot?.querySelector('button')).not.toBeNull();
+    });
+    await user.click(save);
+    await waitFor(() => {
+      expect(getMdField('Name')).toHaveProperty('errorText', 'Enter a name.');
+    });
 
-    await user.type(screen.getByLabelText('Name'), 'Sweep porch');
-    await user.clear(screen.getByLabelText('Interval'));
-    await user.type(screen.getByLabelText('Interval'), '0');
-    await user.click(screen.getByRole('button', { name: 'Save chore' }));
-    expect(await screen.findByText('Enter a whole number of 1 or more.')).toBeInTheDocument();
+    await user.type(await getShadowInput(getMdField('Name')), 'Sweep porch');
+    const intervalInput = await getShadowInput(getMdField('Interval'));
+    fireEvent.input(intervalInput, { target: { value: '' } });
+    await user.type(intervalInput, '0');
+    await user.click(getMdButton('Save chore'));
+    await waitFor(() => {
+      expect(getMdField('Interval')).toHaveProperty(
+        'errorText',
+        'Enter a whole number of 1 or more.',
+      );
+    });
   });
 
   it('the anchor defaults to today and the preview shows the next three dates as the unit changes', async () => {
@@ -498,21 +543,26 @@ describe('Chore sheet', () => {
       },
     });
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText('Name'), 'Sweep porch');
+    await user.type(await getShadowInput(await findMdField('Name')), 'Sweep porch');
     await user.selectOptions(screen.getByLabelText('Assignment'), 'rotation');
     await user.selectOptions(screen.getByLabelText('Add to rotation'), ALEX_ID);
     await user.selectOptions(screen.getByLabelText('Add to rotation'), SAM_ID);
 
-    const samUp = screen.getByRole('button', { name: 'Move Sam Chen up' });
-    samUp.focus();
+    const samUp = getMdButton('Move Sam Chen up');
+    await waitFor(() => {
+      expect(samUp.shadowRoot?.querySelector('button')).not.toBeNull();
+    });
+    samUp.shadowRoot?.querySelector('button')?.focus();
     await user.keyboard('{Enter}');
 
     // Sam now leads the order, so the "up" control has nothing above it and focus moves to "down".
     expect(screen.getByText('1. Sam Chen')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Move Sam Chen down' })).toHaveFocus();
-    expect(screen.getByRole('button', { name: 'Move Sam Chen up' })).toBeDisabled();
+    await waitFor(() => {
+      expect(getMdButton('Move Sam Chen down')).toHaveFocus();
+    });
+    expect(getMdButton('Move Sam Chen up')).toHaveProperty('disabled', true);
 
-    await user.click(screen.getByRole('button', { name: 'Save chore' }));
+    await user.click(getMdButton('Save chore'));
     await waitFor(() => {
       expect(posted).toHaveLength(1);
     });
@@ -525,9 +575,9 @@ describe('Chore sheet', () => {
   it('a rotation needs at least one member before it can be saved', async () => {
     mountForm({});
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText('Name'), 'Sweep porch');
+    await user.type(await getShadowInput(await findMdField('Name')), 'Sweep porch');
     await user.selectOptions(screen.getByLabelText('Assignment'), 'rotation');
-    await user.click(screen.getByRole('button', { name: 'Save chore' }));
+    await user.click(getMdButton('Save chore'));
     expect(await screen.findByText(ROTATION_REQUIRED_ERROR)).toBeInTheDocument();
   });
 
@@ -540,11 +590,11 @@ describe('Chore sheet', () => {
       },
     });
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText('Name'), 'Sweep porch');
+    await user.type(await getShadowInput(await findMdField('Name')), 'Sweep porch');
     await user.selectOptions(screen.getByLabelText('Assignment'), 'single');
     await user.selectOptions(screen.getByLabelText('Assigned to'), 'Sam Chen');
     await user.selectOptions(screen.getByLabelText('Assigned to'), 'Unassigned');
-    await user.click(screen.getByRole('button', { name: 'Save chore' }));
+    await user.click(getMdButton('Save chore'));
     await waitFor(() => {
       expect(posted).toHaveLength(1);
     });
@@ -564,8 +614,8 @@ describe('Chore sheet', () => {
       TAKE_OUT_TRASH_ID,
     );
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Move Jordan Blake up' }));
-    await user.click(screen.getByRole('button', { name: 'Save chore' }));
+    await user.click(await findMdButton('Move Jordan Blake up'));
+    await user.click(getMdButton('Save chore'));
     await waitFor(() => {
       expect(patched).toHaveLength(1);
     });
@@ -583,15 +633,12 @@ describe('Chore sheet', () => {
       TAKE_OUT_TRASH_ID,
     );
     const user = userEvent.setup();
-    await openMenu(
-      user,
-      await screen.findByRole('button', { name: 'More actions for Take out trash' }),
-    );
-    await user.click(await screen.findByRole('menuitem', { name: /Delete/ }));
-    const dialog = await screen.findByRole('alertdialog', { name: 'Delete this chore?' });
+    await openMenu(user, await findMdButton('More actions for Take out trash'));
+    await user.click(await findMdMenuItem(/Delete/));
+    const dialog = await findMdDialog('Delete this chore?');
     expect(within(dialog).getByText(/Delete Take out trash\?/)).toBeInTheDocument();
     expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(false);
-    await user.click(within(dialog).getByRole('button', { name: 'Delete chore' }));
+    await user.click(getMdButton('Delete chore', { container: dialog }));
     await waitFor(() => {
       expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(true);
     });
@@ -600,13 +647,11 @@ describe('Chore sheet', () => {
   it('offline: the fields and Save are disabled with the reason', async () => {
     // The roster loads while online, as it does in the shell, before the connection drops.
     mountForm({});
-    await screen.findByRole('button', { name: 'Save chore' });
+    await findMdButton('Save chore');
     setOnline(false);
-    expect(await screen.findByRole('button', { name: 'Save chore' })).toHaveAccessibleDescription(
-      OFFLINE_ACTION_REASON,
-    );
-    expect(screen.getByLabelText('Name')).toBeDisabled();
-    expect(screen.getByLabelText('Interval')).toBeDisabled();
+    expect(await findMdButton('Save chore')).toHaveAccessibleDescription(OFFLINE_ACTION_REASON);
+    expect(getMdField('Name')).toHaveProperty('disabled', true);
+    expect(getMdField('Interval')).toHaveProperty('disabled', true);
   });
 });
 

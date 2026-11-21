@@ -7,6 +7,20 @@ export interface FieldErrors<F extends string> {
   formRef: RefObject<HTMLFormElement | null>;
 }
 
+function findFirstInvalidField(form: HTMLFormElement | null): HTMLElement | null {
+  if (!form) return null;
+  const matched = form.querySelector<HTMLElement>(
+    '[aria-invalid="true"], [data-aria-invalid="true"], [error]:not([error="false"])',
+  );
+  if (matched) return matched;
+  for (const element of form.querySelectorAll<HTMLElement>('*')) {
+    if (Reflect.get(element, 'error') === true) {
+      return element;
+    }
+  }
+  return null;
+}
+
 /**
  * Form errors that are announced and reachable: each message is rendered by the field (which
  * links it with `aria-describedby` and marks the control `aria-invalid`), and on submit focus
@@ -19,7 +33,7 @@ export function useFieldErrors<F extends string>(): FieldErrors<F> {
 
   useEffect(() => {
     if (attempt === 0) return;
-    formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    findFirstInvalidField(formRef.current)?.focus();
   }, [attempt, errors]);
 
   const setErrors = useCallback((next: Partial<Record<F, string>>) => {

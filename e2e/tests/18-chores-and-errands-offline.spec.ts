@@ -39,7 +39,42 @@ function errandStatus(name: string): string {
  * wrapping a row would match the same text as well.
  */
 function rowFor(page: Page, text: string): Locator {
-  return page.locator('#main li:not(:has(li))').filter({ hasText: text });
+  return page.locator('#main').getByRole('listitem').filter({ hasText: text }).first();
+}
+
+async function ensureCompletedErrandsOpen(page: Page): Promise<void> {
+  // 1. If Phase 20+ MD3 button toggle is visible
+  const button = page.getByRole('button', { name: /^Completed \(\d+\)/ });
+  if (await button.isVisible().catch(() => false)) {
+    const isExpanded = await button.getAttribute('aria-expanded').catch(() => null);
+    if (isExpanded !== 'true') {
+      await button.click({ timeout: 2000 }).catch(() => undefined);
+    }
+    return;
+  }
+
+  // 2. If Phase 17-19 details element is in the DOM
+  const details = page.locator('details');
+  if ((await details.count()) > 0) {
+    const isOpen = await details
+      .first()
+      .evaluate((el: HTMLDetailsElement) => el.open)
+      .catch(() => false);
+    if (!isOpen) {
+      await details
+        .locator('summary')
+        .first()
+        .click({ timeout: 2000 })
+        .catch(() => undefined);
+      await details
+        .evaluateAll((els: HTMLElement[]) => {
+          for (const el of els) {
+            if ('open' in el) (el as HTMLDetailsElement).open = true;
+          }
+        })
+        .catch(() => undefined);
+    }
+  }
 }
 
 /** Light run only: the online completion, the labels, and the history it leaves behind. */
@@ -51,7 +86,9 @@ async function onlineSteps(page: Page): Promise<void> {
   await expect(page.getByRole('link', { name: /^Clean bathroom/ })).toContainText('in 2 days');
 
   // Completing a rotating chore passes its turn on: Jordan had Clean bathroom, and Alex is next.
-  await page.getByRole('button', { name: 'Mark Clean bathroom done' }).click();
+  await page
+    .getByRole('button', { name: /Mark (done, Clean bathroom|Clean bathroom done)/ })
+    .click();
   await expect(
     page.getByText('Clean bathroom done. Alex Rivera is next.', { exact: true }),
   ).toHaveCount(1);
@@ -77,11 +114,12 @@ async function onlineSteps(page: Page): Promise<void> {
     'Overdue 2 days',
   );
   await page.getByRole('checkbox', { name: 'Mark Return Amazon package as done' }).click();
-  await page.getByText(/completed$/).click();
+  await ensureCompletedErrandsOpen(page);
   // Scoped to this errand's row: journey 15 has already completed another one today, with the same words.
   await expect(
     page
-      .locator('#main li:not(:has(li))')
+      .locator('#main')
+      .getByRole('listitem')
       .filter({ hasText: 'Return Amazon package' })
       .filter({ hasText: /Completed by Alex Rivera · today/ }),
   ).toBeVisible();
@@ -96,16 +134,21 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
   await page.goto('/chores/errands');
   await expect(page.getByRole('checkbox', { name: new RegExp(`^Mark ${errand}`) })).toBeVisible();
   await subTabs.getByText('Chores', { exact: true }).click();
-  await expect(page.getByRole('button', { name: `Mark ${chore} done` })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: new RegExp(`Mark (done, ${chore}|${chore} done)`) }),
+  ).toBeVisible();
   // Precached before the loss of network, so the reload below has an app shell to serve.
   await waitForServiceWorker(page);
   await page.context().setOffline(true);
 
-  await page.getByRole('button', { name: `Mark ${chore} done` }).click();
+  await page
+    .getByRole('button', { name: new RegExp(`Mark (done, ${chore}|${chore} done)`) })
+    .click();
   await expect(rowFor(page, chore)).toContainText(PENDING);
 
   await subTabs.getByText('Errands', { exact: true }).click();
   await page.getByRole('checkbox', { name: `Mark ${errand} as done` }).click();
+  await ensureCompletedErrandsOpen(page);
   // The done box shows at once and the row is marked while it waits; its checkbox is held until the
   // write lands, so the errand is not toggled again offline.
   await expect(page.getByRole('checkbox', { name: `Mark ${errand} as open` })).toBeChecked();
@@ -122,6 +165,7 @@ async function offlineWrites(page: Page, theme: 'light' | 'dark'): Promise<void>
   await page.reload();
   await expect(rowFor(page, chore)).toContainText(PENDING);
   await subTabs.getByText('Errands', { exact: true }).click();
+  await ensureCompletedErrandsOpen(page);
   await expect(rowFor(page, errand)).toContainText(PENDING);
 
   await page.context().setOffline(false);

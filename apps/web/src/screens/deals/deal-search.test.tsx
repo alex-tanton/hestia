@@ -1,7 +1,15 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { stubCoarsePointer } from '../../test/browser.ts';
+import {
+  findMdField,
+  getMdAccessibleName,
+  getMdButton,
+  getMdField,
+  queryMdButton,
+  queryMdField,
+} from '../../test/md-queries.ts';
 import {
   createFetchStub,
   problemBody,
@@ -65,10 +73,34 @@ function setOnline(isOnline: boolean): void {
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(isOnline);
 }
 
+async function findFieldInput(name: string, container?: HTMLElement): Promise<HTMLElement> {
+  const host = await findMdField(name, { container });
+  if (host instanceof HTMLInputElement || host instanceof HTMLTextAreaElement) {
+    return host;
+  }
+  return waitFor(() => {
+    const input = host.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (input === null || input === undefined) {
+      throw new Error(`Expected shadow input inside <${host.localName}>`);
+    }
+    return input;
+  });
+}
+
+function getAllMdButtons(name: string): HTMLElement[] {
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'md-filled-button, md-outlined-button, md-text-button, md-icon-button, md-elevated-button, md-filled-tonal-button, button',
+    ),
+  );
+  return candidates.filter((el) => getMdAccessibleName(el) === name);
+}
+
 async function search(term: string): Promise<void> {
   const user = userEvent.setup();
-  await user.type(await screen.findByLabelText('Search deals'), term);
-  await user.click(screen.getByRole('button', { name: 'Search' }));
+  const input = await findFieldInput('Search deals');
+  fireEvent.input(input, { target: { value: term } });
+  await user.click(getMdButton('Search'));
 }
 
 beforeEach(() => {
@@ -87,11 +119,11 @@ describe('deal search', () => {
     renderScreen(<DealSearchScreen />);
 
     expect(await screen.findByRole('heading', { name: 'Your stores' })).toBeInTheDocument();
-    const shortcuts = within(screen.getByRole('list', { name: 'Your favorite stores' }));
-    expect(shortcuts.getByRole('button', { name: 'Harris Teeter' })).toBeInTheDocument();
-    expect(shortcuts.getByRole('button', { name: 'Food Lion' })).toBeInTheDocument();
+    const shortcuts = screen.getByRole('list', { name: 'Your favorite stores' });
+    expect(getMdButton('Harris Teeter', { container: shortcuts })).toBeInTheDocument();
+    expect(getMdButton('Food Lion', { container: shortcuts })).toBeInTheDocument();
     // Publix is not a favorite, so it is not a shortcut.
-    expect(shortcuts.queryByRole('button', { name: 'Publix' })).toBeNull();
+    expect(queryMdButton('Publix', { container: shortcuts })).toBeNull();
     // Nothing is fetched until there is something to search for.
     expect(screen.queryByRole('article')).toBeNull();
   });
@@ -133,9 +165,11 @@ describe('deal search', () => {
     await user.selectOptions(screen.getByLabelText('Store'), FOOD_LION);
     await user.selectOptions(screen.getByLabelText('Sort by'), 'price');
     await user.selectOptions(screen.getByLabelText('Category'), 'Produce');
-    await user.type(screen.getByLabelText('Lowest price'), '1.00');
-    await user.type(screen.getByLabelText('Highest price'), '4.99');
-    await user.click(screen.getByRole('button', { name: 'Search' }));
+    const minInput = await findFieldInput('Lowest price');
+    fireEvent.input(minInput, { target: { value: '1.00' } });
+    const maxInput = await findFieldInput('Highest price');
+    fireEvent.input(maxInput, { target: { value: '4.99' } });
+    await user.click(getMdButton('Search'));
 
     await waitFor(() => {
       expect(recorded.searches.at(-1)?.get('maxPrice')).toBe('499');
@@ -154,10 +188,15 @@ describe('deal search', () => {
     await search('milk');
     await screen.findAllByRole('article');
 
-    await user.type(screen.getByLabelText('Lowest price'), 'cheap');
-    await user.click(screen.getByRole('button', { name: 'Search' }));
+    const minInput = await findFieldInput('Lowest price');
+    fireEvent.input(minInput, { target: { value: 'cheap' } });
+    await user.click(getMdButton('Search'));
 
-    expect(await screen.findByText('Enter a price like 4.99.')).toBeInTheDocument();
+    await waitFor(() => {
+      const field = getMdField('Lowest price');
+      expect(field).toHaveProperty('error', true);
+      expect(field).toHaveProperty('errorText', 'Enter a price like 4.99.');
+    });
     expect(recorded.searches.at(-1)?.get('minPrice')).toBeNull();
   });
 
@@ -179,9 +218,9 @@ describe('deal search', () => {
 
     expect(await screen.findByText('Page 1 of 3')).toBeInTheDocument();
     expect(screen.getByText('128 deals')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Previous/ })).toBeDisabled();
+    expect(getMdButton(/Previous/)).toBeDisabled();
 
-    await user.click(screen.getByRole('button', { name: /Next/ }));
+    await user.click(getMdButton(/Next/));
     await waitFor(() => {
       expect(recorded.searches.at(-1)?.get('page')).toBe('2');
     });
@@ -220,7 +259,7 @@ describe('deal search', () => {
 
     expect(await screen.findByText(/Showing deals as of 09\/25\/2026/)).toBeInTheDocument();
     expect(screen.getAllByRole('article').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Try again/ })).toBeInTheDocument();
+    expect(getMdButton(/Try again/)).toBeInTheDocument();
   });
 
   it('offers retry and a way forward when the fetch failed with nothing cached', async () => {
@@ -234,8 +273,8 @@ describe('deal search', () => {
     expect(
       await screen.findByText("Couldn't reach the store data, and there is nothing saved to show."),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Try again/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add items by hand' })).toBeInTheDocument();
+    expect(getMdButton(/Try again/)).toBeInTheDocument();
+    expect(getMdButton('Add items by hand')).toBeInTheDocument();
   });
 
   it('separates the filtered-empty state from a query that simply found nothing', async () => {
@@ -248,11 +287,11 @@ describe('deal search', () => {
     expect(
       await screen.findByText('No deals match “saffron” at these stores.'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Search all stores' })).toBeInTheDocument();
+    expect(getMdButton('Search all stores')).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText('Store'), FOOD_LION);
     expect(await screen.findByText('No deals match these filters.')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Clear filters' }).length).toBeGreaterThan(0);
+    expect(getAllMdButtons('Clear filters').length).toBeGreaterThan(0);
   });
 
   it('prompts for favorites while browse-all already works', async () => {
@@ -267,7 +306,7 @@ describe('deal search', () => {
     renderScreen(<DealSearchScreen />);
 
     expect(await screen.findByText(/No favorite stores yet/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Choose favorite stores' })).toBeInTheDocument();
+    expect(getMdButton('Choose favorite stores')).toBeInTheDocument();
   });
 
   it('says search needs a connection rather than failing quietly offline', async () => {
@@ -276,7 +315,7 @@ describe('deal search', () => {
     renderScreen(<DealSearchScreen />);
 
     expect(await screen.findByText(SEARCH_OFFLINE_MESSAGE)).toBeInTheDocument();
-    expect(screen.queryByLabelText('Search deals')).toBeNull();
+    expect(queryMdField('Search deals')).toBeNull();
   });
 
   it('refetches while a dormant postal code is refreshing, then stops', async () => {
