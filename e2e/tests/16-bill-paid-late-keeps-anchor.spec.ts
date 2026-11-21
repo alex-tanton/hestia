@@ -84,6 +84,12 @@ for (const theme of ['light', 'dark'] as const) {
         .or(page.getByLabel('Amount'))
         .first();
       await amountInput.fill('64.20');
+      const recurringSwitch = sheet.getByRole('switch', { name: /Recurring bill/i });
+      if (await recurringSwitch.isVisible().catch(() => false)) {
+        if ((await recurringSwitch.getAttribute('aria-checked')) !== 'true') {
+          await recurringSwitch.click();
+        }
+      }
       await sheet.getByRole('combobox', { name: 'Repeats' }).click();
       await page.getByRole('option', { name: 'Monthly' }).first().click();
       const everyInput = sheet
