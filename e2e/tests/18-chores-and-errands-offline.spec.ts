@@ -116,7 +116,8 @@ async function onlineSteps(page: Page): Promise<void> {
   // Scoped to this errand's row: journey 15 has already completed another one today, with the same words.
   await expect(
     page
-      .locator('#main li:not(:has(li))')
+      .locator('#main')
+      .getByRole('listitem')
       .filter({ hasText: 'Return Amazon package' })
       .filter({ hasText: /Completed by Alex Rivera · today/ }),
   ).toBeVisible();

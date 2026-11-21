@@ -334,8 +334,10 @@ for (const theme of THEMES) {
       const listName = `Audit ${randomBytes(2).toString('hex')}`;
       await page.getByLabel('List name').fill(listName);
       await page
-        .getByRole('dialog')
-        .getByRole('button', { name: /^(Create shopping list|Create list)$/ })
+        .locator('md-dialog, dialog, form')
+        .locator('button')
+        .filter({ hasText: /^(Create shopping list|Create list)$/ })
+        .last()
         .click();
       await expect(page.getByRole('heading', { name: listName, level: 1 })).toBeVisible();
 
