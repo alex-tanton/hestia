@@ -2,7 +2,6 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { useRef, useState, type ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SectionProvider } from '../../lib/section-context.tsx';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import {
   getMdAccessibleName,
@@ -907,20 +906,18 @@ describe('Sheet', () => {
   function Harness(): ReactElement {
     const [open, setOpen] = useState(false);
     return (
-      <SectionProvider section="chores">
-        <Sheet
-          open={open}
-          onOpenChange={setOpen}
-          title="Add errand"
-          trigger={<button type="button">Add errand</button>}
-        >
-          <button type="button">Save errand</button>
-        </Sheet>
-      </SectionProvider>
+      <Sheet
+        open={open}
+        onOpenChange={setOpen}
+        title="Add errand"
+        trigger={<button type="button">Add errand</button>}
+      >
+        <button type="button">Save errand</button>
+      </Sheet>
     );
   }
 
-  it('opens via native showModal in the section color and returns focus to its trigger on Escape', async () => {
+  it('opens via native showModal and returns focus to its trigger on Escape', async () => {
     const showModalSpy = vi.spyOn(HTMLDialogElement.prototype, 'showModal');
     render(<Harness />);
     const trigger = screen.getByRole('button', { name: 'Add errand' });
@@ -929,7 +926,6 @@ describe('Sheet', () => {
     expect(showModalSpy).toHaveBeenCalledTimes(1);
     const dialog = await screen.findByRole('dialog', { name: 'Add errand' });
     expect(dialog.tagName).toBe('DIALOG');
-    expect(dialog).toHaveAttribute('data-section', 'chores');
 
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();

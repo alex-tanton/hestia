@@ -17,10 +17,10 @@ Requirements for the Material Design 3 UI overhaul. Each maps to roadmap phases.
 
 ### Navigation & Application Shell
 
-- [ ] **NAV-01**: Replace the `1025px` layout cliff with MD3 Window Size Classes: 5-destination `NavigationBar` (`<600px`, Settings in Top App Bar), `80dp` `NavigationRail` (`>=600px`, bottom-anchored Settings), and `>=840px` expanded content grids.
-- [ ] **NAV-02**: Enforce a scroll-aware Small Top App Bar owning the screen's single `<h1>` and `useScreenChrome` across all pushed routes (fixing missing `useScreenChrome` in `RecipeDetailScreen` and duplicate `<h1>`s in `RecipeDetailScreen`, `ChoreDetailScreen`, and `ChoreFormScreen`).
-- [ ] **NAV-03**: Migrate `SubTabs` from `SegmentedControl` to MD3 Primary Tabs (`<md-tabs>` / `<md-primary-tab>`), gate `HouseholdSwitcher` sheet access to `households.length > 1`, and delete `SectionProvider` plus dead `SubSectionComingSoon` routes in `ListsRoute.tsx`.
-- [ ] **NAV-04**: Consolidate `Meals` sub-tabs from 3 (`Planner | Recipes | Suggestions`) to 2 (`Planner | Recipes`) by folding `SuggestionsScreen` into an `"On sale / Ready now"` `<md-filter-chip>` on `Recipes`, keeping `/meals/suggestions` redirecting to `/meals/recipes`.
+- [x] **NAV-01**: Replace the `1025px` layout cliff with MD3 Window Size Classes: 5-destination `NavigationBar` (`<600px`, Settings in Top App Bar), `80dp` `NavigationRail` (`>=600px`, bottom-anchored Settings), and `>=840px` expanded content grids.
+- [x] **NAV-02**: Enforce a scroll-aware Small Top App Bar owning the screen's single `<h1>` and `useScreenChrome` across all pushed routes (fixing missing `useScreenChrome` in `RecipeDetailScreen` and duplicate `<h1>`s in `RecipeDetailScreen`, `ChoreDetailScreen`, and `ChoreFormScreen`).
+- [x] **NAV-03**: Migrate `SubTabs` from `SegmentedControl` to MD3 Primary Tabs (`<md-tabs>` / `<md-primary-tab>`), gate `HouseholdSwitcher` sheet access to `households.length > 1`, and delete `SectionProvider` plus dead `SubSectionComingSoon` routes in `ListsRoute.tsx`.
+- [x] **NAV-04**: Consolidate `Meals` sub-tabs from 3 (`Planner | Recipes | Suggestions`) to 2 (`Planner | Recipes`) by folding `SuggestionsScreen` into an `"On sale / Ready now"` `<md-filter-chip>` on `Recipes`, keeping `/meals/suggestions` redirecting to `/meals/recipes`.
 
 ### Dashboard, Onboarding & Auth
 
@@ -98,10 +98,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FND-03 | Phase 17 | Pending |
 | FND-04 | Phase 17 | Complete |
 | FND-05 | Phase 21 | Pending |
-| NAV-01 | Phase 18 | Pending |
-| NAV-02 | Phase 18 | Pending |
-| NAV-03 | Phase 18 | Pending |
-| NAV-04 | Phase 18 | Pending |
+| NAV-01 | Phase 18 | Complete |
+| NAV-02 | Phase 18 | Complete |
+| NAV-03 | Phase 18 | Complete |
+| NAV-04 | Phase 18 | Complete |
 | DASH-01 | Phase 19 | Pending |
 | DASH-02 | Phase 19 | Pending |
 | AUTH-06 | Phase 19 | Pending |

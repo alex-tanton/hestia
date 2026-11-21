@@ -78,7 +78,7 @@ describe('Recipe detail', () => {
   it('populated: title, servings, source link, and the announced readiness sentence', async () => {
     mount();
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Sheet Pan Chicken and Vegetables' }),
+      await screen.findByRole('heading', { level: 2, name: 'Sheet Pan Chicken and Vegetables' }),
     ).toBeInTheDocument();
     expect(screen.getByText('4 servings')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View source' })).toHaveAttribute(
@@ -154,7 +154,7 @@ describe('Recipe detail', () => {
       }),
     );
 
-    await screen.findByRole('heading', { level: 1, name: 'Sheet Pan Chicken and Vegetables' });
+    await screen.findByRole('heading', { level: 2, name: 'Sheet Pan Chicken and Vegetables' });
     const row = screen.getByText('chicken breast').closest('li') as HTMLElement;
     await user.click(getMdButton('Not a match', { container: row }));
 
@@ -239,7 +239,7 @@ describe('Recipe detail', () => {
       }),
     );
 
-    await screen.findByRole('heading', { level: 1, name: 'Sheet Pan Chicken and Vegetables' });
+    await screen.findByRole('heading', { level: 2, name: 'Sheet Pan Chicken and Vegetables' });
     const row = screen.getByText('lemon').closest('li') as HTMLElement;
     await user.click(getMdButton('Match to…', { container: row }));
     await user.click(await findMdButton('Lemon'));
@@ -305,7 +305,7 @@ describe('Recipe detail', () => {
       }),
     );
 
-    await screen.findByRole('heading', { level: 1, name: 'Sheet Pan Chicken and Vegetables' });
+    await screen.findByRole('heading', { level: 2, name: 'Sheet Pan Chicken and Vegetables' });
     const row = screen.getByText('lemon').closest('li') as HTMLElement;
     await user.click(getMdButton('Match to…', { container: row }));
 
@@ -333,7 +333,7 @@ describe('Recipe detail', () => {
         'POST /api/recipes/:id/add-to-list': () => ({ status: 200, body: thisWeekDetailFixture }),
       }),
     );
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     await user.click(getMdButton('Add missing to list'));
     await user.click(await findMdButton(/This Week/));
     await waitFor(() => {
@@ -360,7 +360,7 @@ describe('Recipe detail', () => {
         }),
       }),
     );
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     await user.click(getMdButton(/Place on week planner/));
     await user.click(await findMdButton('Place meal'));
     await waitFor(() => {
@@ -371,7 +371,7 @@ describe('Recipe detail', () => {
   it('edit: opens the same form as the add flow, prefilled', async () => {
     const user = userEvent.setup();
     mount();
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     await openMenu(user, /More actions for/);
     await user.click(await findMdMenuItem('Edit'));
     const titleInput = await findFieldInput('Title');
@@ -381,7 +381,7 @@ describe('Recipe detail', () => {
   it('delete: confirms by name, then deletes and navigates away', async () => {
     const user = userEvent.setup();
     const stub = mount(baseHandlers({ 'DELETE /api/recipes/:id': () => ({ status: 204 }) }));
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     await openMenu(user, /More actions for/);
     await user.click(await findMdMenuItem('Delete'));
     expect(
@@ -397,7 +397,7 @@ describe('Recipe detail', () => {
 
   it('offline: disables edit, delete, add-missing, placing, and every correction control', async () => {
     mount();
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     setOnline(false);
 
     const addMissing = getMdButton('Add missing to list');
@@ -435,7 +435,7 @@ describe('Recipe detail: readiness bucket display', () => {
       baseHandlers({ 'GET /api/recipes/:id': () => ({ status: 200, body: bakedZitiFixture }) }),
       bakedZitiFixture.id,
     );
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 2, name: bakedZitiFixture.title });
     // Baked Ziti itself has no "cheese" ingredient; this asserts the fixture wiring is available
     // for a recipe that does (the seed data's override fixture), via `cheeseOverrideFixture`.
     expect(

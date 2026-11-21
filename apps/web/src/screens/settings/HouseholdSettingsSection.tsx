@@ -11,7 +11,6 @@ import { useToast } from '../../components/ui/Toast.tsx';
 import { useHousehold, useUpdateHousehold } from '../../lib/api/hooks.ts';
 import { OFFLINE_MESSAGE, userMessage } from '../../lib/api/problem.ts';
 import { formatTimezone } from '../../lib/format.ts';
-import { SectionProvider } from '../../lib/section-context.tsx';
 import { firstIssue } from '../../lib/validation.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
@@ -161,14 +160,14 @@ export function HouseholdSettingsSection({
             </>
           ))}
         {/* Favorite stores are editable by any member, not only the admin. */}
-        <SectionProvider section="lists" className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           <h3 className="text-h3 text-primary">Favorite stores</h3>
           <FavoriteStores
             householdId={householdId}
             postalCode={household.data?.postalCode}
             showPostalCodeAction={false}
           />
-        </SectionProvider>
+        </div>
       </Card>
     </SettingsSection>
   );

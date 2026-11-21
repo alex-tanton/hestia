@@ -43,5 +43,5 @@ export function ComingSoonPanel({
 
 /** A pillar's tab before the pillar ships; its sub-tabs appear only once it does. */
 export function ComingSoon({ pillar }: { pillar: Pillar }): ReactElement {
-  return <ComingSoonPanel icon={pillar.icon} message={pillar.comingSoon} />;
+  return <ComingSoonPanel icon={pillar.icon} message="" />;
 }

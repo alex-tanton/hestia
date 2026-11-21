@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { oakStreetFixture, profileFixture } from '../../test/fixtures.ts';
 import { createFetchStub, renderApp } from '../../test/harness.tsx';
 import { findMdButton, getMdButton } from '../../test/md-queries.ts';
-import { useSection } from '../../lib/section-context.tsx';
 import { PillarScreen } from '../../screens/PillarScreen.tsx';
 import { HouseholdSwitcher, type HouseholdSummary } from './HouseholdSwitcher.tsx';
 import { OFFLINE_MESSAGE, OfflineBanner } from './OfflineBanner.tsx';
@@ -50,42 +49,64 @@ afterEach(() => {
 describe('app shell', () => {
   it('has a skip link, banner, main, and a labelled main navigation', async () => {
     openPath('/');
-    expect(await screen.findByRole('heading', { level: 1, name: 'This Week' })).toBeInTheDocument();
+    const headings = await screen.findAllByRole('heading', { level: 1 });
+    expect(headings).toHaveLength(1);
+    expect(headings[0]).toHaveTextContent('This Week');
     const skip = screen.getByRole('link', { name: 'Skip to main content' });
     expect(skip).toHaveAttribute('href', '#main');
     expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
-    expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings');
+    const navs = screen.getAllByRole('navigation', { name: 'Main' });
+    expect(navs).toHaveLength(2);
+    const settingsLinks = screen.getAllByRole('link', { name: 'Settings' });
+    expect(settingsLinks).toHaveLength(2);
+    expect(settingsLinks.some((link) => link.closest('nav') !== null)).toBe(true);
+    expect(settingsLinks.some((link) => link.closest('nav') === null)).toBe(true);
     expect(document.title).toBe('This Week · Hestia');
   });
 
   it('shows the five tabs in order with the active one marked aria-current', async () => {
     openPath('/');
-    const nav = await screen.findByRole('navigation', { name: 'Main' });
-    const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual([
+    const [navBar, navRail] = await screen.findAllByRole('navigation', { name: 'Main' });
+    if (!navBar || !navRail) throw new Error('Missing navigation landmarks');
+    const barLinks = within(navBar).getAllByRole('link');
+    expect(barLinks.map((link) => link.textContent)).toEqual([
       'Dashboard',
       'Lists',
       'Meals',
       'Bills',
       'Chores',
     ]);
-    expect(within(nav).getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
+    expect(within(navBar).getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    expect(within(nav).getByRole('link', { name: 'Lists' })).not.toHaveAttribute('aria-current');
+    expect(within(navBar).getByRole('link', { name: 'Lists' })).not.toHaveAttribute('aria-current');
+
+    const railLinks = within(navRail).getAllByRole('link');
+    expect(railLinks.map((link) => link.textContent)).toEqual([
+      'Dashboard',
+      'Lists',
+      'Meals',
+      'Bills',
+      'Chores',
+      'Settings',
+    ]);
+    expect(within(navRail).getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('moves through the tab bar by keyboard and opens a tab with Enter', async () => {
     openPath('/');
-    const nav = await screen.findByRole('navigation', { name: 'Main' });
-    within(nav).getByRole('link', { name: 'Dashboard' }).focus();
+    const [navBar] = await screen.findAllByRole('navigation', { name: 'Main' });
+    if (!navBar) throw new Error('Missing navigation bar');
+    within(navBar).getByRole('link', { name: 'Dashboard' }).focus();
     await userEvent.tab();
-    expect(within(nav).getByRole('link', { name: 'Lists' })).toHaveFocus();
+    expect(within(navBar).getByRole('link', { name: 'Lists' })).toHaveFocus();
     await userEvent.tab();
-    expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveFocus();
+    expect(within(navBar).getByRole('link', { name: 'Meals' })).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     // The Meals module is a lazy chunk, so its first load can outlast the default find timeout.
     expect(
@@ -94,7 +115,7 @@ describe('app shell', () => {
     await waitFor(() => {
       expect(document.title).toBe('Meals · Hestia');
     });
-    expect(within(nav).getByRole('link', { name: 'Meals' })).toHaveAttribute(
+    expect(within(navBar).getByRole('link', { name: 'Meals' })).toHaveAttribute(
       'aria-current',
       'page',
     );
@@ -115,7 +136,7 @@ describe('app shell', () => {
         'GET /api/households/:id': () => ({ status: 200, body: oakStreetFixture }),
       });
       expect(
-        await screen.findByRole('radiogroup', { name: groupName }, { timeout: 10_000 }),
+        await screen.findByRole('navigation', { name: groupName }, { timeout: 10_000 }),
       ).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'Coming soon' })).toBeNull();
     },
@@ -139,31 +160,11 @@ describe('titleForPath', () => {
     ['/lists', 'Lists'],
     // A shipped pillar names its sub-tab; an unshipped one shows only its tab label.
     ['/lists/pantry', 'Pantry'],
-    ['/meals/suggestions', 'Suggestions'],
+    ['/meals/recipes', 'Recipes'],
     // A shipped pillar names its sub-tab, so a deep link into Subscriptions shows that, not Bills.
     ['/bills/subscriptions', 'Subscriptions'],
   ])('%s → %s', (path, title) => {
     expect(titleForPath(path)).toBe(title);
-  });
-});
-
-describe('section context', () => {
-  function SectionProbe(): ReactElement {
-    return <output>{useSection()}</output>;
-  }
-
-  it('comes from the route for the shell', async () => {
-    openPath('/bills', { 'GET /api/households/:id/bills': () => ({ status: 200, body: [] }) });
-    await screen.findByRole('radiogroup', { name: 'Bills sections' }, { timeout: 5000 });
-    expect(screen.getByRole('main').closest('[data-section]')).toHaveAttribute(
-      'data-section',
-      'bills',
-    );
-  });
-
-  it('defaults to the dashboard outside any provider', () => {
-    render(<SectionProbe />);
-    expect(screen.getByRole('status')).toHaveTextContent('dashboard');
   });
 });
 
@@ -191,24 +192,33 @@ describe('sub-tabs once a pillar ships', () => {
     return <p data-testid="location">{useLocation().pathname}</p>;
   }
 
-  it('selects the root sub-tab at the tab root and the matching one deeper in', () => {
+  it('selects the active sub-tab inside MD3 tabs', () => {
     renderBills('/bills/subscriptions');
-    const group = screen.getByRole('radiogroup', { name: 'Bills sections' });
-    expect(within(group).getByRole('radio', { name: 'Subscriptions' })).toBeChecked();
-    expect(within(group).getByRole('radio', { name: 'Bills' })).not.toBeChecked();
+    const nav = screen.getByRole('navigation', { name: 'Bills sections' });
+    const tabs = within(nav).getByRole('tablist');
+    expect(tabs).toBeInTheDocument();
+    const activeTab = within(tabs).getByRole('tab', { name: 'Subscriptions', selected: true });
+    expect(activeTab).toBeInTheDocument();
   });
 
-  it('moves between sub-tabs with arrow keys and navigates on Enter', async () => {
+  it('resets window scroll to (0, 0) and navigates when switching sub-tabs', async () => {
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
     renderBills('/bills');
-    const group = screen.getByRole('radiogroup', { name: 'Bills sections' });
-    await userEvent.tab();
-    expect(within(group).getByRole('radio', { name: 'Bills' })).toHaveFocus();
-    await userEvent.keyboard('{ArrowRight}');
-    const subscriptions = within(group).getByRole('radio', { name: 'Subscriptions' });
-    expect(subscriptions).toHaveFocus();
-    await userEvent.keyboard('{Enter}');
-    expect(subscriptions).toBeChecked();
-    expect(screen.getByTestId('location')).toHaveTextContent('/bills/subscriptions');
+    const nav = screen.getByRole('navigation', { name: 'Bills sections' });
+    const tabs = within(nav).getByRole('tablist');
+    expect(tabs).toBeInTheDocument();
+    const mdTabs = nav.querySelector('md-tabs');
+    expect(mdTabs).not.toBeNull();
+    if (!mdTabs) return;
+    act(() => {
+      mdTabs.dispatchEvent(
+        new CustomEvent('change', { bubbles: true, detail: { activeTabIndex: 1 } }),
+      );
+    });
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/bills/subscriptions');
+    });
   });
 
   it('keeps an unshipped pillar on coming soon even with the released set supplied', () => {
@@ -309,6 +319,7 @@ describe('HouseholdSwitcher', () => {
     await userEvent.click(screen.getByRole('button', { name: /Casey's Empty House/ }));
     const sheet = await screen.findByRole('dialog', { name: 'Households' });
     expect(within(sheet).getByText('1 member')).toBeInTheDocument();
+    expect(within(sheet).getByText('No other households')).toBeInTheDocument();
     await userEvent.click(
       within(sheet).getByRole('button', { name: 'Join or create a household' }),
     );

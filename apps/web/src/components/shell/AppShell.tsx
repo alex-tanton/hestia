@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { SectionProvider } from '../../lib/section-context.tsx';
 import {
   PILLARS,
   RELEASED_PILLARS,
@@ -13,7 +12,8 @@ import { ToastProvider } from '../ui/Toast.tsx';
 import type { HouseholdSwitcherProps } from './HouseholdSwitcher.tsx';
 import { OfflineBanner } from './OfflineBanner.tsx';
 import { ScreenChromeProvider, useCurrentScreenChrome } from './screen-chrome.tsx';
-import { TabBar } from './TabBar.tsx';
+import { NavigationBar } from './NavigationBar.tsx';
+import { NavigationRail } from './NavigationRail.tsx';
 import { TopBar } from './TopBar.tsx';
 
 export interface AppShellProps {
@@ -87,7 +87,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
   }, [title]);
 
   return (
-    <SectionProvider section={section} className="min-h-dvh bg-base text-primary">
+    <div className="min-h-dvh bg-base text-primary">
       <ToastProvider>
         <WriteQueue />
         <a
@@ -96,25 +96,24 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
         >
           Skip to main content
         </a>
-        <div className="lg:pl-56">
-          <header className="sticky top-0 z-20 border-b border-border bg-base pt-[env(safe-area-inset-top)]">
-            <div className="mx-auto max-w-240">
-              <TopBar title={title} switcher={switcher} chrome={chrome} />
-            </div>
+        <div className="min-[600px]:pl-20">
+          <header className="sticky top-0 z-20 bg-surface pt-[env(safe-area-inset-top)]">
+            <TopBar title={title} switcher={switcher} chrome={chrome} />
             <OfflineBanner />
             {updatePrompt}
           </header>
           <main
             id="main"
             tabIndex={-1}
-            className="mx-auto w-full max-w-160 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] outline-none lg:max-w-240 lg:pb-8"
+            className="mx-auto w-full px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] outline-none min-[600px]:pb-8"
           >
             {children}
           </main>
         </div>
-        <TabBar />
+        <NavigationBar />
+        <NavigationRail />
       </ToastProvider>
-    </SectionProvider>
+    </div>
   );
 }
 

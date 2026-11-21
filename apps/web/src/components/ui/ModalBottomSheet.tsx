@@ -6,7 +6,6 @@ import {
   type ReactNode,
   type SyntheticEvent,
 } from 'react';
-import { useSection } from '../../lib/section-context.tsx';
 import { Button } from './Button.tsx';
 import { Icon } from './Icon.tsx';
 
@@ -51,7 +50,6 @@ export function ModalBottomSheet({
   returnFocusTo,
   children,
 }: ModalBottomSheetProps): ReactElement {
-  const section = useSection();
   const titleId = useId();
   const descId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -156,7 +154,6 @@ export function ModalBottomSheet({
       ref={dialogRef}
       tabIndex={-1}
       closedby="any"
-      data-section={section}
       aria-labelledby={titleId}
       aria-describedby={hasDescription ? descId : undefined}
       onClose={handleNativeClose}
