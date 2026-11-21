@@ -88,10 +88,12 @@ export function IngredientEditor({
     setTimeout(() => {
       const rows = document.querySelectorAll<HTMLElement>('[data-ingredient-row]');
       const lastRow = rows[rows.length - 1];
-      const targetInput = lastRow?.querySelector<HTMLElement>(
-        'md-outlined-text-field, input, textarea',
-      );
-      targetInput?.focus();
+      if (lastRow && !lastRow.contains(document.activeElement)) {
+        const targetInput = lastRow.querySelector<HTMLElement>(
+          'md-outlined-text-field, input, textarea',
+        );
+        targetInput?.focus();
+      }
     }, 50);
   };
 
