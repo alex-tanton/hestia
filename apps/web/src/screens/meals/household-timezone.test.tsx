@@ -179,7 +179,7 @@ describe('Place on week planner, with the browser a day ahead of the household',
   it('defaults the date to the household’s today', async () => {
     const user = userEvent.setup();
     mountRecipe();
-    await screen.findByRole('heading', { level: 1, name: sheetPanChickenFixture.title });
+    await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     await user.click(await findMdButton(/Place on week planner/));
     const input = await findFieldInput('Date');
     expect(input).toHaveValue(HOUSEHOLD_TODAY);
@@ -188,7 +188,7 @@ describe('Place on week planner, with the browser a day ahead of the household',
   it('is a disabled skeleton until the household’s zone is known, and opens no sheet', async () => {
     const user = userEvent.setup();
     mountRecipe(() => new Promise(() => undefined));
-    await screen.findByRole('heading', { level: 1, name: sheetPanChickenFixture.title });
+    await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     const button = await findMdButton(/Place on week planner/);
     expect(button).toBeDisabled();
     expect(screen.queryByText(/Loading the household/)).toBeNull();

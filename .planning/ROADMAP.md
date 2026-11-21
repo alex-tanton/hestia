@@ -48,7 +48,7 @@
 **Milestone Goal:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified Warm Terracotta tonal theming, restructured navigation, and clear flow of control.
 
 - [x] **Phase 17: MD3 Foundation, Token Pipeline & UI Primitives** (15/15 plans) — completed 2026-11-14
-- [ ] **Phase 18: Adaptive MD3 Navigation Shell & Route Chrome** - Window Size Class `NavigationBar` (`<600px`) and `NavigationRail` (`>=600px`), scroll-aware Small Top App Bar owning each screen's single `<h1>`, MD3 Primary Tabs, conditional `HouseholdSwitcher`, and consolidated Meals/Lists routing.
+- [x] **Phase 18: Adaptive MD3 Navigation Shell & Route Chrome** - Window Size Class `NavigationBar` (`<600px`) and `NavigationRail` (`>=600px`), scroll-aware Small Top App Bar owning each screen's single `<h1>`, MD3 Primary Tabs, conditional `HouseholdSwitcher`, and consolidated Meals/Lists routing. (completed 2026-11-14)
 - [ ] **Phase 19: Entry, Dashboard & Grocery Ecosystem Screens** - Overhaul Onboarding, Auth, Dashboard, Shared State blocks, Lists, Pantry, Barcode Scanner, Deals, and Flyers onto uncluttered tonal MD3 surfaces with progressive chip filtering and persistent Undo Snackbars.
 - [ ] **Phase 20: Meals, Bills, Chores & Settings Screens** - Overhaul Meal Planner/Recipes, Bills/Subscriptions, Chores/Errands, and Settings/System Health/Departure using MD3 lists, Full-Screen/Centered dialogs for dense forms, `<md-switch>` controls, zero 1-item overflow menus, and a categorized Settings hub.
 - [ ] **Phase 21: Legacy Stack Cleanup & Full Verification** - Remove Tailwind CSS, Radix UI, and Lucide cleanly after all screens migrate, reconcile Knip baselines, and verify Vitest coverage, 24 Playwright E2E specs, light/dark WCAG 2.1 AA audits, shell budget, Caddy CSP, and CI hygiene gates.
@@ -121,7 +121,18 @@ Plans:
   3. Pillar sub-views switch via MD3 Primary Tabs (`<md-tabs>` / `<md-primary-tab>`), `HouseholdSwitcher` sheet access renders only when `households.length > 1`, and `SectionProvider` plus dead `SubSectionComingSoon` routes in `ListsRoute.tsx` are removed.
   4. `Meals` presents two consolidated sub-tabs (`Planner | Recipes`) with `"On sale / Ready now"` filtering surfaced via `<md-filter-chip>` on `Recipes` and `/meals/suggestions` redirecting cleanly to `/meals/recipes`.
 
-**Plans**: TBD
+**Plans:** 3/3 plans complete
+
+Plans:
+**Wave 1**
+- [x] 18-01-PLAN.md — Adaptive MD3 shell (`NavigationBar` `<600px` & `NavigationRail` `>=600px`), Active Indicator Pill, fluid main canvas, scroll-aware Top App Bar single-`<h1>`, and pushed screen heading demotions (`NAV-01`, `NAV-02`)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 18-02-PLAN.md — MD3 Primary Tabs (`<md-tabs>`), scroll-to-top reset, `HouseholdSwitcher` `ModalBottomSheet` with single-membership copy, and atomic deletion of `SectionProvider` and dead routes (`NAV-03`)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 18-03-PLAN.md — Consolidated Meals routing (`/meals/suggestions` redirect), `MdFilterChip` wrapper, and `"On sale / Ready now"` recipe library filtering (`NAV-04`)
+
 **UI hint**: yes
 
 ### Phase 19: Entry, Dashboard & Grocery Ecosystem Screens
@@ -174,7 +185,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 10/15 | In Progress | - |
-| 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 0/0 | Not started | - |
+| 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 3/3 | Complete    | 2026-11-14 |
 | 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 0/0 | Not started | - |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 0/0 | Not started | - |
 | 21. Legacy Stack Cleanup & Full Verification | v3.0 | 0/0 | Not started | - |

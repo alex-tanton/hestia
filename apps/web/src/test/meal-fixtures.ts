@@ -18,8 +18,6 @@ export const SHEET_PAN_CHICKEN_ID = 'c0000001-0000-4000-8000-000000000001';
 export const BAKED_ZITI_ID = 'c0000001-0000-4000-8000-000000000002';
 export const GRILLED_CHEESE_ID = 'c0000001-0000-4000-8000-000000000003';
 export const PAD_THAI_ID = 'c0000001-0000-4000-8000-000000000004';
-export const TUNA_POKE_BOWL_ID = 'c0000001-0000-4000-8000-000000000006';
-export const MISO_SOUP_ID = 'c0000001-0000-4000-8000-000000000007';
 
 const CREATED_AT = '2026-09-15T12:00:00.000Z';
 
@@ -486,25 +484,6 @@ export const padThaiFixture: RecipeDetail = {
   matchOverrides: [],
 };
 
-/** Rivera Family: Tuna Poke Bowl and Miso Soup, both 0% — no pantry, nothing on sale matches. */
-export const tunaPokeBowlFixture: Suggestion = {
-  recipeId: TUNA_POKE_BOWL_ID,
-  title: 'Tuna Poke Bowl',
-  readinessPercent: 0,
-  onSaleCount: 0,
-  inPantryCount: 0,
-  toBuyCount: 6,
-};
-
-export const misoSoupFixture: Suggestion = {
-  recipeId: MISO_SOUP_ID,
-  title: 'Miso Soup',
-  readinessPercent: 0,
-  onSaleCount: 0,
-  inPantryCount: 0,
-  toBuyCount: 5,
-};
-
 export function suggestionOf(recipe: RecipeDetail): Suggestion {
   const readiness = recipe.readiness;
   return {
@@ -525,11 +504,6 @@ export const suggestionsFixture: SuggestionsResponse = {
     suggestionOf(padThaiFixture),
   ],
   dealsAsOf: '2026-09-25T09:00:00.000Z',
-};
-
-export const riveraSuggestionsFixture: SuggestionsResponse = {
-  recipes: [tunaPokeBowlFixture, misoSoupFixture],
-  dealsAsOf: '2026-09-19T09:00:00.000Z',
 };
 
 function baseRecipe(detail: RecipeDetail): Recipe {

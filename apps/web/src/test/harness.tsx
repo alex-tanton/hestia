@@ -12,7 +12,6 @@ import { vi } from 'vitest';
 import { PROBLEM_CONTENT_TYPE } from '@hestia/shared';
 import { AppProviders } from '../App.tsx';
 import { ToastProvider } from '../components/ui/Toast.tsx';
-import { SectionProvider } from '../lib/section-context.tsx';
 import { useWriteQueue } from '../lib/offline/use-write-queue.ts';
 import type { AuthClient, AuthState } from '../lib/auth/auth-client.ts';
 import type { ListRealtimeHandlers, RealtimePort } from '../lib/realtime/realtime-port.ts';
@@ -227,13 +226,11 @@ export function renderScreen(
       flushPersister={flushPersister}
     >
       {/* The shell supplies both around every screen; a screen under test needs them too. */}
-      <SectionProvider section="dashboard">
-        <ToastProvider>
-          <PushPortProvider port={pushPort}>
-            <RouterProvider router={router} />
-          </PushPortProvider>
-        </ToastProvider>
-      </SectionProvider>
+      <ToastProvider>
+        <PushPortProvider port={pushPort}>
+          <RouterProvider router={router} />
+        </PushPortProvider>
+      </ToastProvider>
     </AppProviders>,
   );
   return { ...result, auth, queryClient, pushPort };

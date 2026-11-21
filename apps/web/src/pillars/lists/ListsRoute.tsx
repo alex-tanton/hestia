@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router';
-import { SubSectionComingSoon } from '../../components/states/SubSectionComingSoon.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useProfile } from '../../lib/api/hooks.ts';
 import { PillarScreen } from '../../screens/PillarScreen.tsx';
@@ -23,7 +22,7 @@ function ListDetailRoute({
 }
 
 /**
- * The Lists tab. The sub-tab roots sit inside `PillarScreen`, which draws the segmented control;
+ * The Lists tab. The sub-tab roots sit inside `PillarScreen`, which draws the sub-tabs;
  * the pushed screens — a list's detail and the archived view — render without it, because the top
  * bar has already swapped the switcher for a back control.
  */
@@ -47,22 +46,6 @@ export function Component(): ReactElement {
         element={
           <PillarScreen pillar="lists">
             <ListsIndexScreen householdId={householdId} />
-          </PillarScreen>
-        }
-      />
-      <Route
-        path="deals"
-        element={
-          <PillarScreen pillar="lists">
-            <SubSectionComingSoon section="Deal search" />
-          </PillarScreen>
-        }
-      />
-      <Route
-        path="flyers"
-        element={
-          <PillarScreen pillar="lists">
-            <SubSectionComingSoon section="Flyer browsing" />
           </PillarScreen>
         }
       />

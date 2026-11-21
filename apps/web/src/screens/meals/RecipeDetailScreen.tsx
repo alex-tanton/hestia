@@ -2,6 +2,7 @@ import { CalendarPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import type { RecipeDetail } from '@hestia/shared';
+import { useScreenChrome } from '../../components/shell/screen-chrome.tsx';
 import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
 import { PlaceOnPlannerSheet } from '../../components/meals/PlaceOnPlannerSheet.tsx';
 import { ReadinessBreakdown } from '../../components/meals/ReadinessBreakdown.tsx';
@@ -47,6 +48,12 @@ export function RecipeDetailScreen({
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
+
+  useScreenChrome({
+    title: recipe.data?.title ?? 'Recipe',
+    backTo: '/meals/recipes',
+    backLabel: 'Recipes',
+  });
 
   if (recipe.isPending && recipe.fetchStatus === 'paused') {
     return (
@@ -116,7 +123,7 @@ export function RecipeDetailScreen({
 
       <header className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-h1 text-primary">{data.title}</h1>
+          <h2 className="text-h1 text-primary">{data.title}</h2>
           <p className="text-body-sm text-secondary">
             {data.servings !== null ? pluralize(data.servings, 'serving') : 'Servings not recorded'}
           </p>

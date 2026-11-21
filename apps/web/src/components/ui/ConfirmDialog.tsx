@@ -6,7 +6,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { useSection } from '../../lib/section-context.tsx';
 import { MdDialog } from '../md/MdDialog.tsx';
 import { Button } from './Button.tsx';
 
@@ -41,7 +40,6 @@ export function ConfirmDialog({
   isConfirmDisabled = false,
   isConfirming = false,
 }: ConfirmDialogProps): ReactElement {
-  const section = useSection();
   const descriptionId = useId();
   const cancelRef = useRef<HTMLElement>(null);
   const escapePressedRef = useRef(false);
@@ -88,7 +86,6 @@ export function ConfirmDialog({
       type="alert"
       quick
       open={open}
-      data-section={section}
       aria-describedby={descriptionId}
       onKeyDown={handleKeyDown}
       onCancel={handleCancel}

@@ -2,7 +2,6 @@ import { ChevronRight, TriangleAlert } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 import { PILLARS, type PillarId } from '../../lib/sections.ts';
-import { SectionProvider } from '../../lib/section-context.tsx';
 import { ErrorBoundary } from '../states/ErrorBoundary.tsx';
 import { ErrorState } from '../states/StateBlocks.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -96,48 +95,46 @@ export function DashboardCard({ pillar, title, state }: DashboardCardProps): Rea
   const headingId = `dashboard-card-${pillar}`;
 
   return (
-    <SectionProvider section={pillar}>
-      <Card
-        as="section"
-        variant={isPlaceholder ? 'flat' : 'raised'}
-        aria-labelledby={headingId}
-        className={
-          isPlaceholder
-            ? 'bg-raised'
-            : 'relative transition-colors duration-150 ease-out hover:border-input'
-        }
+    <Card
+      as="section"
+      variant={isPlaceholder ? 'flat' : 'raised'}
+      aria-labelledby={headingId}
+      className={
+        isPlaceholder
+          ? 'bg-raised'
+          : 'relative transition-colors duration-150 ease-out hover:border-input'
+      }
+    >
+      <h2 id={headingId} className="mb-3 text-h3 text-section">
+        {isPlaceholder ? (
+          <span className="flex items-center gap-2">
+            <Icon aria-hidden size={20} strokeWidth={1.5} className="text-section-accent" />
+            {title}
+          </span>
+        ) : (
+          // The stretched link makes the whole card the tap target for its section.
+          <Link
+            to={path}
+            className="flex items-center gap-2 after:absolute after:inset-0 after:rounded-md"
+          >
+            <Icon aria-hidden size={20} strokeWidth={1.5} className="text-section-accent" />
+            <span className="flex-1">{title}</span>
+            <ChevronRight aria-hidden size={20} strokeWidth={1.5} className="text-muted" />
+          </Link>
+        )}
+      </h2>
+      <ErrorBoundary
+        fallback={(reset) => (
+          <div className="relative z-10">
+            <ErrorState
+              message={`Something went wrong loading ${title.toLowerCase()}. Try again, or reload.`}
+              onRetry={reset}
+            />
+          </div>
+        )}
       >
-        <h2 id={headingId} className="mb-3 text-h3 text-section">
-          {isPlaceholder ? (
-            <span className="flex items-center gap-2">
-              <Icon aria-hidden size={20} strokeWidth={1.5} className="text-section-accent" />
-              {title}
-            </span>
-          ) : (
-            // The stretched link makes the whole card the tap target for its section.
-            <Link
-              to={path}
-              className="flex items-center gap-2 after:absolute after:inset-0 after:rounded-md"
-            >
-              <Icon aria-hidden size={20} strokeWidth={1.5} className="text-section-accent" />
-              <span className="flex-1">{title}</span>
-              <ChevronRight aria-hidden size={20} strokeWidth={1.5} className="text-muted" />
-            </Link>
-          )}
-        </h2>
-        <ErrorBoundary
-          fallback={(reset) => (
-            <div className="relative z-10">
-              <ErrorState
-                message={`Something went wrong loading ${title.toLowerCase()}. Try again, or reload.`}
-                onRetry={reset}
-              />
-            </div>
-          )}
-        >
-          <CardBody title={title} state={state} />
-        </ErrorBoundary>
-      </Card>
-    </SectionProvider>
+        <CardBody title={title} state={state} />
+      </ErrorBoundary>
+    </Card>
   );
 }

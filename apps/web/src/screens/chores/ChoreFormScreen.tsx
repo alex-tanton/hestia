@@ -272,9 +272,9 @@ function ChoreForm({
   return (
     <section className="flex flex-col gap-4">
       <header className="flex items-center justify-between gap-3">
-        <h1 className="text-h1 text-primary">
+        <h2 className="text-h1 text-primary">
           {isEditing ? `Edit ${chore?.name ?? ''}` : 'Add a chore'}
-        </h1>
+        </h2>
         {isEditing && (
           <OverflowMenu
             label={`More actions for ${chore?.name ?? 'this chore'}`}

@@ -88,10 +88,13 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 - ✓ **TEST-02**: Service integration tests validate Open Food Facts proxy caching, error resilience, and advisory locks — Phase 16
 - ✓ **TEST-03**: Playwright E2E tests validate deals pricing, barcode scanner add/shop check-off, and flexible meals across themes with WCAG 2.1 AA audits — Phase 16
 
+### Validated (v3.0)
+
+- ✓ **MD3-NAV-SHELL**: Material Design 3 adaptive NavigationBar (<600px) and NavigationRail (>=600px), single-h1 hierarchy in Top App Bar, MD3 Primary Tabs in SubTabs, ModalBottomSheet household switcher, consolidated Meals routing, and readiness filter chips — Phase 18
+
 ### Active
 
 - [ ] **MD3-FOUNDATION**: Replace Tailwind CSS, Radix UI, and Lucide with `@material/web`, `@material/material-color-utilities` (warm Hestia terracotta/amber seed palette for light & dark), Material Symbols, and minimal MD3-spec wrappers only where `@material/web` lacks coverage
-- [ ] **MD3-NAV-SHELL**: Restructure top-level destinations, sub-views, and responsive shell using MD3 Navigation Bar (mobile), Navigation Rail (desktop), and unified Top App Bar, flattening nested tabs/sheets and bringing Auth, Onboarding, and Settings into the unified MD3 design
 - [ ] **MD3-SCREENS**: Overhaul all application screens (Dashboard, Lists/Deals/Flyers/Pantry, Meals/Recipes/Suggestions, Bills/Subscriptions, Chores/Errands, Onboarding/Auth, Settings/System Health) for minimal, clutter-free MD3 visual hierarchy and improved flow of control
 - [ ] **MD3-VERIFY**: Update frontend unit, component, and Playwright E2E suites plus WCAG 2.1 AA audits and CI gates (`check-build`, Knip, JSCPD, typecheck, lint) to pass on the overhauled MD3 frontend
 
@@ -130,9 +133,9 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 | Derive promotional unit & original prices mathematically | Half-up rounding with 1%-95% sanity bounds translates marketing stories into structured prices | Validated — Phase 13 |
 | Bounded 4-worker pool with 150ms pacing & 2,000-item LRU cache for Flipp | Eliminates 15-minute ingestion serialization bottleneck while respecting upstream limits | Validated — Phase 13 |
 | Anchor primary sale price with inline discount badge & single-price fallback | Highlights real savings cleanly without duplicate badges or zero/null discount confusion | Validated — Phase 13 |
-| Standardize entire frontend on Google Material Design 3 (`@material/web`, Material Symbols, `@material/material-color-utilities`) and remove Tailwind/Radix/Lucide | Enforces visual consistency, clean configuration, and native MD3 interaction patterns across all pages | — Pending |
-| Unified warm Hestia terracotta/amber MD3 tonal palette replacing per-pillar color ramps | Eliminates visual fragmentation across sections while preserving calm light/dark hierarchy | — Pending |
-| Restructure top-level destinations and sub-views around MD3 navigation and minimal clutter | Improves flow of control and reduces nested tabs, card borders, and multi-step sheet friction | — Pending |
+| Standardize entire frontend on Google Material Design 3 (`@material/web`, Material Symbols, `@material/material-color-utilities`) and remove Tailwind/Radix/Lucide | Enforces visual consistency, clean configuration, and native MD3 interaction patterns across all pages | Validated — Phase 17 |
+| Unified warm Hestia terracotta/amber MD3 tonal palette replacing per-pillar color ramps | Eliminates visual fragmentation across sections while preserving calm light/dark hierarchy | Validated — Phase 17 |
+| Restructure top-level destinations and sub-views around MD3 navigation and minimal clutter | Improves flow of control and reduces nested tabs, card borders, and multi-step sheet friction | Validated — Phase 18 |
 
 ## Evolution
 
@@ -152,4 +155,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-11 after v3.0 milestone start*
+*Last updated: 2026-11-15 after Phase 18*

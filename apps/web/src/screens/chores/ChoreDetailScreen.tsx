@@ -119,7 +119,7 @@ export function ChoreDetailScreen({ householdId, choreId }: ChoreDetailScreenPro
 
       <header className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-h1 text-primary">{data.name}</h1>
+          <h2 className="text-h1 text-primary">{data.name}</h2>
           <p className="text-body-sm text-secondary">
             {describeRecurrence(data.recurrenceUnit, data.interval)}
           </p>

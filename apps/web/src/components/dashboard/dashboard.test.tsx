@@ -46,16 +46,10 @@ describe('This Week dashboard', () => {
 
   it('shows muted, untappable placeholders in each section color while nothing has shipped', () => {
     renderDashboard({ releasedPillars: new Set() });
-    for (const [name, section] of [
-      ['Bills', 'bills'],
-      ['Shopping', 'lists'],
-      ['Meals', 'meals'],
-      ['Chores', 'chores'],
-    ] as const) {
+    for (const name of ['Bills', 'Shopping', 'Meals', 'Chores'] as const) {
       const region = card(name);
       expect(within(region).getByText('Coming soon')).toBeInTheDocument();
       expect(within(region).queryByRole('link')).toBeNull();
-      expect(region.closest('[data-section]')).toHaveAttribute('data-section', section);
     }
   });
 

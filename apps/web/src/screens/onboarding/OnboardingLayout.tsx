@@ -1,6 +1,5 @@
 import { ChevronLeft } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
-import { SectionProvider } from '../../lib/section-context.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { OfflineBanner } from '../../components/shell/OfflineBanner.tsx';
 import { ToastProvider } from '../../components/ui/Toast.tsx';
@@ -26,7 +25,7 @@ export function OnboardingLayout({
   children,
 }: OnboardingLayoutProps): ReactElement {
   return (
-    <SectionProvider section="dashboard" className="min-h-dvh bg-base text-primary">
+    <div className="min-h-dvh bg-base text-primary">
       <ToastProvider>
         <a
           href="#main"
@@ -60,6 +59,6 @@ export function OnboardingLayout({
           {children}
         </main>
       </ToastProvider>
-    </SectionProvider>
+    </div>
   );
 }
