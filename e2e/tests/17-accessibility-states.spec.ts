@@ -336,7 +336,6 @@ for (const theme of THEMES) {
       await page
         .locator('md-dialog, dialog, form')
         .getByRole('button', { name: /^(Create shopping list|Create list)$/ })
-        .or(page.locator('md-dialog, dialog').locator('md-filled-button'))
         .or(page.getByRole('button', { name: /^(Create shopping list|Create list)$/ }))
         .last()
         .click();

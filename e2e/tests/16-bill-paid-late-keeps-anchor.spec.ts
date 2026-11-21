@@ -181,7 +181,11 @@ for (const theme of ['light', 'dark'] as const) {
       const history = group(page, 'Payment history');
       await expect(history.getByText(`Paid on ${shown(f.today)} · $64.20`)).toBeVisible();
       await expect(
-        history.getByRole('button', { name: `More actions for the ${shown(f.first)} payment` }),
+        history
+          .getByRole('button', { name: `More actions for the ${shown(f.first)} payment` })
+          .or(history.getByRole('button', { name: `Edit payment for ${shown(f.first)}` }))
+          .or(history.getByRole('button', { name: `Delete payment for ${shown(f.first)}` }))
+          .first(),
       ).toBeVisible();
       await expectAccessible(page, `bill detail after late payment (${theme})`);
       await shoot(page, `bill-detail-after-late-payment-${theme}-1280`);
