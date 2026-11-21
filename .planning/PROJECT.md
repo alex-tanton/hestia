@@ -10,20 +10,11 @@ Hestia is a self-hosted household-management PWA (grocery deals, shopping lists,
 - **v1.0 — Cleanup and Hardening (2026-10-25):** 6 phases, 60 plans, 40 requirements. Test determinism, bare-clock ban, Knip baseline, bug fixes, CI ratchets.
 - **v2.0 — Hestia Domain Migration and Rebrand (2026-11-02):** 5 phases, 23 plans, 21 requirements. Custom domain `hestia.aberrance.app` via Cloudflare Tunnel, full Hestia rebrand, GoTrue magic link authentication, RFC 8292 Web Push VAPID, edge caching & WAF rate limits, documentation modularization in `docs/`.
 - **v2.1 — Grocery & Deals Intelligence (2026-11-10):** 5 phases, 13 plans, 16 requirements. Flipp & Open Food Facts CDN delivery, derived original prices & discount badges, fast background deal ingestion, camera/manual barcode scanning for grocery list adding and checkout check-off, flexible meal planning with standalone custom items, and comprehensive unit, integration, and Playwright E2E test hardening with WCAG 2.1 AA accessibility audits.
-
-## Current Milestone: v3.0 Material Design 3 Overhaul
-
-**Goal:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified warm tonal theming, restructured navigation, and clear flow of control.
-
-**Target features:**
-- Clean MD3 stack and token foundation (`@material/web`, `@material/material-color-utilities` from a warm Hestia terracotta/amber seed color, Material Symbols), removing Tailwind CSS, Radix UI, and Lucide in favor of clean MD3 CSS tokens and minimal MD3-spec wrappers where `@material/web` lacks a primitive (e.g., Navigation Bar/Rail, Bottom Sheet)
-- Restructured top-level destinations, sub-views, and responsive shell around MD3 Navigation Bar (mobile), Navigation Rail (desktop), and unified Top App Bar, including streamlined Dashboard and unified Auth, Onboarding, and Settings
-- Minimal, uncluttered redesign of every screen using MD3 tonal surface elevation and whitespace instead of boxed cards/heavy dividers, progressive disclosure/overflow menus for secondary actions, flattened nested tabs/sheets, and removal of low-value visual noise
-- Updated unit, component, and Playwright E2E test suites plus WCAG 2.1 AA audits, Knip, JSCPD, and build checks passing against the new MD3 UI
+- **v3.0 — Material Design 3 Overhaul (2026-11-20):** 5 phases, 31 plans, 32 requirements. Completely overhauled frontend across all screens using Google Material Design 3 for Web (`@material/web@2.5.0`), static Warm Terracotta tonal CSS tokens, inline SVG Material Symbols Rounded registry, responsive window size classes (`NavigationBar` <600px, `NavigationRail` >=600px), single-h1 hierarchy in Top App Bar, persistent Undo snackbar queue, modal bottom sheets, pure semantic CSS replacing Tailwind CSS v4, Radix UI, and Lucide icons, with passing Vitest unit/DOM suites (881 tests), 24 Playwright E2E journeys (56 test cases), and light/dark WCAG 2.1 AA audits.
 
 ## Core Value
 
-The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, provides intelligent grocery deal discovery with verified barcode scanning and flexible meal planning, and maintains clean, structured documentation for developers and operators.
+The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, provides intelligent grocery deal discovery with verified barcode scanning and flexible meal planning, and presents a calm, uncluttered Material Design 3 user experience across mobile and desktop.
 
 ## Requirements
 
@@ -90,15 +81,16 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 
 ### Validated (v3.0)
 
+- ✓ **MD3-FOUNDATION**: Replaced Tailwind CSS, Radix UI, and Lucide with `@material/web`, `@material/material-color-utilities` Warm Terracotta palette, Material Symbols Rounded, and MD3 gap primitives — Phases 17 & 21
 - ✓ **MD3-NAV-SHELL**: Material Design 3 adaptive NavigationBar (<600px) and NavigationRail (>=600px), single-h1 hierarchy in Top App Bar, MD3 Primary Tabs in SubTabs, ModalBottomSheet household switcher, consolidated Meals routing, and readiness filter chips — Phase 18
 - ✓ **MD3-ENTRY-DASH-GROCERY**: Material Design 3 Entry, Auth (440px tonal cards), responsive 1-2 column Dashboard, borderless Grocery Lists with subtle hierarchy, 2-4 column elevated circular Flyers, and camera/flashlight barcode scanner HUD — Phase 19
 - ✓ **MD3-MEALS-BILLS-CHORES-SETTINGS**: Overhaul Meals & Recipes (MEAL-04..06), Bills & Subscriptions (BILL-01..02), Chores & Errands (CHOR-01..02), and Settings & Departure (SET-01..03) for minimal, clutter-free MD3 visual hierarchy — Phase 20
+- ✓ **MD3-SCREENS**: Overhauled all application screens for minimal, clutter-free MD3 visual hierarchy and improved flow of control — Phases 18–20
+- ✓ **MD3-VERIFY**: Updated frontend unit, component, and Playwright E2E suites plus WCAG 2.1 AA audits, Knip, JSCPD, and CI gates to pass on the overhauled MD3 frontend — Phase 21
 
 ### Active
 
-- [ ] **MD3-FOUNDATION**: Replace Tailwind CSS, Radix UI, and Lucide with `@material/web`, `@material/material-color-utilities` (warm Hestia terracotta/amber seed palette for light & dark), Material Symbols, and minimal MD3-spec wrappers only where `@material/web` lacks coverage
-- [ ] **MD3-SCREENS**: Overhaul all application screens (Dashboard, Lists/Deals/Flyers/Pantry, Meals/Recipes/Suggestions, Bills/Subscriptions, Chores/Errands, Onboarding/Auth, Settings/System Health) for minimal, clutter-free MD3 visual hierarchy and improved flow of control
-- [ ] **MD3-VERIFY**: Update frontend unit, component, and Playwright E2E suites plus WCAG 2.1 AA audits and CI gates (`check-build`, Knip, JSCPD, typecheck, lint) to pass on the overhauled MD3 frontend
+(None — execute `/gsd-new-milestone` to start next version)
 
 ### Out of Scope
 
@@ -106,18 +98,20 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 - Rewriting database migration history (migrations remain append-only).
 - Replacing Fastify/Vite/Postgres core tech stack.
 - Complex federated OAuth providers (retaining email/password + magic link auth).
+- Unstable `@material/web/labs/*` components (used custom MD3 light-DOM primitives instead).
+- Google Fonts external webfont loading (violates offline-first PWA CSP; using pure inline SVGs).
 
 ## Context
 
-- Brownfield codebase with 16 completed and archived phases across v1.0, v2.0, and v2.1.
+- Brownfield codebase with 21 completed and archived phases across v1.0, v2.0, v2.1, and v3.0.
 - Custom domain `hestia.aberrance.app` active under Cloudflare Tunnel.
 - pnpm workspace (TypeScript 6, Node 24, React 19.3, Vite 8.3, React Router 8.4, TanStack Query 5).
-- Frontend currently uses Tailwind CSS v4, Radix UI, Lucide icons, and per-section color ramps (`apps/web/src/index.css`) scheduled for replacement in v3.0.
+- Frontend fully converted to Google Material Design 3 (`@material/web@2.5.0`), custom Warm Terracotta tonal CSS tokens, and Material Symbols Rounded inline SVG registry. Tailwind CSS, Radix UI, and Lucide icons completely removed.
 
 ## Constraints
 
 - **No open router ports**: Host server must not require opening ports 80/443 directly to the public internet; Cloudflare Tunnel handles ingress.
-- **Zero test regressions**: All existing unit, integration, and E2E tests must remain green after package and brand renaming.
+- **Zero test regressions**: All existing unit, integration, and E2E tests must remain green.
 - **Documentation integrity**: Do not discard operational knowledge when simplifying `README.md`; preserve it in dedicated `docs/` files.
 - **Append-only migrations**: Any schema or seed updates must be forward-only.
 
@@ -139,6 +133,9 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 | Unified warm Hestia terracotta/amber MD3 tonal palette replacing per-pillar color ramps | Eliminates visual fragmentation across sections while preserving calm light/dark hierarchy | Validated — Phase 17 |
 | Restructure top-level destinations and sub-views around MD3 navigation and minimal clutter | Improves flow of control and reduces nested tabs, card borders, and multi-step sheet friction | Validated — Phase 18 |
 | Responsive layout transitions (<840px agenda pills vs >=840px 7-column board) and responsive dialogs (<600px full-screen vs >=600px centered modal) | Native responsive ergonomics tailored to mobile handhelds and desktop screens without duplicate views | Validated — Phase 20 |
+| Modular CSS architecture with domain stylesheets and semantic CSS classes | Replaces Tailwind utility class churn with structured, scoped CSS | Validated — Phase 21 |
+| Commit-pinned inline SVG Material Symbols Rounded registry (`Icon.tsx`) | Zero font network overhead, zero runtime CSS injection, strict CSP compliance | Validated — Phases 17 & 21 |
+| Single-slot persistent FIFO snackbar queue with 4000ms duration and persistent error/Undo | Prevents toast notification stacking while guaranteeing user feedback for critical mutations | Validated — Phases 17 & 19 |
 
 ## Evolution
 
@@ -158,4 +155,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-15 after Phase 20*
+*Last updated: 2026-11-20 after v3.0 milestone*

@@ -1,4 +1,3 @@
-import { Plus } from 'lucide-react';
 import { useId, useState, type ReactElement } from 'react';
 import type { Errand } from '@hestia/shared';
 import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
@@ -307,7 +306,7 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
             setIsAdding(true);
           }}
         >
-          <Plus aria-hidden size={20} strokeWidth={1.5} />
+          <Icon name="add" size={20} />
           Add an errand
         </Button>
       </div>

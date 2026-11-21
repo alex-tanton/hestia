@@ -268,130 +268,132 @@ function ChoreForm({
   };
 
   return (
-    <MdDialog
-      role="dialog"
-      open
-      quick
-      aria-label={title}
-      className="md3-responsive-dialog w-full max-w-[720px]"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') {
-          void navigate(isEditing ? `/chores/${choreId}` : '/chores');
-        }
-      }}
-    >
-      <div
-        slot="headline"
-        id="dialog-title"
-        className="flex items-center justify-between text-title-lg font-semibold text-[var(--md-sys-color-on-surface)]"
-      >
-        <span>{title}</span>
-        {isEditing && (
-          <OverflowMenu
-            label={`More actions for ${chore?.name ?? 'this chore'}`}
-            items={[
-              {
-                label: 'Delete',
-                icon: <Icon name="delete" size={20} />,
-                isDestructive: true,
-                disabledReason: offlineReason,
-                onSelect: () => {
-                  setIsDeleting(true);
-                },
-              },
-            ]}
-          />
-        )}
-      </div>
-
-      <form
-        slot="content"
-        noValidate
-        className="flex flex-col gap-4 pt-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleSave();
+    <>
+      <MdDialog
+        role="dialog"
+        open
+        quick
+        aria-label={title}
+        className="md3-responsive-dialog w-full max-w-[720px]"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            void navigate(isEditing ? `/chores/${choreId}` : '/chores');
+          }
         }}
       >
-        <Switch
-          label="Active chore"
-          checked={isActive}
-          disabled={offlineReason !== undefined}
-          onCheckedChange={setIsActive}
-        />
+        <div
+          slot="headline"
+          id="dialog-title"
+          className="flex items-center justify-between text-title-lg font-semibold text-[var(--md-sys-color-on-surface)]"
+        >
+          <span>{title}</span>
+          {isEditing && (
+            <OverflowMenu
+              label={`More actions for ${chore?.name ?? 'this chore'}`}
+              items={[
+                {
+                  label: 'Delete',
+                  icon: <Icon name="delete" size={20} />,
+                  isDestructive: true,
+                  disabledReason: offlineReason,
+                  onSelect: () => {
+                    setIsDeleting(true);
+                  },
+                },
+              ]}
+            />
+          )}
+        </div>
 
-        <TextField
-          label="Name"
-          value={name}
-          error={nameError}
-          disabledReason={offlineReason}
-          onChange={(event) => {
-            setName(event.target.value);
+        <form
+          slot="content"
+          noValidate
+          className="flex flex-col gap-4 pt-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSave();
           }}
-        />
+        >
+          <Switch
+            label="Active chore"
+            checked={isActive}
+            disabled={offlineReason !== undefined}
+            onCheckedChange={setIsActive}
+          />
 
-        <RecurrenceFields
-          value={recurrence}
-          onChange={setRecurrence}
-          intervalError={intervalError}
-          disabledReason={offlineReason}
-        />
-
-        <Select
-          label="Assignment"
-          value={assignmentType}
-          options={ASSIGNMENT_OPTIONS}
-          disabledReason={offlineReason}
-          onValueChange={(value) => {
-            setAssignmentType(value as AssignmentType);
-          }}
-        />
-
-        {assignmentType === 'single' && (
-          <Select
-            label="Assigned to"
-            value={singleAssignee === '' ? UNASSIGNED_VALUE : singleAssignee}
+          <TextField
+            label="Name"
+            value={name}
+            error={nameError}
             disabledReason={offlineReason}
-            options={[
-              { value: UNASSIGNED_VALUE, label: UNASSIGNED_LABEL },
-              ...members.map((member) => ({ value: member.userId, label: member.displayName })),
-            ]}
-            onValueChange={(value) => {
-              setSingleAssignee(value === UNASSIGNED_VALUE ? '' : value);
+            onChange={(event) => {
+              setName(event.target.value);
             }}
           />
-        )}
 
-        {assignmentType === 'rotation' && (
-          <RotationEditor
-            members={members}
-            order={rotationOrder}
-            onChange={setRotationOrder}
+          <RecurrenceFields
+            value={recurrence}
+            onChange={setRecurrence}
+            intervalError={intervalError}
             disabledReason={offlineReason}
           />
-        )}
 
-        <FormMessage message={formError} />
-      </form>
+          <Select
+            label="Assignment"
+            value={assignmentType}
+            options={ASSIGNMENT_OPTIONS}
+            disabledReason={offlineReason}
+            onValueChange={(value) => {
+              setAssignmentType(value as AssignmentType);
+            }}
+          />
 
-      <div slot="actions" className="flex justify-end gap-2">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            void navigate(isEditing ? `/chores/${choreId}` : '/chores');
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          isLoading={isSaving}
-          disabledReason={offlineReason}
-          onClick={handleSave}
-        >
-          Save chore
-        </Button>
-      </div>
+          {assignmentType === 'single' && (
+            <Select
+              label="Assigned to"
+              value={singleAssignee === '' ? UNASSIGNED_VALUE : singleAssignee}
+              disabledReason={offlineReason}
+              options={[
+                { value: UNASSIGNED_VALUE, label: UNASSIGNED_LABEL },
+                ...members.map((member) => ({ value: member.userId, label: member.displayName })),
+              ]}
+              onValueChange={(value) => {
+                setSingleAssignee(value === UNASSIGNED_VALUE ? '' : value);
+              }}
+            />
+          )}
+
+          {assignmentType === 'rotation' && (
+            <RotationEditor
+              members={members}
+              order={rotationOrder}
+              onChange={setRotationOrder}
+              disabledReason={offlineReason}
+            />
+          )}
+
+          <FormMessage message={formError} />
+        </form>
+
+        <div slot="actions" className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              void navigate(isEditing ? `/chores/${choreId}` : '/chores');
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            isLoading={isSaving}
+            disabledReason={offlineReason}
+            onClick={handleSave}
+          >
+            Save chore
+          </Button>
+        </div>
+      </MdDialog>
 
       <ConfirmDialog
         open={isDeleting}
@@ -402,6 +404,6 @@ function ChoreForm({
         isConfirming={deleteChore.isPending}
         onConfirm={confirmDelete}
       />
-    </MdDialog>
+    </>
   );
 }

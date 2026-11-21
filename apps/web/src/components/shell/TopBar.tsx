@@ -27,11 +27,7 @@ export function TopBar({ title, switcher, chrome }: TopBarProps): ReactElement {
   }, []);
 
   return (
-    <div
-      className={`flex h-16 items-center gap-3 px-4 transition-colors duration-200 ${
-        isScrolled ? 'bg-surface-container' : 'bg-surface'
-      }`}
-    >
+    <div className={`top-app-bar-content ${isScrolled ? 'scrolled' : ''}`}>
       <div className="flex shrink-0 items-center">
         {chrome ? (
           <Link
@@ -46,9 +42,9 @@ export function TopBar({ title, switcher, chrome }: TopBarProps): ReactElement {
         )}
       </div>
 
-      <h1 className="min-w-0 flex-1 truncate text-heading font-semibold text-primary">{title}</h1>
+      <h1 className="top-app-bar-title">{title}</h1>
 
-      <div className="flex shrink-0 items-center min-[600px]:hidden">
+      <div className="top-bar-settings-link flex shrink-0 items-center">
         <Link
           to="/settings"
           aria-label="Settings"

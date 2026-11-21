@@ -1,7 +1,7 @@
-import { Plus, Ticket } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { ListRow } from '../../components/ui/ListRow.tsx';
 import { useAuthClient } from '../../lib/api/api-context.tsx';
 import { CreateHouseholdStep } from './CreateHouseholdStep.tsx';
@@ -83,7 +83,7 @@ export function OnboardingScreen({
               <ListRow
                 title="Create a household"
                 description="You become its admin"
-                leading={<Plus aria-hidden size={20} strokeWidth={1.5} />}
+                leading={<Icon name="add" size={20} />}
                 onSelect={() => {
                   setStep('create');
                 }}
@@ -93,7 +93,7 @@ export function OnboardingScreen({
               <ListRow
                 title="Join with a code"
                 description="Use the 8-character code from your invite"
-                leading={<Ticket aria-hidden size={20} strokeWidth={1.5} />}
+                leading={<Icon name="confirmation_number" size={20} />}
                 onSelect={() => {
                   setStep('join');
                 }}

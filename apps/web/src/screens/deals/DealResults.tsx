@@ -1,4 +1,3 @@
-import { Tag } from 'lucide-react';
 import { useCallback, type ReactElement } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { Deal, Freshness } from '@hestia/shared';
@@ -113,7 +112,7 @@ export function DealResults({
       {isEmpty && data.refreshing && <DealSkeletons label={loadingLabel} />}
       {isEmpty && !data.refreshing && (
         <EmptyState
-          icon={Tag}
+          icon="sell"
           message={emptyMessage}
           {...(emptyAction ? { action: emptyAction } : {})}
         />

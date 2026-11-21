@@ -1,4 +1,3 @@
-import { RotateCw } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Navigate } from 'react-router';
 import type { DeepHealthResponse } from '@hestia/shared';
@@ -155,7 +154,7 @@ export function SystemHealthScreen(): ReactElement {
             void health.refetch();
           }}
         >
-          <RotateCw aria-hidden size={20} strokeWidth={1.5} />
+          <Icon name="refresh" size={20} />
           Refresh
         </Button>
       </div>

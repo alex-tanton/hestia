@@ -115,7 +115,7 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
     const groups = groupChores(data, today);
 
     return (
-      <div className="flex flex-col gap-6">
+      <div className="chores-list">
         {CHORE_GROUP_ORDER.filter((key) => groups[key].length > 0).map((key) => (
           <section key={key} aria-labelledby={`chore-group-${key}`} className="flex flex-col gap-2">
             <h2
@@ -145,7 +145,7 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="chores-list">
       <div className="flex justify-end">{addButton}</div>
       {chores.isError && chores.data !== undefined && (
         <StaleNotice

@@ -36,10 +36,10 @@ export function SettingsScreen(): ReactElement {
   const isServerOwner = profile.data.isServerOwner;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="settings-hub">
       {profile.data.displayName && (
         <div className="flex items-center gap-3 px-2">
-          <div className="flex size-12 items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-semibold text-title-medium">
+          <div className="settings-avatar-pill">
             {profile.data.displayName.charAt(0).toUpperCase()}
           </div>
           <div className="flex min-w-0 flex-col">
@@ -53,7 +53,7 @@ export function SettingsScreen(): ReactElement {
         </div>
       )}
 
-      <Card variant="flat" className="p-0 overflow-hidden">
+      <Card variant="flat" className="settings-hub-list p-0 overflow-hidden">
         <ul className="flex flex-col divide-y divide-[var(--md-sys-color-outline-variant)]">
           <li className="px-4">
             <ListRow

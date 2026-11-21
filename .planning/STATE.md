@@ -2,39 +2,37 @@
 gsd_state_version: "1.0"
 milestone: v3.0
 milestone_name: Material Design 3 Overhaul
-current_phase: 21
-current_phase_name: Legacy Stack Cleanup & Full Verification
-status: planning
-stopped_at: Phase 20 complete, ready to plan Phase 21
-last_updated: "2026-11-15T20:42:41.762Z"
-last_activity: 2026-11-15
-last_activity_desc: Phase 20 complete, transitioned to Phase 21
-state_head: 5dda9fd7103e0cf8c73f8a922fa732539cb95a24
+status: Awaiting next milestone
+stopped_at: Phase 21 Plan 21-04 completed; all 5 phases of Milestone v3.0 complete
+last_updated: "2026-11-20T16:31:26.947Z"
+last_activity: 2026-11-20
+last_activity_desc: Milestone v3.0 completed and archived
+state_head: 7105d120a7a38f515f91f76e7784c05f4c6123ed
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 27
-  completed_plans: 27
-  percent: 60
+  completed_phases: 5
+  total_plans: 31
+  completed_plans: 31
+  percent: 100
+current_phase: 21
+current_phase_name: Legacy Stack Cleanup & Full Verification
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-15)
+See: .planning/PROJECT.md (updated 2026-11-20)
 
-**Core value:** Completely overhaul Hestia's frontend across all screens using Google's Material Design 3 for Web (`@material/web`) to deliver minimal, uncluttered visuals, unified Warm Terracotta tonal theming, restructured navigation, and clear flow of control.
-**Current focus:** Phase 21 — Legacy Stack Cleanup & Full Verification
+**Core value:** The application is securely reachable at `https://hestia.aberrance.app` with zero open router ports via Cloudflare Tunnel, features friction-free passwordless magic link authentication, delivers reliable mobile Web Push notifications, operates under the unified Hestia brand, provides intelligent grocery deal discovery with verified barcode scanning and flexible meal planning, and presents a calm, uncluttered Material Design 3 user experience across mobile and desktop.
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 21 — Legacy Stack Cleanup & Full Verification
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-15 — Phase 20 complete, transitioned to Phase 21
-
-Progress: [██████░░░░] 60%
+Phase: Milestone v3.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-20 — Milestone v3.0 completed and archived
 
 ## Performance Metrics
 
@@ -80,6 +78,10 @@ Progress: [██████░░░░] 60%
 | Phase 19 P03 | 18m | 3 tasks | 12 files |
 | Phase 19 P04 | 15m | 2 tasks | 2 files |
 | Phase 19 P05 | 20m | 3 tasks | 11 files |
+| Phase 21 P01 | 20m | 3 tasks | 14 files |
+| Phase 21 P02 | 15m | 3 tasks | 8 files |
+| Phase 21 P03 | 45m | 3 tasks | 25 files |
+| Phase 21 P04 | 25m | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -142,10 +144,14 @@ None yet.
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
-| *(none)* | | | | |
+| uat_gaps | 17/17-UAT.md | testing | 2026-11-20 | v3.0 |
 
 ## Session Continuity
 
-Last session: 2026-11-15T20:43:00.000Z
-Stopped at: Phase 20 complete, ready to plan Phase 21
-Resume file: None
+Last session: 2026-11-19T16:42:00-05:00
+Stopped at: Session resumed, proceeding to Plan 21-03 Task 3 (specs 18-24 modernization & full E2E pass)
+Resume file: .planning/HANDOFF.json
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

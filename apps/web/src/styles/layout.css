@@ -1,3 +1,118 @@
+/* Adaptive shell, TopBar, NavigationBar, NavigationRail, and MD3 Window Size Class breakpoints. */
+
+.shell-frame {
+  min-height: 100dvh;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+
+.shell-frame-inner {
+  width: 100%;
+}
+
+.shell-content {
+  margin-inline: auto;
+  width: 100%;
+  padding: 1rem;
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  outline: none;
+}
+
+.top-app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: var(--md-sys-color-surface);
+  padding-top: env(safe-area-inset-top);
+}
+
+.top-app-bar-content {
+  display: flex;
+  height: 4rem; /* 64px */
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: 1rem;
+  transition: background-color 200ms ease;
+  background-color: var(--md-sys-color-surface);
+}
+
+.top-app-bar-content.scrolled {
+  background-color: var(--md-sys-color-surface-container);
+}
+
+.top-app-bar-title {
+  min-width: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--md-sys-typescale-title-large-size, 1.25rem);
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.nav-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  height: 5rem; /* 80px */
+  min-height: 80px;
+  align-items: center;
+  justify-content: space-around;
+  background-color: var(--md-sys-color-surface-container);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-bar a,
+.nav-rail a {
+  color: var(--md-sys-color-on-surface);
+  text-decoration: none;
+}
+
+.nav-rail {
+  display: none;
+  position: fixed;
+  inset-block: 0;
+  left: 0;
+  z-index: 30;
+  width: 5rem; /* 80dp */
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface);
+  padding-block: 1rem;
+}
+
+/* Medium Window Size Class: >=600px */
+@media (min-width: 600px) {
+  .shell-frame-inner {
+    padding-left: 5rem; /* 80dp NavigationRail */
+  }
+
+  .shell-content {
+    padding-bottom: 2rem;
+  }
+
+  .nav-bar {
+    display: none;
+  }
+
+  .nav-rail {
+    display: flex;
+  }
+}
+
+/* Expanded Window Size Class: >=840px */
+@media (min-width: 840px) {
+  .shell-content {
+    max-width: 1200px;
+    padding-inline: 2rem;
+  }
+}
+
 .toast-container {
   position: fixed;
   inset-inline: 0;

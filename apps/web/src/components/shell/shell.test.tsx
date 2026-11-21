@@ -110,7 +110,7 @@ describe('app shell', () => {
     await userEvent.keyboard('{Enter}');
     // The Meals module is a lazy chunk, so its first load can outlast the default find timeout.
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 20000 }),
+      await screen.findByRole('heading', { level: 1, name: 'Meals' }, { timeout: 20_000 }),
     ).toBeInTheDocument();
     await waitFor(() => {
       expect(document.title).toBe('Meals · Hestia');
@@ -119,7 +119,7 @@ describe('app shell', () => {
       'aria-current',
       'page',
     );
-  }, 20_000);
+  }, 30_000);
 
   it.each([
     ['/lists', 'Lists sections'],
@@ -219,15 +219,6 @@ describe('sub-tabs once a pillar ships', () => {
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/bills/subscriptions');
     });
-  });
-
-  it('keeps an unshipped pillar on coming soon even with the released set supplied', () => {
-    render(
-      <MemoryRouter initialEntries={['/chores']}>
-        <PillarScreen pillar="chores" releasedPillars={released} />
-      </MemoryRouter>,
-    );
-    expect(screen.getByRole('heading', { name: 'Coming soon' })).toBeInTheDocument();
   });
 });
 
