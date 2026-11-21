@@ -7,6 +7,8 @@ import { queryKeys } from '../../lib/api/keys.ts';
 import { setOnline } from '../../test/browser.ts';
 import { findMdButton, getMdButton } from '../../test/md-queries.ts';
 import {
+  ALEX_ID,
+  JORDAN_ID,
   OAK_STREET_ID,
   oakStreetFixture,
   oakStreetMembers,
@@ -37,7 +39,7 @@ configure({ asyncUtilTimeout: 5000 });
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DONE_AT = '2026-09-27T16:00:00.000Z';
-const DONE_LABEL = `Mark ${takeOutTrashFixture.name} done`;
+const DONE_LABEL = `Mark done, ${takeOutTrashFixture.name}`;
 
 function mountList(extra: Readonly<Record<string, StubHandler>> = {}): {
   stub: ReturnType<typeof createFetchStub>;
@@ -95,6 +97,11 @@ describe('a chore completed offline', () => {
     const { stub, queryClient } = mountList();
     const row = await loadedRow(queryClient);
 
+    // Assert urgency sections and floating MdFab
+    expect(screen.getByRole('heading', { name: 'Overdue' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'This week' })).toBeInTheDocument();
+    expect(await findMdButton('Add chore')).toBeInTheDocument();
+
     setOnline(false);
     await user.click(getMdButton(DONE_LABEL));
 
@@ -103,6 +110,39 @@ describe('a chore completed offline', () => {
       expect(row.className).toContain(PENDING_CLASSES);
     });
     expect(postCalls(stub)).toHaveLength(0);
+  });
+
+  it('announces the next assignee in a persistent toast when completed online and supports undo', async () => {
+    const user = userEvent.setup();
+    let undoDeleted = false;
+    const afterCompletion = {
+      ...takeOutTrashDetailFixture,
+      currentTurn: JORDAN_ID,
+      nextTurn: ALEX_ID,
+    };
+    const { queryClient } = mountList({
+      'POST /api/chores/:id/complete': () => ({
+        status: 200,
+        body: afterCompletion,
+      }),
+      'DELETE /api/chores/:id/completions/:completionId': () => {
+        undoDeleted = true;
+        return { status: 200, body: {} };
+      },
+    });
+    await loadedRow(queryClient);
+
+    await user.click(getMdButton(DONE_LABEL));
+    expect(
+      await screen.findByText('Take out trash done. Jordan Blake is next.'),
+    ).toBeInTheDocument();
+
+    const undoButton = await findMdButton('Undo');
+    expect(undoButton).toBeInTheDocument();
+    await user.click(undoButton);
+    await waitFor(() => {
+      expect(undoDeleted).toBe(true);
+    });
   });
 
   it('replays on reconnect with its id, the household-date occurrence, and its action time', async () => {

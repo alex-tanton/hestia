@@ -70,9 +70,8 @@ export interface IngredientEditorProps {
 }
 
 /**
- * Each ingredient shows its original line, with quantity, unit, and item name as editable
- * fields beneath it, so a bad split can be corrected before saving. A manually added row has
- * no original line to show.
+ * Rapid inline row editor with borderless quantity, unit, and item fields per D-03.
+ * Pressing Enter inside the item field automatically adds and focuses the next ingredient row.
  */
 export function IngredientEditor({
   ingredients,
@@ -83,66 +82,92 @@ export function IngredientEditor({
     onChange(ingredients.map((row) => (row.key === key ? { ...row, ...patch } : row)));
   };
 
+  const handleAppendRow = (): void => {
+    const newRow = blankIngredient();
+    onChange([...ingredients, newRow]);
+    setTimeout(() => {
+      const rows = document.querySelectorAll<HTMLElement>('[data-ingredient-row]');
+      const lastRow = rows[rows.length - 1];
+      if (lastRow && !lastRow.contains(document.activeElement)) {
+        const targetInput = lastRow.querySelector<HTMLElement>(
+          'md-outlined-text-field, input, textarea',
+        );
+        targetInput?.focus();
+      }
+    }, 50);
+  };
+
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-h3 text-primary">Ingredients</h3>
-      <ul className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-title-small font-semibold text-primary">Ingredients</h3>
+        <Button type="button" variant="ghost" className="px-2" onClick={handleAppendRow}>
+          <Plus aria-hidden size={16} strokeWidth={1.5} />
+          Add ingredient
+        </Button>
+      </div>
+
+      <ul className="flex flex-col divide-y divide-[var(--md-sys-color-outline-variant)]">
         {ingredients.map((row, index) => {
           const error = showErrors ? ingredientRowError(row) : undefined;
           return (
-            <li key={row.key} className="flex flex-col gap-2 rounded-md border border-border p-3">
+            <li key={row.key} data-ingredient-row className="flex flex-col gap-2 py-3">
               {row.rawText !== null && (
                 <p className="text-body-sm text-secondary italic">"{row.rawText}"</p>
               )}
-              <div className="grid grid-cols-3 gap-2">
-                <TextField
-                  label="Quantity"
-                  inputMode="decimal"
-                  value={row.quantity}
-                  onChange={(event) => {
-                    updateRow(row.key, { quantity: event.target.value });
+              <div className="flex items-start gap-2">
+                <div className="w-24 shrink-0">
+                  <TextField
+                    label="Quantity"
+                    inputMode="decimal"
+                    value={row.quantity}
+                    onChange={(event) => {
+                      updateRow(row.key, { quantity: event.target.value });
+                    }}
+                  />
+                </div>
+                <div className="w-28 shrink-0">
+                  <TextField
+                    label="Unit"
+                    value={row.unit}
+                    onChange={(event) => {
+                      updateRow(row.key, { unit: event.target.value });
+                    }}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <TextField
+                    label="Item"
+                    value={row.itemName}
+                    error={error}
+                    onChange={(event) => {
+                      updateRow(row.key, { itemName: event.target.value });
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleAppendRow();
+                      }
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  isIconOnly
+                  className="mt-2 shrink-0 text-secondary hover:text-error"
+                  aria-label={`Remove ingredient ${String(index + 1)}`}
+                  onClick={() => {
+                    onChange(ingredients.filter((candidate) => candidate.key !== row.key));
                   }}
-                />
-                <TextField
-                  label="Unit"
-                  value={row.unit}
-                  onChange={(event) => {
-                    updateRow(row.key, { unit: event.target.value });
-                  }}
-                />
-                <TextField
-                  label="Item"
-                  value={row.itemName}
-                  error={error}
-                  onChange={(event) => {
-                    updateRow(row.key, { itemName: event.target.value });
-                  }}
-                />
+                >
+                  <Trash2 aria-hidden size={16} strokeWidth={1.5} />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                className="self-start px-2"
-                onClick={() => {
-                  onChange(ingredients.filter((candidate) => candidate.key !== row.key));
-                }}
-              >
-                <Trash2 aria-hidden size={16} strokeWidth={1.5} />
-                {`Remove ingredient ${String(index + 1)}`}
-              </Button>
             </li>
           );
         })}
       </ul>
-      <Button
-        variant="secondary"
-        className="self-start"
-        onClick={() => {
-          onChange([...ingredients, blankIngredient()]);
-        }}
-      >
-        <Plus aria-hidden size={20} strokeWidth={1.5} />
-        Add ingredient
-      </Button>
     </div>
   );
 }

@@ -91,6 +91,8 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 ### Validated (v3.0)
 
 - ✓ **MD3-NAV-SHELL**: Material Design 3 adaptive NavigationBar (<600px) and NavigationRail (>=600px), single-h1 hierarchy in Top App Bar, MD3 Primary Tabs in SubTabs, ModalBottomSheet household switcher, consolidated Meals routing, and readiness filter chips — Phase 18
+- ✓ **MD3-ENTRY-DASH-GROCERY**: Material Design 3 Entry, Auth (440px tonal cards), responsive 1-2 column Dashboard, borderless Grocery Lists with subtle hierarchy, 2-4 column elevated circular Flyers, and camera/flashlight barcode scanner HUD — Phase 19
+- ✓ **MD3-MEALS-BILLS-CHORES-SETTINGS**: Overhaul Meals & Recipes (MEAL-04..06), Bills & Subscriptions (BILL-01..02), Chores & Errands (CHOR-01..02), and Settings & Departure (SET-01..03) for minimal, clutter-free MD3 visual hierarchy — Phase 20
 
 ### Active
 
@@ -136,6 +138,7 @@ The application is securely reachable at `https://hestia.aberrance.app` with zer
 | Standardize entire frontend on Google Material Design 3 (`@material/web`, Material Symbols, `@material/material-color-utilities`) and remove Tailwind/Radix/Lucide | Enforces visual consistency, clean configuration, and native MD3 interaction patterns across all pages | Validated — Phase 17 |
 | Unified warm Hestia terracotta/amber MD3 tonal palette replacing per-pillar color ramps | Eliminates visual fragmentation across sections while preserving calm light/dark hierarchy | Validated — Phase 17 |
 | Restructure top-level destinations and sub-views around MD3 navigation and minimal clutter | Improves flow of control and reduces nested tabs, card borders, and multi-step sheet friction | Validated — Phase 18 |
+| Responsive layout transitions (<840px agenda pills vs >=840px 7-column board) and responsive dialogs (<600px full-screen vs >=600px centered modal) | Native responsive ergonomics tailored to mobile handhelds and desktop screens without duplicate views | Validated — Phase 20 |
 
 ## Evolution
 
@@ -155,4 +158,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-15 after Phase 18*
+*Last updated: 2026-11-15 after Phase 20*

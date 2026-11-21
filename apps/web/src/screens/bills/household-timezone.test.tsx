@@ -62,12 +62,12 @@ function groupNamed(heading: string): HTMLElement {
 registerHouseholdClock(PINNED_INSTANT);
 
 describe('bill groups, with the browser a day ahead of the household', () => {
-  it('a household or personal bill due next Tuesday is Later, since the household’s week ends Saturday', async () => {
+  it('a household or personal bill due next Tuesday is Upcoming, and Gas is Upcoming (not Overdue in household zone)', async () => {
     mount();
-    expect(await screen.findByRole('heading', { name: 'This week' })).toBeInTheDocument();
-    expect(within(groupNamed('This week')).getByText('Gas')).toBeInTheDocument();
-    expect(within(groupNamed('This week')).queryByText('Water')).toBeNull();
-    expect(within(groupNamed('Later')).getByText('Water')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Upcoming' })).toBeInTheDocument();
+    expect(within(groupNamed('Upcoming')).getByText('Gas')).toBeInTheDocument();
+    expect(within(groupNamed('Upcoming')).getByText('Water')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Overdue' })).toBeNull();
   });
 });
 

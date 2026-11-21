@@ -1,5 +1,5 @@
-import { ListChecks, Plus } from 'lucide-react';
-import { useState, type ReactElement } from 'react';
+import { Plus } from 'lucide-react';
+import { useId, useState, type ReactElement } from 'react';
 import type { Errand } from '@hestia/shared';
 import { householdFallback } from '../../components/chores/household-date-fallback.tsx';
 import { ErrandRow } from '../../components/errands/ErrandRow.tsx';
@@ -8,16 +8,23 @@ import {
   ERRANDS_ALL_DONE_COPY,
   ERRANDS_EMPTY_COPY,
   OFFLINE_ACTION_REASON,
-  deleteErrandConfirmation,
+  parseErrandStore,
 } from '../../components/chores/chore-copy.ts';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
+import { MdFab } from '../../components/md/MdFab.tsx';
+import { MdFilterChip } from '../../components/md/MdFilterChip.tsx';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDeleteErrand, useErrands, useUpdateErrand } from '../../lib/api/chore-hooks.ts';
+import {
+  useCreateErrand,
+  useDeleteErrand,
+  useErrands,
+  useUpdateErrand,
+} from '../../lib/api/chore-hooks.ts';
 import { useHousehold, useMembers } from '../../lib/api/hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import {
@@ -32,7 +39,10 @@ export interface ErrandsListScreenProps {
   householdId: string;
 }
 
-/** A flat list, open first, done collapsed below with who and when. */
+/**
+ * A flat list of errands with store filter chips, direct trailing deletion with persistent Undo,
+ * floating MdFab for creation, and a collapsible Completed section matching the grocery list pattern.
+ */
 export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
@@ -42,13 +52,16 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
   const queryClient = useQueryClient();
   const errands = useErrands(householdId);
   const members = useMembers(householdId);
+  const createErrand = useCreateErrand(householdId);
   const updateErrand = useUpdateErrand(householdId);
   const deleteErrand = useDeleteErrand(householdId);
   const pendingDones = usePendingErrandDones();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editing, setEditing] = useState<Errand>();
-  const [deleting, setDeleting] = useState<Errand>();
+  const [selectedStore, setSelectedStore] = useState<string | null>(null);
+  const [isCompletedOpen, setIsCompletedOpen] = useState(false);
+  const completedPanelId = useId();
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
   // Marking done is queueable and needs the household's cached timezone offline; reopening is not
@@ -84,15 +97,26 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
     );
   };
 
-  const confirmDelete = (): void => {
-    if (deleting === undefined) return;
-    deleteErrand.mutate(deleting.id, {
+  const handleDelete = (errand: Errand): void => {
+    deleteErrand.mutate(errand.id, {
       onSuccess: () => {
-        toast({ variant: 'success', message: `Deleted ${deleting.name}.` });
-        setDeleting(undefined);
+        toast({
+          variant: 'success',
+          message: `Removed ${errand.name}`,
+          action: {
+            label: 'Undo',
+            onAction: () => {
+              createErrand.mutate({
+                id: errand.id,
+                name: errand.name,
+                dueDate: errand.dueDate,
+                assignedTo: errand.assignedTo,
+              });
+            },
+          },
+        });
       },
       onError: (error) => {
-        setDeleting(undefined);
         toast({
           variant: 'error',
           message: userMessage(error, { fallback: "Couldn't delete that errand. Try again." }),
@@ -140,7 +164,7 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
     if (data.length === 0) {
       return (
         <EmptyState
-          icon={ListChecks}
+          icon="checklist"
           message={ERRANDS_EMPTY_COPY}
           action={{
             label: 'Add an errand',
@@ -152,8 +176,55 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
       );
     }
 
+    const uniqueStores = Array.from(
+      new Set(
+        data
+          .map((item) => parseErrandStore(item.name).store)
+          .filter((s): s is string => s !== undefined && s.length > 0),
+      ),
+    ).sort();
+
     const open = data.filter((errand) => errand.status === 'open');
     const done = data.filter((errand) => errand.status === 'done');
+
+    const filteredOpen = open.filter((errand) => {
+      if (selectedStore === null) return true;
+      return parseErrandStore(errand.name).store === selectedStore;
+    });
+
+    const filteredDone = done.filter((errand) => {
+      if (selectedStore === null) return true;
+      return parseErrandStore(errand.name).store === selectedStore;
+    });
+
+    const filterChips =
+      uniqueStores.length > 0 ? (
+        <div
+          className="flex gap-2 overflow-x-auto pb-1 scrollbar-none"
+          role="toolbar"
+          aria-label="Filter errands by store"
+        >
+          <MdFilterChip
+            selected={selectedStore === null}
+            onClick={() => {
+              setSelectedStore(null);
+            }}
+          >
+            All
+          </MdFilterChip>
+          {uniqueStores.map((store) => (
+            <MdFilterChip
+              key={store}
+              selected={selectedStore === store}
+              onClick={() => {
+                setSelectedStore((prev) => (prev === store ? null : store));
+              }}
+            >
+              {store}
+            </MdFilterChip>
+          ))}
+        </div>
+      ) : null;
 
     const rowFor = (errand: Errand): ReactElement => (
       <ErrandRow
@@ -174,42 +245,61 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
         onSelect={() => {
           setEditing(errand);
         }}
-        menuItems={[
-          {
-            label: 'Delete',
-            isDestructive: true,
-            disabledReason: offlineReason,
-            onSelect: () => {
-              setDeleting(errand);
-            },
-          },
-        ]}
+        onDelete={() => {
+          handleDelete(errand);
+        }}
       />
     );
 
     return (
       <div className="flex flex-col gap-4">
-        {open.length === 0 ? (
-          <p className="px-4 text-body-sm text-secondary">{ERRANDS_ALL_DONE_COPY}</p>
+        {filterChips}
+        {filteredOpen.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-6 text-center">
+            <h3 className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]">
+              Everything is done
+            </h3>
+            <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)] mt-1">
+              {ERRANDS_ALL_DONE_COPY}
+            </p>
+          </div>
         ) : (
-          <ul className="flex flex-col rounded-md border border-border bg-base">
-            {open.map(rowFor)}
+          <ul className="flex flex-col rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]">
+            {filteredOpen.map(rowFor)}
           </ul>
         )}
-        {done.length > 0 && (
-          <details className="rounded-md border border-border bg-base">
-            <summary className="min-h-11 cursor-pointer px-4 py-2.5 text-body-sm text-secondary select-none">
-              {done.length} completed
-            </summary>
-            <ul className="flex flex-col border-t border-border">{done.map(rowFor)}</ul>
-          </details>
+        {filteredDone.length > 0 && (
+          <div className="rounded-2xl bg-[var(--md-sys-color-surface-container-low)]">
+            <div className="flex items-center justify-between gap-2 px-3 py-2">
+              <button
+                type="button"
+                aria-expanded={isCompletedOpen}
+                aria-controls={completedPanelId}
+                className="flex min-h-11 flex-1 items-center gap-2 text-title-sm font-semibold text-[var(--md-sys-color-on-surface-variant)]"
+                onClick={() => {
+                  setIsCompletedOpen((open) => !open);
+                }}
+              >
+                <Icon name={isCompletedOpen ? 'expand_more' : 'chevron_right'} size={20} />
+                <span>{`Completed (${String(filteredDone.length)})`}</span>
+                <span className="sr-only">completed</span>
+              </button>
+            </div>
+            <ul
+              id={completedPanelId}
+              hidden={!isCompletedOpen}
+              className="flex flex-col border-t border-[var(--md-sys-color-outline-variant)]"
+            >
+              {filteredDone.map(rowFor)}
+            </ul>
+          </div>
         )}
       </div>
     );
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 pb-20">
       <div className="flex justify-end">
         <Button
           disabledReason={offlineReason}
@@ -261,17 +351,20 @@ export function ErrandsListScreen({ householdId }: ErrandsListScreenProps): Reac
         />
       )}
 
-      <ConfirmDialog
-        open={deleting !== undefined}
-        onOpenChange={(open) => {
-          if (!open) setDeleting(undefined);
-        }}
-        title="Delete this errand?"
-        description={deleting ? deleteErrandConfirmation(deleting) : ''}
-        confirmLabel="Delete errand"
-        isConfirming={deleteErrand.isPending}
-        onConfirm={confirmDelete}
-      />
+      <div className="fixed bottom-6 right-6 z-20">
+        <MdFab
+          aria-label="Add errand"
+          onClick={() => {
+            if (isOnline) {
+              setIsAdding(true);
+            }
+          }}
+        >
+          <span slot="icon">
+            <Icon name="add" size={24} />
+          </span>
+        </MdFab>
+      </div>
     </section>
   );
 }

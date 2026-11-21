@@ -2,6 +2,8 @@ import { useState, type ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import type { DeparturePreview, Member } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
 import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
@@ -34,12 +36,12 @@ function DepartureBody({
   const depart = useDepart(householdId, userId, isSelf);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string>();
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const departing = members.find((member) => member.userId === userId);
   const remaining = members.filter((member) => member.userId !== userId);
   const owned = ownedItemIds(preview);
   const isEverythingAssigned = owned.every((id) => assignments[id] !== undefined);
-  // Membership changes need a connection, and say so rather than failing.
   const offlineReason = isOnline ? undefined : OFFLINE_MESSAGE;
 
   const run = (confirmName?: string): void => {
@@ -56,7 +58,7 @@ function DepartureBody({
                 ? `You left ${preview.householdName}.`
                 : `${departing?.displayName ?? 'The member'} was removed.`,
           });
-          void navigate(isSelf ? '/' : '/settings', { replace: true });
+          void navigate(isSelf ? '/' : '/settings/households', { replace: true });
         },
         onError: (error) => {
           setFormError(
@@ -88,15 +90,25 @@ function DepartureBody({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="max-w-[70ch] text-body text-secondary">
-        {isSelf
-          ? `Before you leave ${preview.householdName}, hand over everything you own here.`
-          : `Before ${departing?.displayName ?? 'this member'} leaves ${preview.householdName}, their lists, chores, errands, and bills need a new owner.`}
-      </p>
+    <div className="flex flex-col gap-6">
+      <Card
+        variant="flat"
+        className="bg-[var(--md-sys-color-surface-container-low)] rounded-2xl p-4 flex flex-col gap-2"
+      >
+        <span className="text-title-sm font-semibold text-[var(--md-sys-color-on-surface)]">
+          Household reassignment
+        </span>
+        <p className="max-w-[70ch] text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+          {isSelf
+            ? `Before you leave ${preview.householdName}, hand over everything you own here.`
+            : `Before ${departing?.displayName ?? 'this member'} leaves ${preview.householdName}, their lists, chores, errands, and bills need a new owner.`}
+        </p>
+      </Card>
 
       {owned.length === 0 ? (
-        <p className="max-w-[70ch] text-body text-secondary">There is nothing to reassign.</p>
+        <Card variant="flat" className="p-4">
+          <p className="max-w-[70ch] text-body text-secondary">There is nothing to reassign.</p>
+        </Card>
       ) : (
         <ReassignmentList
           preview={preview}
@@ -112,6 +124,7 @@ function DepartureBody({
 
       <RotationNotes preview={preview} members={members} />
       <FormMessage message={formError} />
+
       <Button
         variant="destructive"
         className="self-start"
@@ -122,19 +135,36 @@ function DepartureBody({
           (isEverythingAssigned ? undefined : 'Choose someone for each item above first.')
         }
         onClick={() => {
-          run();
+          setIsConfirmOpen(true);
         }}
       >
         {isSelf ? 'Leave household' : `Remove ${departing?.displayName ?? 'member'}`}
       </Button>
+
+      <ConfirmDialog
+        open={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        title={
+          isSelf ? 'Confirm household departure' : `Remove ${departing?.displayName ?? 'member'}?`
+        }
+        description={
+          isSelf
+            ? `Leave ${preview.householdName}? Everything you own will be reassigned as selected.`
+            : `Remove ${departing?.displayName ?? 'this member'} from ${preview.householdName}? Their owned items will be reassigned.`
+        }
+        confirmLabel="Confirm member departure"
+        isConfirming={depart.isPending}
+        onConfirm={() => {
+          setIsConfirmOpen(false);
+          run();
+        }}
+      />
     </div>
   );
 }
 
 /**
- * The departure preview. Leaving and removing open the same pushed screen: what the member owns, a
- * picker for each, rotations for information, and — for the last member — the household deletion
- * instead.
+ * Progressive departure flow: reassignments with MdSelect and destructive ConfirmDialog verification.
  */
 export function DepartureScreen(): ReactElement {
   const params = useParams();
@@ -146,9 +176,9 @@ export function DepartureScreen(): ReactElement {
   const isSelf = profile.data?.id === userId;
 
   useScreenChrome({
-    title: isSelf ? 'Leave household' : 'Remove member',
-    backTo: '/settings',
-    backLabel: 'Settings',
+    title: 'Depart household',
+    backTo: '/settings/households',
+    backLabel: 'Households',
   });
 
   if (preview.isPending || members.isPending || profile.isPending) {
@@ -164,7 +194,8 @@ export function DepartureScreen(): ReactElement {
     }
     return (
       <ErrorState
-        message="Couldn't load what needs reassigning. Try again."
+        message="Couldn't load departure details. Check your network connection and reload."
+        retryLabel="Reload departure"
         onRetry={() => {
           void preview.refetch();
           void members.refetch();

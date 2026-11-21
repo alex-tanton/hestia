@@ -10,7 +10,8 @@ import { addDays, weekStart } from '../../lib/household-date.ts';
 
 export const OFFLINE_ACTION_REASON = 'Needs a connection.';
 
-export const CHORES_EMPTY_COPY = 'No chores yet. Add one to start tracking what needs doing.';
+export const CHORES_EMPTY_COPY =
+  'Track recurring household tasks, share rotations, and know whose turn it is next.';
 export const ERRANDS_EMPTY_COPY = 'No errands yet. Add one to keep track of it.';
 export const ERRANDS_ALL_DONE_COPY = 'Nothing open. Everything is done.';
 
@@ -158,6 +159,38 @@ export const DELETE_COMPLETION_CONFIRMATION =
 
 export function deleteErrandConfirmation(errand: { name: string }): string {
   return `Delete ${errand.name}?`;
+}
+
+/**
+ * Extracts optional store/category tag formatted as `[Store] Title` or `Title [Store]`.
+ */
+export function parseErrandStore(name: string): { title: string; store?: string | undefined } {
+  const prefixMatch = /^\[([^\]]+)\]\s*(.*)$/.exec(name);
+  if (prefixMatch) {
+    const store = prefixMatch[1]?.trim();
+    const rawTitle = prefixMatch[2]?.trim();
+    const title = rawTitle && rawTitle.length > 0 ? rawTitle : name;
+    return { title, ...(store ? { store } : {}) };
+  }
+  const suffixMatch = /^(.*?)\s*\[([^\]]+)\]$/.exec(name);
+  if (suffixMatch !== null) {
+    const rawSuffixTitle = suffixMatch[1]?.trim();
+    if (rawSuffixTitle) {
+      const store = suffixMatch[2]?.trim();
+      return { title: rawSuffixTitle, ...(store ? { store } : {}) };
+    }
+  }
+  return { title: name };
+}
+
+/**
+ * Formats errand title with optional store/category tag as `[Store] Title`.
+ */
+export function formatErrandName(title: string, store?: string): string {
+  const trimmedStore = store?.trim();
+  const trimmedTitle = title.trim();
+  if (!trimmedStore) return trimmedTitle;
+  return `[${trimmedStore}] ${trimmedTitle}`;
 }
 
 /**

@@ -6,11 +6,11 @@ import { ListPickerSheet } from '../../components/meals/ListPickerSheet.tsx';
 import { PLANNER_PAST_WEEK_COPY } from '../../components/meals/meal-copy.ts';
 import { PlannerDay } from '../../components/meals/PlannerDay.tsx';
 import { MealPlacementSheet } from '../../components/meals/MealPlacementSheet.tsx';
-import { ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
+import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
-import { Tabs } from '../../components/ui/Tabs.tsx';
+import { MdPrimaryTab, MdTabs } from '../../components/md/MdTabs.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
 import { useHousehold } from '../../lib/api/hooks.ts';
 import {
@@ -28,10 +28,11 @@ import {
   weekStart,
   WEEKDAY_LABELS,
 } from '../../lib/household-date.ts';
-import { DESKTOP_QUERY, useMediaQuery } from '../../lib/use-media-query.ts';
+import { useMediaQuery } from '../../lib/use-media-query.ts';
 import { useOnlineStatus } from '../../lib/use-online-status.ts';
 
 const OFFLINE_ACTION_REASON = 'Needs a connection.';
+const EXPANDED_PLANNER_QUERY = '(min-width: 840px)';
 
 function dayLabel(date: string): string {
   const [, month = '01', day = '01'] = date.split('-');
@@ -40,9 +41,9 @@ function dayLabel(date: string): string {
 }
 
 /**
- * Sunday-to-Saturday, mobile day tabs, desktop full grid. Every week, day and
- * "today" on the planner is a household date, so nothing is drawn until the household's timezone is
- * known.
+ * Sunday-to-Saturday weekly planner.
+ * Adapts between compact scheduled-only mobile agenda (<840px) and 7-column desktop board (>=840px)
+ * per MEAL-04, D-01, D-08.
  */
 export function PlannerScreen({ householdId }: { householdId: string }): ReactElement {
   const household = useHousehold(householdId);
@@ -59,16 +60,13 @@ function PlannerWeek({
   timezone: string;
 }): ReactElement {
   const isOnline = useOnlineStatus();
-  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const isDesktop = useMediaQuery(EXPANDED_PLANNER_QUERY);
   const toast = useToast();
   const currentWeek = weekStart(todayInTimezone(timezone));
 
   const [week, setWeek] = useState(currentWeek);
   const dates = weekDates(week);
   const [selectedDate, setSelectedDate] = useState(() => todayInTimezone(timezone));
-  // Switching weeks can leave the selected day outside the new week entirely; falling back to
-  // that week's Sunday keeps a day tab always selected, rather than the Tabs value matching
-  // nothing and rendering no day at all.
   const activeDate = dates.includes(selectedDate) ? selectedDate : (dates[0] ?? selectedDate);
 
   const plan = useMealPlanWeek(householdId, week);
@@ -82,10 +80,6 @@ function PlannerWeek({
   const [isWeekPickerOpen, setIsWeekPickerOpen] = useState(false);
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
-  // A past week hides its write controls entirely, the same as the archived-lists screen
-  // (past weeks remain reachable as read-only history). Offline is a different state — its
-  // controls stay visible but disabled with a reason (a control is never hidden, and never
-  // fails silently).
   const isPastWeek = week < currentWeek;
   const isReadOnly = isPastWeek;
 
@@ -131,12 +125,33 @@ function PlannerWeek({
   };
 
   const remove = (entry: MealPlanEntry): void => {
-    const itemTitle = entry.customTitle ?? entry.recipeTitle ?? 'meal';
     deleteEntry.mutate(entry.id, {
       onSuccess: () => {
-        toast({ variant: 'success', message: `Removed ${itemTitle}.` });
+        toast({
+          variant: 'success',
+          message: 'Removed meal from planner',
+          action: {
+            label: 'Undo',
+            onAction: () => {
+              if (entry.recipeId !== null) {
+                createEntry.mutate({
+                  recipeId: entry.recipeId,
+                  plannedDate: entry.plannedDate,
+                  mealType: entry.mealType,
+                });
+              } else if (entry.customTitle !== null) {
+                createEntry.mutate({
+                  customTitle: entry.customTitle,
+                  plannedDate: entry.plannedDate,
+                  mealType: entry.mealType,
+                });
+              }
+            },
+          },
+        });
       },
       onError: (error) => {
+        const itemTitle = entry.customTitle ?? entry.recipeTitle ?? 'meal';
         toast({
           variant: 'error',
           message: userMessage(error, {
@@ -219,25 +234,71 @@ function PlannerWeek({
 
     if (isDesktop) {
       return (
-        <div className="grid grid-cols-7 gap-3">
+        <div className="grid grid-cols-7 items-start gap-3">
           {dates.map((date) => (
-            <PlannerDay key={date} {...dayProps(date)} />
+            <PlannerDay key={date} {...dayProps(date)} isDesktop />
           ))}
         </div>
       );
     }
 
+    const totalWeekEntries = plan.data.entries.length;
+    const isWeekEmpty = totalWeekEntries === 0;
+
     return (
-      <Tabs
-        label="Day of the week"
-        value={activeDate}
-        onValueChange={setSelectedDate}
-        items={dates.map((date) => ({
-          value: date,
-          label: dayLabel(date),
-          content: <PlannerDay {...dayProps(date)} />,
-        }))}
-      />
+      <div className="flex flex-col gap-4">
+        {/* Horizontal Day Anchor Pills */}
+        <div className="overflow-x-auto pb-1">
+          <MdTabs
+            aria-label="Day of the week"
+            activeTabIndex={Math.max(0, dates.indexOf(activeDate))}
+            onChange={(event) => {
+              const idx = (event.target as { activeTabIndex?: number }).activeTabIndex;
+              if (idx !== undefined && dates[idx]) {
+                const targetDate = dates[idx];
+                setSelectedDate(targetDate);
+                const target = document.getElementById(`planner-day-${targetDate}`);
+                target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }}
+          >
+            {dates.map((date) => (
+              <MdPrimaryTab key={date} id={`tab-${date}`}>
+                {dayLabel(date)}
+              </MdPrimaryTab>
+            ))}
+          </MdTabs>
+        </div>
+
+        {/* 7-day scheduled-only vertical agenda */}
+        {isWeekEmpty ? (
+          !isReadOnly ? (
+            <EmptyState
+              icon="restaurant"
+              heading="No meals planned this week"
+              message="Plan upcoming meals, reuse favorites, or generate ideas based on pantry inventory and store deals."
+              action={{
+                label: 'Plan meal',
+                onAction: () => {
+                  setPlacing({ date: activeDate, mealType: 'dinner' });
+                },
+              }}
+            />
+          ) : (
+            <EmptyState
+              icon="restaurant"
+              heading="No meals planned this week"
+              message="Plan upcoming meals, reuse favorites, or generate ideas based on pantry inventory and store deals."
+            />
+          )
+        ) : (
+          <div className="flex flex-col gap-3">
+            {dates.map((date) => (
+              <PlannerDay key={date} {...dayProps(date)} isDesktop={false} />
+            ))}
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -259,6 +320,17 @@ function PlannerWeek({
             Week of {dayLabel(week)}
             {week === currentWeek && ' (this week)'}
           </span>
+          {week !== currentWeek && (
+            <Button
+              variant="ghost"
+              className="px-2"
+              onClick={() => {
+                setWeek(currentWeek);
+              }}
+            >
+              This week
+            </Button>
+          )}
           <Button
             variant="secondary"
             isIconOnly

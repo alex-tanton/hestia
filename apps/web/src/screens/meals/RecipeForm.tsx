@@ -10,10 +10,10 @@ import {
   type EditableIngredient,
 } from '../../components/meals/IngredientEditor.tsx';
 import { PARSE_FAILED_COPY, PARSE_INCOMPLETE_COPY } from '../../components/meals/meal-copy.ts';
+import { MdDialog } from '../../components/md/MdDialog.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { TextField, TextAreaField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
-import { Sheet } from '../../components/ui/Sheet.tsx';
 import { useCreateRecipe, useParseRecipe, useUpdateRecipe } from '../../lib/api/meal-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
@@ -33,6 +33,7 @@ export interface RecipeFormProps {
  * same editable form as the add flow) are one component. Each mode change is a view swap, so
  * focus moves into whatever replaced the prior view rather than falling back to the document
  * (the same idiom as `ChangePasswordForm`).
+ * Renders as a responsive MD3 Dialog (<600px full-screen, >=600px centered max-w-[720px]) per D-02.
  */
 export function RecipeForm({
   householdId,
@@ -96,10 +97,7 @@ export function RecipeForm({
       setMode('edit');
     } catch {
       // Parse failure falls back cleanly to the manual form, prefilled with whatever could be
-      // salvaged — here, just the URL the member typed. Every fetch failure the parser reports
-      // (invalid_url/private_address → 400, timeout → 504, too_large/http_error/network_error →
-      // 502) falls back the same way, so the reason is not distinguished further; the
-      // `needsManualEntry` banner below states it in plain words.
+      // salvaged — here, just the URL the member typed.
       setNeedsManualEntry(true);
       setIsIncomplete(false);
       setSourceUrl(url.trim());
@@ -147,13 +145,31 @@ export function RecipeForm({
     }
   };
 
-  const sheetTitle = recipe === undefined ? 'Add a recipe' : `Edit ${recipe.title}`;
+  const dialogTitle = recipe ? 'Edit recipe' : 'Create recipe';
 
   return (
-    <Sheet open onOpenChange={onOpenChange} title={sheetTitle}>
-      <div ref={containerRef} className="flex flex-col gap-4 px-4">
+    <MdDialog
+      role="dialog"
+      open
+      quick
+      aria-label={dialogTitle}
+      className="md3-responsive-dialog w-full max-w-[720px]"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          onOpenChange(false);
+        }
+      }}
+    >
+      <div
+        slot="headline"
+        id="dialog-title"
+        className="text-title-lg font-semibold text-[var(--md-sys-color-on-surface)]"
+      >
+        {dialogTitle}
+      </div>
+      <div ref={containerRef} slot="content" className="flex flex-col gap-4 pt-2">
         {mode === 'choose' && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 py-2">
             <Button
               onClick={() => {
                 setMode('url');
@@ -250,22 +266,31 @@ export function RecipeForm({
               showErrors={showIngredientErrors}
             />
             <FormMessage message={formError} />
-            <div className="flex flex-wrap gap-2">
-              <Button type="submit" isLoading={isSaving}>
-                Save recipe
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  onOpenChange(false);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
           </form>
         )}
       </div>
-    </Sheet>
+      <div slot="actions" className="flex justify-end gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => {
+            onOpenChange(false);
+          }}
+        >
+          Cancel
+        </Button>
+        {mode === 'edit' && (
+          <Button
+            variant="primary"
+            type="submit"
+            isLoading={isSaving}
+            onClick={() => {
+              void handleSave();
+            }}
+          >
+            Save recipe
+          </Button>
+        )}
+      </div>
+    </MdDialog>
   );
 }

@@ -9,13 +9,12 @@ import {
   OFFLINE_ACTION_REASON,
   allChoreCopyStrings,
 } from '../../components/chores/chore-copy.ts';
-import { openMenu, setOnline, stubCoarsePointer } from '../../test/browser.ts';
+import { setOnline, stubCoarsePointer } from '../../test/browser.ts';
 import {
   findMdButton,
   findMdCheckbox,
   findMdDialog,
   findMdField,
-  findMdMenuItem,
   getMdAccessibleName,
   getMdButton,
 } from '../../test/md-queries.ts';
@@ -145,16 +144,12 @@ describe('Errands list', () => {
 
   it('done errands collapse below, each with who completed it and when', async () => {
     mount();
-    const summary = await screen.findByText('2 completed');
-    const details = summary.closest('details');
-    expect(details).not.toBeNull();
-    expect(details).not.toHaveAttribute('open');
-    expect(
-      within(details ?? document.body).getByText('Completed by Alex Rivera · 4 days ago'),
-    ).toBeInTheDocument();
-    expect(
-      within(details ?? document.body).getByText('Completed by Sam Chen · 6 days ago'),
-    ).toBeInTheDocument();
+    const toggleButton = await screen.findByRole('button', { name: /Completed \(2\)/ });
+    expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(toggleButton);
+    expect(toggleButton).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Completed by Alex Rivera · 4 days ago')).toBeInTheDocument();
+    expect(screen.getByText('Completed by Sam Chen · 6 days ago')).toBeInTheDocument();
   });
 
   it('empty first run: says what this holds and offers the first errand', async () => {
@@ -213,22 +208,47 @@ describe('Errands list', () => {
     expect(patched[0]).toEqual({ status: 'done', doneAt: '2026-09-27T16:00:00.000Z' });
   });
 
-  it('delete is in the overflow menu and asks for confirmation first', async () => {
+  it('delete is a direct icon button with persistent Undo toast', async () => {
     const stub = mount({
       'DELETE /api/errands/:id': () => ({ status: 204 }),
     });
     const user = userEvent.setup();
-    await openMenu(user, 'More actions for Buy birthday card');
-    await user.click(await findMdMenuItem(/Delete/));
-    const dialog = await findMdDialog('Delete this errand?');
-    expect(within(dialog).getByText('Delete Buy birthday card?')).toBeInTheDocument();
-    expect(stub.calls.some((call) => call.method === 'DELETE')).toBe(false);
-    await user.click(getMdButton('Delete errand', { container: dialog }));
+    const deleteBtn = await findMdButton('Delete errand, Buy birthday card');
+    await user.click(deleteBtn);
     await waitFor(() => {
       expect(stub.calls.find((call) => call.method === 'DELETE')?.path).toMatch(
         new RegExp(`/api/errands/${BIRTHDAY_CARD_ID}$`),
       );
     });
+    expect(await screen.findByText('Removed Buy birthday card')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+  });
+
+  it('renders top store filter chips when stores are present and filters errands', async () => {
+    const storeErrands = [
+      { ...returnPackageFixture, name: '[Hardware] Buy lightbulbs' },
+      { ...dryCleaningFixture, name: '[Pharmacy] Pick up prescription' },
+    ];
+    mount({ 'GET /api/households/:id/errands': () => ({ status: 200, body: storeErrands }) });
+    const toolbar = await screen.findByRole('toolbar', { name: 'Filter errands by store' });
+    expect(within(toolbar).getByText('Hardware')).toBeInTheDocument();
+    expect(within(toolbar).getByText('Pharmacy')).toBeInTheDocument();
+    expect(within(toolbar).getByText('All')).toBeInTheDocument();
+
+    await userEvent.click(within(toolbar).getByText('Hardware'));
+    expect(screen.getByText('Buy lightbulbs')).toBeInTheDocument();
+    expect(screen.queryByText('Pick up prescription')).not.toBeInTheDocument();
+
+    await userEvent.click(within(toolbar).getByText('All'));
+    expect(screen.getByText('Buy lightbulbs')).toBeInTheDocument();
+    expect(screen.getByText('Pick up prescription')).toBeInTheDocument();
+  });
+
+  it('floating action button opens ErrandSheet', async () => {
+    mount();
+    const fab = await findMdButton('Add errand');
+    await userEvent.click(fab);
+    expect(await findMdDialog('Add an errand')).toBeInTheDocument();
   });
 });
 
@@ -238,7 +258,7 @@ describe('Errand quick-add and edit sheet', () => {
     const user = userEvent.setup();
     await user.click(await findMdButton('Add an errand'));
     const dialog = await findMdDialog('Add an errand');
-    await user.click(getMdButton('Save errand', { container: dialog }));
+    await user.click(getMdButton('Create errand', { container: dialog }));
     const nameField = await findMdField('Name', { container: dialog });
     await waitFor(() => {
       expect(nameField).toHaveProperty('errorText', 'Enter a name.');
@@ -265,7 +285,7 @@ describe('Errand quick-add and edit sheet', () => {
     const dialog = await findMdDialog('Add an errand');
     const nameInput = await findFieldInput('Name', dialog);
     fireEvent.input(nameInput, { target: { value: 'Post card' } });
-    await user.click(getMdButton('Save errand', { container: dialog }));
+    await user.click(getMdButton('Create errand', { container: dialog }));
     await waitFor(() => {
       expect(posted).toHaveLength(1);
     });
@@ -290,7 +310,7 @@ describe('Errand quick-add and edit sheet', () => {
       target: { value: '2026-10-01' },
     });
     await user.selectOptions(within(dialog).getByLabelText('Assigned to'), SAM_ID);
-    await user.click(getMdButton('Save errand', { container: dialog }));
+    await user.click(getMdButton('Create errand', { container: dialog }));
     await waitFor(() => {
       expect(posted).toHaveLength(1);
     });

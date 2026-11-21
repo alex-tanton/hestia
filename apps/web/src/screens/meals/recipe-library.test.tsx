@@ -106,7 +106,7 @@ describe('Recipe library', () => {
       }),
     );
     expect(await screen.findByText(RECIPE_LIBRARY_EMPTY_COPY)).toBeInTheDocument();
-    expect(getAllMdButtons('Add a recipe')[0]).toBeInTheDocument();
+    expect(getAllMdButtons('Add recipe')[0]).toBeInTheDocument();
   });
 
   it('filtered empty: different copy, with a clear-search action', async () => {
@@ -117,7 +117,7 @@ describe('Recipe library', () => {
     fireEvent.input(searchInput, { target: { value: 'zzzzz' } });
     expect(await screen.findByText(RECIPE_LIBRARY_NO_MATCH_COPY)).toBeInTheDocument();
     expect(screen.queryByText(RECIPE_LIBRARY_EMPTY_COPY)).toBeNull();
-    await user.click(getMdButton('Clear search'));
+    await user.click(getMdButton('Clear recipe filter'));
     expect(await screen.findByText(/Sheet Pan Chicken/)).toBeInTheDocument();
   });
 
@@ -141,7 +141,7 @@ describe('Recipe library', () => {
     mount();
     await screen.findByText(/Sheet Pan Chicken/);
     setOnline(false);
-    const add = getMdButton('Add a recipe');
+    const add = getMdButton('Add recipe');
     expect(add).toHaveProperty('softDisabled', true);
     const reasonId = add.getAttribute('aria-describedby');
     expect(document.getElementById(reasonId ?? '')).toHaveTextContent('Needs a connection.');
@@ -265,7 +265,7 @@ describe('Recipe library', () => {
     await user.click(getMdButton('Next'));
     await screen.findByText(bakedZitiFixture.title);
 
-    const filterChip = screen.getByText('On sale / Ready now');
+    const filterChip = screen.getByText('Ready now');
     await user.click(filterChip);
     await screen.findByText(/Sheet Pan Chicken/);
     expect(getMdButton('Previous')).toBeDisabled();
@@ -282,7 +282,7 @@ describe('Recipe library', () => {
       }),
     );
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(getAllMdButtons('Add recipe')[0]!);
     await user.click(await findMdButton('Enter by hand'));
     const titleInput = await findFieldInput('Title');
     fireEvent.input(titleInput, { target: { value: 'Weeknight Tacos' } });
@@ -301,7 +301,7 @@ describe('Recipe library', () => {
     const user = userEvent.setup();
     mount();
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(getAllMdButtons('Add recipe')[0]!);
     await user.click(await findMdButton('Enter by hand'));
     const titleInput = await findFieldInput('Title');
     fireEvent.input(titleInput, { target: { value: 'Untitled Dish' } });
@@ -322,7 +322,7 @@ describe('Recipe library', () => {
       }),
     );
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(getAllMdButtons('Add recipe')[0]!);
     await user.click(await findMdButton('Paste a link'));
     const urlInput = await findFieldInput('Recipe URL');
     fireEvent.input(urlInput, { target: { value: 'https://example.test/bad-page' } });
@@ -352,7 +352,7 @@ describe('Recipe library', () => {
       }),
     );
     await screen.findByText(/Sheet Pan Chicken/);
-    await user.click(getAllMdButtons('Add a recipe')[0]!);
+    await user.click(getAllMdButtons('Add recipe')[0]!);
     await user.click(await findMdButton('Paste a link'));
     const urlInput = await findFieldInput('Recipe URL');
     fireEvent.input(urlInput, { target: { value: 'https://example.test/partial' } });
@@ -459,7 +459,7 @@ describe('Recipe library', () => {
       await screen.findByRole('heading', { level: 2, name: 'No matching recipes' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/No recipes have ingredients currently in your pantry or on sale/),
+      screen.getByText(/No recipes match your current search or filter criteria/),
     ).toBeInTheDocument();
 
     const clearButton = getMdButton('Clear recipe filter');

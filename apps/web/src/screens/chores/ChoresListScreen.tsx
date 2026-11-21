@@ -1,4 +1,3 @@
-import { ClipboardCheck, Plus } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import { ChoreListRow } from '../../components/chores/ChoreListRow.tsx';
@@ -11,9 +10,11 @@ import {
   groupChores,
 } from '../../components/chores/chore-copy.ts';
 import { useChoreCompletion } from '../../components/chores/use-chore-completion.ts';
+import { MdFab } from '../../components/md/MdFab.tsx';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Button } from '../../components/ui/Button.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useChores } from '../../lib/api/chore-hooks.ts';
 import { useHousehold, useMembers } from '../../lib/api/hooks.ts';
@@ -47,7 +48,7 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
         void navigate('/chores/new');
       }}
     >
-      <Plus aria-hidden size={20} strokeWidth={1.5} />
+      <Icon name="add" size={20} />
       Add a chore
     </Button>
   );
@@ -98,7 +99,8 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
     if (data.length === 0) {
       return (
         <EmptyState
-          icon={ClipboardCheck}
+          icon="checklist"
+          heading="No chores yet"
           message={CHORES_EMPTY_COPY}
           action={{
             label: 'Add a chore',
@@ -113,13 +115,16 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
     const groups = groupChores(data, today);
 
     return (
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         {CHORE_GROUP_ORDER.filter((key) => groups[key].length > 0).map((key) => (
-          <section key={key} aria-labelledby={`chore-group-${key}`} className="flex flex-col gap-1">
-            <h2 id={`chore-group-${key}`} className="px-4 text-h3 text-primary">
+          <section key={key} aria-labelledby={`chore-group-${key}`} className="flex flex-col gap-2">
+            <h2
+              id={`chore-group-${key}`}
+              className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]"
+            >
               {CHORE_GROUP_LABELS[key]}
             </h2>
-            <ul className="flex flex-col rounded-md border border-border bg-base">
+            <ul className="flex flex-col divide-y divide-[var(--md-sys-color-outline-variant)]">
               {groups[key].map((chore) => (
                 <ChoreListRow
                   key={chore.id}
@@ -151,6 +156,21 @@ export function ChoresListScreen({ householdId }: ChoresListScreenProps): ReactE
         />
       )}
       {body()}
+
+      {!offlineReason && (
+        <div className="fixed right-6 bottom-6 z-20">
+          <MdFab
+            aria-label="Add chore"
+            onClick={() => {
+              void navigate('/chores/new');
+            }}
+          >
+            <span slot="icon">
+              <Icon name="add" size={24} />
+            </span>
+          </MdFab>
+        </div>
+      )}
     </section>
   );
 }

@@ -1,10 +1,12 @@
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 import type { Chore, Member } from '@hestia/shared';
+import { cn } from '../../lib/cn.ts';
 import { calendarDateOfInstant } from '../../lib/household-date.ts';
 import { PENDING_CLASSES, PendingMark } from '../lists/PendingMark.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
+import { Icon } from '../ui/Icon.tsx';
 import {
   UNASSIGNED_LABEL,
   describeRecurrence,
@@ -28,12 +30,9 @@ export interface ChoreListRowProps {
 }
 
 /**
- * `ChoreRow` carries name, recurrence, next due, current assignee, last-completed relative
- * time, and a complete action. Rotation chores show whose turn it is and who is next. Overdue
- * carries the danger color plus the word "Overdue" (never color alone), with neutral copy.
- *
- * The row's name is a link to the detail, and the complete action is a sibling button, so the
- * two stay separate tab stops rather than a button nested inside a link.
+ * `ChoreListRow`: borderless list row carrying member avatar, chore title, recurrence cadence,
+ * due status, and a direct quick "Done" tonal icon button (CHOR-01, D-13). Zero 1-item overflow
+ * menus exist.
  */
 export function ChoreListRow({
   chore,
@@ -48,14 +47,26 @@ export function ChoreListRow({
     ? formatOverdue(chore.dueDate, today)
     : `Due ${formatDueIn(chore.dueDate, today)}`;
 
-  const assignmentLabel =
+  const currentMember =
     chore.rotationOrder !== null
-      ? `${memberName(members, chore.currentTurn)}'s turn${
-          chore.nextTurn !== null ? `, ${memberName(members, chore.nextTurn)} next` : ''
-        }`
+      ? members.find((m) => m.userId === chore.currentTurn)
+      : chore.assignedTo !== null
+        ? members.find((m) => m.userId === chore.assignedTo)
+        : null;
+
+  const currentMemberName =
+    chore.rotationOrder !== null
+      ? memberName(members, chore.currentTurn)
       : chore.assignedTo !== null
         ? memberName(members, chore.assignedTo)
         : UNASSIGNED_LABEL;
+
+  const assignmentLabel =
+    chore.rotationOrder !== null
+      ? `${currentMemberName}'s turn${
+          chore.nextTurn !== null ? `, ${memberName(members, chore.nextTurn)} next` : ''
+        }`
+      : currentMemberName;
 
   const lastCompletedLabel = formatLastCompleted(
     chore.lastCompletion === null
@@ -64,45 +75,70 @@ export function ChoreListRow({
     today,
   );
 
+  const initial =
+    currentMember?.displayName.trim().charAt(0).toUpperCase() ??
+    (chore.rotationOrder !== null || chore.assignedTo !== null ? '?' : null);
+
+  const avatar =
+    initial !== null ? (
+      <div
+        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-label-lg font-medium text-[var(--md-sys-color-on-primary-container)]"
+        aria-hidden="true"
+      >
+        {initial}
+      </div>
+    ) : (
+      <div
+        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]"
+        aria-hidden="true"
+      >
+        <Icon name="person" size={20} />
+      </div>
+    );
+
   return (
     <li
-      className={`flex items-center gap-2 border-b border-border pr-3 last:border-b-0${
-        isPending ? ` ${PENDING_CLASSES}` : ''
-      }`}
+      className={cn(
+        'flex min-h-12 items-center justify-between gap-3 border-b border-[var(--md-sys-color-outline-variant)] last:border-b-0 pl-4',
+        isPending && PENDING_CLASSES,
+      )}
     >
+      {avatar}
       <Link
         to={`/chores/${chore.id}`}
-        className="flex min-h-11 min-w-0 flex-1 flex-col gap-1 px-4 py-3 transition-colors duration-150 ease-out hover:bg-raised active:bg-section-tint"
+        className="flex min-w-0 flex-1 flex-col gap-0.5 py-3 hover:bg-[var(--md-sys-color-surface-container-low)] focus-visible:outline-2 focus-visible:outline-offset-2"
       >
-        {/* The name wraps rather than truncating, and the overdue badge drops to its own line
-            before it would hide any of the name: nothing is clipped. */}
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="min-w-0 text-body font-semibold break-words text-primary">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="truncate text-body font-semibold text-[var(--md-sys-color-on-surface)]">
             {chore.name}
           </span>
           {chore.isOverdue && <Badge variant="danger">{dueLabel}</Badge>}
           {isPending && <PendingMark />}
         </span>
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-secondary">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
           <span>{describeRecurrence(chore.recurrenceUnit, chore.interval)}</span>
           <span aria-hidden>·</span>
           {!chore.isOverdue && <span>{dueLabel}</span>}
           {!chore.isOverdue && <span aria-hidden>·</span>}
           <span>{assignmentLabel}</span>
         </span>
-        <span className="text-body-sm text-secondary">{lastCompletedLabel}</span>
+        <span className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+          {lastCompletedLabel}
+        </span>
       </Link>
-      <Button
-        variant="secondary"
-        aria-label={`Mark ${chore.name} done`}
-        isLoading={isPending}
-        disabledReason={disabledReason}
-        onClick={() => {
-          onComplete(chore);
-        }}
-      >
-        Done
-      </Button>
+      <div className="flex items-center pr-4">
+        <Button
+          variant="secondary"
+          aria-label={`Mark done, ${chore.name}`}
+          isLoading={isPending}
+          disabledReason={disabledReason}
+          onClick={() => {
+            onComplete(chore);
+          }}
+        >
+          Done
+        </Button>
+      </div>
     </li>
   );
 }
