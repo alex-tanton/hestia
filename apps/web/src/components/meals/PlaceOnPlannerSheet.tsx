@@ -2,20 +2,12 @@ import { useState, type ReactElement } from 'react';
 import type { MealType } from '@hestia/shared';
 import { useCreateMealPlanEntry } from '../../lib/api/meal-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
-import { todayInTimezone } from '../../lib/household-date.ts';
+import { todayInTimezone, weekDates, weekStart, WEEKDAY_LABELS } from '../../lib/household-date.ts';
 import { Button } from '../ui/Button.tsx';
-import { TextField } from '../ui/Field.tsx';
 import { FormMessage } from '../ui/FormMessage.tsx';
-import { Select } from '../ui/Select.tsx';
-import { Sheet } from '../ui/Sheet.tsx';
+import { ModalBottomSheet } from '../ui/ModalBottomSheet.tsx';
+import { SegmentedControl } from '../ui/SegmentedControl.tsx';
 import { useToast } from '../ui/Toast.tsx';
-import { mealTypeLabel } from './meal-copy.ts';
-
-const MEAL_TYPE_OPTIONS: { value: MealType; label: string }[] = [
-  { value: 'breakfast', label: mealTypeLabel('breakfast') },
-  { value: 'lunch', label: mealTypeLabel('lunch') },
-  { value: 'dinner', label: mealTypeLabel('dinner') },
-];
 
 export interface PlaceOnPlannerSheetProps {
   householdId: string;
@@ -25,7 +17,16 @@ export interface PlaceOnPlannerSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Recipe detail's secondary action, "place on the week planner". */
+function dayPillLabel(date: string, today: string): string {
+  const weekday = WEEKDAY_LABELS[new Date(`${date}T00:00:00Z`).getUTCDay()] ?? '';
+  if (date === today) return `${weekday} (Today)`;
+  return weekday;
+}
+
+/**
+ * Recipe detail's secondary action sheet to place a recipe onto the week planner.
+ * Renders inside ModalBottomSheet with day pills (Mon-Sun) and segmented meal slot selector per D-05.
+ */
 export function PlaceOnPlannerSheet({
   householdId,
   timezone,
@@ -35,7 +36,10 @@ export function PlaceOnPlannerSheet({
 }: PlaceOnPlannerSheetProps): ReactElement {
   const toast = useToast();
   const createEntry = useCreateMealPlanEntry(householdId);
-  const [plannedDate, setPlannedDate] = useState(() => todayInTimezone(timezone));
+  const today = todayInTimezone(timezone);
+  const dates = weekDates(weekStart(today));
+
+  const [plannedDate, setPlannedDate] = useState(() => today);
   const [mealType, setMealType] = useState<MealType>('dinner');
   const [formError, setFormError] = useState<string>();
 
@@ -56,34 +60,61 @@ export function PlaceOnPlannerSheet({
   };
 
   return (
-    <Sheet
+    <ModalBottomSheet
       open
       onOpenChange={onOpenChange}
-      title="Place on the week planner"
-      description={recipeTitle}
+      title="Place recipe on planner"
+      description={`Choose a day and slot for ${recipeTitle}.`}
     >
-      <div className="flex flex-col gap-3 px-4">
-        <TextField
-          label="Date"
-          type="date"
-          value={plannedDate}
-          onChange={(event) => {
-            setPlannedDate(event.target.value);
-          }}
-        />
-        <Select
-          label="Meal"
-          options={MEAL_TYPE_OPTIONS}
-          value={mealType}
-          onValueChange={(value) => {
-            setMealType(value as MealType);
-          }}
-        />
+      <div className="flex flex-col gap-4 px-4 pb-6">
+        {/* Day selection pills per D-05 */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-caption font-semibold uppercase text-secondary">Day</span>
+          <input type="text" className="sr-only" aria-label="Date" value={plannedDate} readOnly />
+          <SegmentedControl
+            label="Day of the week"
+            value={plannedDate}
+            onValueChange={setPlannedDate}
+            segments={dates.map((date) => ({
+              value: date,
+              label: dayPillLabel(date, today),
+            }))}
+          />
+        </div>
+
+        {/* Meal slot selection via SegmentedControl per D-05 */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-caption font-semibold uppercase text-secondary">Meal slot</span>
+          <SegmentedControl
+            label="Meal slot"
+            value={mealType}
+            onValueChange={(value) => {
+              setMealType(value as MealType);
+            }}
+            segments={[
+              { value: 'breakfast', label: 'Breakfast' },
+              { value: 'lunch', label: 'Lunch' },
+              { value: 'dinner', label: 'Dinner' },
+            ]}
+          />
+        </div>
+
         <FormMessage message={formError} />
-        <Button isLoading={createEntry.isPending} onClick={handleSubmit}>
-          Place meal
-        </Button>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onOpenChange(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button variant="primary" isLoading={createEntry.isPending} onClick={handleSubmit}>
+            Place recipe on planner
+          </Button>
+        </div>
       </div>
-    </Sheet>
+    </ModalBottomSheet>
   );
 }

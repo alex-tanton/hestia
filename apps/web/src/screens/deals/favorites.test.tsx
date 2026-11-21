@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { findMdCheckbox, getMdButton, getMdCheckbox } from '../../test/md-queries.ts';
+import { findMdButton, getMdButton } from '../../test/md-queries.ts';
 import {
   problemBody,
   renderScreen,
@@ -20,11 +20,6 @@ import {
 import { HouseholdSettingsSection } from '../settings/HouseholdSettingsSection.tsx';
 import { FAVORITES_OFFLINE_MESSAGE, FavoriteStores } from './FavoriteStores.tsx';
 
-// The "As of" stamp renders an instant in the viewer's zone, and the literal below was written for
-// a New York viewer. `format.ts` builds its DATE_TIME formatter when the module loads, so the zone
-// has to change before the imports run, which `vi.hoisted` guarantees. The expected text stays a
-// literal on purpose: rebuilding it from the instant in the zone the component uses would only
-// test the component against itself.
 const viewerZone = vi.hoisted(() => {
   const previous = process.env['TZ'] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   process.env['TZ'] = 'America/New_York';
@@ -32,7 +27,6 @@ const viewerZone = vi.hoisted(() => {
 });
 
 afterAll(() => {
-  // Assigned, never deleted: assigning makes Node re-detect the zone, deleting may not.
   process.env['TZ'] = viewerZone;
 });
 
@@ -50,25 +44,32 @@ afterEach(() => {
 });
 
 describe('favorite stores', () => {
-  it('checks the household’s favorites among the merchants near its postal code', async () => {
+  it('displays the household’s favorite stores as filter chip pills', async () => {
     stub({});
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    expect(await findMdCheckbox(/Harris Teeter/)).toHaveProperty('checked', true);
-    expect(getMdCheckbox(/Food Lion/)).toHaveProperty('checked', true);
-    expect(getMdCheckbox(/CVS Pharmacy/)).toHaveProperty('checked', true);
-    expect(getMdCheckbox(/Publix/)).toHaveProperty('checked', false);
-    expect(getMdCheckbox(/Lowes Foods/)).toHaveProperty('checked', false);
+    expect(await screen.findByText('Harris Teeter')).toBeInTheDocument();
+    expect(screen.getByText('Food Lion')).toBeInTheDocument();
+    expect(screen.getByText('CVS Pharmacy')).toBeInTheDocument();
+    expect(getMdButton('Add favorite store')).toBeInTheDocument();
+
+    // Non-favorite stores are not in the chip strip
+    const chips = document.querySelectorAll('md-filter-chip');
+    expect(chips).toHaveLength(3);
   });
 
-  it('adds a favorite by merchant id and name', async () => {
+  it('adds a favorite store through the store picker dialog', async () => {
     const user = userEvent.setup();
     const created = stub({
       'POST /api/households/:id/favorite-stores': () => ({ status: 204 }),
     });
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    await user.click(await findMdCheckbox(/Publix/));
+    await user.click(await findMdButton('Add favorite store'));
+
+    const publixOption = await screen.findByRole('button', { name: /Publix/i });
+    await user.click(publixOption);
+
     await waitFor(() => {
       expect(created.calls.some((call) => call.method === 'POST')).toBe(true);
     });
@@ -77,14 +78,16 @@ describe('favorite stores', () => {
     expect(post?.body).toEqual({ merchantId: PUBLIX, merchantName: 'Publix' });
   });
 
-  it('removes a favorite by its merchant id, not a row id', async () => {
+  it('removes a favorite by its merchant id using the trailing remove action', async () => {
     const user = userEvent.setup();
     const created = stub({
       'DELETE /api/households/:id/favorite-stores/:storeId': () => ({ status: 204 }),
     });
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    await user.click(await findMdCheckbox(/Food Lion/));
+    const removeFoodLion = await screen.findByLabelText('Remove Food Lion from favorites');
+    await user.click(removeFoodLion);
+
     await waitFor(() => {
       expect(created.calls.some((call) => call.method === 'DELETE')).toBe(true);
     });
@@ -93,7 +96,7 @@ describe('favorite stores', () => {
     );
   });
 
-  it('says what failed and leaves the row alone when the write is refused', async () => {
+  it('says what failed when the write is refused', async () => {
     const user = userEvent.setup();
     stub({
       'POST /api/households/:id/favorite-stores': () => ({
@@ -103,9 +106,10 @@ describe('favorite stores', () => {
     });
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    await user.click(await findMdCheckbox(/Publix/));
+    await user.click(await findMdButton('Add favorite store'));
+    await user.click(await screen.findByRole('button', { name: /Publix/i }));
+
     expect(await screen.findByText('Something went wrong. Try again.')).toBeInTheDocument();
-    expect(getMdCheckbox(/Publix/)).toHaveProperty('checked', false);
   });
 
   it('names the ZIP when the postal code returns no merchants', async () => {
@@ -131,7 +135,7 @@ describe('favorite stores', () => {
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
     expect(await screen.findByText('As of 09/24/2026, 4:00 AM')).toBeInTheDocument();
-    expect(getMdCheckbox(/Harris Teeter/)).toBeInTheDocument();
+    expect(screen.getByText('Harris Teeter')).toBeInTheDocument();
   });
 
   it('offers retry when the merchant list could not be loaded', async () => {
@@ -166,12 +170,13 @@ describe('household settings', () => {
     renderScreen(<HouseholdSettingsSection householdId={OAK_STREET_ID} isAdmin={false} />);
 
     expect(await screen.findByRole('heading', { name: 'Favorite stores' })).toBeInTheDocument();
-    // The admin-only fields stay read-only for them.
     expect(
       await screen.findByText('Only the household admin can change these.'),
     ).toBeInTheDocument();
 
-    await user.click(await findMdCheckbox(/Publix/));
+    await user.click(await findMdButton('Add favorite store'));
+    await user.click(await screen.findByRole('button', { name: /Publix/i }));
+
     await waitFor(() => {
       expect(created.calls.some((call) => call.method === 'POST')).toBe(true);
     });

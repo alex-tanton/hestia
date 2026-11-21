@@ -58,7 +58,7 @@ describe('MealPlacementSheet', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Place meal' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Plan meal' })).toBeInTheDocument();
     expect(getMdTab('Recipe')).toHaveProperty('active', true);
     expect(getMdTab('Quick Item')).toHaveProperty('active', false);
 
@@ -92,7 +92,7 @@ describe('MealPlacementSheet', () => {
     });
 
     expect(getMdField('Item name')).toBeInTheDocument();
-    expect(getMdButton('Place item')).toBeDisabled();
+    expect(getMdButton('Save meal placement')).toBeDisabled();
 
     // Verify all suggestion chips are present
     for (const suggestion of QUICK_SUGGESTIONS) {
@@ -118,7 +118,7 @@ describe('MealPlacementSheet', () => {
     const input = await findFieldInput('Item name');
     fireEvent.input(input, { target: { value: 'Greek Yogurt' } });
 
-    const placeBtn = getMdButton('Place item');
+    const placeBtn = getMdButton('Save meal placement');
     expect(placeBtn).toBeEnabled();
 
     await user.click(placeBtn);
@@ -185,7 +185,7 @@ describe('MealPlacementSheet', () => {
     fireEvent.input(input, { target: { value: '   ' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(getMdButton('Place item')).toBeDisabled();
+    expect(getMdButton('Save meal placement')).toBeDisabled();
     expect(onPickCustom).not.toHaveBeenCalled();
   });
 });

@@ -2,8 +2,11 @@ import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent, type ReactElement } from 'react';
 import type { Member } from '@hestia/shared';
 import { ROTATION_EMPTY_COPY } from './chore-copy.ts';
+import { Card } from '../ui/Card.tsx';
 import { Button } from '../ui/Button.tsx';
+import { Icon } from '../ui/Icon.tsx';
 import { Select } from '../ui/Select.tsx';
+import { MdSwitch } from '../md/MdSwitch.tsx';
 
 export interface RotationEditorProps {
   members: readonly Member[];
@@ -30,14 +33,12 @@ function moveIndex<T>(list: readonly T[], from: number, to: number): T[] {
 }
 
 /**
- * A rotation is an ordered list of members, reorderable by drag handles with up and down buttons
- * as the non-gesture alternative. The up/down buttons are the real accessibility requirement
- * (full operation without a pointer); the drag handle is a pointer convenience on top of them,
- * not a replacement.
+ * A rotation is an ordered list of members in a tonal list card (surfaceContainerLow),
+ * displaying household members with avatar, enable Switch control, and up/down turn order
+ * buttons per D-15.
  *
- * A button that moves a member, or removes one, is often the last focusable thing in its row once
- * the row reaches an edge, so focus follows the member to where it lands (focus moves into what
- * replaced the control rather than falling back to the page).
+ * The up/down buttons are the real accessibility requirement (full operation without a pointer);
+ * the drag handle is a pointer convenience on top of them, not a replacement.
  */
 export function RotationEditor({
   members,
@@ -129,100 +130,158 @@ export function RotationEditor({
     };
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-3">
-      <h3 tabIndex={-1} data-control="heading" className="text-h3 text-primary focus:outline-none">
-        Rotation order
-      </h3>
-      {disabledReason !== undefined && (
-        <p className="text-body-sm text-secondary">{disabledReason}</p>
-      )}
-      {order.length === 0 && <p className="text-body-sm text-secondary">{ROTATION_EMPTY_COPY}</p>}
-      <ol className="flex flex-col gap-2">
-        {order.map((userId, index) => (
-          <li key={userId} data-member={userId} className="rounded-md border border-border bg-base">
-            {/* The row is the drop target and carries no role of its own, so the <li> keeps its
-                list semantics. The handle is the drag source, a real button kept out of the Tab
-                order (tabIndex -1): Up and Down below are the required non-gesture alternative,
-                and a focusable control that did nothing would only be noise. */}
-            <div
-              role="presentation"
-              onDragOver={(event) => {
-                event.preventDefault();
-              }}
-              onDrop={handleDrop(index)}
-              className="flex min-h-11 items-center gap-2 px-2 py-1.5"
+    <div ref={containerRef}>
+      <Card
+        variant="flat"
+        className="bg-[var(--md-sys-color-surface-container-low)] rounded-2xl p-3 flex flex-col gap-3"
+      >
+        <h3
+          tabIndex={-1}
+          data-control="heading"
+          className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)] focus:outline-none"
+        >
+          Rotation order
+        </h3>
+        {disabledReason !== undefined && (
+          <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+            {disabledReason}
+          </p>
+        )}
+        {order.length === 0 && (
+          <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+            {ROTATION_EMPTY_COPY}
+          </p>
+        )}
+        <ol className="flex flex-col gap-2">
+          {order.map((userId, index) => (
+            <li
+              key={userId}
+              data-member={userId}
+              className="rounded-md border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]"
             >
-              <button
-                type="button"
-                draggable={!isUnavailable}
-                tabIndex={-1}
-                aria-label={`Drag ${nameOf(userId)} to reorder`}
-                onDragStart={() => {
-                  setDragIndex(index);
+              <div
+                role="presentation"
+                onDragOver={(event) => {
+                  event.preventDefault();
                 }}
-                onDragEnd={() => {
-                  setDragIndex(null);
-                }}
-                className="inline-flex min-h-11 min-w-11 shrink-0 cursor-grab items-center justify-center text-muted"
+                onDrop={handleDrop(index)}
+                className="flex min-h-11 items-center gap-2 px-2 py-1.5"
               >
-                <GripVertical aria-hidden size={20} strokeWidth={1.5} />
-              </button>
-              <span className="min-w-0 flex-1 truncate text-body text-primary">
-                {`${String(index + 1)}. ${nameOf(userId)}`}
-              </span>
-              <Button
-                variant="ghost"
-                isIconOnly
-                data-member={userId}
-                data-control="up"
-                aria-label={`Move ${nameOf(userId)} up`}
-                disabled={index === 0 || isUnavailable}
-                onClick={() => {
-                  move(index, -1);
-                }}
-              >
-                <ArrowUp aria-hidden size={18} strokeWidth={1.5} />
-              </Button>
-              <Button
-                variant="ghost"
-                isIconOnly
-                data-member={userId}
-                data-control="down"
-                aria-label={`Move ${nameOf(userId)} down`}
-                disabled={index === order.length - 1 || isUnavailable}
-                onClick={() => {
-                  move(index, 1);
-                }}
-              >
-                <ArrowDown aria-hidden size={18} strokeWidth={1.5} />
-              </Button>
-              <Button
-                variant="ghost"
-                isIconOnly
-                data-member={userId}
-                data-control="remove"
-                aria-label={`Remove ${nameOf(userId)} from rotation`}
-                disabled={isUnavailable}
-                onClick={() => {
-                  remove(index);
-                }}
-              >
-                <Trash2 aria-hidden size={18} strokeWidth={1.5} />
-              </Button>
+                <button
+                  type="button"
+                  draggable={!isUnavailable}
+                  tabIndex={-1}
+                  aria-label={`Drag ${nameOf(userId)} to reorder`}
+                  onDragStart={() => {
+                    setDragIndex(index);
+                  }}
+                  onDragEnd={() => {
+                    setDragIndex(null);
+                  }}
+                  className="inline-flex min-h-11 min-w-11 shrink-0 cursor-grab items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
+                >
+                  <GripVertical aria-hidden size={20} strokeWidth={1.5} />
+                </button>
+                <div
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-label-md font-medium text-[var(--md-sys-color-on-primary-container)]"
+                  aria-hidden="true"
+                >
+                  <Icon name="person" size={18} />
+                </div>
+                <span className="min-w-0 flex-1 truncate text-body text-[var(--md-sys-color-on-surface)]">
+                  {`${String(index + 1)}. ${nameOf(userId)}`}
+                </span>
+                <Button
+                  variant="ghost"
+                  isIconOnly
+                  data-member={userId}
+                  data-control="up"
+                  aria-label={`Move ${nameOf(userId)} up`}
+                  disabled={index === 0 || isUnavailable}
+                  onClick={() => {
+                    move(index, -1);
+                  }}
+                >
+                  <ArrowUp aria-hidden size={18} strokeWidth={1.5} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  isIconOnly
+                  data-member={userId}
+                  data-control="down"
+                  aria-label={`Move ${nameOf(userId)} down`}
+                  disabled={index === order.length - 1 || isUnavailable}
+                  onClick={() => {
+                    move(index, 1);
+                  }}
+                >
+                  <ArrowDown aria-hidden size={18} strokeWidth={1.5} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  isIconOnly
+                  data-member={userId}
+                  data-control="remove"
+                  aria-label={`Remove ${nameOf(userId)} from rotation`}
+                  disabled={isUnavailable}
+                  onClick={() => {
+                    remove(index);
+                  }}
+                >
+                  <Trash2 aria-hidden size={18} strokeWidth={1.5} />
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ol>
+        {available.length > 0 && (
+          <div className="flex flex-col gap-2 pt-2 border-t border-[var(--md-sys-color-outline-variant)]">
+            <p className="text-body-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">
+              Available members
+            </p>
+            <div className="flex flex-col gap-2">
+              {available.map((member) => (
+                <div
+                  key={member.userId}
+                  className="flex items-center justify-between gap-2 p-2 rounded-md border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]"
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]"
+                      aria-hidden="true"
+                    >
+                      <Icon name="person" size={18} />
+                    </div>
+                    <span className="truncate text-body text-[var(--md-sys-color-on-surface)]">
+                      {member.displayName}
+                    </span>
+                  </div>
+                  <MdSwitch
+                    aria-label={`Include ${member.displayName} in rotation`}
+                    selected={false}
+                    disabled={isUnavailable}
+                    onChange={(event: Event) => {
+                      const target = event.target as { selected?: boolean } | null;
+                      if (target?.selected === true) add(member.userId);
+                    }}
+                  />
+                </div>
+              ))}
             </div>
-          </li>
-        ))}
-      </ol>
-      {available.length > 0 && (
-        <Select
-          label="Add to rotation"
-          placeholder="Choose a member"
-          value=""
-          disabledReason={disabledReason}
-          options={available.map((member) => ({ value: member.userId, label: member.displayName }))}
-          onValueChange={add}
-        />
-      )}
+            <Select
+              label="Add to rotation"
+              placeholder="Choose a member"
+              value=""
+              disabledReason={disabledReason}
+              options={available.map((member) => ({
+                value: member.userId,
+                label: member.displayName,
+              }))}
+              onValueChange={add}
+            />
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

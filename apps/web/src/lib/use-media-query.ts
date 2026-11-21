@@ -25,6 +25,3 @@ function getSnapshot(query: string): () => boolean {
 export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(subscribe(query), getSnapshot(query), () => false);
 }
-
-/** The desktop layout begins at 1024px. */
-export const DESKTOP_QUERY = '(min-width: 1024px)';

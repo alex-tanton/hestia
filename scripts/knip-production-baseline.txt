@@ -24,5 +24,6 @@ exports	packages/shared/src/config/constants.ts	TEST_CONFIG
 exports	packages/shared/src/scrub.ts	scrubFields
 files	apps/service/src/deals/flipp/normalized-fixtures.ts	-
 files	apps/web/src/components/md/MdRadio.tsx	-
+files	apps/web/src/components/ui/Tabs.tsx	-
 files	scripts/knip-summary.mjs	-
-total	27	-
+total	28	-

@@ -1,12 +1,13 @@
 import { useState, type ReactElement } from 'react';
 import { useRecipes, useSuggestions } from '../../lib/api/meal-hooks.ts';
+import { MdSuggestionChip } from '../md/MdSuggestionChip.tsx';
 import { ErrorState } from '../states/StateBlocks.tsx';
 import { Button } from '../ui/Button.tsx';
 import { TextField } from '../ui/Field.tsx';
 import { ListRow } from '../ui/ListRow.tsx';
-import { Sheet } from '../ui/Sheet.tsx';
+import { ModalBottomSheet } from '../ui/ModalBottomSheet.tsx';
+import { SegmentedControl } from '../ui/SegmentedControl.tsx';
 import { SkeletonRows } from '../ui/Skeleton.tsx';
-import { Tabs } from '../ui/Tabs.tsx';
 import { breakdownLine } from './meal-copy.ts';
 import { mergeReadiness, sortSuggestions } from './recipe-sort.ts';
 
@@ -19,6 +20,8 @@ export const QUICK_SUGGESTIONS = [
   'Leftovers',
   'Salad',
   'Sandwich',
+  'Takeout',
+  'Pizza',
 ] as const;
 
 export interface MealPlacementSheetProps {
@@ -73,7 +76,7 @@ export function MealPlacementSheet({
   };
 
   const recipeContent = (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pt-3">
       <TextField
         label="Search recipes"
         type="search"
@@ -116,77 +119,85 @@ export function MealPlacementSheet({
   );
 
   const customContent = (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <TextField
-          label="Item name"
-          placeholder="Banana, yogurt, leftovers..."
-          value={customTitle}
-          onChange={(event) => {
-            setCustomTitle(event.target.value);
+    <div className="flex flex-col gap-4 pt-3">
+      {/* Quick suggestions strip above custom dish input per D-07 */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-caption font-semibold uppercase text-secondary">
+          Quick Suggestions
+        </span>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {QUICK_SUGGESTIONS.map((suggestion) => (
+            <MdSuggestionChip
+              key={suggestion}
+              onClick={() => {
+                setCustomTitle(suggestion);
+                onPickCustom(suggestion);
+              }}
+            >
+              {suggestion}
+            </MdSuggestionChip>
+          ))}
+        </div>
+      </div>
+
+      <TextField
+        label="Item name"
+        placeholder="Banana, yogurt, leftovers..."
+        value={customTitle}
+        onChange={(event) => {
+          setCustomTitle(event.target.value);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            handleCustomSubmit();
+          }
+        }}
+      />
+
+      <div className="flex justify-end gap-2 pt-2">
+        <Button
+          variant="ghost"
+          onClick={() => {
+            onOpenChange(false);
           }}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              handleCustomSubmit();
-            }
-          }}
-        />
+        >
+          Cancel
+        </Button>
         <Button
           type="button"
           variant="primary"
           disabled={customTitle.trim() === ''}
           onClick={handleCustomSubmit}
         >
-          Place item
+          Save meal placement
         </Button>
-      </div>
-      <div className="flex flex-col gap-2">
-        <span className="text-caption font-semibold uppercase text-secondary">
-          Quick Suggestions
-        </span>
-        <div className="flex flex-wrap gap-2">
-          {QUICK_SUGGESTIONS.map((suggestion) => (
-            <Button
-              key={suggestion}
-              type="button"
-              variant="secondary"
-              className="px-3"
-              onClick={() => {
-                onPickCustom(suggestion);
-              }}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
       </div>
     </div>
   );
 
   return (
-    <Sheet open onOpenChange={onOpenChange} title="Place meal">
-      <div className="px-4">
-        <Tabs
+    <ModalBottomSheet open onOpenChange={onOpenChange} title="Plan meal">
+      <div className="flex flex-col gap-3 px-4 pb-6">
+        <SegmentedControl
           label="Placement mode"
           value={tab}
           onValueChange={(val) => {
             setTab(val as 'recipe' | 'custom');
           }}
-          items={[
+          segments={[
             {
               value: 'recipe',
               label: 'Recipe',
-              content: recipeContent,
             },
             {
               value: 'custom',
               label: 'Quick Item',
-              content: customContent,
             },
           ]}
         />
+        {tab === 'recipe' ? recipeContent : customContent}
       </div>
-    </Sheet>
+    </ModalBottomSheet>
   );
 }

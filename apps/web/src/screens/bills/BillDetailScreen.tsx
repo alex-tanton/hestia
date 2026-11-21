@@ -1,14 +1,8 @@
-import { Archive, Pencil, Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import type { BillPayment } from '@hestia/shared';
 import { BillForm, type BillDraft } from '../../components/bills/BillForm.tsx';
-import {
-  OFFLINE_ACTION_REASON,
-  archiveBillConfirmation,
-  deleteBillConfirmation,
-  deletePaymentConfirmation,
-} from '../../components/bills/bills-copy.ts';
+import { OFFLINE_ACTION_REASON } from '../../components/bills/bills-copy.ts';
 import {
   PaymentEditSheet,
   type PaymentEditDraft,
@@ -20,7 +14,9 @@ import { ErrorState, OfflineState } from '../../components/states/StateBlocks.ts
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
 import { Badge } from '../../components/ui/Badge.tsx';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
@@ -29,6 +25,8 @@ import {
   useBill,
   useDeleteBill,
   useDeleteBillPayment,
+  usePayBill,
+  useSkipBill,
   useUpdateBill,
   useUpdateBillPayment,
 } from '../../lib/api/bills-hooks.ts';
@@ -42,9 +40,9 @@ export interface BillDetailScreenProps {
 }
 
 /**
- * The bill's own fields (editable) plus its full payment history. The overflow menu holds only
- * archive and delete — pay and skip stay on the bills list row, since recording a payment here
- * would duplicate that action rather than add one.
+ * Bill detail view: single <h1> in Top App Bar, tonal summary card, direct Edit action,
+ * multi-item overflow menu (Archive, Delete), and PaymentHistory with direct inline delete
+ * and persistent Undo feedback (D-11, D-12, BILL-02).
  */
 export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps): ReactElement {
   const isOnline = useOnlineStatus();
@@ -56,12 +54,13 @@ export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps)
   const deleteBill = useDeleteBill(householdId);
   const updatePayment = useUpdateBillPayment(householdId);
   const deletePayment = useDeleteBillPayment(householdId);
+  const payBill = usePayBill(householdId);
+  const skipBill = useSkipBill(householdId);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingPayment, setEditingPayment] = useState<BillPayment>();
-  const [deletingPayment, setDeletingPayment] = useState<BillPayment>();
 
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
 
@@ -140,17 +139,34 @@ export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps)
     );
   };
 
-  const confirmDeletePayment = (): void => {
-    if (deletingPayment === undefined) return;
+  const handleDeletePayment = (payment: BillPayment): void => {
+    const name = bill.data?.name ?? 'bill';
     deletePayment.mutate(
-      { billId, paymentId: deletingPayment.id },
+      { billId, paymentId: payment.id },
       {
         onSuccess: () => {
-          setDeletingPayment(undefined);
-          toast({ variant: 'success', message: 'Deleted payment.' });
+          toast({
+            variant: 'success',
+            message: `Removed payment for ${name}`,
+            action: {
+              label: 'Undo',
+              onAction: () => {
+                if (payment.isSkipped) {
+                  skipBill.mutate(billId);
+                } else {
+                  payBill.mutate({
+                    billId,
+                    body: {
+                      paidDate: payment.paidDate ?? undefined,
+                      amountPaidCents: payment.amountPaidCents ?? undefined,
+                    },
+                  });
+                }
+              },
+            },
+          });
         },
         onError: (error) => {
-          setDeletingPayment(undefined);
           toast({
             variant: 'error',
             message: userMessage(error, { fallback: "Couldn't delete this payment. Try again." }),
@@ -196,66 +212,79 @@ export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps)
         />
       )}
 
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="flex flex-wrap items-center gap-2 text-body text-primary">
-            {formatCents(data.amountCents)}
-            {data.visibility === 'personal' && <Badge variant="personal" />}
-            {data.autopay && <Badge variant="neutral">Autopay</Badge>}
-            {data.isOverdue && <Badge variant="danger">Overdue</Badge>}
-          </p>
-          <p className="text-body-sm text-secondary">
-            {`Due ${formatCalendarDate(data.currentOccurrenceDate)}${data.category !== null ? ` · ${data.category}` : ''}`}
-          </p>
-          {recurrencePreview !== undefined && (
-            <p className="text-body-sm text-secondary">{recurrencePreview}</p>
-          )}
-          <p className="text-body-sm text-secondary">{`Reminds ${String(data.reminderDaysBefore)} days before.`}</p>
-        </div>
-        <OverflowMenu
-          label={`More actions for ${data.name}`}
-          items={[
-            {
-              label: 'Archive',
-              icon: <Archive aria-hidden size={20} strokeWidth={1.5} />,
-              disabledReason: offlineReason,
-              onSelect: () => {
-                setIsArchiving(true);
-              },
-            },
-            {
-              label: 'Delete',
-              icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
-              isDestructive: true,
-              disabledReason: offlineReason,
-              onSelect: () => {
-                setIsDeleting(true);
-              },
-            },
-          ]}
-        />
-      </header>
-
-      <Button
-        variant="secondary"
-        disabledReason={offlineReason}
-        onClick={() => {
-          setIsEditing(true);
-        }}
+      {/* Tonal Summary Card per D-11 and UI-SPEC */}
+      <Card
+        variant="flat"
+        className="p-4 flex flex-col gap-3 rounded-2xl bg-[var(--md-sys-color-surface-container-low)]"
       >
-        <Pencil aria-hidden size={20} strokeWidth={1.5} />
-        Edit bill
-      </Button>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2 text-display-sm font-semibold tabular-nums text-[var(--md-sys-color-on-surface)]">
+              {formatCents(data.amountCents)}
+              {data.visibility === 'personal' && <Badge variant="personal" />}
+              {data.autopay && <Badge variant="neutral">Autopay</Badge>}
+              {data.isOverdue && <Badge variant="danger">Overdue</Badge>}
+            </div>
+            <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+              {`Due ${formatCalendarDate(data.currentOccurrenceDate)}${data.category !== null ? ` · ${data.category}` : ''}`}
+            </p>
+            {recurrencePreview !== undefined && (
+              <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+                {recurrencePreview}
+              </p>
+            )}
+            <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">{`Reminds ${String(data.reminderDaysBefore)} days before.`}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="secondary"
+              disabledReason={offlineReason}
+              onClick={() => {
+                setIsEditing(true);
+              }}
+              aria-label="Edit bill"
+            >
+              <Icon name="edit" size={20} />
+              Edit bill
+            </Button>
+            <OverflowMenu
+              label={`More actions for ${data.name}`}
+              items={[
+                {
+                  label: 'Archive',
+                  icon: <Icon name="archive" size={20} />,
+                  disabledReason: offlineReason,
+                  onSelect: () => {
+                    setIsArchiving(true);
+                  },
+                },
+                {
+                  label: 'Delete',
+                  icon: <Icon name="delete" size={20} />,
+                  isDestructive: true,
+                  disabledReason: offlineReason,
+                  onSelect: () => {
+                    setIsDeleting(true);
+                  },
+                },
+              ]}
+            />
+          </div>
+        </div>
+      </Card>
 
       <section aria-labelledby="payment-history-heading" className="flex flex-col gap-2">
-        <h2 id="payment-history-heading" className="text-h2 text-primary">
+        <h2
+          id="payment-history-heading"
+          className="text-title-md font-semibold text-[var(--md-sys-color-on-surface)]"
+        >
           Payment history
         </h2>
         <PaymentHistory
           payments={data.payments}
           offlineReason={offlineReason}
           onEdit={setEditingPayment}
-          onDelete={setDeletingPayment}
+          onDelete={handleDeletePayment}
         />
       </section>
 
@@ -271,6 +300,7 @@ export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps)
 
       {editingPayment !== undefined && (
         <PaymentEditSheet
+          open
           payment={editingPayment}
           onOpenChange={(open) => {
             if (!open) setEditingPayment(undefined);
@@ -284,7 +314,7 @@ export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps)
         open={isArchiving}
         onOpenChange={setIsArchiving}
         title="Archive this bill?"
-        description={archiveBillConfirmation(data)}
+        description={`Archive ${data.name}? It stops showing up and sends no more reminders; its history is kept.`}
         confirmLabel="Archive bill"
         isConfirming={archiveBill.isPending}
         onConfirm={confirmArchive}
@@ -294,22 +324,10 @@ export function BillDetailScreen({ householdId, billId }: BillDetailScreenProps)
         open={isDeleting}
         onOpenChange={setIsDeleting}
         title="Delete this bill?"
-        description={deleteBillConfirmation(data)}
+        description={`Delete ${data.name}? Its payment history is removed with it.`}
         confirmLabel="Delete bill"
         isConfirming={deleteBill.isPending}
         onConfirm={confirmDelete}
-      />
-
-      <ConfirmDialog
-        open={deletingPayment !== undefined}
-        onOpenChange={(open) => {
-          if (!open) setDeletingPayment(undefined);
-        }}
-        title="Delete this payment?"
-        description={deletingPayment === undefined ? '' : deletePaymentConfirmation(data)}
-        confirmLabel="Delete payment"
-        isConfirming={deletePayment.isPending}
-        onConfirm={confirmDeletePayment}
       />
     </section>
   );

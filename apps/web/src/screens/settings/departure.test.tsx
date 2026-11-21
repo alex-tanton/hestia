@@ -114,6 +114,8 @@ describe('removing a member', () => {
     });
 
     await user.click(confirm());
+    const dialogConfirm = await findMdButton('Confirm member departure');
+    await user.click(dialogConfirm);
     await waitFor(() => {
       const post = stub.calls.find((call) => call.method === 'POST');
       expect(post?.body).toEqual({
@@ -176,7 +178,7 @@ describe('the last member leaving', () => {
 
     await user.click(getMdButton('Delete household and leave'));
 
-    const confirm = await findMdButton('Delete household');
+    const confirm = await findMdButton('Delete household group');
     expect(confirm).toHaveProperty('disabled', true);
 
     const confirmField = await findMdField('Type Rivera Family to confirm');

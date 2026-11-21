@@ -37,8 +37,10 @@ export function breakdownLine(
   );
 }
 
-export const RECIPE_LIBRARY_EMPTY_COPY = 'No recipes yet. Paste a link or add one by hand.';
-export const RECIPE_LIBRARY_NO_MATCH_COPY = 'No recipes match that search.';
+export const RECIPE_LIBRARY_EMPTY_COPY =
+  'Paste a link to import a recipe or add your favorites by hand.';
+export const RECIPE_LIBRARY_NO_MATCH_COPY =
+  'No recipes match your current search or filter criteria. Try clearing the filter.';
 
 export const PARSE_FAILED_COPY = "Couldn't read that page. Add it by hand?";
 /** A parse that succeeded but is incomplete: flag it rather than save silently. */

@@ -3,12 +3,12 @@ import type { Bill, BillVisibility, RecurrenceUnit } from '@hestia/shared';
 import { recurrencePreviewSentence } from '../../lib/bills/recurrence-preview.ts';
 import { formatPriceInput, parsePriceInput } from '../../lib/price-input.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
+import { MdDialog } from '../md/MdDialog.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Checkbox } from '../ui/Checkbox.tsx';
 import { TextField } from '../ui/Field.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
 import { Select } from '../ui/Select.tsx';
-import { Sheet } from '../ui/Sheet.tsx';
+import { Switch } from '../ui/Switch.tsx';
 
 export interface BillDraft {
   name: string;
@@ -25,11 +25,10 @@ export interface BillDraft {
 export interface BillFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Editing an existing bill, or adding a new one — visibility is asked only when adding, since
-   * a bill's owner cannot move it between household and personal afterward. */
   bill?: Bill | undefined;
   onSubmit: (draft: BillDraft, visibility: BillVisibility) => void;
   isSaving?: boolean;
+  initialIsSubscription?: boolean;
 }
 
 const RECURRENCE_OPTIONS: readonly { value: string; label: string }[] = [
@@ -59,11 +58,8 @@ function toUnit(value: string): RecurrenceUnit | null {
 }
 
 /**
- * The bill sheet: name, amount, category, recurrence (with the next-three-dates preview),
- * autopay, reminder lead time, and whether it counts toward Subscriptions. Visibility is asked
- * only when adding a bill — the database's own
- * `bill_personal_iff_no_household` constraint, and the fact that PATCH /bills/:id does not accept
- * it, mean there is no "move a bill" action to build a control for.
+ * Responsive MD3 Bill dialog (<600px full-screen canvas, >=600px centered max-w-[720px])
+ * featuring MD3 Switch controls for recurrence, autopay, and subscription tracking (D-11, BILL-02).
  */
 export function BillForm({
   open,
@@ -71,14 +67,17 @@ export function BillForm({
   bill,
   onSubmit,
   isSaving = false,
+  initialIsSubscription = false,
 }: BillFormProps): ReactElement {
   const isEditing = bill !== undefined;
+  const title = isEditing ? `Edit ${bill.name}` : 'Add bill';
   const { errors, setErrors, formRef } = useFieldErrors<Field>();
 
   const [visibility, setVisibility] = useState<BillVisibility>(bill?.visibility ?? 'household');
   const [name, setName] = useState(bill?.name ?? '');
   const [amount, setAmount] = useState(formatPriceInput(bill?.amountCents ?? null));
   const [category, setCategory] = useState(bill?.category ?? '');
+  const [isRecurring, setIsRecurring] = useState((bill?.recurrenceUnit ?? null) !== null);
   const [recurrenceUnit, setRecurrenceUnit] = useState<RecurrenceUnit | null>(
     bill?.recurrenceUnit ?? 'month',
   );
@@ -88,48 +87,53 @@ export function BillForm({
     String(bill?.reminderDaysBefore ?? 3),
   );
   const [autopay, setAutopay] = useState(bill?.autopay ?? false);
-  const [isSubscription, setIsSubscription] = useState(bill?.isSubscription ?? false);
+  const [isSubscription, setIsSubscription] = useState(
+    bill?.isSubscription ?? initialIsSubscription,
+  );
 
   const parsedInterval = Number.parseInt(interval, 10);
+  const effectiveUnit = isRecurring ? recurrenceUnit : null;
   const preview = recurrencePreviewSentence({
-    unit: recurrenceUnit,
+    unit: effectiveUnit,
     interval: Number.isNaN(parsedInterval) ? 0 : parsedInterval,
     anchorDate,
   });
 
-  const handleSubmit = (event: SyntheticEvent): void => {
-    event.preventDefault();
+  const handleSubmit = (event?: SyntheticEvent): void => {
+    event?.preventDefault();
     const next: Partial<Record<Field, string>> = {};
 
-    const trimmedName = name.trim();
-    if (trimmedName === '') next.name = 'Enter a name.';
-
+    if (name.trim() === '') next.name = 'Enter the bill name.';
     const parsedAmount = parsePriceInput(amount);
     if (parsedAmount.error !== undefined) next.amount = parsedAmount.error;
-    else if (parsedAmount.cents === undefined) next.amount = 'Enter an amount.';
+    else if (parsedAmount.cents === undefined) next.amount = 'Enter the amount.';
 
-    // A one-time bill hides the interval field, so its (possibly blank) text must not block saving.
-    if (recurrenceUnit !== null && (!Number.isInteger(parsedInterval) || parsedInterval <= 0)) {
-      next.interval = 'Enter a whole number, 1 or more.';
+    if (isRecurring && effectiveUnit !== null) {
+      if (Number.isNaN(parsedInterval) || parsedInterval <= 0)
+        next.interval = 'Interval must be at least 1.';
     }
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate)) next.anchorDate = 'Enter the first due date.';
 
     const parsedReminder = Number.parseInt(reminderDaysBefore, 10);
-    if (!Number.isInteger(parsedReminder) || parsedReminder < 0) {
-      next.reminderDaysBefore = 'Enter 0 or more days.';
-    }
+    if (Number.isNaN(parsedReminder) || parsedReminder < 0)
+      next.reminderDaysBefore = 'Reminder lead time cannot be negative.';
 
     setErrors(next);
-    if (Object.keys(next).length > 0 || parsedAmount.cents === undefined) return;
+    if (
+      Object.keys(next).length > 0 ||
+      parsedAmount.cents === undefined ||
+      Number.isNaN(parsedReminder)
+    )
+      return;
 
     onSubmit(
       {
-        name: trimmedName,
+        name: name.trim(),
         amountCents: parsedAmount.cents,
         category: category.trim() === '' ? null : category.trim(),
-        recurrenceUnit,
-        interval: recurrenceUnit === null ? 1 : parsedInterval,
+        recurrenceUnit: effectiveUnit,
+        interval: isRecurring && effectiveUnit !== null ? parsedInterval : 1,
         anchorDate,
         reminderDaysBefore: parsedReminder,
         autopay,
@@ -140,14 +144,34 @@ export function BillForm({
   };
 
   return (
-    <Sheet
+    <MdDialog
+      role="dialog"
       open={open}
-      onOpenChange={onOpenChange}
-      title={isEditing ? `Edit ${bill.name}` : 'Add a bill'}
+      quick
+      aria-label={title}
+      className="md3-responsive-dialog w-full max-w-[720px]"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          onOpenChange(false);
+        }
+      }}
     >
-      <form ref={formRef} noValidate className="flex flex-col gap-3 px-4" onSubmit={handleSubmit}>
+      <div
+        slot="headline"
+        id="dialog-title"
+        className="text-title-lg font-semibold text-[var(--md-sys-color-on-surface)]"
+      >
+        {title}
+      </div>
+      <form
+        ref={formRef}
+        slot="content"
+        noValidate
+        className="flex flex-col gap-4 pt-2"
+        onSubmit={handleSubmit}
+      >
         {isEditing ? (
-          <p className="text-body-sm text-secondary">
+          <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
             {bill.visibility === 'personal' ? 'Personal bill' : 'Household bill'}
           </p>
         ) : (
@@ -163,7 +187,6 @@ export function BillForm({
         <TextField
           label="Name"
           name="name"
-          autoComplete="off"
           value={name}
           error={errors.name}
           onChange={(event) => {
@@ -185,35 +208,50 @@ export function BillForm({
         <TextField
           label="Category"
           name="category"
-          autoComplete="off"
-          hint="Optional"
           value={category}
           onChange={(event) => {
             setCategory(event.target.value);
           }}
         />
-        <Select
-          label="Repeats"
-          name="recurrenceUnit"
-          options={RECURRENCE_OPTIONS}
-          value={recurrenceUnit ?? ''}
-          onValueChange={(value) => {
-            setRecurrenceUnit(toUnit(value));
+
+        {/* Recurrence Switch and Cadence */}
+        <Switch
+          label="Recurring bill"
+          checked={isRecurring}
+          onCheckedChange={(checked) => {
+            setIsRecurring(checked);
+            if (checked && recurrenceUnit === null) {
+              setRecurrenceUnit('month');
+            }
           }}
         />
-        {recurrenceUnit !== null && (
-          <TextField
-            label="Every"
-            name="interval"
-            inputMode="numeric"
-            hint={INTERVAL_HINT[recurrenceUnit]}
-            value={interval}
-            error={errors.interval}
-            onChange={(event) => {
-              setIntervalText(event.target.value);
-            }}
-          />
+        {isRecurring && (
+          <div className="flex flex-col gap-3 pl-2 border-l-2 border-[var(--md-sys-color-outline-variant)]">
+            <Select
+              label="Repeats"
+              name="recurrenceUnit"
+              options={RECURRENCE_OPTIONS}
+              value={recurrenceUnit ?? 'month'}
+              onValueChange={(value) => {
+                setRecurrenceUnit(toUnit(value));
+              }}
+            />
+            {recurrenceUnit !== null && (
+              <TextField
+                label="Every"
+                name="interval"
+                inputMode="numeric"
+                hint={INTERVAL_HINT[recurrenceUnit]}
+                value={interval}
+                error={errors.interval}
+                onChange={(event) => {
+                  setIntervalText(event.target.value);
+                }}
+              />
+            )}
+          </div>
         )}
+
         <TextField
           label="First due date"
           name="anchorDate"
@@ -224,7 +262,9 @@ export function BillForm({
             setAnchorDate(event.target.value);
           }}
         />
-        {preview !== undefined && <p className="text-body-sm text-secondary">{preview}</p>}
+        {preview !== undefined && (
+          <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">{preview}</p>
+        )}
         <TextField
           label="Remind me this many days before"
           name="reminderDaysBefore"
@@ -235,24 +275,35 @@ export function BillForm({
             setReminderDaysBefore(event.target.value);
           }}
         />
-        <Checkbox
-          label="Autopay"
-          checked={autopay}
-          onChange={(event) => {
-            setAutopay(event.target.checked);
-          }}
-        />
-        <Checkbox
+
+        {/* Autopay and Subscription MD3 Switches */}
+        <Switch label="Autopay enabled" checked={autopay} onCheckedChange={setAutopay} />
+        <Switch
           label="Track as a subscription"
           checked={isSubscription}
-          onChange={(event) => {
-            setIsSubscription(event.target.checked);
-          }}
+          onCheckedChange={setIsSubscription}
         />
-        <Button type="submit" isLoading={isSaving} className="mt-1">
-          {isEditing ? 'Save bill' : 'Add bill'}
-        </Button>
       </form>
-    </Sheet>
+      <div slot="actions" className="flex justify-end gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => {
+            onOpenChange(false);
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          type="submit"
+          isLoading={isSaving}
+          onClick={() => {
+            handleSubmit();
+          }}
+        >
+          {isEditing ? 'Save bill changes' : 'Add bill'}
+        </Button>
+      </div>
+    </MdDialog>
   );
 }

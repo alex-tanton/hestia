@@ -8,8 +8,7 @@ import {
   findMdField,
   findMdMenuItem,
   getMdButton,
-  getMdMenuItem,
-  queryMdMenuItem,
+  getMdSwitch,
 } from '../../test/md-queries.ts';
 import {
   billDetailFixture,
@@ -89,8 +88,7 @@ describe('Bill detail', () => {
     expect(await screen.findByText('Autopay')).toBeInTheDocument();
   });
 
-  it('shows a skipped occurrence without an amount, and offers no edit for it', async () => {
-    const user = userEvent.setup();
+  it('shows a skipped occurrence without an amount, direct delete button, and zero overflow menus', async () => {
     mount(
       baseHandlers({
         'GET /api/bills/:id': () => ({
@@ -104,9 +102,40 @@ describe('Bill detail', () => {
       }),
     );
     expect(await screen.findByText(/Skipped/)).toBeInTheDocument();
-    await openMenu(user, /More actions for the/);
-    expect(queryMdMenuItem('Edit')).toBeNull();
-    expect(getMdMenuItem('Delete')).toBeInTheDocument();
+    // Zero 1-item overflow menus on payment rows per D-12
+    expect(screen.queryByRole('button', { name: /More actions for the/ })).toBeNull();
+    // Direct delete button exists
+    expect(getMdButton(/Delete payment for/)).toBeInTheDocument();
+  });
+
+  it('direct delete payment: immediately removes payment and shows persistent Undo toast', async () => {
+    const user = userEvent.setup();
+    const stub = mount(
+      baseHandlers({
+        'GET /api/bills/:id': () => ({
+          status: 200,
+          body: {
+            ...billDetailFixture,
+            payments: [waterSkippedPaymentFixture],
+          },
+        }),
+        'DELETE /api/bills/:id/payments/:paymentId': () => ({ status: 204 }),
+      }),
+    );
+    await screen.findByText(/Skipped/);
+    await user.click(getMdButton(/Delete payment for/));
+    await waitFor(() => {
+      expect(
+        stub.calls.some(
+          (call) =>
+            call.method === 'DELETE' &&
+            call.path ===
+              `/api/bills/${dukeEnergyFixture.id}/payments/${waterSkippedPaymentFixture.id}`,
+        ),
+      ).toBe(true);
+    });
+    expect(await screen.findByText(/Removed payment for Duke Energy/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
   });
 
   it('empty: no payments recorded yet', async () => {
@@ -161,7 +190,9 @@ describe('Bill detail', () => {
     await openMenu(user, 'More actions for Duke Energy');
     await user.click(await findMdMenuItem('Archive'));
     const dialog = await findMdDialog('Archive this bill?');
-    expect(dialog).toHaveTextContent('Archive Duke Energy?');
+    expect(dialog).toHaveTextContent(
+      'Archive Duke Energy? It stops showing up and sends no more reminders; its history is kept.',
+    );
     await user.click(getMdButton('Archive bill', { container: dialog }));
     await waitFor(() => {
       expect(
@@ -177,7 +208,7 @@ describe('Bill detail', () => {
     await openMenu(user, 'More actions for Duke Energy');
     await user.click(await findMdMenuItem('Delete'));
     const dialog = await findMdDialog('Delete this bill?');
-    expect(dialog).toHaveTextContent('Its payment history is removed with it.');
+    expect(dialog).toHaveTextContent('Delete Duke Energy? Its payment history is removed with it.');
     await user.click(getMdButton('Delete bill', { container: dialog }));
     await waitFor(() => {
       expect(
@@ -188,7 +219,7 @@ describe('Bill detail', () => {
     });
   });
 
-  it('edit a payment: opens prefilled, saves the new date and amount', async () => {
+  it('edit a payment: opens ModalBottomSheet prefilled, saves the new date and amount', async () => {
     const user = userEvent.setup();
     const payment = billDetailFixture.payments[0]!;
     const stub = mount(
@@ -200,18 +231,30 @@ describe('Bill detail', () => {
       }),
     );
     await screen.findByText('$142.30');
-    await openMenu(
-      user,
-      `More actions for the ${formatCalendarDate(payment.occurrenceDate)} payment`,
+    await user.click(
+      screen.getByRole('button', {
+        name: new RegExp(`Edit payment for ${formatCalendarDate(payment.occurrenceDate)}`),
+      }),
     );
-    await user.click(await findMdMenuItem('Edit'));
     const amountInput = await findFieldInput('Amount paid');
     fireEvent.input(amountInput, { target: { value: '150.00' } });
-    await user.click(getMdButton('Save payment'));
+    await user.click(getMdButton('Save payment changes'));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.method === 'PATCH' && call.path.includes('/payments/')),
       ).toBe(true);
     });
+  });
+
+  it('BillForm: opens as responsive dialog with MD3 Switch toggles for recurrence and autopay', async () => {
+    const user = userEvent.setup();
+    mount();
+    await screen.findByText('$142.30');
+    await user.click(getMdButton('Edit bill'));
+    const dialog = await findMdDialog('Edit Duke Energy');
+    expect(dialog).toBeInTheDocument();
+    expect(getMdSwitch('Autopay enabled', { container: dialog })).toBeInTheDocument();
+    expect(getMdSwitch('Recurring bill', { container: dialog })).toBeInTheDocument();
+    expect(getMdSwitch('Track as a subscription', { container: dialog })).toBeInTheDocument();
   });
 });

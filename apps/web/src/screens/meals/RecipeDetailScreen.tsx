@@ -226,6 +226,19 @@ export function RecipeDetailScreen({
           title="Add missing to which list?"
           description={data.title}
           isPicking={addToList.isPending}
+          missingIngredients={
+            data.readiness
+              ? data.readiness.breakdown
+                  .filter((entry) => entry.bucket === 'to_buy')
+                  .map((entry) => {
+                    const ing = data.ingredients.find((i) => i.id === entry.ingredientId);
+                    return {
+                      id: entry.ingredientId,
+                      itemName: ing?.itemName ?? 'Ingredient',
+                    };
+                  })
+              : undefined
+          }
           onPick={addMissingToList}
           onOpenChange={setIsListPickerOpen}
         />

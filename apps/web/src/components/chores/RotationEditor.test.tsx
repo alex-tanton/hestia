@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState, type ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ALEX_ID, JORDAN_ID, SAM_ID, oakStreetMembers } from '../../test/fixtures.ts';
-import { getMdAccessibleName, getMdButton } from '../../test/md-queries.ts';
+import { getMdAccessibleName, getMdButton, getMdSwitch } from '../../test/md-queries.ts';
 import { RotationEditor } from './RotationEditor.tsx';
 
 /*
@@ -111,6 +111,17 @@ describe('the rotation editor, keyboard only', () => {
 
     expect(getMdButton('Move Alex Rivera up')).toHaveProperty('disabled', true);
     expect(getMdButton('Move Jordan Blake down')).toHaveProperty('disabled', true);
+  });
+
+  it('toggles member participation using the switch', async () => {
+    const user = userEvent.setup();
+    const onOrder = vi.fn();
+    render(<Harness initial={[ALEX_ID]} onOrder={onOrder} />);
+
+    const samSwitch = getMdSwitch('Include Sam Chen in rotation');
+    expect(samSwitch).toBeInTheDocument();
+    await user.click(samSwitch);
+    expect(onOrder).toHaveBeenCalledWith([ALEX_ID, SAM_ID]);
   });
 
   it('moves a member with Enter, and focus follows the member', async () => {

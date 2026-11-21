@@ -46,7 +46,7 @@ export function DeleteHouseholdPanel({
   const matches = typedName === preview.householdName;
 
   return (
-    <Card className="flex flex-col gap-4">
+    <Card variant="flat" className="flex flex-col gap-4">
       <h2 className="text-h2 text-primary">You are the last member</h2>
       <p className="max-w-[70ch] text-body text-secondary">
         Leaving {preview.householdName} deletes it and everything in it. {summary} Your personal
@@ -67,8 +67,8 @@ export function DeleteHouseholdPanel({
         open={isOpen}
         onOpenChange={setIsOpen}
         title={`Delete ${preview.householdName}?`}
-        description={`${summary} This cannot be undone.`}
-        confirmLabel="Delete household"
+        description={`${summary} Permanently delete ${preview.householdName} and all its data? This cannot be undone.`}
+        confirmLabel="Delete household group"
         isConfirmDisabled={!matches}
         isConfirming={isConfirming}
         onConfirm={() => {

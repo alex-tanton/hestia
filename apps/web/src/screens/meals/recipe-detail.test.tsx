@@ -5,6 +5,7 @@ import type { RecipeDetail } from '@hestia/shared';
 import { openMenu, registerBrowserStubs, setOnline } from '../../test/browser.ts';
 import {
   findMdButton,
+  findMdDialog,
   findMdField,
   findMdMenuItem,
   getMdButton,
@@ -308,6 +309,7 @@ describe('Recipe detail', () => {
     await screen.findByRole('heading', { level: 2, name: 'Sheet Pan Chicken and Vegetables' });
     const row = screen.getByText('lemon').closest('li') as HTMLElement;
     await user.click(getMdButton('Match to…', { container: row }));
+    await user.click(await findMdButton('Deals'));
 
     const searchInput = await findFieldInput('Search deals');
     expect(searchInput).toHaveValue('lemon');
@@ -362,7 +364,7 @@ describe('Recipe detail', () => {
     );
     await screen.findByRole('heading', { level: 2, name: sheetPanChickenFixture.title });
     await user.click(getMdButton(/Place on week planner/));
-    await user.click(await findMdButton('Place meal'));
+    await user.click(await findMdButton(/Place (recipe on planner|meal)/));
     await waitFor(() => {
       expect(stub.calls.some((call) => call.path.endsWith('/meal-plan'))).toBe(true);
     });
@@ -376,6 +378,24 @@ describe('Recipe detail', () => {
     await user.click(await findMdMenuItem('Edit'));
     const titleInput = await findFieldInput('Title');
     expect(titleInput).toHaveValue(sheetPanChickenFixture.title);
+
+    // Assert MdDialog responsive dialog presentation and Enter key in IngredientEditor advances row
+    const dialog = await findMdDialog('Edit recipe');
+    expect(dialog).toHaveClass('md3-responsive-dialog');
+    const ingredientRowLi = await waitFor(() => {
+      const rows = dialog.querySelectorAll<HTMLElement>('[data-ingredient-row]');
+      if (rows.length === 0) throw new Error('Waiting for ingredient rows');
+      return rows[rows.length - 1];
+    });
+    expect(ingredientRowLi).toBeDefined();
+    if (ingredientRowLi) {
+      const itemField = await findFieldInput('Item', ingredientRowLi);
+      fireEvent.keyDown(itemField, { key: 'Enter' });
+    }
+    await waitFor(() => {
+      const rows = dialog.querySelectorAll<HTMLElement>('[data-ingredient-row]');
+      expect(rows.length).toBeGreaterThan(sheetPanChickenFixture.ingredients.length);
+    });
   });
 
   it('delete: confirms by name, then deletes and navigates away', async () => {

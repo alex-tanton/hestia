@@ -5,6 +5,7 @@ import type { ProfileResponse } from '@hestia/shared';
 import {
   createFetchStub,
   problemBody,
+  renderApp,
   renderScreen,
   type StubHandler,
 } from '../../test/harness.tsx';
@@ -14,7 +15,6 @@ import {
   getMdButton,
   getMdCheckbox,
   getMdMenuItem,
-  queryMdButton,
 } from '../../test/md-queries.ts';
 import { openMenu } from '../../test/browser.ts';
 import {
@@ -28,6 +28,9 @@ import {
   riveraFamilyMembers,
 } from '../../test/fixtures.ts';
 import { SettingsScreen } from './SettingsScreen.tsx';
+import { AccountScreen } from './AccountRoute.tsx';
+import { HouseholdsScreen } from './HouseholdsRoute.tsx';
+import { NotificationsScreen } from './NotificationsRoute.tsx';
 
 const HOUSEHOLDS: Record<string, unknown> = {
   [OAK_STREET_ID]: oakStreetFixture,
@@ -74,7 +77,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('Settings', () => {
+describe('Settings Hub', () => {
   it('announces that it is loading before anything arrives', () => {
     renderSettings({ 'GET /api/users/me': () => new Promise(() => undefined) });
     expect(screen.getByRole('status')).toHaveTextContent('Loading settings');
@@ -101,41 +104,75 @@ describe('Settings', () => {
     expect(stub.calls).toHaveLength(0);
   });
 
-  it('shows every settings section', async () => {
+  it('renders categorized hub list rows', async () => {
     renderSettings(settingsHandlers());
 
-    for (const heading of [
-      'Account',
-      'My Households',
-      'Invites',
-      'Household settings',
-      'Notifications',
-      'About',
-    ]) {
-      expect(await screen.findByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
-    }
-    expect(await screen.findByDisplayValue('Alex Rivera')).toBeInTheDocument();
-    expect(screen.getByText('alex@example.com')).toBeInTheDocument();
+    expect(await screen.findByText('Account')).toBeInTheDocument();
+    expect(screen.getByText('Email, display name, and password')).toBeInTheDocument();
+
+    expect(screen.getByText('Households & Invites')).toBeInTheDocument();
+    expect(
+      screen.getByText('Active household, members, and pending invitations'),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText('Notifications')).toBeInTheDocument();
+    expect(screen.getByText('Web push permissions and alert preferences')).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { level: 2, name: 'About' })).toBeInTheDocument();
+    expect(getMdButton('Sign out')).toBeInTheDocument();
   });
 
+  it('keeps System health hidden for non-server-owners', async () => {
+    renderSettings(settingsHandlers({ ...profileFixture, isServerOwner: false }));
+    await screen.findByText('Account');
+    expect(screen.queryByText('System health')).toBeNull();
+  });
+
+  it('shows System health to the server owner', async () => {
+    renderSettings(settingsHandlers({ ...profileFixture, isServerOwner: true }));
+    expect(await screen.findByText('System health')).toBeInTheDocument();
+    expect(screen.getByText('Diagnostics, connectivity, and telemetry')).toBeInTheDocument();
+  });
+
+  it('navigates from Settings hub to pushed sub-routes', async () => {
+    const user = userEvent.setup();
+    const stub = createFetchStub(settingsHandlers());
+    vi.stubGlobal('fetch', stub.fetch);
+
+    renderApp({ initialEntries: ['/settings'] });
+
+    const accountRow = await screen.findByRole('button', { name: /Account/ });
+    await user.click(accountRow);
+
+    // Verify sub-route loaded with single h1 chrome
+    expect(await screen.findByRole('heading', { level: 1, name: 'Account' })).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Alex Rivera')).toBeInTheDocument();
+  });
+});
+
+describe('Account Route', () => {
+  it('displays user profile details and timezone', async () => {
+    const stub = createFetchStub(settingsHandlers());
+    vi.stubGlobal('fetch', stub.fetch);
+    renderScreen(<AccountScreen />);
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Account' })).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Alex Rivera')).toBeInTheDocument();
+    expect(screen.getByText('alex@example.com')).toBeInTheDocument();
+    expect(screen.getByText(/detected from this device/)).toBeInTheDocument();
+  });
+});
+
+describe('Households Route', () => {
   it('lists each household with its members and a leave action', async () => {
-    renderSettings(settingsHandlers());
+    const stub = createFetchStub(settingsHandlers());
+    vi.stubGlobal('fetch', stub.fetch);
+    renderScreen(<HouseholdsScreen />);
 
     expect(await screen.findByText('Sam Chen')).toBeInTheDocument();
     expect(screen.getByText('Jordan Blake')).toBeInTheDocument();
     expect(getMdButton('Leave Oak Street')).toBeInTheDocument();
     expect(getMdButton('Leave Rivera Family')).toBeInTheDocument();
-  });
-
-  it('keeps System health for the server owner', async () => {
-    renderSettings(settingsHandlers());
-    await screen.findByRole('heading', { level: 2, name: 'About' });
-    expect(queryMdButton(/System health/)).toBeNull();
-  });
-
-  it('shows System health to the server owner', async () => {
-    renderSettings(settingsHandlers({ ...profileFixture, isServerOwner: true }));
-    expect(await findMdButton(/System health/)).toBeInTheDocument();
   });
 
   it('hides invite management from a member', async () => {
@@ -146,7 +183,9 @@ describe('Settings', () => {
         role: 'member' as const,
       })),
     };
-    renderSettings(settingsHandlers(asMember));
+    const stub = createFetchStub(settingsHandlers(asMember));
+    vi.stubGlobal('fetch', stub.fetch);
+    renderScreen(<HouseholdsScreen />);
 
     expect(
       await screen.findByText('Only the household admin can change these.'),
@@ -156,7 +195,7 @@ describe('Settings', () => {
 
   it('shows a new invite’s link and code once, with copy actions', async () => {
     const user = userEvent.setup();
-    renderSettings(
+    const stub = createFetchStub(
       settingsHandlers(profileFixture, {
         'POST /api/households/:id/invites': () => ({
           status: 201,
@@ -168,6 +207,8 @@ describe('Settings', () => {
         }),
       }),
     );
+    vi.stubGlobal('fetch', stub.fetch);
+    renderScreen(<HouseholdsScreen />);
 
     await user.click(await findMdButton('Create an invite'));
 
@@ -178,20 +219,26 @@ describe('Settings', () => {
 
   it('gives the admin remove and transfer on another member', async () => {
     const user = userEvent.setup();
-    renderSettings(settingsHandlers());
+    const stub = createFetchStub(settingsHandlers());
+    vi.stubGlobal('fetch', stub.fetch);
+    renderScreen(<HouseholdsScreen />);
 
     await openMenu(user, 'More actions for Sam Chen');
     expect(getMdMenuItem('Make admin')).toBeInTheDocument();
     expect(getMdMenuItem('Remove from household')).toBeInTheDocument();
   });
+});
 
+describe('Notifications Route', () => {
   it('saves quiet hours alongside the notification types', async () => {
     const user = userEvent.setup();
-    const stub = renderSettings(
+    const stub = createFetchStub(
       settingsHandlers(profileFixture, {
         'PATCH /api/users/me': () => ({ status: 200, body: profileFixture }),
       }),
     );
+    vi.stubGlobal('fetch', stub.fetch);
+    renderScreen(<NotificationsScreen />);
 
     expect(await screen.findByRole('heading', { name: 'Notification types' })).toBeInTheDocument();
     await user.click(getMdCheckbox('Hold notifications during quiet hours'));
@@ -213,10 +260,11 @@ describe('Settings', () => {
   it('disables the bill reminder offline and says why, in the description too', async () => {
     const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     try {
-      renderSettings(settingsHandlers());
+      const stub = createFetchStub(settingsHandlers());
+      vi.stubGlobal('fetch', stub.fetch);
+      renderScreen(<NotificationsScreen />);
       const reminder = await screen.findByLabelText('Remind me about all household bills');
       expect(reminder).toBeDisabled();
-      // The reason sits beside the control and in its description.
       expect(reminder).toHaveAccessibleDescription('Needs a connection.');
     } finally {
       onLine.mockRestore();
@@ -270,7 +318,9 @@ describe('Account forms swap focus with the control they replace', () => {
     ['Change email', 'New email'],
   ])('%s moves focus into the form and back to the trigger', async (trigger, firstField) => {
     const user = userEvent.setup();
-    renderSettings(settingsHandlers());
+    const stub = createFetchStub(settingsHandlers());
+    vi.stubGlobal('fetch', stub.fetch);
+    renderScreen(<AccountScreen />);
 
     await user.click(await findMdButton(trigger));
     const field = await findMdField(firstField);

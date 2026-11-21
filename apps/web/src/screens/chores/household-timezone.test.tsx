@@ -52,7 +52,7 @@ function stubWith(
 }
 
 function rowOfDoneButton(name: string): HTMLElement {
-  const row = getMdButton(`Mark ${name} done`).closest('li');
+  const row = getMdButton(new RegExp(`Mark (done, ${name}|${name} done)`)).closest('li');
   if (row === null) throw new Error('the row is always there');
   return row;
 }
@@ -101,7 +101,11 @@ describe('household dates, with the device a day ahead', () => {
     expect(
       await screen.findByText(/household's details sync when you reconnect/),
     ).toBeInTheDocument();
-    expect(queryMdButton(`Mark ${takeOutTrashFixture.name} done`)).toBeNull();
+    expect(
+      queryMdButton(
+        new RegExp(`Mark (done, ${takeOutTrashFixture.name}|${takeOutTrashFixture.name} done)`),
+      ),
+    ).toBeNull();
   });
 
   it('shows the chores list’s error, not dated rows, when the household cannot load', async () => {
@@ -114,6 +118,10 @@ describe('household dates, with the device a day ahead', () => {
     renderScreen(<ChoresListScreen householdId={OAK_STREET_ID} />);
 
     expect(await screen.findByText("Couldn't load the household. Try again.")).toBeInTheDocument();
-    expect(queryMdButton(`Mark ${takeOutTrashFixture.name} done`)).toBeNull();
+    expect(
+      queryMdButton(
+        new RegExp(`Mark (done, ${takeOutTrashFixture.name}|${takeOutTrashFixture.name} done)`),
+      ),
+    ).toBeNull();
   });
 });

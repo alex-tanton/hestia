@@ -9,5 +9,7 @@ export const MdFilterChip = createComponent({
   events: {
     onChange: 'change',
     onInput: 'input',
+    onClick: 'click',
+    onRemove: 'remove',
   },
 });
