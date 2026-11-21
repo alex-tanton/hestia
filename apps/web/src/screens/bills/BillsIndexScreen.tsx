@@ -199,42 +199,44 @@ export function BillsIndexScreen({ householdId }: BillsIndexScreenProps): ReactE
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button
-          disabledReason={offlineReason}
-          onClick={() => {
-            setIsAdding(true);
-          }}
-        >
-          Add a bill
-        </Button>
-      </div>
-
-      {bills.isError && bills.data !== undefined && (
-        <StaleNotice
-          updatedAt={bills.dataUpdatedAt}
-          onRetry={() => {
-            void bills.refetch();
-          }}
-        />
-      )}
-
-      {body()}
-
-      {!offlineReason && (
-        <div className="fixed right-6 bottom-6 z-20">
-          <MdFab
-            aria-label="Add bill"
+      <div aria-hidden={isAdding || undefined} inert={isAdding} className="flex flex-col gap-4">
+        <div className="flex justify-end">
+          <Button
+            disabledReason={offlineReason}
             onClick={() => {
               setIsAdding(true);
             }}
           >
-            <span slot="icon">
-              <Icon name="add" size={24} />
-            </span>
-          </MdFab>
+            Add a bill
+          </Button>
         </div>
-      )}
+
+        {bills.isError && bills.data !== undefined && (
+          <StaleNotice
+            updatedAt={bills.dataUpdatedAt}
+            onRetry={() => {
+              void bills.refetch();
+            }}
+          />
+        )}
+
+        {body()}
+
+        {!offlineReason && (
+          <div className="fixed right-6 bottom-6 z-20">
+            <MdFab
+              aria-label="Add bill"
+              onClick={() => {
+                setIsAdding(true);
+              }}
+            >
+              <span slot="icon">
+                <Icon name="add" size={24} />
+              </span>
+            </MdFab>
+          </div>
+        )}
+      </div>
 
       {isAdding && (
         <BillForm

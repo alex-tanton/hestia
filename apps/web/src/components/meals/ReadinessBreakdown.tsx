@@ -28,7 +28,12 @@ export function ReadinessBreakdown({
     readiness?.breakdown.find((entry) => entry.ingredientId === ingredientId);
 
   return (
-    <Card variant="flat" className="flex flex-col gap-3 p-4">
+    <Card
+      as="section"
+      aria-labelledby="readiness-heading"
+      variant="flat"
+      className="flex flex-col gap-3 p-4"
+    >
       <div className="flex items-center gap-3">
         <ReadinessRing percent={readiness?.readinessPercent ?? 0} />
         <div className="flex flex-col">

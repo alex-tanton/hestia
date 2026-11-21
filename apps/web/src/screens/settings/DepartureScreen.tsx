@@ -58,7 +58,7 @@ function DepartureBody({
                 ? `You left ${preview.householdName}.`
                 : `${departing?.displayName ?? 'The member'} was removed.`,
           });
-          void navigate(isSelf ? '/' : '/settings', { replace: true });
+          void navigate(isSelf ? '/' : '/settings/households', { replace: true });
         },
         onError: (error) => {
           setFormError(
