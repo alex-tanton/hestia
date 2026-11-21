@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DashboardScreen, type DashboardScreenProps } from '../../screens/DashboardScreen.tsx';
 import type { PillarId } from '../../lib/sections.ts';
 import { getMdButton } from '../../test/md-queries.ts';
-import { DashboardCard, type DashboardCardState } from './DashboardCard.tsx';
+import { DashboardCard, sortPillarItems, type DashboardCardState } from './DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from './DashboardCards.tsx';
 import { FIRST_RUN_HEADING } from './DashboardFirstRun.tsx';
 
@@ -63,13 +63,26 @@ describe('This Week dashboard', () => {
     expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
   });
 
-  it('replaces the shipped pillars’ empty cards with one first-run panel', () => {
+  it('replaces the shipped pillars’ empty cards with one first-run panel with action pills', () => {
     renderDashboard({
       releasedPillars: new Set(['lists']),
       shopping: { status: 'empty', message: DASHBOARD_EMPTY_COPY.lists },
     });
     expect(screen.getByRole('heading', { level: 2, name: FIRST_RUN_HEADING })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: /^Shopping/ })).toBeNull();
+    // Quick start pills exist
+    expect(screen.getByRole('link', { name: /create a shopping list/i })).toHaveAttribute(
+      'href',
+      '/lists',
+    );
+    expect(screen.getByRole('link', { name: /add upcoming bill/i })).toHaveAttribute(
+      'href',
+      '/bills',
+    );
+    expect(screen.getByRole('link', { name: /plan first meal/i })).toHaveAttribute(
+      'href',
+      '/meals',
+    );
     // An unshipped pillar's placeholder is unaffected and keeps its place.
     expect(within(card('Bills')).getByText('Coming soon')).toBeInTheDocument();
     expect(
@@ -118,7 +131,7 @@ describe('This Week dashboard', () => {
 });
 
 describe('DashboardCard states', () => {
-  it('populated: shows up to three items, a remainder count, and links to its section', () => {
+  it('populated: shows up to three items, dedicated +N more in [Pillar] link, and links to its section', () => {
     renderCard({
       status: 'populated',
       total: 5,
@@ -132,7 +145,10 @@ describe('DashboardCard states', () => {
     const region = card('Bills');
     expect(within(region).getAllByRole('listitem')).toHaveLength(3);
     expect(within(region).queryByText('Rent')).toBeNull();
-    expect(within(region).getByText('+2 more')).toBeInTheDocument();
+    expect(within(region).getByRole('link', { name: '+2 more in Bills' })).toHaveAttribute(
+      'href',
+      '/bills',
+    );
     expect(within(region).getByRole('link', { name: 'Bills' })).toHaveAttribute('href', '/bills');
   });
 
@@ -143,6 +159,17 @@ describe('DashboardCard states', () => {
       items: [{ id: 'b1', label: 'Duke Energy', detail: '$142.30', isOverdue: true }],
     });
     expect(within(card('Bills')).getByRole('listitem')).toHaveTextContent('Duke Energy · Overdue');
+  });
+
+  it('sortPillarItems orders overdue items before non-overdue items', () => {
+    const items = [
+      { id: '1', label: 'Item 1', isOverdue: false },
+      { id: '2', label: 'Item 2', isOverdue: true },
+      { id: '3', label: 'Item 3', isOverdue: false },
+      { id: '4', label: 'Item 4', isOverdue: true },
+    ];
+    const sorted = sortPillarItems(items);
+    expect(sorted.map((i) => i.id)).toEqual(['2', '4', '1', '3']);
   });
 
   it('empty: keeps its place with one line', () => {

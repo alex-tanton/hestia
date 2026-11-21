@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactElement, type SyntheticEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { useAuthClient } from '../../lib/api/api-context.tsx';
@@ -84,61 +85,79 @@ export function MagicLinkRequestScreen(): ReactElement {
        * does rather than with `display: none`, which would take it out of the accessibility
        * tree and leave the announcement nothing to land in.
        */}
-      <p role="status" className="max-w-[70ch] text-body text-secondary empty:sr-only">
+      <p
+        role="status"
+        className="max-w-[70ch] text-body-md text-body text-[var(--md-sys-color-on-surface-variant)] empty:sr-only"
+      >
         {sentTo === undefined ? '' : sentConfirmation(sentTo)}
       </p>
-      {sentTo === undefined ? (
-        <form
-          ref={formRef}
-          noValidate
-          className="flex flex-col gap-4"
-          onSubmit={(event) => {
-            void handleSubmit(event);
-          }}
-        >
-          <TextField
-            label="Email"
-            type="email"
-            name="email"
-            autoComplete="email"
-            value={email}
-            error={errors.email}
-            onChange={(event) => {
-              setEmail(event.target.value);
-            }}
-          />
-          <FormMessage message={formError} />
-          <Button
-            type="submit"
-            isLoading={isSubmitting}
-            disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
+      >
+        {sentTo === undefined ? (
+          <>
+            <form
+              ref={formRef}
+              noValidate
+              className="flex flex-col gap-4"
+              onSubmit={(event) => {
+                void handleSubmit(event);
+              }}
+            >
+              <TextField
+                label="Email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={email}
+                error={errors.email}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                }}
+              />
+              <FormMessage message={formError} />
+              <Button
+                type="submit"
+                variant="primary"
+                isLoading={isSubmitting}
+                disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
+              >
+                Email sign-in link
+              </Button>
+            </form>
+            <Link
+              to="/sign-in"
+              className="text-body-sm font-semibold text-[var(--md-sys-color-primary)]"
+            >
+              Sign in with password instead
+            </Link>
+          </>
+        ) : (
+          <div
+            ref={confirmationRef}
+            tabIndex={-1}
+            className="flex flex-col items-stretch gap-3 outline-none"
           >
-            Send sign-in link
-          </Button>
-        </form>
-      ) : (
-        <div
-          ref={confirmationRef}
-          tabIndex={-1}
-          className="flex flex-col items-stretch gap-3 outline-none"
-        >
-          <Button
-            onClick={() => {
-              void navigate(MAGIC_CODE_PATH, { state: { email: sentTo } });
-            }}
-          >
-            Enter the code
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setSentTo(undefined);
-            }}
-          >
-            Use a different email
-          </Button>
-        </div>
-      )}
+            <Button
+              variant="primary"
+              onClick={() => {
+                void navigate(MAGIC_CODE_PATH, { state: { email: sentTo } });
+              }}
+            >
+              Enter the code
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSentTo(undefined);
+              }}
+            >
+              Use a different email
+            </Button>
+          </div>
+        )}
+      </Card>
     </OnboardingLayout>
   );
 }

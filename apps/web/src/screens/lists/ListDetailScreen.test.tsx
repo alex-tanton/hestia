@@ -7,8 +7,20 @@ import { setOnline } from '../../test/browser.ts';
 import { ALEX_ID, OAK_STREET_ID, oakStreetMembers, profileFixture } from '../../test/fixtures.ts';
 import { createFetchStub, renderScreen, type StubHandler, WithQueue } from '../../test/harness.tsx';
 import { listItem, THIS_WEEK_ID } from '../../test/list-fixtures.ts';
-import { findMdButton, findMdField, getMdButton } from '../../test/md-queries.ts';
+import { findMdButton, findMdCheckbox, findMdField, getMdButton } from '../../test/md-queries.ts';
 import { ListDetailScreen } from './ListDetailScreen.tsx';
+
+async function findFieldInput(
+  name: string | RegExp,
+  container?: HTMLElement,
+): Promise<HTMLElement> {
+  const field = await findMdField(name, container ? { container } : undefined);
+  return waitFor(() => {
+    const input = field.shadowRoot?.querySelector<HTMLElement>('input, textarea');
+    if (!input) throw new Error(`Expected shadow input for ${String(name)}`);
+    return input;
+  });
+}
 
 vi.mock('../../components/lists/BarcodeScannerDialog.tsx', () => ({
   BarcodeScannerDialog: ({
@@ -287,5 +299,140 @@ describe('ListDetailScreen - Barcode Scanning Integration', () => {
     expect(await screen.findByText(/not on this list/i)).toBeInTheDocument();
     // Scanner stays open
     expect(screen.getByTestId('mock-scanner-dialog')).toBeInTheDocument();
+  });
+});
+
+describe('ListDetailScreen - MD3 Grocery Overhaul', () => {
+  beforeEach(() => {
+    setOnline(true);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('submits quick-add item on Enter key', async () => {
+    const user = userEvent.setup();
+    const stub = renderDetail({
+      ...baseHandlers(),
+      'POST /api/lists/:id/items': () => ({
+        status: 201,
+        body: makeDetailFixture(),
+      }),
+    });
+
+    const input = await findFieldInput(/add an item/i);
+    await user.type(input, 'Bananas{Enter}');
+
+    await waitFor(() => {
+      const call = stub.calls.find(
+        (c) => c.method === 'POST' && c.path.includes(`/api/lists/${THIS_WEEK_ID}/items`),
+      );
+      expect(call).toBeDefined();
+      expect((call?.body as { itemName: string }).itemName).toBe('Bananas');
+    });
+  });
+
+  it('checking an item off marks it as bought and dispatches persistent undo snackbar', async () => {
+    const user = userEvent.setup();
+    const stub = renderDetail({
+      ...baseHandlers(),
+      'PATCH /api/lists/:id/items/:itemId': () => ({
+        status: 200,
+        body: makeDetailFixture(),
+      }),
+    });
+
+    const checkbox = await findMdCheckbox(/Horizon Organic Whole Milk/i);
+    await user.click(checkbox);
+
+    await waitFor(() => {
+      expect(stub.calls.some((c) => c.method === 'PATCH' && c.path.includes(MILK_ITEM_ID))).toBe(
+        true,
+      );
+    });
+
+    expect(
+      await screen.findByText(/marked 'Horizon Organic Whole Milk' as bought/i),
+    ).toBeInTheDocument();
+    const undoBtn = getMdButton('Undo');
+    await user.click(undoBtn);
+
+    await waitFor(() => {
+      expect(
+        stub.calls.filter((c) => c.method === 'PATCH' && c.path.includes(MILK_ITEM_ID)),
+      ).toHaveLength(2);
+    });
+  });
+
+  it('toggles collapsible Bought (N) section open and closed', async () => {
+    const user = userEvent.setup();
+    const boughtItem = listItem({
+      id: 'b0000001-0000-4000-8000-000000000001',
+      itemName: 'Sourdough Bread',
+      status: 'bought',
+    });
+    const fixtureWithBought: ShoppingListDetail = {
+      ...makeDetailFixture(),
+      itemCount: 2,
+      outstandingCount: 1,
+      bought: [boughtItem],
+    };
+
+    renderDetail({
+      ...baseHandlers(),
+      'GET /api/lists/:id': () => ({
+        status: 200,
+        body: fixtureWithBought,
+      }),
+    });
+
+    const boughtToggle = await screen.findByRole('button', { name: /bought/i });
+    expect(boughtToggle).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(boughtToggle);
+    expect(boughtToggle).toHaveAttribute('aria-expanded', 'true');
+    expect(await screen.findByText('Sourdough Bread')).toBeInTheDocument();
+
+    await user.click(boughtToggle);
+    expect(boughtToggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('tapping "Add bought to pantry" opens SyncToPantrySheet', async () => {
+    const user = userEvent.setup();
+    const boughtItem = listItem({
+      id: 'b0000001-0000-4000-8000-000000000001',
+      itemName: 'Sourdough Bread',
+      status: 'bought',
+    });
+    const fixtureWithBought: ShoppingListDetail = {
+      ...makeDetailFixture(),
+      itemCount: 2,
+      outstandingCount: 1,
+      bought: [boughtItem],
+    };
+
+    renderDetail({
+      ...baseHandlers(),
+      'GET /api/lists/:id': () => ({
+        status: 200,
+        body: fixtureWithBought,
+      }),
+      'POST /api/lists/:id/add-bought-to-pantry': () => ({
+        status: 200,
+        body: [],
+      }),
+    });
+
+    const pantryBtn = await findMdButton(/add bought.*pantry/i);
+    await user.click(pantryBtn);
+
+    expect(
+      await screen.findByText(
+        'Review storage locations and expiry estimates before adding items to your pantry.',
+      ),
+    ).toBeInTheDocument();
+    expect(getMdButton(/commit items to pantry/i)).toBeInTheDocument();
   });
 });

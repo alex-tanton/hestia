@@ -1,6 +1,6 @@
-import { ChevronLeft } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
 import { Button } from '../../components/ui/Button.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { OfflineBanner } from '../../components/shell/OfflineBanner.tsx';
 import { ToastProvider } from '../../components/ui/Toast.tsx';
 
@@ -25,11 +25,11 @@ export function OnboardingLayout({
   children,
 }: OnboardingLayoutProps): ReactElement {
   return (
-    <div className="min-h-dvh bg-base text-primary">
+    <div className="min-h-dvh bg-surface bg-[var(--md-sys-color-surface)] text-on-surface text-[var(--md-sys-color-on-surface)]">
       <ToastProvider>
         <a
           href="#main"
-          className="sr-only z-50 rounded-md bg-base px-4 py-3 text-body font-semibold text-section focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+          className="sr-only z-50 rounded-md bg-[var(--md-sys-color-surface)] px-4 py-3 text-body font-semibold text-[var(--md-sys-color-primary)] focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
         >
           Skip to main content
         </a>
@@ -44,16 +44,22 @@ export function OnboardingLayout({
               <Button
                 variant="ghost"
                 onClick={onBack.onBack}
-                className="-ml-4 self-start text-secondary"
+                className="-ml-4 self-start text-[var(--md-sys-color-on-surface-variant)]"
               >
-                <ChevronLeft aria-hidden size={20} strokeWidth={1.5} />
+                <Icon name="arrow_back" size={20} />
                 {onBack.label}
               </Button>
             )}
-            <p className="text-caption tracking-[0.04em] text-muted uppercase">Hestia</p>
-            <h1 className="text-display text-primary">{title}</h1>
+            <p className="text-label text-caption tracking-wider uppercase text-[var(--md-sys-color-on-surface-variant)]">
+              Hestia
+            </p>
+            <h1 className="text-display font-semibold text-on-surface text-[var(--md-sys-color-on-surface)]">
+              {title}
+            </h1>
             {description !== undefined && (
-              <p className="max-w-[70ch] text-body text-secondary">{description}</p>
+              <p className="max-w-[70ch] text-body-md text-body text-[var(--md-sys-color-on-surface-variant)]">
+                {description}
+              </p>
             )}
           </header>
           {children}

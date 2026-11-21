@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { useJoinHousehold } from '../../lib/api/hooks.ts';
@@ -23,13 +24,18 @@ export interface JoinHouseholdStepProps {
   /** The token from an invite link, redeemed as soon as the screen opens. */
   autoToken?: string | undefined;
   onJoined: () => void;
+  onCreateNew?: () => void;
 }
 
 /**
  * Joining by link or by the 8-character code. The code field accepts what people actually type:
  * lowercase, spaces, hyphens, and the letters Crockford Base32 reads as digits.
  */
-export function JoinHouseholdStep({ autoToken, onJoined }: JoinHouseholdStepProps): ReactElement {
+export function JoinHouseholdStep({
+  autoToken,
+  onJoined,
+  onCreateNew,
+}: JoinHouseholdStepProps): ReactElement {
   const isOnline = useOnlineStatus();
   const joinHousehold = useJoinHousehold();
   const { errors, setErrors, formRef } = useFieldErrors<'code'>();
@@ -97,44 +103,68 @@ export function JoinHouseholdStep({ autoToken, onJoined }: JoinHouseholdStepProp
 
   if (isRedeemingLink) {
     return (
-      <p role="status" className="text-body text-secondary">
-        Opening your invite…
-      </p>
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-4"
+      >
+        <p
+          role="status"
+          className="text-body-md text-body text-[var(--md-sys-color-on-surface-variant)]"
+        >
+          Opening your invite…
+        </p>
+      </Card>
     );
   }
 
   return (
-    <form
-      ref={formRef}
-      noValidate
-      className="flex flex-col gap-4"
-      onSubmit={(event) => {
-        void handleSubmit(event);
-      }}
+    <Card
+      variant="flat"
+      className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
     >
-      <TextField
-        label="Invite code"
-        name="inviteCode"
-        autoComplete="one-time-code"
-        autoCapitalize="characters"
-        spellCheck={false}
-        maxLength={INVITE_CODE_LENGTH * 2}
-        hint="8 characters, from the person who invited you"
-        className="tracking-[0.12em] tabular-nums"
-        value={code}
-        error={errors.code}
-        onChange={(event) => {
-          setCode(event.target.value);
+      <form
+        ref={formRef}
+        noValidate
+        className="flex flex-col gap-4"
+        onSubmit={(event) => {
+          void handleSubmit(event);
         }}
-      />
-      <FormMessage message={formError} />
-      <Button
-        type="submit"
-        isLoading={joinHousehold.isPending}
-        disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
       >
-        Join household
-      </Button>
-    </form>
+        <TextField
+          label="Invite code"
+          name="inviteCode"
+          autoComplete="one-time-code"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={INVITE_CODE_LENGTH * 2}
+          hint="8 characters, from the person who invited you"
+          className="tracking-[0.12em] tabular-nums"
+          value={code}
+          error={errors.code}
+          onChange={(event) => {
+            setCode(event.target.value);
+          }}
+        />
+        <FormMessage message={formError} />
+        <Button
+          type="submit"
+          variant="primary"
+          isLoading={joinHousehold.isPending}
+          disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
+        >
+          Join household group
+        </Button>
+      </form>
+      {onCreateNew && (
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={onCreateNew}
+          className="self-start text-body-sm"
+        >
+          Create a new household instead
+        </Button>
+      )}
+    </Card>
   );
 }

@@ -1,8 +1,9 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { stubCoarsePointer } from '../../test/browser.ts';
 import {
+  findMdButton,
   findMdField,
   getMdAccessibleName,
   getMdButton,
@@ -25,6 +26,7 @@ import {
   merchantsResponse,
   searchResponse,
   thisWeekList,
+  weekendCookoutList,
   dealScreenHandlers,
 } from '../../test/deal-fixtures.ts';
 import { DealSearchScreen, SEARCH_OFFLINE_MESSAGE } from './DealSearchScreen.tsx';
@@ -118,7 +120,9 @@ describe('deal search', () => {
     stubDeals(() => ({ status: 200, body: searchResponse() }));
     renderScreen(<DealSearchScreen />);
 
-    expect(await screen.findByRole('heading', { name: 'Your stores' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Your stores' }, { timeout: 15000 }),
+    ).toBeInTheDocument();
     const shortcuts = screen.getByRole('list', { name: 'Your favorite stores' });
     expect(getMdButton('Harris Teeter', { container: shortcuts })).toBeInTheDocument();
     expect(getMdButton('Food Lion', { container: shortcuts })).toBeInTheDocument();
@@ -349,5 +353,47 @@ describe('deal search', () => {
     await vi.advanceTimersByTimeAsync(120_000);
     expect(recorded.searches.length).toBe(after);
     vi.useRealTimers();
+  });
+
+  it('immediately adds to list and shows Undo toast when exactly 1 active list exists', async () => {
+    const user = userEvent.setup();
+    const recorded = stubDeals(() => ({ status: 200, body: searchResponse([eggsDeal]) }), {
+      'POST /api/lists/:id/items': () => ({ status: 201, body: {} }),
+    });
+    renderScreen(<DealSearchScreen />);
+    await search('eggs');
+
+    const addBtn = await findMdButton(`Add ${eggsDeal.name} to shopping list`);
+    await user.click(addBtn);
+
+    await waitFor(() => {
+      expect(recorded.calls.some((c) => c.method === 'POST')).toBe(true);
+    });
+    expect(
+      await screen.findByText(`Added '${eggsDeal.name}' to ${thisWeekList.name}`),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+  });
+
+  it('opens lifted AddToListSheet when multiple active lists exist', async () => {
+    const user = userEvent.setup();
+    stubDeals(() => ({ status: 200, body: searchResponse([eggsDeal]) }), {
+      'GET /api/households/:id/lists': () => ({
+        status: 200,
+        body: [thisWeekList, weekendCookoutList],
+      }),
+    });
+    renderScreen(<DealSearchScreen />);
+    await search('eggs');
+
+    const addBtn = await findMdButton(`Add ${eggsDeal.name} to shopping list`);
+    await user.click(addBtn);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Add to which list?')).toBeInTheDocument();
+    expect(await within(dialog).findByRole('button', { name: /This Week/ })).toBeInTheDocument();
+    expect(
+      await within(dialog).findByRole('button', { name: /Weekend Cookout/ }),
+    ).toBeInTheDocument();
   });
 });

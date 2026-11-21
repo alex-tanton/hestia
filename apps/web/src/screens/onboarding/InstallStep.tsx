@@ -1,6 +1,7 @@
-import { Share, Smartphone } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { showInstallPrompt, useInstallMethod } from '../../lib/use-install-prompt.ts';
 
 export const IOS_INSTALL_MESSAGE =
@@ -30,47 +31,66 @@ export function InstallStep({ onDone }: { onDone: () => void }): ReactElement {
 
   if (method === 'ios-share') {
     return (
-      <div className="flex flex-col gap-4">
-        <p className="flex items-start gap-2 text-body text-secondary">
-          <Share aria-hidden size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-section" />
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-4"
+      >
+        <p className="flex items-start gap-3 text-body-md text-body text-[var(--md-sys-color-on-surface)]">
+          <Icon
+            name="share"
+            size={24}
+            className="mt-0.5 shrink-0 text-[var(--md-sys-color-primary)]"
+          />
           <span className="max-w-[70ch]">{IOS_INSTALL_MESSAGE}</span>
         </p>
-        <Button onClick={onDone}>Go to Hestia</Button>
-      </div>
+        <Button variant="primary" onClick={onDone}>
+          Go to Hestia
+        </Button>
+      </Card>
     );
   }
 
   if (method === 'prompt') {
     return (
-      <div className="flex flex-col gap-4">
-        <p className="flex items-start gap-2 text-body text-secondary">
-          <Smartphone
-            aria-hidden
-            size={20}
-            strokeWidth={1.5}
-            className="mt-0.5 shrink-0 text-section"
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-4"
+      >
+        <p className="flex items-start gap-3 text-body-md text-body text-[var(--md-sys-color-on-surface)]">
+          <Icon
+            name="smartphone"
+            size={24}
+            className="mt-0.5 shrink-0 text-[var(--md-sys-color-primary)]"
           />
           <span className="max-w-[70ch]">{INSTALL_MESSAGE}</span>
         </p>
         <Button
+          variant="primary"
           isLoading={isPrompting}
           onClick={() => {
             void handleInstall();
           }}
         >
-          Install Hestia
+          Install Hestia app
         </Button>
         <Button variant="ghost" onClick={onDone}>
           Not now
         </Button>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="max-w-[70ch] text-body text-secondary">Your household is ready.</p>
-      <Button onClick={onDone}>Go to Hestia</Button>
-    </div>
+    <Card
+      variant="flat"
+      className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-4"
+    >
+      <p className="max-w-[70ch] text-body-md text-body text-[var(--md-sys-color-on-surface-variant)]">
+        Your household is ready.
+      </p>
+      <Button variant="primary" onClick={onDone}>
+        Go to Hestia
+      </Button>
+    </Card>
   );
 }

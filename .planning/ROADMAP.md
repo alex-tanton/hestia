@@ -147,7 +147,24 @@ Plans:
   4. Users scan barcodes in a dark-scheme MD3 Full-Screen Dialog (`Add to list | Mark bought` Segmented Button, flashlight, manual entry, camera polyfill, persistent Undo Snackbar) with full functional parity.
   5. Users search and browse deals and flyers through an MD3 Search Bar, `Favorites | All stores` Segmented Button, `<md-filter-chip>` Filter Modal Bottom Sheet, compact tonal `DealFreshness` banner, simplified `DealCard`s sharing a single screen-level `AddToListSheet`, and 2–4 column elevated `FlyersScreen` / `FlyerItemsScreen` cards.
 
-**Plans**: TBD
+**Plans:** 4/5 plans executed
+
+Plans:
+**Wave 1**
+- [x] 19-01-PLAN.md — Dashboard & StateBlocks: tonal surfaceContainerLow cards, urgency ranking, and adaptive state blocks (`DASH-01`, `DASH-02`)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 19-02-PLAN.md — Auth & Onboarding: centered 440px tonal cards, TextField inputs, and onboarding guidance cards (`AUTH-06`, `AUTH-07`)
+
+**Wave 3** *(blocked on Wave 1 completion)*
+- [x] 19-03-PLAN.md — Lists, ItemSheet & Pantry: borderless list rows, StoreGroupHeaders, ItemSheet, and pantry inventory (`LIST-01`, `LIST-02`)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [x] 19-04-PLAN.md — Barcode Scanner Dark HUD: full-screen dialog, continuous batch scanning, and in-HUD naming (`LIST-03`)
+
+**Wave 5** *(blocked on Wave 3 completion)*
+- [x] 19-05-PLAN.md — Deals, Lifted AddToListSheet & Flyers: compact DealCards, lifted AddToListSheet, and elevated flyer grid (`DEAL-06`, `DEAL-07`)
+
 **UI hint**: yes
 
 ### Phase 20: Meals, Bills, Chores & Settings Screens
@@ -186,6 +203,6 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21
 |-------|-----------|----------------|--------|-----------|
 | 17. MD3 Foundation, Token Pipeline & UI Primitives | v3.0 | 10/15 | In Progress | - |
 | 18. Adaptive MD3 Navigation Shell & Route Chrome | v3.0 | 3/3 | Complete    | 2026-11-14 |
-| 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 0/0 | Not started | - |
+| 19. Entry, Dashboard & Grocery Ecosystem Screens | v3.0 | 3/5 | In Progress | - |
 | 20. Meals, Bills, Chores & Settings Screens | v3.0 | 0/0 | Not started | - |
 | 21. Legacy Stack Cleanup & Full Verification | v3.0 | 0/0 | Not started | - |

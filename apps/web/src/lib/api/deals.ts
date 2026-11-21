@@ -234,6 +234,13 @@ export function useShoppingLists(householdId: string | undefined): UseQueryResul
 export interface AddDealToList {
   listId: string;
   dealId: string;
+  quantity?: number;
+}
+
+export interface AddedDealResult {
+  id: string;
+  listId: string;
+  dealId: string;
 }
 
 interface HeldDealAdds {
@@ -261,7 +268,7 @@ function heldDealAddIds(queryClient: QueryClient, userId: string | null): Map<st
  */
 export function useAddDealToList(
   householdId: string,
-): UseMutationResult<void, Error, AddDealToList> {
+): UseMutationResult<AddedDealResult, Error, AddDealToList> {
   const api = useApi();
   const queryClient = useQueryClient();
   const auth = useAuthClient();
@@ -274,16 +281,19 @@ export function useAddDealToList(
   // and back). They are also held per signed-in user, because the page keeps one QueryClient for
   // its whole life and does not clear it on sign-out.
   return useMutation({
-    mutationFn: ({ listId, dealId }: AddDealToList) => {
+    mutationFn: async ({ listId, dealId, quantity }: AddDealToList) => {
       const held = heldDealAddIds(queryClient, auth.getState().userId);
       const key = `${listId}:${dealId}`;
       const id = held.get(key) ?? crypto.randomUUID();
       held.set(key, id);
-      return api.send({
+      const body: Record<string, unknown> = { source: 'from_deal', id, dealId };
+      if (quantity !== undefined) body['quantity'] = quantity;
+      await api.send({
         method: 'POST',
         path: `/api/lists/${listId}/items`,
-        body: { source: 'from_deal', id, dealId },
+        body,
       });
+      return { id, listId, dealId };
     },
     onSuccess: async (_data, { listId, dealId }) => {
       heldDealAddIds(queryClient, auth.getState().userId).delete(`${listId}:${dealId}`);

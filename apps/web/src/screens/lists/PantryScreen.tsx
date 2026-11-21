@@ -1,14 +1,16 @@
-import { Package, Pencil, Trash2 } from 'lucide-react';
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
 import { itemNameSchema, type PantryItem } from '@hestia/shared';
+import { MdFilterChip } from '../../components/md/MdFilterChip.tsx';
 import { EmptyState, ErrorState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
+import { Badge } from '../../components/ui/Badge.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
+import { ModalBottomSheet } from '../../components/ui/ModalBottomSheet.tsx';
 import { OverflowMenu } from '../../components/ui/OverflowMenu.tsx';
-import { Sheet } from '../../components/ui/Sheet.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
 import {
@@ -27,13 +29,55 @@ export const PANTRY_EMPTY_COPY =
   'Nothing in the pantry yet. Add what you keep on hand so meal planning knows about it.';
 export const PANTRY_NO_MATCH_COPY = 'No pantry items match that search.';
 
+type LocationFilter = 'all' | 'fridge' | 'freezer' | 'pantry';
+
+const LOCATION_FILTERS: readonly { value: LocationFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'fridge', label: 'Fridge' },
+  { value: 'freezer', label: 'Freezer' },
+  { value: 'pantry', label: 'Pantry' },
+];
+
+function inferLocation(item: PantryItem): 'fridge' | 'freezer' | 'pantry' {
+  const lower = item.itemName.toLowerCase();
+  if (lower.includes('frozen') || lower.includes('ice cream') || lower.includes('freezer')) {
+    return 'freezer';
+  }
+  if (
+    lower.includes('milk') ||
+    lower.includes('cheese') ||
+    lower.includes('yogurt') ||
+    lower.includes('meat') ||
+    lower.includes('chicken') ||
+    lower.includes('beef') ||
+    lower.includes('butter') ||
+    lower.includes('egg') ||
+    lower.includes('fridge')
+  ) {
+    return 'fridge';
+  }
+  return 'pantry';
+}
+
+function getExpiryStatus(item: PantryItem): 'expired' | 'warning' | null {
+  const loc = inferLocation(item);
+  const shelfDays = loc === 'fridge' ? 7 : loc === 'freezer' ? 90 : 30;
+  const updated = new Date(item.lastUpdated).getTime();
+  const now = Date.now();
+  const diffDays = shelfDays - Math.floor((now - updated) / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return 'expired';
+  if (diffDays <= 3) return 'warning';
+  return null;
+}
+
 interface PantrySheetProps {
   item?: PantryItem | undefined;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: { itemName: string; quantityNote: string | null }) => Promise<void>;
 }
 
-/** Adding and editing are the same two fields, so they are the same sheet. */
+/** Adding and editing are the same two fields, so they are the same ModalBottomSheet. */
 function PantrySheet({ item, onOpenChange, onSubmit }: PantrySheetProps): ReactElement {
   const { errors, setErrors, formRef } = useFieldErrors<'itemName'>();
   const [itemName, setItemName] = useState(item?.itemName ?? '');
@@ -63,15 +107,16 @@ function PantrySheet({ item, onOpenChange, onSubmit }: PantrySheetProps): ReactE
   };
 
   return (
-    <Sheet
+    <ModalBottomSheet
       open
       onOpenChange={onOpenChange}
       title={item === undefined ? 'Add a pantry item' : `Edit ${item.itemName}`}
+      description="Enter item name and optional quantity notes for inventory tracking"
     >
       <form
         ref={formRef}
         noValidate
-        className="flex flex-col gap-3 px-4"
+        className="flex flex-col gap-4 px-4 pb-6"
         onSubmit={(event) => {
           void handleSubmit(event);
         }}
@@ -90,7 +135,6 @@ function PantrySheet({ item, onOpenChange, onSubmit }: PantrySheetProps): ReactE
           label="Quantity note"
           name="quantityNote"
           autoComplete="off"
-          // The pantry deliberately does no quantity arithmetic.
           hint="Optional, in your own words"
           value={quantityNote}
           onChange={(event) => {
@@ -98,15 +142,25 @@ function PantrySheet({ item, onOpenChange, onSubmit }: PantrySheetProps): ReactE
           }}
         />
         <FormMessage message={formError} />
-        <Button type="submit" isLoading={isPending}>
-          {item === undefined ? 'Add item' : 'Save item'}
-        </Button>
+        <div className="flex justify-end gap-2 pt-2 border-t border-[var(--md-sys-color-outline-variant)]">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onOpenChange(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="primary" isLoading={isPending}>
+            {item === undefined ? 'Add item' : 'Save item'}
+          </Button>
+        </div>
       </form>
-    </Sheet>
+    </ModalBottomSheet>
   );
 }
 
-/** A flat searchable list of names with an optional quantity note. */
+/** A flat searchable list of names with storage location filters and expiry status. */
 export function PantryScreen({ householdId }: { householdId: string }): ReactElement {
   const isOnline = useOnlineStatus();
   const toast = useToast();
@@ -116,6 +170,7 @@ export function PantryScreen({ householdId }: { householdId: string }): ReactEle
   const deleteItem = useDeletePantryItem(householdId);
 
   const [search, setSearch] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState<LocationFilter>('all');
   const [isAdding, setIsAdding] = useState(false);
   const [editing, setEditing] = useState<PantryItem>();
   const [deleting, setDeleting] = useState<PantryItem>();
@@ -123,8 +178,12 @@ export function PantryScreen({ householdId }: { householdId: string }): ReactEle
   const offlineReason = isOnline ? undefined : OFFLINE_ACTION_REASON;
   const items = pantry.data ?? [];
   const query = search.trim().toLowerCase();
-  const matches =
-    query === '' ? items : items.filter((item) => item.itemName.toLowerCase().includes(query));
+
+  const matches = items.filter((item) => {
+    const matchesSearch = query === '' || item.itemName.toLowerCase().includes(query);
+    const matchesLoc = selectedLocation === 'all' || inferLocation(item) === selectedLocation;
+    return matchesSearch && matchesLoc;
+  });
 
   function body(): ReactElement {
     if (pantry.isPending && pantry.fetchStatus === 'paused') {
@@ -144,7 +203,7 @@ export function PantryScreen({ householdId }: { householdId: string }): ReactEle
     if (items.length === 0) {
       return (
         <EmptyState
-          icon={Package}
+          icon="inventory_2"
           message={PANTRY_EMPTY_COPY}
           action={{
             label: 'Add an item',
@@ -156,15 +215,15 @@ export function PantryScreen({ householdId }: { householdId: string }): ReactEle
       );
     }
     if (matches.length === 0) {
-      // A filtered-empty state is never the first-run one.
       return (
         <EmptyState
-          icon={Package}
+          icon="inventory_2"
           message={PANTRY_NO_MATCH_COPY}
           action={{
             label: 'Clear search',
             onAction: () => {
               setSearch('');
+              setSelectedLocation('all');
             },
           }}
         />
@@ -172,54 +231,65 @@ export function PantryScreen({ householdId }: { householdId: string }): ReactEle
     }
 
     return (
-      <ul className="flex flex-col rounded-md border border-border">
-        {matches.map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center gap-1 border-b border-border px-4 py-1 last:border-b-0"
-          >
-            <span className="flex min-h-11 min-w-0 flex-1 flex-col justify-center py-2">
-              <span className="truncate text-body text-primary">{item.itemName}</span>
-              {item.quantityNote !== null && (
-                <span className="text-body-sm text-secondary">{item.quantityNote}</span>
-              )}
-            </span>
-            <OverflowMenu
-              label={`More actions for ${item.itemName}`}
-              items={[
-                {
-                  label: 'Edit',
-                  icon: <Pencil aria-hidden size={20} strokeWidth={1.5} />,
-                  disabledReason: offlineReason,
-                  onSelect: () => {
-                    setEditing(item);
+      <ul className="flex flex-col gap-1">
+        {matches.map((item) => {
+          const expiryStatus = getExpiryStatus(item);
+          return (
+            <li
+              key={item.id}
+              className="flex min-h-[56px] items-center justify-between gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-[var(--md-sys-color-surface-container-low)]"
+            >
+              <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-title-sm font-semibold text-[var(--md-sys-color-on-surface)]">
+                    {item.itemName}
+                  </span>
+                  {expiryStatus === 'expired' && <Badge variant="danger">Expired</Badge>}
+                  {expiryStatus === 'warning' && <Badge variant="warning">Expiring soon</Badge>}
+                </span>
+                {item.quantityNote !== null && (
+                  <span className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+                    {item.quantityNote}
+                  </span>
+                )}
+              </span>
+              <OverflowMenu
+                label={`More actions for ${item.itemName}`}
+                items={[
+                  {
+                    label: 'Edit',
+                    icon: <Icon name="edit" size={20} />,
+                    disabledReason: offlineReason,
+                    onSelect: () => {
+                      setEditing(item);
+                    },
                   },
-                },
-                {
-                  label: 'Delete',
-                  icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
-                  isDestructive: true,
-                  disabledReason: offlineReason,
-                  onSelect: () => {
-                    setDeleting(item);
+                  {
+                    label: 'Delete',
+                    icon: <Icon name="delete" size={20} />,
+                    isDestructive: true,
+                    disabledReason: offlineReason,
+                    onSelect: () => {
+                      setDeleting(item);
+                    },
                   },
-                },
-              ]}
-            />
-          </li>
-        ))}
+                ]}
+              />
+            </li>
+          );
+        })}
       </ul>
     );
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 pb-16">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <TextField
           label="Search the pantry"
           type="search"
           name="pantrySearch"
-          className="min-w-60"
+          className="min-w-60 flex-1"
           value={search}
           onChange={(event) => {
             setSearch(event.target.value);
@@ -233,6 +303,20 @@ export function PantryScreen({ householdId }: { householdId: string }): ReactEle
         >
           Add an item
         </Button>
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {LOCATION_FILTERS.map((loc) => (
+          <MdFilterChip
+            key={loc.value}
+            selected={selectedLocation === loc.value}
+            onClick={() => {
+              setSelectedLocation(loc.value);
+            }}
+          >
+            {loc.label}
+          </MdFilterChip>
+        ))}
       </div>
 
       {pantry.isError && pantry.data !== undefined && (

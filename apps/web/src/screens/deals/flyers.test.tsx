@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getMdButton } from '../../test/md-queries.ts';
+import { findMdButton, getMdButton } from '../../test/md-queries.ts';
 import {
   problemBody,
   renderScreen,
@@ -71,6 +71,16 @@ describe('browsing flyers', () => {
     expect(screen.getAllByText('09/23/2026 – 09/29/2026')).toHaveLength(2);
     expect(screen.getByText('42 items')).toBeInTheDocument();
     expect(screen.getByText('37 items')).toBeInTheDocument();
+  });
+
+  it('renders a 2-4 column elevated MD3 card grid with cover image and item count badge', async () => {
+    stub({ 'GET /api/households/:id/flyers': () => ({ status: 200, body: flyersResponse() }) });
+    const { container } = renderScreen(<FlyersScreen />);
+
+    expect(await screen.findByText('Harris Teeter')).toBeInTheDocument();
+    const grid = container.querySelector('.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-4');
+    expect(grid).toBeInTheDocument();
+    expect(screen.getAllByRole('article').length).toBeGreaterThan(0);
   });
 
   it('links each flyer to its own items', async () => {
@@ -256,5 +266,29 @@ describe("one flyer's items", () => {
     });
     renderScreen(<FlyerItemsScreen />, route);
     expect(await screen.findByText('No items in this flyer yet.')).toBeInTheDocument();
+  });
+
+  it('adds an item to list immediately with Undo toast when 1 list exists', async () => {
+    const user = userEvent.setup();
+    const created = stub({
+      'GET /api/households/:id/flyers/:flyerId/items': () => ({
+        status: 200,
+        body: flyerItemsResponse([eggsDeal]),
+      }),
+      'POST /api/lists/:id/items': () => ({ status: 201, body: {} }),
+    });
+    renderScreen(<FlyerItemsScreen />, route);
+    await screen.findAllByRole('article');
+
+    const addBtn = await findMdButton(`Add ${eggsDeal.name} to shopping list`);
+    await user.click(addBtn);
+
+    await waitFor(() => {
+      expect(created.calls.some((c) => c.method === 'POST')).toBe(true);
+    });
+    expect(
+      await screen.findByText(`Added '${eggsDeal.name}' to ${thisWeekList.name}`),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
   });
 });
