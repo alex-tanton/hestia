@@ -96,9 +96,14 @@ async function createList(page: Page, name: string): Promise<void> {
   await page.goto('/lists');
   await expect(page.getByRole('heading', { name: 'Lists', level: 1 })).toBeVisible();
   await page.getByRole('button', { name: 'New list' }).click();
-  const sheet = page.getByRole('dialog', { name: 'New list' });
-  await sheet.getByLabel('List name').fill(name);
-  await sheet.getByRole('button', { name: 'Create list' }).click();
+  const sheet = page.getByRole('dialog', { name: /^(New list|Create shopping list)$/ });
+  await expect(sheet).toBeVisible();
+  await page.getByLabel('List name').fill(name);
+  await page
+    .locator('md-filled-button', { hasText: 'Create shopping list' })
+    .or(page.getByRole('button', { name: /^(Create shopping list|Create list)$/ }))
+    .first()
+    .click();
   // ListNameSheet's onCreated navigates straight to the new (empty) list.
   await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
 }
@@ -106,16 +111,20 @@ async function createList(page: Page, name: string): Promise<void> {
 async function openAddRecipeSheet(page: Page): Promise<Locator> {
   await page.goto('/meals/recipes');
   await expect(page.getByRole('heading', { name: 'Recipes', level: 1 })).toBeVisible();
-  await page.getByRole('button', { name: 'Add a recipe' }).click();
-  const sheet = page.getByRole('dialog', { name: 'Add a recipe' });
+  await page
+    .locator('md-filled-button', { hasText: 'Add recipe' })
+    .or(page.getByRole('button', { name: /^(Add a recipe|Add recipe)$/ }))
+    .first()
+    .click();
+  const sheet = page.getByRole('dialog', { name: /^(Create recipe|Add a recipe)$/ });
   await expect(sheet).toBeVisible();
   return sheet;
 }
 
-async function pasteAndParse(sheet: Locator, url: string): Promise<void> {
-  await sheet.getByRole('button', { name: 'Paste a link' }).click();
-  await sheet.getByLabel('Recipe URL').fill(url);
-  await sheet.getByRole('button', { name: 'Parse' }).click();
+async function pasteAndParse(page: Page, url: string): Promise<void> {
+  await page.getByRole('button', { name: 'Paste a link' }).click();
+  await page.getByLabel('Recipe URL').fill(url);
+  await page.getByRole('button', { name: 'Parse' }).click();
 }
 
 /** An ingredient row's bucket badge, scoped to the `Readiness` region. */
@@ -144,21 +153,21 @@ for (const theme of ['light', 'dark'] as const) {
       let sheet = await openAddRecipeSheet(page);
       await expectAccessible(page, `add-a-recipe, choose mode (${theme})`);
 
-      await sheet.getByRole('button', { name: 'Paste a link' }).click();
+      await page.getByRole('button', { name: 'Paste a link' }).click();
       await expectAccessible(page, `add-a-recipe, paste-a-link mode (${theme})`);
 
-      await sheet.getByLabel('Recipe URL').fill(scenario.url);
-      await sheet.getByRole('button', { name: 'Parse' }).click();
+      await page.getByLabel('Recipe URL').fill(scenario.url);
+      await page.getByRole('button', { name: 'Parse' }).click();
 
-      await expect(sheet.getByLabel('Title')).toHaveValue(scenario.recipeTitle);
-      await expect(sheet.getByLabel('Servings')).toHaveValue('4');
+      await expect(page.getByLabel('Title')).toHaveValue(scenario.recipeTitle);
+      await expect(page.getByLabel('Servings')).toHaveValue('4');
       // Every parsed row keeps its original line, so a bad split can be corrected before saving;
       // this one line is enough to prove the raw text survived.
-      await expect(sheet.getByText('"1 lb cod fillets"')).toBeVisible();
-      await expect(sheet.getByRole('button', { name: /^Remove ingredient/ })).toHaveCount(7);
+      await expect(page.getByText('"1 lb cod fillets"')).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Remove ingredient/ })).toHaveCount(7);
       await expectAccessible(page, `add-a-recipe, parsed preview (${theme})`);
 
-      await sheet.getByRole('button', { name: 'Save recipe' }).click();
+      await page.getByRole('button', { name: 'Save recipe' }).click();
       await expect(page.getByText(`Added ${scenario.recipeTitle}.`).first()).toBeVisible();
       await expect(sheet).toBeHidden();
 
@@ -243,19 +252,19 @@ for (const theme of ['light', 'dark'] as const) {
 
       // --- Parse-failure fallback: a page with no JSON-LD falls back cleanly to an editable form. ---
       sheet = await openAddRecipeSheet(page);
-      await pasteAndParse(sheet, NO_JSON_LD_URL);
-      await expect(sheet.getByText("Couldn't read that page. Add it by hand?")).toBeVisible();
-      const titleField = sheet.getByLabel('Title');
+      await pasteAndParse(page, NO_JSON_LD_URL);
+      await expect(page.getByText("Couldn't read that page. Add it by hand?")).toBeVisible();
+      const titleField = page.getByLabel('Title');
       await expect(titleField).toHaveValue('');
-      await expect(sheet.getByLabel('Source URL')).toHaveValue(NO_JSON_LD_URL);
-      await expect(sheet.getByRole('button', { name: /^Remove ingredient/ })).toHaveCount(0);
+      await expect(page.getByLabel('Source URL')).toHaveValue(NO_JSON_LD_URL);
+      await expect(page.getByRole('button', { name: /^Remove ingredient/ })).toHaveCount(0);
       await expectAccessible(page, `add-a-recipe, parse-failure fallback (${theme})`);
 
       // The fallback form is genuinely usable, not just visually present: fill it in and save.
       await titleField.fill(scenario.manualFallbackTitle);
-      await sheet.getByRole('button', { name: 'Add ingredient' }).click();
-      await sheet.getByLabel('Item').fill('a handwritten ingredient');
-      await sheet.getByRole('button', { name: 'Save recipe' }).click();
+      await page.getByRole('button', { name: 'Add ingredient' }).click();
+      await page.getByLabel('Item').fill('a handwritten ingredient');
+      await page.getByRole('button', { name: 'Save recipe' }).click();
       await expect(page.getByText(`Added ${scenario.manualFallbackTitle}.`).first()).toBeVisible();
       await expect(sheet).toBeHidden();
     });
