@@ -264,6 +264,7 @@ for (const theme of ['light', 'dark'] as const) {
       // The fallback form is genuinely usable, not just visually present: fill it in and save.
       await titleField.fill(scenario.manualFallbackTitle);
       await page.getByRole('button', { name: 'Add ingredient' }).click();
+      await page.waitForTimeout(100);
       await page.getByLabel('Item').fill('a handwritten ingredient');
       await page.getByRole('button', { name: 'Save recipe' }).click();
       await expect(page.getByText(`Added ${scenario.manualFallbackTitle}.`).first()).toBeVisible();
