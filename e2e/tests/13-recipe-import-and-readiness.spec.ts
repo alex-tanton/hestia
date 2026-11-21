@@ -99,7 +99,11 @@ async function createList(page: Page, name: string): Promise<void> {
   const sheet = page.getByRole('dialog', { name: /^(New list|Create shopping list)$/ });
   await expect(sheet).toBeVisible();
   await page.getByLabel('List name').fill(name);
-  await page.locator('md-filled-button', { hasText: 'Create shopping list' }).click();
+  await page
+    .locator('md-filled-button', { hasText: 'Create shopping list' })
+    .or(page.getByRole('button', { name: /^(Create shopping list|Create list)$/ }))
+    .first()
+    .click();
   // ListNameSheet's onCreated navigates straight to the new (empty) list.
   await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
 }
@@ -107,7 +111,11 @@ async function createList(page: Page, name: string): Promise<void> {
 async function openAddRecipeSheet(page: Page): Promise<Locator> {
   await page.goto('/meals/recipes');
   await expect(page.getByRole('heading', { name: 'Recipes', level: 1 })).toBeVisible();
-  await page.locator('md-filled-button', { hasText: 'Add recipe' }).click();
+  await page
+    .locator('md-filled-button', { hasText: 'Add recipe' })
+    .or(page.getByRole('button', { name: /^(Add a recipe|Add recipe)$/ }))
+    .first()
+    .click();
   const sheet = page.getByRole('dialog', { name: /^(Create recipe|Add a recipe)$/ });
   await expect(sheet).toBeVisible();
   return sheet;
