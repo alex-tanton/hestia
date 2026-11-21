@@ -43,29 +43,37 @@ function rowFor(page: Page, text: string): Locator {
 }
 
 async function ensureCompletedErrandsOpen(page: Page): Promise<void> {
-  const toggle = page
-    .getByRole('button', { name: /^Completed \(\d+\)/ })
-    .or(page.locator('details summary'));
+  // 1. If Phase 20+ MD3 button toggle is visible
+  const button = page.getByRole('button', { name: /^Completed \(\d+\)/ });
+  if (await button.isVisible().catch(() => false)) {
+    const isExpanded = await button.getAttribute('aria-expanded').catch(() => null);
+    if (isExpanded !== 'true') {
+      await button.click({ timeout: 2000 }).catch(() => undefined);
+    }
+    return;
+  }
 
-  await expect(toggle.first())
-    .toBeVisible({ timeout: 10000 })
-    .catch(() => undefined);
-
-  const isDetailsOpen = await page
-    .locator('details')
-    .evaluate((el: HTMLDetailsElement) => el.open)
-    .catch(() => false);
-  const isButtonExpanded = await page
-    .getByRole('button', { name: /^Completed \(\d+\)/ })
-    .getAttribute('aria-expanded')
-    .then((v) => v === 'true')
-    .catch(() => false);
-
-  if (!isDetailsOpen && !isButtonExpanded) {
-    await toggle
+  // 2. If Phase 17-19 details element is in the DOM
+  const details = page.locator('details');
+  if ((await details.count()) > 0) {
+    const isOpen = await details
       .first()
-      .click()
-      .catch(() => undefined);
+      .evaluate((el: HTMLDetailsElement) => el.open)
+      .catch(() => false);
+    if (!isOpen) {
+      await details
+        .locator('summary')
+        .first()
+        .click({ timeout: 2000 })
+        .catch(() => undefined);
+      await details
+        .evaluateAll((els: HTMLElement[]) => {
+          for (const el of els) {
+            if ('open' in el) (el as HTMLDetailsElement).open = true;
+          }
+        })
+        .catch(() => undefined);
+    }
   }
 }
 
