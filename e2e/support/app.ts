@@ -101,20 +101,12 @@ export async function reassign(page: Page, itemName: string, memberName: string)
   }
   await select.scrollIntoViewIfNeeded();
   await select.click();
-  const option = page.getByRole('option', { name: memberName }).filter({ visible: true }).first();
-  const clicked = await option
-    .click({ timeout: 2000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!clicked) {
-    await select
-      .locator('md-select-option')
-      .filter({ hasText: memberName })
-      .first()
-      .click({ force: true })
-      .catch(() => undefined);
-  }
-  // Ensure React state received the value update
+  const option = page
+    .getByRole('listbox', { name: itemName })
+    .getByRole('option', { name: memberName })
+    .or(page.getByRole('option', { name: memberName }))
+    .last();
+  await option.click({ timeout: 2000 }).catch(() => undefined);
   await select
     .evaluate((el: HTMLElement, name: string) => {
       const options = Array.from(el.querySelectorAll('md-select-option, option'));
