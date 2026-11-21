@@ -52,7 +52,7 @@ export function MagicLinkCodeScreen(): ReactElement {
 
   // The code field is the only thing this screen is for, so the caret starts in it.
   useEffect(() => {
-    formRef.current?.querySelector('input')?.focus();
+    formRef.current?.querySelector<HTMLElement>('md-outlined-text-field, input, textarea')?.focus();
   }, [formRef]);
 
   useEffect(() => {

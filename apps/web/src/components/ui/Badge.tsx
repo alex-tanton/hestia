@@ -1,6 +1,6 @@
-import { CircleAlert, User } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../lib/cn.ts';
+import { Icon } from './Icon.tsx';
 
 export type BadgeVariant = 'neutral' | 'section' | 'warning' | 'danger' | 'personal';
 
@@ -11,28 +11,32 @@ export interface BadgeProps {
 }
 
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
-  neutral: 'bg-neutral-badge text-on-neutral-badge',
-  personal: 'bg-neutral-badge text-on-neutral-badge',
-  section: 'bg-section-badge text-on-section-badge',
-  warning: 'bg-warning-badge text-on-warning-badge',
-  danger: 'bg-danger-badge text-on-danger-badge',
+  neutral:
+    'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]',
+  personal:
+    'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]',
+  section:
+    'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
+  warning:
+    'bg-[var(--md-sys-color-warning-container)] text-[var(--md-sys-color-on-warning-container)]',
+  danger: 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]',
 };
 
 /**
- * Badge pairs are all 4.5:1 at caption size. Danger carries an icon so
- * the state is never read from red alone; Personal carries the Lucide `user` icon and its word.
+ * Tonal MD3 badge pairs all meet >= 4.5:1 AA contrast. Danger carries an `error` icon so
+ * the state is never read from color alone; Personal carries the `person` icon and its word.
  */
 export function Badge({ variant = 'neutral', children, className }: BadgeProps): ReactElement {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-caption whitespace-nowrap',
+        'inline-flex items-center gap-1 rounded-[var(--md-sys-shape-corner-extra-small)] px-2 py-0.5 text-caption whitespace-nowrap',
         VARIANT_CLASSES[variant],
         className,
       )}
     >
-      {variant === 'danger' && <CircleAlert aria-hidden size={14} strokeWidth={2} />}
-      {variant === 'personal' && <User aria-hidden size={14} strokeWidth={2} />}
+      {variant === 'danger' && <Icon name="error" size={14} />}
+      {variant === 'personal' && <Icon name="person" size={14} />}
       {variant === 'personal' ? (children ?? 'Personal') : children}
     </span>
   );

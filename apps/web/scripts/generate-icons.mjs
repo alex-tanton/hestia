@@ -1,4 +1,4 @@
-// Writes the placeholder PWA icons: a white "H" on the section-neutral slate, full-bleed so
+// Writes the placeholder PWA icons: a white "H" on Warm Terracotta, full-bleed so
 // the same file works as a maskable icon. There is no app mark yet; replace these
 // PNGs when there is one. Uses only Node built-ins so it adds no dependency.
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
 
-const BACKGROUND = [0x47, 0x55, 0x69]; // #475569, the Dashboard slate
+const BACKGROUND = [0x8e, 0x4c, 0x32]; // #8e4c32, Warm Terracotta MD3 primary
 const FOREGROUND = [0xff, 0xff, 0xff];
 const SIZES = [192, 512];
 

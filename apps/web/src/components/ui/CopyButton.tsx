@@ -1,6 +1,6 @@
-import { Copy } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Button } from './Button.tsx';
+import { Icon } from './Icon.tsx';
 import { useToast } from './Toast.tsx';
 
 export interface CopyButtonProps {
@@ -35,7 +35,7 @@ export function CopyButton({ label, value, confirmation }: CopyButtonProps): Rea
         void copy();
       }}
     >
-      <Copy aria-hidden size={20} strokeWidth={1.5} />
+      <Icon name="content_copy" size={20} />
       {label}
     </Button>
   );

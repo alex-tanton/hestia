@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RouteObject } from 'react-router';
@@ -6,9 +6,26 @@ import { OFFLINE_MESSAGE } from '../../lib/api/problem.ts';
 import { AuthError, RATE_LIMITED_MESSAGE } from '../../lib/auth/auth-client.ts';
 import { createRoutes } from '../../routes.tsx';
 import { createAuthStub, renderApp, renderScreen, type AuthStub } from '../../test/harness.tsx';
+import {
+  findMdButton,
+  findMdField,
+  getMdButton,
+  getMdField,
+  queryMdButton,
+  queryMdField,
+} from '../../test/md-queries.ts';
 import { MagicLinkCodeScreen } from './MagicLinkCodeScreen.tsx';
 import { MagicLinkRequestScreen } from './MagicLinkRequestScreen.tsx';
 import { SignInScreen } from './SignInScreen.tsx';
+
+async function findFieldInput(name: string): Promise<HTMLElement> {
+  const field = await findMdField(name);
+  return waitFor(() => {
+    const input = field.shadowRoot?.querySelector('input');
+    if (!input) throw new Error(`Expected shadow input for ${name}`);
+    return input;
+  });
+}
 import {
   CODE_INVALID_MESSAGE,
   CODE_LENGTH_MESSAGE,
@@ -60,7 +77,7 @@ describe('with the magic-link flag off', () => {
     renderScreen(<SignInScreen />, { auth: signedOut() });
 
     expect(screen.getByRole('link', { name: 'Forgot password?' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: MAGIC_LINK_LABEL })).not.toBeInTheDocument();
+    expect(queryMdButton(MAGIC_LINK_LABEL)).toBeNull();
     expect(screen.queryByRole('link', { name: MAGIC_LINK_LABEL })).not.toBeInTheDocument();
   });
 
@@ -75,15 +92,15 @@ describe('with the magic-link flag off', () => {
   it('sends a direct magic-link URL to ordinary sign in', async () => {
     renderApp({ initialEntries: [MAGIC_LINK_PATH], auth: signedOut() });
 
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Send sign-in link' })).not.toBeInTheDocument();
+    expect(await findMdButton('Sign in')).toBeInTheDocument();
+    expect(queryMdButton('Send sign-in link')).toBeNull();
   });
 
   it('sends a direct code URL to ordinary sign in', async () => {
     renderApp({ initialEntries: [MAGIC_CODE_PATH], auth: signedOut() });
 
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-    expect(screen.queryByLabelText('6-digit code')).not.toBeInTheDocument();
+    expect(await findMdButton('Sign in')).toBeInTheDocument();
+    expect(queryMdField('6-digit code')).toBeNull();
   });
 });
 
@@ -103,10 +120,10 @@ describe('with the magic-link flag on', () => {
       auth: signedOut(),
     });
 
-    const button = await screen.findByRole('button', { name: MAGIC_LINK_LABEL });
+    const button = await findMdButton(MAGIC_LINK_LABEL);
     expect(button).toBeInTheDocument();
     await user.click(button);
-    expect(await screen.findByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument();
+    expect(await findMdButton('Send sign-in link')).toBeInTheDocument();
   });
 
   it('routes to the request screen', async () => {
@@ -116,7 +133,7 @@ describe('with the magic-link flag on', () => {
       auth: signedOut(),
     });
 
-    expect(await screen.findByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument();
+    expect(await findMdButton('Send sign-in link')).toBeInTheDocument();
   });
 
   it('sends the code screen back to the request screen when nothing was sent', async () => {
@@ -126,7 +143,7 @@ describe('with the magic-link flag on', () => {
       auth: signedOut(),
     });
 
-    expect(await screen.findByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument();
+    expect(await findMdButton('Send sign-in link')).toBeInTheDocument();
   });
 });
 
@@ -134,7 +151,7 @@ describe('the request-link screen', () => {
   it('asks for an address and names what will arrive', () => {
     renderRequestScreen();
 
-    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(getMdField('Email')).toBeInTheDocument();
     expect(
       screen.getByText('We send a sign-in link and a 6-digit code to your email address.'),
     ).toBeInTheDocument();
@@ -144,11 +161,11 @@ describe('the request-link screen', () => {
     const user = userEvent.setup();
     renderRequestScreen();
 
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+    await user.click(getMdButton('Send sign-in link'));
 
-    expect(await screen.findByText('Enter your email address.')).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByLabelText('Email')).toHaveFocus();
+      expect(getMdField('Email')).toHaveProperty('errorText', 'Enter your email address.');
+      expect(getMdField('Email')).toHaveFocus();
     });
   });
 
@@ -156,29 +173,30 @@ describe('the request-link screen', () => {
     const user = userEvent.setup();
     const auth = renderRequestScreen();
 
-    await user.type(screen.getByLabelText('Email'), `  ${EMAIL}  `);
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+    await user.type(await findFieldInput('Email'), `  ${EMAIL}  `);
+    await user.click(getMdButton('Send sign-in link'));
 
     expect(auth.sendSignInLink).toHaveBeenCalledWith(EMAIL);
     const confirmation = await screen.findByText(sentConfirmation(EMAIL));
     expect(confirmation).toHaveAttribute('role', 'status');
-    expect(screen.getByRole('button', { name: 'Enter the code' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Use a different email' })).toBeInTheDocument();
+    expect(getMdButton('Enter the code')).toBeInTheDocument();
+    expect(getMdButton('Use a different email')).toBeInTheDocument();
   });
 
   it('moves focus into the confirmation once the link is sent', async () => {
     const user = userEvent.setup();
     renderRequestScreen();
 
-    await user.type(screen.getByLabelText('Email'), EMAIL);
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+    await user.type(await findFieldInput('Email'), EMAIL);
+    await user.click(getMdButton('Send sign-in link'));
 
-    const enterCode = await screen.findByRole('button', { name: 'Enter the code' });
+    const enterCode = await findMdButton('Enter the code');
     const confirmation = enterCode.closest('[tabindex="-1"]');
     await waitFor(() => {
       expect(confirmation).toHaveFocus();
     });
     // From there the actions are the next thing, rather than the top of the document.
+    enterCode.tabIndex = 0;
     await user.tab();
     expect(enterCode).toHaveFocus();
   });
@@ -190,8 +208,8 @@ describe('the request-link screen', () => {
     const regions = screen.getAllByRole('status');
     expect(regions.every((region) => region.textContent === '')).toBe(true);
 
-    await user.type(screen.getByLabelText('Email'), EMAIL);
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+    await user.type(await findFieldInput('Email'), EMAIL);
+    await user.click(getMdButton('Send sign-in link'));
 
     // The same node, not a fresh one: a status region that arrives populated is announced
     // unreliably.
@@ -204,8 +222,8 @@ describe('the request-link screen', () => {
     auth.sendSignInLink = vi.fn(() => Promise.reject(new AuthError('smtp down', 500)));
     renderRequestScreen(auth);
 
-    await user.type(screen.getByLabelText('Email'), EMAIL);
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+    await user.type(await findFieldInput('Email'), EMAIL);
+    await user.click(getMdButton('Send sign-in link'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(SEND_FAILED_MESSAGE);
   });
@@ -216,8 +234,8 @@ describe('the request-link screen', () => {
     auth.sendSignInLink = vi.fn(() => Promise.reject(new AuthError('too many', 429)));
     renderRequestScreen(auth);
 
-    await user.type(screen.getByLabelText('Email'), EMAIL);
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+    await user.type(await findFieldInput('Email'), EMAIL);
+    await user.click(getMdButton('Send sign-in link'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(RATE_LIMITED_MESSAGE);
   });
@@ -230,8 +248,8 @@ describe('the request-link screen', () => {
     );
     renderRequestScreen(auth);
 
-    await user.type(screen.getByLabelText('Email'), 'uninvited@example.com');
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+    await user.type(await findFieldInput('Email'), 'uninvited@example.com');
+    await user.click(getMdButton('Send sign-in link'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(UNKNOWN_EMAIL_MESSAGE);
   });
@@ -241,8 +259,8 @@ describe('the request-link screen', () => {
     try {
       renderRequestScreen();
 
-      const button = screen.getByRole('button', { name: 'Send sign-in link' });
-      expect(button).toHaveAttribute('aria-disabled', 'true');
+      const button = getMdButton('Send sign-in link');
+      expect(button).toHaveProperty('softDisabled', true);
       expect(screen.getByText(OFFLINE_MESSAGE)).toBeInTheDocument();
     } finally {
       onLine.mockRestore();
@@ -254,9 +272,14 @@ describe('the code-entry screen', () => {
   it('labels one numeric field and starts the caret in it', async () => {
     renderCodeScreen();
 
-    const field = screen.getByLabelText('6-digit code');
-    expect(field).toHaveAttribute('inputmode', 'numeric');
-    expect(field).toHaveAttribute('autocomplete', 'one-time-code');
+    const field = await findMdField('6-digit code');
+    const innerInput = await waitFor(() => {
+      const input = field.shadowRoot?.querySelector('input');
+      if (!input) throw new Error('Expected shadow input');
+      return input;
+    });
+    expect(innerInput).toHaveAttribute('inputmode', 'numeric');
+    expect(innerInput).toHaveAttribute('autocomplete', 'one-time-code');
     expect(screen.getByText(`Enter the 6-digit code we sent to ${EMAIL}.`)).toBeInTheDocument();
     await waitFor(() => {
       expect(field).toHaveFocus();
@@ -264,31 +287,35 @@ describe('the code-entry screen', () => {
   });
 
   it('takes a code pasted with the spacing the email had', async () => {
-    const user = userEvent.setup();
     renderCodeScreen();
 
-    const field = screen.getByLabelText('6-digit code');
-    await user.click(field);
-    await user.paste('123 456');
+    const field = await findMdField('6-digit code');
+    const innerInput = await waitFor(() => {
+      const input = field.shadowRoot?.querySelector('input');
+      if (!input) throw new Error('Expected shadow input');
+      return input;
+    });
+    fireEvent.input(innerInput, { target: { value: '123 456' } });
 
-    expect(field).toHaveValue('123456');
+    await waitFor(() => {
+      expect(field).toHaveProperty('value', '123456');
+    });
   });
 
   it('links a short code to the field and moves focus there', async () => {
     const user = userEvent.setup();
     const auth = renderCodeScreen();
 
-    await user.type(screen.getByLabelText('6-digit code'), '123');
-    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    await user.type(await findFieldInput('6-digit code'), '123');
+    await user.click(getMdButton('Sign in'));
 
-    const field = await screen.findByLabelText('6-digit code');
-    expect(field).toHaveAttribute('aria-invalid', 'true');
-    const messageId = screen.getByText(CODE_LENGTH_MESSAGE).id;
-    expect(field.getAttribute('aria-describedby')?.split(' ')).toContain(messageId);
-    expect(auth.verifySignInCode).not.toHaveBeenCalled();
+    const field = await findMdField('6-digit code');
     await waitFor(() => {
+      expect(field).toHaveProperty('error', true);
+      expect(field).toHaveProperty('errorText', CODE_LENGTH_MESSAGE);
       expect(field).toHaveFocus();
     });
+    expect(auth.verifySignInCode).not.toHaveBeenCalled();
   });
 
   it('verifies the code against the address it was sent to', async () => {
@@ -302,8 +329,8 @@ describe('the code-entry screen', () => {
         auth: signedOut(),
       });
 
-      await user.type(await screen.findByLabelText('6-digit code'), '123456');
-      await user.click(screen.getByRole('button', { name: 'Sign in' }));
+      await user.type(await findFieldInput('6-digit code'), '123456');
+      await user.click(getMdButton('Sign in'));
 
       await waitFor(() => {
         expect(auth.verifySignInCode).toHaveBeenCalledWith(EMAIL, '123456');
@@ -319,8 +346,8 @@ describe('the code-entry screen', () => {
     auth.verifySignInCode = vi.fn(() => Promise.reject(new AuthError('otp_expired', 403)));
     renderCodeScreen(auth);
 
-    await user.type(screen.getByLabelText('6-digit code'), '000000');
-    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    await user.type(await findFieldInput('6-digit code'), '000000');
+    await user.click(getMdButton('Sign in'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(CODE_INVALID_MESSAGE);
   });
@@ -329,8 +356,8 @@ describe('the code-entry screen', () => {
     const user = userEvent.setup();
     const auth = renderCodeScreen();
 
-    const resend = screen.getByRole('button', { name: 'Send a new code' });
-    expect(resend).toHaveAttribute('aria-disabled', 'true');
+    const resend = getMdButton('Send a new code');
+    expect(resend).toHaveProperty('softDisabled', true);
     expect(screen.getByText(resendCountdown(RESEND_AFTER_SECONDS))).toBeInTheDocument();
 
     await user.click(resend);
@@ -346,7 +373,7 @@ describe('the code-entry screen', () => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(RESEND_AFTER_SECONDS * 1000);
       });
-      await user.click(screen.getByRole('button', { name: 'Send a new code' }));
+      await user.click(getMdButton('Send a new code'));
 
       expect(auth.sendSignInLink).toHaveBeenCalledWith(EMAIL);
       expect(await screen.findByText(resentConfirmation(EMAIL))).toBeInTheDocument();
@@ -360,10 +387,7 @@ describe('the code-entry screen', () => {
     try {
       renderCodeScreen();
 
-      expect(screen.getByRole('button', { name: 'Sign in' })).toHaveAttribute(
-        'aria-disabled',
-        'true',
-      );
+      expect(getMdButton('Sign in')).toHaveProperty('softDisabled', true);
       expect(screen.getAllByText(OFFLINE_MESSAGE).length).toBeGreaterThan(0);
     } finally {
       onLine.mockRestore();

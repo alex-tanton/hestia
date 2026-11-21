@@ -24,7 +24,7 @@ export function ChangePasswordForm(): ReactElement {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [formError, setFormError] = useState<string>();
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
   const wasOpen = useRef(isOpen);
 
   // Opening swaps the trigger for the form, and closing swaps it back. Where a member's action
@@ -33,7 +33,8 @@ export function ChangePasswordForm(): ReactElement {
   useEffect(() => {
     if (wasOpen.current === isOpen) return;
     wasOpen.current = isOpen;
-    if (isOpen) formRef.current?.querySelector('input')?.focus();
+    if (isOpen)
+      formRef.current?.querySelector<HTMLElement>('md-outlined-text-field, input')?.focus();
     else triggerRef.current?.focus();
   }, [isOpen, formRef]);
 

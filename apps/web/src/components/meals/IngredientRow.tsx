@@ -58,9 +58,9 @@ export function IngredientRow({
   // chosen.
   const isOverridden = governing.length > 0;
 
-  const notAMatchRef = useRef<HTMLButtonElement>(null);
-  const matchToRef = useRef<HTMLButtonElement>(null);
-  const removeRef = useRef<HTMLButtonElement>(null);
+  const notAMatchRef = useRef<HTMLElement>(null);
+  const matchToRef = useRef<HTMLElement>(null);
+  const removeRef = useRef<HTMLElement>(null);
   const wasOverridden = useRef(isOverridden);
 
   useEffect(() => {

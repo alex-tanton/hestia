@@ -3,7 +3,7 @@
   "ignoreExportsUsedInFile": true,
   "ignoreBinaries": ["supabase", "psql"],
   "ignore": [".planning/**"],
-  "ignoreDependencies": ["tailwindcss"],
+  "ignoreDependencies": ["tailwindcss", "@material/material-color-utilities"],
   "node": false,
   "workspaces": {
     ".": {

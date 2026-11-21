@@ -16,6 +16,7 @@ import {
   renderScreen,
   type StubHandler,
 } from '../../test/harness.tsx';
+import { findMdButton, getMdButton } from '../../test/md-queries.ts';
 import { SubscriptionsScreen } from './SubscriptionsScreen.tsx';
 
 function baseHandlers(
@@ -95,7 +96,7 @@ describe('Subscriptions', () => {
         }),
       }),
     );
-    await user.click(await screen.findByRole('button', { name: 'Try again' }));
+    await user.click(await findMdButton('Try again'));
     await waitFor(() => {
       expect(
         stub.calls.filter((call) => call.path.includes('/subscriptions')).length,
@@ -153,7 +154,7 @@ describe('Subscriptions', () => {
       }),
     );
     await screen.findByText('Still using this?');
-    await user.click(screen.getByRole('button', { name: /^Still using/ }));
+    await user.click(getMdButton(/^Still using/));
     await waitFor(() => {
       expect(
         stub.calls.some(
@@ -182,7 +183,7 @@ describe('Subscriptions', () => {
       }),
     );
     await screen.findByText('Still using this?');
-    await user.click(screen.getByRole('button', { name: /^Stop tracking/ }));
+    await user.click(getMdButton(/^Stop tracking/));
     await waitFor(() => {
       expect(
         stub.calls.some((call) => call.path === `/api/bills/${spectrumInternetFixture.id}/archive`),

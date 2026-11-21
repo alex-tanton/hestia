@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { findMdCheckbox, getMdButton, getMdCheckbox } from '../../test/md-queries.ts';
 import {
   problemBody,
   renderScreen,
@@ -53,11 +54,11 @@ describe('favorite stores', () => {
     stub({});
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    expect(await screen.findByRole('checkbox', { name: /Harris Teeter/ })).toBeChecked();
-    expect(screen.getByRole('checkbox', { name: /Food Lion/ })).toBeChecked();
-    expect(screen.getByRole('checkbox', { name: /CVS Pharmacy/ })).toBeChecked();
-    expect(screen.getByRole('checkbox', { name: /Publix/ })).not.toBeChecked();
-    expect(screen.getByRole('checkbox', { name: /Lowes Foods/ })).not.toBeChecked();
+    expect(await findMdCheckbox(/Harris Teeter/)).toHaveProperty('checked', true);
+    expect(getMdCheckbox(/Food Lion/)).toHaveProperty('checked', true);
+    expect(getMdCheckbox(/CVS Pharmacy/)).toHaveProperty('checked', true);
+    expect(getMdCheckbox(/Publix/)).toHaveProperty('checked', false);
+    expect(getMdCheckbox(/Lowes Foods/)).toHaveProperty('checked', false);
   });
 
   it('adds a favorite by merchant id and name', async () => {
@@ -67,7 +68,7 @@ describe('favorite stores', () => {
     });
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    await user.click(await screen.findByRole('checkbox', { name: /Publix/ }));
+    await user.click(await findMdCheckbox(/Publix/));
     await waitFor(() => {
       expect(created.calls.some((call) => call.method === 'POST')).toBe(true);
     });
@@ -83,7 +84,7 @@ describe('favorite stores', () => {
     });
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    await user.click(await screen.findByRole('checkbox', { name: /Food Lion/ }));
+    await user.click(await findMdCheckbox(/Food Lion/));
     await waitFor(() => {
       expect(created.calls.some((call) => call.method === 'DELETE')).toBe(true);
     });
@@ -102,9 +103,9 @@ describe('favorite stores', () => {
     });
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
-    await user.click(await screen.findByRole('checkbox', { name: /Publix/ }));
+    await user.click(await findMdCheckbox(/Publix/));
     expect(await screen.findByText('Something went wrong. Try again.')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /Publix/ })).not.toBeChecked();
+    expect(getMdCheckbox(/Publix/)).toHaveProperty('checked', false);
   });
 
   it('names the ZIP when the postal code returns no merchants', async () => {
@@ -114,7 +115,7 @@ describe('favorite stores', () => {
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="99999" />);
 
     expect(await screen.findByText('No stores found near 99999.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Change the postal code' })).toBeInTheDocument();
+    expect(getMdButton('Change the postal code')).toBeInTheDocument();
   });
 
   it('keeps the stale list with its as-of date rather than emptying', async () => {
@@ -130,7 +131,7 @@ describe('favorite stores', () => {
     renderScreen(<FavoriteStores householdId={OAK_STREET_ID} postalCode="27514" />);
 
     expect(await screen.findByText('As of 09/24/2026, 4:00 AM')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /Harris Teeter/ })).toBeInTheDocument();
+    expect(getMdCheckbox(/Harris Teeter/)).toBeInTheDocument();
   });
 
   it('offers retry when the merchant list could not be loaded', async () => {
@@ -145,7 +146,7 @@ describe('favorite stores', () => {
     expect(
       await screen.findByText("Couldn't load the stores near this household. Try again."),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Try again/ })).toBeInTheDocument();
+    expect(getMdButton(/Try again/)).toBeInTheDocument();
   });
 
   it('explains why the picker is unavailable offline instead of hiding it', async () => {
@@ -170,7 +171,7 @@ describe('household settings', () => {
       await screen.findByText('Only the household admin can change these.'),
     ).toBeInTheDocument();
 
-    await user.click(await screen.findByRole('checkbox', { name: /Publix/ }));
+    await user.click(await findMdCheckbox(/Publix/));
     await waitFor(() => {
       expect(created.calls.some((call) => call.method === 'POST')).toBe(true);
     });

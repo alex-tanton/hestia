@@ -14,7 +14,15 @@ export interface ListRowProps {
   className?: string;
 }
 
-/** A generic row: 12px vertical padding and at least a 44px target. */
+function hasSlotContent(node: ReactNode): boolean {
+  return node !== undefined && node !== null && node !== false && node !== '';
+}
+
+/**
+ * A generic MD3 list row: 12px vertical padding, 48dp minimum height (`min-h-12`), truncated
+ * single-line title, wrapping description, and optional leading/trailing slots omitted cleanly
+ * when undefined. Avoids `overflow-hidden` so child menus or popovers never clip.
+ */
 export function ListRow({
   title,
   description,
@@ -27,15 +35,23 @@ export function ListRow({
 }: ListRowProps): ReactElement {
   const content = (
     <>
-      {leading && <span className="flex shrink-0 items-center text-section-accent">{leading}</span>}
+      {hasSlotContent(leading) && (
+        <span className="flex shrink-0 items-center text-[var(--md-sys-color-primary)]">
+          {leading}
+        </span>
+      )}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-body text-primary">{title}</span>
-        {description && <span className="text-body-sm text-secondary">{description}</span>}
+        <span className="truncate text-body text-[var(--md-sys-color-on-surface)]">{title}</span>
+        {hasSlotContent(description) && (
+          <span className="text-body-sm break-words text-[var(--md-sys-color-on-surface-variant)]">
+            {description}
+          </span>
+        )}
       </span>
-      {trailing && <span className="flex shrink-0 items-center">{trailing}</span>}
+      {hasSlotContent(trailing) && <span className="flex shrink-0 items-center">{trailing}</span>}
     </>
   );
-  const rowClasses = cn('flex min-h-11 w-full items-center gap-3 px-4 py-3 text-left', className);
+  const rowClasses = cn('flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left', className);
 
   if (!onSelect) return <div className={rowClasses}>{content}</div>;
   return (
@@ -46,7 +62,7 @@ export function ListRow({
       aria-current={isCurrent || undefined}
       className={cn(
         rowClasses,
-        'transition-colors duration-150 ease-out hover:bg-raised active:bg-section-tint disabled:cursor-not-allowed disabled:opacity-50',
+        'rounded-[var(--md-sys-shape-corner-medium)] transition-colors duration-150 ease-out hover:bg-[var(--md-sys-color-on-surface)]/8 active:bg-[var(--md-sys-color-on-surface)]/12 disabled:cursor-not-allowed disabled:opacity-50',
       )}
     >
       {content}

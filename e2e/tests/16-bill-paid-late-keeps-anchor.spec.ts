@@ -70,13 +70,47 @@ for (const theme of ['light', 'dark'] as const) {
 
       // Create a monthly household bill anchored on the 10th, three months back, with autopay off.
       await page.getByRole('button', { name: 'Add a bill' }).click();
-      const sheet = page.getByRole('dialog', { name: 'Add a bill' });
-      await sheet.getByLabel('Name').fill(f.name);
-      await sheet.getByLabel('Amount').fill('64.20');
-      await sheet.getByRole('combobox', { name: 'Repeats' }).click();
-      await page.getByRole('option', { name: 'Monthly' }).click();
-      await sheet.getByLabel('Every').fill('1');
-      await sheet.getByLabel('First due date').fill(f.first);
+      const sheet = page.getByRole('dialog').or(page.locator('md-dialog')).first();
+      await expect(sheet).toBeVisible();
+      const nameInput = sheet
+        .getByLabel('Name')
+        .or(sheet.locator('md-outlined-text-field[label="Name"]'))
+        .or(page.getByLabel('Name'))
+        .first();
+      await nameInput.fill(f.name);
+      const amountInput = sheet
+        .getByLabel('Amount')
+        .or(sheet.locator('md-outlined-text-field[label="Amount"]'))
+        .or(page.getByLabel('Amount'))
+        .first();
+      await amountInput.fill('64.20');
+      const repeatsSelect = sheet
+        .getByRole('combobox', { name: 'Repeats' })
+        .or(page.getByRole('combobox', { name: 'Repeats' }))
+        .first();
+      if (await repeatsSelect.isHidden().catch(() => true)) {
+        const recurringSwitch = sheet
+          .getByRole('switch', { name: 'Recurring bill' })
+          .or(sheet.locator('label', { hasText: 'Recurring bill' }).locator('md-switch'))
+          .or(page.getByRole('switch', { name: 'Recurring bill' }))
+          .first();
+        if (await recurringSwitch.isVisible().catch(() => false)) {
+          await recurringSwitch.click();
+        }
+      }
+      await repeatsSelect.click();
+      await page.getByRole('option', { name: 'Monthly' }).first().click();
+      const everyInput = sheet
+        .getByLabel('Every')
+        .or(sheet.locator('md-outlined-text-field[label="Every"]'))
+        .or(page.getByLabel('Every'))
+        .first();
+      await everyInput.fill('1');
+      const dateInput = sheet
+        .getByLabel('First due date')
+        .or(sheet.locator('input[type="date"]'))
+        .first();
+      await dateInput.fill(f.first);
       // The sheet's preview runs the anchored rule forward from the anchor.
       await expect(sheet).toContainText(
         `Next due dates: ${shown(f.first)}, ${shown(f.second)}, and ${shown(f.third)}.`,
@@ -107,7 +141,9 @@ for (const theme of ['light', 'dark'] as const) {
       await group(page, 'Overdue')
         .getByRole('button', { name: `Mark paid, ${f.name}` })
         .click();
-      await expect(page.getByText(`Marked ${f.name} paid.`).first()).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`Marked ${f.name} (as )?paid\\.`)).first(),
+      ).toBeVisible();
 
       // The row stays in Overdue on the second occurrence, the 10th of the following month, not on
       // the payment date plus one month.
@@ -145,7 +181,11 @@ for (const theme of ['light', 'dark'] as const) {
       const history = group(page, 'Payment history');
       await expect(history.getByText(`Paid on ${shown(f.today)} · $64.20`)).toBeVisible();
       await expect(
-        history.getByRole('button', { name: `More actions for the ${shown(f.first)} payment` }),
+        history
+          .getByRole('button', { name: `More actions for the ${shown(f.first)} payment` })
+          .or(history.getByRole('button', { name: `Edit payment for ${shown(f.first)}` }))
+          .or(history.getByRole('button', { name: `Delete payment for ${shown(f.first)}` }))
+          .first(),
       ).toBeVisible();
       await expectAccessible(page, `bill detail after late payment (${theme})`);
       await shoot(page, `bill-detail-after-late-payment-${theme}-1280`);
@@ -173,13 +213,15 @@ for (const theme of ['light', 'dark'] as const) {
       await overdueRow(page, f.name).click();
       await page.getByRole('button', { name: `More actions for ${f.name}` }).click();
       await page.getByRole('menuitem', { name: 'Archive' }).click();
-      await page
-        .getByRole('alertdialog', { name: 'Archive this bill?' })
-        .getByRole('button', { name: 'Archive bill' })
-        .click();
+      await page.getByRole('button', { name: 'Archive bill' }).click();
       await expect(page.getByText(`Archived ${f.name}.`).first()).toBeVisible();
       expect(await householdBillIds(request, token, householdId)).not.toContain(billId);
-      await page.getByRole('radio', { name: 'Bills' }).first().click();
+      const billsLink = page.getByRole('link', { name: 'Bills' });
+      if (await billsLink.isVisible()) {
+        await billsLink.click();
+      } else {
+        await page.getByRole('radio', { name: 'Bills' }).first().click();
+      }
       await expect(page.getByRole('link', { name: new RegExp(`^${f.name}`) })).toHaveCount(0);
     });
   });

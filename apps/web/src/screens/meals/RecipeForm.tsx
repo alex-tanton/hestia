@@ -67,7 +67,9 @@ export function RecipeForm({
   useEffect(() => {
     if (previousMode.current === mode) return;
     previousMode.current = mode;
-    containerRef.current?.querySelector<HTMLElement>('input, textarea')?.focus();
+    containerRef.current
+      ?.querySelector<HTMLElement>('md-outlined-text-field, input, textarea')
+      ?.focus();
   }, [mode]);
 
   const handleParse = async (): Promise<void> => {

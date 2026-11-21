@@ -18,6 +18,22 @@ function Trigger({ toast }: { toast: ToastInput }): ReactElement {
   );
 }
 
+function MultiTrigger({ toasts }: { toasts: ToastInput[] }): ReactElement {
+  const show = useToast();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        for (const toast of toasts) {
+          show(toast);
+        }
+      }}
+    >
+      Show all
+    </button>
+  );
+}
+
 function renderWithToast(toast: ToastInput): void {
   render(
     <ToastProvider>
@@ -31,7 +47,7 @@ afterEach(() => {
 });
 
 describe('toastDuration', () => {
-  it('gives each variant its display duration', () => {
+  it('gives each variant its display duration (4s non-action, persistent error/action)', () => {
     expect(toastDuration({ variant: 'success', message: 'Added to Grocery List.' })).toBe(4000);
     expect(toastDuration({ variant: 'info', message: '3 changes synced.' })).toBe(4000);
     expect(
@@ -40,7 +56,7 @@ describe('toastDuration', () => {
         message: 'Take out trash done. Sam is next.',
         action: { label: 'Undo', onAction: vi.fn() },
       }),
-    ).toBe(5000);
+    ).toBe(Number.POSITIVE_INFINITY);
     expect(toastDuration({ variant: 'error', message: 'Could not save.' })).toBe(
       Number.POSITIVE_INFINITY,
     );
@@ -48,37 +64,100 @@ describe('toastDuration', () => {
 });
 
 describe('ToastProvider', () => {
-  it.each(['success', 'info'] as const)('shows a %s toast and dismisses it after 4s', (variant) => {
+  it.each(['success', 'info'] as const)(
+    'shows a %s snackbar and dismisses it after 4s',
+    (variant) => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      renderWithToast({ variant, message: 'Added to Grocery List.' });
+      act(() => {
+        screen.getByRole('button', { name: 'Show' }).click();
+      });
+      expect(screen.getByRole('status')).toHaveTextContent('Added to Grocery List.');
+      act(() => {
+        vi.advanceTimersByTime(4000);
+      });
+      expect(screen.queryByRole('status')).toBeNull();
+    },
+  );
+
+  it('keeps an error snackbar persistently as an alert until dismissed', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    renderWithToast({ variant, message: 'Added to Grocery List.' });
+    renderWithToast({ variant: 'error', message: "Couldn't save Milk." });
     act(() => {
       screen.getByRole('button', { name: 'Show' }).click();
     });
-    expect(screen.getAllByText('Added to Grocery List.').length).toBeGreaterThan(0);
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't save Milk.");
     act(() => {
-      vi.advanceTimersByTime(4500);
+      vi.advanceTimersByTime(10000);
     });
-    expect(screen.queryByRole('status', { name: /Added to Grocery List/ })).toBeNull();
-    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
-  });
-
-  it('keeps an error toast until it is dismissed', async () => {
-    renderWithToast({ variant: 'error', message: "Couldn't save Milk." });
-    await userEvent.click(screen.getByRole('button', { name: 'Show' }));
-    expect(screen.getAllByText("Couldn't save Milk.").length).toBeGreaterThan(0);
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't save Milk.");
     await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('runs the action (Undo)', async () => {
+  it('keeps action-bearing snackbars persistent until Undo or Dismiss is activated', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const onUndo = vi.fn();
     renderWithToast({
       variant: 'success',
       message: 'Take out trash done. Sam is next.',
       action: { label: 'Undo', onAction: onUndo },
     });
-    await userEvent.click(screen.getByRole('button', { name: 'Show' }));
+    act(() => {
+      screen.getByRole('button', { name: 'Show' }).click();
+    });
+    act(() => {
+      vi.advanceTimersByTime(10000);
+    });
+    expect(screen.getByRole('status')).toHaveTextContent('Take out trash done. Sam is next.');
     await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(onUndo).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('status')).toBeNull();
+
+    const onIgnoredUndo = vi.fn();
+    renderWithToast({
+      variant: 'info',
+      message: 'Water plants skipped.',
+      action: { label: 'Undo', onAction: onIgnoredUndo },
+    });
+    const showButtons = screen.getAllByRole('button', { name: 'Show' });
+    await userEvent.click(showButtons[1]!);
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(onIgnoredUndo).not.toHaveBeenCalled();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('renders a single active snackbar at a time in FIFO queue order', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    render(
+      <ToastProvider>
+        <MultiTrigger
+          toasts={[
+            { variant: 'success', message: 'First notice.' },
+            { variant: 'info', message: 'Second notice.' },
+            { variant: 'error', message: 'Third notice.' },
+          ]}
+        />
+      </ToastProvider>,
+    );
+
+    act(() => {
+      screen.getByRole('button', { name: 'Show all' }).click();
+    });
+
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent('First notice.');
+    expect(screen.queryByText('Second notice.')).toBeNull();
+    expect(screen.queryByText('Third notice.')).toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Second notice.');
+    expect(screen.queryByText('Third notice.')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Third notice.');
   });
 });

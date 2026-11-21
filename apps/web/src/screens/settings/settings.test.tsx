@@ -1,6 +1,6 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileResponse } from '@hestia/shared';
 import {
   createFetchStub,
@@ -8,6 +8,15 @@ import {
   renderScreen,
   type StubHandler,
 } from '../../test/harness.tsx';
+import {
+  findMdButton,
+  findMdField,
+  getMdButton,
+  getMdCheckbox,
+  getMdMenuItem,
+  queryMdButton,
+} from '../../test/md-queries.ts';
+import { openMenu } from '../../test/browser.ts';
 import {
   OAK_STREET_ID,
   RIVERA_FAMILY_ID,
@@ -76,7 +85,7 @@ describe('Settings', () => {
       'GET /api/users/me': () => ({ status: 500, body: problemBody(500, 'Server Error') }),
     });
     expect(await screen.findByText("Couldn't load your settings. Try again.")).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(getMdButton('Try again')).toBeInTheDocument();
   });
 
   it('says it needs a connection when the request never leaves', async () => {
@@ -114,19 +123,19 @@ describe('Settings', () => {
 
     expect(await screen.findByText('Sam Chen')).toBeInTheDocument();
     expect(screen.getByText('Jordan Blake')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Leave Oak Street' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Leave Rivera Family' })).toBeInTheDocument();
+    expect(getMdButton('Leave Oak Street')).toBeInTheDocument();
+    expect(getMdButton('Leave Rivera Family')).toBeInTheDocument();
   });
 
   it('keeps System health for the server owner', async () => {
     renderSettings(settingsHandlers());
     await screen.findByRole('heading', { level: 2, name: 'About' });
-    expect(screen.queryByRole('button', { name: /System health/ })).not.toBeInTheDocument();
+    expect(queryMdButton(/System health/)).toBeNull();
   });
 
   it('shows System health to the server owner', async () => {
     renderSettings(settingsHandlers({ ...profileFixture, isServerOwner: true }));
-    expect(await screen.findByRole('button', { name: /System health/ })).toBeInTheDocument();
+    expect(await findMdButton(/System health/)).toBeInTheDocument();
   });
 
   it('hides invite management from a member', async () => {
@@ -160,25 +169,20 @@ describe('Settings', () => {
       }),
     );
 
-    await user.click(await screen.findByRole('button', { name: 'Create an invite' }));
+    await user.click(await findMdButton('Create an invite'));
 
     expect(await screen.findByText('9XKR4TZ2')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Copy invite link' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Copy code' })).toBeInTheDocument();
+    expect(getMdButton('Copy invite link')).toBeInTheDocument();
+    expect(getMdButton('Copy code')).toBeInTheDocument();
   });
 
   it('gives the admin remove and transfer on another member', async () => {
     const user = userEvent.setup();
     renderSettings(settingsHandlers());
 
-    // Radix opens its menu from the keyboard, which is the path jsdom can drive.
-    (await screen.findByRole('button', { name: 'More actions for Sam Chen' })).focus();
-    await user.keyboard('{Enter}');
-    const menu = await screen.findByRole('menu');
-    expect(within(menu).getByRole('menuitem', { name: 'Make admin' })).toBeInTheDocument();
-    expect(
-      within(menu).getByRole('menuitem', { name: 'Remove from household' }),
-    ).toBeInTheDocument();
+    await openMenu(user, 'More actions for Sam Chen');
+    expect(getMdMenuItem('Make admin')).toBeInTheDocument();
+    expect(getMdMenuItem('Remove from household')).toBeInTheDocument();
   });
 
   it('saves quiet hours alongside the notification types', async () => {
@@ -190,8 +194,8 @@ describe('Settings', () => {
     );
 
     expect(await screen.findByRole('heading', { name: 'Notification types' })).toBeInTheDocument();
-    await user.click(screen.getByLabelText('Hold notifications during quiet hours'));
-    await user.click(screen.getByRole('button', { name: 'Save quiet hours' }));
+    await user.click(getMdCheckbox('Hold notifications during quiet hours'));
+    await user.click(getMdButton('Save quiet hours'));
 
     await waitFor(() => {
       expect(
@@ -226,6 +230,41 @@ describe('Settings', () => {
  * falling back to the document, and returns to the trigger when the form closes.
  */
 describe('Account forms swap focus with the control they replace', () => {
+  beforeEach(() => {
+    interface CustomElementWithFocus {
+      prototype: {
+        focus: (this: HTMLElement, options?: FocusOptions) => void;
+        __focusPatched?: boolean;
+      };
+    }
+
+    for (const tag of [
+      'md-outlined-button',
+      'md-filled-button',
+      'md-text-button',
+      'md-icon-button',
+    ]) {
+      const constructor = customElements.get(tag) as unknown as CustomElementWithFocus | undefined;
+      if (constructor !== undefined && constructor.prototype.__focusPatched !== true) {
+        const original = constructor.prototype.focus;
+        constructor.prototype.focus = function focus(
+          this: HTMLElement,
+          options?: FocusOptions,
+        ): void {
+          const litTarget = this as unknown as {
+            isUpdatePending?: boolean;
+            performUpdate?: () => void;
+          };
+          if (litTarget.isUpdatePending === true && typeof litTarget.performUpdate === 'function') {
+            litTarget.performUpdate();
+          }
+          original.call(this, options);
+        };
+        constructor.prototype.__focusPatched = true;
+      }
+    }
+  });
+
   it.each([
     ['Change password', 'Current password'],
     ['Change email', 'New email'],
@@ -233,10 +272,15 @@ describe('Account forms swap focus with the control they replace', () => {
     const user = userEvent.setup();
     renderSettings(settingsHandlers());
 
-    await user.click(await screen.findByRole('button', { name: trigger }));
-    expect(await screen.findByLabelText(firstField)).toHaveFocus();
+    await user.click(await findMdButton(trigger));
+    const field = await findMdField(firstField);
+    await waitFor(() => {
+      expect(field).toHaveFocus();
+    });
 
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(await screen.findByRole('button', { name: trigger })).toHaveFocus();
+    await user.click(getMdButton('Cancel'));
+    await waitFor(() => {
+      expect(getMdButton(trigger)).toHaveFocus();
+    });
   });
 });

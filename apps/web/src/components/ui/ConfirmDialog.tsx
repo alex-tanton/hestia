@@ -1,8 +1,14 @@
-import { AlertDialog } from 'radix-ui';
-import type { ReactElement, ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { useSection } from '../../lib/section-context.tsx';
-import { BUTTON_BASE, Button } from './Button.tsx';
-import { cn } from '../../lib/cn.ts';
+import { MdDialog } from '../md/MdDialog.tsx';
+import { Button } from './Button.tsx';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -12,16 +18,16 @@ export interface ConfirmDialogProps {
   description: string;
   confirmLabel: string;
   onConfirm: () => void;
-  cancelLabel?: string;
+  cancelLabel?: string | undefined;
   /** Extra content, such as the typed-name field for household deletion. */
-  children?: ReactNode;
-  isConfirmDisabled?: boolean;
-  isConfirming?: boolean;
+  children?: ReactNode | undefined;
+  isConfirmDisabled?: boolean | undefined;
+  isConfirming?: boolean | undefined;
 }
 
 /**
  * Dialogs are for destructive confirmation only, so this is an alert dialog: it traps focus, starts
- * on Cancel, and cannot be dismissed by an outside click.
+ * on Cancel, and cannot be dismissed by an outside scrim click.
  */
 export function ConfirmDialog({
   open,
@@ -36,39 +42,92 @@ export function ConfirmDialog({
   isConfirming = false,
 }: ConfirmDialogProps): ReactElement {
   const section = useSection();
+  const descriptionId = useId();
+  const cancelRef = useRef<HTMLElement>(null);
+  const escapePressedRef = useRef(false);
+
+  const focusCancel = (): void => {
+    cancelRef.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!open) {
+      escapePressedRef.current = false;
+      return;
+    }
+    focusCancel();
+  }, [open]);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>): void => {
+    if (event.key === 'Escape' && !event.defaultPrevented) {
+      escapePressedRef.current = true;
+      onOpenChange(false);
+    }
+  };
+
+  const handleCancel = (event: Event): void => {
+    if (!escapePressedRef.current) {
+      event.preventDefault();
+      return;
+    }
+    escapePressedRef.current = false;
+    onOpenChange(false);
+  };
+
+  const handleOpened = (): void => {
+    focusCancel();
+  };
+
+  const handleClosed = (): void => {
+    escapePressedRef.current = false;
+    onOpenChange(false);
+  };
+
   return (
-    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 z-40 bg-overlay data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in" />
-        <AlertDialog.Content
-          data-section={section}
-          className="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-lg border border-border bg-base p-6 shadow-md data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+    <MdDialog
+      type="alert"
+      quick
+      open={open}
+      data-section={section}
+      aria-describedby={descriptionId}
+      onKeyDown={handleKeyDown}
+      onCancel={handleCancel}
+      onOpened={handleOpened}
+      onClosed={handleClosed}
+    >
+      <span slot="headline" className="break-words">
+        {title}
+      </span>
+      <div slot="content" className="flex flex-col gap-4">
+        <p
+          id={descriptionId}
+          className="m-0 break-words text-[0.9375rem] leading-6 text-[var(--md-sys-color-on-surface-variant)]"
         >
-          <AlertDialog.Title className="text-h2 text-primary">{title}</AlertDialog.Title>
-          <AlertDialog.Description className="text-body text-secondary">
-            {description}
-          </AlertDialog.Description>
-          {children}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <AlertDialog.Cancel
-              className={cn(
-                BUTTON_BASE,
-                'border border-input bg-base px-4 text-primary hover:bg-raised active:bg-section-tint',
-              )}
-            >
-              {cancelLabel}
-            </AlertDialog.Cancel>
-            <Button
-              variant="destructive"
-              disabled={isConfirmDisabled}
-              isLoading={isConfirming}
-              onClick={onConfirm}
-            >
-              {confirmLabel}
-            </Button>
-          </div>
-        </AlertDialog.Content>
-      </AlertDialog.Portal>
-    </AlertDialog.Root>
+          {description}
+        </p>
+        {children}
+      </div>
+      <div slot="actions" className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button
+          ref={cancelRef}
+          variant="secondary"
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- Alert dialog intentionally starts keyboard focus on non-destructive Cancel
+          autoFocus
+          onClick={() => {
+            onOpenChange(false);
+          }}
+        >
+          {cancelLabel}
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={isConfirmDisabled}
+          isLoading={isConfirming}
+          onClick={onConfirm}
+        >
+          {confirmLabel}
+        </Button>
+      </div>
+    </MdDialog>
   );
 }

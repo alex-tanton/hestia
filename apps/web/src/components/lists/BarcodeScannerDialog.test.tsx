@@ -6,6 +6,7 @@ import {
   type BarcodeDetectorInstance,
   type BarcodeResult,
 } from '../../lib/barcode/detector.ts';
+import { getMdButton } from '../../test/md-queries.ts';
 import { BarcodeScannerDialog } from './BarcodeScannerDialog.tsx';
 
 const mockDetect = vi.fn<() => Promise<BarcodeResult[]>>();
@@ -77,7 +78,7 @@ describe('BarcodeScannerDialog', () => {
     await user.click(addBtn);
 
     expect(localStorage.getItem('hestia.scanner_mode')).toBe('add');
-    expect(addBtn).toHaveAttribute('data-state', 'on');
+    expect(addBtn).toHaveAttribute('aria-checked', 'true');
   });
 
   it('allows manual entry and submits barcode', async () => {
@@ -87,7 +88,7 @@ describe('BarcodeScannerDialog', () => {
     render(<BarcodeScannerDialog open={true} onOpenChange={vi.fn()} onScan={onScan} />);
 
     // Switch to manual tab
-    const switchBtn = screen.getByRole('button', { name: 'Switch to manual entry' });
+    const switchBtn = getMdButton('Switch to manual entry');
     await user.click(switchBtn);
 
     // Type on numeric keypad: 1, 2, 3
@@ -99,7 +100,7 @@ describe('BarcodeScannerDialog', () => {
     expect(input.value).toBe('123');
 
     // Click submit
-    const submitBtn = screen.getByRole('button', { name: /find & mark bought|add to list/i });
+    const submitBtn = getMdButton('Find & Mark Bought');
     await user.click(submitBtn);
 
     expect(onScan).toHaveBeenCalledWith('123', 'shop');

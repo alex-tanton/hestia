@@ -1,9 +1,9 @@
-import { Check, ChevronDown } from 'lucide-react';
-import { Select as RadixSelect } from 'radix-ui';
 import { useSyncExternalStore, type ReactElement } from 'react';
 import { cn } from '../../lib/cn.ts';
-import { useSection } from '../../lib/section-context.tsx';
+import { MdOutlinedSelect, MdSelectOption } from '../md/MdSelect.tsx';
+import { omitUndefined } from '../md/props.ts';
 import { FieldFrame } from './Field.tsx';
+import { Icon } from './Icon.tsx';
 
 export interface SelectOption {
   value: string;
@@ -15,12 +15,12 @@ export interface SelectProps {
   options: readonly SelectOption[];
   value: string;
   onValueChange: (value: string) => void;
-  placeholder?: string;
+  placeholder?: string | undefined;
   hint?: string | undefined;
   error?: string | undefined;
   disabledReason?: string | undefined;
-  disabled?: boolean;
-  name?: string;
+  disabled?: boolean | undefined;
+  name?: string | undefined;
 }
 
 const COARSE_POINTER = '(pointer: coarse)';
@@ -38,12 +38,20 @@ function isCoarsePointer(): boolean {
   return typeof window.matchMedia === 'function' && window.matchMedia(COARSE_POINTER).matches;
 }
 
-const TRIGGER_CLASSES =
-  'flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border bg-base px-3 text-left text-body text-primary transition-colors duration-150 ease-out hover:border-primary disabled:cursor-not-allowed disabled:bg-raised disabled:opacity-60';
+const NATIVE_SELECT_CLASSES =
+  'min-h-14 w-full min-w-0 appearance-none rounded-[var(--md-sys-shape-corner-extra-small)] bg-[var(--md-sys-color-surface)] pr-10 pl-4 text-left text-[1rem] leading-6 text-[var(--md-sys-color-on-surface)] transition-colors duration-150 ease-out focus:outline-none disabled:cursor-not-allowed disabled:bg-[var(--md-sys-color-surface-container-highest)]/40 disabled:opacity-60';
+
+function readSelectValue(target: EventTarget | null): string | undefined {
+  if (target !== null && 'value' in target && typeof target.value === 'string') {
+    return target.value;
+  }
+  return undefined;
+}
 
 /**
- * Radix Select, native on mobile where possible. Touch devices get the
- * platform picker, which is faster one-handed than a custom listbox.
+ * Hybrid MD3 Select: native `<select>` on coarse touch devices for fast platform pickers, and
+ * `<MdOutlinedSelect menuPositioning="fixed">` on fine-pointer desktops so popovers escape clipped
+ * cards and bottom sheets.
  */
 export function Select({
   label,
@@ -59,91 +67,79 @@ export function Select({
 }: SelectProps): ReactElement {
   const isNative = useSyncExternalStore(subscribeToPointer, isCoarsePointer, () => false);
   const isDisabled = disabled ?? Boolean(disabledReason);
-  const section = useSection();
+  const isInvalid = Boolean(error);
 
-  return (
-    <FieldFrame label={label} hint={hint} error={error} disabledReason={disabledReason}>
-      {({ inputId, describedBy, isInvalid }) => {
-        const borderClass = isInvalid ? 'border-2 border-danger' : 'border-input';
-        if (isNative) {
-          return (
-            <div className="relative">
-              <select
-                id={inputId}
-                name={name}
-                value={value}
-                disabled={isDisabled}
-                aria-invalid={isInvalid || undefined}
-                aria-describedby={describedBy}
-                onChange={(event) => {
-                  onValueChange(event.target.value);
-                }}
-                className={cn(TRIGGER_CLASSES, 'appearance-none pr-10', borderClass)}
-              >
-                {placeholder && (
-                  <option value="" disabled>
-                    {placeholder}
-                  </option>
-                )}
-                {options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                aria-hidden
-                size={20}
-                strokeWidth={1.5}
-                className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-secondary"
-              />
-            </div>
-          );
-        }
-        return (
-          <RadixSelect.Root
-            value={value}
-            onValueChange={onValueChange}
-            disabled={isDisabled}
-            {...(name ? { name } : {})}
-          >
-            <RadixSelect.Trigger
+  if (isNative) {
+    return (
+      <FieldFrame label={label} hint={hint} error={error} disabledReason={disabledReason}>
+        {({ inputId, describedBy }) => (
+          <div className="relative">
+            <select
               id={inputId}
+              name={name}
+              value={value}
+              disabled={isDisabled}
               aria-invalid={isInvalid || undefined}
               aria-describedby={describedBy}
-              className={cn(TRIGGER_CLASSES, borderClass)}
+              onChange={(event) => {
+                onValueChange(event.currentTarget.value);
+              }}
+              className={cn(
+                NATIVE_SELECT_CLASSES,
+                isInvalid
+                  ? 'border-2 border-[var(--md-sys-color-error)] focus:border-2 focus:border-[var(--md-sys-color-error)]'
+                  : 'border border-[var(--md-sys-color-outline)] hover:border-[var(--md-sys-color-on-surface)] focus:border-2 focus:border-[var(--md-sys-color-primary)]',
+              )}
             >
-              <RadixSelect.Value placeholder={placeholder} />
-              <RadixSelect.Icon>
-                <ChevronDown aria-hidden size={20} strokeWidth={1.5} className="text-secondary" />
-              </RadixSelect.Icon>
-            </RadixSelect.Trigger>
-            <RadixSelect.Portal>
-              <RadixSelect.Content
-                data-section={section}
-                position="popper"
-                sideOffset={4}
-                className="z-50 max-h-(--radix-select-content-available-height) min-w-(--radix-select-trigger-width) overflow-hidden rounded-md border border-border bg-base shadow-md"
-              >
-                <RadixSelect.Viewport className="p-1">
-                  {options.map((option) => (
-                    <RadixSelect.Item
-                      key={option.value}
-                      value={option.value}
-                      className="flex min-h-11 cursor-default items-center justify-between gap-2 rounded-sm px-3 text-body text-primary outline-none select-none data-highlighted:bg-raised data-highlighted:outline-2 data-highlighted:-outline-offset-2 data-highlighted:outline-section-accent data-[state=checked]:font-semibold"
-                    >
-                      <RadixSelect.ItemText>{option.label}</RadixSelect.ItemText>
-                      <RadixSelect.ItemIndicator>
-                        <Check aria-hidden size={20} strokeWidth={1.5} className="text-section" />
-                      </RadixSelect.ItemIndicator>
-                    </RadixSelect.Item>
-                  ))}
-                </RadixSelect.Viewport>
-              </RadixSelect.Content>
-            </RadixSelect.Portal>
-          </RadixSelect.Root>
-        );
-      }}
-    </FieldFrame>
+              {placeholder && (
+                <option value="" disabled>
+                  {placeholder}
+                </option>
+              )}
+              {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <Icon
+              name="expand_more"
+              size={18}
+              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)]"
+            />
+          </div>
+        )}
+      </FieldFrame>
+    );
+  }
+
+  const hasMatchingOption = options.some((option) => option.value === value);
+  const ariaInvalid: 'true' | undefined = isInvalid ? 'true' : undefined;
+  const mdProps = omitUndefined({
+    label,
+    name,
+    value: hasMatchingOption ? value : '',
+    disabled: isDisabled,
+    error: isInvalid,
+    errorText: error ?? '',
+    supportingText: disabledReason ?? hint ?? '',
+    'aria-invalid': ariaInvalid,
+    className: 'w-full min-w-0 max-w-full',
+    onChange: (event: Event) => {
+      const next = readSelectValue(event.currentTarget);
+      if (next !== undefined) {
+        onValueChange(next);
+      }
+    },
+  });
+
+  return (
+    <MdOutlinedSelect menuPositioning="fixed" {...mdProps}>
+      {options.map((option) => (
+        <MdSelectOption key={option.value} value={option.value} selected={option.value === value}>
+          <div slot="headline">{option.label}</div>
+        </MdSelectOption>
+      ))}
+    </MdOutlinedSelect>
   );
 }

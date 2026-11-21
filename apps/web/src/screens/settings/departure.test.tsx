@@ -9,6 +9,7 @@ import {
   type FetchStub,
   type StubHandler,
 } from '../../test/harness.tsx';
+import { findMdButton, findMdField, getMdButton } from '../../test/md-queries.ts';
 import {
   ALEX_ID,
   OAK_STREET_ID,
@@ -96,20 +97,20 @@ describe('removing a member', () => {
       }),
     });
 
-    const confirm = (): HTMLElement => screen.getByRole('button', { name: 'Remove Sam Chen' });
-    await screen.findByRole('button', { name: 'Remove Sam Chen' });
-    expect(confirm()).toHaveAttribute('aria-disabled', 'true');
+    const confirm = (): HTMLElement => getMdButton('Remove Sam Chen');
+    await findMdButton('Remove Sam Chen');
+    expect(confirm()).toHaveProperty('softDisabled', true);
     expect(screen.getByText('Choose someone for each item above first.')).toBeInTheDocument();
 
     await user.click(confirm());
     expect(stub.calls.some((call) => call.method === 'POST')).toBe(false);
 
     await user.selectOptions(screen.getByLabelText('This Week'), ALEX_ID);
-    expect(confirm()).toHaveAttribute('aria-disabled', 'true');
+    expect(confirm()).toHaveProperty('softDisabled', true);
 
     await user.selectOptions(screen.getByLabelText('Take out trash'), ALEX_ID);
     await waitFor(() => {
-      expect(confirm()).not.toHaveAttribute('aria-disabled');
+      expect(confirm()).toHaveProperty('softDisabled', false);
     });
 
     await user.click(confirm());
@@ -170,21 +171,24 @@ describe('the last member leaving', () => {
 
     expect(await screen.findByText('You are the last member')).toBeInTheDocument();
     expect(
-      screen.getByText(/This deletes 4 lists, 23 recipes, and 6 chores permanently\./),
+      screen.getAllByText(/This deletes 4 lists, 23 recipes, and 6 chores permanently\./)[0],
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Delete household and leave' }));
+    await user.click(getMdButton('Delete household and leave'));
 
-    const confirm = await screen.findByRole('button', { name: 'Delete household' });
-    expect(confirm).toBeDisabled();
+    const confirm = await findMdButton('Delete household');
+    expect(confirm).toHaveProperty('disabled', true);
 
-    await user.type(screen.getByLabelText('Type Rivera Family to confirm'), 'Rivera');
-    expect(confirm).toBeDisabled();
+    const confirmField = await findMdField('Type Rivera Family to confirm');
+    const innerInput = confirmField.shadowRoot?.querySelector('input') ?? confirmField;
+
+    await user.type(innerInput, 'Rivera');
+    expect(confirm).toHaveProperty('disabled', true);
     expect(stub.calls.some((call) => call.method === 'POST')).toBe(false);
 
-    await user.type(screen.getByLabelText('Type Rivera Family to confirm'), ' Family');
+    await user.type(innerInput, ' Family');
     await waitFor(() => {
-      expect(confirm).toBeEnabled();
+      expect(confirm).toHaveProperty('disabled', false);
     });
 
     await user.click(confirm);
@@ -205,6 +209,6 @@ describe('the last member leaving', () => {
 describe('the lazy route module', () => {
   it('wires the depart route to the departure screen', async () => {
     renderDeparture(departurePreviewFixture, oakStreetMembers, {}, <DepartRoute />);
-    expect(await screen.findByRole('button', { name: 'Remove Sam Chen' })).toBeInTheDocument();
+    expect(await findMdButton('Remove Sam Chen')).toBeInTheDocument();
   });
 });

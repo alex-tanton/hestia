@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DashboardScreen, type DashboardScreenProps } from '../../screens/DashboardScreen.tsx';
 import type { PillarId } from '../../lib/sections.ts';
+import { getMdButton } from '../../test/md-queries.ts';
 import { DashboardCard, type DashboardCardState } from './DashboardCard.tsx';
 import { DASHBOARD_EMPTY_COPY } from './DashboardCards.tsx';
 import { FIRST_RUN_HEADING } from './DashboardFirstRun.tsx';
@@ -163,7 +164,7 @@ describe('DashboardCard states', () => {
   it('error: states what failed and retries', async () => {
     const onRetry = vi.fn();
     renderCard({ status: 'error', message: "Couldn't load bills.", onRetry });
-    await userEvent.click(within(card('Bills')).getByRole('button', { name: 'Try again' }));
+    await userEvent.click(getMdButton('Try again', { container: card('Bills') }));
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
