@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { useAuthState } from '../../lib/api/api-context.tsx';
@@ -59,9 +60,17 @@ export function SetPasswordScreen(): ReactElement {
   if (authState.status === 'loading') {
     return (
       <OnboardingLayout title="Set a new password">
-        <p role="status" className="text-body text-secondary">
-          Checking your reset link…
-        </p>
+        <Card
+          variant="flat"
+          className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
+        >
+          <p
+            role="status"
+            className="text-body-md text-body text-[var(--md-sys-color-on-surface-variant)]"
+          >
+            Checking your reset link…
+          </p>
+        </Card>
       </OnboardingLayout>
     );
   }
@@ -69,45 +78,59 @@ export function SetPasswordScreen(): ReactElement {
   if (isLinkUnusable) {
     return (
       <OnboardingLayout title="Set a new password">
-        <FormMessage message={RESET_LINK_EXPIRED_MESSAGE} />
-        <Link to="/sign-in" className="text-body-sm font-semibold text-section">
-          Back to sign in
-        </Link>
+        <Card
+          variant="flat"
+          className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
+        >
+          <FormMessage message={RESET_LINK_EXPIRED_MESSAGE} />
+          <Link
+            to="/sign-in"
+            className="text-body-sm font-semibold text-[var(--md-sys-color-primary)]"
+          >
+            Back to sign in
+          </Link>
+        </Card>
       </OnboardingLayout>
     );
   }
 
   return (
     <OnboardingLayout title="Set a new password">
-      <form
-        ref={formRef}
-        noValidate
-        className="flex flex-col gap-4"
-        onSubmit={(event) => {
-          void handleSubmit(event);
-        }}
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
       >
-        <TextField
-          label="New password"
-          type="password"
-          name="newPassword"
-          autoComplete="new-password"
-          hint={PASSWORD_HINT}
-          value={password}
-          error={errors.password}
-          onChange={(event) => {
-            setPassword(event.target.value);
+        <form
+          ref={formRef}
+          noValidate
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            void handleSubmit(event);
           }}
-        />
-        <FormMessage message={formError} />
-        <Button
-          type="submit"
-          isLoading={changePassword.isPending}
-          disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
         >
-          Set password
-        </Button>
-      </form>
+          <TextField
+            label="New password"
+            type="password"
+            name="newPassword"
+            autoComplete="new-password"
+            hint={PASSWORD_HINT}
+            value={password}
+            error={errors.password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+            }}
+          />
+          <FormMessage message={formError} />
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={changePassword.isPending}
+            disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
+          >
+            Set password
+          </Button>
+        </form>
+      </Card>
     </OnboardingLayout>
   );
 }

@@ -2,6 +2,7 @@ import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { displayNameSchema, emailSchema } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { useAuthClient } from '../../lib/api/api-context.tsx';
@@ -69,62 +70,68 @@ export function SignUpScreen(): ReactElement {
 
   return (
     <OnboardingLayout title="Create your account">
-      <form
-        ref={formRef}
-        noValidate
-        className="flex flex-col gap-4"
-        onSubmit={(event) => {
-          void handleSubmit(event);
-        }}
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
       >
-        <TextField
-          label="Display name"
-          name="displayName"
-          autoComplete="name"
-          value={displayName}
-          error={errors.displayName}
-          onChange={(event) => {
-            setDisplayName(event.target.value);
+        <form
+          ref={formRef}
+          noValidate
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            void handleSubmit(event);
           }}
-        />
-        <TextField
-          label="Email"
-          type="email"
-          name="email"
-          autoComplete="email"
-          value={email}
-          error={errors.email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-          }}
-        />
-        <TextField
-          label="Password"
-          type="password"
-          name="password"
-          autoComplete="new-password"
-          hint={PASSWORD_HINT}
-          value={password}
-          error={errors.password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
-        />
-        <FormMessage message={formError} />
-        <Button
-          type="submit"
-          isLoading={isSubmitting}
-          disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
         >
-          Create account
-        </Button>
-      </form>
-      <p className="text-body-sm text-secondary">
-        Already have an account?{' '}
-        <Link to="/sign-in" className="font-semibold text-section">
-          Sign in
-        </Link>
-      </p>
+          <TextField
+            label="Display name"
+            name="displayName"
+            autoComplete="name"
+            value={displayName}
+            error={errors.displayName}
+            onChange={(event) => {
+              setDisplayName(event.target.value);
+            }}
+          />
+          <TextField
+            label="Email"
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={email}
+            error={errors.email}
+            onChange={(event) => {
+              setEmail(event.target.value);
+            }}
+          />
+          <TextField
+            label="Password"
+            type="password"
+            name="password"
+            autoComplete="new-password"
+            hint={PASSWORD_HINT}
+            value={password}
+            error={errors.password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+            }}
+          />
+          <FormMessage message={formError} />
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={isSubmitting}
+            disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
+          >
+            Create account
+          </Button>
+        </form>
+        <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+          Already have an account?{' '}
+          <Link to="/sign-in" className="font-semibold text-[var(--md-sys-color-primary)]">
+            Sign in
+          </Link>
+        </p>
+      </Card>
     </OnboardingLayout>
   );
 }

@@ -1,7 +1,8 @@
-import { Clock, RefreshCw, RotateCw } from 'lucide-react';
 import type { ReactElement } from 'react';
 import type { Freshness } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { formatDateTime } from '../../lib/format.ts';
 
 export const REFRESHING_MESSAGE = "Fetching this week's deals…";
@@ -24,11 +25,8 @@ export interface DealFreshnessProps extends Freshness {
 }
 
 /**
- * Stale results keep their "as of" date rather than being
- * replaced by an error, because stale data beats empty data, and a postal code whose background
- * refresh is still running says so while its cache stays on screen.
- *
- * Each line pairs an icon with its text, so none of these states is read from color alone.
+ * DealFreshness renders as a compact tonal surfaceContainerLow banner with
+ * schedule and refresh status icons per D-19 and DEAL-06.
  */
 export function DealFreshness({
   asOf,
@@ -40,34 +38,37 @@ export function DealFreshness({
   if (!stale && !refreshing) return null;
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border bg-raised p-3">
-      {stale && (
-        <p className="flex items-start gap-2 text-body-sm text-secondary">
-          <Clock aria-hidden size={20} strokeWidth={1.5} className="mt-px shrink-0 text-warning" />
-          <span className="max-w-[70ch]">{staleMessage(asOf)}</span>
-        </p>
-      )}
-      {refreshing && (
-        <p role="status" className="flex items-start gap-2 text-body-sm text-secondary">
-          <RefreshCw
-            aria-hidden
-            size={20}
-            strokeWidth={1.5}
-            className="mt-px shrink-0 text-info-accent"
-          />
-          <span className="max-w-[70ch]">
-            {REFRESHING_MESSAGE}
-            {!stale && asOf !== null && ` ${asOfLabel(asOf)}.`}
-            {hasGivenUp && ' This is taking a while.'}
-          </span>
-        </p>
-      )}
-      {(stale || hasGivenUp) && (
-        <Button variant="ghost" className="self-start" onClick={onRetry}>
-          <RotateCw aria-hidden size={20} strokeWidth={1.5} />
-          Try again
-        </Button>
-      )}
-    </div>
+    <Card
+      variant="flat"
+      className="flex flex-col gap-2 rounded-lg bg-[var(--md-sys-color-surface-container-low)] p-3 text-label-md text-on-surface-variant"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col gap-1.5">
+          {stale && (
+            <p className="flex items-start gap-2 text-body-sm text-secondary">
+              <Icon name="schedule" size={20} className="mt-px shrink-0 text-warning" />
+              <span className="max-w-[70ch]">{staleMessage(asOf)}</span>
+            </p>
+          )}
+          {refreshing && (
+            <p role="status" className="flex items-start gap-2 text-body-sm text-secondary">
+              <Icon name="refresh" size={20} className="mt-px shrink-0 text-primary" />
+              <span className="max-w-[70ch]">
+                {REFRESHING_MESSAGE}
+                {!stale && asOf !== null && ` ${asOfLabel(asOf)}.`}
+                {hasGivenUp && ' This is taking a while.'}
+              </span>
+            </p>
+          )}
+        </div>
+
+        {(stale || hasGivenUp) && (
+          <Button variant="ghost" className="self-start" onClick={onRetry}>
+            <Icon name="refresh" size={20} />
+            Try again
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 }

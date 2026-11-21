@@ -39,9 +39,6 @@ export interface ButtonProps extends Omit<
   ref?: Ref<HTMLElement> | undefined;
 }
 
-export const BUTTON_BASE =
-  'inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-md text-body font-semibold transition-colors duration-150 ease-out select-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 disabled:cursor-not-allowed disabled:opacity-50';
-
 const DESTRUCTIVE_CLASSES =
   '[--md-filled-button-container-color:var(--md-sys-color-error)] [--md-filled-button-label-text-color:var(--md-sys-color-on-error)]';
 

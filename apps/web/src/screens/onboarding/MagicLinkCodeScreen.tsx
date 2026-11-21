@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement, type SyntheticEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { useAuthClient } from '../../lib/api/api-context.tsx';
@@ -119,50 +120,60 @@ export function MagicLinkCodeScreen(): ReactElement {
         },
       }}
     >
-      <form
-        ref={formRef}
-        noValidate
-        className="flex flex-col gap-4"
-        onSubmit={(event) => {
-          void handleSubmit(event);
-        }}
+      <Card
+        variant="flat"
+        className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
       >
-        <TextField
-          label="6-digit code"
-          name="code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          spellCheck={false}
-          hint="From the email we just sent"
-          className="tracking-[0.3em] tabular-nums"
-          value={code}
-          error={errors.code}
-          onChange={(event) => {
-            setCode(normalizeCode(event.target.value));
-          }}
-        />
-        <FormMessage message={formError} />
-        <Button type="submit" isLoading={isSubmitting} disabledReason={resendUnavailable}>
-          Sign in
-        </Button>
-      </form>
-      <div className="flex flex-col gap-2">
-        <Button
-          variant="secondary"
-          isLoading={isResending}
-          disabledReason={
-            resendUnavailable ?? (secondsLeft > 0 ? resendCountdown(secondsLeft) : undefined)
-          }
-          onClick={() => {
-            void handleResend();
+        <form
+          ref={formRef}
+          noValidate
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            void handleSubmit(event);
           }}
         >
-          Send a new code
-        </Button>
-        <p role="status" className="text-body-sm text-secondary">
-          {hasResent ? resentConfirmation(email) : ''}
-        </p>
-      </div>
+          <TextField
+            label="6-digit code"
+            name="code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            spellCheck={false}
+            hint="From the email we just sent"
+            className="tracking-[0.3em] tabular-nums"
+            value={code}
+            error={errors.code}
+            onChange={(event) => {
+              setCode(normalizeCode(event.target.value));
+            }}
+          />
+          <FormMessage message={formError} />
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={isSubmitting}
+            disabledReason={resendUnavailable}
+          >
+            Verify sign-in code
+          </Button>
+        </form>
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="secondary"
+            isLoading={isResending}
+            disabledReason={
+              resendUnavailable ?? (secondsLeft > 0 ? resendCountdown(secondsLeft) : undefined)
+            }
+            onClick={() => {
+              void handleResend();
+            }}
+          >
+            Send a new code
+          </Button>
+          <p role="status" className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+            {hasResent ? resentConfirmation(email) : ''}
+          </p>
+        </div>
+      </Card>
     </OnboardingLayout>
   );
 }

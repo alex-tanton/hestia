@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { householdNameSchema, postalCodeSchema } from '@hestia/shared';
 import { Button } from '../../components/ui/Button.tsx';
+import { Card } from '../../components/ui/Card.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
 import { useCreateHousehold } from '../../lib/api/hooks.ts';
@@ -13,11 +14,19 @@ import { useOnlineStatus } from '../../lib/use-online-status.ts';
 
 type Field = 'name' | 'postalCode';
 
+export interface CreateHouseholdStepProps {
+  onCreated: () => void;
+  onJoinInvite?: () => void;
+}
+
 /**
  * Name and postal code. The timezone is taken from the browser without
  * asking, so it is stated rather than offered.
  */
-export function CreateHouseholdStep({ onCreated }: { onCreated: () => void }): ReactElement {
+export function CreateHouseholdStep({
+  onCreated,
+  onJoinInvite,
+}: CreateHouseholdStepProps): ReactElement {
   const isOnline = useOnlineStatus();
   const createHousehold = useCreateHousehold();
   const { errors, setErrors, formRef } = useFieldErrors<Field>();
@@ -50,49 +59,65 @@ export function CreateHouseholdStep({ onCreated }: { onCreated: () => void }): R
   };
 
   return (
-    <form
-      ref={formRef}
-      noValidate
-      className="flex flex-col gap-4"
-      onSubmit={(event) => {
-        void handleSubmit(event);
-      }}
+    <Card
+      variant="flat"
+      className="w-full max-w-[440px] mx-auto p-6 bg-[var(--md-sys-color-surface-container)] flex flex-col gap-6"
     >
-      <TextField
-        label="Household name"
-        name="householdName"
-        autoComplete="off"
-        value={name}
-        error={errors.name}
-        onChange={(event) => {
-          setName(event.target.value);
+      <form
+        ref={formRef}
+        noValidate
+        className="flex flex-col gap-4"
+        onSubmit={(event) => {
+          void handleSubmit(event);
         }}
-      />
-      <TextField
-        label="ZIP code"
-        name="postalCode"
-        inputMode="numeric"
-        autoComplete="postal-code"
-        maxLength={5}
-        hint="Used to find the weekly ads near you"
-        value={postalCode}
-        error={errors.postalCode}
-        onChange={(event) => {
-          setPostalCode(event.target.value);
-        }}
-      />
-      <p className="text-body-sm text-secondary">
-        Dates and times for this household use {formatTimezone(timezone)}, detected from this
-        device. The admin can change it in Settings.
-      </p>
-      <FormMessage message={formError} />
-      <Button
-        type="submit"
-        isLoading={createHousehold.isPending}
-        disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
       >
-        Create household
-      </Button>
-    </form>
+        <TextField
+          label="Household name"
+          name="householdName"
+          autoComplete="off"
+          value={name}
+          error={errors.name}
+          onChange={(event) => {
+            setName(event.target.value);
+          }}
+        />
+        <TextField
+          label="ZIP code"
+          name="postalCode"
+          inputMode="numeric"
+          autoComplete="postal-code"
+          maxLength={5}
+          hint="Used to find the weekly ads near you"
+          value={postalCode}
+          error={errors.postalCode}
+          onChange={(event) => {
+            setPostalCode(event.target.value);
+          }}
+        />
+        <p className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+          Dates and times for this household use {formatTimezone(timezone)}, detected from this
+          device. The admin can change it in Settings.
+        </p>
+        <FormMessage message={formError} />
+        <Button
+          type="submit"
+          variant="primary"
+          isLoading={createHousehold.isPending}
+          disabledReason={isOnline ? undefined : OFFLINE_MESSAGE}
+        >
+          Create household group
+        </Button>
+      </form>
+      {onJoinInvite && (
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={onJoinInvite}
+          className="self-start text-body-sm"
+        >
+          Already have an invite? Join a household
+        </Button>
+      )}
+    </Card>
   );
 }

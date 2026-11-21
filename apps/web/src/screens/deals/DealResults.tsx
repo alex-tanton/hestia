@@ -63,6 +63,7 @@ export interface DealResultsProps {
   /** A failed fetch with no cache offers a route forward. */
   manualAlternative: { label: string; onAction: () => void };
   onPageChange: (page: number) => void;
+  onAddDeal?: (deal: Deal) => void;
 }
 
 /**
@@ -78,6 +79,7 @@ export function DealResults({
   errorMessage,
   manualAlternative,
   onPageChange,
+  onAddDeal,
 }: DealResultsProps): ReactElement {
   const isOnline = useOnlineStatus();
   const data = query.data;
@@ -125,7 +127,7 @@ export function DealResults({
           <ul className="flex flex-col gap-3">
             {data.deals.map((deal) => (
               <li key={deal.id}>
-                <DealCard householdId={householdId} deal={deal} />
+                <DealCard householdId={householdId} deal={deal} onAdd={onAddDeal} />
               </li>
             ))}
           </ul>

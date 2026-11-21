@@ -1,9 +1,9 @@
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
 import { listNameSchema, type ShoppingList, type ShoppingListDetail } from '@hestia/shared';
+import { MdDialog } from '../../components/md/MdDialog.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { TextField } from '../../components/ui/Field.tsx';
 import { FormMessage } from '../../components/ui/FormMessage.tsx';
-import { Sheet } from '../../components/ui/Sheet.tsx';
 import { useCreateList, useRenameList } from '../../lib/api/list-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { useFieldErrors } from '../../lib/use-field-errors.ts';
@@ -18,7 +18,7 @@ export interface ListNameSheetProps {
   onCreated?: (list: ShoppingListDetail) => void;
 }
 
-/** Creating and renaming are the same one field, so they are the same sheet. */
+/** Creating and renaming are the same one field, so they are the same dialog prompt. */
 export function ListNameSheet({
   householdId,
   list,
@@ -34,9 +34,11 @@ export function ListNameSheet({
 
   const isRenaming = list !== undefined;
   const isPending = isRenaming ? renameList.isPending : createList.isPending;
+  const title = isRenaming ? 'Rename shopping list' : 'Create shopping list';
 
-  const handleSubmit = async (event: SyntheticEvent): Promise<void> => {
-    event.preventDefault();
+  const handleSubmit = async (event?: SyntheticEvent): Promise<void> => {
+    event?.preventDefault();
+    if (isPending) return;
     setFormError(undefined);
     const parsed = listNameSchema.safeParse(name);
     if (!parsed.success) {
@@ -64,15 +66,30 @@ export function ListNameSheet({
   };
 
   return (
-    <Sheet
+    <MdDialog
+      role="dialog"
       open={open}
-      onOpenChange={onOpenChange}
-      title={isRenaming ? `Rename ${list.name}` : 'New list'}
+      quick
+      aria-label={title}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          onOpenChange(false);
+        }
+      }}
     >
+      <div
+        slot="headline"
+        id="list-name-dialog-title"
+        className="text-title-lg font-semibold text-[var(--md-sys-color-on-surface)]"
+      >
+        {title}
+      </div>
       <form
         ref={formRef}
+        slot="content"
+        id="list-name-form"
         noValidate
-        className="flex flex-col gap-3 px-4"
+        className="flex flex-col gap-4 pt-2"
         onSubmit={(event) => {
           void handleSubmit(event);
         }}
@@ -83,15 +100,34 @@ export function ListNameSheet({
           autoComplete="off"
           value={name}
           error={errors.name}
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- MD3 basic dialog prompt starts keyboard focus on the input field
+          autoFocus
           onChange={(event) => {
             setName(event.target.value);
           }}
         />
         <FormMessage message={formError} />
-        <Button type="submit" isLoading={isPending}>
-          {isRenaming ? 'Save name' : 'Create list'}
-        </Button>
       </form>
-    </Sheet>
+      <div slot="actions" className="flex justify-end gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => {
+            onOpenChange(false);
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          type="submit"
+          isLoading={isPending}
+          onClick={(event) => {
+            void handleSubmit(event);
+          }}
+        >
+          {isRenaming ? 'Save list name' : 'Create shopping list'}
+        </Button>
+      </div>
+    </MdDialog>
   );
 }

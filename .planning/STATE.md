@@ -4,18 +4,18 @@ milestone: v3.0
 milestone_name: Material Design 3 Overhaul
 current_phase: 19
 current_phase_name: Entry, Dashboard & Grocery Ecosystem Screens
-status: planning
-stopped_at: Phase 18 complete, ready to plan Phase 19
-last_updated: "2026-11-15T04:38:44.398Z"
-last_activity: 2026-11-14
-last_activity_desc: Phase 18 complete, transitioned to Phase 19
-state_head: 654aa4ae78065169589f7256930e7f6f6e85871a
+status: executing
+stopped_at: Completed 19-05-PLAN.md
+last_updated: "2026-11-15T11:45:00.000Z"
+last_activity: 2026-11-15
+last_activity_desc: Phase 19 Plan 05 complete
+state_head: cb643e7
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 18
-  completed_plans: 18
-  percent: 20
+  total_plans: 23
+  completed_plans: 23
+  percent: 24
 ---
 
 # Project State
@@ -29,19 +29,19 @@ See: .planning/PROJECT.md (updated 2026-11-14)
 
 ## Current Position
 
-Phase: 19 — Entry, Dashboard & Grocery Ecosystem Screens
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-14 — Phase 18 complete, transitioned to Phase 19
+Phase: 19 (Entry, Dashboard & Grocery Ecosystem Screens) — EXECUTING
+Plan: 5 of 5
+Status: Ready to execute
+Last activity: 2026-11-15 — Phase 19 Plan 05 complete
 
-Progress: [██░░░░░░░░] 20%
+Progress: [███░░░░░░░] 24%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
+- Total plans completed: 23
 - Average duration: ~15 min
-- Total execution time: ~3.7 hrs
+- Total execution time: ~4.0 hrs
 
 **By Phase:**
 
@@ -49,6 +49,7 @@ Progress: [██░░░░░░░░] 20%
 |-------|-------|-------|----------|
 | Phase 17 | 15 | ~225 min | ~15 min |
 | 18 | 3 | - | - |
+| Phase 19 | 5 | ~85 min | ~17 min |
 
 *Updated after each plan completion*
 **Per-Plan Metrics:**
@@ -73,6 +74,10 @@ Progress: [██░░░░░░░░] 20%
 | Phase 18 P01 | 18m | 3 tasks | 8 files |
 | Phase 18 P02 | 35m | 3 tasks | 7 files |
 | Phase 18 P03 | 25m | 2 tasks | 7 files |
+| Phase 19-entry-dashboard-grocery-ecosystem-screens P19-02 | 15m | 3 tasks | 12 files |
+| Phase 19 P03 | 18m | 3 tasks | 12 files |
+| Phase 19 P04 | 15m | 2 tasks | 2 files |
+| Phase 19 P05 | 20m | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -110,6 +115,18 @@ Progress: [██░░░░░░░░] 20%
 - [Phase 18]: Use child text content for MdFilterChip label to adhere to @material/web deprecation of label property
 - [Phase 18]: Render a surfaceContainerLow Card empty state with 'No matching recipes' and 'Clear recipe filter' button when zero recipes match pantry or deal criteria
 - [Phase 18]: Delete orphaned SuggestionsScreen and suggestions copy to preserve the 27-row Knip baseline
+- [Phase 19-entry-dashboard-grocery-ecosystem-screens]: Preserve exact build contract string 'Email me a sign-in link' in SignInScreen under HESTIA_PUBLIC_MAGIC_LINK_ENABLED gating
+- [Phase 19-entry-dashboard-grocery-ecosystem-screens]: Keep ForgotPasswordScreen informational card without input form aligning with self-hosted admin reset pattern
+- [Phase 19-entry-dashboard-grocery-ecosystem-screens]: Update onboarding step button CTAs to 'Create household group' and 'Join household group' per MD3 copywriting contract
+- [Phase 19]: Migrated ListNameSheet from bottom sheet to MdDialog basic prompt with proper form submission handling
+- [Phase 19]: Created MdFab wrapper around @material/web/fab/fab.js for floating action buttons
+- [Phase 19]: Added persistent undo snackbar on grocery item checkoff with immediate optimistic state update
+- [Phase 19]: Implemented SyncToPantrySheet with prefilled storage locations and estimated shelf life
+- [Phase 19]: Organized PantryScreen with storage location chips (All, Fridge, Freezer, Pantry) and expiry status badges
+- [Phase 19]: Restyled BarcodeScannerDialog as an MD3 dark-scheme full-screen dialog with top-bar actions, corner-bracket reticle, in-HUD naming ModalBottomSheet, and single-slot persistent Undo snackbar queue
+- [Phase 19]: Formatted DealCard on mobile (<600px) as single-column horizontal card with 72x72 photo, bold price, tonal discount badge, and circular + Add button (19-05)
+- [Phase 19]: Lifted shared AddToListSheet to screen level with smart 1-list immediate addition paired with persistent Undo Snackbar (19-05)
+- [Phase 19]: Overhauled DealSearchScreen with MD3 search bar, SegmentedControl, quick filter chips, and FilterModalBottomSheet; presented FlyersScreen in 2-4 column elevated MD3 card grid (19-05)
 
 ### Pending Todos
 
@@ -127,6 +144,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-15T03:18:22.892Z
-Stopped at: Phase 18 complete, ready to plan Phase 19
+Last session: 2026-11-15T11:05:32.289Z
+Stopped at: Completed 19-03-PLAN.md
 Resume file: None

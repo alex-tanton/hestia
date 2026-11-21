@@ -93,7 +93,7 @@ describe('with the magic-link flag off', () => {
     renderApp({ initialEntries: [MAGIC_LINK_PATH], auth: signedOut() });
 
     expect(await findMdButton('Sign in')).toBeInTheDocument();
-    expect(queryMdButton('Send sign-in link')).toBeNull();
+    expect(queryMdButton('Email sign-in link')).toBeNull();
   });
 
   it('sends a direct code URL to ordinary sign in', async () => {
@@ -123,7 +123,7 @@ describe('with the magic-link flag on', () => {
     const button = await findMdButton(MAGIC_LINK_LABEL);
     expect(button).toBeInTheDocument();
     await user.click(button);
-    expect(await findMdButton('Send sign-in link')).toBeInTheDocument();
+    expect(await findMdButton('Email sign-in link')).toBeInTheDocument();
   });
 
   it('routes to the request screen', async () => {
@@ -133,7 +133,7 @@ describe('with the magic-link flag on', () => {
       auth: signedOut(),
     });
 
-    expect(await findMdButton('Send sign-in link')).toBeInTheDocument();
+    expect(await findMdButton('Email sign-in link')).toBeInTheDocument();
   });
 
   it('sends the code screen back to the request screen when nothing was sent', async () => {
@@ -143,7 +143,7 @@ describe('with the magic-link flag on', () => {
       auth: signedOut(),
     });
 
-    expect(await findMdButton('Send sign-in link')).toBeInTheDocument();
+    expect(await findMdButton('Email sign-in link')).toBeInTheDocument();
   });
 });
 
@@ -161,7 +161,7 @@ describe('the request-link screen', () => {
     const user = userEvent.setup();
     renderRequestScreen();
 
-    await user.click(getMdButton('Send sign-in link'));
+    await user.click(getMdButton('Email sign-in link'));
 
     await waitFor(() => {
       expect(getMdField('Email')).toHaveProperty('errorText', 'Enter your email address.');
@@ -174,7 +174,7 @@ describe('the request-link screen', () => {
     const auth = renderRequestScreen();
 
     await user.type(await findFieldInput('Email'), `  ${EMAIL}  `);
-    await user.click(getMdButton('Send sign-in link'));
+    await user.click(getMdButton('Email sign-in link'));
 
     expect(auth.sendSignInLink).toHaveBeenCalledWith(EMAIL);
     const confirmation = await screen.findByText(sentConfirmation(EMAIL));
@@ -188,7 +188,7 @@ describe('the request-link screen', () => {
     renderRequestScreen();
 
     await user.type(await findFieldInput('Email'), EMAIL);
-    await user.click(getMdButton('Send sign-in link'));
+    await user.click(getMdButton('Email sign-in link'));
 
     const enterCode = await findMdButton('Enter the code');
     const confirmation = enterCode.closest('[tabindex="-1"]');
@@ -209,7 +209,7 @@ describe('the request-link screen', () => {
     expect(regions.every((region) => region.textContent === '')).toBe(true);
 
     await user.type(await findFieldInput('Email'), EMAIL);
-    await user.click(getMdButton('Send sign-in link'));
+    await user.click(getMdButton('Email sign-in link'));
 
     // The same node, not a fresh one: a status region that arrives populated is announced
     // unreliably.
@@ -223,7 +223,7 @@ describe('the request-link screen', () => {
     renderRequestScreen(auth);
 
     await user.type(await findFieldInput('Email'), EMAIL);
-    await user.click(getMdButton('Send sign-in link'));
+    await user.click(getMdButton('Email sign-in link'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(SEND_FAILED_MESSAGE);
   });
@@ -235,7 +235,7 @@ describe('the request-link screen', () => {
     renderRequestScreen(auth);
 
     await user.type(await findFieldInput('Email'), EMAIL);
-    await user.click(getMdButton('Send sign-in link'));
+    await user.click(getMdButton('Email sign-in link'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(RATE_LIMITED_MESSAGE);
   });
@@ -249,7 +249,7 @@ describe('the request-link screen', () => {
     renderRequestScreen(auth);
 
     await user.type(await findFieldInput('Email'), 'uninvited@example.com');
-    await user.click(getMdButton('Send sign-in link'));
+    await user.click(getMdButton('Email sign-in link'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(UNKNOWN_EMAIL_MESSAGE);
   });
@@ -259,7 +259,7 @@ describe('the request-link screen', () => {
     try {
       renderRequestScreen();
 
-      const button = getMdButton('Send sign-in link');
+      const button = getMdButton('Email sign-in link');
       expect(button).toHaveProperty('softDisabled', true);
       expect(screen.getByText(OFFLINE_MESSAGE)).toBeInTheDocument();
     } finally {
@@ -307,7 +307,7 @@ describe('the code-entry screen', () => {
     const auth = renderCodeScreen();
 
     await user.type(await findFieldInput('6-digit code'), '123');
-    await user.click(getMdButton('Sign in'));
+    await user.click(getMdButton('Verify sign-in code'));
 
     const field = await findMdField('6-digit code');
     await waitFor(() => {
@@ -330,7 +330,7 @@ describe('the code-entry screen', () => {
       });
 
       await user.type(await findFieldInput('6-digit code'), '123456');
-      await user.click(getMdButton('Sign in'));
+      await user.click(getMdButton('Verify sign-in code'));
 
       await waitFor(() => {
         expect(auth.verifySignInCode).toHaveBeenCalledWith(EMAIL, '123456');
@@ -347,7 +347,7 @@ describe('the code-entry screen', () => {
     renderCodeScreen(auth);
 
     await user.type(await findFieldInput('6-digit code'), '000000');
-    await user.click(getMdButton('Sign in'));
+    await user.click(getMdButton('Verify sign-in code'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(CODE_INVALID_MESSAGE);
   });
@@ -387,7 +387,7 @@ describe('the code-entry screen', () => {
     try {
       renderCodeScreen();
 
-      expect(getMdButton('Sign in')).toHaveProperty('softDisabled', true);
+      expect(getMdButton('Verify sign-in code')).toHaveProperty('softDisabled', true);
       expect(screen.getAllByText(OFFLINE_MESSAGE).length).toBeGreaterThan(0);
     } finally {
       onLine.mockRestore();

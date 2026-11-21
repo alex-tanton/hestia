@@ -1,11 +1,13 @@
-import { Archive, ArchiveRestore, Pencil, ShoppingCart, Trash2 } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router';
 import type { ShoppingList } from '@hestia/shared';
+import { MdFab } from '../../components/md/MdFab.tsx';
 import { ErrorState, EmptyState, OfflineState } from '../../components/states/StateBlocks.tsx';
 import { StaleNotice } from '../../components/states/StaleNotice.tsx';
+import { Badge } from '../../components/ui/Badge.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { OverflowMenu, type OverflowMenuItem } from '../../components/ui/OverflowMenu.tsx';
 import { SkeletonRows } from '../../components/ui/Skeleton.tsx';
 import { useToast } from '../../components/ui/Toast.tsx';
@@ -72,7 +74,7 @@ export function ListsIndexScreen({
       ? [
           {
             label: 'Unarchive',
-            icon: <ArchiveRestore aria-hidden size={20} strokeWidth={1.5} />,
+            icon: <Icon name="unarchive" size={20} />,
             disabledReason: offlineReason,
             onSelect: () => {
               archiveList(list, false);
@@ -80,7 +82,7 @@ export function ListsIndexScreen({
           },
           {
             label: 'Delete',
-            icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
+            icon: <Icon name="delete" size={20} />,
             isDestructive: true,
             disabledReason: offlineReason,
             onSelect: () => {
@@ -91,7 +93,7 @@ export function ListsIndexScreen({
       : [
           {
             label: 'Rename',
-            icon: <Pencil aria-hidden size={20} strokeWidth={1.5} />,
+            icon: <Icon name="edit" size={20} />,
             disabledReason: offlineReason,
             onSelect: () => {
               setRenaming(list);
@@ -99,7 +101,7 @@ export function ListsIndexScreen({
           },
           {
             label: 'Archive',
-            icon: <Archive aria-hidden size={20} strokeWidth={1.5} />,
+            icon: <Icon name="archive" size={20} />,
             disabledReason: offlineReason,
             onSelect: () => {
               archiveList(list, true);
@@ -107,7 +109,7 @@ export function ListsIndexScreen({
           },
           {
             label: 'Delete',
-            icon: <Trash2 aria-hidden size={20} strokeWidth={1.5} />,
+            icon: <Icon name="delete" size={20} />,
             isDestructive: true,
             disabledReason: offlineReason,
             onSelect: () => {
@@ -137,10 +139,10 @@ export function ListsIndexScreen({
     const data = lists.data;
     if (data.length === 0) {
       return isArchived ? (
-        <EmptyState icon={Archive} message="No archived lists. Archiving one keeps it readable." />
+        <EmptyState icon="archive" message="No archived lists. Archiving one keeps it readable." />
       ) : (
         <EmptyState
-          icon={ShoppingCart}
+          icon="shopping_cart"
           message={LISTS_EMPTY_COPY}
           action={{
             label: 'Create a list',
@@ -153,30 +155,37 @@ export function ListsIndexScreen({
     }
 
     return (
-      <ul className="flex flex-col rounded-md border border-border">
-        {data.map((list) => (
-          <li
-            key={list.id}
-            className="flex items-center gap-1 border-b border-border last:border-b-0"
-          >
-            <Link
-              to={`/lists/${list.id}`}
-              className="flex min-h-11 flex-1 flex-col gap-0.5 px-4 py-3 hover:bg-raised"
+      <ul className="flex flex-col gap-1">
+        {data.map((list) => {
+          const boughtCount = list.itemCount - list.outstandingCount;
+          return (
+            <li
+              key={list.id}
+              className="flex min-h-[56px] items-center justify-between gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-[var(--md-sys-color-surface-container-low)]"
             >
-              <span className="truncate text-body text-primary">{list.name}</span>
-              <span className="text-body-sm text-secondary">
-                {`${pluralize(list.itemCount, 'item')} · ${String(list.outstandingCount)} outstanding · ${formatDateTime(list.updatedAt)}`}
-              </span>
-            </Link>
-            <OverflowMenu label={`More actions for ${list.name}`} items={menuFor(list)} />
-          </li>
-        ))}
+              <Link to={`/lists/${list.id}`} className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-title-md font-semibold text-[var(--md-sys-color-on-surface)]">
+                    {list.name}
+                  </span>
+                  <Badge variant="neutral">
+                    {`${String(boughtCount)}/${String(list.itemCount)} bought`}
+                  </Badge>
+                </div>
+                <span className="text-body-sm text-[var(--md-sys-color-on-surface-variant)]">
+                  {`${pluralize(list.itemCount, 'item')} · ${String(list.outstandingCount)} outstanding · ${formatDateTime(list.updatedAt)}`}
+                </span>
+              </Link>
+              <OverflowMenu label={`More actions for ${list.name}`} items={menuFor(list)} />
+            </li>
+          );
+        })}
       </ul>
     );
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 pb-16">
       {!isArchived && (
         <div className="flex justify-end">
           <Button
@@ -205,6 +214,21 @@ export function ListsIndexScreen({
         <Link to="/lists/archived" className="self-start text-body text-section underline">
           Archived lists
         </Link>
+      )}
+
+      {!isArchived && (
+        <div className="fixed bottom-6 right-6 z-20">
+          <MdFab
+            aria-label="Create shopping list"
+            onClick={() => {
+              setIsCreating(true);
+            }}
+          >
+            <span slot="icon">
+              <Icon name="add" size={24} />
+            </span>
+          </MdFab>
+        </div>
       )}
 
       {isCreating && (

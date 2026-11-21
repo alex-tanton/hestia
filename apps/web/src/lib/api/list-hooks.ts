@@ -179,21 +179,37 @@ export function useDeleteList(householdId: string): UseMutationResult<void, Erro
   });
 }
 
+export interface DeleteListItemInput {
+  listId: string;
+  itemId: string;
+}
+
 /**
  * Deleting an item is not queueable (only add, check, uncheck, and edit are), so it is an
  * ordinary online mutation.
  */
 export function useDeleteListItem(
   householdId: string,
-  listId: string,
-): UseMutationResult<void, Error, string> {
+  listId?: string,
+): UseMutationResult<void, Error, string | DeleteListItemInput> {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (itemId: string) =>
-      api.send({ method: 'DELETE', path: `/api/lists/${listId}/items/${itemId}` }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.list(householdId, listId) });
+    mutationFn: (arg: string | DeleteListItemInput) => {
+      const resolvedListId = typeof arg === 'string' ? listId : arg.listId;
+      const itemId = typeof arg === 'string' ? arg : arg.itemId;
+      if (!resolvedListId) {
+        throw new Error('listId is required to delete a list item');
+      }
+      return api.send({ method: 'DELETE', path: `/api/lists/${resolvedListId}/items/${itemId}` });
+    },
+    onSuccess: async (_result, arg) => {
+      const resolvedListId = typeof arg === 'string' ? listId : arg.listId;
+      if (resolvedListId) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.list(householdId, resolvedListId),
+        });
+      }
     },
   });
 }
