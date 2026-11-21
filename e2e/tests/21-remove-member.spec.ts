@@ -108,7 +108,7 @@ for (const theme of ['light', 'dark'] as const) {
 
       // Back on Settings, with the member gone from Oak Street's card.
       await expect(
-        page.getByRole('heading', { name: /^(Households|My Households)$/ }),
+        page.getByRole('heading', { name: /^(Households|My Households)$/, level: 1 }),
       ).toBeVisible();
       await expect(page.getByText(member.name)).toHaveCount(0);
       await expectAccessible(page, `settings after the removal (${theme})`);
