@@ -205,7 +205,6 @@ export function FavoriteStores({
           </div>
         ))}
         <Button
-          role="button"
           variant="secondary"
           className="rounded-full"
           aria-label="Add favorite store"
