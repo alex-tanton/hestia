@@ -1,4 +1,3 @@
-import { Bell, CircleAlert, Share } from 'lucide-react';
 import { useId, type ReactElement } from 'react';
 import {
   householdNotificationType,
@@ -6,6 +5,7 @@ import {
   type ProfileResponse,
 } from '@hestia/shared';
 import { Card } from '../../components/ui/Card.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { Switch } from '../../components/ui/Switch.tsx';
 import { EmptyState } from '../../components/states/StateBlocks.tsx';
 import { IOS_INSTALL_MESSAGE } from '../onboarding/InstallStep.tsx';
@@ -110,7 +110,7 @@ export function PreferenceList({
   onToggle: (preference: NotificationPreference, enabled: boolean) => void;
 }): ReactElement {
   if (preferences.length === 0) {
-    return <EmptyState icon={Bell} message={NOTIFICATION_TYPES_EMPTY} />;
+    return <EmptyState icon="notifications" message={NOTIFICATION_TYPES_EMPTY} />;
   }
 
   const grouped = PILLARS.map((pillar) => ({
@@ -160,7 +160,7 @@ export function PreferenceList({
 export function DeviceNoteLine({ note }: { note: DeviceNote }): ReactElement {
   return (
     <p className="flex items-start gap-2 text-body-sm text-secondary">
-      <CircleAlert aria-hidden size={20} strokeWidth={1.5} className="mt-px shrink-0" />
+      <Icon name="warning" size={20} className="mt-px shrink-0" />
       <span className="max-w-[70ch]">
         {DEVICE_MESSAGES[note]}
         {note === 'denied' && (
@@ -185,7 +185,7 @@ export function DeviceNoteLine({ note }: { note: DeviceNote }): ReactElement {
 export function IosInstallLine(): ReactElement {
   return (
     <p className="flex items-start gap-2 text-body text-secondary">
-      <Share aria-hidden size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-section" />
+      <Icon name="share" size={20} className="mt-0.5 shrink-0 text-section" />
       <span className="max-w-[70ch]">{IOS_INSTALL_MESSAGE}</span>
     </p>
   );

@@ -87,7 +87,7 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
   }, [title]);
 
   return (
-    <div className="min-h-dvh bg-base text-primary">
+    <div className="shell-frame">
       <ToastProvider>
         <WriteQueue />
         <a
@@ -96,17 +96,13 @@ function ShellFrame({ switcher, updatePrompt, children }: AppShellProps): ReactE
         >
           Skip to main content
         </a>
-        <div className="min-[600px]:pl-20">
-          <header className="sticky top-0 z-20 bg-surface pt-[env(safe-area-inset-top)]">
+        <div className="shell-frame-inner">
+          <header className="top-app-bar">
             <TopBar title={title} switcher={switcher} chrome={chrome} />
             <OfflineBanner />
             {updatePrompt}
           </header>
-          <main
-            id="main"
-            tabIndex={-1}
-            className="mx-auto w-full px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] outline-none min-[600px]:pb-8"
-          >
+          <main id="main" tabIndex={-1} className="shell-content">
             {children}
           </main>
         </div>

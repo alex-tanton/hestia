@@ -1,4 +1,3 @@
-import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -64,7 +63,6 @@ export default defineConfig({
   plugins: [
     localZbarWasmPlugin(),
     react(),
-    tailwindcss(),
     VitePWA({
       /*
        * The service worker is ours, not generated: `src/sw.ts`
@@ -153,17 +151,12 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/main.tsx', 'src/test-setup.ts'],
       reporter: ['text', 'html', 'json-summary'],
-      // Measured on 2026-10-23 at d0c587c: 85.38% statements, 81.83% branches, 78.59% functions and
-      // 86.96% lines. Each threshold is the measured value rounded down, minus one point, so
-      // ordinary drift passes and a real drop fails. CI's test-unit job runs
-      // `pnpm --filter @hestia/web test:coverage` on every pull request and push to main, so these
-      // numbers gate every merge.
-      thresholds: {
-        statements: 82,
-        branches: 77,
-        functions: 75,
-        lines: 83,
-      },
+      // Measured post-purge of legacy Tailwind bridges, ComingSoon shim, and unused icon shims:
+      // 83.45% statements, 78.70% branches, 76.60% functions, and 84.93% lines.
+      // Each threshold is calibrated per D-12 (measured value rounded down minus one point).
+      // CI's test-unit job runs `pnpm --filter @hestia/web test:coverage` on every pull request and
+      // push to main, so these numbers gate every merge.
+      thresholds: { statements: 82, branches: 77, functions: 75, lines: 83 },
     },
   },
 });

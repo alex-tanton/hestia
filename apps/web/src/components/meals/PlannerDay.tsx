@@ -1,8 +1,8 @@
-import { Plus } from 'lucide-react';
 import type { ReactElement } from 'react';
 import type { MealPlanEntry, MealType } from '@hestia/shared';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
+import { Icon } from '../ui/Icon.tsx';
 import { mealTypeLabel } from './meal-copy.ts';
 import { MealSlotEntry } from './MealSlotEntry.tsx';
 
@@ -67,7 +67,7 @@ export function PlannerDay({
                       onAdd(date, mealType);
                     }}
                   >
-                    <Plus aria-hidden size={14} strokeWidth={1.5} />
+                    <Icon name="add" size={18} />
                     {`Add to ${mealTypeLabel(mealType).toLowerCase()}`}
                   </Button>
                 )}
@@ -118,7 +118,7 @@ export function PlannerDay({
             }}
             aria-label={`Plan meal for ${label}`}
           >
-            <Plus aria-hidden size={16} strokeWidth={1.5} />
+            <Icon name="add" size={18} />
             Plan meal
           </Button>
         )}
@@ -145,7 +145,7 @@ export function PlannerDay({
             }}
             aria-label={`Plan meal for ${label}`}
           >
-            <Plus aria-hidden size={16} strokeWidth={1.5} />
+            <Icon name="add" size={18} />
             Plan meal
           </Button>
         )}

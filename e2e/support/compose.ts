@@ -17,15 +17,45 @@ export interface CommandResult {
   stderr: string;
 }
 
+function toPosixPath(val: string): string {
+  const normalized = val.replace(/\\/g, '/');
+  const match = /^([A-Za-z]):\/(.*)$/.exec(normalized);
+  if (match) {
+    const drive = match[1] ?? '';
+    const rest = match[2] ?? '';
+    return `/mnt/${drive.toLowerCase()}/${rest}`;
+  }
+  return normalized;
+}
+
 export function runCommand(
   command: string,
   args: readonly string[],
   env: Record<string, string> = {},
 ): CommandResult {
-  const result = spawnSync(command, args, {
+  let execCmd = command;
+  let execArgs = args;
+  const execEnv = { ...process.env, ...env };
+
+  if (process.platform === 'win32') {
+    if (command === 'pnpm' || command === 'npm') {
+      execCmd = 'cmd.exe';
+      execArgs = ['/d', '/s', '/c', command, ...args];
+    } else if (command === 'docker') {
+      execCmd = 'wsl';
+      execArgs = ['-d', 'Ubuntu-24.04', 'docker', ...args.map(toPosixPath)];
+      const extraKeys = Object.keys(env);
+      if (extraKeys.length > 0) {
+        const existing = execEnv['WSLENV'] ?? '';
+        execEnv['WSLENV'] = existing ? `${existing}:${extraKeys.join(':')}` : extraKeys.join(':');
+      }
+    }
+  }
+
+  const result = spawnSync(execCmd, execArgs, {
     cwd: REPO_ROOT,
     encoding: 'utf8',
-    env: { ...process.env, ...env },
+    env: execEnv,
     maxBuffer: 64 * 1024 * 1024,
   });
   if (result.error) throw result.error;

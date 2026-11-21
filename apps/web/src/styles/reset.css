@@ -1,0 +1,133 @@
+/* Foundational MD3 reset, typography binding, accessible helpers, and semantic token bridge. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--md-ref-typeface-plain);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Warm Terracotta MD3 bridge so components inherit light, OS dark, and [data-theme] tokens. */
+:root {
+  --bg-base: var(--md-sys-color-surface);
+  --bg-raised: var(--md-sys-color-surface-container-low);
+  --border: var(--md-sys-color-outline-variant);
+  --border-input: var(--md-sys-color-outline);
+  --text-primary: var(--md-sys-color-on-surface);
+  --text-secondary: var(--md-sys-color-on-surface-variant);
+  --text-muted: var(--md-sys-color-on-surface-variant);
+  --overlay: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent);
+
+  --section: var(--md-sys-color-primary);
+  --section-accent: var(--md-sys-color-primary);
+  --on-section: var(--md-sys-color-on-primary);
+  --section-tint: var(--md-sys-color-primary-container);
+  --section-badge: var(--md-sys-color-secondary-container);
+  --on-section-badge: var(--md-sys-color-on-secondary-container);
+
+  --danger: var(--md-sys-color-error);
+  --danger-accent: var(--md-sys-color-error);
+  --on-danger: var(--md-sys-color-on-error);
+  --danger-badge: var(--md-sys-color-error-container);
+  --on-danger-badge: var(--md-sys-color-on-error-container);
+
+  --warning: var(--md-sys-color-warning);
+  --warning-accent: var(--md-sys-color-warning);
+  --on-warning: var(--md-sys-color-on-warning);
+  --warning-badge: var(--md-sys-color-warning-container);
+  --on-warning-badge: var(--md-sys-color-on-warning-container);
+
+  --success: var(--md-sys-color-success);
+  --success-accent: var(--md-sys-color-success);
+  --on-success: var(--md-sys-color-on-success);
+
+  --info: var(--md-sys-color-info);
+  --info-accent: var(--md-sys-color-info);
+  --on-info: var(--md-sys-color-on-info);
+
+  --neutral-badge: var(--md-sys-color-surface-container-high);
+  --on-neutral-badge: var(--md-sys-color-on-surface-variant);
+
+  --md-focus-ring-color: var(--md-sys-color-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --overlay: color-mix(in srgb, var(--md-sys-color-scrim) 60%, transparent);
+  }
+}
+
+:root[data-theme='light'] {
+  --overlay: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent);
+}
+
+:root[data-theme='dark'] {
+  --overlay: color-mix(in srgb, var(--md-sys-color-scrim) 60%, transparent);
+}

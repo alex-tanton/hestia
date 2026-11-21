@@ -1,7 +1,7 @@
-import { Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 import type { MealPlanEntry } from '@hestia/shared';
+import { Icon } from '../ui/Icon.tsx';
 import { OverflowMenu } from '../ui/OverflowMenu.tsx';
 import { CUSTOM_ITEM_ADD_TO_LIST, DELETED_RECIPE_NOTE } from './meal-copy.ts';
 
@@ -85,7 +85,7 @@ export function MealSlotEntry({
             ...addAction,
             {
               label: 'Remove',
-              icon: <Trash2 aria-hidden size={16} strokeWidth={1.5} />,
+              icon: <Icon name="delete" size={18} />,
               isDestructive: true,
               disabledReason: offlineReason,
               onSelect: () => {

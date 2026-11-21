@@ -30,6 +30,15 @@ describe('navigation config', () => {
   it('ships every pillar, so no tab opens the coming-soon state', () => {
     expect([...RELEASED_PILLARS]).toEqual(['lists', 'meals', 'chores', 'bills']);
   });
+
+  it('asserts clean Tab structure without legacy LucideIcon or icon properties', () => {
+    for (const tab of TABS) {
+      expect(tab).toHaveProperty('id');
+      expect(tab).toHaveProperty('label');
+      expect(tab).toHaveProperty('path');
+      expect('icon' in tab).toBe(false);
+    }
+  });
 });
 
 describe('sectionForPath', () => {

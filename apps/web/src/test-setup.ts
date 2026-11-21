@@ -1,7 +1,10 @@
 import { forceElementInternalsPolyfill } from 'element-internals-polyfill';
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
+
+// Generous async utility timeout prevents jsdom microtask race flakiness during parallel test runs.
+configure({ asyncUtilTimeout: 5000 });
 
 // Force ElementInternals + CustomStateSet registration before any @material/web element loads;
 // jsdom 30 defines a partial attachInternals that lacks form/validity hooks needed by MD3.

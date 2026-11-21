@@ -1,18 +1,18 @@
-import { Package, ShoppingBasket, Tag, X, type LucideIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import type { MatchOverride, ReadinessBreakdownEntry, RecipeIngredient } from '@hestia/shared';
 import { useCreateMatchOverride, useDeleteMatchOverride } from '../../lib/api/meal-hooks.ts';
 import { userMessage } from '../../lib/api/problem.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
+import { Icon, type IconName } from '../ui/Icon.tsx';
 import { useToast } from '../ui/Toast.tsx';
 import { MatchToSheet } from './MatchToSheet.tsx';
 import { BUCKET_LABEL } from './meal-copy.ts';
 
-const BUCKET_ICON: Readonly<Record<ReadinessBreakdownEntry['bucket'], LucideIcon>> = {
-  on_sale: Tag,
-  in_pantry: Package,
-  to_buy: ShoppingBasket,
+const BUCKET_ICON_NAME: Readonly<Record<ReadinessBreakdownEntry['bucket'], IconName>> = {
+  on_sale: 'sell',
+  in_pantry: 'inventory_2',
+  to_buy: 'shopping_basket',
 };
 
 export interface IngredientRowProps {
@@ -44,7 +44,7 @@ export function IngredientRow({
   const [isMatchSheetOpen, setIsMatchSheetOpen] = useState(false);
 
   const bucket = entry?.bucket ?? 'to_buy';
-  const Icon = BUCKET_ICON[bucket];
+  const iconName = BUCKET_ICON_NAME[bucket];
   const governing = overrides.filter(
     (o) => o.ingredientNormalizedName === ingredient.normalizedName,
   );
@@ -112,7 +112,7 @@ export function IngredientRow({
   return (
     <li className="flex flex-col gap-2 border-b border-border px-4 py-3 last:border-b-0">
       <div className="flex flex-wrap items-center gap-2">
-        <Icon aria-hidden size={20} strokeWidth={1.5} className="shrink-0 text-section-accent" />
+        <Icon name={iconName} size={20} className="shrink-0 text-section-accent" />
         <span className="text-body text-primary">{ingredient.itemName}</span>
         <Badge variant="section">{BUCKET_LABEL[bucket]}</Badge>
         {entry?.matchedName !== null && entry?.matchedName !== undefined && (
@@ -131,7 +131,7 @@ export function IngredientRow({
               disabledReason={offlineReason}
               onClick={removeCorrection}
             >
-              <X aria-hidden size={16} strokeWidth={1.5} />
+              <Icon name="close" size={18} />
               Remove correction
             </Button>
           </>
