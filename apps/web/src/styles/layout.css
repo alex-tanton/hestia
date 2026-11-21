@@ -13,6 +13,10 @@
   pointer-events: auto;
 }
 
+.barcode-scanner-dialog {
+  z-index: 50;
+}
+
 @media (min-width: 600px) {
   .toast-container {
     left: 5rem;

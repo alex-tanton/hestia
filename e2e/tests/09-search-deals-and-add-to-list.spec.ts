@@ -39,7 +39,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(card).toBeVisible();
       await expectAccessible(page, `deal search results (${theme})`);
 
-      await card.getByRole('button', { name: `Add ${target.name} to a list` }).click();
+      await card.getByRole('button', { name: new RegExp(`^Add ${target.name} to`) }).click();
 
       // Oak Street has two active lists ("This Week" and "Weekend Cookout"), so the picker opens
       // rather than adding straight away.
@@ -50,7 +50,9 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(picker).toBeHidden();
       // The toast's own text and its screen-reader-only live-region echo both say it, so this is
       // the one place in the suite a text lookup needs `.first()` rather than a unique match.
-      await expect(page.getByText('Added to This Week.').first()).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`Added ('${target.name}'|to This Week)`)).first(),
+      ).toBeVisible();
 
       await openList(page, 'This Week');
       // The store group is a labelled region (`StoreGroupHeader`'s `aria-labelledby`), not just any

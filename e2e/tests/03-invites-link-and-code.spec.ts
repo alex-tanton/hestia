@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
-import { expectDashboard, openSettings, signIn } from '../support/app.ts';
+import { expectDashboard, openHouseholdSettings, signIn } from '../support/app.ts';
 import { expectAccessible } from '../support/axe.ts';
 import { queryValue } from '../support/db.ts';
 import { SEED } from '../support/env.ts';
@@ -37,7 +37,7 @@ test('an admin invites, one member joins by link and another by code', async ({
 
   await signIn(page, SEED.alex.email);
   await expectDashboard(page, SEED.oakStreet.name);
-  await openSettings(page);
+  await openHouseholdSettings(page);
 
   await page.getByRole('button', { name: 'Create an invite' }).click();
   await expect(page.getByRole('heading', { name: 'Share this invite' })).toBeVisible();
@@ -58,7 +58,7 @@ test('an admin invites, one member joins by link and another by code', async ({
 
   const casey = await signedInPage(browser, SEED.casey.email);
   await expectDashboard(casey, SEED.emptyHouse.name);
-  await openSettings(casey);
+  await openHouseholdSettings(casey);
   await casey.getByRole('button', { name: 'Join or create a household' }).click();
   await expect(casey.getByRole('heading', { name: 'Set up your household' })).toBeVisible();
   await casey.getByRole('button', { name: 'Join with a code' }).click();

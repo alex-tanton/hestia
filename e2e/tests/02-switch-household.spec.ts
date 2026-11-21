@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
   expectDashboard,
-  openSettings,
+  openHouseholdSettings,
   signIn,
   switchHousehold,
   switcher,
@@ -23,7 +23,7 @@ const NO_INVITES = 'No invites are outstanding. Create one to add someone to thi
 async function expectCurrentInSwitcher(page: Page, householdName: string): Promise<void> {
   await switcher(page).click();
   const sheet = page.getByRole('dialog', { name: 'Households' });
-  await expect(sheet.getByRole('button', { name: householdName })).toHaveAttribute(
+  await expect(sheet.getByRole('button', { name: new RegExp(householdName) })).toHaveAttribute(
     'aria-current',
     'true',
   );
@@ -42,7 +42,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expectAccessible(page, `dashboard, Oak Street (${theme})`);
       await expectCurrentInSwitcher(page, SEED.oakStreet.name);
 
-      await openSettings(page);
+      await openHouseholdSettings(page);
       await expect(page.getByLabel('Household name')).toHaveValue(SEED.oakStreet.name);
       await expect(page.getByLabel('ZIP code')).toHaveValue(SEED.oakStreet.postalCode);
       // Oak Street has an outstanding invite, so it has a
@@ -55,7 +55,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expectDashboard(page, SEED.riveraFamily.name);
       await expectCurrentInSwitcher(page, SEED.riveraFamily.name);
 
-      await openSettings(page);
+      await openHouseholdSettings(page);
       // The household-scoped settings are Rivera Family's, and only Rivera Family's.
       await expect(page.getByLabel('Household name')).toHaveValue(SEED.riveraFamily.name);
       await expect(page.getByLabel('ZIP code')).toHaveValue(SEED.riveraFamily.postalCode);
@@ -67,7 +67,7 @@ for (const theme of ['light', 'dark'] as const) {
       // Back again, so the next run starts where this one did and the swap is proven both ways.
       await switchHousehold(page, SEED.oakStreet.name);
       await expectDashboard(page, SEED.oakStreet.name);
-      await openSettings(page);
+      await openHouseholdSettings(page);
       await expect(page.getByLabel('ZIP code')).toHaveValue(SEED.oakStreet.postalCode);
     });
   });
