@@ -84,13 +84,15 @@ for (const theme of ['light', 'dark'] as const) {
         .or(page.getByLabel('Amount'))
         .first();
       await amountInput.fill('64.20');
-      const recurringSwitch = sheet.getByRole('switch', { name: /Recurring bill/i });
-      if (await recurringSwitch.isVisible().catch(() => false)) {
-        if ((await recurringSwitch.getAttribute('aria-checked')) !== 'true') {
-          await recurringSwitch.click();
-        }
+      const repeatsSelect = sheet.getByRole('combobox', { name: 'Repeats' });
+      if (await repeatsSelect.isHidden().catch(() => true)) {
+        await sheet
+          .getByText('Recurring bill')
+          .or(page.getByText('Recurring bill'))
+          .first()
+          .click();
       }
-      await sheet.getByRole('combobox', { name: 'Repeats' }).click();
+      await repeatsSelect.click();
       await page.getByRole('option', { name: 'Monthly' }).first().click();
       const everyInput = sheet
         .getByLabel('Every')
