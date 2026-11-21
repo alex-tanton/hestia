@@ -333,9 +333,11 @@ for (const theme of THEMES) {
       // A suffix keeps a rerun on a kept stack from matching the list the previous run archived.
       const listName = `Audit ${randomBytes(2).toString('hex')}`;
       await page.getByLabel('List name').fill(listName);
-      await page
+      const createDialog = page.getByRole('dialog', { name: /^(New list|Create shopping list)$/ });
+      await createDialog
         .getByRole('button', { name: /^(Create shopping list|Create list)$/ })
-        .first()
+        .or(page.locator('md-filled-button', { hasText: /^(Create shopping list|Create list)$/ }))
+        .last()
         .click();
       await expect(page.getByRole('heading', { name: listName, level: 1 })).toBeVisible();
 
