@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spike 003: Dashboard Cards Head-to-Head Comparison</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../apps/web/src/styles/tokens.css">
+  <link rel="stylesheet" href="../001-pure-md3-styling-foundation/md3-foundation.css">
+  <style>
+    body {
+      background-color: var(--md-sys-color-surface-dim);
+      padding: 32px 24px;
+      font-family: 'Roboto', sans-serif;
+    }
+    .comparison-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .hero-banner {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .head-to-head-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .variant-column {
+      background-color: var(--md-sys-color-surface);
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+    }
+    .variant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+    .dashboard-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* === Variant A: Elevated Tonal === */
+    .card-elevated-tonal {
+      background-color: var(--md-sys-color-surface-container-low);
+      border-radius: 16px;
+      box-shadow: var(--md-sys-elevation-1);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: none;
+    }
+    .card-elevated-tonal:hover {
+      box-shadow: var(--md-sys-elevation-2);
+    }
+    .card-header-a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pillar-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .pillar-bills { color: var(--md-sys-color-primary); }
+    .pillar-shopping { color: var(--md-sys-color-secondary); }
+    .pillar-meals { color: var(--md-sys-color-tertiary); }
+    .pillar-chores { color: var(--md-sys-color-info, #2d5ea2); }
+
+    .item-box-a {
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* === Variant B: Outlined Minimal === */
+    .card-outlined-minimal {
+      background-color: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: none;
+    }
+    .card-outlined-minimal:hover {
+      border-color: var(--md-sys-color-outline);
+    }
+    .card-header-b {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--md-sys-color-surface-container-high);
+    }
+    .item-box-b {
+      background-color: transparent;
+      padding: 8px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--md-sys-color-outline-variant);
+    }
+    .item-box-b:last-child {
+      border-bottom: none;
+    }
+
+    .check-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--md-sys-color-outline);
+      margin-right: 8px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="comparison-container">
+  
+  <div class="hero-banner">
+    <span class="md3-badge md3-badge-primary">Spike 003 Head-to-Head Comparison</span>
+    <h1 class="md3-headline-medium" style="margin-top:8px;">Dashboard Cards: Elevated Tonal vs. Outlined Minimal</h1>
+    <p class="md3-body-medium" style="color:var(--md-sys-color-on-surface-variant); max-width:700px; margin:8px auto 0;">
+      Both variants implement authentic MD3 card specs with zero external utility CSS. Compare the layered depth of Variant A against the flat minimalism of Variant B.
+    </p>
+  </div>
+
+  <div class="head-to-head-grid">
+    
+    <!-- VARIANT A -->
+    <div class="variant-column">
+      <div class="variant-header">
+        <div>
+          <span class="md3-label-large" style="color:var(--md-sys-color-primary)">OPTION A</span>
+          <h2 class="md3-title-large">Elevated Tonal Cards</h2>
+        </div>
+        <span class="md3-badge md3-badge-primary">Tactile &amp; Layered</span>
+      </div>
+
+      <div class="dashboard-cards-grid">
+        <!-- Bills Card A -->
+        <div class="card-elevated-tonal">
+          <div class="card-header-a">
+            <span class="pillar-tag pillar-bills">💳 Bills</span>
+            <span class="md3-badge md3-badge-error">1 Overdue</span>
+          </div>
+          <div class="item-box-a">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Electric Utility</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-error)">Due yesterday</div>
+            </div>
+            <span class="md3-label-large" style="font-weight:600;">$94.20</span>
+          </div>
+          <div class="item-box-a">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Internet Fiber</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Nov 26</div>
+            </div>
+            <span class="md3-label-large" style="font-weight:600;">$75.00</span>
+          </div>
+        </div>
+
+        <!-- Shopping Card A -->
+        <div class="card-elevated-tonal">
+          <div class="card-header-a">
+            <span class="pillar-tag pillar-shopping">🛒 Shopping</span>
+            <span class="md3-badge md3-badge-secondary">4 Items</span>
+          </div>
+          <div class="item-box-a">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Organic Oat Milk</span>
+            </div>
+            <span class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Pantry</span>
+          </div>
+          <div class="item-box-a">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Fresh Rosemary</span>
+            </div>
+            <span class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Produce</span>
+          </div>
+        </div>
+
+        <!-- Meals Card A -->
+        <div class="card-elevated-tonal">
+          <div class="card-header-a">
+            <span class="pillar-tag pillar-meals">🍲 Meals</span>
+            <span class="md3-badge md3-badge-tertiary">Tonight</span>
+          </div>
+          <div class="item-box-a">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Herb Crusted Salmon</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-tertiary)">Dinner · Tonight</div>
+            </div>
+          </div>
+          <div class="item-box-a">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Tortellini Soup</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Dinner · Tomorrow</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chores Card A -->
+        <div class="card-elevated-tonal">
+          <div class="card-header-a">
+            <span class="pillar-tag pillar-chores">🧹 Chores</span>
+            <span class="md3-badge" style="background:#d6e3ff; color:#001b3d;">2 Today</span>
+          </div>
+          <div class="item-box-a">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Empty Dishwasher</span>
+            </div>
+            <span class="md3-badge" style="background:var(--md-sys-color-surface-container-high); font-size:0.6875rem;">Alex</span>
+          </div>
+          <div class="item-box-a">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Recycling Bin Out</span>
+            </div>
+            <span class="md3-badge" style="background:var(--md-sys-color-surface-container-high); font-size:0.6875rem;">Taylor</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT B -->
+    <div class="variant-column">
+      <div class="variant-header">
+        <div>
+          <span class="md3-label-large" style="color:var(--md-sys-color-secondary)">OPTION B</span>
+          <h2 class="md3-title-large">Outlined Minimal Cards</h2>
+        </div>
+        <span class="md3-badge md3-badge-secondary">Crisp &amp; Lightweight</span>
+      </div>
+
+      <div class="dashboard-cards-grid">
+        <!-- Bills Card B -->
+        <div class="card-outlined-minimal">
+          <div class="card-header-b">
+            <span class="pillar-tag pillar-bills">Bills</span>
+            <span class="md3-badge md3-badge-error">1 Overdue</span>
+          </div>
+          <div class="item-box-b">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Electric Utility</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-error)">Due yesterday</div>
+            </div>
+            <span class="md3-label-large" style="font-weight:600;">$94.20</span>
+          </div>
+          <div class="item-box-b">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Internet Fiber</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Nov 26</div>
+            </div>
+            <span class="md3-label-large" style="font-weight:600;">$75.00</span>
+          </div>
+        </div>
+
+        <!-- Shopping Card B -->
+        <div class="card-outlined-minimal">
+          <div class="card-header-b">
+            <span class="pillar-tag pillar-shopping">Shopping</span>
+            <span class="md3-badge md3-badge-secondary">4 Items</span>
+          </div>
+          <div class="item-box-b">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Organic Oat Milk</span>
+            </div>
+            <span class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Pantry</span>
+          </div>
+          <div class="item-box-b">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Fresh Rosemary</span>
+            </div>
+            <span class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Produce</span>
+          </div>
+        </div>
+
+        <!-- Meals Card B -->
+        <div class="card-outlined-minimal">
+          <div class="card-header-b">
+            <span class="pillar-tag pillar-meals">Meals</span>
+            <span class="md3-badge md3-badge-tertiary">Tonight</span>
+          </div>
+          <div class="item-box-b">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Herb Crusted Salmon</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-tertiary)">Dinner · Tonight</div>
+            </div>
+          </div>
+          <div class="item-box-b">
+            <div>
+              <div class="md3-body-medium" style="font-weight:500;">Tortellini Soup</div>
+              <div class="md3-label-small" style="color:var(--md-sys-color-on-surface-variant)">Dinner · Tomorrow</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chores Card B -->
+        <div class="card-outlined-minimal">
+          <div class="card-header-b">
+            <span class="pillar-tag pillar-chores">Chores</span>
+            <span class="md3-badge" style="background:#d6e3ff; color:#001b3d;">2 Today</span>
+          </div>
+          <div class="item-box-b">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Empty Dishwasher</span>
+            </div>
+            <span class="md3-badge" style="background:var(--md-sys-color-surface-container-high); font-size:0.6875rem;">Alex</span>
+          </div>
+          <div class="item-box-b">
+            <div style="display:flex; align-items:center;">
+              <span class="check-circle"></span>
+              <span class="md3-body-medium">Recycling Bin Out</span>
+            </div>
+            <span class="md3-badge" style="background:var(--md-sys-color-surface-container-high); font-size:0.6875rem;">Taylor</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
