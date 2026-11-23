@@ -1,0 +1,404 @@
+/* Official Material Design 3 (M3) Pure CSS Specification */
+
+:root {
+  --md3-font: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* --- Authentic Google M3 Blue Palette --- */
+  --md-sys-color-primary: #0b57d0;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #d3e3fd;
+  --md-sys-color-on-primary-container: #041e49;
+  
+  --md-sys-color-secondary: #535f70;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #d7e3f8;
+  --md-sys-color-on-secondary-container: #101c2b;
+  
+  --md-sys-color-tertiary: #6e5676;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #f7d8ff;
+  --md-sys-color-on-tertiary-container: #271430;
+  
+  --md-sys-color-error: #ba1a1a;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: #ffdad6;
+  --md-sys-color-on-error-container: #410002;
+  
+  --md-sys-color-surface: #ffffff;
+  --md-sys-color-surface-dim: #ded8e1;
+  --md-sys-color-surface-bright: #ffffff;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-container-low: #f7f9fc;
+  --md-sys-color-surface-container: #f0f4f9;
+  --md-sys-color-surface-container-high: #e9eef6;
+  --md-sys-color-surface-container-highest: #e1e7f0;
+  
+  --md-sys-color-on-surface: #1f1f1f;
+  --md-sys-color-on-surface-variant: #444746;
+  --md-sys-color-outline: #747775;
+  --md-sys-color-outline-variant: #c4c7c5;
+
+  /* Elevation (Official M3: very subtle diffuse ambient shadows) */
+  --md-elevation-1: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 1px rgba(0, 0, 0, 0.06);
+  --md-elevation-2: 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 2px 6px 2px rgba(0, 0, 0, 0.06);
+  --md-elevation-3: 0 4px 8px 3px rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Optional Theme 2: M3 Baseline Iris */
+[data-theme="iris"] {
+  --md-sys-color-primary: #6750a4;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #eaddff;
+  --md-sys-color-on-primary-container: #21005d;
+  --md-sys-color-secondary: #625b71;
+  --md-sys-color-secondary-container: #e8def8;
+  --md-sys-color-on-secondary-container: #1d192b;
+  --md-sys-color-tertiary: #7d5260;
+  --md-sys-color-tertiary-container: #ffd8e4;
+  --md-sys-color-on-tertiary-container: #31111d;
+  --md-sys-color-surface: #fef7ff;
+  --md-sys-color-surface-container-low: #f7f2fa;
+  --md-sys-color-surface-container: #f3edf7;
+  --md-sys-color-surface-container-high: #ece6f0;
+  --md-sys-color-surface-container-highest: #e6e0e9;
+  --md-sys-color-on-surface: #1d1b20;
+  --md-sys-color-on-surface-variant: #49454f;
+  --md-sys-color-outline: #79747e;
+  --md-sys-color-outline-variant: #cac4d0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--md3-font);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* --- Official M3 Typography Scale --- */
+.m3-title-large {
+  font-size: 1.375rem; /* 22px */
+  line-height: 1.75rem; /* 28px */
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.m3-title-medium {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5rem; /* 24px */
+  font-weight: 500;
+  letter-spacing: 0.15px;
+}
+
+.m3-title-small {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.m3-body-large {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.m3-body-medium {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem;
+  font-weight: 400;
+  letter-spacing: 0.25px;
+}
+
+.m3-label-large {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.m3-label-medium {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.m3-label-small {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* --- Official M3 Card System --- */
+.m3-card {
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 1. M3 Filled Card (Primary recommended standard in M3) */
+.m3-card-filled {
+  background-color: var(--md-sys-color-surface-container-low);
+  border: none;
+  box-shadow: none;
+}
+.m3-card-filled:hover {
+  background-color: var(--md-sys-color-surface-container);
+}
+
+/* 2. M3 Outlined Card (Lightweight border) */
+.m3-card-outlined {
+  background-color: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: none;
+}
+.m3-card-outlined:hover {
+  border-color: var(--md-sys-color-outline);
+}
+
+/* 3. M3 Elevated Card (Level 1 resting elevation) */
+.m3-card-elevated {
+  background-color: var(--md-sys-color-surface-container-low);
+  box-shadow: var(--md-elevation-1);
+  border: none;
+}
+.m3-card-elevated:hover {
+  box-shadow: var(--md-elevation-2);
+}
+
+/* Card Header */
+.m3-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.m3-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* --- Official M3 List Items (Inside Cards) --- */
+.m3-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.m3-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.m3-list-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.m3-list-item-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.m3-list-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.m3-list-headline {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-list-supporting {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 400;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.m3-list-trailing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: right;
+}
+
+/* --- Official M3 Badges & Chips --- */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.m3-badge-neutral {
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.m3-badge-primary {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.m3-badge-secondary {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.m3-badge-error {
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+
+/* --- M3 Checkbox --- */
+.m3-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid var(--md-sys-color-outline);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms ease;
+}
+
+.m3-checkbox.checked {
+  background-color: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+/* --- Top App Bar --- */
+.m3-top-bar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background-color: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-top-bar-title {
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-assist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.m3-assist-chip:hover {
+  background-color: var(--md-sys-color-surface-container);
+}
+
+/* --- M3 Navigation Bar (Mobile) --- */
+.m3-nav-bar {
+  height: 80px;
+  background-color: var(--md-sys-color-surface-container);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 16px 8px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.m3-nav-pill {
+  width: 64px;
+  height: 32px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: all 200ms ease;
+  position: relative;
+}
+
+.m3-nav-item.active .m3-nav-pill {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.m3-nav-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.m3-nav-item.active .m3-nav-label {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+/* --- M3 FAB --- */
+.m3-fab {
+  height: 56px;
+  min-width: 56px;
+  padding: 0 20px;
+  border-radius: 16px;
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  box-shadow: var(--md-elevation-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+.m3-fab:hover {
+  box-shadow: var(--md-elevation-4);
+  filter: brightness(0.97);
+}

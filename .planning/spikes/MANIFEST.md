@@ -21,3 +21,4 @@ Complete visual overhaul of Hestia's UI to a clean, pure Material Design 3 (MD3)
 | 003a | pure-md3-redesign | md3-cards-elevated-tonal | comparison | Dashboard pillar cards using MD3 Elevated / Surface Container treatment | VALIDATED | cards, dashboard, elevated |
 | 003b | pure-md3-redesign | md3-cards-outlined | comparison | Dashboard pillar cards using MD3 Outlined card treatment | VALIDATED | cards, dashboard, outlined |
 | 004 | pure-md3-redesign | md3-screens-visual-showcase | standard | Full screen visual showcase with automated screenshot pipeline | VALIDATED | showcase, screens, visual |
+| 005 | pure-md3-redesign | authentic-official-md3 | standard | Authentic m3.material.io specifications: Google Blue/Iris, 8dp spacing, tonal container elevation | VALIDATED | official-md3, google-blue, iris, tonal-elevation |

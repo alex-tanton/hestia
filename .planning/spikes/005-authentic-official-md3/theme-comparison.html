@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Official MD3 Color Themes Comparison</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="official-md3.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 32px 24px;
+      font-family: 'Roboto', sans-serif;
+    }
+    .comp-wrapper {
+      max-width: 1360px;
+      margin: 0 auto;
+    }
+    .grid-themes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .theme-card-wrapper {
+      background: white;
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+
+<div class="comp-wrapper">
+  
+  <div style="text-align: center; margin-bottom: 32px;">
+    <span class="m3-badge m3-badge-primary">Official Material Design 3 Palette Choice</span>
+    <h1 class="m3-title-large" style="font-size: 2rem; margin-top: 8px;">Theme Palette Comparison</h1>
+    <p class="m3-body-large" style="color:#444746;">
+      Comparing Google's Signature Material 3 Blue (#0B57D0) against Material 3 Baseline Iris (#6750A4).
+      Notice: zero mud, zero clashing colors, perfectly calibrated contrast and crisp typography.
+    </p>
+  </div>
+
+  <div class="grid-themes">
+    <!-- THEME 1: Google M3 Blue -->
+    <div class="theme-card-wrapper">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e0e2ec;">
+        <div>
+          <span class="m3-badge m3-badge-primary">THEME 1</span>
+          <h2 class="m3-title-medium" style="font-size:1.25rem; margin-top:4px;">Google Material 3 Blue (#0B57D0)</h2>
+        </div>
+        <span class="m3-label-small" style="color:#444746;">As seen in Google Workspace &amp; Android 14+</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Card 1 -->
+        <div class="m3-card m3-card-filled">
+          <div class="m3-card-header">
+            <span class="m3-card-title">💳 Upcoming Bills</span>
+            <span class="m3-badge m3-badge-error">1 Overdue</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-text">
+              <span class="m3-list-headline">Electric Utility</span>
+              <span class="m3-list-supporting" style="color:var(--md-sys-color-error);">Due yesterday · Past due</span>
+            </div>
+            <span class="m3-label-large" style="font-weight:600;">$94.20</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-text">
+              <span class="m3-list-headline">Fiber Internet</span>
+              <span class="m3-list-supporting">Auto-pay on Nov 26</span>
+            </div>
+            <span class="m3-label-large" style="font-weight:600;">$75.00</span>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="m3-card m3-card-filled">
+          <div class="m3-card-header">
+            <span class="m3-card-title">🛒 Shopping List</span>
+            <span class="m3-badge m3-badge-secondary">4 Items</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-content">
+              <span class="m3-checkbox"></span>
+              <span class="m3-list-headline">Organic Oat Milk</span>
+            </div>
+            <span class="m3-list-supporting">Pantry</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-content">
+              <span class="m3-checkbox"></span>
+              <span class="m3-list-headline">Fresh Rosemary &amp; Thyme</span>
+            </div>
+            <span class="m3-list-supporting">Produce</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THEME 2: M3 Baseline Iris -->
+    <div class="theme-card-wrapper" data-theme="iris">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant);">
+        <div>
+          <span class="m3-badge m3-badge-primary">THEME 2</span>
+          <h2 class="m3-title-medium" style="font-size:1.25rem; margin-top:4px;">Material 3 Baseline Iris (#6750A4)</h2>
+        </div>
+        <span class="m3-label-small" style="color:var(--md-sys-color-on-surface-variant);">Official m3.material.io Baseline</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Card 1 -->
+        <div class="m3-card m3-card-filled">
+          <div class="m3-card-header">
+            <span class="m3-card-title">💳 Upcoming Bills</span>
+            <span class="m3-badge m3-badge-error">1 Overdue</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-text">
+              <span class="m3-list-headline">Electric Utility</span>
+              <span class="m3-list-supporting" style="color:var(--md-sys-color-error);">Due yesterday · Past due</span>
+            </div>
+            <span class="m3-label-large" style="font-weight:600;">$94.20</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-text">
+              <span class="m3-list-headline">Fiber Internet</span>
+              <span class="m3-list-supporting">Auto-pay on Nov 26</span>
+            </div>
+            <span class="m3-label-large" style="font-weight:600;">$75.00</span>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="m3-card m3-card-filled">
+          <div class="m3-card-header">
+            <span class="m3-card-title">🛒 Shopping List</span>
+            <span class="m3-badge m3-badge-secondary">4 Items</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-content">
+              <span class="m3-checkbox"></span>
+              <span class="m3-list-headline">Organic Oat Milk</span>
+            </div>
+            <span class="m3-list-supporting">Pantry</span>
+          </div>
+          <div class="m3-list-item">
+            <div class="m3-list-item-content">
+              <span class="m3-checkbox"></span>
+              <span class="m3-list-headline">Fresh Rosemary &amp; Thyme</span>
+            </div>
+            <span class="m3-list-supporting">Produce</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
