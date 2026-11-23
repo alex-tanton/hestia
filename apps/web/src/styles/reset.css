@@ -80,7 +80,7 @@
   }
 }
 
-/* Warm Terracotta MD3 bridge so components inherit light, OS dark, and [data-theme] tokens. */
+/* Google Material 3 Blue MD3 bridge so components inherit light, OS dark, and [data-theme] tokens. */
 :root {
   --bg-base: var(--md-sys-color-surface);
   --bg-raised: var(--md-sys-color-surface-container-low);

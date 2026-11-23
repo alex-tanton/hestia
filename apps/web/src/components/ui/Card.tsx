@@ -22,7 +22,7 @@ export function Card({
     <Element
       {...rest}
       className={cn(
-        'hestia-card rounded-[var(--md-sys-shape-corner-medium)] p-4 text-[var(--md-sys-color-on-surface)]',
+        'hestia-card rounded-[var(--md-sys-shape-corner-large)] p-6 text-[var(--md-sys-color-on-surface)]',
         variant === 'raised'
           ? 'bg-[var(--md-sys-color-surface-container)] shadow-[var(--md-sys-elevation-1)]'
           : 'bg-[var(--md-sys-color-surface-container-low)]',
