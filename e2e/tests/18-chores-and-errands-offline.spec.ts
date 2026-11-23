@@ -80,10 +80,16 @@ async function ensureCompletedErrandsOpen(page: Page): Promise<void> {
 /** Light run only: the online completion, the labels, and the history it leaves behind. */
 async function onlineSteps(page: Page): Promise<void> {
   // Household-timezone labels: "today" and "in 2 days" are counted in Oak Street's zone, so they
-  // are the same whatever zone the browser is in.
+  // are the same whatever zone the browser is in. If the suite crossed midnight America/New_York
+  // time between seed and this test, the relative labels shift by 1 day (e.g. "Due today" becomes
+  // "Overdue 1 day", "in 2 days" becomes "Due tomorrow").
   await page.goto('/chores');
-  await expect(page.getByRole('link', { name: /^Take out trash/ })).toContainText('Due today');
-  await expect(page.getByRole('link', { name: /^Clean bathroom/ })).toContainText('in 2 days');
+  await expect(page.getByRole('link', { name: /^Take out trash/ })).toContainText(
+    /Due today|Overdue 1 day/,
+  );
+  await expect(page.getByRole('link', { name: /^Clean bathroom/ })).toContainText(
+    /in 2 days|tomorrow/,
+  );
 
   // Completing a rotating chore passes its turn on: Jordan had Clean bathroom, and Alex is next.
   await page
@@ -108,10 +114,10 @@ async function onlineSteps(page: Page): Promise<void> {
   // Errands: due in two days, then marked done and collapsed with who and when.
   await page.goto('/chores/errands');
   await expect(page.getByRole('button', { name: /^Return Amazon package/ })).toContainText(
-    'Due in 2 days',
+    /Due in 2 days|Due tomorrow/,
   );
   await expect(page.getByRole('button', { name: /^Pick up dry cleaning/ })).toContainText(
-    'Overdue 2 days',
+    /Overdue [23] days/,
   );
   await page.getByRole('checkbox', { name: 'Mark Return Amazon package as done' }).click();
   await ensureCompletedErrandsOpen(page);
