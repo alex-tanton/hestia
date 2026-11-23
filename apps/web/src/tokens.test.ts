@@ -174,39 +174,39 @@ describe('tokens.css file invariants and cascade determinism', () => {
   });
 });
 
-// Computed via @material/material-color-utilities SchemeTonalSpot(Hct('#B4532A'), isDark, 0.0)
+// Computed via @material/material-color-utilities SchemeTonalSpot(Hct('#0B57D0'), isDark, 0.0)
 const EXPECTED_SCHEME_TIERS = [
   [
     'light',
     defaultLight,
     {
-      '--md-sys-color-primary': '#8e4c32',
-      '--md-sys-color-surface': '#fff8f6',
-      '--md-sys-color-on-surface': '#231a16',
+      '--md-sys-color-primary': '#495d92',
+      '--md-sys-color-surface': '#faf8ff',
+      '--md-sys-color-on-surface': '#1a1b21',
       '--md-sys-color-surface-container-lowest': '#ffffff',
-      '--md-sys-color-surface-container-low': '#fff1ec',
-      '--md-sys-color-surface-container': '#fceae4',
-      '--md-sys-color-surface-container-high': '#f7e4df',
-      '--md-sys-color-surface-container-highest': '#f1dfd9',
+      '--md-sys-color-surface-container-low': '#f4f3fa',
+      '--md-sys-color-surface-container': '#eeedf4',
+      '--md-sys-color-surface-container-high': '#e8e7ef',
+      '--md-sys-color-surface-container-highest': '#e2e2e9',
     },
   ],
   [
     'dark',
     explicitDark,
     {
-      '--md-sys-color-primary': '#ffb599',
-      '--md-sys-color-surface': '#1a110e',
-      '--md-sys-color-on-surface': '#f1dfd9',
-      '--md-sys-color-surface-container-lowest': '#140c09',
-      '--md-sys-color-surface-container-low': '#231a16',
-      '--md-sys-color-surface-container': '#271e1a',
-      '--md-sys-color-surface-container-high': '#322824',
-      '--md-sys-color-surface-container-highest': '#3d322f',
+      '--md-sys-color-primary': '#b2c5ff',
+      '--md-sys-color-surface': '#121318',
+      '--md-sys-color-on-surface': '#e2e2e9',
+      '--md-sys-color-surface-container-lowest': '#0d0e13',
+      '--md-sys-color-surface-container-low': '#1a1b21',
+      '--md-sys-color-surface-container': '#1e1f25',
+      '--md-sys-color-surface-container-high': '#282a2f',
+      '--md-sys-color-surface-container-highest': '#33343a',
     },
   ],
 ] as const;
 
-describe('Warm Terracotta #B4532A SchemeTonalSpot fidelity', () => {
+describe('Google Material 3 Blue #0B57D0 SchemeTonalSpot fidelity', () => {
   it.each(EXPECTED_SCHEME_TIERS)(
     '%s block matches SchemeTonalSpot and has 5 distinct surface-container-* tiers',
     (_mode, theme, expected) => {

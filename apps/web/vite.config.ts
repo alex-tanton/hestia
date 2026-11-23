@@ -5,8 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 import pkg from './package.json' with { type: 'json' };
 
-// Warm Terracotta MD3 light surface color.
-const THEME_COLOR = '#fff8f6';
+// Google Material 3 Blue light surface color.
+const THEME_COLOR = '#faf8ff';
 
 const DOM_UNIT_TS_TESTS = [
   'src/lib/auth/auth-client.test.ts',

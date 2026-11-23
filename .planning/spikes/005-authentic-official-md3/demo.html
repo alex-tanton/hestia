@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Official Material Design 3 Redesign - Hestia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="official-md3.css">
+  <style>
+    .page-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    .hero-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-card {
+      background-color: var(--md-sys-color-surface);
+      border-radius: 24px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      overflow: hidden;
+      margin-bottom: 48px;
+    }
+    .section-banner {
+      padding: 20px 28px;
+      background-color: var(--md-sys-color-surface-container);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .desktop-frame {
+      display: flex;
+      height: 640px;
+      background-color: var(--md-sys-color-surface);
+    }
+    .rail-container {
+      width: 80px;
+      background-color: var(--md-sys-color-surface-container-low);
+      border-right: 1px solid var(--md-sys-color-outline-variant);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      gap: 16px;
+    }
+    .rail-logo-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+    .main-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 28px;
+      overflow-y: auto;
+    }
+    .mobile-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 36px 20px;
+      background-color: var(--md-sys-color-surface);
+      flex-wrap: wrap;
+    }
+    .phone-mock {
+      width: 380px;
+      height: 740px;
+      border-radius: 36px;
+      border: 6px solid #1f1f1f;
+      background-color: var(--md-sys-color-surface);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-bar {
+      height: 38px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface);
+    }
+    .phone-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 96px;
+    }
+    .icon {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <header class="hero-header">
+    <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span class="m3-badge m3-badge-primary">Official Material Design 3</span>
+      <span class="m3-badge m3-badge-neutral">Zero Tailwind · Pure M3 CSS</span>
+    </div>
+    <h1 class="m3-title-large" style="font-size: 2.25rem; font-weight: 500;">Hestia — Official M3 Experience</h1>
+    <p class="m3-body-large" style="color:var(--md-sys-color-on-surface-variant); max-width:760px; margin:10px auto 0;">
+      Redesigned from the ground up according to official <strong>m3.material.io</strong> specifications:
+      harmonious Google Blue / Iris color system, authentic 8dp grid spacing, tonal container elevation, and standard two-line list items.
+    </p>
+  </header>
+
+  <!-- 1. DESKTOP EXPERIENCE WITH OFFICIAL FILLED & OUTLINED CARDS -->
+  <div class="section-card">
+    <div class="section-banner">
+      <div>
+        <h2 class="m3-title-medium" style="font-weight:600;">1. Desktop Dashboard (Official M3 Filled Cards)</h2>
+        <p class="m3-body-medium" style="color:var(--md-sys-color-on-surface-variant)">
+          80px Navigation Rail · 64px Top App Bar · Tonal Surface Containers (Zero harsh drop shadows)
+        </p>
+      </div>
+      <span class="m3-badge m3-badge-secondary">Desktop Layout</span>
+    </div>
+
+    <div class="desktop-frame">
+      <!-- M3 Navigation Rail -->
+      <aside class="rail-container">
+        <div class="rail-logo-box">H</div>
+        
+        <!-- Rail Item 1: Active -->
+        <div class="m3-nav-item active" style="gap:2px;">
+          <div class="m3-nav-pill">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0-18v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z"/></svg>
+          </div>
+          <span class="m3-nav-label">This Week</span>
+        </div>
+
+        <!-- Rail Item 2 -->
+        <div class="m3-nav-item" style="gap:2px;">
+          <div class="m3-nav-pill">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 14V6c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-9-1c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-6v11c0 1.1-.9 2-2 2H4v-2h17V7h2z"/></svg>
+          </div>
+          <span class="m3-nav-label">Bills</span>
+        </div>
+
+        <!-- Rail Item 3 -->
+        <div class="m3-nav-item" style="gap:2px;">
+          <div class="m3-nav-pill">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </div>
+          <span class="m3-nav-label">Shopping</span>
+        </div>
+
+        <!-- Rail Item 4 -->
+        <div class="m3-nav-item" style="gap:2px;">
+          <div class="m3-nav-pill">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+          </div>
+          <span class="m3-nav-label">Meals</span>
+        </div>
+
+        <!-- Rail Item 5 -->
+        <div class="m3-nav-item" style="gap:2px;">
+          <div class="m3-nav-pill">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <span class="m3-nav-label">Chores</span>
+        </div>
+      </aside>
+
+      <!-- Main Shell Content -->
+      <div class="main-body">
+        <header class="m3-top-bar">
+          <div style="display:flex; align-items:center; gap:20px;">
+            <h1 class="m3-top-bar-title">This Week</h1>
+            <button class="m3-assist-chip">
+              <span>🏡 Oak Street Home</span>
+              <span style="font-size:0.75rem; color:var(--md-sys-color-outline);">▼</span>
+            </button>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="m3-badge m3-badge-neutral" style="font-size:0.8125rem;">Synced just now</span>
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--md-sys-color-primary-container); color:var(--md-sys-color-on-primary-container); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.875rem;">A</div>
+          </div>
+        </header>
+
+        <div class="cards-grid">
+          <!-- Card 1: Bills -->
+          <div class="m3-card m3-card-filled">
+            <div class="m3-card-header">
+              <div class="m3-card-title">
+                <svg class="icon" style="color:var(--md-sys-color-primary);" viewBox="0 0 24 24"><path d="M19 14V6c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-9-1c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-6v11c0 1.1-.9 2-2 2H4v-2h17V7h2z"/></svg>
+                <span>Bills</span>
+              </div>
+              <span class="m3-badge m3-badge-error">1 Overdue</span>
+            </div>
+            <div class="m3-list">
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Electric Utility</span>
+                    <span class="m3-list-supporting" style="color:var(--md-sys-color-error);">Due yesterday · Past due</span>
+                  </div>
+                </div>
+                <div class="m3-list-trailing">
+                  <span class="m3-label-large" style="font-weight:600;">$94.20</span>
+                </div>
+              </div>
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Gigabit Fiber Internet</span>
+                    <span class="m3-list-supporting">Auto-pay scheduled for Nov 26</span>
+                  </div>
+                </div>
+                <div class="m3-list-trailing">
+                  <span class="m3-label-large" style="font-weight:600;">$75.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Shopping -->
+          <div class="m3-card m3-card-filled">
+            <div class="m3-card-header">
+              <div class="m3-card-title">
+                <svg class="icon" style="color:var(--md-sys-color-primary);" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                <span>Shopping</span>
+              </div>
+              <span class="m3-badge m3-badge-secondary">4 Items left</span>
+            </div>
+            <div class="m3-list">
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <span class="m3-checkbox"></span>
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Organic Oat Milk</span>
+                    <span class="m3-list-supporting">Pantry · 1 gallon</span>
+                  </div>
+                </div>
+              </div>
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <span class="m3-checkbox"></span>
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Fresh Rosemary &amp; Thyme</span>
+                    <span class="m3-list-supporting">Produce · For tonight's dinner</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Meals -->
+          <div class="m3-card m3-card-filled">
+            <div class="m3-card-header">
+              <div class="m3-card-title">
+                <svg class="icon" style="color:var(--md-sys-color-primary);" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+                <span>Meals</span>
+              </div>
+              <span class="m3-badge m3-badge-primary">Tonight</span>
+            </div>
+            <div class="m3-list">
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Herb Crusted Salmon with Asparagus</span>
+                    <span class="m3-list-supporting">Dinner · Tonight · Prep time 25m</span>
+                  </div>
+                </div>
+              </div>
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Tuscan Tortellini Soup</span>
+                    <span class="m3-list-supporting">Dinner · Tomorrow</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Chores -->
+          <div class="m3-card m3-card-filled">
+            <div class="m3-card-header">
+              <div class="m3-card-title">
+                <svg class="icon" style="color:var(--md-sys-color-primary);" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <span>Chores</span>
+              </div>
+              <span class="m3-badge m3-badge-neutral">2 Due Today</span>
+            </div>
+            <div class="m3-list">
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <span class="m3-checkbox"></span>
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Empty Dishwasher</span>
+                    <span class="m3-list-supporting">Assigned to Alex</span>
+                  </div>
+                </div>
+              </div>
+              <div class="m3-list-item">
+                <div class="m3-list-item-content">
+                  <span class="m3-checkbox"></span>
+                  <div class="m3-list-item-text">
+                    <span class="m3-list-headline">Take Out Recycling Bin</span>
+                    <span class="m3-list-supporting">Assigned to Taylor</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MOBILE COMPARISON (DASHBOARD & SHOPPING LIST) -->
+  <div class="section-card">
+    <div class="section-banner">
+      <div>
+        <h2 class="m3-title-medium" style="font-weight:600;">2. Mobile Phone Experience (380px Viewport)</h2>
+        <p class="m3-body-medium" style="color:var(--md-sys-color-on-surface-variant)">
+          Standard 80px M3 Navigation Bar with Active Pill Indicator · Standard 56px FAB
+        </p>
+      </div>
+      <span class="m3-badge m3-badge-secondary">Mobile Devices</span>
+    </div>
+
+    <div class="mobile-row">
+      <!-- Phone 1: Mobile Dashboard -->
+      <div class="phone-mock">
+        <div class="phone-bar">
+          <span>9:41</span>
+          <span>5G 🔋 100%</span>
+        </div>
+        
+        <header class="m3-top-bar" style="height:56px; padding:0 16px;">
+          <h2 class="m3-title-medium" style="font-weight:600;">This Week</h2>
+          <button class="m3-assist-chip" style="height:32px; padding:0 12px; font-size:0.75rem;">
+            <span>Oak Street</span>
+            <span>▼</span>
+          </button>
+        </header>
+
+        <div class="phone-content">
+          <!-- Mobile Card: Bills -->
+          <div class="m3-card m3-card-filled" style="padding:16px;">
+            <div class="m3-card-header" style="margin-bottom:8px;">
+              <span class="m3-title-small">Bills</span>
+              <span class="m3-badge m3-badge-error">1 Overdue</span>
+            </div>
+            <div class="m3-list-item" style="min-height:48px;">
+              <div class="m3-list-item-text">
+                <span class="m3-list-headline" style="font-size:0.875rem;">Electric Utility</span>
+                <span class="m3-list-supporting" style="color:var(--md-sys-color-error); font-size:0.75rem;">Due yesterday</span>
+              </div>
+              <span class="m3-label-large">$94.20</span>
+            </div>
+          </div>
+
+          <!-- Mobile Card: Shopping -->
+          <div class="m3-card m3-card-filled" style="padding:16px;">
+            <div class="m3-card-header" style="margin-bottom:8px;">
+              <span class="m3-title-small">Shopping</span>
+              <span class="m3-badge m3-badge-secondary">4 Items</span>
+            </div>
+            <div class="m3-list-item" style="min-height:48px;">
+              <div class="m3-list-item-content">
+                <span class="m3-checkbox"></span>
+                <span class="m3-list-headline" style="font-size:0.875rem;">Organic Oat Milk</span>
+              </div>
+              <span class="m3-list-supporting" style="font-size:0.75rem;">Pantry</span>
+            </div>
+          </div>
+
+          <!-- Mobile Card: Meals -->
+          <div class="m3-card m3-card-filled" style="padding:16px;">
+            <div class="m3-card-header" style="margin-bottom:8px;">
+              <span class="m3-title-small">Tonight's Dinner</span>
+              <span class="m3-badge m3-badge-primary">25m</span>
+            </div>
+            <span class="m3-list-headline" style="font-size:0.875rem;">Herb Crusted Salmon</span>
+            <span class="m3-list-supporting" style="font-size:0.75rem; margin-top:2px;">With roasted asparagus</span>
+          </div>
+        </div>
+
+        <nav class="m3-nav-bar">
+          <div class="m3-nav-item active">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0-18v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z"/></svg>
+            </div>
+            <span class="m3-nav-label">This Week</span>
+          </div>
+          <div class="m3-nav-item">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M19 14V6c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-9-1c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-6v11c0 1.1-.9 2-2 2H4v-2h17V7h2z"/></svg>
+            </div>
+            <span class="m3-nav-label">Bills</span>
+          </div>
+          <div class="m3-nav-item">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </div>
+            <span class="m3-nav-label">Shopping</span>
+          </div>
+          <div class="m3-nav-item">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+            </div>
+            <span class="m3-nav-label">Meals</span>
+          </div>
+        </nav>
+      </div>
+
+      <!-- Phone 2: Shopping List Screen -->
+      <div class="phone-mock">
+        <div class="phone-bar">
+          <span>9:41</span>
+          <span>5G 🔋 100%</span>
+        </div>
+        
+        <header class="m3-top-bar" style="height:56px; padding:0 16px;">
+          <h2 class="m3-title-medium" style="font-weight:600;">Groceries</h2>
+          <div style="font-size:0.875rem; color:var(--md-sys-color-primary); font-weight:500;">Clear done</div>
+        </header>
+
+        <div class="phone-content">
+          <!-- Filter Chips -->
+          <div style="display:flex; gap:8px; overflow-x:auto;">
+            <button class="m3-assist-chip" style="background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); border:none; height:32px; padding:0 14px;">All (4)</button>
+            <button class="m3-assist-chip" style="height:32px; padding:0 14px;">Produce</button>
+            <button class="m3-assist-chip" style="height:32px; padding:0 14px;">Pantry</button>
+          </div>
+
+          <!-- Section: Produce -->
+          <div>
+            <div class="m3-label-small" style="color:var(--md-sys-color-primary); letter-spacing:1px; margin-bottom:8px; font-weight:600;">PRODUCE</div>
+            <div class="m3-card m3-card-outlined" style="padding:16px;">
+              <div class="m3-list">
+                <div class="m3-list-item">
+                  <div class="m3-list-item-content">
+                    <span class="m3-checkbox"></span>
+                    <div class="m3-list-item-text">
+                      <span class="m3-list-headline">Fresh Rosemary &amp; Thyme</span>
+                      <span class="m3-list-supporting">Linked to tonight's dinner</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="m3-list-item">
+                  <div class="m3-list-item-content">
+                    <span class="m3-checkbox"></span>
+                    <div class="m3-list-item-text">
+                      <span class="m3-list-headline">Organic Apples</span>
+                      <span class="m3-list-supporting">3 lbs Honeycrisp</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Pantry -->
+          <div style="margin-top:8px;">
+            <div class="m3-label-small" style="color:var(--md-sys-color-primary); letter-spacing:1px; margin-bottom:8px; font-weight:600;">PANTRY</div>
+            <div class="m3-card m3-card-outlined" style="padding:16px;">
+              <div class="m3-list">
+                <div class="m3-list-item">
+                  <div class="m3-list-item-content">
+                    <span class="m3-checkbox"></span>
+                    <div class="m3-list-item-text">
+                      <span class="m3-list-headline">Organic Oat Milk</span>
+                      <span class="m3-list-supporting">1 gallon</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="m3-list-item" style="opacity:0.5;">
+                  <div class="m3-list-item-content">
+                    <span class="m3-checkbox checked">✓</span>
+                    <span class="m3-list-headline" style="text-decoration:line-through;">Extra Virgin Olive Oil</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extended FAB -->
+          <button class="m3-fab" style="position:absolute; right:20px; bottom:96px;">
+            <span style="font-size:1.25rem; font-weight:400;">+</span>
+            <span>Add Item</span>
+          </button>
+        </div>
+
+        <nav class="m3-nav-bar">
+          <div class="m3-nav-item">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0-18v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z"/></svg>
+            </div>
+            <span class="m3-nav-label">This Week</span>
+          </div>
+          <div class="m3-nav-item">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M19 14V6c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-9-1c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-6v11c0 1.1-.9 2-2 2H4v-2h17V7h2z"/></svg>
+            </div>
+            <span class="m3-nav-label">Bills</span>
+          </div>
+          <div class="m3-nav-item active">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </div>
+            <span class="m3-nav-label">Shopping</span>
+          </div>
+          <div class="m3-nav-item">
+            <div class="m3-nav-pill">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+            </div>
+            <span class="m3-nav-label">Meals</span>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

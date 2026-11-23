@@ -150,7 +150,7 @@ export function DashboardCard({ pillar, title, state }: DashboardCardProps): Rea
       as="section"
       variant="flat"
       aria-labelledby={headingId}
-      className="flex flex-col gap-3 p-4 bg-[var(--md-sys-color-surface-container-low)]"
+      className="flex flex-col gap-4 p-6 bg-[var(--md-sys-color-surface-container-low)]"
     >
       <h2
         id={headingId}
